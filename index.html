@@ -338,6 +338,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
    Arquivo → Publicar na web → aba "BASE DE DADOS" → CSV → copiar link
 ============================================================ */
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo1ojA9X6uwXfldL8pM4XtiK_fVn0NcHmQ6zKndOGqpUSjrv-PP37Vos3blcjHWQ/pub?gid=728389433&single=true&output=csv";
+// URL da aba PAINEL — usada apenas para buscar o Prejuízo Total Estimado
+const PAINEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo1ojA9X6uwXfldL8pM4XtiK_fVn0NcHmQ6zKndOGqpUSjrv-PP37Vos3blcjHWQ/pub?gid=951510036&single=true&output=csv";
 /* ============================================================ */
 
 /* ── Estado global ── */
@@ -563,6 +565,39 @@ const EMBEDDED_CSV = `"Nº BO","Data","Hora","Tipo de BO","Natureza / Crime","En
 "3284700608","03/01/2026","22:23","Comunicação de Ocorrência","Tráfico de drogas (Lei 11.343/06, Art. 33)","Estrada do Palheta, área rural","Guajará-Mirim","RO","0","1","0,755","0,755","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Zona rural","Delegacia PF – Guajará-Mirim","-10,9","-65,4","56625","755g cocaína em tablete envolto em plástico preto arremessada por passageiro de moto ao notar presença policial. Dupla fugiu em alta velocidade.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Divisas e Fronteiras",""
 "3284800353","02/01/2026","10:30","Prisão/Apreensão","Porte ilegal de arma de fogo / Posse de drogas","Av. Toufic Melhen Abichabki, Bairro Jardim das Esmeraldas","Guajará-Mirim","RO","0","3","0,007","0,001","0","0,006","1","3","0","0","0","0","0","","6","0","0","Terrestre","Residência / Via pública","Delegacia PF – Guajará-Mirim","-10,783","-65,339","19438,33333","Espingarda cal .12 + 3 munições + 4 granadas enterradas no quintal + maconha (6g) + cocaína (1g) + balança + 6 celulares + pés de maconha em vaso. Autores: CLEIVI RODES VEIGA, VICTOR RIAM RODRIGUES DANTAS, EDYLAYLA BRUNA DA SILVA PEREIRA.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Fronteiras e Divisas",""`;
 
+/* ── Busca Prejuízo Total do PAINEL ── */
+async function fetchPrejuizoTotal() {
+  try {
+    const url = PAINEL_URL + '&_nc=' + Date.now();
+    const res = await fetch(url, {mode:'cors'});
+    if (!res.ok) return;
+    const txt = await res.text();
+
+    // Última linha não-vazia tem o total: "R$ 17.473.148","54"
+    const allLines = txt.split('
+').map(l => l.trim()).filter(l => l.length > 0);
+    const lastLine = allLines[allLines.length - 1];
+
+    // Remove R$, espaços e aspas, fica com: 17.473.148,54
+    const cleaned = lastLine.replace(/[R$$\s"]/g, '');
+    const parts = cleaned.split(',');
+    if (parts.length >= 2) {
+      const intPart = parts[0].replace(/\./g, '');
+      const decPart = parts[1].substring(0, 2);
+      const value = parseFloat(intPart + '.' + decPart);
+      if (!isNaN(value) && value > 1000000) {
+        window._prejuizoTotal = value;
+        $('k-prej', fR(value));
+        console.log('[BPFRON] Prejuizo total:', fR(value));
+        return;
+      }
+    }
+    console.warn('[BPFRON] Total nao encontrado. Ultima linha:', lastLine);
+  } catch(e) {
+    console.warn('[BPFRON] Erro prejuizo:', e.message);
+  }
+}
+
 /* ── LOAD DATA ── */
 async function loadData() {
   setSt('load','Carregando dados da planilha...');
@@ -573,6 +608,9 @@ async function loadData() {
 
   let txt = '';
   let fonte = '';
+
+  // Busca o Prejuízo Total do PAINEL em paralelo
+  fetchPrejuizoTotal();
 
   // Tenta buscar dados atualizados do Google Sheets
   try {
@@ -717,9 +755,20 @@ function renderKPIs() {
   $('k-ve', fN(s('veiculos')));
   $('k-ma', fD(s('maconha_kg'),2)+' kg');
   $('k-mad', fD(s('madeira_m3'),3)+' m³');
-  // Prejuízo ao crime: soma do campo prejuizo + valor_veiculos
-  const prejTotal = s('prejuizo') + s('valor_veiculos');
-  $('k-prej', prejTotal > 0 ? fR(prejTotal) : 'R$ 17.473.148,54');
+  // Prejuízo ao crime: usa valor do PAINEL se já carregado, senão calcula da BASE
+  if (window._prejuizoTotal) {
+    $('k-prej', fR(window._prejuizoTotal));
+  } else {
+    // Cálculo local usando tabela de preços enquanto PAINEL carrega
+    const prej_drogas   = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
+    const prej_cigarros = s('cigarros') * 9.799;
+    const prej_combust  = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
+    const prej_madeira  = s('madeira_m3') * 1500;
+    const prej_veiculos = s('valor_veiculos');
+    const prej_armas    = s('armas') * 19333;
+    const calc = prej_drogas + prej_cigarros + prej_combust + prej_madeira + prej_veiculos + prej_armas;
+    $('k-prej', calc > 0 ? fR(calc) : '—');
+  }
 }
 function $(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 
