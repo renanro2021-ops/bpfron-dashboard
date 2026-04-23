@@ -574,12 +574,11 @@ async function fetchPrejuizoTotal() {
     const txt = await res.text();
 
     // Última linha não-vazia tem o total: "R$ 17.473.148","54"
-    const allLines = txt.split('
-').map(l => l.trim()).filter(l => l.length > 0);
+    const allLines = txt.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
     const lastLine = allLines[allLines.length - 1];
 
     // Remove R$, espaços e aspas, fica com: 17.473.148,54
-    const cleaned = lastLine.replace(/[R$$\s"]/g, '');
+    const cleaned = lastLine.split('R$').join('').split(' ').join('').split('"').join('');
     const parts = cleaned.split(',');
     if (parts.length >= 2) {
       const intPart = parts[0].replace(/\./g, '');
