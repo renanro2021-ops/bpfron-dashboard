@@ -80,7 +80,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .sec::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 16px 14px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;cursor:default}
 .kpi:hover{border-color:rgba(245,197,24,.28);transform:translateY(-2px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0}
@@ -154,6 +154,54 @@ tbody tr:last-child td{border-bottom:none}
 .hdr-logo-pmro{height:58px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen}
 .hdr-right-inner{display:flex;align-items:center;gap:14px}
 .hdr-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+/* ── KPI PREJUÍZO DESTAQUE BANNER ── */
+.kpi-prej-banner{
+  background: linear-gradient(135deg, #1a0800 0%, #2d1200 40%, #3d1a00 60%, #1a0800 100%);
+  border: 1px solid rgba(234,88,12,.5);
+  border-radius: 10px;
+  padding: 20px 32px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(234,88,12,.15), inset 0 0 40px rgba(234,88,12,.05);
+  flex-wrap: wrap;
+}
+.kpi-prej-banner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#ea580c,#f97316,#fbbf24,#f97316,#ea580c);
+  border-radius:10px 10px 0 0;
+}
+.kpi-prej-banner::after{
+  content:'💰';font-size:80px;position:absolute;right:24px;top:50%;
+  transform:translateY(-50%);opacity:0.08;line-height:1;
+}
+.prej-left{ display:flex; flex-direction:column; gap:4px; }
+.prej-lbl{
+  font-size:11px;font-weight:700;color:#fb923c;
+  letter-spacing:1.5px;text-transform:uppercase;
+}
+.prej-val{
+  font-family:'Rajdhani',sans-serif;
+  font-size:42px;font-weight:700;
+  color:#fed7aa;line-height:1;letter-spacing:-1px;
+}
+.prej-sub{ font-size:11px;color:#c2410c; }
+.prej-right{
+  display:flex;gap:24px;flex-wrap:wrap;align-items:center;
+}
+.prej-cat{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:rgba(0,0,0,.3);border-radius:8px;padding:10px 16px;
+  border:1px solid rgba(234,88,12,.2);min-width:90px;
+}
+.prej-cat-ico{ font-size:18px; }
+.prej-cat-lbl{ font-size:9px;color:#fb923c;letter-spacing:.8px;text-transform:uppercase;font-weight:600; }
+.prej-cat-val{ font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fed7aa; }
 
 /* ── KPI PREJUÍZO DESTAQUE ── */
 .kpi.prejuizo-destaque{
@@ -242,7 +290,7 @@ tbody tr:last-child td{border-bottom:none}
 }
 .leaflet-control-zoom a:hover { background: #232830 !important; }
 .leaflet-tile {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.7);
+  filter: brightness(1.4) contrast(1.3) saturate(1.2);
 }
 
 /* ── FOOTER ── */
@@ -309,9 +357,50 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="kpi g"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
       <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
       <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
+      <div class="kpi o"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
       <div class="kpi r"><div class="kpi-ico">🌿</div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
       <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
-      <div class="kpi prejuizo-destaque"><div class="kpi-ico">💰</div><div class="kpi-lbl">Prejuízo ao Crime</div><div class="kpi-val sm" id="k-prej">—</div><div class="kpi-sub">Valor estimado total</div></div>
+    </div>
+
+    <!-- PREJUÍZO AO CRIME — BANNER DESTAQUE -->
+    <div class="kpi-prej-banner">
+      <div class="prej-left">
+        <div class="prej-lbl">💰 Prejuízo Estimado ao Crime</div>
+        <div class="prej-val" id="k-prej">—</div>
+        <div class="prej-sub">Valor total estimado das apreensões</div>
+      </div>
+      <div class="prej-right">
+        <div class="prej-cat">
+          <span class="prej-cat-ico">💊</span>
+          <span class="prej-cat-lbl">Drogas</span>
+          <span class="prej-cat-val" id="pj-dr">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🔫</span>
+          <span class="prej-cat-lbl">Armas</span>
+          <span class="prej-cat-val" id="pj-ar">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🚗</span>
+          <span class="prej-cat-lbl">Veículos</span>
+          <span class="prej-cat-val" id="pj-ve">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">⛽</span>
+          <span class="prej-cat-lbl">Combust.</span>
+          <span class="prej-cat-val" id="pj-cb">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🚬</span>
+          <span class="prej-cat-lbl">Cigarros</span>
+          <span class="prej-cat-val" id="pj-ci">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🌳</span>
+          <span class="prej-cat-lbl">Madeira</span>
+          <span class="prej-cat-val" id="pj-ma">—</span>
+        </div>
+      </div>
     </div>
 
     <!-- INSIGHTS -->
@@ -692,11 +781,18 @@ function initMap() {
     zoomControl: true,
   });
 
-  // Tile cinza escuro com fronteiras bem visíveis (CartoDB Voyager com filtro escuro)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Tile base: CartoDB Dark Matter (escuro, funciona sem auth)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap © CARTO',
     subdomains: 'abcd',
     maxZoom: 19,
+  }).addTo(MAP);
+  // Camada de fronteiras e labels com opacidade alta para destaque
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+    attribution: '',
+    subdomains: 'abcd',
+    maxZoom: 19,
+    opacity: 1,
   }).addTo(MAP);
 }
 
@@ -823,20 +919,27 @@ async function loadData() {
   // Busca o Prejuízo Total do PAINEL em paralelo
   fetchPrejuizoTotal();
 
-  // Tenta buscar dados atualizados do Google Sheets
-  try {
-    const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
-    const res = await fetch(url, {mode:'cors'});
-    if (res.ok) {
-      const fetched = await res.text();
-      if (fetched && fetched.trim().length > 100) {
-        txt = fetched;
-        fonte = 'online';
-        console.log('[BPFRON] Dados carregados do Google Sheets');
+  // Busca via proxy AllOrigins — contorna CORS do GitHub Pages
+  // Só tenta online se não for arquivo local
+  const isLocal = window.location.protocol === 'file:';
+  if (!isLocal) {
+    try {
+      const csvUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const fetched = await res.text();
+        if (fetched && fetched.trim().length > 100 && !fetched.includes('<html')) {
+          txt = fetched;
+          fonte = 'online';
+          console.log('[BPFRON] Dados carregados via proxy (online)');
+        }
       }
+    } catch(e) {
+      console.warn('[BPFRON] Proxy falhou, usando dados embutidos:', e.message);
     }
-  } catch(e) {
-    console.warn('[BPFRON] Fetch bloqueado (CORS/local), usando dados embutidos:', e.message);
+  } else {
+    console.log('[BPFRON] Arquivo local — usando dados embutidos diretamente');
   }
 
   // Fallback: usa dados embutidos no HTML
@@ -964,20 +1067,23 @@ function renderKPIs() {
   $('k-dr', fD(s('drogas_total_kg'),2)+' kg');
   $('k-ar', fN(s('armas')));
   $('k-ve', fN(s('veiculos')));
+  $('k-co', fD(s('cocaina_kg'),2)+' kg');
   $('k-ma', fD(s('maconha_kg'),2)+' kg');
   $('k-mad', fD(s('madeira_m3'),3)+' m³');
-  // Prejuízo ao crime: usa valor do PAINEL se já carregado, senão calcula da BASE
+  // Subcategorias do prejuízo (cálculo local)
+  const pj_dr = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
+  const pj_ar = s('armas') * 19333;
+  const pj_ve = s('valor_veiculos');
+  const pj_cb = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
+  const pj_ci = s('cigarros') * 9.799;
+  const pj_ma = s('madeira_m3') * 1500;
+  $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
+  $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
+  // Total: usa valor do PAINEL se carregado, senão soma as categorias
   if (window._prejuizoTotal) {
     $('k-prej', fR(window._prejuizoTotal));
   } else {
-    // Cálculo local usando tabela de preços enquanto PAINEL carrega
-    const prej_drogas   = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
-    const prej_cigarros = s('cigarros') * 9.799;
-    const prej_combust  = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
-    const prej_madeira  = s('madeira_m3') * 1500;
-    const prej_veiculos = s('valor_veiculos');
-    const prej_armas    = s('armas') * 19333;
-    const calc = prej_drogas + prej_cigarros + prej_combust + prej_madeira + prej_veiculos + prej_armas;
+    const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma;
     $('k-prej', calc > 0 ? fR(calc) : '—');
   }
 }
