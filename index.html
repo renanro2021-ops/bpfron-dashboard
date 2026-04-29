@@ -350,16 +350,23 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
     <!-- KPIs -->
     <div class="sec">📊 Indicadores Operacionais</div>
-    <div class="kpi-grid">
+
+    <!-- LINHA 1: 5 KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
       <div class="kpi y"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="k-oc">—</div><div class="kpi-sub">Boletins registrados</div></div>
       <div class="kpi b"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="k-pr">—</div><div class="kpi-sub">Indivíduos detidos</div></div>
       <div class="kpi t"><div class="kpi-ico">📦</div><div class="kpi-lbl">Apreensões s/ Prisão</div><div class="kpi-val" id="k-ap">—</div><div class="kpi-sub">Sem detenção</div></div>
       <div class="kpi g"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
       <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
+    </div>
+
+    <!-- LINHA 2: 4 KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
       <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
       <div class="kpi o"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
       <div class="kpi r"><div class="kpi-ico">🌿</div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
       <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
+      <div class="kpi b" style="opacity:0;pointer-events:none"></div>
     </div>
 
     <!-- PREJUÍZO AO CRIME — BANNER DESTAQUE -->
@@ -919,27 +926,33 @@ async function loadData() {
   // Busca o Prejuízo Total do PAINEL em paralelo
   fetchPrejuizoTotal();
 
-  // Busca via proxy AllOrigins — contorna CORS do GitHub Pages
-  // Só tenta online se não for arquivo local
+  // Busca dados online — tenta múltiplos proxies
   const isLocal = window.location.protocol === 'file:';
   if (!isLocal) {
-    try {
-      const csvUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
-      const res = await fetch(proxyUrl);
-      if (res.ok) {
-        const fetched = await res.text();
-        if (fetched && fetched.trim().length > 100 && !fetched.includes('<html')) {
-          txt = fetched;
-          fonte = 'online';
-          console.log('[BPFRON] Dados carregados via proxy (online)');
+    const csvUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
+    const proxies = [
+      'https://corsproxy.io/?' + encodeURIComponent(csvUrl),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl),
+      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(csvUrl),
+    ];
+    for (const proxyUrl of proxies) {
+      try {
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const fetched = await res.text();
+          if (fetched && fetched.trim().length > 100 && !fetched.includes('<html') && !fetched.includes('error')) {
+            txt = fetched;
+            fonte = 'online';
+            console.log('[BPFRON] Dados carregados via proxy:', proxyUrl.split('/')[2]);
+            break;
+          }
         }
+      } catch(e) {
+        console.warn('[BPFRON] Proxy falhou:', proxyUrl.split('/')[2], e.message);
       }
-    } catch(e) {
-      console.warn('[BPFRON] Proxy falhou, usando dados embutidos:', e.message);
     }
   } else {
-    console.log('[BPFRON] Arquivo local — usando dados embutidos diretamente');
+    console.log('[BPFRON] Arquivo local — usando dados embutidos');
   }
 
   // Fallback: usa dados embutidos no HTML
