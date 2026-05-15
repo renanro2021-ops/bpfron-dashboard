@@ -318,6 +318,23 @@ tbody tr:last-child td{border-bottom:none}
   /* sem filtro — tile claro natural */
 }
 
+/* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
+function normalizeMunicipio(raw) {
+  if (!raw) return '';
+  // Converte para Title Case e normaliza acentuação
+  return raw.trim()
+    .toLowerCase()
+    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
+    .replace(/\bDe\b/g, 'de')
+    .replace(/\bDo\b/g, 'do')
+    .replace(/\bDa\b/g, 'da')
+    .replace(/\bDos\b/g, 'dos')
+    .replace(/\bDas\b/g, 'das')
+    .replace(/\bE\b/g, 'e')
+    .replace(/\bD'oeste\b/g, "D'Oeste")
+    .replace(/\bD'Oeste\b/g, "D'Oeste");
+}
+
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
 .periodo-rapido {
   display: flex;
@@ -860,6 +877,8 @@ function parseCSV(txt) {
     row._date = parseDate(row.data);
     // Normaliza natureza/crime para agrupar variações do mesmo crime
     if (row.natureza_crime) row.natureza_crime = normalizeCrime(row.natureza_crime);
+    // Normaliza município para unificar maiúsculas/minúsculas
+    if (row.municipio) row.municipio = normalizeMunicipio(row.municipio);
     NUM_FIELDS.forEach(f => { row[f] = toNum(row[f]); });
 
     if (!row.no_bo) continue;
@@ -1065,6 +1084,23 @@ function normalizeCrime(raw) {
     if (re.test(s)) return label;
   }
   return s; // mantém original se não mapeado
+}
+
+/* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
+function normalizeMunicipio(raw) {
+  if (!raw) return '';
+  // Converte para Title Case e normaliza acentuação
+  return raw.trim()
+    .toLowerCase()
+    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
+    .replace(/\bDe\b/g, 'de')
+    .replace(/\bDo\b/g, 'do')
+    .replace(/\bDa\b/g, 'da')
+    .replace(/\bDos\b/g, 'dos')
+    .replace(/\bDas\b/g, 'das')
+    .replace(/\bE\b/g, 'e')
+    .replace(/\bD'oeste\b/g, "D'Oeste")
+    .replace(/\bD'Oeste\b/g, "D'Oeste");
 }
 
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
