@@ -318,6 +318,37 @@ tbody tr:last-child td{border-bottom:none}
   filter: brightness(1.4) contrast(1.3) saturate(1.2);
 }
 
+/* ── BOTÕES DE PERÍODO RÁPIDO ── */
+.periodo-rapido {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.periodo-rapido span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.btn-periodo {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all .2s;
+  letter-spacing: .5px;
+}
+.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-periodo.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
 </style>
@@ -355,6 +386,17 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   </div>
 
   <!-- FILTROS -->
+  <!-- BOTÕES DE PERÍODO RÁPIDO -->
+  <div class="periodo-rapido" id="periodo-rapido" style="display:none">
+    <span>Período:</span>
+    <button class="btn-periodo" onclick="setPeriodo('tudo')">Tudo</button>
+    <button class="btn-periodo" onclick="setPeriodo('2024')">2024</button>
+    <button class="btn-periodo" onclick="setPeriodo('2025')">2025</button>
+    <button class="btn-periodo" onclick="setPeriodo('2026')">2026</button>
+    <button class="btn-periodo" onclick="setPeriodo('1tri2026')">1° Tri 2026</button>
+    <button class="btn-periodo" onclick="setPeriodo('2tri2026')">2° Tri 2026</button>
+  </div>
+
   <div class="filters" id="filters" style="display:none">
     <div class="filters-ttl">🔍 Filtros Interativos</div>
     <div class="filters-grid">
@@ -816,6 +858,8 @@ function parseCSV(txt) {
     });
 
     row._date = parseDate(row.data);
+    // Normaliza natureza/crime para agrupar variações do mesmo crime
+    if (row.natureza_crime) row.natureza_crime = normalizeCrime(row.natureza_crime);
     NUM_FIELDS.forEach(f => { row[f] = toNum(row[f]); });
 
     if (!row.no_bo) continue;
@@ -992,6 +1036,64 @@ function setMapMode(mode) {
   document.getElementById('btn-marcadores').classList.toggle('active', mode === 'marcadores');
   document.getElementById('btn-calor').classList.toggle('active', mode === 'calor');
   renderMap();
+}
+
+/* ── NORMALIZAÇÃO DE NATUREZA/CRIME ── */
+function normalizeCrime(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  // Mapa de prefixos → categoria normalizada
+  const map = [
+    [/^tráfico de drogas/i,              'Tráfico de drogas'],
+    [/^tráfico de entorpecentes/i,        'Tráfico de drogas'],
+    [/^descaminho/i,                      'Descaminho'],
+    [/^recuperação de veículo/i,          'Recuperação de veículo'],
+    [/^transporte ilegal de madeira/i,    'Transporte ilegal de madeira'],
+    [/^cumprimento de mandado/i,          'Cumprimento de mandado de prisão'],
+    [/^contrabando de combustível/i,      'Contrabando de combustível'],
+    [/^apoio a órgão/i,                   'Apoio a órgão de segurança'],
+    [/^adulteração de veículo/i,          'Adulteração de veículo'],
+    [/^porte ilegal de arma/i,            'Porte ilegal de arma de fogo'],
+    [/^posse irregular de arma/i,         'Posse irregular de arma de fogo'],
+    [/^receptação/i,                      'Receptação'],
+    [/^objeto encontrado/i,               'Objeto encontrado'],
+    [/^roubo/i,                           'Roubo de veículo'],
+    [/^furto/i,                           'Furto'],
+    [/^posse de drogas/i,                 'Posse de drogas'],
+    [/^contrabando de cigarros/i,         'Contrabando de cigarros'],
+    [/^contrabando/i,                     'Contrabando (outros)'],
+    [/^homicídio/i,                       'Homicídio'],
+    [/^tráfico de pessoas/i,              'Tráfico de pessoas'],
+    [/^resistência/i,                     'Outros'],
+    [/^apropriação/i,                     'Outros'],
+  ];
+  for (const [re, label] of map) {
+    if (re.test(s)) return label;
+  }
+  return s; // mantém original se não mapeado
+}
+
+/* ── BOTÕES DE PERÍODO RÁPIDO ── */
+function setPeriodo(p) {
+  // Remove active de todos
+  document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const now = new Date();
+  let di, df;
+  if (p === 'tudo') {
+    const dates = ALL.map(r => r._date).filter(Boolean);
+    di = new Date(Math.min(...dates));
+    df = new Date(Math.max(...dates));
+  } else if (p === '2024') { di = new Date(2024,0,1); df = new Date(2024,11,31); }
+  else if (p === '2025')   { di = new Date(2025,0,1); df = new Date(2025,11,31); }
+  else if (p === '2026')   { di = new Date(2026,0,1); df = new Date(2026,11,31); }
+  else if (p === '1tri2026') { di = new Date(2026,0,1); df = new Date(2026,2,31); }
+  else if (p === '2tri2026') { di = new Date(2026,3,1); df = new Date(2026,5,30); }
+
+  document.getElementById('fdi').value = di.toISOString().slice(0,10);
+  document.getElementById('fdf').value = df.toISOString().slice(0,10);
+  applyFilters();
 }
 
 /* ── SISTEMA DE PÁGINAS ── */
@@ -1251,6 +1353,7 @@ async function loadData() {
     applyFilters();
 
     document.getElementById('filters').style.display = '';
+    document.getElementById('periodo-rapido').style.display = '';
     document.getElementById('dash').style.display = '';
     document.getElementById('erro').style.display = 'none';
 
