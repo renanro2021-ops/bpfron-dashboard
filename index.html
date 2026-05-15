@@ -1044,8 +1044,9 @@ function normalizeCrime(raw) {
   const s = raw.trim();
   // Mapa de prefixos → categoria normalizada
   const map = [
-    [/^tráfico de drogas/i,              'Tráfico de drogas'],
-    [/^tráfico de entorpecentes/i,        'Tráfico de drogas'],
+    [/tráfico de drogas/i,               'Tráfico de drogas'],
+    [/tráfico de entorpecentes/i,         'Tráfico de drogas'],
+    [/lei.*11\.343/i,                     'Tráfico de drogas'],
     [/^descaminho/i,                      'Descaminho'],
     [/^recuperação de veículo/i,          'Recuperação de veículo'],
     [/^transporte ilegal de madeira/i,    'Transporte ilegal de madeira'],
