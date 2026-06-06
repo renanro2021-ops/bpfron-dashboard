@@ -1,0 +1,55 @@
+name: Atualizar dados BPFRON
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # Todo dia às 06:00 BRT (09:00 UTC)
+  workflow_dispatch:        # Permite rodar manualmente pelo GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Buscar CSV do Google Sheets
+        run: |
+          curl -L --fail -o data.csv \
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=992567398&single=true&output=csv"
+          BYTES=$(wc -c < data.csv)
+          echo "CSV baixado: ${BYTES} bytes"
+          if [ "$BYTES" -lt 500 ]; then
+            echo "ERRO: CSV muito pequeno ou vazio"
+            cat data.csv
+            exit 1
+          fi
+
+      - name: Atualizar EMBEDDED_CSV no HTML
+        run: |
+          python3 - << 'PYEOF'
+          with open('index.html', 'r', encoding='utf-8') as f:
+              html = f.read()
+          with open('data.csv', 'r', encoding='utf-8') as f:
+              csv_data = f.read().strip()
+          marker = 'const EMBEDDED_CSV = `'
+          start = html.index(marker) + len(marker)
+          end = html.index('`;', start)
+          new_html = html[:start] + '\n' + csv_data + '\n' + html[end:]
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(new_html)
+          print(f'OK: {len(csv_data):,} chars inseridos')
+          PYEOF
+
+      - name: Commit se houve mudança
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "Sem mudanças nos dados."
+          else
+            git commit -m "dados: atualização automática $(date -u '+%d/%m/%Y %H:%M') UTC"
+            git push
+          fi
