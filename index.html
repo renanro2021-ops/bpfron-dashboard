@@ -452,11 +452,32 @@ function normalizeMunicipio(raw) {
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
 
-/* ── CONSULTAS SUB-TABS ── */
-.cons-tabs-bar{display:flex;gap:0;margin-bottom:18px;background:rgba(6,9,18,.7);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden}
-.cons-tab{flex:1;padding:12px 20px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;letter-spacing:.6px;text-transform:uppercase;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-.cons-tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
-.cons-tab.active{color:#fff;background:rgba(37,99,235,.12);border-bottom:2px solid #2563eb}
+/* ── CONSULTAS PAGE ── */
+.consultas-hdr{display:flex;align-items:center;gap:18px;margin-bottom:20px;padding:18px 24px;background:var(--glass);border:1px solid var(--border2);border-radius:12px;backdrop-filter:blur(12px)}
+.consultas-hdr-icon{width:50px;height:50px;background:linear-gradient(135deg,#c9a030,#F5C518);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 20px rgba(245,197,24,.25)}
+.consultas-hdr h2{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--yellow);letter-spacing:.6px;margin-bottom:3px;line-height:1.2}
+.consultas-hdr p{font-size:10.5px;color:var(--muted);letter-spacing:.3px}
+.consultas-hdr-divider{width:1px;height:38px;background:rgba(255,255,255,.06);flex-shrink:0;margin:0 4px}
+.consultas-hdr-info{display:flex;gap:20px;flex-wrap:wrap}
+.consultas-hdr-stat{display:flex;flex-direction:column;gap:2px}
+.consultas-hdr-stat .s-val{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#e2e8f0}
+.consultas-hdr-stat .s-lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+.consultas-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.consultas-tab{background:var(--glass);border:1px solid var(--border2);border-radius:10px;padding:16px 20px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .25s;display:flex;align-items:center;gap:14px;text-align:left;backdrop-filter:blur(8px);position:relative;overflow:hidden}
+.consultas-tab::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;opacity:0;transition:opacity .25s}
+.consultas-tab:hover{border-color:rgba(245,197,24,.2);background:rgba(14,20,38,.85)}
+.consultas-tab.active{border-color:rgba(245,197,24,.35);background:rgba(245,197,24,.05);box-shadow:0 0 28px rgba(245,197,24,.07)}
+.consultas-tab.active::before{opacity:1;background:linear-gradient(90deg,#c9a030,#F5C518,#c9a030)}
+.ct-icon{font-size:22px;flex-shrink:0;width:44px;height:44px;background:rgba(255,255,255,.05);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .25s;border:1px solid rgba(255,255,255,.06)}
+.consultas-tab.active .ct-icon{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.2)}
+.ct-text{display:flex;flex-direction:column;gap:3px}
+.ct-label{font-size:13.5px;font-weight:700;color:var(--muted);letter-spacing:.2px;transition:color .25s}
+.consultas-tab.active .ct-label{color:var(--yellow)}
+.consultas-tab:hover .ct-label{color:var(--text)}
+.ct-sub{font-size:10px;color:#334155;letter-spacing:.2px}
+.ct-arrow{margin-left:auto;font-size:16px;color:#1e2535;transition:color .25s;flex-shrink:0}
+.consultas-tab.active .ct-arrow{color:rgba(245,197,24,.4)}
 
 /* ── PÁGINA CONSULTAS ── */
 #page-consultas{max-width:1600px;margin:0 auto;padding:22px 20px 56px}
@@ -475,12 +496,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 .busca-clear:hover{background:rgba(245,197,24,.08)}
 
 /* ── SIGA-STYLE FORM (Envolvidos / Veículos) ── */
-.siga-form-wrap{background:rgba(8,12,24,.8);border:1px solid rgba(59,130,246,.18);border-radius:10px;margin-bottom:14px;overflow:hidden}
-.siga-section-hdr{background:linear-gradient(90deg,#0c1f40,#162f5e);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(59,130,246,.25)}
-.siga-section-hdr h2{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#e2e8f0;letter-spacing:.5px;display:flex;align-items:center;gap:9px}
-.siga-section-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:3px 11px;font-size:10px;color:#93c5fd;letter-spacing:.8px;font-weight:600;white-space:nowrap}
-.siga-form-body{padding:20px 22px}
-.siga-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 18px}
+.siga-form-wrap{background:rgba(8,12,24,.8);border:1px solid rgba(255,255,255,.07);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.siga-form-label{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;padding:14px 22px 0;display:flex;align-items:center;gap:7px}
+.siga-form-label::before{content:'';display:inline-block;width:3px;height:12px;background:rgba(59,130,246,.6);border-radius:2px}
+.siga-form-body{padding:14px 22px 18px}
+.siga-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:13px 16px}
 .siga-field{display:flex;flex-direction:column;gap:5px}
 .siga-field label{font-size:9.5px;font-weight:700;color:#64748b;letter-spacing:.6px;text-transform:uppercase}
 .siga-field input,.siga-field select{background:rgba(6,9,18,.95);border:1px solid #1e2838;border-radius:5px;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;padding:7px 11px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
@@ -885,16 +905,44 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
 <!-- CONSULTAS: Envolvidos e Veículos -->
 <div id="page-consultas" class="page-content">
-  <div class="cons-tabs-bar">
-    <button class="cons-tab active" id="cons-tab-envolvidos" onclick="setConsulta('envolvidos')">👤 Envolvidos</button>
-    <button class="cons-tab"        id="cons-tab-veiculos"   onclick="setConsulta('veiculos')">🚗 Veículos</button>
+
+  <!-- Header da página -->
+  <div class="consultas-hdr">
+    <div class="consultas-hdr-icon">🔎</div>
+    <div>
+      <h2>Consultas Policiais</h2>
+      <p>Busca por envolvidos em ocorrências e veículos apreendidos · BPFRON/RO</p>
+    </div>
+    <div class="consultas-hdr-divider"></div>
+    <div class="consultas-hdr-info">
+      <div class="consultas-hdr-stat"><span class="s-val" id="ch-total-env">—</span><span class="s-lbl">Envolvidos</span></div>
+      <div class="consultas-hdr-stat"><span class="s-val" id="ch-total-vei">—</span><span class="s-lbl">Veículos</span></div>
+    </div>
   </div>
+
+  <!-- Seletor de módulo (card-style) -->
+  <div class="consultas-tabs">
+    <button class="consultas-tab active" id="cons-tab-envolvidos" onclick="setConsulta('envolvidos')">
+      <div class="ct-icon">👤</div>
+      <div class="ct-text">
+        <span class="ct-label">Envolvidos</span>
+        <span class="ct-sub">Pessoas detidas, autuadas ou investigadas</span>
+      </div>
+      <span class="ct-arrow">›</span>
+    </button>
+    <button class="consultas-tab" id="cons-tab-veiculos" onclick="setConsulta('veiculos')">
+      <div class="ct-icon">🚗</div>
+      <div class="ct-text">
+        <span class="ct-label">Veículos</span>
+        <span class="ct-sub">Veículos apreendidos ou envolvidos em ocorrências</span>
+      </div>
+      <span class="ct-arrow">›</span>
+    </button>
+  </div>
+
   <div id="cons-envolvidos">
   <div class="siga-form-wrap">
-    <div class="siga-section-hdr">
-      <h2>👤 Envolvidos em Ocorrências</h2>
-      <span class="siga-section-badge">BPFRON/RO · Módulo CPO</span>
-    </div>
+    <div class="siga-form-label">Filtros de Pesquisa</div>
     <div class="siga-form-body">
       <div class="siga-form-grid">
         <div class="siga-field">
@@ -988,10 +1036,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
   <div id="cons-veiculos" style="display:none">
   <div class="siga-form-wrap">
-    <div class="siga-section-hdr">
-      <h2>🚗 Veículos em Ocorrências</h2>
-      <span class="siga-section-badge">BPFRON/RO · Módulo CPO</span>
-    </div>
+    <div class="siga-form-label">Filtros de Pesquisa</div>
     <div class="siga-form-body">
       <div class="siga-form-grid">
         <div class="siga-field">
@@ -2180,7 +2225,8 @@ async function loadEnvolvidos() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     ALL_ENV = parseCSVgenerico(await r.text());
     ENV_LOADED = true;
-    // Preenche filtros
+    const hE = document.getElementById('ch-total-env');
+    if (hE) hE.textContent = ALL_ENV.length.toLocaleString('pt-BR');
     preencheSel('f-env-status', [...new Set(ALL_ENV.map(r=>r.status||r.status_do_envolvido||'').filter(Boolean))].sort());
     preencheSel('f-env-papel',  [...new Set(ALL_ENV.map(r=>r.papel||'').filter(Boolean))].sort());
     filtrarEnvolvidos();
@@ -2307,6 +2353,8 @@ async function loadVeiculos() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     ALL_VEI = parseCSVgenerico(await r.text());
     VEI_LOADED = true;
+    const hV = document.getElementById('ch-total-vei');
+    if (hV) hV.textContent = ALL_VEI.length.toLocaleString('pt-BR');
     preencheSel('f-vei-situacao', [...new Set(ALL_VEI.map(r=>r.situacao||'').filter(Boolean))].sort());
     preencheSel('f-vei-tipo',     [...new Set(ALL_VEI.map(r=>r.tipo||'').filter(Boolean))].sort());
     preencheSel('f-vei-uf',       [...new Set(ALL_VEI.map(r=>r.uf||'').filter(Boolean))].sort());
