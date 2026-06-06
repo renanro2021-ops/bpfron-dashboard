@@ -452,17 +452,14 @@ function normalizeMunicipio(raw) {
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
 
-/* ── NAV TABS ── */
-.nav-tabs-bar{background:rgba(6,9,18,.98);border-bottom:1px solid rgba(255,255,255,.07);box-shadow:0 2px 16px rgba(0,0,0,.5)}
-.nav-tabs-inner{max-width:1600px;margin:0 auto;padding:0 20px;display:flex;gap:0;align-items:stretch}
-.nav-tab{padding:13px 24px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;letter-spacing:.8px;text-transform:uppercase;font-family:'Inter',sans-serif;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;display:flex;align-items:center;gap:7px;position:relative}
-.nav-tab:hover{color:#e2e8f0;background:rgba(255,255,255,.03)}
-.nav-tab.active{color:#fff;border-bottom-color:#2563eb;background:rgba(37,99,235,.08)}
-.nav-tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6);border-radius:2px 2px 0 0}
-.nav-tabs-divider{width:1px;background:rgba(255,255,255,.05);margin:10px 0;flex-shrink:0}
+/* ── CONSULTAS SUB-TABS ── */
+.cons-tabs-bar{display:flex;gap:0;margin-bottom:18px;background:rgba(6,9,18,.7);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden}
+.cons-tab{flex:1;padding:12px 20px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;letter-spacing:.6px;text-transform:uppercase;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.cons-tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.cons-tab.active{color:#fff;background:rgba(37,99,235,.12);border-bottom:2px solid #2563eb}
 
-/* ── BUSCA UNIVERSAL ── */
-.sec-busca{max-width:1600px;margin:0 auto;padding:22px 20px 56px;display:none}
+/* ── PÁGINA CONSULTAS ── */
+#page-consultas{max-width:1600px;margin:0 auto;padding:22px 20px 56px}
 .busca-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
 .busca-ttl{font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px}
 .busca-input-wrap{position:relative;margin-bottom:12px}
@@ -578,17 +575,6 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   </div>
 </header>
 
-<!-- NAV TABS -->
-<div class="nav-tabs-bar">
-  <div class="nav-tabs-inner">
-    <button class="nav-tab active" id="tab-painel"     onclick="setSecao('painel')">📊 Painel Analítico</button>
-    <div class="nav-tabs-divider"></div>
-    <button class="nav-tab"       id="tab-envolvidos"  onclick="setSecao('envolvidos')">👤 Envolvidos</button>
-    <button class="nav-tab"       id="tab-veiculos"    onclick="setSecao('veiculos')">🚗 Veículos</button>
-    <div style="flex:1"></div>
-    <span style="font-size:9.5px;color:#334155;letter-spacing:.8px;text-transform:uppercase;align-self:center;padding-right:4px;font-weight:600">Consultas Policiais · BPFRON/RO</span>
-  </div>
-</div>
 
 <main class="main" id="sec-painel">
 
@@ -634,6 +620,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <button class="btn-page-nav" onclick="showPage('graficos')" id="nav-graficos">📊 Gráficos</button>
       <button class="btn-page-nav" onclick="showPage('operacoes')" id="nav-operacoes">🔍 Por Operação</button>
       <button class="btn-page-nav" onclick="showPage('comparativo')" id="nav-comparativo">📅 Comparativo Anual</button>
+      <button class="btn-page-nav" onclick="showPage('consultas')"  id="nav-consultas">🔎 Consultas</button>
       <button class="btn-page-nav" id="btn-apresentacao" onclick="toggleApresentacao()" style="margin-left:auto;background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.4);color:var(--yellow)">▶ Apresentação</button>
     </div>
 
@@ -896,8 +883,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
 </div><!-- /page-tabela -->
 
-<!-- SEÇÃO ENVOLVIDOS -->
-<div class="sec-busca" id="sec-envolvidos">
+<!-- CONSULTAS: Envolvidos e Veículos -->
+<div id="page-consultas" class="page-content">
+  <div class="cons-tabs-bar">
+    <button class="cons-tab active" id="cons-tab-envolvidos" onclick="setConsulta('envolvidos')">👤 Envolvidos</button>
+    <button class="cons-tab"        id="cons-tab-veiculos"   onclick="setConsulta('veiculos')">🚗 Veículos</button>
+  </div>
+  <div id="cons-envolvidos">
   <div class="siga-form-wrap">
     <div class="siga-section-hdr">
       <h2>👤 Envolvidos em Ocorrências</h2>
@@ -992,10 +984,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="tbl-pag-btns" id="pag-env-btns"></div>
     </div>
   </div>
-</div>
+  </div><!-- /cons-envolvidos -->
 
-<!-- SEÇÃO VEÍCULOS -->
-<div class="sec-busca" id="sec-veiculos">
+  <div id="cons-veiculos" style="display:none">
   <div class="siga-form-wrap">
     <div class="siga-section-hdr">
       <h2>🚗 Veículos em Ocorrências</h2>
@@ -1086,7 +1077,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="tbl-pag-btns" id="pag-vei-btns"></div>
     </div>
   </div>
-</div>
+  </div><!-- /cons-veiculos -->
+</div><!-- /page-consultas -->
 
 <!-- MODAL DETALHE / BO -->
 <div class="modal-overlay" id="modal-bo" onclick="if(event.target===this)fecharModal()">
@@ -1531,26 +1523,30 @@ let apresentacaoTimer = null;
 let apresentacaoIdx = 0;
 
 function showPage(pageId) {
-  // Hide all pages
   document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.btn-page-nav').forEach(b => b.classList.remove('active'));
 
-  // Show selected
   const pg = document.getElementById('page-' + pageId);
   if (pg) pg.classList.add('active');
   const btn = document.getElementById('nav-' + pageId);
   if (btn) btn.classList.add('active');
 
-  // Tabela aparece em todas exceto comparativo
+  // Tabela aparece em todas exceto comparativo e consultas
   const tbl = document.getElementById('page-tabela');
-  if (tbl) tbl.classList.toggle('active', pageId !== 'comparativo');
+  if (tbl) tbl.classList.toggle('active', pageId !== 'comparativo' && pageId !== 'consultas');
 
   currentPage = pageId;
 
-  // Render specific page charts
-  if (pageId === 'operacoes') renderOperacoes();
+  if (pageId === 'operacoes')  renderOperacoes();
   if (pageId === 'comparativo') renderComparativo();
-  if (pageId === 'mapa') { setTimeout(() => { if(MAP) MAP.invalidateSize(); }, 100); }
+  if (pageId === 'mapa')       { setTimeout(() => { if(MAP) MAP.invalidateSize(); }, 100); }
+  if (pageId === 'consultas')  {
+    // Lazy-load a sub-aba ativa
+    const consEnv = document.getElementById('cons-envolvidos');
+    const consVei = document.getElementById('cons-veiculos');
+    if (consEnv && consEnv.style.display !== 'none' && !ENV_LOADED) loadEnvolvidos();
+    if (consVei && consVei.style.display !== 'none' && !VEI_LOADED) loadVeiculos();
+  }
 }
 
 // Init: show first page
@@ -2111,16 +2107,16 @@ let ALL_VEI = [], FIL_VEI = [], PAGE_VEI = 1, SORT_VEI = {col:null,dir:1};
 let ENV_LOADED = false, VEI_LOADED = false;
 const PG_B = 25;
 
-/* ── Navegação entre seções ── */
-function setSecao(s) {
-  ['painel','envolvidos','veiculos'].forEach(id => {
-    const el = document.getElementById('sec-' + id);
-    if (el) el.style.display = (id === s) ? '' : 'none';
-    const tb = document.getElementById('tab-' + id);
-    if (tb) tb.classList.toggle('active', id === s);
+/* ── Sub-abas dentro de Consultas ── */
+function setConsulta(tab) {
+  ['envolvidos','veiculos'].forEach(id => {
+    const el  = document.getElementById('cons-' + id);
+    const btn = document.getElementById('cons-tab-' + id);
+    if (el)  el.style.display  = (id === tab) ? '' : 'none';
+    if (btn) btn.classList.toggle('active', id === tab);
   });
-  if (s === 'envolvidos' && !ENV_LOADED) loadEnvolvidos();
-  if (s === 'veiculos'   && !VEI_LOADED) loadVeiculos();
+  if (tab === 'envolvidos' && !ENV_LOADED) loadEnvolvidos();
+  if (tab === 'veiculos'   && !VEI_LOADED) loadVeiculos();
 }
 
 /* ── Parser CSV genérico ── */
