@@ -1329,29 +1329,47 @@ async function loadData() {
   // Busca o Prejuízo Total do PAINEL em paralelo
   fetchPrejuizoTotal();
 
-  // Busca dados online — tenta múltiplos proxies
+  // Busca dados online
   const isLocal = window.location.protocol === 'file:';
   if (!isLocal) {
-    const csvUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
-    const proxies = [
-      'https://corsproxy.io/?' + encodeURIComponent(csvUrl),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl),
-      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(csvUrl),
-    ];
-    for (const proxyUrl of proxies) {
-      try {
-        const res = await fetch(proxyUrl);
-        if (res.ok) {
-          const fetched = await res.text();
-          if (fetched && fetched.trim().length > 100 && !fetched.includes('<html') && !fetched.includes('error')) {
-            txt = fetched;
-            fonte = 'online';
-            console.log('[BPFRON] Dados carregados via proxy:', proxyUrl.split('/')[2]);
-            break;
-          }
+    // 1. Tenta data.csv do mesmo servidor (GitHub Pages — sem CORS)
+    try {
+      const res = await fetch('data.csv?_nc=' + Date.now());
+      if (res.ok) {
+        const fetched = await res.text();
+        if (fetched && fetched.trim().length > 100 && !fetched.trim().startsWith('<')) {
+          txt = fetched;
+          fonte = 'online';
+          console.log('[BPFRON] Dados carregados de data.csv');
         }
-      } catch(e) {
-        console.warn('[BPFRON] Proxy falhou:', proxyUrl.split('/')[2], e.message);
+      }
+    } catch(e) {
+      console.warn('[BPFRON] data.csv não disponível:', e.message);
+    }
+
+    // 2. Fallback: tenta proxies CORS
+    if (!txt) {
+      const csvUrl = CSV_URL + '&_nc=' + Date.now();
+      const proxies = [
+        'https://corsproxy.io/?' + encodeURIComponent(csvUrl),
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl),
+        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(csvUrl),
+      ];
+      for (const proxyUrl of proxies) {
+        try {
+          const res = await fetch(proxyUrl);
+          if (res.ok) {
+            const fetched = await res.text();
+            if (fetched && fetched.trim().length > 100 && !fetched.includes('<html') && !fetched.includes('error')) {
+              txt = fetched;
+              fonte = 'online';
+              console.log('[BPFRON] Dados carregados via proxy:', proxyUrl.split('/')[2]);
+              break;
+            }
+          }
+        } catch(e) {
+          console.warn('[BPFRON] Proxy falhou:', proxyUrl.split('/')[2], e.message);
+        }
       }
     }
   } else {
