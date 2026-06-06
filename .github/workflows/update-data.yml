@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -16,13 +19,25 @@ jobs:
 
       - name: Buscar CSV do Google Sheets
         run: |
-          curl -L --fail -o data.csv \
+          curl -L \
+            -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            -H "Accept: text/csv,text/plain,*/*" \
+            -o data.csv \
             "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=992567398&single=true&output=csv"
+
           BYTES=$(wc -c < data.csv)
-          echo "CSV baixado: ${BYTES} bytes"
+          FIRST=$(head -c 1 data.csv)
+          echo "Baixado: ${BYTES} bytes | Primeiro char: '${FIRST}'"
+          echo "--- Primeiras 3 linhas ---"
+          head -3 data.csv
+          echo "--------------------------"
+
+          if [ "$FIRST" = "<" ]; then
+            echo "ERRO: Google retornou HTML (login/erro) em vez de CSV"
+            exit 1
+          fi
           if [ "$BYTES" -lt 500 ]; then
             echo "ERRO: CSV muito pequeno ou vazio"
-            cat data.csv
             exit 1
           fi
 
