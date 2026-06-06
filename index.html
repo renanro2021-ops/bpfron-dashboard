@@ -368,6 +368,78 @@ function normalizeMunicipio(raw) {
 
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
+
+/* ── NAV TABS ── */
+.nav-tabs-bar{background:var(--bg2);border-bottom:1px solid var(--border)}
+.nav-tabs-inner{max-width:1600px;margin:0 auto;padding:0 28px;display:flex;gap:0}
+.nav-tab{padding:12px 22px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;letter-spacing:.6px;text-transform:uppercase;font-family:'Inter',sans-serif;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+
+/* ── BUSCA UNIVERSAL ── */
+.sec-busca{max-width:1600px;margin:0 auto;padding:22px 20px 56px;display:none}
+.busca-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.busca-ttl{font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px}
+.busca-input-wrap{position:relative;margin-bottom:12px}
+.busca-input{width:100%;background:var(--bg2);border:1px solid #2a3040;border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:11px 16px 11px 44px;outline:none;transition:border-color .2s}
+.busca-input:focus{border-color:var(--yellow)}
+.busca-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:17px;pointer-events:none}
+.busca-hint{font-size:10.5px;color:var(--muted);margin-top:6px}
+.busca-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.busca-sel{background:var(--bg2);border:1px solid #232830;border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:6px 28px 6px 10px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23666' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+.busca-sel:focus{border-color:var(--yellow)}
+.busca-count{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.busca-clear{background:transparent;color:var(--yellow);border:1px solid rgba(245,197,24,.3);border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.busca-clear:hover{background:rgba(245,197,24,.08)}
+
+/* ── TABELA BUSCA ── */
+.tbl-busca-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tbl-busca-scroll{overflow-x:auto;max-height:560px;overflow-y:auto}
+.tbl-busca{width:100%;border-collapse:collapse;font-size:12px}
+.tbl-busca th{background:#0d1017;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:2}
+.tbl-busca th:hover{color:var(--yellow)}
+.tbl-busca th.sort-asc::after{content:' ↑'}
+.tbl-busca th.sort-desc::after{content:' ↓'}
+.tbl-busca td{padding:9px 12px;border-top:1px solid rgba(255,255,255,.04);vertical-align:middle;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbl-busca tr:hover td{background:rgba(245,197,24,.03);cursor:pointer}
+.bo-link{color:var(--yellow);cursor:pointer;font-weight:700;font-size:11px}
+.bo-link:hover{text-decoration:underline}
+.tbl-busca .empty-row td{text-align:center;padding:40px;color:var(--muted);cursor:default}
+.tbl-pag{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.tbl-pag-info{font-size:11px;color:var(--muted)}
+.tbl-pag-btns{display:flex;gap:4px}
+
+/* ── BADGES STATUS ── */
+.bd{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.bd-m{background:rgba(59,130,246,.18);color:#60a5fa}
+.bd-f{background:rgba(236,72,153,.18);color:#f472b6}
+.bd-preso{background:rgba(220,38,38,.15);color:#f87171}
+.bd-solto{background:rgba(22,163,74,.15);color:#4ade80}
+.bd-ap{background:rgba(234,88,12,.15);color:#fb923c}
+.bd-rec{background:rgba(13,148,136,.15);color:#2dd4bf}
+.bd-def{background:rgba(100,116,139,.15);color:#94a3b8}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid rgba(245,197,24,.25);border-radius:14px;max-width:960px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.9)}
+.modal-hdr{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-hdr h3{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--yellow);letter-spacing:.3px}
+.modal-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:2px 6px;transition:color .2s;border-radius:4px}
+.modal-close:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.modal-body{padding:20px 24px}
+.modal-sec{margin-bottom:22px}
+.modal-sec-ttl{font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.modal-field{background:var(--card);border-radius:8px;padding:10px 13px;border:1px solid rgba(255,255,255,.04)}
+.modal-field-lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}
+.modal-field-val{font-size:13px;color:var(--text);font-weight:500;word-break:break-word;line-height:1.4}
+.modal-field-val.dest{color:var(--yellow);font-weight:700}
+.modal-mini-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.modal-mini-tbl th{background:#0d1017;color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:8px 10px;text-align:left}
+.modal-mini-tbl td{padding:8px 10px;border-top:1px solid rgba(255,255,255,.04);color:var(--text)}
+.modal-mini-tbl tr:hover td{background:rgba(245,197,24,.03)}
+.modal-empty{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -395,7 +467,16 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   </div>
 </header>
 
-<main class="main">
+<!-- NAV TABS -->
+<div class="nav-tabs-bar">
+  <div class="nav-tabs-inner">
+    <button class="nav-tab active" id="tab-painel"      onclick="setSecao('painel')">      📊 Painel</button>
+    <button class="nav-tab"        id="tab-envolvidos"  onclick="setSecao('envolvidos')">  👤 Envolvidos</button>
+    <button class="nav-tab"        id="tab-veiculos"    onclick="setSecao('veiculos')">    🚗 Veículos</button>
+  </div>
+</div>
+
+<main class="main" id="sec-painel">
 
   <div class="statusbar">
     <div class="dot load" id="sdot"></div>
@@ -460,7 +541,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     <!-- LINHA 2: Cocaína, Veículos, Madeira, Armas, Munições -->
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
       <div class="kpi o"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
-      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
+      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val sm" id="k-ve">—</div><div class="kpi-sub" id="k-ve-sub">Apreendidos</div></div>
       <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
       <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
       <div class="kpi t"><div class="kpi-ico">🔴</div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="k-mun">—</div><div class="kpi-sub">Unidades</div></div>
@@ -700,6 +781,105 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 </main>
 
 </div><!-- /page-tabela -->
+
+<!-- SEÇÃO ENVOLVIDOS -->
+<div class="sec-busca" id="sec-envolvidos">
+  <div class="busca-wrap">
+    <div class="busca-ttl">👤 Busca de Envolvidos</div>
+    <div class="busca-input-wrap">
+      <span class="busca-icon">🔍</span>
+      <input class="busca-input" id="busca-env" type="text"
+        placeholder="Buscar por nome, CPF, RG, Nº BO, crime, endereço, telefone..."
+        oninput="filtrarEnvolvidos()">
+    </div>
+    <p class="busca-hint">Digite qualquer informação — nome, CPF, RG, Nº BO, placa vinculada — para localizar o registro completo.</p>
+    <div class="busca-filters">
+      <select class="busca-sel" id="f-env-sexo"   onchange="filtrarEnvolvidos()"><option value="">Sexo: Todos</option><option>Masculino</option><option>Feminino</option></select>
+      <select class="busca-sel" id="f-env-status" onchange="filtrarEnvolvidos()"><option value="">Status: Todos</option></select>
+      <select class="busca-sel" id="f-env-papel"  onchange="filtrarEnvolvidos()"><option value="">Papel: Todos</option></select>
+      <button class="busca-clear" onclick="limparEnvolvidos()">✕ Limpar</button>
+      <span class="busca-count" id="env-count">—</span>
+    </div>
+  </div>
+  <div class="tbl-busca-card">
+    <div class="tbl-busca-scroll">
+      <table class="tbl-busca" id="tbl-env">
+        <thead><tr>
+          <th onclick="sortEnv('no_bo')">Nº BO</th>
+          <th onclick="sortEnv('nome_completo')">Nome Completo</th>
+          <th onclick="sortEnv('cpf')">CPF</th>
+          <th onclick="sortEnv('rg')">RG</th>
+          <th onclick="sortEnv('nascimento')">Nascimento</th>
+          <th onclick="sortEnv('sexo')">Sexo</th>
+          <th onclick="sortEnv('status')">Status</th>
+          <th onclick="sortEnv('crime_natureza')">Crime / Natureza</th>
+          <th onclick="sortEnv('papel')">Papel</th>
+          <th onclick="sortEnv('destino')">Destino</th>
+        </tr></thead>
+        <tbody id="tbody-env"><tr class="empty-row"><td colspan="10">Carregando dados...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="tbl-pag">
+      <span class="tbl-pag-info" id="pag-env-info">—</span>
+      <div class="tbl-pag-btns" id="pag-env-btns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEÇÃO VEÍCULOS -->
+<div class="sec-busca" id="sec-veiculos">
+  <div class="busca-wrap">
+    <div class="busca-ttl">🚗 Busca de Veículos</div>
+    <div class="busca-input-wrap">
+      <span class="busca-icon">🔍</span>
+      <input class="busca-input" id="busca-vei" type="text"
+        placeholder="Buscar por placa, chassi, RENAVAM, proprietário, condutor, Nº BO..."
+        oninput="filtrarVeiculos()">
+    </div>
+    <p class="busca-hint">Digite qualquer informação — placa, chassi, RENAVAM, nome do proprietário ou Nº BO — para localizar o veículo.</p>
+    <div class="busca-filters">
+      <select class="busca-sel" id="f-vei-situacao" onchange="filtrarVeiculos()"><option value="">Situação: Todas</option></select>
+      <select class="busca-sel" id="f-vei-tipo"     onchange="filtrarVeiculos()"><option value="">Tipo: Todos</option></select>
+      <select class="busca-sel" id="f-vei-uf"       onchange="filtrarVeiculos()"><option value="">UF: Todas</option></select>
+      <button class="busca-clear" onclick="limparVeiculos()">✕ Limpar</button>
+      <span class="busca-count" id="vei-count">—</span>
+    </div>
+  </div>
+  <div class="tbl-busca-card">
+    <div class="tbl-busca-scroll">
+      <table class="tbl-busca" id="tbl-vei">
+        <thead><tr>
+          <th onclick="sortVei('no_bo')">Nº BO</th>
+          <th onclick="sortVei('placa')">Placa</th>
+          <th onclick="sortVei('marca_modelo')">Marca / Modelo</th>
+          <th onclick="sortVei('tipo')">Tipo</th>
+          <th onclick="sortVei('ano_fab_mod')">Ano</th>
+          <th onclick="sortVei('cor')">Cor</th>
+          <th onclick="sortVei('situacao')">Situação</th>
+          <th onclick="sortVei('proprietario')">Proprietário</th>
+          <th onclick="sortVei('condutor_motorista')">Condutor</th>
+          <th onclick="sortVei('municipio')">Município/UF</th>
+        </tr></thead>
+        <tbody id="tbody-vei"><tr class="empty-row"><td colspan="10">Carregando dados...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="tbl-pag">
+      <span class="tbl-pag-info" id="pag-vei-info">—</span>
+      <div class="tbl-pag-btns" id="pag-vei-btns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE / BO -->
+<div class="modal-overlay" id="modal-bo" onclick="if(event.target===this)fecharModal()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3 id="modal-bo-titulo">Detalhes</h3>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-bo-body"></div>
+  </div>
+</div>
 
 <footer>BPFRON/RO &nbsp;·&nbsp; Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia &nbsp;·&nbsp; Painel Analítico v3.0 &nbsp;·&nbsp; Uso Restrito — Informação Operacional</footer>
 
@@ -1503,7 +1683,9 @@ function renderKPIs() {
   $('k-ma', fD(s('maconha_kg'),2)+' kg');
   $('k-pb', fD(s('pasta_base_kg'),2)+' kg');
   $('k-co', fD(s('cocaina_kg'),2)+' kg');
-  $('k-ve', fN(s('veiculos')));
+  const nVe = s('veiculos'), vVe = s('valor_veiculos');
+  if (vVe > 0) { $('k-ve', fR(vVe)); $('k-ve-sub', fN(nVe) + ' unid. apreend.'); }
+  else { $('k-ve', fN(nVe)); $('k-ve-sub', 'Apreendidos'); }
   $('k-mad', fD(s('madeira_m3'),3)+' m³');
   $('k-ar', fN(s('armas')));
   $('k-mun', fN(s('municoes')));
@@ -1672,6 +1854,338 @@ function renderPage(){
 }
 
 loadData();
+
+/* ════════════════════════════════════════════════════════
+   MÓDULO: BUSCA DE ENVOLVIDOS E VEÍCULOS
+════════════════════════════════════════════════════════ */
+
+let ALL_ENV = [], FIL_ENV = [], PAGE_ENV = 1, SORT_ENV = {col:null,dir:1};
+let ALL_VEI = [], FIL_VEI = [], PAGE_VEI = 1, SORT_VEI = {col:null,dir:1};
+let ENV_LOADED = false, VEI_LOADED = false;
+const PG_B = 25;
+
+/* ── Navegação entre seções ── */
+function setSecao(s) {
+  ['painel','envolvidos','veiculos'].forEach(id => {
+    const el = document.getElementById('sec-' + id);
+    if (el) el.style.display = (id === s) ? '' : 'none';
+    const tb = document.getElementById('tab-' + id);
+    if (tb) tb.classList.toggle('active', id === s);
+  });
+  if (s === 'envolvidos' && !ENV_LOADED) loadEnvolvidos();
+  if (s === 'veiculos'   && !VEI_LOADED) loadVeiculos();
+}
+
+/* ── Parser CSV genérico ── */
+function parseCSVgenerico(txt) {
+  const sep = detectSep(txt);
+  const lines = txt.split('\n');
+  const hi = findHeader(lines, sep);
+  const headers = smartSplit(lines[hi], sep).map(h => nk(h.replace(/^"|"$/g,'').trim()));
+  const rows = [];
+  for (let i = hi + 1; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (!l) continue;
+    const cells = smartSplit(l, sep);
+    const r = {};
+    headers.forEach((h, j) => { r[h] = (cells[j] || '').replace(/^"|"$/g,'').trim(); });
+    if (Object.values(r).some(v => v)) rows.push(r);
+  }
+  return rows;
+}
+
+/* ── Badge sexo / status / situação ── */
+function bdSexo(v) {
+  if (!v) return '—';
+  const cl = v[0].toUpperCase() === 'M' ? 'bd-m' : 'bd-f';
+  return `<span class="bd ${cl}">${v}</span>`;
+}
+function bdStatus(v) {
+  if (!v) return '—';
+  const map = {'preso':'bd-preso','detido':'bd-preso','solto':'bd-solto','liberado':'bd-solto','apreendido':'bd-ap','recuperado':'bd-rec'};
+  const cl = map[v.toLowerCase().split(' ')[0]] || 'bd-def';
+  return `<span class="bd ${cl}">${v}</span>`;
+}
+
+/* ── Paginação genérica ── */
+function renderPag(total, page, pgSize, infoId, btnsId, cb) {
+  const pages = Math.ceil(total / pgSize) || 1;
+  const start = (page-1)*pgSize;
+  document.getElementById(infoId).textContent =
+    `${start+1}–${Math.min(start+pgSize,total)} de ${total.toLocaleString('pt-BR')} registros`;
+  const cont = document.getElementById(btnsId);
+  cont.innerHTML = '';
+  const mk = (lbl, pg, act) => {
+    const b = document.createElement('button');
+    b.className = 'pbtn' + (act?' act':'');
+    b.textContent = lbl; b.disabled = pg === null;
+    if (pg !== null && !act) b.onclick = () => cb(pg);
+    cont.appendChild(b);
+  };
+  mk('‹', page>1?page-1:null, false);
+  for (let p=Math.max(1,page-2); p<=Math.min(pages,page+2); p++) mk(p,p,p===page);
+  mk('›', page<pages?page+1:null, false);
+}
+
+/* ══════════════════════════════
+   ENVOLVIDOS
+══════════════════════════════ */
+async function loadEnvolvidos() {
+  document.getElementById('env-count').textContent = 'Carregando...';
+  try {
+    const r = await fetch('data_envolvidos.csv?_nc=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    ALL_ENV = parseCSVgenerico(await r.text());
+    ENV_LOADED = true;
+    // Preenche filtros
+    preencheSel('f-env-status', [...new Set(ALL_ENV.map(r=>r.status||r.status_do_envolvido||'').filter(Boolean))].sort());
+    preencheSel('f-env-papel',  [...new Set(ALL_ENV.map(r=>r.papel||'').filter(Boolean))].sort());
+    filtrarEnvolvidos();
+  } catch(e) {
+    document.getElementById('env-count').textContent = 'Erro ao carregar';
+    document.getElementById('tbody-env').innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ Não foi possível carregar os dados de envolvidos.</td></tr>`;
+    console.error('[ENV]', e);
+  }
+}
+
+function preencheSel(id, vals) {
+  const s = document.getElementById(id); if(!s) return;
+  const cur = s.value;
+  while(s.options.length > 1) s.remove(1);
+  vals.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; s.appendChild(o); });
+  if(cur) s.value = cur;
+}
+
+function filtrarEnvolvidos() {
+  const q = (document.getElementById('busca-env').value || '').toLowerCase().trim();
+  const sexo = document.getElementById('f-env-sexo').value.toLowerCase();
+  const status = document.getElementById('f-env-status').value;
+  const papel = document.getElementById('f-env-papel').value;
+  FIL_ENV = ALL_ENV.filter(r => {
+    if (sexo && (r.sexo||'').toLowerCase()[0] !== sexo[0]) return false;
+    if (status && (r.status||r.status_do_envolvido||'') !== status) return false;
+    if (papel && (r.papel||'') !== papel) return false;
+    if (!q) return true;
+    return Object.values(r).some(v => String(v).toLowerCase().includes(q));
+  });
+  if (SORT_ENV.col) aplicaSortEnv();
+  PAGE_ENV = 1;
+  renderTblEnv();
+}
+
+function limparEnvolvidos() {
+  document.getElementById('busca-env').value = '';
+  ['f-env-sexo','f-env-status','f-env-papel'].forEach(id => document.getElementById(id).value = '');
+  filtrarEnvolvidos();
+}
+
+function sortEnv(col) {
+  SORT_ENV.dir = SORT_ENV.col === col ? -SORT_ENV.dir : 1;
+  SORT_ENV.col = col;
+  aplicaSortEnv();
+  PAGE_ENV = 1;
+  renderTblEnv();
+}
+function aplicaSortEnv() {
+  const {col,dir} = SORT_ENV;
+  FIL_ENV.sort((a,b) => String(a[col]||'').localeCompare(String(b[col]||''), 'pt-BR') * dir);
+}
+
+function renderTblEnv() {
+  const total = FIL_ENV.length;
+  document.getElementById('env-count').textContent = total.toLocaleString('pt-BR') + ' registro(s)';
+  const slice = FIL_ENV.slice((PAGE_ENV-1)*PG_B, PAGE_ENV*PG_B);
+  const tbody = document.getElementById('tbody-env');
+  if (!slice.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">${ENV_LOADED?'Nenhum registro encontrado.':'Carregando dados...'}</td></tr>`;
+  } else {
+    const boKey = Object.keys(slice[0]).find(k => k.includes('bo') || k.includes('n_bo')) || 'n_bo';
+    tbody.innerHTML = slice.map(r => {
+      const bo = r[boKey]||r.no_bo||r.n_bo||'—';
+      const nome = r.nome_completo||r.nome||'—';
+      const cpf = r.cpf||'—';
+      const rg = r.rg||'—';
+      const nasc = r.nascimento||r.data_nascimento||'—';
+      const sexo = r.sexo||'—';
+      const st = r.status||r.status_do_envolvido||'—';
+      const crime = r.crime_natureza||r.crime||r.natureza_crime||r.natureza||'—';
+      const papel = r.papel||'—';
+      const dest = r.destino||'—';
+      return `<tr onclick="verEnvolvido(${ALL_ENV.indexOf(r)})">
+        <td><span class="bo-link" onclick="event.stopPropagation();verBO('${bo}')">${bo}</span></td>
+        <td title="${nome}" style="max-width:180px">${nome}</td>
+        <td>${cpf}</td><td>${rg}</td><td>${nasc}</td>
+        <td>${bdSexo(sexo)}</td>
+        <td>${bdStatus(st)}</td>
+        <td title="${crime}" style="max-width:160px">${crime}</td>
+        <td>${papel}</td>
+        <td title="${dest}" style="max-width:120px">${dest}</td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag(total, PAGE_ENV, PG_B, 'pag-env-info', 'pag-env-btns', p => { PAGE_ENV=p; renderTblEnv(); });
+}
+
+/* ══════════════════════════════
+   VEÍCULOS
+══════════════════════════════ */
+async function loadVeiculos() {
+  document.getElementById('vei-count').textContent = 'Carregando...';
+  try {
+    const r = await fetch('data_veiculos.csv?_nc=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    ALL_VEI = parseCSVgenerico(await r.text());
+    VEI_LOADED = true;
+    preencheSel('f-vei-situacao', [...new Set(ALL_VEI.map(r=>r.situacao||'').filter(Boolean))].sort());
+    preencheSel('f-vei-tipo',     [...new Set(ALL_VEI.map(r=>r.tipo||'').filter(Boolean))].sort());
+    preencheSel('f-vei-uf',       [...new Set(ALL_VEI.map(r=>r.uf||'').filter(Boolean))].sort());
+    filtrarVeiculos();
+  } catch(e) {
+    document.getElementById('vei-count').textContent = 'Erro ao carregar';
+    document.getElementById('tbody-vei').innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ Não foi possível carregar os dados de veículos.</td></tr>`;
+    console.error('[VEI]', e);
+  }
+}
+
+function filtrarVeiculos() {
+  const q = (document.getElementById('busca-vei').value || '').toLowerCase().trim();
+  const sit = document.getElementById('f-vei-situacao').value;
+  const tipo = document.getElementById('f-vei-tipo').value;
+  const uf   = document.getElementById('f-vei-uf').value;
+  FIL_VEI = ALL_VEI.filter(r => {
+    if (sit  && (r.situacao||'') !== sit)  return false;
+    if (tipo && (r.tipo||'') !== tipo)     return false;
+    if (uf   && (r.uf||'') !== uf)         return false;
+    if (!q) return true;
+    return Object.values(r).some(v => String(v).toLowerCase().includes(q));
+  });
+  if (SORT_VEI.col) aplicaSortVei();
+  PAGE_VEI = 1;
+  renderTblVei();
+}
+
+function limparVeiculos() {
+  document.getElementById('busca-vei').value = '';
+  ['f-vei-situacao','f-vei-tipo','f-vei-uf'].forEach(id => document.getElementById(id).value = '');
+  filtrarVeiculos();
+}
+
+function sortVei(col) {
+  SORT_VEI.dir = SORT_VEI.col === col ? -SORT_VEI.dir : 1;
+  SORT_VEI.col = col;
+  aplicaSortVei();
+  PAGE_VEI = 1;
+  renderTblVei();
+}
+function aplicaSortVei() {
+  const {col,dir} = SORT_VEI;
+  FIL_VEI.sort((a,b) => String(a[col]||'').localeCompare(String(b[col]||''), 'pt-BR') * dir);
+}
+
+function renderTblVei() {
+  const total = FIL_VEI.length;
+  document.getElementById('vei-count').textContent = total.toLocaleString('pt-BR') + ' registro(s)';
+  const slice = FIL_VEI.slice((PAGE_VEI-1)*PG_B, PAGE_VEI*PG_B);
+  const tbody = document.getElementById('tbody-vei');
+  if (!slice.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">${VEI_LOADED?'Nenhum registro encontrado.':'Carregando dados...'}</td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map(r => {
+      const bo = r.no_bo||r.n_bo||r.bo||'—';
+      const placa = r.placa||'—';
+      const modelo = r.marca_modelo||r.marca||'—';
+      const tipo = r.tipo||'—';
+      const ano = r.ano_fab_mod||r.ano||'—';
+      const cor = r.cor||'—';
+      const sit = r.situacao||'—';
+      const prop = r.proprietario||'—';
+      const cond = r.condutor_motorista||r.condutor||'—';
+      const mun = (r.municipio||'—') + (r.uf?'/'+r.uf:'');
+      return `<tr onclick="verVeiculo(${ALL_VEI.indexOf(r)})">
+        <td><span class="bo-link" onclick="event.stopPropagation();verBO('${bo}')">${bo}</span></td>
+        <td style="font-weight:700;color:var(--yellow)">${placa}</td>
+        <td title="${modelo}">${modelo}</td>
+        <td>${tipo}</td><td>${ano}</td><td>${cor}</td>
+        <td>${bdStatus(sit)}</td>
+        <td title="${prop}" style="max-width:140px">${prop}</td>
+        <td title="${cond}" style="max-width:140px">${cond}</td>
+        <td>${mun}</td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag(total, PAGE_VEI, PG_B, 'pag-vei-info', 'pag-vei-btns', p => { PAGE_VEI=p; renderTblVei(); });
+}
+
+/* ══════════════════════════════
+   MODAL — DETALHE COMPLETO
+══════════════════════════════ */
+function camposModal(r, skip=[]) {
+  return Object.entries(r).filter(([k]) => !skip.includes(k) && r[k]).map(([k,v]) =>
+    `<div class="modal-field"><div class="modal-field-lbl">${k.replace(/_/g,' ')}</div><div class="modal-field-val">${v}</div></div>`
+  ).join('');
+}
+
+function verEnvolvido(idx) {
+  const r = ALL_ENV[idx]; if(!r) return;
+  const bo = r.no_bo||r.n_bo||r.bo||'';
+  document.getElementById('modal-bo-titulo').textContent = '👤 ' + (r.nome_completo||r.nome||'Envolvido');
+  const veisBO = ALL_VEI.filter(v => (v.no_bo||v.n_bo||v.bo) === bo);
+  document.getElementById('modal-bo-body').innerHTML = `
+    <div class="modal-sec"><div class="modal-sec-ttl">📋 Dados Completos — BO ${bo}</div>
+      <div class="modal-grid">${camposModal(r)}</div></div>
+    ${veisBO.length ? `<div class="modal-sec"><div class="modal-sec-ttl">🚗 Veículos do mesmo BO (${veisBO.length})</div>
+      <table class="modal-mini-tbl"><thead><tr><th>Placa</th><th>Modelo</th><th>Cor</th><th>Situação</th><th>Proprietário</th></tr></thead>
+      <tbody>${veisBO.map(v=>`<tr><td style="font-weight:700;color:var(--yellow)">${v.placa||'—'}</td><td>${v.marca_modelo||'—'}</td><td>${v.cor||'—'}</td><td>${v.situacao||'—'}</td><td>${v.proprietario||'—'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+  `;
+  document.getElementById('modal-bo').classList.add('open');
+}
+
+function verVeiculo(idx) {
+  const r = ALL_VEI[idx]; if(!r) return;
+  const bo = r.no_bo||r.n_bo||r.bo||'';
+  document.getElementById('modal-bo-titulo').textContent = '🚗 ' + (r.placa||'Veículo') + ' — ' + (r.marca_modelo||'');
+  const envsBO = ALL_ENV.filter(e => (e.no_bo||e.n_bo||e.bo) === bo);
+  document.getElementById('modal-bo-body').innerHTML = `
+    <div class="modal-sec"><div class="modal-sec-ttl">📋 Dados Completos — BO ${bo}</div>
+      <div class="modal-grid">${camposModal(r)}</div></div>
+    ${envsBO.length ? `<div class="modal-sec"><div class="modal-sec-ttl">👤 Envolvidos do mesmo BO (${envsBO.length})</div>
+      <table class="modal-mini-tbl"><thead><tr><th>Nome</th><th>CPF</th><th>Sexo</th><th>Status</th><th>Papel</th></tr></thead>
+      <tbody>${envsBO.map(e=>`<tr><td>${e.nome_completo||e.nome||'—'}</td><td>${e.cpf||'—'}</td><td>${e.sexo||'—'}</td><td>${e.status||'—'}</td><td>${e.papel||'—'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+  `;
+  document.getElementById('modal-bo').classList.add('open');
+}
+
+function verBO(bo) {
+  if (!bo || bo === '—') return;
+  const envs = ALL_ENV.filter(e => (e.no_bo||e.n_bo||e.bo) === bo);
+  const veis = ALL_VEI.filter(v => (v.no_bo||v.n_bo||v.bo) === bo);
+  const oc   = ALL.find(r => String(r.no_bo) === String(bo));
+  document.getElementById('modal-bo-titulo').textContent = '📋 BO ' + bo;
+  document.getElementById('modal-bo-body').innerHTML = `
+    ${oc ? `<div class="modal-sec"><div class="modal-sec-ttl">🗂️ Ocorrência</div><div class="modal-grid">
+      <div class="modal-field"><div class="modal-field-lbl">Data</div><div class="modal-field-val">${fDate(oc._date)}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Município</div><div class="modal-field-val">${oc.municipio||'—'}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Tipo</div><div class="modal-field-val">${oc.tipo_de_bo||'—'}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Crime</div><div class="modal-field-val">${oc.natureza_crime||'—'}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Presos</div><div class="modal-field-val">${oc.no_presos||0}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Drogas</div><div class="modal-field-val">${oc.drogas_total_kg>0?fD(oc.drogas_total_kg,2)+' kg':'—'}</div></div>
+    </div></div>` : ''}
+    ${envs.length ? `<div class="modal-sec"><div class="modal-sec-ttl">👤 Envolvidos (${envs.length})</div>
+      <table class="modal-mini-tbl"><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Sexo</th><th>Status</th><th>Papel</th><th>Crime</th></tr></thead>
+      <tbody>${envs.map(e=>`<tr><td>${e.nome_completo||e.nome||'—'}</td><td>${e.cpf||'—'}</td><td>${e.rg||'—'}</td><td>${e.sexo||'—'}</td><td>${bdStatus(e.status||'')}</td><td>${e.papel||'—'}</td><td>${e.crime_natureza||e.natureza_crime||'—'}</td></tr>`).join('')}</tbody></table></div>` :
+      `<div class="modal-sec"><div class="modal-sec-ttl">👤 Envolvidos</div><p class="modal-empty">Nenhum envolvido vinculado a este BO${ENV_LOADED?'':' (dados ainda carregando)'}.</p></div>`}
+    ${veis.length ? `<div class="modal-sec"><div class="modal-sec-ttl">🚗 Veículos (${veis.length})</div>
+      <table class="modal-mini-tbl"><thead><tr><th>Placa</th><th>Chassi</th><th>Modelo</th><th>Cor</th><th>Situação</th><th>Proprietário</th></tr></thead>
+      <tbody>${veis.map(v=>`<tr><td style="font-weight:700;color:var(--yellow)">${v.placa||'—'}</td><td>${v.chassi||'—'}</td><td>${v.marca_modelo||'—'}</td><td>${v.cor||'—'}</td><td>${bdStatus(v.situacao||'')}</td><td>${v.proprietario||'—'}</td></tr>`).join('')}</tbody></table></div>` :
+      `<div class="modal-sec"><div class="modal-sec-ttl">🚗 Veículos</div><p class="modal-empty">Nenhum veículo vinculado a este BO${VEI_LOADED?'':' (dados ainda carregando)'}.</p></div>`}
+  `;
+  document.getElementById('modal-bo').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('modal-bo').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
 </script>
 </body>
 </html>
