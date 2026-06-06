@@ -80,7 +80,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .sec::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 16px 14px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;cursor:default}
 .kpi:hover{border-color:rgba(245,197,24,.28);transform:translateY(-2px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0}
@@ -155,6 +155,54 @@ tbody tr:last-child td{border-bottom:none}
 .hdr-right-inner{display:flex;align-items:center;gap:14px}
 .hdr-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 
+/* ── KPI PREJUÍZO DESTAQUE BANNER ── */
+.kpi-prej-banner{
+  background: linear-gradient(135deg, #1a0800 0%, #2d1200 40%, #3d1a00 60%, #1a0800 100%);
+  border: 1px solid rgba(234,88,12,.5);
+  border-radius: 10px;
+  padding: 20px 32px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(234,88,12,.15), inset 0 0 40px rgba(234,88,12,.05);
+  flex-wrap: wrap;
+}
+.kpi-prej-banner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#ea580c,#f97316,#fbbf24,#f97316,#ea580c);
+  border-radius:10px 10px 0 0;
+}
+.kpi-prej-banner::after{
+  content:'💰';font-size:80px;position:absolute;right:24px;top:50%;
+  transform:translateY(-50%);opacity:0.08;line-height:1;
+}
+.prej-left{ display:flex; flex-direction:column; gap:4px; }
+.prej-lbl{
+  font-size:11px;font-weight:700;color:#fb923c;
+  letter-spacing:1.5px;text-transform:uppercase;
+}
+.prej-val{
+  font-family:'Rajdhani',sans-serif;
+  font-size:42px;font-weight:700;
+  color:#fed7aa;line-height:1;letter-spacing:-1px;
+}
+.prej-sub{ font-size:11px;color:#c2410c; }
+.prej-right{
+  display:flex;gap:24px;flex-wrap:wrap;align-items:center;
+}
+.prej-cat{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:rgba(0,0,0,.3);border-radius:8px;padding:10px 16px;
+  border:1px solid rgba(234,88,12,.2);min-width:90px;
+}
+.prej-cat-ico{ font-size:18px; }
+.prej-cat-lbl{ font-size:9px;color:#fb923c;letter-spacing:.8px;text-transform:uppercase;font-weight:600; }
+.prej-cat-val{ font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fed7aa; }
+
 /* ── KPI PREJUÍZO DESTAQUE ── */
 .kpi.prejuizo-destaque{
   background: linear-gradient(135deg, #1a0a00 0%, #2d1200 50%, #1a0a00 100%);
@@ -166,6 +214,31 @@ tbody tr:last-child td{border-bottom:none}
 .kpi.prejuizo-destaque .kpi-val{color:#fed7aa;font-size:17px;letter-spacing:-.3px}
 .kpi.prejuizo-destaque .kpi-sub{color:#c2410c}
 .kpi.prejuizo-destaque:hover{border-color:rgba(234,88,12,.8);box-shadow:0 0 36px rgba(234,88,12,.35)}
+
+/* ── NAVEGAÇÃO DE PÁGINAS ── */
+.btn-page-nav {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all .2s;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+.btn-page-nav:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-page-nav.active {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
+  font-weight: 700;
+}
+.page-content { display: none; }
+.page-content.active { display: block; }
 
 /* ── MAPA ── */
 #mapa-ocorrencias {
@@ -224,7 +297,7 @@ tbody tr:last-child td{border-bottom:none}
 .btn-map.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
 
 /* Leaflet dark overrides */
-.leaflet-container { background: #0a0c10 !important; }
+.leaflet-container { background: #f2f2f0 !important; }
 .leaflet-popup-content-wrapper {
   background: #13161e !important;
   color: var(--text) !important;
@@ -242,8 +315,56 @@ tbody tr:last-child td{border-bottom:none}
 }
 .leaflet-control-zoom a:hover { background: #232830 !important; }
 .leaflet-tile {
-  filter: brightness(1.4) contrast(1.3) saturate(1.2);
+  /* sem filtro — tile claro natural */
 }
+
+/* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
+function normalizeMunicipio(raw) {
+  if (!raw) return '';
+  // Converte para Title Case e normaliza acentuação
+  return raw.trim()
+    .toLowerCase()
+    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
+    .replace(/\bDe\b/g, 'de')
+    .replace(/\bDo\b/g, 'do')
+    .replace(/\bDa\b/g, 'da')
+    .replace(/\bDos\b/g, 'dos')
+    .replace(/\bDas\b/g, 'das')
+    .replace(/\bE\b/g, 'e')
+    .replace(/\bD'oeste\b/g, "D'Oeste")
+    .replace(/\bD'Oeste\b/g, "D'Oeste");
+}
+
+/* ── BOTÕES DE PERÍODO RÁPIDO ── */
+.periodo-rapido {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.periodo-rapido span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.btn-periodo {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all .2s;
+  letter-spacing: .5px;
+}
+.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-periodo.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
 
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
@@ -282,6 +403,17 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   </div>
 
   <!-- FILTROS -->
+  <!-- BOTÕES DE PERÍODO RÁPIDO -->
+  <div class="periodo-rapido" id="periodo-rapido" style="display:none">
+    <span>Período:</span>
+    <button class="btn-periodo" onclick="setPeriodo('tudo')">Tudo</button>
+    <button class="btn-periodo" onclick="setPeriodo('2024')">2024</button>
+    <button class="btn-periodo" onclick="setPeriodo('2025')">2025</button>
+    <button class="btn-periodo" onclick="setPeriodo('2026')">2026</button>
+    <button class="btn-periodo" onclick="setPeriodo('1tri2026')">1° Tri 2026</button>
+    <button class="btn-periodo" onclick="setPeriodo('2tri2026')">2° Tri 2026</button>
+  </div>
+
   <div class="filters" id="filters" style="display:none">
     <div class="filters-ttl">🔍 Filtros Interativos</div>
     <div class="filters-grid">
@@ -300,18 +432,87 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <!-- DASHBOARD -->
   <div id="dash" style="display:none">
 
+    <!-- NAVEGAÇÃO POR PÁGINAS -->
+    <div id="page-nav" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn-page-nav active" onclick="showPage('visao-geral')" id="nav-visao-geral">🏠 Visão Geral</button>
+      <button class="btn-page-nav" onclick="showPage('mapa')" id="nav-mapa">🗺️ Mapa</button>
+      <button class="btn-page-nav" onclick="showPage('graficos')" id="nav-graficos">📊 Gráficos</button>
+      <button class="btn-page-nav" onclick="showPage('operacoes')" id="nav-operacoes">🔍 Por Operação</button>
+      <button class="btn-page-nav" onclick="showPage('comparativo')" id="nav-comparativo">📅 Comparativo Anual</button>
+      <button class="btn-page-nav" id="btn-apresentacao" onclick="toggleApresentacao()" style="margin-left:auto;background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.4);color:var(--yellow)">▶ Apresentação</button>
+    </div>
+
+    <!-- PÁGINA: VISÃO GERAL -->
+    <div id="page-visao-geral" class="page-content">
+
     <!-- KPIs -->
     <div class="sec">📊 Indicadores Operacionais</div>
-    <div class="kpi-grid">
+
+    <!-- LINHA 1: Ocorrências, Presos, Drogas, Maconha, Pasta Base -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
       <div class="kpi y"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="k-oc">—</div><div class="kpi-sub">Boletins registrados</div></div>
       <div class="kpi b"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="k-pr">—</div><div class="kpi-sub">Indivíduos detidos</div></div>
-      <div class="kpi t"><div class="kpi-ico">📦</div><div class="kpi-lbl">Apreensões s/ Prisão</div><div class="kpi-val" id="k-ap">—</div><div class="kpi-sub">Sem detenção</div></div>
       <div class="kpi g"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
-      <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
-      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
       <div class="kpi r"><div class="kpi-ico">🌿</div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p"><div class="kpi-ico">🧴</div><div class="kpi-lbl">Pasta Base</div><div class="kpi-val sm" id="k-pb">—</div><div class="kpi-sub">kg</div></div>
+    </div>
+
+    <!-- LINHA 2: Cocaína, Veículos, Madeira, Armas, Munições -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
+      <div class="kpi o"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
       <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
-      <div class="kpi prejuizo-destaque"><div class="kpi-ico">💰</div><div class="kpi-lbl">Prejuízo ao Crime</div><div class="kpi-val sm" id="k-prej">—</div><div class="kpi-sub">Valor estimado total</div></div>
+      <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi t"><div class="kpi-ico">🔴</div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="k-mun">—</div><div class="kpi-sub">Unidades</div></div>
+    </div>
+
+    <!-- LINHA 3: TCO, Gasolina, Diesel, GLP -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+      <div class="kpi b"><div class="kpi-ico">📄</div><div class="kpi-lbl">TCO</div><div class="kpi-val" id="k-tco">—</div><div class="kpi-sub">Termos Circunstanciados</div></div>
+      <div class="kpi t"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Gasolina Boliviana</div><div class="kpi-val sm" id="k-gas">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi g"><div class="kpi-ico">🛢️</div><div class="kpi-lbl">Diesel Boliviano</div><div class="kpi-val sm" id="k-die">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi y"><div class="kpi-ico">🔥</div><div class="kpi-lbl">GLP</div><div class="kpi-val" id="k-glp">—</div><div class="kpi-sub">Botijas</div></div>
+    </div>
+
+    <!-- PREJUÍZO AO CRIME — BANNER DESTAQUE -->
+    <div class="kpi-prej-banner">
+      <div class="prej-left">
+        <div class="prej-lbl">💰 Prejuízo Estimado ao Crime</div>
+        <div class="prej-val" id="k-prej">—</div>
+        <div class="prej-sub">Valor total estimado das apreensões</div>
+      </div>
+      <div class="prej-right">
+        <div class="prej-cat">
+          <span class="prej-cat-ico">💊</span>
+          <span class="prej-cat-lbl">Drogas</span>
+          <span class="prej-cat-val" id="pj-dr">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🔫</span>
+          <span class="prej-cat-lbl">Armas</span>
+          <span class="prej-cat-val" id="pj-ar">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🚗</span>
+          <span class="prej-cat-lbl">Veículos</span>
+          <span class="prej-cat-val" id="pj-ve">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">⛽</span>
+          <span class="prej-cat-lbl">Combust.</span>
+          <span class="prej-cat-val" id="pj-cb">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🚬</span>
+          <span class="prej-cat-lbl">Cigarros</span>
+          <span class="prej-cat-val" id="pj-ci">—</span>
+        </div>
+        <div class="prej-cat">
+          <span class="prej-cat-ico">🌳</span>
+          <span class="prej-cat-lbl">Madeira</span>
+          <span class="prej-cat-val" id="pj-ma">—</span>
+        </div>
+      </div>
     </div>
 
     <!-- INSIGHTS -->
@@ -330,6 +531,10 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </div>
 
     <!-- CHARTS ROW 1 -->
+    </div><!-- /page-visao-geral -->
+
+    <!-- PÁGINA: GRÁFICOS -->
+    <div id="page-graficos" class="page-content">
     <div class="sec">📈 Análise Temporal e Geográfica</div>
     <div class="charts-row r2">
       <div class="chart-card">
@@ -370,7 +575,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
     <!-- TABLE -->
     <!-- MAPA DE OCORRÊNCIAS -->
-  <div class="sec">🗺️ Mapa da Mancha Criminal</div>
+  </div><!-- /page-graficos -->
+
+    <!-- PÁGINA: MAPA -->
+    <div id="page-mapa" class="page-content">
+    <div class="sec">🗺️ Mapa da Mancha Criminal</div>
   <div class="chart-card map-card" style="margin-bottom:12px">
     <div class="map-header">
       <h3 style="margin:0"><span class="ch-dot"></span>Distribuição Geográfica das Ocorrências</h3>
@@ -390,7 +599,65 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     <div id="mapa-ocorrencias"></div>
   </div>
 
-  <div class="sec">📋 Ocorrências Registradas</div>
+  </div><!-- /page-mapa -->
+
+    <!-- PÁGINA: OPERAÇÕES -->
+    <div id="page-operacoes" class="page-content">
+    <div class="sec">🔍 Análise por Operação</div>
+    <div class="charts-row r2">
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Ocorrências por Operação</h3>
+        <div class="chart-wrap" id="w-op" style="height:320px"><canvas id="c-op"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Drogas por Operação (kg)</h3>
+        <div class="chart-wrap" style="height:320px"><canvas id="c-op-dr"></canvas></div>
+      </div>
+    </div>
+    <div class="charts-row r2">
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Presos por Operação</h3>
+        <div class="chart-wrap" style="height:280px"><canvas id="c-op-pr"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Veículos por Operação</h3>
+        <div class="chart-wrap" style="height:280px"><canvas id="c-op-ve"></canvas></div>
+      </div>
+    </div>
+    </div><!-- /page-operacoes -->
+
+    <!-- PÁGINA: COMPARATIVO ANUAL -->
+    <div id="page-comparativo" class="page-content">
+    <div class="sec">📅 Comparativo Anual</div>
+    <div class="charts-row r2">
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Ocorrências por Ano</h3>
+        <div class="chart-wrap" style="height:280px"><canvas id="c-ano-oc"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Presos por Ano</h3>
+        <div class="chart-wrap" style="height:280px"><canvas id="c-ano-pr"></canvas></div>
+      </div>
+    </div>
+    <div class="charts-row r3">
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Drogas por Ano (kg)</h3>
+        <div class="chart-wrap" style="height:240px"><canvas id="c-ano-dr"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Veículos por Ano</h3>
+        <div class="chart-wrap" style="height:240px"><canvas id="c-ano-ve"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="ch-dot"></span>Armas por Ano</h3>
+        <div class="chart-wrap" style="height:240px"><canvas id="c-ano-ar"></canvas></div>
+      </div>
+    </div>
+    </div><!-- /page-comparativo -->
+
+    <!-- TABELA (visível em todas as páginas exceto mapa/comparativo) -->
+    <div id="page-tabela" class="page-content active">
+    <div class="sec">📋 Ocorrências Registradas</div>
     <div class="tbl-wrap">
       <h3><span class="ch-dot"></span>Últimos Registros</h3>
       <table>
@@ -431,6 +698,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   </div>
 
 </main>
+
+</div><!-- /page-tabela -->
 
 <footer>BPFRON/RO &nbsp;·&nbsp; Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia &nbsp;·&nbsp; Painel Analítico v3.0 &nbsp;·&nbsp; Uso Restrito — Informação Operacional</footer>
 
@@ -489,6 +758,7 @@ const FIELD_MAP = {
   'descricao_resumida':          'descricao',
   'nacionalidade_operacao':      'nacionalidade',
   'valor_estimado_veiculos_r':   'valor_veiculos', // ← coluna nova
+  'operacao':                    'operacao',        // ← coluna AQ
   // aliases de segurança
   'no_bo':                       'no_bo',
   'no_presos':                   'no_presos',
@@ -605,6 +875,10 @@ function parseCSV(txt) {
     });
 
     row._date = parseDate(row.data);
+    // Normaliza natureza/crime para agrupar variações do mesmo crime
+    if (row.natureza_crime) row.natureza_crime = normalizeCrime(row.natureza_crime);
+    // Normaliza município para unificar maiúsculas/minúsculas
+    if (row.municipio) row.municipio = normalizeMunicipio(row.municipio);
     NUM_FIELDS.forEach(f => { row[f] = toNum(row[f]); });
 
     if (!row.no_bo) continue;
@@ -692,18 +966,11 @@ function initMap() {
     zoomControl: true,
   });
 
-  // Tile base: CartoDB Dark Matter (escuro, funciona sem auth)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO',
+  // Tile claro CartoDB Voyager — visual limpo parecido com Google Maps, sem autenticação
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
-  }).addTo(MAP);
-  // Camada de fronteiras e labels com opacidade alta para destaque
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-    attribution: '',
-    subdomains: 'abcd',
-    maxZoom: 19,
-    opacity: 1,
   }).addTo(MAP);
 }
 
@@ -783,6 +1050,238 @@ function setMapMode(mode) {
   renderMap();
 }
 
+/* ── NORMALIZAÇÃO DE NATUREZA/CRIME ── */
+function normalizeCrime(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  // Mapa de prefixos → categoria normalizada
+  const map = [
+    [/tráfico de drogas/i,               'Tráfico de drogas'],
+    [/tráfico de entorpecentes/i,         'Tráfico de drogas'],
+    [/lei.*11\.343/i,                     'Tráfico de drogas'],
+    [/^descaminho/i,                      'Descaminho'],
+    [/^recuperação de veículo/i,          'Recuperação de veículo'],
+    [/^transporte ilegal de madeira/i,    'Transporte ilegal de madeira'],
+    [/^cumprimento de mandado/i,          'Cumprimento de mandado de prisão'],
+    [/^contrabando de combustível/i,      'Contrabando de combustível'],
+    [/^apoio a órgão/i,                   'Apoio a órgão de segurança'],
+    [/^adulteração de veículo/i,          'Adulteração de veículo'],
+    [/^porte ilegal de arma/i,            'Porte ilegal de arma de fogo'],
+    [/^posse irregular de arma/i,         'Posse irregular de arma de fogo'],
+    [/^receptação/i,                      'Receptação'],
+    [/^objeto encontrado/i,               'Objeto encontrado'],
+    [/^roubo/i,                           'Roubo de veículo'],
+    [/^furto/i,                           'Furto'],
+    [/^posse de drogas/i,                 'Posse de drogas'],
+    [/^contrabando de cigarros/i,         'Contrabando de cigarros'],
+    [/^contrabando/i,                     'Contrabando (outros)'],
+    [/^homicídio/i,                       'Homicídio'],
+    [/^tráfico de pessoas/i,              'Tráfico de pessoas'],
+    [/^resistência/i,                     'Outros'],
+    [/^apropriação/i,                     'Outros'],
+  ];
+  for (const [re, label] of map) {
+    if (re.test(s)) return label;
+  }
+  return s; // mantém original se não mapeado
+}
+
+/* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
+function normalizeMunicipio(raw) {
+  if (!raw) return '';
+  // Converte para Title Case e normaliza acentuação
+  return raw.trim()
+    .toLowerCase()
+    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
+    .replace(/\bDe\b/g, 'de')
+    .replace(/\bDo\b/g, 'do')
+    .replace(/\bDa\b/g, 'da')
+    .replace(/\bDos\b/g, 'dos')
+    .replace(/\bDas\b/g, 'das')
+    .replace(/\bE\b/g, 'e')
+    .replace(/\bD'oeste\b/g, "D'Oeste")
+    .replace(/\bD'Oeste\b/g, "D'Oeste");
+}
+
+/* ── BOTÕES DE PERÍODO RÁPIDO ── */
+function setPeriodo(p) {
+  // Remove active de todos
+  document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const now = new Date();
+  let di, df;
+  if (p === 'tudo') {
+    const dates = ALL.map(r => r._date).filter(Boolean);
+    di = new Date(Math.min(...dates));
+    df = new Date(Math.max(...dates));
+  } else if (p === '2024') { di = new Date(2024,0,1); df = new Date(2024,11,31); }
+  else if (p === '2025')   { di = new Date(2025,0,1); df = new Date(2025,11,31); }
+  else if (p === '2026')   { di = new Date(2026,0,1); df = new Date(2026,11,31); }
+  else if (p === '1tri2026') { di = new Date(2026,0,1); df = new Date(2026,2,31); }
+  else if (p === '2tri2026') { di = new Date(2026,3,1); df = new Date(2026,5,30); }
+
+  document.getElementById('fdi').value = di.toISOString().slice(0,10);
+  document.getElementById('fdf').value = df.toISOString().slice(0,10);
+  applyFilters();
+}
+
+/* ── SISTEMA DE PÁGINAS ── */
+const PAGES = ['visao-geral','graficos','mapa','operacoes','comparativo'];
+let currentPage = 'visao-geral';
+let apresentacaoTimer = null;
+let apresentacaoIdx = 0;
+
+function showPage(pageId) {
+  // Hide all pages
+  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.btn-page-nav').forEach(b => b.classList.remove('active'));
+
+  // Show selected
+  const pg = document.getElementById('page-' + pageId);
+  if (pg) pg.classList.add('active');
+  const btn = document.getElementById('nav-' + pageId);
+  if (btn) btn.classList.add('active');
+
+  // Tabela aparece em todas exceto comparativo
+  const tbl = document.getElementById('page-tabela');
+  if (tbl) tbl.classList.toggle('active', pageId !== 'comparativo');
+
+  currentPage = pageId;
+
+  // Render specific page charts
+  if (pageId === 'operacoes') renderOperacoes();
+  if (pageId === 'comparativo') renderComparativo();
+  if (pageId === 'mapa') { setTimeout(() => { if(MAP) MAP.invalidateSize(); }, 100); }
+}
+
+// Init: show first page
+function initPages() {
+  document.getElementById('page-visao-geral').classList.add('active');
+  document.getElementById('page-tabela').classList.add('active');
+}
+
+/* ── MODO APRESENTAÇÃO ── */
+function toggleApresentacao() {
+  const btn = document.getElementById('btn-apresentacao');
+  if (apresentacaoTimer) {
+    clearInterval(apresentacaoTimer);
+    apresentacaoTimer = null;
+    btn.textContent = '▶ Apresentação';
+    btn.style.background = 'rgba(245,197,24,.15)';
+  } else {
+    btn.textContent = '⏹ Parar';
+    btn.style.background = 'rgba(245,197,24,.4)';
+    apresentacaoIdx = PAGES.indexOf(currentPage);
+    apresentacaoTimer = setInterval(() => {
+      apresentacaoIdx = (apresentacaoIdx + 1) % PAGES.length;
+      showPage(PAGES[apresentacaoIdx]);
+    }, 6000);
+  }
+}
+
+/* ── GRÁFICOS DE OPERAÇÕES ── */
+function renderOperacoes() {
+  // Parse operations - split by '/' and trim
+  const opMap = {};
+  FIL.forEach(r => {
+    const ops = (r.operacao || '').split('/').map(o => o.trim()).filter(Boolean);
+    if (!ops.length) ops.push('Sem Operação');
+    ops.forEach(op => {
+      if (!opMap[op]) opMap[op] = { oc:0, dr:0, pr:0, ve:0 };
+      opMap[op].oc++;
+      opMap[op].dr += r.drogas_total_kg || 0;
+      opMap[op].pr += r.no_presos || 0;
+      opMap[op].ve += r.veiculos || 0;
+    });
+  });
+
+  const sorted = Object.entries(opMap).sort((a,b) => b[1].oc - a[1].oc);
+  const labels = sorted.map(e => e[0]);
+  const oc  = sorted.map(e => e[1].oc);
+  const dr  = sorted.map(e => parseFloat(e[1].dr.toFixed(2)));
+  const pr  = sorted.map(e => e[1].pr);
+  const ve  = sorted.map(e => e[1].ve);
+
+  // Dynamic height
+  const h = Math.max(280, labels.length * 36 + 60);
+  document.getElementById('w-op').style.height = h + 'px';
+
+  // Chart: ocorrências por operação
+  destroyC('op');
+  CHARTS['op'] = new Chart(document.getElementById('c-op'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Ocorrências', data:oc, backgroundColor:'#F5C518', borderRadius:4 }] },
+    options: { ...cOpts(), indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+
+  // Chart: drogas por operação
+  destroyC('op-dr');
+  CHARTS['op-dr'] = new Chart(document.getElementById('c-op-dr'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Drogas (kg)', data:dr, backgroundColor:'#22c55e', borderRadius:4 }] },
+    options: { ...cOpts('kg'), indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+
+  // Chart: presos por operação
+  destroyC('op-pr');
+  CHARTS['op-pr'] = new Chart(document.getElementById('c-op-pr'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Presos', data:pr, backgroundColor:'#3b82f6', borderRadius:4 }] },
+    options: { ...cOpts(), indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+
+  // Chart: veículos por operação
+  destroyC('op-ve');
+  CHARTS['op-ve'] = new Chart(document.getElementById('c-op-ve'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Veículos', data:ve, backgroundColor:'#ea580c', borderRadius:4 }] },
+    options: { ...cOpts(), indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+}
+
+/* ── GRÁFICOS COMPARATIVO ANUAL ── */
+function renderComparativo() {
+  // Group by year
+  const anos = {};
+  ALL.forEach(r => { // Uses ALL not FIL for full history
+    if (!r._date) return;
+    const y = r._date.getFullYear();
+    if (!anos[y]) anos[y] = { oc:0, pr:0, dr:0, ve:0, ar:0 };
+    anos[y].oc++;
+    anos[y].pr += r.no_presos || 0;
+    anos[y].dr += r.drogas_total_kg || 0;
+    anos[y].ve += r.veiculos || 0;
+    anos[y].ar += r.armas || 0;
+  });
+
+  const labels = Object.keys(anos).sort();
+  const oc = labels.map(y => anos[y].oc);
+  const pr = labels.map(y => anos[y].pr);
+  const dr = labels.map(y => parseFloat(anos[y].dr.toFixed(2)));
+  const ve = labels.map(y => anos[y].ve);
+  const ar = labels.map(y => anos[y].ar);
+
+  const mkChart = (id, data, color, label, yLbl='') => {
+    destroyC(id);
+    CHARTS[id] = new Chart(document.getElementById('c-'+id), {
+      type: 'bar',
+      data: { labels, datasets: [{ label, data, backgroundColor: color, borderRadius:6, borderWidth:0 }] },
+      options: { ...cOpts(yLbl), plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.parsed.y.toLocaleString('pt-BR')}`}} } }
+    });
+  };
+
+  mkChart('ano-oc', oc, '#F5C518', 'Ocorrências');
+  mkChart('ano-pr', pr, '#3b82f6', 'Presos');
+  mkChart('ano-dr', dr, '#22c55e', 'Drogas (kg)', 'kg');
+  mkChart('ano-ve', ve, '#ea580c', 'Veículos');
+  mkChart('ano-ar', ar, '#dc2626', 'Armas');
+}
+
+/* ── Busca Prejuízo Total do PAINEL ── */
+/* ── Busca Prejuízo Total do PAINEL ── */
+
 /* ── Busca Prejuízo Total do PAINEL ── */
 /* ── Busca Prejuízo Total do PAINEL ── */
 async function fetchPrejuizoTotal() {
@@ -830,20 +1329,33 @@ async function loadData() {
   // Busca o Prejuízo Total do PAINEL em paralelo
   fetchPrejuizoTotal();
 
-  // Tenta buscar dados atualizados do Google Sheets
-  try {
-    const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
-    const res = await fetch(url, {mode:'cors'});
-    if (res.ok) {
-      const fetched = await res.text();
-      if (fetched && fetched.trim().length > 100) {
-        txt = fetched;
-        fonte = 'online';
-        console.log('[BPFRON] Dados carregados do Google Sheets');
+  // Busca dados online — tenta múltiplos proxies
+  const isLocal = window.location.protocol === 'file:';
+  if (!isLocal) {
+    const csvUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_nc=' + Date.now();
+    const proxies = [
+      'https://corsproxy.io/?' + encodeURIComponent(csvUrl),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl),
+      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(csvUrl),
+    ];
+    for (const proxyUrl of proxies) {
+      try {
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const fetched = await res.text();
+          if (fetched && fetched.trim().length > 100 && !fetched.includes('<html') && !fetched.includes('error')) {
+            txt = fetched;
+            fonte = 'online';
+            console.log('[BPFRON] Dados carregados via proxy:', proxyUrl.split('/')[2]);
+            break;
+          }
+        }
+      } catch(e) {
+        console.warn('[BPFRON] Proxy falhou:', proxyUrl.split('/')[2], e.message);
       }
     }
-  } catch(e) {
-    console.warn('[BPFRON] Fetch bloqueado (CORS/local), usando dados embutidos:', e.message);
+  } else {
+    console.log('[BPFRON] Arquivo local — usando dados embutidos');
   }
 
   // Fallback: usa dados embutidos no HTML
@@ -871,6 +1383,7 @@ async function loadData() {
     applyFilters();
 
     document.getElementById('filters').style.display = '';
+    document.getElementById('periodo-rapido').style.display = '';
     document.getElementById('dash').style.display = '';
     document.getElementById('erro').style.display = 'none';
 
@@ -959,7 +1472,7 @@ function applyFilters() {
     return true;
   });
 
-  renderKPIs(); renderInsights(); renderCharts(); renderMap(); renderTable();
+  renderKPIs(); renderInsights(); renderCharts(); renderMap(); renderTable(); initPages();
 }
 
 /* ── KPIs ── */
@@ -969,22 +1482,31 @@ function renderKPIs() {
   $('k-pr', fN(s('no_presos')));
   $('k-ap', fN(s('no_apreensoes')));
   $('k-dr', fD(s('drogas_total_kg'),2)+' kg');
-  $('k-ar', fN(s('armas')));
-  $('k-ve', fN(s('veiculos')));
   $('k-ma', fD(s('maconha_kg'),2)+' kg');
+  $('k-pb', fD(s('pasta_base_kg'),2)+' kg');
+  $('k-co', fD(s('cocaina_kg'),2)+' kg');
+  $('k-ve', fN(s('veiculos')));
   $('k-mad', fD(s('madeira_m3'),3)+' m³');
-  // Prejuízo ao crime: usa valor do PAINEL se já carregado, senão calcula da BASE
+  $('k-ar', fN(s('armas')));
+  $('k-mun', fN(s('municoes')));
+  $('k-tco', fN(FIL.filter(r=>r.tipo_de_bo==='Termo Circunstanciado').length));
+  $('k-gas', fD(s('gasolina_l'),0)+' L');
+  $('k-die', fD(s('diesel_l'),0)+' L');
+  $('k-glp', fN(s('glp'))+' un.');
+  // Subcategorias do prejuízo (cálculo local)
+  const pj_dr = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
+  const pj_ar = s('armas') * 19333;
+  const pj_ve = s('valor_veiculos');
+  const pj_cb = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
+  const pj_ci = s('cigarros') * 9.799;
+  const pj_ma = s('madeira_m3') * 1500;
+  $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
+  $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
+  // Total: usa valor do PAINEL se carregado, senão soma as categorias
   if (window._prejuizoTotal) {
     $('k-prej', fR(window._prejuizoTotal));
   } else {
-    // Cálculo local usando tabela de preços enquanto PAINEL carrega
-    const prej_drogas   = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
-    const prej_cigarros = s('cigarros') * 9.799;
-    const prej_combust  = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
-    const prej_madeira  = s('madeira_m3') * 1500;
-    const prej_veiculos = s('valor_veiculos');
-    const prej_armas    = s('armas') * 19333;
-    const calc = prej_drogas + prej_cigarros + prej_combust + prej_madeira + prej_veiculos + prej_armas;
+    const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma;
     $('k-prej', calc > 0 ? fR(calc) : '—');
   }
 }
