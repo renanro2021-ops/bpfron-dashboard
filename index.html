@@ -906,8 +906,26 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 <!-- CONSULTAS: Envolvidos e Veículos -->
 <div id="page-consultas" class="page-content">
 
+  <!-- ── TELA DE LOGIN (dados de PII exigem autenticação) ── -->
+  <div id="cons-login" style="display:none;max-width:420px;margin:60px auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:32px;box-shadow:0 10px 40px rgba(0,0,0,.45)">
+    <div style="text-align:center;font-size:42px;line-height:1">🔐</div>
+    <div style="text-align:center;font-size:20px;font-weight:700;color:#e2e8f0;margin-top:6px">Acesso Restrito</div>
+    <div style="text-align:center;font-size:13px;color:#94a3b8;margin:6px 0 22px">Os dados pessoais (Envolvidos e Veículos) exigem login.</div>
+    <form id="cons-login-form" onsubmit="return doLogin(event)">
+      <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px">Usuário</label>
+      <input id="login-user" type="text" autocomplete="username" required
+             style="width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:14px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px">
+      <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px">Senha</label>
+      <input id="login-pass" type="password" autocomplete="current-password" required
+             style="width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:8px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px">
+      <div id="login-erro" style="color:#f87171;font-size:13px;min-height:18px;margin-bottom:8px"></div>
+      <button id="login-btn" type="submit"
+              style="width:100%;padding:11px;background:#2563eb;border:none;border-radius:8px;color:#fff;font-weight:600;font-size:15px;cursor:pointer">Entrar</button>
+    </form>
+  </div>
+
   <!-- Barra superior: marca + pill-tabs de módulo -->
-  <div class="cp-topbar">
+  <div class="cp-topbar" id="cons-topbar" style="display:none">
     <div class="cp-brand">
       <div class="cp-brand-icon">🔎</div>
       <div>
@@ -922,6 +940,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <button class="cp-tab" id="cons-tab-veiculos" onclick="setConsulta('veiculos')">
         🚗 Veículos <span class="cp-tab-count" id="ch-total-vei">—</span>
       </button>
+    </div>
+    <div id="cons-userbar" style="display:none;margin-left:auto;font-size:13px;color:#94a3b8;white-space:nowrap">
+      <span id="cons-user" style="color:#e2e8f0;font-weight:600"></span>
+      <button onclick="apiLogout()" title="Encerrar sessão"
+              style="margin-left:10px;padding:5px 12px;background:#334155;border:none;border-radius:6px;color:#e2e8f0;cursor:pointer;font-size:12px">Sair</button>
     </div>
   </div>
 
@@ -1491,11 +1514,8 @@ function showPage(pageId) {
   if (pageId === 'comparativo') renderComparativo();
   if (pageId === 'mapa')       { setTimeout(() => { if(MAP) MAP.invalidateSize(); }, 100); }
   if (pageId === 'consultas')  {
-    // Lazy-load a sub-aba ativa
-    const consEnv = document.getElementById('cons-envolvidos');
-    const consVei = document.getElementById('cons-veiculos');
-    if (consEnv && consEnv.style.display !== 'none' && !ENV_LOADED) loadEnvolvidos();
-    if (consVei && consVei.style.display !== 'none' && !VEI_LOADED) loadVeiculos();
+    // Exige login: o gate decide se mostra a tela de login ou os dados.
+    gateConsultas();
   }
 }
 
@@ -1755,9 +1775,11 @@ async function loadData() {
       'Atualizado às ' + now.toLocaleTimeString('pt-BR') + ' — ' + fonteLabel;
     setSt('ok', ALL.length + ' registros carregados (' + fonteLabel + ')');
 
-    // Pré-carrega envolvidos e veículos em background
-    setTimeout(() => { if (!ENV_LOADED) loadEnvolvidos(); }, 1200);
-    setTimeout(() => { if (!VEI_LOADED) loadVeiculos(); }, 3500);
+    // Pré-carrega envolvidos e veículos em background (só se já estiver logado)
+    if (typeof AUTH !== 'undefined' && AUTH.logged) {
+      setTimeout(() => { if (!ENV_LOADED) loadEnvolvidos(); }, 1200);
+      setTimeout(() => { if (!VEI_LOADED) loadVeiculos(); }, 3500);
+    }
 
   } catch(e) {
     console.error('[BPFRON]', e);
@@ -2063,6 +2085,8 @@ const PG_B = 25;
 
 /* ── Sub-abas dentro de Consultas ── */
 function setConsulta(tab) {
+  CONS_TAB = tab;
+  if (!AUTH.logged) { gateConsultas(); return; }
   ['envolvidos','veiculos'].forEach(id => {
     const el  = document.getElementById('cons-' + id);
     const btn = document.getElementById('cons-tab-' + id);
@@ -2127,50 +2151,101 @@ function renderPag(total, page, pgSize, infoId, btnsId, cb) {
 /* ══════════════════════════════
    ENVOLVIDOS
 ══════════════════════════════ */
+/* ════════════════════════════════════════════
+   AUTENTICAÇÃO — Backend Cloudflare Worker
+   Lê a planilha PRIVADA via conta de serviço.
+   Dados de PII (envolvidos/veículos/BO) exigem login.
+   Sessão por token JWT no header Authorization
+   (evita cookie de terceiros, bloqueado por navegadores).
+═══════════════════════════════════════════════ */
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+let CONS_TAB = 'envolvidos';
+
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+
+async function doLogin(ev){
+  ev.preventDefault();
+  const btn  = document.getElementById('login-btn');
+  const erro = document.getElementById('login-erro');
+  const user = (document.getElementById('login-user').value || '').trim();
+  const pass = document.getElementById('login-pass').value || '';
+  erro.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token = d.token; AUTH.user = d.user;
+    document.getElementById('login-pass').value = '';
+    gateConsultas();
+  } catch(e){
+    erro.textContent = (e && e.message) ? e.message : 'Não foi possível conectar ao servidor.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+  return false;
+}
+
+function apiLogout(){
+  AUTH.token = ''; AUTH.user = '';
+  ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
+  const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
+  const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
+  gateConsultas();
+}
+
+async function apiFetchCSV(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
+  return await r.text();
+}
+
+// Decide entre mostrar a tela de login ou os dados restritos
+function gateConsultas(){
+  const gate    = document.getElementById('cons-login');
+  const topbar  = document.getElementById('cons-topbar');
+  const userbar = document.getElementById('cons-userbar');
+  const env     = document.getElementById('cons-envolvidos');
+  const vei     = document.getElementById('cons-veiculos');
+  if (AUTH.logged){
+    if (gate)    gate.style.display = 'none';
+    if (topbar)  topbar.style.display = '';
+    if (userbar) userbar.style.display = '';
+    const who = document.getElementById('cons-user'); if (who) who.textContent = '👤 ' + AUTH.user;
+    setConsulta(CONS_TAB || 'envolvidos');
+  } else {
+    if (gate)    gate.style.display = '';
+    if (topbar)  topbar.style.display = 'none';
+    if (userbar) userbar.style.display = 'none';
+    if (env)     env.style.display = 'none';
+    if (vei)     vei.style.display = 'none';
+  }
+}
+
 const ENV_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=1074903546&single=true&output=csv";
 
 async function loadEnvolvidos() {
+  if (!AUTH.logged) { gateConsultas(); return; }
   const countEl = document.getElementById('env-count');
   const tbodyEl = document.getElementById('tbody-env');
   if (countEl) countEl.textContent = 'Carregando...';
 
   let txt = '';
-
-  // 1. Tenta arquivo local do GitHub Pages
-  if (window.location.protocol !== 'file:') {
-    try {
-      const r = await fetch('data_envolvidos.csv?_nc=' + Date.now());
-      if (r.ok) {
-        const t = await r.text();
-        if (t && t.trim().length > 100 && !t.trim().startsWith('<')) { txt = t; console.log('[ENV] data_envolvidos.csv OK'); }
-      }
-    } catch(e) { console.warn('[ENV] data_envolvidos.csv falhou:', e.message); }
-  }
-
-  // 2. Fallback: URL publicada via proxy CORS
-  if (!txt) {
-    const url = ENV_CSV_URL + '&_nc=' + Date.now();
-    const proxies = [
-      'https://corsproxy.io/?' + encodeURIComponent(url),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
-    ];
-    for (const p of proxies) {
-      try {
-        const r = await fetch(p);
-        if (r.ok) {
-          const t = await r.text();
-          if (t && t.trim().length > 100 && !t.includes('<html') && !t.includes('error')) {
-            txt = t; console.log('[ENV] proxy OK:', p.split('/')[2]); break;
-          }
-        }
-      } catch(e) { console.warn('[ENV] proxy falhou:', p.split('/')[2]); }
-    }
-  }
-
-  if (!txt) {
-    if (countEl) countEl.textContent = 'Sem dados';
-    if (tbodyEl) tbodyEl.innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ Dados de envolvidos não disponíveis.</td></tr>`;
+  try {
+    txt = await apiFetchCSV('/api/envolvidos');   // Worker lê a planilha privada
+    console.log('[ENV] API Worker OK');
+  } catch(e) {
+    if (countEl) countEl.textContent = 'Erro';
+    if (tbodyEl) tbodyEl.innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ ${e.message || 'Não foi possível carregar os envolvidos.'}</td></tr>`;
     return;
   }
 
@@ -2295,47 +2370,18 @@ function renderTblEnv() {
 const VEI_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=1525039898&single=true&output=csv";
 
 async function loadVeiculos() {
+  if (!AUTH.logged) { gateConsultas(); return; }
   const countEl = document.getElementById('vei-count');
   const tbodyEl = document.getElementById('tbody-vei');
   if (countEl) countEl.textContent = 'Carregando...';
 
   let txt = '';
-
-  // 1. Tenta arquivo local do GitHub Pages
-  if (window.location.protocol !== 'file:') {
-    try {
-      const r = await fetch('data_veiculos.csv?_nc=' + Date.now());
-      if (r.ok) {
-        const t = await r.text();
-        if (t && t.trim().length > 100 && !t.trim().startsWith('<')) { txt = t; console.log('[VEI] data_veiculos.csv OK'); }
-      }
-    } catch(e) { console.warn('[VEI] data_veiculos.csv falhou:', e.message); }
-  }
-
-  // 2. Fallback: URL publicada via proxy CORS
-  if (!txt) {
-    const url = VEI_CSV_URL + '&_nc=' + Date.now();
-    const proxies = [
-      'https://corsproxy.io/?' + encodeURIComponent(url),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
-    ];
-    for (const p of proxies) {
-      try {
-        const r = await fetch(p);
-        if (r.ok) {
-          const t = await r.text();
-          if (t && t.trim().length > 100 && !t.includes('<html') && !t.includes('error')) {
-            txt = t; console.log('[VEI] proxy OK:', p.split('/')[2]); break;
-          }
-        }
-      } catch(e) { console.warn('[VEI] proxy falhou:', p.split('/')[2]); }
-    }
-  }
-
-  if (!txt) {
-    if (countEl) countEl.textContent = 'Sem dados';
-    if (tbodyEl) tbodyEl.innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ Dados de veículos não disponíveis.</td></tr>`;
+  try {
+    txt = await apiFetchCSV('/api/veiculos');   // Worker lê a planilha privada
+    console.log('[VEI] API Worker OK');
+  } catch(e) {
+    if (countEl) countEl.textContent = 'Erro';
+    if (tbodyEl) tbodyEl.innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ ${e.message || 'Não foi possível carregar os veículos.'}</td></tr>`;
     return;
   }
 
