@@ -401,23 +401,6 @@ tbody tr:last-child td{border-bottom:none}
   /* sem filtro — tile claro natural */
 }
 
-/* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
-function normalizeMunicipio(raw) {
-  if (!raw) return '';
-  // Converte para Title Case e normaliza acentuação
-  return raw.trim()
-    .toLowerCase()
-    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
-    .replace(/\bDe\b/g, 'de')
-    .replace(/\bDo\b/g, 'do')
-    .replace(/\bDa\b/g, 'da')
-    .replace(/\bDos\b/g, 'dos')
-    .replace(/\bDas\b/g, 'das')
-    .replace(/\bE\b/g, 'e')
-    .replace(/\bD'oeste\b/g, "D'Oeste")
-    .replace(/\bD'Oeste\b/g, "D'Oeste");
-}
-
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
 .periodo-rapido {
   display: inline-flex;
