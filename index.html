@@ -420,40 +420,54 @@ function normalizeMunicipio(raw) {
 
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
 .periodo-rapido {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  gap: 7px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  background: rgba(6,9,18,.55);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 7px 9px;
 }
 .periodo-rapido span {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
+  padding: 0 8px 0 4px;
 }
 .btn-periodo {
   background: var(--card);
   border: 1px solid var(--border);
-  color: var(--muted);
-  border-radius: 6px;
-  padding: 5px 14px;
-  font-size: 11px;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  transition: all .2s;
-  letter-spacing: .5px;
+  transition: all .18s;
+  letter-spacing: .3px;
+  white-space: nowrap;
 }
-.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); }
-.btn-periodo.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(245,197,24,.08); }
+.btn-periodo.active {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
+  box-shadow: 0 2px 12px rgba(245,197,24,.28);
+}
 
 /* ── FOOTER ── */
 footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);max-width:1600px;margin:0 auto;letter-spacing:.3px}
 
 /* ── CONSULTAS FULL-PAGE ── */
-#page-consultas{max-width:1600px;margin:0 auto;padding:0 20px 32px;display:flex;flex-direction:column;gap:14px}
+/* Sem 'display' aqui: deixa .page-content{display:none} esconder quando inativa.
+   Só vira flex quando a página está ativa (senão vaza no rodapé). */
+#page-consultas{max-width:1600px;margin:0 auto;padding:0 20px 32px;flex-direction:column;gap:14px}
+#page-consultas.active{display:flex}
 
 /* top bar */
 .cp-topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 0 4px;flex-wrap:wrap;gap:12px}
@@ -941,10 +955,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         🚗 Veículos <span class="cp-tab-count" id="ch-total-vei">—</span>
       </button>
     </div>
-    <div id="cons-userbar" style="display:none;margin-left:auto;font-size:13px;color:#94a3b8;white-space:nowrap">
-      <span id="cons-user" style="color:#e2e8f0;font-weight:600"></span>
+    <div id="cons-userbar" style="display:none;margin-left:auto;align-items:center;gap:10px;white-space:nowrap">
+      <span id="cons-user" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(6,9,18,.6);border:1px solid var(--border);border-radius:999px;color:#e2e8f0;font-weight:600;font-size:13px"></span>
       <button onclick="apiLogout()" title="Encerrar sessão"
-              style="margin-left:10px;padding:5px 12px;background:#334155;border:none;border-radius:6px;color:#e2e8f0;cursor:pointer;font-size:12px">Sair</button>
+              style="padding:8px 16px;background:#334155;border:1px solid #475569;border-radius:8px;color:#e2e8f0;cursor:pointer;font-size:12px;font-weight:600;transition:all .18s"
+              onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">⎋ Sair</button>
     </div>
   </div>
 
@@ -2219,7 +2234,7 @@ function gateConsultas(){
   if (AUTH.logged){
     if (gate)    gate.style.display = 'none';
     if (topbar)  topbar.style.display = '';
-    if (userbar) userbar.style.display = '';
+    if (userbar) userbar.style.display = 'flex';
     const who = document.getElementById('cons-user'); if (who) who.textContent = '👤 ' + AUTH.user;
     setConsulta(CONS_TAB || 'envolvidos');
   } else {
