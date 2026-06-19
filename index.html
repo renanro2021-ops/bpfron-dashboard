@@ -421,43 +421,45 @@ function normalizeMunicipio(raw) {
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
 .periodo-rapido {
   display: inline-flex;
-  gap: 7px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 14px;
-  background: rgba(6,9,18,.55);
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, rgba(20,26,40,.9), rgba(10,14,24,.9));
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 7px 9px;
+  border-left: 4px solid var(--yellow);
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.35);
 }
 .periodo-rapido span {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 1.2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--yellow);
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 0 8px 0 4px;
+  padding: 0 10px 0 4px;
 }
 .btn-periodo {
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   transition: all .18s;
   letter-spacing: .3px;
   white-space: nowrap;
 }
-.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(245,197,24,.08); }
+.btn-periodo:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(245,197,24,.12); transform: translateY(-1px); }
 .btn-periodo.active {
   background: var(--yellow);
   color: #000;
   border-color: var(--yellow);
-  box-shadow: 0 2px 12px rgba(245,197,24,.28);
+  box-shadow: 0 3px 14px rgba(245,197,24,.4);
 }
 
 /* ── FOOTER ── */
@@ -476,13 +478,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 .cp-brand-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--yellow);letter-spacing:.5px;line-height:1.1}
 .cp-brand-sub{font-size:10.5px;color:var(--muted);margin-top:2px;letter-spacing:.2px}
 
-/* pill-style module tabs */
-.cp-tabs{display:flex;gap:5px;background:rgba(6,9,18,.8);padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.cp-tab{padding:8px 22px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-radius:7px;border:none;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:8px;background:transparent;letter-spacing:.3px;white-space:nowrap}
-.cp-tab:hover{color:var(--text);background:rgba(255,255,255,.06)}
-.cp-tab.active{background:var(--yellow);color:#000;font-weight:800}
-.cp-tab-count{background:rgba(0,0,0,.2);border-radius:4px;padding:1px 8px;font-size:10px;font-weight:700;line-height:1.6}
-.cp-tab.active .cp-tab-count{background:rgba(0,0,0,.25)}
+/* tabs no MESMO estilo dos botões de navegação (btn-page-nav) */
+.cp-tabs{display:flex;gap:10px;align-items:center}
+.cp-tab{padding:9px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:8px;border:1px solid var(--border);font-family:'Inter',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:9px;background:var(--card);letter-spacing:.3px;white-space:nowrap}
+.cp-tab:hover{color:var(--yellow);border-color:var(--yellow);background:rgba(245,197,24,.08)}
+.cp-tab.active{background:var(--yellow);color:#000;border-color:var(--yellow);font-weight:700}
+.cp-tab-count{background:rgba(0,0,0,.18);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;line-height:1.5}
+.cp-tab.active .cp-tab-count{background:rgba(0,0,0,.22)}
 
 /* floating search panel */
 .cp-search-panel{background:rgba(10,15,28,.93);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 20px 15px;box-shadow:0 20px 60px rgba(0,0,0,.75),0 4px 16px rgba(0,0,0,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
@@ -592,7 +594,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="hdr-title">
         <h1>BPFRON/RO &nbsp;·&nbsp; PAINEL ANALÍTICO DE OPERAÇÕES POLICIAIS</h1>
         <p>Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia</p>
-        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; v3.0</p>
+        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; <span style="color:#F5C518;font-weight:700">v3.2</span></p>
       </div>
     </div>
     <div class="hdr-right">
@@ -955,11 +957,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         🚗 Veículos <span class="cp-tab-count" id="ch-total-vei">—</span>
       </button>
     </div>
-    <div id="cons-userbar" style="display:none;margin-left:auto;align-items:center;gap:10px;white-space:nowrap">
-      <span id="cons-user" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(6,9,18,.6);border:1px solid var(--border);border-radius:999px;color:#e2e8f0;font-weight:600;font-size:13px"></span>
+    <div id="cons-userbar" style="display:none;margin-left:auto;align-items:center;gap:12px;white-space:nowrap">
+      <span id="cons-user" style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:var(--card);border:1px solid var(--border);border-radius:999px;color:var(--text);font-weight:600;font-size:13px"></span>
       <button onclick="apiLogout()" title="Encerrar sessão"
-              style="padding:8px 16px;background:#334155;border:1px solid #475569;border-radius:8px;color:#e2e8f0;cursor:pointer;font-size:12px;font-weight:600;transition:all .18s"
-              onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">⎋ Sair</button>
+              style="padding:9px 18px;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.4);border-radius:8px;color:#f87171;cursor:pointer;font-size:13px;font-weight:600;transition:all .18s;display:inline-flex;align-items:center;gap:7px"
+              onmouseover="this.style.background='rgba(220,38,38,.26)'" onmouseout="this.style.background='rgba(220,38,38,.14)'">⎋ Sair</button>
     </div>
   </div>
 
