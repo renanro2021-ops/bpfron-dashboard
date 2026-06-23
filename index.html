@@ -343,6 +343,49 @@ tbody tr:last-child td{border-bottom:none}
   border-color: var(--yellow);
   font-weight: 700;
 }
+/* ── Painel de filtro de Operações ── */
+.op-filter-panel{
+  background:rgba(245,197,24,.04);
+  border:1px solid rgba(245,197,24,.25);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:16px;
+}
+.op-btns{ display:flex; flex-wrap:wrap; gap:8px; }
+.op-pill{
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--muted);
+  border-radius:999px;
+  padding:8px 15px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:all .18s;
+  white-space:nowrap;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+.op-pill:hover{ border-color:var(--yellow); color:var(--yellow); }
+.op-pill.active{ background:var(--yellow); color:#000; border-color:var(--yellow); font-weight:700; }
+.op-pill .op-badge{
+  background:rgba(148,163,184,.18);
+  color:inherit;
+  border-radius:999px;
+  padding:1px 8px;
+  font-size:11px;
+  font-weight:700;
+}
+.op-pill.active .op-badge{ background:rgba(0,0,0,.18); }
+.op-kpi-head{
+  display:flex; align-items:baseline; gap:12px;
+  margin:4px 2px 12px; flex-wrap:wrap;
+}
+.op-kpi-head #op-sel-name{ font-size:18px; font-weight:800; color:var(--yellow); letter-spacing:.2px; }
+.op-kpi-head .op-sel-count{ font-size:13px; color:var(--muted); font-weight:600; }
+.op-kpi-grid{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
 .page-content { display: none; }
 .page-content.active { display: block; }
 
@@ -863,7 +906,32 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
     <!-- PÁGINA: OPERAÇÕES -->
     <div id="page-operacoes" class="page-content">
-    <div class="sec">🔍 Análise por Operação</div>
+    <div class="sec">🎯 Selecione a Operação</div>
+    <div class="op-filter-panel">
+      <div id="op-btns" class="op-btns"></div>
+    </div>
+
+    <!-- KPIs da operação selecionada -->
+    <div class="op-kpi-head">
+      <span id="op-sel-name">Todas as Operações</span>
+      <span id="op-sel-count" class="op-sel-count">—</span>
+    </div>
+    <div class="kpi-grid op-kpi-grid" style="margin-bottom:12px">
+      <div class="kpi y"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="op-k-oc">—</div><div class="kpi-sub">Boletins</div></div>
+      <div class="kpi b"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="op-k-pr">—</div><div class="kpi-sub">Detidos</div></div>
+      <div class="kpi g"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas</div><div class="kpi-val sm" id="op-k-dr">—</div><div class="kpi-sub">kg total</div></div>
+      <div class="kpi o"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="op-k-co">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi r"><div class="kpi-ico">🌿</div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="op-k-ma">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p"><div class="kpi-ico">🧴</div><div class="kpi-lbl">Pasta Base</div><div class="kpi-val sm" id="op-k-pb">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi o"><div class="kpi-ico">🔫</div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="op-k-ar">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi t"><div class="kpi-ico">🔴</div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="op-k-mun">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val" id="op-k-ve">—</div><div class="kpi-sub">Apreendidos</div></div>
+      <div class="kpi t"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Combustível</div><div class="kpi-val sm" id="op-k-cb">—</div><div class="kpi-sub">L (gas+diesel)</div></div>
+      <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="op-k-mad">—</div><div class="kpi-sub">m³</div></div>
+      <div class="kpi prejuizo-destaque"><div class="kpi-ico">💰</div><div class="kpi-lbl">Prejuízo ao Crime</div><div class="kpi-val sm" id="op-k-prej">—</div><div class="kpi-sub">Estimado (R$)</div></div>
+    </div>
+
+    <div class="sec">🔍 Comparativo entre Operações</div>
     <div class="charts-row r2">
       <div class="chart-card">
         <h3><span class="ch-dot"></span>Ocorrências por Operação</h3>
@@ -1130,9 +1198,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
    ★ EDITE AQUI O LINK DO CSV ★
    Arquivo → Publicar na web → aba "BASE DE DADOS" → CSV → copiar link
 ============================================================ */
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHQyUh2U2G2kS26MYJeT5GNivr8EY9bSLVh7zM7ltUBSuVkgdznxGsSdX8aoJziPpkLqbwNi7NmC24/pub?gid=728389433&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=992567398&single=true&output=csv";
 // URL da aba PAINEL — usada apenas para buscar o Prejuízo Total Estimado
-const PAINEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHQyUh2U2G2kS26MYJeT5GNivr8EY9bSLVh7zM7ltUBSuVkgdznxGsSdX8aoJziPpkLqbwNi7NmC24/pub?gid=951510036&single=true&output=csv";
+const PAINEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=1543001629&single=true&output=csv";
 /* ============================================================ */
 
 /* ── Estado global ── */
@@ -1616,13 +1684,48 @@ function toggleApresentacao() {
 }
 
 /* ── GRÁFICOS DE OPERAÇÕES ── */
+// Operações de um registro (podem vir combinadas por '/')
+function opsDe(r){
+  const ops = String(r.operacao||'').split('/').map(o=>o.trim()).filter(Boolean);
+  return ops.length ? ops : ['Sem Operação'];
+}
+
+// Clique no botão de operação (null/'' = todas; clicar de novo limpa)
+function selectOperacao(op){
+  op = op || null;
+  window._opSel = (window._opSel === op) ? null : op;
+  renderOperacoes();
+}
+
+// Preenche as KPIs da operação selecionada (ou todas)
+function renderOpKPIs(){
+  const sel = window._opSel || null;
+  const subset = sel ? FIL.filter(r => opsDe(r).includes(sel)) : FIL;
+  const s = f => subset.reduce((a,r)=>a+(r[f]||0),0);
+  const set = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('op-sel-name', sel || 'Todas as Operações');
+  set('op-sel-count', subset.length + (subset.length===1 ? ' ocorrência' : ' ocorrências'));
+  set('op-k-oc',  fN(subset.length));
+  set('op-k-pr',  fN(s('no_presos')));
+  set('op-k-dr',  fD(s('drogas_total_kg'),2)+' kg');
+  set('op-k-co',  fD(s('cocaina_kg'),2)+' kg');
+  set('op-k-ma',  fD(s('maconha_kg'),2)+' kg');
+  set('op-k-pb',  fD(s('pasta_base_kg'),2)+' kg');
+  set('op-k-ar',  fN(s('armas')));
+  set('op-k-mun', fN(s('municoes')));
+  set('op-k-ve',  fN(s('veiculos')));
+  set('op-k-cb',  fD(s('gasolina_l')+s('diesel_l'),0)+' L');
+  set('op-k-mad', fD(s('madeira_m3'),3)+' m³');
+  const pj = s('prejuizo');
+  set('op-k-prej', pj>0 ? fR(pj) : '—');
+}
+
 function renderOperacoes() {
-  // Parse operations - split by '/' and trim
+  const escH = x => String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // Agrupa por operação (split por '/')
   const opMap = {};
   FIL.forEach(r => {
-    const ops = (r.operacao || '').split('/').map(o => o.trim()).filter(Boolean);
-    if (!ops.length) ops.push('Sem Operação');
-    ops.forEach(op => {
+    opsDe(r).forEach(op => {
       if (!opMap[op]) opMap[op] = { oc:0, dr:0, pr:0, ve:0 };
       opMap[op].oc++;
       opMap[op].dr += r.drogas_total_kg || 0;
@@ -1632,6 +1735,23 @@ function renderOperacoes() {
   });
 
   const sorted = Object.entries(opMap).sort((a,b) => b[1].oc - a[1].oc);
+
+  // Se a operação selecionada sumiu do filtro atual, volta para "Todas"
+  if (window._opSel && !opMap[window._opSel]) window._opSel = null;
+
+  // ── Botões de operação (gerados automaticamente) ──
+  const btnBox = document.getElementById('op-btns');
+  if (btnBox){
+    let html = `<button class="op-pill${!window._opSel?' active':''}" data-op="">📌 Todas <span class="op-badge">${FIL.length}</span></button>`;
+    html += sorted.map(([op,st]) =>
+      `<button class="op-pill${window._opSel===op?' active':''}" data-op="${escH(op)}">${escH(op)} <span class="op-badge">${st.oc}</span></button>`
+    ).join('');
+    btnBox.innerHTML = html;
+    btnBox.querySelectorAll('.op-pill').forEach(b => b.onclick = () => selectOperacao(b.dataset.op || null));
+  }
+
+  // ── KPIs da operação selecionada ──
+  renderOpKPIs();
   const labels = sorted.map(e => e[0]);
   const oc  = sorted.map(e => e[1].oc);
   const dr  = sorted.map(e => parseFloat(e[1].dr.toFixed(2)));
@@ -1950,7 +2070,14 @@ function applyFilters() {
     return true;
   });
 
+  // Filtro ativo = o conjunto exibido é menor que o total (período, município, tipo, natureza, meio…)
+  window._filtroAtivo = FIL.length !== ALL.length;
+
   renderKPIs(); renderInsights(); renderCharts(); renderMap(); renderTable(); initPages();
+
+  // Se a página de Operações estiver aberta, atualiza botões + KPIs com o novo filtro
+  const pgOp = document.getElementById('page-operacoes');
+  if (pgOp && pgOp.classList.contains('active')) renderOperacoes();
 }
 
 /* ── KPIs ── */
@@ -1982,12 +2109,17 @@ function renderKPIs() {
   const pj_ma = s('madeira_m3') * 1500;
   $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
   $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
-  // Total: usa valor do PAINEL se carregado, senão soma as categorias
-  if (window._prejuizoTotal) {
+  // Total do prejuízo:
+  //  • SEM filtro ativo → total oficial da aba PAINEL (~R$ 241 mi)
+  //  • COM filtro ativo → soma a coluna oficial "Prejuízo Estimado (R$)" só das ocorrências selecionadas
+  const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma;
+  if (window._prejuizoTotal && !window._filtroAtivo) {
     $('k-prej', fR(window._prejuizoTotal));
   } else {
-    const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma;
-    $('k-prej', calc > 0 ? fR(calc) : '—');
+    const pjReal = s('prejuizo');             // coluna oficial por BO, somada no período filtrado
+    if (pjReal > 0)      $('k-prej', fR(pjReal));
+    else if (calc > 0)   $('k-prej', fR(calc)); // fallback: soma das categorias (multiplicadores do site)
+    else                 $('k-prej', '—');
   }
 }
 function $(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
@@ -2097,7 +2229,11 @@ function renderPM(){
 function renderTable(){PAGE=1;renderPage();}
 
 function renderPage(){
-  const data=[...FIL].reverse();
+  // Ordena por data: mais RECENTE primeiro (sem data vai para o fim)
+  const data=[...FIL].sort((a,b)=>{
+    const ta=a._date?a._date.getTime():-Infinity, tb=b._date?b._date.getTime():-Infinity;
+    return tb-ta;
+  });
   const total=data.length, pages=Math.ceil(total/PG)||1;
   const start=(PAGE-1)*PG, slice=data.slice(start,start+PG);
   const tbody=document.getElementById('tbody');
