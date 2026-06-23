@@ -94,6 +94,29 @@ body{
 /* ── MAIN ── */
 .main{max-width:1600px;margin:0 auto;padding:24px 20px 64px}
 
+/* ── SIDEBAR (navegação lateral) ── */
+body{padding-left:236px}
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:236px;background:linear-gradient(180deg,#0b0f1a,#070a12);border-right:1px solid rgba(245,197,24,.14);z-index:200;display:flex;flex-direction:column;padding:14px 12px;overflow-y:auto;box-shadow:2px 0 24px rgba(0,0,0,.5)}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:4px 6px 14px;border-bottom:1px solid var(--border2);margin-bottom:6px}
+.sb-brand .sb-emblem{width:40px;height:40px;background:linear-gradient(135deg,#c9a030,#F5C518,#c9a030);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:0 0 18px rgba(245,197,24,.3)}
+.sb-brand b{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--yellow);letter-spacing:.5px;line-height:1;display:block}
+.sb-brand span{display:block;font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.sb-group{font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:14px 8px 5px}
+.sb-item{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;margin-bottom:3px;border-radius:9px;background:none;border:1px solid transparent;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;letter-spacing:.2px}
+.sb-item .ic{font-size:15px;line-height:1;width:18px;text-align:center;flex-shrink:0}
+.sb-item:hover{background:rgba(245,197,24,.08);color:var(--yellow)}
+.sb-item.active{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.32);color:var(--yellow);box-shadow:0 0 16px rgba(245,197,24,.08)}
+.sb-spacer{flex:1;min-height:14px}
+.sb-apres{border-top:1px solid var(--border2);padding-top:12px;margin-top:6px;border-radius:0 0 9px 9px}
+@media(max-width:900px){
+  body{padding-left:0}
+  #sidebar{position:sticky;top:0;width:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;border-right:none;border-bottom:1px solid rgba(245,197,24,.14);box-shadow:0 4px 16px rgba(0,0,0,.4);padding:9px 14px}
+  .sb-brand{border-bottom:none;margin:0 8px 0 0;padding:0}
+  .sb-brand span,.sb-group,.sb-spacer{display:none}
+  .sb-item{width:auto;margin:0;padding:8px 11px}
+  .sb-apres{border-top:none;padding-top:0;margin-top:0}
+}
+
 /* ── STATUS ── */
 .statusbar{
   display:flex;align-items:center;gap:10px;
@@ -569,6 +592,30 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 <body>
 
 <div class="classif-banner">⚠ USO RESTRITO — INFORMAÇÃO OPERACIONAL — POLÍCIA MILITAR DO ESTADO DE RONDÔNIA ⚠</div>
+
+<!-- BARRA LATERAL DE NAVEGAÇÃO -->
+<nav id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-emblem">🛡️</div>
+    <div><b>BPFRON</b><span>Inteligência Op.</span></div>
+  </div>
+
+  <div class="sb-group">📊 Análise · Power BI</div>
+  <button class="sb-item active" id="nav-visao-geral" onclick="showPage('visao-geral')"><span class="ic">🏠</span> Visão Geral</button>
+  <button class="sb-item" id="nav-mapa"        onclick="showPage('mapa')"><span class="ic">🗺️</span> Mapa</button>
+  <button class="sb-item" id="nav-graficos"    onclick="showPage('graficos')"><span class="ic">📈</span> Gráficos</button>
+  <button class="sb-item" id="nav-operacoes"   onclick="showPage('operacoes')"><span class="ic">🎯</span> Operações</button>
+  <button class="sb-item" id="nav-comparativo" onclick="showPage('comparativo')"><span class="ic">📅</span> Comparativo</button>
+  <button class="sb-item" id="nav-consultas"   onclick="showPage('consultas')"><span class="ic">🔎</span> Consultas</button>
+
+  <div class="sb-group">🚓 Gestão</div>
+  <button class="sb-item" id="nav-garagem"  onclick="showPage('garagem')"><span class="ic">🚗</span> Garagem</button>
+  <button class="sb-item" id="nav-material" onclick="showPage('material')"><span class="ic">🔫</span> Material Bélico</button>
+
+  <div class="sb-spacer"></div>
+  <button class="sb-item sb-apres" id="btn-apresentacao" onclick="toggleApresentacao()"><span class="ic">▶</span> Apresentação</button>
+</nav>
+
 <header class="hdr">
   <div class="hdr-inner">
     <div class="hdr-brand">
@@ -577,7 +624,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="hdr-title">
         <h1>BPFRON/RO &nbsp;·&nbsp; PAINEL ANALÍTICO DE OPERAÇÕES POLICIAIS</h1>
         <p>Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia</p>
-        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; <span style="color:#F5C518;font-weight:700">v3.2</span></p>
+        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; <span style="color:#F5C518;font-weight:700">v3.4</span></p>
       </div>
     </div>
     <div class="hdr-right">
@@ -632,15 +679,27 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <!-- DASHBOARD -->
   <div id="dash" style="display:none">
 
-    <!-- NAVEGAÇÃO POR PÁGINAS -->
-    <div id="page-nav" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      <button class="btn-page-nav active" onclick="showPage('visao-geral')" id="nav-visao-geral">🏠 Visão Geral</button>
-      <button class="btn-page-nav" onclick="showPage('mapa')" id="nav-mapa">🗺️ Mapa</button>
-      <button class="btn-page-nav" onclick="showPage('graficos')" id="nav-graficos">📊 Gráficos</button>
-      <button class="btn-page-nav" onclick="showPage('operacoes')" id="nav-operacoes">🔍 Por Operação</button>
-      <button class="btn-page-nav" onclick="showPage('comparativo')" id="nav-comparativo">📅 Comparativo Anual</button>
-      <button class="btn-page-nav" onclick="showPage('consultas')"  id="nav-consultas">🔎 Consultas</button>
-      <button class="btn-page-nav" id="btn-apresentacao" onclick="toggleApresentacao()" style="margin-left:auto;background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.4);color:var(--yellow)">▶ Apresentação</button>
+    <!-- NAVEGAÇÃO: movida para a barra lateral (#sidebar) -->
+    <div id="page-nav" style="display:none"></div>
+
+    <!-- PÁGINA: GARAGEM (em construção) -->
+    <div id="page-garagem" class="page-content">
+      <div class="sec">🚗 Garagem — Frota de Viaturas</div>
+      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
+        <div style="font-size:46px;margin-bottom:10px">🚧</div>
+        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
+        <p>Aqui vai entrar o controle da frota: <b>onde a viatura está</b>, situação (operante / em manutenção), <b>troca de óleo</b> (feita / a fazer), local de estacionamento e mais. Vamos montar nos próximos passos.</p>
+      </div>
+    </div>
+
+    <!-- PÁGINA: MATERIAL BÉLICO (em construção) -->
+    <div id="page-material" class="page-content">
+      <div class="sec">🔫 Material Bélico — Poder de Fogo</div>
+      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
+        <div style="font-size:46px;margin-bottom:10px">🚧</div>
+        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
+        <p>Aqui vai entrar o inventário do <b>poder bélico</b>: armamento, munição, quantidades, situação e distribuição. Vamos montar nos próximos passos.</p>
+      </div>
     </div>
 
     <!-- PÁGINA: VISÃO GERAL -->
@@ -1203,13 +1262,24 @@ function smartSplit(line, sep) {
   return r;
 }
 
-/* ── Converte data DD/MM/AAAA ou AAAA-MM-DD ── */
+/* ── Converte data: aceita AAAA-MM-DD, DD/MM/AAAA e M/D/AAAA (export US do Sheets) ──
+   Desambiguação: o número > 12 é sempre o dia. Se ambos <= 12 (ambíguo), assume
+   M/D/AAAA, que é como o Google Sheets exporta o xlsx convertido. A exibição na
+   tela continua em dd/mm/aaaa (via fDate → toLocaleDateString 'pt-BR'). */
 function parseDate(s) {
   if (!s) return null;
-  let m = String(s).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-  m = String(s).match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/);
+  s = String(s).trim();
+  // ISO: AAAA-MM-DD (ou AAAA/MM/DD)
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
   if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  // X/Y/AAAA
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m) {
+    const a = +m[1], b = +m[2], y = +m[3];
+    if (a > 12 && b <= 12) return new Date(y, b-1, a);   // DD/MM/AAAA (BR)
+    if (b > 12 && a <= 12) return new Date(y, a-1, b);   // M/D/AAAA  (US)
+    return new Date(y, a-1, b);                          // ambíguo → assume M/D (export do Sheets)
+  }
   const d = new Date(s); return isNaN(d) ? null : d;
 }
 
@@ -1264,45 +1334,45 @@ const fMes  = d => d ? d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit
    os dados mais recentes automaticamente.
 ================================================================ */
 const EMBEDDED_CSV = `"Nº BO","Data","Hora","Tipo de BO","Natureza / Crime","Endereço","Município","UF","Nº Presos","Nº Apreensões s/ Prisão","Drogas TOTAL (kg)","Cocaína/CH (kg)","Pasta Base (kg)","Maconha (kg)","Armas Apreend.","Munições Apreend.","Veículos Apreend.","Gasolina Boliviana (L)","Diesel Boliviano (L)","GLP (botijas)","Cigarros (maços)","Madeira Apreendida (m³)","Desc. Celulares (un.)","Desc. Roupas (un.)","Dinheiro (R$)","Meio","Ambiente","Destino dos Envolvidos","Latitude","Longitude","Prejuízo Estimado (R$)","Descrição Resumida","Nacionalidade / Operação","Valor Estimado Veículos (R$)"
-"3340600758","01/03/2026","10:15","Comunicação de Ocorrência","Recuperação de veículo furtado (CP Art. 155)","BR 364 – próx. Ramal Santa Rita / Fazenda Terra Bonita","Porto Velho","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área de mata","Delegacia PC Nova Mutum Paraná","-9,1300046","-64,1414021","","0","0","85000"
-"3374900014","17/03/2026","11:30","Prisão/Apreensão","Porte ilegal de arma de fogo (Lei 10.826/03, Art. 14)","BR 364 – Vista Alegre do Abunã","Porto Velho","RO","1","0","0","0","0","0","1","3","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Extrema","-9,658715914","-65,73586418","","0","0","0"
-"3374900015","17/03/2026","09:00","Relato de Ocorrência","Receptação / Veículo com restrição de furto (CP Art. 180)","BR 364 – Distrito de Extrema","Porto Velho","RO","2","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Extrema","-9,770364268","-66,31386247","","0","0","7000"
-"3374900016","19/03/2026","11:00","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","Porto Oficial","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto fluvial","Pátio NIF-GEI – Guajará-Mirim","-10,7936718","-65,34688509","","0","0","95000"
-"3283700667","23/03/2026","00:05","Comunicação de Ocorrência","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","BR 319 km 13, Ramal Severino Braz","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,6959262","-64,0352688","0","0","0","45000"
-"3284700616","28/03/2026","23:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) / Porte ilegal de arma (Lei 10.826/03, Art. 14)","Estrada do Pacífico – BR 425 / Rio Madeira","Porto Velho","RO","2","0","421,95","33,1","72","316,85","1","5","1","0","0","0","0","","2","0","0","Fluvial","Rio Madeira","Delegacia PF – Guajará-Mirim","-9,620768224","-64,94289681","","2","0","0"
-"3327500161","30/03/2026","22:10","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Próx. Vila Franciscana – S 8°48'9.871 W 64°4'5.844","Porto Velho","RO","0","2","0","0","0","0","0","0","1","0","0","0","0","4,63","0","0","0","Terrestre","Via pública / Zona rural","Permaneceram no local (veículo ao BPAMB)","-8,7984218","-63,7024222","4,63","0","0","120000"
-"3327500162","30/03/2026","23:30","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Próx. Vila Francisca – Ramal Bom Jesus","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","20,99","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,7981019","-63,7019536","20,99","0","0","220000"
-"3327500163","30/03/2026","23:40","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Ramal Santo Antônio – Próx. Vila Franciscana","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","21,66","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,7981205","-63,7019618","21,66","0","0","90000"
-"3284800367","13/03/2026","00:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-425, Distrito de Araras, zona rural","Nova Mamoré","RO","0","1","44","36","0","8","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Zona rural","Delegacia PF – Guajará-Mirim","-10,824","-65,053","","0","0","0"
-"3284800365","06/03/2026","10:57","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Avenida 8 de Dezembro, bairro Triângulo","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
-"3284800366","06/03/2026","11:11","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","Avenida Doutor Lewerger, bairro Dez de Abril","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública","Pátio NIF-GEI – Guajará-Mirim","-10,783","-65,339","","0","0","105000"
-"3296600069","05/03/2026","09:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Av. Castelo Branco, nº 15778, Posto Machadão, próx. Havan","Cacoal","RO","2","0","5,076","5,049","0","0,004","0","0","2","0","0","0","0","","2","0","2096","Terrestre","Via pública / Posto de combustível","Delegacia PC – Cacoal","-11,434","-61,447","","2","0","95000"
+"3340600758","03/01/2026","10:15","Comunicação de Ocorrência","Recuperação de veículo furtado (CP Art. 155)","BR 364 – próx. Ramal Santa Rita / Fazenda Terra Bonita","Porto Velho","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área de mata","Delegacia PC Nova Mutum Paraná","-9,1300046","-64,1414021","","0","0","85000"
+"3374900014","03/17/2026","11:30","Prisão/Apreensão","Porte ilegal de arma de fogo (Lei 10.826/03, Art. 14)","BR 364 – Vista Alegre do Abunã","Porto Velho","RO","1","0","0","0","0","0","1","3","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Extrema","-9,658715914","-65,73586418","","0","0","0"
+"3374900015","03/17/2026","09:00","Relato de Ocorrência","Receptação / Veículo com restrição de furto (CP Art. 180)","BR 364 – Distrito de Extrema","Porto Velho","RO","2","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Extrema","-9,770364268","-66,31386247","","0","0","7000"
+"3374900016","03/19/2026","11:00","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","Porto Oficial","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto fluvial","Pátio NIF-GEI – Guajará-Mirim","-10,7936718","-65,34688509","","0","0","95000"
+"3283700667","03/23/2026","00:05","Comunicação de Ocorrência","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","BR 319 km 13, Ramal Severino Braz","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,6959262","-64,0352688","0","0","0","45000"
+"3284700616","03/28/2026","23:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) / Porte ilegal de arma (Lei 10.826/03, Art. 14)","Estrada do Pacífico – BR 425 / Rio Madeira","Porto Velho","RO","2","0","421,95","33,1","72","316,85","1","5","1","0","0","0","0","","2","0","0","Fluvial","Rio Madeira","Delegacia PF – Guajará-Mirim","-9,620768224","-64,94289681","","2","0","0"
+"3327500161","03/30/2026","22:10","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Próx. Vila Franciscana – S 8°48'9.871 W 64°4'5.844","Porto Velho","RO","0","2","0","0","0","0","0","0","1","0","0","0","0","4,63","0","0","0","Terrestre","Via pública / Zona rural","Permaneceram no local (veículo ao BPAMB)","-8,7984218","-63,7024222","4,63","0","0","120000"
+"3327500162","03/30/2026","23:30","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Próx. Vila Francisca – Ramal Bom Jesus","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","20,99","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,7981019","-63,7019536","20,99","0","0","220000"
+"3327500163","03/30/2026","23:40","Termo Circunstanciado","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","Ramal Santo Antônio – Próx. Vila Franciscana","Porto Velho","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","21,66","0","0","0","Terrestre","Via pública / Zona rural","Permaneceu no local (veículo ao BPAMB)","-8,7981205","-63,7019618","21,66","0","0","90000"
+"3284800367","03/13/2026","00:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-425, Distrito de Araras, zona rural","Nova Mamoré","RO","0","1","44","36","0","8","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Zona rural","Delegacia PF – Guajará-Mirim","-10,824","-65,053","","0","0","0"
+"3284800365","03/06/2026","10:57","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Avenida 8 de Dezembro, bairro Triângulo","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
+"3284800366","03/06/2026","11:11","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","Avenida Doutor Lewerger, bairro Dez de Abril","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública","Pátio NIF-GEI – Guajará-Mirim","-10,783","-65,339","","0","0","105000"
+"3296600069","03/05/2026","09:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Av. Castelo Branco, nº 15778, Posto Machadão, próx. Havan","Cacoal","RO","2","0","5,076","5,049","0","0,004","0","0","2","0","0","0","0","","2","0","2096","Terrestre","Via pública / Posto de combustível","Delegacia PC – Cacoal","-11,434","-61,447","","2","0","95000"
 "3330600316","03/03/2026","13:30","Prisão/Apreensão","Receptação / Veículo com restrição de furto (CP Art. 180)","RO-010, distrito de Nova Estrela","Rolim de Moura","RO","1","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","UNISP – Rolim de Moura","-11,726","-61,778","","0","0","55000"
-"3340600757","28/02/2026","11:00","Prisão/Apreensão","Posse irregular de arma de fogo (Lei 10.826/03, Art. 12)","Reserva São Lourenço, zona rural","Porto Velho","RO","1","0","0","0","0","0","2","7","0","0","0","0","0","","0","0","0","Fluvial","Rio São Lourenço / Parque Nacional Mapinguari","Delegacia PC – Porto Velho","-8,9","-64,2","","0","0","0"
-"3284500781","27/02/2026","17:00","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Avenida Doutor Lewerger, Bairro Dez de Abril","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","104","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
-"3284500780","25/02/2026","10:51","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Rua Pentecostal c/ Av. Toufic Melhen Abichabki, Jardim das Esmeraldas","Guajará-Mirim","RO","1","0","0,31","0","0","0,31","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","","0","0","0"
-"3284500779","23/02/2026","09:45","Prisão/Apreensão","Descaminho (CP Art. 334)","Rua Dom Pedro II, bairro Triângulo","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","0","217","175","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
-"3284800356","22/02/2026","23:00","Prisão/Apreensão","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","BR-364, zona rural","Porto Velho","RO","0","5","0","0","0","0","0","0","5","0","0","0","0","78,446","0","0","0","Terrestre","Via pública / Zona rural","Permaneceram no local (veículos ao SEDAM)","-9,2","-64,5","78,446","0","0","0"
-"3286200864","18/02/2026","21:37","Prisão/Apreensão","Porte ilegal de arma de fogo de uso restrito (Lei 10.826/03, Art. 16)","Avenida Primeiro de Maio, Centro","Guajará-Mirim","RO","1","0","0","0","0","0","1","33","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","19333,33333","Pistola SIG Sauer P220 cal .45 + 33 munições + 1 carregador. Preso: JOÃO MOSQUEIRA SUCUBANO.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
-"3286200862","18/02/2026","16:00","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Travessa N Jorge, Centro","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","25000","Botijas de GLP de origem estrangeira + veículo FIAT/PALIO (LBM5H86) apreendidos. Condutor evadiu ao ver presença policial.","Brasileira | Operação Protetor das Divisas e Fronteiras","25000"
-"3286200861","18/02/2026","05:55","Comunicação de Ocorrência","Descaminho / Contrabando (CP Art. 334)","Avenida Presidentes Dutra, nº 882, Bairro Triângulo, prox. Porto Pérola","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","72","0","0","860","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","8916,74","22kg alho + 72L gasolina + 760 maços cigarro Pine + 100 maços cigarro Point + doces, desodorantes e outros produtos bolivianos sem documentação. Indivíduos fugiram ao ver patrulha.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
-"3286200860","17/02/2026","04:25","Prisão/Apreensão","Resistência (CP Art. 329) / Desobediência (CP Art. 330) / Descaminho","Porto do Dólar – Estrada RO-370 (Pacaás Novos), Zona Rural","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","1","0","0","0","0","","1","0","0","Terrestre","Via pública / Zona rural / Porto clandestino","Hospital + Delegacia PC – Guajará-Mirim","-10,9","-65,4","90000","JEEP/RENEGADE (EGI8B63) conduzido em alta velocidade ignorando ordem de parada para travessia clandestina à Bolívia. Veículo colidiu. Celular Samsung apreendido. Preso: MYKAEL NASCIMENTO CEZÁRIO (20 anos).","Brasileira | Operação Protetor das Divisas e Fronteiras","90000"
-"3287301015","15/02/2026","11:18","Comunicação de Ocorrência","Tráfico de drogas (Lei 11.343/06, Art. 33)","Rua 10 de Abril, bairro São José","Guajará-Mirim","RO","0","1","5,3","0","4,3","1","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PF – Guajará-Mirim","-10,783","-65,339","220000","4 tabletes pasta base (4.300g) + 1 tablete maconha boliviana (1.000g) em bolsa vermelha abandonada por dupla em fuga de motocicleta. Autores não identificados.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
-"7000419-50.2006.8.22.0017","14/02/2026","17:55","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) – Cumprimento de Ordem Judicial","Avenida Juscelino Kubitschek, nº 4272, Bairro Redondo","Guajará-Mirim","RO","1","0","0,17","0","0","0,153","0","0","0","0","0","0","0","","1","0","3994","Terrestre","Residência / Via pública","Delegacia PC – Guajará-Mirim","-10,783","-65,339","4759","153,3g maconha + 2 pinos cocaína + 11,4g crack + R$3.994 em espécie + celular. Preso: GILMAR CAMARGO DA SILVA JUNIOR. Cumprimento de Ordem Judicial TJRO nº 7000419-50.2006.8.22.0017.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
-"915837","14/02/2026","15:47","Prisão/Apreensão","Adulteração de sinal identificador de veículo (CP Art. 311)","Avenida Mario Peixe de Souza, nº 5110, Bairro Nossa Senhora de Fátima","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","10000","Honda Titan preta sem placa com chassi adulterado (motor corresponde à Honda Titan branca placa MZQ-9653). Preso: MAICON SOARES PARENTE.","Brasileira | Operação Protetor das Divisas e Fronteiras","10000"
-"3286200848","14/02/2026","08:31","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Av. Boucinha de Menezes c/ Av. Marechal Deodoro, Centro","Guajará-Mirim","RO","1","0","52,2","0","52,2","0","0","0","1","0","0","0","0","","1","0","384","Terrestre","Via pública / Área urbana","Delegacia PF – Guajará-Mirim","-10,783","-65,339","2750384","51 tabletes pasta base de cocaína (52.200g) no porta-malas de Honda/Civic prata + R$384 + celular Samsung. Preso: ANDERSON LIMA BEZERRA.","Brasileira | Operação Protetor das Divisas e Fronteiras","140000"
-"3340600700","13/02/2026","11:41","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Arts. 33 e 35)","RO-481, km 02, zona rural","Nova Brasilândia do Oeste","RO","4","0","42,3","0","0","42,3","0","0","2","0","0","0","0","","5","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Nova Brasilândia do Oeste","-11,727","-62,313","266500","42,3 kg maconha em 2 sacas + 2 veículos (Saveiro RSV9A41 + Strada NED0I00) + 5 celulares + Starlink + máquina cartão TON. Presos: JOVISON SALVATICO DOS SANTOS, BRUNO SERAFIM GARCIA, ALINE PEIXOTO DA SILVA, PATRICIA BARBOSA CAMPOS.","Brasileira | Operação Protetor das Divisas e Fronteiras","55000"
-"3340600694","11/02/2026","23:37","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-429, Centro","São Miguel do Guaporé","RO","1","0","173","0","0","173","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","UNISP – São Miguel do Guaporé","-11,685","-62,913","865000","148 tabletes maconha (173 kg) em Chevrolet/Cobalt prata (FIE4I24). Preso: MARCELO FERMINIANO DA SILVA.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
-"3330600306","06/02/2026","17:50","Relato de Ocorrência","Cumprimento de mandado de prisão","Avenida Macapá, nº 4947, Bairro Centro","Rolim de Moura","RO","1","0","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","UNISP – Rolim de Moura","-11,726","-61,778","0","Cumprimento de mandado de prisão em desfavor de WERLEY MIGUEL FAGUNDES.","Brasileira | Operação Protetor das Fronteiras e Divisas",""
-"3258700951","07/02/2026","01:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) – ato infracional análogo","Terminal rodoviário de Nova Mamoré","Nova Mamoré","RO","0","1","20","0","0","20","0","0","0","0","0","0","0","","1","0","0","Terrestre","Via pública / Terminal rodoviário","UNISP – Nova Mamoré","-10,397","-65,329","100000","20 kg maconha + celular Motorola. Adolescente (JOAQUIM SUDÁRIO DE SOUZA) de Guajará-Mirim com destino Porto Velho. Ato infracional análogo ao tráfico + falsa identidade.","Brasileira | Operação Protetor das Fronteiras e Divisas",""
-"3286600975","07/02/2026","03:45","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-364, próx. entroncamento BR-425","Porto Velho","RO","1","0","56,834","4,174","0","51,046","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Central de Flagrantes – Porto Velho","-8,785","-63,878","698280","51,046 kg maconha + 4,174 kg cocaína + 1,02 kg crack + 594g haxixe + 2 rádios Baofeng + Ford Cargo 815 (DGE7G33). Preso: MATEUS DA SILVA REIS.","Brasileira | Operação Protetor das Fronteiras e Divisas","130000"
-"3287300939","29/01/2026","11:00","Comunicação de Ocorrência","Recuperação de veículo (furto qualificado / receptação)","Avenida Beira Rio, Centro","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","135000","Renault Duster 1.6 CVT 2025 (cinza) subtraído por fraude em contrato de locação. Recuperado próximo à fronteira com atuação de OCT. Cooperação BPFRON + NIIF + DIPROVE (Bolívia).","Brasileira | Operação Protetor das Divisas e Fronteiras","135000"
-"3375300003","29/01/2026","03:23","Prisão/Apreensão","Receptação (CP Art. 180)","Estrada do Sol, Zona Rural","Guajará-Mirim","RO","3","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Fluvial","Via fluvial / Zona rural / Fronteira","Delegacia Regional PC – Guajará-Mirim","-10,9","-65,4","55000","Ford EcoSport (JPM5E20) interceptado no momento da travessia para Bolívia + 2 motores de popa rabeta. Presos: JESSÉ CONCEIÇÃO DA SILVA, EDGAR TANACA OLIVAR, CLEIANE RODRIGUES DE SOUSA.","Brasileira | Operação Protetor das Fronteiras e Divisas","55000"
-"010/4ºBPM/11JAN2026","11/01/2026","19:35","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","BR-230, KM 1, Posto ATEM","Humaitá","AM","1","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","8ª DIH – Humaitá","-7,502","-63,017","110000","Saveiro Robust prata 2025 (UAX-0J74) com restrição de roubo localizado no Posto ATEM após travessia de balsa. Preso: EDVAN DOUGLAS BONE MAREIRA.","Brasileira | Operação Madeira Mamoré","110000"
-"3284800355","07/01/2026","11:44","Prisão/Apreensão","Descaminho (CP Art. 334)","Rua Beira Rio, Porto Pérola, bairro Triângulo","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","70000","Fiat Strada Working (NBO1764) com brinquedos, mochilas, meias, bolsas, cobertores, fones e outros produtos bolivianos sem doc. fiscal. FRANCISCO VALDENIR DE LIMA + CARLOS ARTEAGA AGUILERA (boliviano).","Brasileira | Operação Madeira Mamoré / Operação Protetor das Divisas e Fronteiras","70000"
-"3287300924","05/01/2026","10:26","Relato de Ocorrência","Cumprimento de mandado de prisão","BR-425, zona rural","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC/DRPC – Guajará-Mirim","-10,783","-65,339","0","Mandado de prisão expedido pela 1ª Vara Criminal de Guajará-Mirim/RO. Preso: RODRIGO DA SILVA NOBRE.","Brasileira | Operação Madeira Mamoré",""
-"3284700608","03/01/2026","22:23","Comunicação de Ocorrência","Tráfico de drogas (Lei 11.343/06, Art. 33)","Estrada do Palheta, área rural","Guajará-Mirim","RO","0","1","0,755","0,755","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Zona rural","Delegacia PF – Guajará-Mirim","-10,9","-65,4","56625","755g cocaína em tablete envolto em plástico preto arremessada por passageiro de moto ao notar presença policial. Dupla fugiu em alta velocidade.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Divisas e Fronteiras",""
-"3284800353","02/01/2026","10:30","Prisão/Apreensão","Porte ilegal de arma de fogo / Posse de drogas","Av. Toufic Melhen Abichabki, Bairro Jardim das Esmeraldas","Guajará-Mirim","RO","0","3","0,007","0,001","0","0,006","1","3","0","0","0","0","0","","6","0","0","Terrestre","Residência / Via pública","Delegacia PF – Guajará-Mirim","-10,783","-65,339","19438,33333","Espingarda cal .12 + 3 munições + 4 granadas enterradas no quintal + maconha (6g) + cocaína (1g) + balança + 6 celulares + pés de maconha em vaso. Autores: CLEIVI RODES VEIGA, VICTOR RIAM RODRIGUES DANTAS, EDYLAYLA BRUNA DA SILVA PEREIRA.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Fronteiras e Divisas",""`;
+"3340600757","02/28/2026","11:00","Prisão/Apreensão","Posse irregular de arma de fogo (Lei 10.826/03, Art. 12)","Reserva São Lourenço, zona rural","Porto Velho","RO","1","0","0","0","0","0","2","7","0","0","0","0","0","","0","0","0","Fluvial","Rio São Lourenço / Parque Nacional Mapinguari","Delegacia PC – Porto Velho","-8,9","-64,2","","0","0","0"
+"3284500781","02/27/2026","17:00","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Avenida Doutor Lewerger, Bairro Dez de Abril","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","104","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
+"3284500780","02/25/2026","10:51","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Rua Pentecostal c/ Av. Toufic Melhen Abichabki, Jardim das Esmeraldas","Guajará-Mirim","RO","1","0","0,31","0","0","0,31","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","","0","0","0"
+"3284500779","02/23/2026","09:45","Prisão/Apreensão","Descaminho (CP Art. 334)","Rua Dom Pedro II, bairro Triângulo","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","0","217","175","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Receita Federal – Guajará-Mirim","-10,783","-65,339","","0","0","0"
+"3284800356","02/22/2026","23:00","Prisão/Apreensão","Crime ambiental – transporte ilegal de madeira (Lei 9.605/98, Art. 46)","BR-364, zona rural","Porto Velho","RO","0","5","0","0","0","0","0","0","5","0","0","0","0","78,446","0","0","0","Terrestre","Via pública / Zona rural","Permaneceram no local (veículos ao SEDAM)","-9,2","-64,5","78,446","0","0","0"
+"3286200864","02/18/2026","21:37","Prisão/Apreensão","Porte ilegal de arma de fogo de uso restrito (Lei 10.826/03, Art. 16)","Avenida Primeiro de Maio, Centro","Guajará-Mirim","RO","1","0","0","0","0","0","1","33","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","19333,33333","Pistola SIG Sauer P220 cal .45 + 33 munições + 1 carregador. Preso: JOÃO MOSQUEIRA SUCUBANO.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
+"3286200862","02/18/2026","16:00","Comunicação de Ocorrência","Descaminho (CP Art. 334)","Travessa N Jorge, Centro","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","25000","Botijas de GLP de origem estrangeira + veículo FIAT/PALIO (LBM5H86) apreendidos. Condutor evadiu ao ver presença policial.","Brasileira | Operação Protetor das Divisas e Fronteiras","25000"
+"3286200861","02/18/2026","05:55","Comunicação de Ocorrência","Descaminho / Contrabando (CP Art. 334)","Avenida Presidentes Dutra, nº 882, Bairro Triângulo, prox. Porto Pérola","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","0","72","0","0","860","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","8916,74","22kg alho + 72L gasolina + 760 maços cigarro Pine + 100 maços cigarro Point + doces, desodorantes e outros produtos bolivianos sem documentação. Indivíduos fugiram ao ver patrulha.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
+"3286200860","02/17/2026","04:25","Prisão/Apreensão","Resistência (CP Art. 329) / Desobediência (CP Art. 330) / Descaminho","Porto do Dólar – Estrada RO-370 (Pacaás Novos), Zona Rural","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","1","0","0","0","0","","1","0","0","Terrestre","Via pública / Zona rural / Porto clandestino","Hospital + Delegacia PC – Guajará-Mirim","-10,9","-65,4","90000","JEEP/RENEGADE (EGI8B63) conduzido em alta velocidade ignorando ordem de parada para travessia clandestina à Bolívia. Veículo colidiu. Celular Samsung apreendido. Preso: MYKAEL NASCIMENTO CEZÁRIO (20 anos).","Brasileira | Operação Protetor das Divisas e Fronteiras","90000"
+"3287301015","02/15/2026","11:18","Comunicação de Ocorrência","Tráfico de drogas (Lei 11.343/06, Art. 33)","Rua 10 de Abril, bairro São José","Guajará-Mirim","RO","0","1","5,3","0","4,3","1","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PF – Guajará-Mirim","-10,783","-65,339","220000","4 tabletes pasta base (4.300g) + 1 tablete maconha boliviana (1.000g) em bolsa vermelha abandonada por dupla em fuga de motocicleta. Autores não identificados.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
+"7000419-50.2006.8.22.0017","02/14/2026","17:55","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) – Cumprimento de Ordem Judicial","Avenida Juscelino Kubitschek, nº 4272, Bairro Redondo","Guajará-Mirim","RO","1","0","0,17","0","0","0,153","0","0","0","0","0","0","0","","1","0","3994","Terrestre","Residência / Via pública","Delegacia PC – Guajará-Mirim","-10,783","-65,339","4759","153,3g maconha + 2 pinos cocaína + 11,4g crack + R$3.994 em espécie + celular. Preso: GILMAR CAMARGO DA SILVA JUNIOR. Cumprimento de Ordem Judicial TJRO nº 7000419-50.2006.8.22.0017.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
+"915837","02/14/2026","15:47","Prisão/Apreensão","Adulteração de sinal identificador de veículo (CP Art. 311)","Avenida Mario Peixe de Souza, nº 5110, Bairro Nossa Senhora de Fátima","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","10000","Honda Titan preta sem placa com chassi adulterado (motor corresponde à Honda Titan branca placa MZQ-9653). Preso: MAICON SOARES PARENTE.","Brasileira | Operação Protetor das Divisas e Fronteiras","10000"
+"3286200848","02/14/2026","08:31","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","Av. Boucinha de Menezes c/ Av. Marechal Deodoro, Centro","Guajará-Mirim","RO","1","0","52,2","0","52,2","0","0","0","1","0","0","0","0","","1","0","384","Terrestre","Via pública / Área urbana","Delegacia PF – Guajará-Mirim","-10,783","-65,339","2750384","51 tabletes pasta base de cocaína (52.200g) no porta-malas de Honda/Civic prata + R$384 + celular Samsung. Preso: ANDERSON LIMA BEZERRA.","Brasileira | Operação Protetor das Divisas e Fronteiras","140000"
+"3340600700","02/13/2026","11:41","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Arts. 33 e 35)","RO-481, km 02, zona rural","Nova Brasilândia do Oeste","RO","4","0","42,3","0","0","42,3","0","0","2","0","0","0","0","","5","0","0","Terrestre","Via pública / Rodovia","Delegacia PC – Nova Brasilândia do Oeste","-11,727","-62,313","266500","42,3 kg maconha em 2 sacas + 2 veículos (Saveiro RSV9A41 + Strada NED0I00) + 5 celulares + Starlink + máquina cartão TON. Presos: JOVISON SALVATICO DOS SANTOS, BRUNO SERAFIM GARCIA, ALINE PEIXOTO DA SILVA, PATRICIA BARBOSA CAMPOS.","Brasileira | Operação Protetor das Divisas e Fronteiras","55000"
+"3340600694","02/11/2026","23:37","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-429, Centro","São Miguel do Guaporé","RO","1","0","173","0","0","173","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","UNISP – São Miguel do Guaporé","-11,685","-62,913","865000","148 tabletes maconha (173 kg) em Chevrolet/Cobalt prata (FIE4I24). Preso: MARCELO FERMINIANO DA SILVA.","Brasileira | Operação Protetor das Divisas e Fronteiras",""
+"3330600306","02/06/2026","17:50","Relato de Ocorrência","Cumprimento de mandado de prisão","Avenida Macapá, nº 4947, Bairro Centro","Rolim de Moura","RO","1","0","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","UNISP – Rolim de Moura","-11,726","-61,778","0","Cumprimento de mandado de prisão em desfavor de WERLEY MIGUEL FAGUNDES.","Brasileira | Operação Protetor das Fronteiras e Divisas",""
+"3258700951","02/07/2026","01:30","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33) – ato infracional análogo","Terminal rodoviário de Nova Mamoré","Nova Mamoré","RO","0","1","20","0","0","20","0","0","0","0","0","0","0","","1","0","0","Terrestre","Via pública / Terminal rodoviário","UNISP – Nova Mamoré","-10,397","-65,329","100000","20 kg maconha + celular Motorola. Adolescente (JOAQUIM SUDÁRIO DE SOUZA) de Guajará-Mirim com destino Porto Velho. Ato infracional análogo ao tráfico + falsa identidade.","Brasileira | Operação Protetor das Fronteiras e Divisas",""
+"3286600975","02/07/2026","03:45","Prisão/Apreensão","Tráfico de drogas (Lei 11.343/06, Art. 33)","BR-364, próx. entroncamento BR-425","Porto Velho","RO","1","0","56,834","4,174","0","51,046","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Central de Flagrantes – Porto Velho","-8,785","-63,878","698280","51,046 kg maconha + 4,174 kg cocaína + 1,02 kg crack + 594g haxixe + 2 rádios Baofeng + Ford Cargo 815 (DGE7G33). Preso: MATEUS DA SILVA REIS.","Brasileira | Operação Protetor das Fronteiras e Divisas","130000"
+"3287300939","01/29/2026","11:00","Comunicação de Ocorrência","Recuperação de veículo (furto qualificado / receptação)","Avenida Beira Rio, Centro","Guajará-Mirim","RO","0","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Área urbana","Delegacia PC – Guajará-Mirim","-10,783","-65,339","135000","Renault Duster 1.6 CVT 2025 (cinza) subtraído por fraude em contrato de locação. Recuperado próximo à fronteira com atuação de OCT. Cooperação BPFRON + NIIF + DIPROVE (Bolívia).","Brasileira | Operação Protetor das Divisas e Fronteiras","135000"
+"3375300003","01/29/2026","03:23","Prisão/Apreensão","Receptação (CP Art. 180)","Estrada do Sol, Zona Rural","Guajará-Mirim","RO","3","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Fluvial","Via fluvial / Zona rural / Fronteira","Delegacia Regional PC – Guajará-Mirim","-10,9","-65,4","55000","Ford EcoSport (JPM5E20) interceptado no momento da travessia para Bolívia + 2 motores de popa rabeta. Presos: JESSÉ CONCEIÇÃO DA SILVA, EDGAR TANACA OLIVAR, CLEIANE RODRIGUES DE SOUSA.","Brasileira | Operação Protetor das Fronteiras e Divisas","55000"
+"010/4ºBPM/11JAN2026","01/11/2026","19:35","Comunicação de Ocorrência","Recuperação de veículo furtado/roubado","BR-230, KM 1, Posto ATEM","Humaitá","AM","1","0","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","8ª DIH – Humaitá","-7,502","-63,017","110000","Saveiro Robust prata 2025 (UAX-0J74) com restrição de roubo localizado no Posto ATEM após travessia de balsa. Preso: EDVAN DOUGLAS BONE MAREIRA.","Brasileira | Operação Madeira Mamoré","110000"
+"3284800355","01/07/2026","11:44","Prisão/Apreensão","Descaminho (CP Art. 334)","Rua Beira Rio, Porto Pérola, bairro Triângulo","Guajará-Mirim","RO","0","1","0","0","0","0","0","0","1","0","0","0","0","","0","0","0","Terrestre","Via pública / Porto clandestino","Receita Federal – Guajará-Mirim","-10,783","-65,339","70000","Fiat Strada Working (NBO1764) com brinquedos, mochilas, meias, bolsas, cobertores, fones e outros produtos bolivianos sem doc. fiscal. FRANCISCO VALDENIR DE LIMA + CARLOS ARTEAGA AGUILERA (boliviano).","Brasileira | Operação Madeira Mamoré / Operação Protetor das Divisas e Fronteiras","70000"
+"3287300924","01/05/2026","10:26","Relato de Ocorrência","Cumprimento de mandado de prisão","BR-425, zona rural","Guajará-Mirim","RO","1","0","0","0","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Rodovia","Delegacia PC/DRPC – Guajará-Mirim","-10,783","-65,339","0","Mandado de prisão expedido pela 1ª Vara Criminal de Guajará-Mirim/RO. Preso: RODRIGO DA SILVA NOBRE.","Brasileira | Operação Madeira Mamoré",""
+"3284700608","01/03/2026","22:23","Comunicação de Ocorrência","Tráfico de drogas (Lei 11.343/06, Art. 33)","Estrada do Palheta, área rural","Guajará-Mirim","RO","0","1","0,755","0,755","0","0","0","0","0","0","0","0","0","","0","0","0","Terrestre","Via pública / Zona rural","Delegacia PF – Guajará-Mirim","-10,9","-65,4","56625","755g cocaína em tablete envolto em plástico preto arremessada por passageiro de moto ao notar presença policial. Dupla fugiu em alta velocidade.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Divisas e Fronteiras",""
+"3284800353","01/02/2026","10:30","Prisão/Apreensão","Porte ilegal de arma de fogo / Posse de drogas","Av. Toufic Melhen Abichabki, Bairro Jardim das Esmeraldas","Guajará-Mirim","RO","0","3","0,007","0,001","0","0,006","1","3","0","0","0","0","0","","6","0","0","Terrestre","Residência / Via pública","Delegacia PF – Guajará-Mirim","-10,783","-65,339","19438,33333","Espingarda cal .12 + 3 munições + 4 granadas enterradas no quintal + maconha (6g) + cocaína (1g) + balança + 6 celulares + pés de maconha em vaso. Autores: CLEIVI RODES VEIGA, VICTOR RIAM RODRIGUES DANTAS, EDYLAYLA BRUNA DA SILVA PEREIRA.","Brasileira | Operação Madeira Mamoré / Operação Protetor das Fronteiras e Divisas",""`;
 
 /* ── MAPA DE OCORRÊNCIAS ── */
 let MAP = null;
@@ -1497,16 +1567,17 @@ let apresentacaoIdx = 0;
 
 function showPage(pageId) {
   document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.btn-page-nav').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.btn-page-nav, .sb-item').forEach(b => b.classList.remove('active'));
 
   const pg = document.getElementById('page-' + pageId);
   if (pg) pg.classList.add('active');
   const btn = document.getElementById('nav-' + pageId);
   if (btn) btn.classList.add('active');
 
-  // Tabela aparece em todas exceto comparativo e consultas
+  // Tabela só nas páginas analíticas (não em comparativo, consultas, garagem, material)
+  const semTabela = ['comparativo','consultas','garagem','material'];
   const tbl = document.getElementById('page-tabela');
-  if (tbl) tbl.classList.toggle('active', pageId !== 'comparativo' && pageId !== 'consultas');
+  if (tbl) tbl.classList.toggle('active', !semTabela.includes(pageId));
 
   currentPage = pageId;
 
@@ -1648,35 +1719,54 @@ function renderComparativo() {
 
 /* ── Busca Prejuízo Total do PAINEL ── */
 /* ── Busca Prejuízo Total do PAINEL ── */
+// URL de export DIRETO da aba PAINEL (gid 1543001629) — chave viva (a antiga PAINEL_URL morreu).
+const PAINEL_EXPORT_URL = "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=1543001629";
+
+// Extrai o Prejuízo Total (última linha não-vazia: "R$ 241.916.025,87",,,,)
+function parsePrejuizoTotal(txt) {
+  const allLines = txt.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const lastLine = allLines[allLines.length - 1] || '';
+  const cleaned = lastLine.split('R$').join('').split(' ').join('').split('"').join('');
+  const parts = cleaned.split(',');
+  if (parts.length >= 2) {
+    const intPart = parts[0].replace(/\./g, '');
+    const decPart = parts[1].substring(0, 2);
+    const value = parseFloat(intPart + '.' + decPart);
+    if (!isNaN(value) && value > 1000000) return value;
+  }
+  return null;
+}
+
 async function fetchPrejuizoTotal() {
-  try {
-    const url = PAINEL_URL + '&_nc=' + Date.now();
-    const res = await fetch(url, {mode:'cors'});
-    if (!res.ok) return;
-    const txt = await res.text();
-
-    // Última linha não-vazia tem o total: "R$ 17.473.148","54"
-    const allLines = txt.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
-    const lastLine = allLines[allLines.length - 1];
-
-    // Remove R$, espaços e aspas, fica com: 17.473.148,54
-    const cleaned = lastLine.split('R$').join('').split(' ').join('').split('"').join('');
-    const parts = cleaned.split(',');
-    if (parts.length >= 2) {
-      const intPart = parts[0].replace(/\./g, '');
-      const decPart = parts[1].substring(0, 2);
-      const value = parseFloat(intPart + '.' + decPart);
-      if (!isNaN(value) && value > 1000000) {
+  const isLocal = window.location.protocol === 'file:';
+  const sources = [];
+  // 1) painel.csv do mesmo domínio (gerado pelo Actions, sem CORS) — preferido
+  if (!isLocal) sources.push('painel.csv?_nc=' + Date.now());
+  // 2) proxies CORS sobre o export VIVO da aba PAINEL
+  if (!isLocal) {
+    const u = PAINEL_EXPORT_URL + '&_nc=' + Date.now();
+    sources.push('https://corsproxy.io/?' + encodeURIComponent(u));
+    sources.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(u));
+    sources.push('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u));
+  }
+  for (const src of sources) {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) continue;
+      const txt = await res.text();
+      if (!txt || txt.trim().startsWith('<')) continue;
+      const value = parsePrejuizoTotal(txt);
+      if (value) {
         window._prejuizoTotal = value;
         $('k-prej', fR(value));
-        console.log('[BPFRON] Prejuizo total:', fR(value));
+        console.log('[BPFRON] Prejuizo total:', fR(value), '(via', src.split('/')[2] || 'local', ')');
         return;
       }
+    } catch(e) {
+      console.warn('[BPFRON] Prejuizo fonte falhou:', (src.split('/')[2]||src), e.message);
     }
-    console.warn('[BPFRON] Total nao encontrado. Ultima linha:', lastLine);
-  } catch(e) {
-    console.warn('[BPFRON] Erro prejuizo:', e.message);
   }
+  console.warn('[BPFRON] Prejuizo total nao obtido — usando cálculo local de fallback.');
 }
 
 /* ── LOAD DATA ── */
@@ -2295,7 +2385,13 @@ function filtrarEnvolvidos() {
       if (rawDate) {
         const parts = rawDate.split('/');
         if (parts.length === 3) {
-          const iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          // desambigua DD/MM vs M/D: o número > 12 é o dia; ambíguo assume M/D (export US)
+          const a = +parts[0], b = +parts[1], y = parts[2];
+          let dd, mm;
+          if (a > 12 && b <= 12) { dd = a; mm = b; }
+          else if (b > 12 && a <= 12) { dd = b; mm = a; }
+          else { dd = b; mm = a; }
+          const iso = `${y}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
           if (di && iso < di) return false;
           if (df && iso > df) return false;
         }
