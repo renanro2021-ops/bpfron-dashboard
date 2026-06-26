@@ -391,13 +391,13 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ── MAPA ── */
 #mapa-ocorrencias {
-  height: 520px;
+  height: 720px;
   width: 100%;
   border-radius: 10px;
   z-index: 1;
   background: #0a0c10;
 }
-.map-card { padding: 0; overflow: hidden; }
+.map-card { padding: 0; overflow: hidden; position: relative; }
 .map-header {
   padding: 18px 18px 14px;
   display: flex;
@@ -444,6 +444,59 @@ tbody tr:last-child td{border-bottom:none}
 }
 .btn-map:hover { border-color: var(--yellow); color: var(--yellow); }
 .btn-map.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+/* Painel de filtro por crime — dentro do mapa, à direita, seleção */
+.tp-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+#map-crime-filters {
+  position:absolute; top:14px; right:14px; z-index:600;
+  width:212px; max-height:calc(100% - 28px); overflow-y:auto;
+  background:rgba(10,12,16,.85); border:1px solid rgba(245,197,24,.3);
+  border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:3px;
+  box-shadow:0 2px 14px rgba(0,0,0,.55); pointer-events:auto;
+}
+.mcf-head {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:10px; font-weight:700; color:#fbbf24; text-transform:uppercase;
+  letter-spacing:.5px; padding:2px 4px 6px;
+}
+.mcf-clear { background:none; border:none; color:#94a3b8; font-size:9.5px; cursor:pointer; text-decoration:underline; padding:0; }
+.crime-pill {
+  display:flex; align-items:center; gap:7px; width:100%;
+  background:transparent; border:1px solid transparent; color:#e2e8f0;
+  border-radius:7px; padding:4px 7px; font-size:11px; cursor:pointer; text-align:left;
+  font-family:'Inter',sans-serif; transition:all .12s;
+}
+.crime-pill:hover { background:rgba(255,255,255,.06); }
+.crime-pill .cp-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.crime-pill .cp-n { font-size:10px; color:#94a3b8; font-weight:700; }
+.crime-pill.sel { background:rgba(245,197,24,.16); border-color:rgba(245,197,24,.5); color:#fff; }
+.crime-pill.dim { opacity:.38; }
+
+/* Tela cheia do mapa (apresentação) */
+.map-card.fs-css { position:fixed; inset:0; z-index:9999; margin:0; }
+.map-card.is-fs { display:flex; flex-direction:column; background:var(--bg); }
+.map-card.is-fs #map-wrap { flex:1 1 auto; min-height:0; }
+.map-card.is-fs #mapa-ocorrencias { height:100% !important; border-radius:0; }
+.map-card:fullscreen { display:flex; flex-direction:column; background:var(--bg); }
+.map-card:fullscreen #map-wrap { flex:1 1 auto; min-height:0; }
+.map-card:fullscreen #mapa-ocorrencias { height:100% !important; border-radius:0; }
+
+/* Wrapper de posicionamento: contexto p/ overlays (começa abaixo do header) */
+#map-wrap { position:relative; }
+
+/* Indicadores flutuantes DENTRO do mapa (canto inferior esquerdo) */
+#map-stats {
+  position:absolute; left:14px; bottom:22px; z-index:600;
+  display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 240px);
+  pointer-events:none;
+}
+.mst {
+  background:rgba(10,12,16,.82); border:1px solid rgba(245,197,24,.35);
+  border-radius:9px; padding:7px 12px; min-width:72px;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);
+}
+.mst .mst-v { font-size:18px; font-weight:800; color:#fff; line-height:1.1; }
+.mst .mst-l { font-size:9.5px; color:#fbbf24; text-transform:uppercase; letter-spacing:.5px; font-weight:700; margin-top:2px; }
 
 /* Leaflet dark overrides */
 .leaflet-container { background: #f2f2f0 !important; }
@@ -654,6 +707,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <div class="sb-group">🚓 Gestão</div>
   <button class="sb-item" id="nav-garagem"  onclick="showPage('garagem')"><span class="ic">🚗</span> Garagem</button>
   <button class="sb-item" id="nav-material" onclick="showPage('material')"><span class="ic">🔫</span> Material Bélico</button>
+  <button class="sb-item" id="nav-policiais-campo" onclick="showPage('policiais-campo')"><span class="ic">👮</span> Policiais em Campo</button>
+  <button class="sb-item" id="nav-diaria"   onclick="showPage('diaria')"><span class="ic">💵</span> Diária por Policial</button>
+  <button class="sb-item" id="nav-recursos" onclick="showPage('recursos')"><span class="ic">💰</span> Valor de Recursos Obtidos</button>
 
   <div class="sb-spacer"></div>
   <button class="sb-item sb-apres" id="btn-apresentacao" onclick="toggleApresentacao()"><span class="ic">▶</span> Apresentação</button>
@@ -745,8 +801,38 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       </div>
     </div>
 
+    <!-- PÁGINA: POLICIAIS EM CAMPO (em construção) -->
+    <div id="page-policiais-campo" class="page-content">
+      <div class="sec">👮 Policiais em Campo — Efetivo Empregado</div>
+      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
+        <div style="font-size:46px;margin-bottom:10px">🚧</div>
+        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
+        <p>Aqui vai entrar o acompanhamento do <b>efetivo empregado em campo</b>: quantos policiais em operação, por equipe, por período e por área de atuação. Vamos montar nos próximos passos.</p>
+      </div>
+    </div>
+
+    <!-- PÁGINA: DIÁRIA POR POLICIAL (em construção) -->
+    <div id="page-diaria" class="page-content">
+      <div class="sec">💵 Diária por Policial — Custo Operacional</div>
+      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
+        <div style="font-size:46px;margin-bottom:10px">🚧</div>
+        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
+        <p>Aqui vai entrar o controle das <b>diárias por policial</b>: valor, quantidade paga, total por operação e período. Vamos montar nos próximos passos.</p>
+      </div>
+    </div>
+
+    <!-- PÁGINA: VALOR DE RECURSOS OBTIDOS (em construção) -->
+    <div id="page-recursos" class="page-content">
+      <div class="sec">💰 Valor de Recursos Obtidos — Resultado Financeiro</div>
+      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
+        <div style="font-size:46px;margin-bottom:10px">🚧</div>
+        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
+        <p>Aqui vai entrar o <b>valor dos recursos obtidos</b>: apreensões, bens, prejuízo causado ao crime e retorno operacional. Vamos montar nos próximos passos.</p>
+      </div>
+    </div>
+
     <!-- PÁGINA: VISÃO GERAL -->
-    <div id="page-visao-geral" class="page-content">
+    <div id="page-visao-geral" class="page-content active">
 
     <!-- KPIs -->
     <div class="sec">📊 Indicadores Operacionais</div>
@@ -886,20 +972,19 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <div class="chart-card map-card" style="margin-bottom:12px">
     <div class="map-header">
       <h3 style="margin:0"><span class="ch-dot"></span>Distribuição Geográfica das Ocorrências</h3>
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div class="map-toggle">
           <button class="btn-map active" id="btn-marcadores" onclick="setMapMode('marcadores')">📍 Marcadores</button>
           <button class="btn-map" id="btn-calor" onclick="setMapMode('calor')">🔥 Calor</button>
         </div>
-        <div class="map-legend">
-          <div class="leg-item"><div class="leg-dot" style="background:#ef4444"></div>Prisão/Apreensão</div>
-          <div class="leg-item"><div class="leg-dot" style="background:#3b82f6"></div>Comunicação</div>
-          <div class="leg-item"><div class="leg-dot" style="background:#f59e0b"></div>Relato</div>
-          <div class="leg-item"><div class="leg-dot" style="background:#a855f7"></div>Outros</div>
-        </div>
+        <button class="btn-map" id="btn-fullscreen" onclick="toggleMapFullscreen()">⛶ Tela cheia</button>
       </div>
     </div>
-    <div id="mapa-ocorrencias"></div>
+    <div id="map-wrap">
+      <div id="mapa-ocorrencias"></div>
+      <div id="map-stats"></div>
+      <div id="map-crime-filters"></div>
+    </div>
   </div>
 
   </div><!-- /page-mapa -->
@@ -1376,8 +1461,11 @@ function parseCSV(txt) {
     });
 
     row._date = parseDate(row.data);
-    // Normaliza natureza/crime para agrupar variações do mesmo crime
-    if (row.natureza_crime) row.natureza_crime = normalizeCrime(row.natureza_crime);
+    // Crimes: separa compostos (" / ") em categorias normalizadas; guarda o principal p/ exibição/cor
+    if (row.natureza_crime) {
+      row._crimes = crimesDeRaw(row.natureza_crime);
+      row.natureza_crime = row._crimes[0] || normalizeCrime(row.natureza_crime);
+    }
     // Normaliza município para unificar maiúsculas/minúsculas
     if (row.municipio) row.municipio = normalizeMunicipio(row.municipio);
     NUM_FIELDS.forEach(f => { row[f] = toNum(row[f]); });
@@ -1447,6 +1535,7 @@ let MAP = null;
 let HEAT_LAYER = null;
 let MARKERS_LAYER = null;
 let MAP_MODE = 'marcadores';
+let MAP_CRIMES_SEL = new Set();   // crimes SELECIONADOS no mapa (vazio = mostra todos)
 
 const TIPO_CORES = {
   'Prisão/Apreensão':          '#ef4444',
@@ -1459,6 +1548,37 @@ function getTipoCor(tipo) {
   return TIPO_CORES[tipo] || '#a855f7';
 }
 
+/* Cores por categoria de CRIME (usadas nos filtros e marcadores do mapa) */
+const CRIME_CORES = {
+  'Tráfico de drogas':                '#22c55e',
+  'Posse de drogas (uso pessoal)':    '#16a34a',
+  'Descaminho':                       '#3b82f6',
+  'Contrabando':                      '#f59e0b',
+  'Arma de fogo / munição':           '#ef4444',
+  'Roubo de veículo':                 '#a855f7',
+  'Furto':                            '#c084fc',
+  'Recuperação de veículo':           '#8b5cf6',
+  'Adulteração de veículo':           '#7c3aed',
+  'Transporte ilegal de madeira':     '#84cc16',
+  'Cumprimento de mandado de prisão': '#06b6d4',
+  'Recaptura de foragido':            '#0891b2',
+  'Homicídio':                        '#be123c',
+  'Receptação':                       '#0ea5e9',
+  'Apoio a órgão de segurança':       '#64748b',
+  'Objeto encontrado':                '#94a3b8',
+  'Apropriação indébita':             '#f472b6',
+  'Outros':                           '#78716c',
+};
+const CRIME_PALETTE = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a855f7','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
+// Categoria de crime de um registro
+function crimeCat(r) { return normalizeCrime(r.natureza_crime) || 'Outros'; }
+// Cor estável por categoria de crime (predefinida ou derivada do nome)
+function getCrimeCor(cat) {
+  if (CRIME_CORES[cat]) return CRIME_CORES[cat];
+  let h = 0; for (let i = 0; i < cat.length; i++) h = (h * 31 + cat.charCodeAt(i)) >>> 0;
+  return CRIME_PALETTE[h % CRIME_PALETTE.length];
+}
+
 function initMap() {
   if (MAP) return;
   MAP = L.map('mapa-ocorrencias', {
@@ -1467,10 +1587,15 @@ function initMap() {
     zoomControl: true,
   });
 
-  // Tile claro CartoDB Voyager — visual limpo parecido com Google Maps, sem autenticação
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
+  // SATÉLITE (Esri World Imagery) — imagem de satélite sem autenticação
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Imagery © Esri, Maxar, Earthstar Geographics, USGS',
+    maxZoom: 19,
+  }).addTo(MAP);
+
+  // Rótulos por cima (nomes de cidades, rodovias, divisas) para legibilidade sobre o satélite
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '',
     maxZoom: 19,
   }).addTo(MAP);
 }
@@ -1484,8 +1609,18 @@ function renderMap() {
   if (MARKERS_LAYER) { MAP.removeLayer(MARKERS_LAYER); MARKERS_LAYER = null; }
 
   // Filtra apenas ocorrências com coordenadas válidas
-  const pontos = FIL.filter(r => r.latitude && r.longitude &&
+  const comCoords = FIL.filter(r => r.latitude && r.longitude &&
     Math.abs(r.latitude) > 1 && Math.abs(r.longitude) > 1);
+
+  // Monta as pílulas de crime (legenda interativa) e aplica o filtro de crime do mapa
+  renderCrimeFilters(comCoords);
+  // Seleção: nada selecionado = todos; senão, só pontos com algum crime selecionado
+  const pontos = MAP_CRIMES_SEL.size
+    ? comCoords.filter(r => crimesDe(r).some(c => MAP_CRIMES_SEL.has(c)))
+    : comCoords;
+
+  // Indicadores sobre o mapa (refletem o que está visível)
+  renderMapStats(pontos);
 
   if (!pontos.length) return;
 
@@ -1503,7 +1638,7 @@ function renderMap() {
     // MARCADORES INDIVIDUAIS
     MARKERS_LAYER = L.layerGroup();
     pontos.forEach(r => {
-      const cor = getTipoCor(r.tipo_de_bo);
+      const cor = getCrimeCor(crimeCat(r));
       const icon = L.divIcon({
         className: '',
         html: `<div style="
@@ -1521,26 +1656,31 @@ function renderMap() {
       const armas  = r.armas > 0 ? `<br>🔫 Armas: <strong>${r.armas}</strong>` : '';
       const veic   = r.veiculos > 0 ? `<br>🚗 Veículos: <strong>${r.veiculos}</strong>` : '';
       const presos = r.no_presos > 0 ? `<br>🔒 Presos: <strong>${r.no_presos}</strong>` : '';
+      const ender  = r.endereco ? `<br>🏠 ${r.endereco}` : '';
+      const oper   = r.operacao ? `<br>🎯 <em>${r.operacao}</em>` : '';
+      const desc   = r.descricao ? `<hr style="border:none;border-top:1px solid #e2e8f0;margin:6px 0">📝 ${r.descricao}` : '';
 
       const popup = `
         <strong>BO Nº ${r.no_bo}</strong><br>
         📅 ${r.data || '—'} ${r.hora ? '· '+r.hora : ''}<br>
-        📍 ${r.municipio || '—'}<br>
+        📍 ${r.municipio || '—'}${ender}<br>
         ⚖️ ${r.natureza_crime || '—'}
-        ${presos}${drogas}${armas}${veic}
+        ${presos}${drogas}${armas}${veic}${oper}
+        ${equipeHTML(r.no_bo)}
+        ${desc}
       `;
 
       L.marker([r.latitude, r.longitude], {icon})
-        .bindPopup(popup, {maxWidth: 280})
+        .bindPopup(popup, {maxWidth: 320})
         .addTo(MARKERS_LAYER);
     });
     MARKERS_LAYER.addTo(MAP);
   }
 
-  // Ajusta zoom para os pontos
+  // Ajusta zoom para enquadrar só os pontos visíveis (sem exagerar quando há poucos)
   if (pontos.length > 0) {
     const bounds = L.latLngBounds(pontos.map(r => [r.latitude, r.longitude]));
-    MAP.fitBounds(bounds, {padding: [30, 30]});
+    MAP.fitBounds(bounds, {padding: [40, 40], maxZoom: 12});
   }
 }
 
@@ -1551,46 +1691,187 @@ function setMapMode(mode) {
   renderMap();
 }
 
+/* Painel de filtro por CRIME (dentro do mapa, à direita, por SELEÇÃO, maiores primeiro) */
+function renderCrimeFilters(pts) {
+  const box = document.getElementById('map-crime-filters');
+  if (!box) return;
+  const cnt = {};
+  pts.forEach(r => crimesDe(r).forEach(c => { cnt[c] = (cnt[c] || 0) + 1; }));
+  const crimes = Object.keys(cnt).sort((a,b) => cnt[b] - cnt[a]);
+  const anySel = MAP_CRIMES_SEL.size > 0;
+  const head = `<div class="mcf-head"><span>🎯 Filtrar crime</span>${anySel ? `<button class="mcf-clear" onclick="clearMapCrimes()">limpar</button>` : ''}</div>`;
+  const pills = crimes.map(c => {
+    const sel = MAP_CRIMES_SEL.has(c);
+    const cls = 'crime-pill' + (sel ? ' sel' : '') + (anySel && !sel ? ' dim' : '');
+    const cor = getCrimeCor(c);
+    const cEsc = c.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return `<button class="${cls}" data-crime="${cEsc}">
+      <span class="tp-dot" style="background:${cor}"></span>
+      <span class="cp-name">${cEsc}</span>
+      <span class="cp-n">${cnt[c]}</span>
+    </button>`;
+  }).join('');
+  box.innerHTML = head + pills;
+  box.querySelectorAll('.crime-pill').forEach(b => b.onclick = () => toggleMapCrime(b.dataset.crime));
+}
+function toggleMapCrime(c) {
+  if (MAP_CRIMES_SEL.has(c)) MAP_CRIMES_SEL.delete(c); else MAP_CRIMES_SEL.add(c);
+  renderMap();
+}
+function clearMapCrimes() {
+  MAP_CRIMES_SEL.clear();
+  renderMap();
+}
+
+/* Indicadores sobre o mapa (refletem os pontos visíveis) */
+function renderMapStats(pts) {
+  const el = document.getElementById('map-stats');
+  if (!el) return;
+  const sum = f => pts.reduce((a,r) => a + (r[f]||0), 0);
+  const cards = [
+    ['Ocorrências', fN(pts.length)],
+    ['Presos',      fN(sum('no_presos'))],
+    ['Drogas',      fD(sum('drogas_total_kg'),1)+' kg'],
+    ['Veículos',    fN(sum('veiculos'))],
+    ['Armas',       fN(sum('armas'))],
+  ];
+  el.innerHTML = cards.map(([l,v]) =>
+    `<div class="mst"><div class="mst-v">${v}</div><div class="mst-l">${l}</div></div>`
+  ).join('');
+}
+
+/* Tela cheia do mapa — usa Fullscreen API com fallback CSS */
+function toggleMapFullscreen() {
+  const card = document.querySelector('.map-card');
+  if (!card) return;
+  const req = card.requestFullscreen || card.webkitRequestFullscreen;
+  const isFsApi = document.fullscreenElement || document.webkitFullscreenElement;
+  if (req) {
+    if (!isFsApi) req.call(card);
+    else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } else {
+    card.classList.toggle('fs-css');   // fallback navegadores sem API
+    afterFsChange();
+  }
+}
+function afterFsChange() {
+  const card = document.querySelector('.map-card');
+  if (!card) return;
+  const fs = !!(document.fullscreenElement || document.webkitFullscreenElement) || card.classList.contains('fs-css');
+  card.classList.toggle('is-fs', fs);
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.innerHTML = fs ? '✕ Sair' : '⛶ Tela cheia';
+  setTimeout(() => { if (MAP) { MAP.invalidateSize(); renderMap(); } }, 150);
+}
+document.addEventListener('fullscreenchange', afterFsChange);
+document.addEventListener('webkitfullscreenchange', afterFsChange);
+document.addEventListener('keydown', e => {
+  // Esc sai do modo fallback CSS (a API já trata sozinha)
+  if (e.key === 'Escape') {
+    const card = document.querySelector('.map-card');
+    if (card && card.classList.contains('fs-css')) { card.classList.remove('fs-css'); afterFsChange(); }
+  }
+});
+
 /* ── NORMALIZAÇÃO DE NATUREZA/CRIME ── */
 function normalizeCrime(raw) {
   if (!raw) return '';
   const s = raw.trim();
-  // Mapa de prefixos → categoria normalizada
-  const map = [
-    [/tráfico de drogas/i,               'Tráfico de drogas'],
-    [/tráfico de entorpecentes/i,         'Tráfico de drogas'],
-    [/lei.*11\.343/i,                     'Tráfico de drogas'],
-    [/^descaminho/i,                      'Descaminho'],
-    [/^recuperação de veículo/i,          'Recuperação de veículo'],
-    [/^transporte ilegal de madeira/i,    'Transporte ilegal de madeira'],
-    [/^cumprimento de mandado/i,          'Cumprimento de mandado de prisão'],
-    [/^contrabando de combustível/i,      'Contrabando de combustível'],
-    [/^apoio a órgão/i,                   'Apoio a órgão de segurança'],
-    [/^adulteração de veículo/i,          'Adulteração de veículo'],
-    [/^porte ilegal de arma/i,            'Porte ilegal de arma de fogo'],
-    [/^posse irregular de arma/i,         'Posse irregular de arma de fogo'],
-    [/^receptação/i,                      'Receptação'],
-    [/^objeto encontrado/i,               'Objeto encontrado'],
-    [/^roubo/i,                           'Roubo de veículo'],
-    [/^furto/i,                           'Furto'],
-    [/^posse de drogas/i,                 'Posse de drogas'],
-    [/^contrabando de cigarros/i,         'Contrabando de cigarros'],
-    [/^contrabando/i,                     'Contrabando (outros)'],
-    [/^homicídio/i,                       'Homicídio'],
-    [/^tráfico de pessoas/i,              'Tráfico de pessoas'],
-    [/^resistência/i,                     'Outros'],
-    [/^apropriação/i,                     'Outros'],
+  // chave de comparação: SEM acento e em minúsculas (agrupa variações de ortografia/maiúsculas)
+  const k = s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  // Detecção por PALAVRA-CHAVE (cada parte já é um crime; ordem importa)
+  const rules = [
+    [/uso pessoal|art\.?\s*28/,                          'Posse de drogas (uso pessoal)'],
+    [/apoio/,                                            'Apoio a órgão de segurança'],
+    [/recaptura|foragido/,                               'Recaptura de foragido'],
+    [/trafico|associacao para o trafico|11\.?343/,       'Tráfico de drogas'],
+    [/arma de fogo|arma de uso|porte .*arma|posse .*arma|disparo de arma|municao|10\.?826|supressao de marca/, 'Arma de fogo / munição'],
+    [/descaminho/,                                       'Descaminho'],
+    [/contrabando/,                                      'Contrabando'],
+    [/madeira|florestal|9\.?605|crime ambiental|usurpacao/, 'Transporte ilegal de madeira'],
+    [/recuperacao de veiculo|veiculo clonado|veiculo .*(furtad|roubad)/, 'Recuperação de veículo'],
+    [/receptacao/,                                       'Receptação'],
+    [/adulteracao/,                                      'Adulteração de veículo'],
+    [/roubo/,                                            'Roubo de veículo'],
+    [/furto/,                                            'Furto'],
+    [/mandado/,                                          'Cumprimento de mandado de prisão'],
+    [/homicidio/,                                        'Homicídio'],
+    [/objeto encontrado/,                                'Objeto encontrado'],
+    [/apropriacao/,                                      'Apropriação indébita'],
   ];
-  for (const [re, label] of map) {
-    if (re.test(s)) return label;
+  for (const [re, label] of rules) {
+    if (re.test(k)) return label;
   }
-  return s; // mantém original se não mapeado
+  // crimes menos comuns / fragmentos → categoria genérica
+  return 'Outros';
+}
+
+/* Separa crimes compostos de um BO em categorias normalizadas.
+   Quebra em ";" ou " / " (barra entre espaços) — NÃO quebra em "Lei 11.343/06". */
+function crimesDeRaw(raw) {
+  if (!raw) return [];
+  const parts = String(raw).split(/\s*;\s*|\s+\/\s+/).map(p => normalizeCrime(p.trim())).filter(Boolean);
+  return [...new Set(parts)];
+}
+// Categorias de crime de um registro já carregado (usa o que foi calculado na carga)
+function crimesDe(r) {
+  if (r && Array.isArray(r._crimes) && r._crimes.length) return r._crimes;
+  return r && r.natureza_crime ? [r.natureza_crime] : [];
 }
 
 /* ── NORMALIZAÇÃO DE MUNICÍPIO ── */
+// Chave de agrupamento: sem acento, minúscula, só alfanumérico (igual à ideia de normalizeCrime)
+function munKey(s) {
+  return (s || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // remove acentos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')                         // hífen, apóstrofo, etc → espaço
+    .replace(/\bd[oae]?\s+oeste\b/g, 'doeste')          // "d oeste"/"do oeste"/"da oeste" → "doeste"
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Municípios de Rondônia (grafia oficial) → resolvem qualquer variação de acento/caixa
+const MUN_RO = [
+  "Alta Floresta D'Oeste","Alto Alegre dos Parecis","Alto Paraíso","Alvorada D'Oeste",
+  "Ariquemes","Buritis","Cabixi","Cacaulândia","Cacoal","Campo Novo de Rondônia",
+  "Candeias do Jamari","Castanheiras","Cerejeiras","Chupinguaia","Colorado do Oeste",
+  "Corumbiara","Costa Marques","Cujubim","Espigão D'Oeste","Governador Jorge Teixeira",
+  "Guajará-Mirim","Itapuã do Oeste","Jaru","Ji-Paraná","Machadinho D'Oeste",
+  "Ministro Andreazza","Mirante da Serra","Monte Negro","Nova Brasilândia D'Oeste",
+  "Nova Mamoré","Nova União","Novo Horizonte do Oeste","Ouro Preto do Oeste","Parecis",
+  "Pimenta Bueno","Pimenteiras do Oeste","Porto Velho","Presidente Médici",
+  "Primavera de Rondônia","Rio Crespo","Rolim de Moura","Santa Luzia D'Oeste",
+  "São Felipe D'Oeste","São Francisco do Guaporé","São Miguel do Guaporé","Seringueiras",
+  "Teixeirópolis","Theobroma","Urupá","Vale do Anari","Vale do Paraíso","Vilhena"
+];
+const MUN_CANON = {};
+MUN_RO.forEach(n => { MUN_CANON[munKey(n)] = n; });
+
+// Apelidos: formas abreviadas (sem D'Oeste / do Guaporé / dos Parecis) → grafia oficial
+const MUN_ALIAS = {
+  "nova brasilandia":   "Nova Brasilândia D'Oeste",
+  "alta floresta":      "Alta Floresta D'Oeste",
+  "alvorada":           "Alvorada D'Oeste",
+  "espigao":            "Espigão D'Oeste",
+  "machadinho":         "Machadinho D'Oeste",
+  "santa luzia":        "Santa Luzia D'Oeste",
+  "sao felipe":         "São Felipe D'Oeste",
+  "sao francisco":      "São Francisco do Guaporé",
+  "sao miguel":         "São Miguel do Guaporé",
+  "alto alegre":        "Alto Alegre dos Parecis",
+  "novo horizonte":     "Novo Horizonte do Oeste",
+  "primavera":          "Primavera de Rondônia",
+  "campo novo":         "Campo Novo de Rondônia"
+};
+Object.entries(MUN_ALIAS).forEach(([k, v]) => { MUN_CANON[munKey(k)] = v; });
+
 function normalizeMunicipio(raw) {
   if (!raw) return '';
-  // Converte para Title Case e normaliza acentuação
+  // 1) Município de RO conhecido / apelido → grafia oficial (resolve acento/caixa/apóstrofo)
+  const canon = MUN_CANON[munKey(raw)];
+  if (canon) return canon;
+  // 2) Fallback p/ municípios fora da lista (fronteira): Title Case
   return raw.trim()
     .toLowerCase()
     .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
@@ -1600,8 +1881,7 @@ function normalizeMunicipio(raw) {
     .replace(/\bDos\b/g, 'dos')
     .replace(/\bDas\b/g, 'das')
     .replace(/\bE\b/g, 'e')
-    .replace(/\bD'oeste\b/g, "D'Oeste")
-    .replace(/\bD'Oeste\b/g, "D'Oeste");
+    .replace(/\bD'oeste\b/g, "D'Oeste");
 }
 
 /* ── BOTÕES DE PERÍODO RÁPIDO ── */
@@ -1643,7 +1923,7 @@ function showPage(pageId) {
   if (btn) btn.classList.add('active');
 
   // Tabela só nas páginas analíticas (não em comparativo, consultas, garagem, material)
-  const semTabela = ['comparativo','consultas','garagem','material'];
+  const semTabela = ['comparativo','consultas','garagem','material','policiais-campo','diaria','recursos'];
   const tbl = document.getElementById('page-tabela');
   if (tbl) tbl.classList.toggle('active', !semTabela.includes(pageId));
 
@@ -1651,7 +1931,7 @@ function showPage(pageId) {
 
   if (pageId === 'operacoes')  renderOperacoes();
   if (pageId === 'comparativo') renderComparativo();
-  if (pageId === 'mapa')       { setTimeout(() => { if(MAP) MAP.invalidateSize(); }, 100); }
+  if (pageId === 'mapa')       { setTimeout(() => { if(MAP){ MAP.invalidateSize(); renderMap(); } }, 120); }
   if (pageId === 'consultas')  {
     // Exige login: o gate decide se mostra a tela de login ou os dados.
     gateConsultas();
@@ -1889,6 +2169,69 @@ async function fetchPrejuizoTotal() {
   console.warn('[BPFRON] Prejuizo total nao obtido — usando cálculo local de fallback.');
 }
 
+/* ── Equipe policial por ocorrência (aba 👮 POLICIAIS, gid 894084456) ── */
+const POL_EXPORT_URL = "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=894084456";
+
+async function loadPoliciais() {
+  const isLocal = window.location.protocol === 'file:';
+  const sources = [];
+  if (!isLocal) sources.push('policiais.csv?_nc=' + Date.now());   // futuro: gerado pelo Actions
+  if (!isLocal) {
+    const u = POL_EXPORT_URL + '&_nc=' + Date.now();
+    sources.push('https://corsproxy.io/?' + encodeURIComponent(u));
+    sources.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(u));
+    sources.push('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u));
+  }
+  let txt = '';
+  for (const src of sources) {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) continue;
+      const t = await res.text();
+      if (t && t.trim().length > 50 && !t.trim().startsWith('<')) { txt = t; break; }
+    } catch(e) { /* tenta a próxima fonte */ }
+  }
+  if (!txt) { console.warn('[POL] equipe não carregada'); return; }
+
+  const rows = parseCSVgenerico(txt);
+  const byBO = {};
+  rows.forEach(r => {
+    const bo = String(r.n_bo || r.no_bo || r.bo || '').replace(/^"|"$/g,'').trim();
+    if (!bo) return;
+    (byBO[bo] = byBO[bo] || []).push({
+      posto:   r.posto_graduacao || '',
+      guerra:  r.nome_de_guerra || '',
+      nome:    r.nome_do_policial || '',
+      unidade: r.unidade || '',
+      funcao:  r.funcao_na_ocorrencia || '',
+    });
+  });
+  window._polByBO = byBO;
+  console.log('[POL] equipe carregada:', rows.length, 'registros /', Object.keys(byBO).length, 'BOs');
+  if (typeof MAP !== 'undefined' && MAP) renderMap();   // reconstrói popups com a equipe
+}
+
+/* Monta o bloco "Equipe" do popup. Público: Unidade + Nome de Guerra + Função.
+   Logado (AUTH): Posto + Nome completo + Unidade + Função. */
+function equipeHTML(bo) {
+  const team = (window._polByBO && window._polByBO[String(bo).trim()]) || [];
+  if (!team.length) return '';
+  const logged = (typeof AUTH !== 'undefined' && AUTH.logged);
+  const isCmt = p => /(coman|cmt)/i.test(p.funcao);
+  const sorted = [...team].sort((a,b) => (isCmt(b)?1:0) - (isCmt(a)?1:0));
+  const linhas = sorted.map(p => {
+    const fnc = p.funcao ? ` <span style="color:#64748b">(${p.funcao})</span>` : '';
+    if (logged) {
+      const id = [p.posto, p.nome || p.guerra].filter(Boolean).join(' ');
+      const un = p.unidade ? ` · <span style="color:#475569">${p.unidade}</span>` : '';
+      return `• ${id}${un}${fnc}`;
+    }
+    const id = [p.unidade, p.guerra].filter(Boolean).join(' · ');
+    return `• ${id || p.guerra || p.unidade || '—'}${fnc}`;
+  }).join('<br>');
+  return `<hr style="border:none;border-top:1px solid #e2e8f0;margin:6px 0">👮 <strong>Equipe (${team.length})</strong><br>${linhas}`;
+}
+
 /* ── LOAD DATA ── */
 async function loadData() {
   setSt('load','Carregando dados da planilha...');
@@ -1902,6 +2245,8 @@ async function loadData() {
 
   // Busca o Prejuízo Total do PAINEL em paralelo
   fetchPrejuizoTotal();
+  // Busca a equipe policial por BO (aba POLICIAIS) em paralelo
+  loadPoliciais();
 
   // Busca dados online
   const isLocal = window.location.protocol === 'file:';
@@ -2019,7 +2364,7 @@ function populateFilters() {
   const uniq = f => [...new Set(ALL.map(r=>r[f]).filter(Boolean))].sort();
   fill('fmun',  uniq('municipio'));
   fill('ftipo', uniq('tipo_de_bo'));
-  fill('fnat',  uniq('natureza_crime'));
+  fill('fnat',  [...new Set(ALL.flatMap(crimesDe).filter(Boolean))].sort());  // todas as categorias de crime
   fill('fmeio', uniq('meio'));
 
   const dates = ALL.map(r=>r._date).filter(Boolean);
@@ -2065,7 +2410,7 @@ function applyFilters() {
     if (ed && r._date && r._date > ed) return false;
     if (mn && r.municipio !== mn)      return false;
     if (ti && r.tipo_de_bo !== ti)     return false;
-    if (na && r.natureza_crime !== na) return false;
+    if (na && !crimesDe(r).includes(na)) return false;  // pega BOs com vários crimes
     if (me && r.meio !== me)           return false;
     return true;
   });
@@ -2073,7 +2418,7 @@ function applyFilters() {
   // Filtro ativo = o conjunto exibido é menor que o total (período, município, tipo, natureza, meio…)
   window._filtroAtivo = FIL.length !== ALL.length;
 
-  renderKPIs(); renderInsights(); renderCharts(); renderMap(); renderTable(); initPages();
+  renderKPIs(); renderInsights(); renderCharts(); renderMap(); renderTable();
 
   // Se a página de Operações estiver aberta, atualiza botões + KPIs com o novo filtro
   const pgOp = document.getElementById('page-operacoes');
