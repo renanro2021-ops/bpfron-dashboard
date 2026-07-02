@@ -889,6 +889,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-policiais-campo table.ec-tbl th:nth-child(4),#page-policiais-campo table.ec-tbl td:nth-child(4){width:128px}
       #page-policiais-campo table.ec-tbl th:nth-child(5),#page-policiais-campo table.ec-tbl td:nth-child(5){width:84px}
       #page-policiais-campo table.ec-tbl td.ec-nm{word-break:break-word}
+      /* coluna OPM extra (só nos cards de AI CRP — efetivo de batalhões variados) */
+      #page-policiais-campo table.ec-tbl td.ec-opm{color:#9db8ff;font-weight:600;font-size:11px;white-space:nowrap}
+      #page-policiais-campo table.ec-tbl-ai th:nth-child(6),#page-policiais-campo table.ec-tbl-ai td:nth-child(6){width:96px}
       #page-policiais-campo table.ec-tbl tr:last-child td{border-bottom:none}
       #page-policiais-campo .ec-fn{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.5px}
       #page-policiais-campo .ec-fn.CMT{background:rgba(220,38,38,.18);color:#fca5a5}
@@ -897,6 +900,27 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-policiais-campo .ec-nm{font-weight:600;color:#fff}
       #page-policiais-campo mark{background:rgba(245,197,24,.35);color:#fff;border-radius:3px;padding:0 2px}
       #page-policiais-campo .ec-empty{text-align:center;padding:50px 20px;color:var(--muted)}
+      /* filtro avançado de batalhões */
+      #page-policiais-campo .ec-bat-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+      #page-policiais-campo .ec-bat-label{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+      #page-policiais-campo .ec-bat-pills{display:flex;flex-wrap:wrap;gap:7px}
+      #page-policiais-campo .ec-bat-pill{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#cfd6e0;cursor:pointer;transition:.15s;white-space:nowrap}
+      #page-policiais-campo .ec-bat-pill:hover{border-color:rgba(245,197,24,.5);color:#fff}
+      #page-policiais-campo .ec-bat-pill.active{background:var(--yellow);border-color:var(--yellow);color:#0a0f1a}
+      #page-policiais-campo .ec-bat-pill.bpfron{border-color:rgba(245,197,24,.55);color:var(--yellow)}
+      #page-policiais-campo .ec-bat-pill.bpfron.active{color:#0a0f1a}
+      #page-policiais-campo .ec-bat-pill.todos.active{background:#34d399;border-color:#34d399;color:#04241a}
+      /* blocos (CRP / CPE / BPFRON) — cada um separado */
+      #page-policiais-campo .ec-bloco{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden}
+      #page-policiais-campo .ec-bloco-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+      #page-policiais-campo .ec-bloco-ttl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;color:#fff;flex:1;min-width:160px}
+      #page-policiais-campo .ec-bloco.bpfron .ec-bloco-head{background:linear-gradient(90deg,rgba(245,197,24,.16),transparent)}
+      #page-policiais-campo .ec-bloco.bpfron .ec-bloco-ttl{color:var(--yellow)}
+      #page-policiais-campo .ec-bloco.crp .ec-bloco-head{background:linear-gradient(90deg,rgba(120,150,255,.14),transparent)}
+      #page-policiais-campo .ec-bloco.crp .ec-bloco-ttl{color:#9db8ff}
+      #page-policiais-campo .ec-bloco.cpe .ec-bloco-head{background:linear-gradient(90deg,rgba(52,211,153,.14),transparent)}
+      #page-policiais-campo .ec-bloco.cpe .ec-bloco-ttl{color:#6ee7b7}
+      #page-policiais-campo .ec-bloco-body{padding:6px 16px 16px}
     </style>
     <div id="page-policiais-campo" class="page-content">
       <div class="sec">👮 Policiais em Campo — Efetivo Empregado</div>
@@ -922,6 +946,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         <div class="ec-fg">
           <button class="btn-page-nav" onclick="ecHoje()">📅 Hoje</button>
         </div>
+      </div>
+
+      <div class="ec-bat-panel">
+        <div class="ec-bat-label">🎖️ Filtrar por batalhão</div>
+        <div id="ec-bat-pills" class="ec-bat-pills"></div>
       </div>
 
       <div class="ec-card">
@@ -3392,14 +3421,18 @@ function fecharModal() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
 
 /* ═══════════════════════ POLICIAIS EM CAMPO (Escalas — Google Sheets) ═══════════════════════ */
-// Cada operação = uma planilha; cada ABA (gid) = um período. As abas são descobertas em runtime
-// via /htmlview (nome da aba traz o período). Depois é só adicionar mais operações aqui.
+// Fonte das escalas: UMA PLANILHA por operação; cada ABA (gid) = um período.
+// As abas são descobertas em runtime via /htmlview (o nome da aba traz o período).
+// Para adicionar/trocar uma operação, basta incluir { op, sigla, sheetId } aqui.
 const ESCALA_SOURCES = [
-  { op:'BRASIL CONTRA O CRIME ORGANIZADO', sigla:'BCCO', sheetId:'1B48lZYroIgO4MSAsOJ347BDWxg2Wfse8U9s9C510fPU' },
+  { op:'BRASIL CONTRA O CRIME ORGANIZADO', sigla:'BCCO',     sheetId:'1B48lZYroIgO4MSAsOJ347BDWxg2Wfse8U9s9C510fPU' },
+  { op:'PROTETOR DA FRONTEIRA E DIVISAS',  sigla:'PROTETOR', sheetId:'1_CTAypx3cRLrRutm3o2fwrHdXr0zZavE7ZIwRIl47wQ' },
+  { op:'OUTRAS OPERAÇÕES',                 sigla:'OUTROS',   sheetId:'1jIuhndVZHup26LivtJ26VadVjCK0F3d3XUR8jVKClHs' },
 ];
 const EC_ANO_PADRAO = 2026;   // as abas/datas não trazem o ano
 const EC_PROXIES = ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy/?quest='];
 let EC_LOADED = false, EC_LOADING = false, EC_DATA = [], EC_MAP = null, EC_MARKERS = [];
+let EC_BAT_SEL = new Set();   // batalhões selecionados no filtro (vazio = todos)
 
 // busca tolerante a CORS: tenta direto (futuro Worker/same-origin) e cai nos proxies
 async function ecPx(url){
@@ -3437,26 +3470,67 @@ function ecPeriodoFlex(s){
   if(!ini || isNaN(ini)) return null;
   return { ini, fim:(fim && !isNaN(fim))?fim:ini, raw:s.trim() };
 }
+// rótulo de "bloco" (separador de comando na planilha): CRP I..IV, CPE/BPTAR, BPFRON.
+// Só vale numa linha "solo" (resto da linha vazio), p/ não confundir com cabeçalho de equipe.
+function ecBlocoHead(c0, rest){
+  if(rest.some(x => (x||'').trim())) return null;
+  const u = c0.replace(/[━—–]+/g,' ').replace(/\s+/g,' ').trim().toUpperCase();
+  if(!u) return null;
+  let m;
+  if(m = u.match(/^CRP\s+([IVX]+)\b/)) return 'CRP '+m[1];
+  if(/^CPE\b/.test(u)) return u.replace(/\s*\/\s*/g,' / ');
+  if(/^BPFRON\b/.test(u)) return 'BPFRON';
+  return null;
+}
+// normaliza o nome do batalhão/OPM ("1 BPM"/"1º BPM" → "1º BPM"; BPFRON; siglas especiais)
+function ecBatNorm(s){
+  const t = (s||'').trim().toUpperCase().replace(/\s+/g,' ');
+  if(!t) return '';
+  const m = t.match(/(\d{1,2})\s*º?\s*BPM/);
+  if(m) return m[1]+'º BPM';
+  if(/BPFRON/.test(t)) return 'BPFRON';
+  const m2 = t.match(/\b(BPTAR|BOPE|BPCHOQUE|BPTRAN|BPA|BPAMB|CIPO|CIOPAER|ROTAM|CIPT|CI)\b/);
+  if(m2) return m2[1];
+  return t;
+}
+// batalhão dominante de uma equipe (pela coluna OPM dos policiais; fallback p/ cabeçalho/bloco)
+function ecTeamBat(q){
+  // Agência de Inteligência (AI CRP) = batalhão único "AI CRP" (efetivo de OPMs variadas)
+  if(/\bAI\s*CRP\b/i.test(q.opm||'') || /\bAI\s*CRP\b/i.test(q.local||'')) return 'AI CRP';
+  const cont = {};
+  (q.policiais||[]).forEach(p => { const b = ecBatNorm(p.opm); if(b) cont[b]=(cont[b]||0)+1; });
+  const keys = Object.keys(cont);
+  if(keys.length) return keys.sort((a,b)=>cont[b]-cont[a])[0];
+  return ecBatNorm(q.opm) || ecBatNorm(q.bloco) || '';
+}
+// ordem dos batalhões: BPFRON primeiro, depois BPMs por número, depois unidades especiais
+function ecBatOrder(b){
+  if(b==='BPFRON') return [0,0];
+  const m = b.match(/^(\d{1,2})º BPM/); if(m) return [1,+m[1]];
+  return [2,0];
+}
 // parseia uma aba (CSV estruturado) numa "escala" (mesmo modelo usado pela lista/mapa)
 function ecParseSheet(csv, tabName, opNome, sigla){
   const rows = ecPcsv(csv);
-  const equipes=[]; let cur=null, hdr=null, dataSeen='';
+  const equipes=[]; let cur=null, hdr=null, dataSeen='', bloco='';
   const idx = name => hdr ? hdr.findIndex(h => h.toUpperCase().startsWith(name)) : -1;
   for(const r of rows){
     const c0 = (r[0]||'').trim();
     if(/^POST\s*\/\s*GRAD/i.test(c0)){ hdr = r.map(x=>(x||'').trim().toUpperCase()); continue; }
-    if(/EQUIPE/i.test(c0)){
-      const eqM  = c0.match(/EQUIPE\s+([A-ZÀ-Ú0-9\-]+)/i);
+    if(/EQUIPE|GUARNI[ÇC][ÃA]O/i.test(c0)){
+      const eqM  = c0.match(/(?:EQUIPE|GUARNI[ÇC][ÃA]O)\s+([A-ZÀ-Ú0-9\-]+)/i);
       const loM  = c0.match(/\[([^\]]+)\]/);
       const dM   = c0.match(/DATA\s*:\s*([^\n\r]+)/i);
       const vtrM = c0.match(/VIATURA\s*-\s*([^)\n\r]*)/i);
       const opmM = c0.match(/\]\s*-?\s*([A-ZÀ-Ú0-9ºª\/ ]+?)\s*(?:\n|\(|$)/i);
       cur = { nome: eqM?ecClean(eqM[1]).replace(/[\s\-]+$/,''):'?', local: loM?ecClean(loM[1]):'',
               opm: opmM?ecClean(opmM[1]):'', viatura: ecClean(vtrM?vtrM[1]:'')||'—',
-              dataRaw: dM?ecClean(dM[1]):'', policiais:[] };
+              dataRaw: dM?ecClean(dM[1]):'', bloco: bloco, policiais:[] };
       if(cur.dataRaw && !dataSeen) dataSeen = cur.dataRaw;
       equipes.push(cur); continue;
     }
+    const bl = ecBlocoHead(c0, r.slice(1));
+    if(bl){ bloco = bl; continue; }
     if(!cur || !hdr) continue;
     const reCol = idx('RE'); const reVal = reCol>=0 ? (r[reCol]||'').trim() : '';
     const g = n => { const k = idx(n); return k>=0 ? (r[k]||'').trim() : ''; };
@@ -3466,6 +3540,7 @@ function ecParseSheet(csv, tabName, opNome, sigla){
                            funcao:g('FUN').toUpperCase(), telefone:tel, contato:tel, localidade:g('LOCAL') });
     }
   }
+  equipes.forEach(q => { q.batalhao = ecTeamBat(q); });   // batalhão por equipe (p/ filtro)
   const periodoRaw = dataSeen || tabName.replace(/_/g,' ');
   const locs = [...new Set(equipes.map(e=>e.local).filter(Boolean))];
   return { fonte:sigla, evento:opNome, tab:tabName, local:locs.join(' · '),
@@ -3720,21 +3795,30 @@ async function ecLoad(){
   EC_LOADING = true;
   const st = document.getElementById('ec-status');
   if(st) st.textContent = 'Carregando escalas…';
-  let all=[];
-  for(const src of ESCALA_SOURCES){
+
+  // Abas-template vazias (Página1 / Sheet1 / Planilha1) não têm escala: pulamos pra
+  // não disparar uma exportação que volta vazia e percorre toda a cadeia de proxies (lento).
+  const TPL = /^(p[áa]gina ?\d+|sheet ?\d+|planilha ?\d+)$/i;
+
+  // Carrega cada operação EM PARALELO (o tempo total ≈ o da planilha mais lenta, não a soma);
+  // dentro de cada operação as abas seguem em sequência (não sobrecarrega o proxy).
+  const perSource = await Promise.all(ESCALA_SOURCES.map(async (src) => {
+    const out = [];
     try{
-      const tabs = await ecListTabs(src.sheetId);
+      const tabs = (await ecListTabs(src.sheetId)).filter(t => !TPL.test((t.name||'').trim()));
       for(const tab of tabs){
         const csv = await ecFetchTab(src.sheetId, tab.gid);
         if(!csv) continue;
         const esc = ecParseSheet(csv, tab.name, src.op, src.sigla);
-        if(esc.equipes.length) all.push(esc);
+        if(esc.equipes.length) out.push(esc);
       }
-      console.log('[CAMPO] '+src.sigla+': '+tabs.length+' abas, '+
-        all.reduce((a,e)=>a+e.equipes.reduce((b,q)=>b+q.policiais.length,0),0)+' policiais');
+      console.log('[CAMPO] '+src.sigla+': '+tabs.length+' abas úteis, '+
+        out.reduce((b,e)=>b+e.equipes.reduce((c,q)=>c+q.policiais.length,0),0)+' policiais');
     }catch(err){ console.warn('[CAMPO] falha em '+src.sigla+':', err.message); }
-  }
-  EC_DATA = all;
+    return out;
+  }));
+
+  EC_DATA = perSource.flat();
   EC_LOADED = true; EC_LOADING = false;
 }
 
@@ -3745,6 +3829,29 @@ function ecPopulateFonte(){
   sel.innerHTML = '<option value="">Todas as operações</option>' + ops.map(o=>`<option value="${o}">${o}</option>`).join('');
   if(ops.includes(atual)) sel.value = atual;
 }
+// lista de batalhões presentes nos dados, BPFRON primeiro, depois BPMs, depois especiais
+function ecAllBats(){
+  const s = new Set();
+  EC_DATA.forEach(e => e.equipes.forEach(q => { if(q.batalhao) s.add(q.batalhao); }));
+  return [...s].sort((a,b)=>{ const x=ecBatOrder(a), y=ecBatOrder(b); return x[0]-y[0] || x[1]-y[1] || a.localeCompare(b); });
+}
+function ecPopulateBat(){
+  const wrap = document.getElementById('ec-bat-pills'); if(!wrap) return;
+  const bats = ecAllBats();
+  let html = `<button class="ec-bat-pill todos ${EC_BAT_SEL.size?'':'active'}" onclick="ecToggleBat('')">Todos</button>`;
+  html += bats.map(b => {
+    const cls = (b==='BPFRON'?'bpfron ':'') + (EC_BAT_SEL.has(b)?'active':'');
+    return `<button class="ec-bat-pill ${cls}" onclick="ecToggleBat('${b.replace(/'/g,"\\'")}')">${ecEsc(b)}</button>`;
+  }).join('');
+  wrap.innerHTML = html;
+}
+function ecToggleBat(b){
+  if(!b) EC_BAT_SEL.clear();
+  else if(EC_BAT_SEL.has(b)) EC_BAT_SEL.delete(b);
+  else EC_BAT_SEL.add(b);
+  ecPopulateBat();
+  renderCampo();
+}
 function ecSetDate(d){
   const di = document.getElementById('ec-date'); if(!di) return;
   di.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -3752,6 +3859,7 @@ function ecSetDate(d){
 async function initCampo(){
   if(!EC_LOADED){ await ecLoad(); }
   ecPopulateFonte();
+  ecPopulateBat();
   const di = document.getElementById('ec-date');
   if(di && !di.value){
     const hoje = new Date();
@@ -3807,7 +3915,7 @@ function ecRenderMap(escalas){
       const pol = q.policiais.map(p=>`<div style="margin:3px 0;color:#1f2937"><b style="color:#0a0f1a">${ecEsc(p.posto)}</b> ${ecEsc(p.nome)} <span style="color:#6b7280">(${ecEsc(p.funcao)||'—'})</span>${(p.telefone||p.contato)?` · <span style="color:#6b7280">📞 ${ecEsc(p.telefone||p.contato)}</span>`:''}</div>`).join('');
       const meta = ecEsc(esc.periodoRaw);
       return `<div style="margin-top:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f8fafc;padding:7px 9px">
-        <div style="color:#9a7b00;font-weight:800;font-size:12px">🛡️ GUARNIÇÃO ${ecEsc(q.nome)}</div>
+        <div style="color:#9a7b00;font-weight:800;font-size:12px">🛡️ ${ecEqTipo(q)} ${ecEsc(q.nome)}${q.batalhao?` · ${ecEsc(q.batalhao)}`:''}</div>
         ${meta?`<div style="color:#6b7280;font-size:10.5px;margin-bottom:3px">${meta}</div>`:''}${pol}</div>`;
     }).join('');
     mk.bindPopup(
@@ -3837,6 +3945,31 @@ function ecTeamLocalidade(q, esc){
   if(keys.length) return keys.sort((a,b)=>cont[b]-cont[a])[0];
   return (q.local||'').trim() || (q.opm&&q.opm!=='BPFRON'?q.opm:'') || (esc&&esc.local||'').trim() || '';
 }
+// "GUARNIÇÃO" p/ nomes numéricos (BPFRON: 01,02…); "EQUIPE" p/ nomes (ALFA, BRAVO…)
+function ecEqTipo(q){ return /^\d/.test((q.nome||'').trim()) ? 'GUARNIÇÃO' : 'EQUIPE'; }
+function ecBlocoIcon(b){ const u=(b||'').toUpperCase(); if(u==='BPFRON')return'🛡️'; if(/^CRP/.test(u))return'🚔'; if(/^CPE/.test(u))return'⭐'; return'📋'; }
+function ecRoman(r){ const m={I:1,V:5,X:10}; let n=0,p=0; for(let i=r.length-1;i>=0;i--){const v=m[(r[i]||'').toUpperCase()]||0; n+= v<p?-v:v; p=v;} return n; }
+// card de uma equipe/guarnição (reutilizado na lista por bloco)
+function ecEqCard(q, e, busca, showPeriod){
+  const loc = ecTeamLocalidade(q, e);
+  const isAI = (q.batalhao === 'AI CRP');   // AI CRP = efetivo de batalhões variados → mostra coluna OPM
+  const rows = q.policiais.map(p=>`<tr>
+    <td>${ecEsc(p.posto)}</td>
+    <td style="color:#9aa6b2;font-variant-numeric:tabular-nums">${ecEsc(p.re)}</td>
+    <td class="ec-nm">${ecHL(p.nome,busca)}</td>
+    <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${(p.telefone||p.contato)?ecEsc(p.telefone||p.contato):'<span style="opacity:.4">—</span>'}</td>
+    <td>${p.funcao?`<span class="ec-fn ${ecEsc(p.funcao)}">${ecEsc(p.funcao)}</span>`:'—'}</td>
+    ${isAI?`<td class="ec-opm">${ecEsc(p.opm)||'<span style="opacity:.4">—</span>'}</td>`:''}</tr>`).join('');
+  const bat = q.batalhao||q.opm||'';
+  return `<div class="ec-eq">
+    <div class="ec-eq-head"><span class="ec-eq-name">🛡️ ${ecEqTipo(q)} ${ecEsc(q.nome)}</span>
+      ${bat?`<span class="ec-eq-vtr">🎖️ ${ecEsc(bat)}</span>`:''}
+      ${(showPeriod&&e.periodoRaw)?`<span class="ec-eq-vtr">🗓️ ${ecEsc(e.periodoRaw)}</span>`:''}
+      <span class="ec-eq-vtr">👮 ${q.policiais.length} pol.</span></div>
+    ${loc?`<div class="ec-eq-loc"><span class="ec-eq-loc-ic">📍</span><span class="ec-eq-loc-txt">${ecEsc(loc)}</span></div>`:''}
+    <table class="ec-tbl${isAI?' ec-tbl-ai':''}"><thead><tr><th>Posto/Grad</th><th>RE</th><th>Nome</th><th>Telefone</th><th>Função</th>${isAI?'<th>OPM</th>':''}</tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
+}
 function renderCampo(){
   const lista = document.getElementById('ec-lista');
   const kpis  = document.getElementById('ec-map-stats');   // indicadores DENTRO do mapa (igual aba Mapas)
@@ -3856,6 +3989,12 @@ function renderCampo(){
   if(fonte) escs = escs.filter(e=>e.fonte===fonte);
   if(soAtivos && !busca) escs = escs.filter(e=>ecAtivo(e, dref));
 
+  // filtro por batalhão (mantém só as equipes do(s) batalhão(ões) marcado(s))
+  if(EC_BAT_SEL.size){
+    escs = escs.map(e=>({ ...e, equipes: e.equipes.filter(q=>EC_BAT_SEL.has(q.batalhao)) }))
+               .filter(e=>e.equipes.length);
+  }
+
   // filtro por busca de policial (aplica a cada escala, mantendo só equipes/policiais que casam)
   if(busca){
     escs = escs.map(e=>{
@@ -3867,12 +4006,12 @@ function renderCampo(){
   }
 
   // KPIs
-  const reSet=new Set(), opSet=new Set(), vtrSet=new Set(); let nEq=0, nPol=0;
-  escs.forEach(e=>{ opSet.add(e.evento); e.equipes.forEach(q=>{ nEq++; if(q.viatura && q.viatura!=='—') vtrSet.add(q.viatura); q.policiais.forEach(p=>{ nPol++; reSet.add((p.re||'')+'|'+(p.nome||'')); }); }); });
+  const reSet=new Set(), batSet=new Set(), vtrSet=new Set(); let nEq=0, nPol=0;
+  escs.forEach(e=>{ e.equipes.forEach(q=>{ nEq++; if(q.batalhao) batSet.add(q.batalhao); if(q.viatura && q.viatura!=='—') vtrSet.add(q.viatura); q.policiais.forEach(p=>{ nPol++; reSet.add((p.re||'')+'|'+(p.nome||'')); }); }); });
   const kpiDef = [
     ['Escalas',   escs.length],
     ['Policiais', reSet.size],
-    ['Operações', opSet.size],
+    ['Batalhões', batSet.size],
     ['Equipes',   nEq],
   ];
   kpis.innerHTML = kpiDef.map(k=>`<div class="mst"><div class="mst-v">${k[1]}</div><div class="mst-l">${k[0]}</div></div>`).join('');
@@ -3886,45 +4025,40 @@ function renderCampo(){
   // mapa
   ecRenderMap(escs);
 
-  // lista agrupada por operação
+  // lista separada por BLOCO (CRP I..IV, CPE, BPFRON) — como na planilha
   if(!escs.length){ lista.innerHTML='<div class="ec-empty">Nenhuma escala para esse filtro/data.</div>'; return; }
-  const byOp = {};
-  escs.forEach(e=>{ (byOp[e.evento] = byOp[e.evento]||[]).push(e); });
-  lista.innerHTML = Object.keys(byOp).map(op=>{
-    const arr = byOp[op];
-    const tot = arr.reduce((a,e)=>a+e.equipes.reduce((b,q)=>b+q.policiais.length,0),0);
-    const fontes = [...new Set(arr.map(e=>e.fonte))];
-    const escHtml = arr.map(e=>{
-      const ativo = ecAtivo(e, dref);
-      const eqHtml = e.equipes.map(q=>{
-        const loc = ecTeamLocalidade(q, e);
-        const rows = q.policiais.map(p=>`<tr>
-          <td>${ecEsc(p.posto)}</td>
-          <td style="color:#9aa6b2;font-variant-numeric:tabular-nums">${ecEsc(p.re)}</td>
-          <td class="ec-nm">${ecHL(p.nome,busca)}</td>
-          <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${(p.telefone||p.contato)?ecEsc(p.telefone||p.contato):'<span style="opacity:.4">—</span>'}</td>
-          <td>${p.funcao?`<span class="ec-fn ${ecEsc(p.funcao)}">${ecEsc(p.funcao)}</span>`:'—'}</td></tr>`).join('');
-        return `<div class="ec-eq">
-          <div class="ec-eq-head"><span class="ec-eq-name">🛡️ GUARNIÇÃO ${ecEsc(q.nome)}</span>
-            ${(q.opm||q.bpfron)?`<span class="ec-eq-vtr">🏢 ${ecEsc(q.opm||q.bpfron)}</span>`:''}
-            <span class="ec-eq-vtr">👮 ${q.policiais.length} pol.</span></div>
-          ${loc?`<div class="ec-eq-loc"><span class="ec-eq-loc-ic">📍</span><span class="ec-eq-loc-txt">${ecEsc(loc)}</span></div>`:''}
-          <table class="ec-tbl"><thead><tr><th>Posto/Grad</th><th>RE</th><th>Nome</th><th>Telefone</th><th>Função</th></tr></thead><tbody>${rows}</tbody></table>
-        </div>`;
-      }).join('');
-      return `<div class="ec-esc">
-        <div class="ec-esc-meta">
-          <span>🗓️ <b>${ecEsc(e.periodoRaw||'—')}</b></span>
-          <span>📍 <b>${ecEsc(e.local||'—')}</b></span>
-          <span class="ec-badge src">${e.fonte}</span>
-          ${ativo?'<span class="ec-badge live">● ativa na data</span>':''}
-        </div>${eqHtml}</div>`;
-    }).join('');
-    return `<div class="ec-op">
-      <div class="ec-op-head"><div class="ec-op-ttl">${ecHL(op,'')}</div>
-        ${fontes.map(f=>`<span class="ec-badge src">${f}</span>`).join('')}
-        <span class="ec-badge">${tot} policiais</span></div>
-      ${escHtml}</div>`;
+  const byBloco = {};
+  escs.forEach(e => e.equipes.forEach(q => {
+    const bl = q.bloco || 'OUTROS';
+    (byBloco[bl] = byBloco[bl] || []).push({ e, q });
+  }));
+  const blocoRank = b => { const u=b.toUpperCase();
+    if(u==='BPFRON') return [0,0];
+    let m=u.match(/^CRP\s+([IVX]+)/); if(m) return [1, ecRoman(m[1])];
+    if(/^CPE/.test(u)) return [2,0];
+    return [3,0];
+  };
+  const blocos = Object.keys(byBloco).sort((a,b)=>{ const x=blocoRank(a), y=blocoRank(b); return x[0]-y[0] || x[1]-y[1] || a.localeCompare(b); });
+  lista.innerHTML = blocos.map(bl=>{
+    const items   = byBloco[bl];
+    const tot     = items.reduce((a,x)=>a+x.q.policiais.length,0);
+    const periodos= [...new Set(items.map(x=>x.e.periodoRaw).filter(Boolean))];
+    const multiP  = periodos.length>1;
+    const anyAtivo= items.some(x=>ecAtivo(x.e, dref));
+    const u   = bl.toUpperCase();
+    const cls = u==='BPFRON'?'bpfron':(/^CRP/.test(u)?'crp':(/^CPE/.test(u)?'cpe':''));
+    const tipo= ecEqTipo(items[0].q).toLowerCase();
+    const eqHtml = items.map(({e,q})=>ecEqCard(q, e, busca, multiP)).join('');
+    return `<div class="ec-bloco ${cls}">
+      <div class="ec-bloco-head">
+        <div class="ec-bloco-ttl">${ecBlocoIcon(bl)} ${ecEsc(bl)}</div>
+        <span class="ec-badge">${items.length} ${tipo}(s)</span>
+        <span class="ec-badge">👮 ${tot} policiais</span>
+        ${anyAtivo?'<span class="ec-badge live">● ativo na data</span>':''}
+        ${(!multiP&&periodos.length)?`<span class="ec-badge src">🗓️ ${ecEsc(periodos[0])}</span>`:''}
+      </div>
+      <div class="ec-bloco-body">${eqHtml}</div>
+    </div>`;
   }).join('');
 }
 </script>
