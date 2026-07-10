@@ -753,7 +753,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="hdr-title">
         <h1>BPFRON/RO &nbsp;·&nbsp; PAINEL ANALÍTICO DE OPERAÇÕES POLICIAIS</h1>
         <p>Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia</p>
-        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; <span style="color:#F5C518;font-weight:700">v3.4</span></p>
+        <p class="hdr-sub2">Sistema de Inteligência Operacional &nbsp;·&nbsp; <span style="color:#F5C518;font-weight:700">v3.5</span></p>
       </div>
     </div>
     <div class="hdr-right">
@@ -832,12 +832,82 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </div>
 
     <!-- PÁGINA: GARAGEM (em construção) -->
+    <style>
+      #page-garagem .gar-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+      #page-garagem .gar-kpis .mst{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;min-width:120px}
+      #page-garagem .gar-kpis .mst-v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;color:var(--yellow)}
+      #page-garagem .gar-kpis .mst-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+      #page-garagem .gar-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+      #page-garagem .gar-search{background:rgba(6,9,18,.8);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#e8edf5;font-family:'Inter',sans-serif;font-size:12.5px;padding:9px 12px;outline:none;min-width:240px}
+      #page-garagem .gar-search:focus{border-color:var(--yellow)}
+      #page-garagem .gar-status{font-size:12px;color:var(--muted);margin:0 2px 12px}
+      #page-garagem .gar-layout{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;align-items:start}
+      @media (max-width:900px){#page-garagem .gar-layout{grid-template-columns:1fr}}
+      #page-garagem .gar-ranking{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-top:16px}
+      #page-garagem .gar-ranking-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
+      #page-garagem .gar-ranking-ttl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fff;letter-spacing:.3px}
+      #page-garagem .gar-ranking-total{font-size:12.5px;color:var(--muted)}
+      #page-garagem .gar-ranking-total b{color:var(--yellow);font-size:15px}
+      #page-garagem .gar-km-chart-wrap{height:260px;margin-top:12px}
+      #page-garagem .gar-km-mes-wrap{height:150px;margin-top:10px}
+      #page-garagem .gar-grid{display:flex;flex-direction:column;gap:9px;max-height:76vh;overflow-y:auto;padding-right:4px}
+      #page-garagem .gar-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+      #page-garagem .gar-card:hover{border-color:rgba(245,197,24,.35)}
+      #page-garagem .gar-card.active{border-color:var(--yellow);background:rgba(245,197,24,.07)}
+      #page-garagem .gar-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+      #page-garagem .gar-prefixo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;letter-spacing:.3px}
+      #page-garagem .gar-placa{font-size:11px;color:var(--muted);letter-spacing:.5px}
+      #page-garagem .gar-modelo{font-size:11.5px;color:#aab4c0;margin-top:2px}
+      #page-garagem .gar-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+      #page-garagem .gb{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2.5px 8px;border-radius:20px;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
+      #page-garagem .gb.ok{color:#34d399;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3)}
+      #page-garagem .gb.warn{color:#fbbf24;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3)}
+      #page-garagem .gb.bad{color:#f87171;background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3)}
+      #page-garagem .gb.info{color:#8fb3ff;background:rgba(120,150,255,.1);border-color:rgba(120,150,255,.3)}
+      #page-garagem .gb.muted{color:var(--muted);background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08)}
+      #page-garagem .gar-detail{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;min-height:260px}
+      #page-garagem .gar-detail-empty{text-align:center;padding:70px 20px;color:var(--muted);font-size:14px;line-height:1.8}
+      #page-garagem .gar-det-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:16px}
+      #page-garagem .gar-det-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:24px;color:var(--yellow)}
+      #page-garagem .gar-det-sub{font-size:12px;color:#aab4c0;margin-top:3px}
+      #page-garagem .gar-section{margin-bottom:18px}
+      #page-garagem .gar-section:last-child{margin-bottom:0}
+      #page-garagem .gar-section-ttl{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+      #page-garagem .gar-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+      #page-garagem .gar-field{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:9px;padding:8px 11px}
+      #page-garagem .gar-field-l{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      #page-garagem .gar-field-v{font-size:13.5px;color:#e8edf5;font-weight:600;margin-top:2px}
+      #page-garagem .gar-oleo{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:12px 14px}
+      #page-garagem .gar-oleo.warn{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
+      #page-garagem .gar-checklist{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:13px 15px}
+      #page-garagem .gar-checklist-alt{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);color:#fca5a5;font-size:12.5px;line-height:1.5;white-space:pre-line}
+      #page-garagem .gar-pend{border-left:3px solid #f87171;background:rgba(248,113,113,.06);border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:8px}
+      #page-garagem .gar-pend:last-child{margin-bottom:0}
+      #page-garagem .gar-pend-item{font-weight:700;font-size:12.5px;color:#fca5a5}
+      #page-garagem .gar-pend-desc{font-size:12px;color:#cbd5e1;margin-top:3px;white-space:pre-line}
+      #page-garagem .gar-pend-meta{font-size:10.5px;color:var(--muted);margin-top:5px}
+      #page-garagem table.gar-tbl{width:100%;border-collapse:collapse;font-size:12px}
+      #page-garagem table.gar-tbl th{text-align:left;font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+      #page-garagem table.gar-tbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.035);color:#d3dae3;vertical-align:top}
+      #page-garagem .gar-empty-mini{color:var(--muted);font-size:12px;padding:8px 2px}
+    </style>
     <div id="page-garagem" class="page-content">
       <div class="sec">🚗 Garagem — Frota de Viaturas</div>
-      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
-        <div style="font-size:46px;margin-bottom:10px">🚧</div>
-        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
-        <p>Aqui vai entrar o controle da frota: <b>onde a viatura está</b>, situação (operante / em manutenção), <b>troca de óleo</b> (feita / a fazer), local de estacionamento e mais. Vamos montar nos próximos passos.</p>
+      <div class="gar-kpis" id="gar-kpis"></div>
+      <div class="gar-toolbar">
+        <input type="text" id="gar-busca" class="gar-search" placeholder="🔍 Buscar por prefixo, placa ou modelo..." oninput="renderGaragemGrid()">
+      </div>
+      <div class="gar-status" id="gar-status">Carregando frota...</div>
+      <div class="gar-layout">
+        <div class="gar-grid" id="gar-grid"></div>
+        <div class="gar-detail" id="gar-detail"><div class="gar-detail-empty">🚓<br>Selecione uma viatura ao lado<br>para ver os detalhes em tempo real.</div></div>
+      </div>
+      <div class="gar-ranking" id="gar-ranking-card" style="display:none">
+        <div class="gar-ranking-head">
+          <div class="gar-ranking-ttl">🏆 Ranking — Viaturas que mais rodam</div>
+          <div class="gar-ranking-total">KM total rodado pela frota: <b id="gar-ranking-total-val">—</b></div>
+        </div>
+        <div class="gar-km-chart-wrap"><canvas id="c-gar-ranking"></canvas></div>
       </div>
     </div>
 
@@ -2132,8 +2202,14 @@ let apresentacaoIdx = 0;
 const GESTAO_PAGES = ['garagem','material','policiais-campo','diaria','recursos'];
 // Páginas SEM os botões de Período e o painel de Filtros Avançados (Gestão + Consultas)
 const NO_FILTER_PAGES = [...GESTAO_PAGES, 'consultas'];
+// Páginas bloqueadas por usuário (ex.: comandante do CPE não vê Consultas).
+const RESTRICTED_PAGES = { cpe: ['consultas'] };
 
 function showPage(pageId) {
+  // Bloqueio por usuário: redireciona silenciosamente para Visão Geral.
+  if (typeof AUTH !== 'undefined' && AUTH.logged && (RESTRICTED_PAGES[AUTH.user] || []).includes(pageId)) {
+    pageId = 'visao-geral';
+  }
   document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.btn-page-nav, .sb-item').forEach(b => b.classList.remove('active'));
 
@@ -2170,6 +2246,7 @@ function showPage(pageId) {
   if (pageId === 'comparativo') renderComparativo();
   if (pageId === 'mapa')       { setTimeout(() => { if(MAP){ MAP.invalidateSize(); renderMap(); } }, 120); }
   if (pageId === 'policiais-campo') initCampo();
+  if (pageId === 'garagem') initGaragem();
   if (pageId === 'consultas')  {
     // Exige login: o gate decide se mostra a tela de login ou os dados.
     gateConsultas();
@@ -3004,6 +3081,15 @@ const AUTH = {
   get logged(){ return !!this.token; }
 };
 
+// Esconde itens de menu bloqueados para o usuário logado (ver RESTRICTED_PAGES).
+function applyUserRestrictions(){
+  const blocked = AUTH.logged ? (RESTRICTED_PAGES[AUTH.user] || []) : [];
+  const navConsultas = document.getElementById('nav-consultas');
+  if (navConsultas) navConsultas.style.display = blocked.includes('consultas') ? 'none' : '';
+  if (blocked.includes(currentPage)) showPage('visao-geral');
+}
+applyUserRestrictions();
+
 // Núcleo do login (compartilhado pelas telas de Consultas e Gestão).
 // Faz o POST /api/login, guarda o token e devolve true/false.
 async function submitLogin(user, pass, btn, erro){
@@ -3016,6 +3102,7 @@ async function submitLogin(user, pass, btn, erro){
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
     AUTH.token = d.token; AUTH.user = d.user;
+    applyUserRestrictions();
     return true;
   } catch(e){
     erro.textContent = (e && e.message) ? e.message : 'Não foi possível conectar ao servidor.';
@@ -3053,8 +3140,10 @@ async function doLoginGestao(ev){
 function apiLogout(){
   AUTH.token = ''; AUTH.user = '';
   ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
+  GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; destroyC('gar-ranking'); destroyC('gar-km-mes');
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
+  applyUserRestrictions();
   gateConsultas();
   // Se estiver numa página de Gestão, re-trava (mostra a tela de login).
   if (GESTAO_PAGES.includes(currentPage)) showPage(currentPage);
@@ -3065,6 +3154,13 @@ async function apiFetchCSV(path){
   if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
   if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
   return await r.text();
+}
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
+  return await r.json();
 }
 
 // Decide entre mostrar a tela de login ou os dados restritos
@@ -3856,6 +3952,206 @@ function ecSetDate(d){
   const di = document.getElementById('ec-date'); if(!di) return;
   di.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+/* ── GARAGEM (frota de viaturas, em tempo real via Worker) ── */
+let GAR_DATA = null;
+let GAR_LOADED = false;
+let GAR_SEL = null;
+
+async function initGaragem(){
+  if (!AUTH.logged) return; // showPage já bloqueou antes de chegar aqui
+  if (GAR_LOADED) { renderGaragemGrid(); renderGaragemDetail(); renderGaragemRanking(); return; }
+  const status = document.getElementById('gar-status');
+  try {
+    GAR_DATA = await apiFetchJSON('/api/garagem');
+    GAR_LOADED = true;
+    if (status) status.textContent = `${GAR_DATA.viaturas.length} viatura(s) na frota.`;
+    renderGaragemKPIs();
+    renderGaragemGrid();
+    renderGaragemRanking();
+  } catch(e) {
+    if (status) status.textContent = '❌ ' + (e.message || 'Erro ao carregar a frota.');
+  }
+}
+
+function garStatusInfo(v){
+  const s = (v.status_geral || '').toLowerCase();
+  if (/manuten/.test(s)) return {cls:'warn', label: v.status_geral || 'Manutenção'};
+  if (/baix|indispon|inativ/.test(s)) return {cls:'bad', label: v.status_geral || 'Baixada'};
+  if (/ativ/.test(s)) return {cls:'ok', label: v.status_geral || 'Ativa'};
+  return {cls:'muted', label: v.status_geral || '—'};
+}
+
+function renderGaragemKPIs(){
+  const el = document.getElementById('gar-kpis');
+  if (!el || !GAR_DATA) return;
+  const vs = GAR_DATA.viaturas;
+  const ativas = vs.filter(v => /ativ/i.test(v.status_geral||'')).length;
+  const pendTotal = vs.reduce((a,v)=>a+v.pendencias_abertas.length,0);
+  const oleo = vs.filter(v=>v.oleo_alerta).length;
+  const kpis = [
+    ['Viaturas', vs.length],
+    ['Ativas', ativas],
+    ['Pendências abertas', pendTotal],
+    ['Óleo a trocar', oleo],
+    ['KM total rodado', fN(GAR_DATA.km_total_frota||0)],
+  ];
+  el.innerHTML = kpis.map(k=>`<div class="mst"><div class="mst-v">${k[1]}</div><div class="mst-l">${k[0]}</div></div>`).join('');
+}
+
+function renderGaragemRanking(){
+  const card = document.getElementById('gar-ranking-card');
+  if (!card || !GAR_DATA) return;
+  const ranking = GAR_DATA.ranking_km || [];
+  document.getElementById('gar-ranking-total-val').textContent = fN(GAR_DATA.km_total_frota||0) + ' km';
+  destroyC('gar-ranking');
+  if (!ranking.length){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  const top = ranking.slice(0, 10);
+  CHARTS['gar-ranking'] = new Chart(document.getElementById('c-gar-ranking'), {
+    type: 'bar',
+    data: { labels: top.map(v=>v.prefixo), datasets: [{ label:'KM rodado', data: top.map(v=>v.km_rodado_total), backgroundColor: top.map((_,i)=>PAL[i%PAL.length]), borderRadius:4, borderWidth:0, maxBarThickness:34 }] },
+    options: { ...cOpts('KM'), indexAxis:'y', plugins:{legend:{display:false},tooltip:{...cOpts().plugins.tooltip,callbacks:{label:c=>` ${fN(c.parsed.x)} km`}}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+}
+
+function renderGaragemGrid(){
+  const el = document.getElementById('gar-grid');
+  if (!el || !GAR_DATA) return;
+  const busca = (document.getElementById('gar-busca')?.value || '').trim().toLowerCase();
+  let vs = GAR_DATA.viaturas;
+  if (busca) vs = vs.filter(v => (v.prefixo+' '+v.placa+' '+v.modelo).toLowerCase().includes(busca));
+  vs = [...vs].sort((a,b)=> a.prefixo.localeCompare(b.prefixo));
+  if (!vs.length){ el.innerHTML = '<div class="gar-empty-mini">Nenhuma viatura encontrada.</div>'; return; }
+  el.innerHTML = vs.map(v=>{
+    const st = garStatusInfo(v);
+    const nPend = v.pendencias_abertas.length;
+    const cond = v.ultimo_checklist ? v.ultimo_checklist.condicao : '';
+    return `<div class="gar-card${GAR_SEL===v.prefixo?' active':''}" onclick="selectViatura('${v.prefixo.replace(/'/g,"\\'")}')">
+      <div class="gar-card-top">
+        <span class="gar-prefixo">${ecEsc(v.prefixo)}</span>
+        <span class="gar-placa">${ecEsc(v.placa||'—')}</span>
+      </div>
+      <div class="gar-modelo">${ecEsc(v.modelo||'—')}${v.ano?(' · '+ecEsc(v.ano)):''}</div>
+      <div class="gar-badges">
+        <span class="gb ${st.cls}">${ecEsc(st.label)}</span>
+        ${v.oleo_alerta?'<span class="gb warn">🛢️ Trocar óleo</span>':''}
+        ${nPend?`<span class="gb bad">⚠️ ${nPend} pendência(s)</span>`:''}
+        ${cond?`<span class="gb ${cond.toLowerCase()==='limpa'?'ok':'info'}">${ecEsc(cond)}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectViatura(prefixo){
+  GAR_SEL = prefixo;
+  renderGaragemGrid();
+  renderGaragemDetail();
+}
+
+function renderGaragemDetail(){
+  const el = document.getElementById('gar-detail');
+  if (!el) return;
+  const v = GAR_DATA && GAR_DATA.viaturas.find(x=>x.prefixo===GAR_SEL);
+  if (!v){ el.innerHTML = '<div class="gar-detail-empty">🚓<br>Selecione uma viatura ao lado<br>para ver os detalhes em tempo real.</div>'; return; }
+  const st = garStatusInfo(v);
+  const uc = v.ultimo_checklist;
+
+  const fichaHTML = `
+    <div class="gar-section">
+      <div class="gar-section-ttl">Ficha da viatura</div>
+      <div class="gar-fields">
+        <div class="gar-field"><div class="gar-field-l">Placa</div><div class="gar-field-v">${ecEsc(v.placa||'—')}</div></div>
+        <div class="gar-field"><div class="gar-field-l">Modelo</div><div class="gar-field-v">${ecEsc(v.modelo||'—')}</div></div>
+        <div class="gar-field"><div class="gar-field-l">Ano</div><div class="gar-field-v">${ecEsc(v.ano||'—')}</div></div>
+        <div class="gar-field"><div class="gar-field-l">Lotação</div><div class="gar-field-v">${ecEsc(v.lotacao||'—')}</div></div>
+        <div class="gar-field"><div class="gar-field-l">KM atual</div><div class="gar-field-v">${v.km_atual?fN(v.km_atual)+' km':'—'}</div></div>
+      </div>
+    </div>`;
+
+  const oleoHTML = `
+    <div class="gar-section">
+      <div class="gar-section-ttl">Óleo</div>
+      <div class="gar-oleo${v.oleo_alerta?' warn':''}">
+        <span style="font-size:22px">${v.oleo_alerta?'🛢️⚠️':'🛢️'}</span>
+        <div>
+          ${v.km_ultima_troca_oleo?`<div>Última troca: <b>${fN(v.km_ultima_troca_oleo)} km</b></div>`:'<div>Sem registro de troca.</div>'}
+          ${v.intervalo_oleo_km?`<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Intervalo: a cada ${fN(v.intervalo_oleo_km)} km${v.km_desde_troca_oleo!==null?(v.km_desde_troca_oleo>=0?(' · rodados desde a troca: '+fN(v.km_desde_troca_oleo)+' km'):' · ⚠️ KM da última troca é maior que o KM atual (checar lançamento na planilha)'):''}</div>`:''}
+          ${v.oleo_alerta?'<div style="color:#fbbf24;font-weight:700;margin-top:3px">⚠️ Troca de óleo necessária</div>':''}
+        </div>
+      </div>
+    </div>`;
+
+  const kmMesHTML = `
+    <div class="gar-section">
+      <div class="gar-section-ttl">KM rodado</div>
+      <div class="gar-fields" style="margin-bottom:8px">
+        <div class="gar-field"><div class="gar-field-l">Total no período monitorado</div><div class="gar-field-v">${fN(v.km_rodado_total||0)} km</div></div>
+      </div>
+      ${v.km_rodado_por_mes && v.km_rodado_por_mes.length ? '<div class="gar-km-mes-wrap"><canvas id="c-gar-km-mes"></canvas></div>' : '<div class="gar-empty-mini">Ainda sem histórico suficiente de checklists pra calcular km por mês.</div>'}
+    </div>`;
+
+  const checklistHTML = uc ? `
+    <div class="gar-section">
+      <div class="gar-section-ttl">Último checklist</div>
+      <div class="gar-checklist">
+        <div class="gar-fields">
+          <div class="gar-field"><div class="gar-field-l">Data</div><div class="gar-field-v">${ecEsc(uc.data||'—')}</div></div>
+          <div class="gar-field"><div class="gar-field-l">Momento</div><div class="gar-field-v">${ecEsc(uc.momento||'—')}</div></div>
+          <div class="gar-field"><div class="gar-field-l">Condição</div><div class="gar-field-v">${ecEsc(uc.condicao||'—')}</div></div>
+          <div class="gar-field"><div class="gar-field-l">KM</div><div class="gar-field-v">${uc.km?fN(uc.km):'—'}</div></div>
+          <div class="gar-field"><div class="gar-field-l">Motorista</div><div class="gar-field-v">${ecEsc(uc.motorista||'—')}</div></div>
+          <div class="gar-field"><div class="gar-field-l">Comandante</div><div class="gar-field-v">${ecEsc(uc.comandante||'—')}</div></div>
+          <div class="gar-field"><div class="gar-field-l">Local</div><div class="gar-field-v">${ecEsc(uc.local||'—')}</div></div>
+        </div>
+        ${uc.itens_alterados ? `<div class="gar-checklist-alt"><b>⚠️ ${ecEsc(uc.itens_alterados)}</b><br>${ecEsc(uc.alteracoes||'')}</div>` : ''}
+      </div>
+    </div>` : `<div class="gar-section"><div class="gar-section-ttl">Último checklist</div><div class="gar-empty-mini">Nenhum checklist registrado ainda.</div></div>`;
+
+  const pendHTML = `
+    <div class="gar-section">
+      <div class="gar-section-ttl">Pendências abertas (${v.pendencias_abertas.length})</div>
+      ${v.pendencias_abertas.length ? v.pendencias_abertas.map(p=>`
+        <div class="gar-pend">
+          <div class="gar-pend-item">${ecEsc(p.item||'—')}</div>
+          <div class="gar-pend-desc">${ecEsc(p.descricao||'')}</div>
+          <div class="gar-pend-meta">Aberta por ${ecEsc(p.aberta_por||'—')} em ${ecEsc(p.data_abertura||'—')}</div>
+        </div>`).join('') : '<div class="gar-empty-mini">Nenhuma pendência aberta. ✅</div>'}
+    </div>`;
+
+  const manutHTML = `
+    <div class="gar-section">
+      <div class="gar-section-ttl">Histórico de manutenção</div>
+      ${v.manutencoes.length ? `<table class="gar-tbl"><thead><tr><th>Data</th><th>KM</th><th>Local</th><th>Situação</th><th>Obs.</th></tr></thead><tbody>
+        ${v.manutencoes.map(m=>`<tr><td>${ecEsc(m.data||'—')}</td><td>${ecEsc(m.km||'—')}</td><td>${ecEsc(m.localidade||'—')}</td><td>${ecEsc(m.situacao||'—')}</td><td>${ecEsc(m.obs||'—')}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="gar-empty-mini">Nenhum registro de manutenção.</div>'}
+    </div>`;
+
+  el.innerHTML = `
+    <div class="gar-det-head">
+      <div>
+        <div class="gar-det-title">${ecEsc(v.prefixo)}</div>
+        <div class="gar-det-sub">${ecEsc(v.modelo||'—')} · ${ecEsc(v.placa||'—')}</div>
+      </div>
+      <span class="gb ${st.cls}" style="font-size:11px;padding:4px 12px">${ecEsc(st.label)}</span>
+    </div>
+    ${fichaHTML}
+    ${oleoHTML}
+    ${kmMesHTML}
+    ${checklistHTML}
+    ${pendHTML}
+    ${manutHTML}
+  `;
+
+  destroyC('gar-km-mes');
+  if (v.km_rodado_por_mes && v.km_rodado_por_mes.length) {
+    CHARTS['gar-km-mes'] = new Chart(document.getElementById('c-gar-km-mes'), {
+      type: 'bar',
+      data: { labels: v.km_rodado_por_mes.map(m=>m.label), datasets: [{ label:'KM rodado', data: v.km_rodado_por_mes.map(m=>m.km), backgroundColor:'#F5C518', borderRadius:4, borderWidth:0, maxBarThickness:56 }] },
+      options: { ...cOpts('KM'), plugins:{legend:{display:false},tooltip:{...cOpts().plugins.tooltip,callbacks:{label:c=>` ${fN(c.parsed.y)} km`}}}, scales:{ x:cOpts().scales.x, y:{...cOpts().scales.y,beginAtZero:true} } }
+    });
+  }
+}
+
 async function initCampo(){
   if(!EC_LOADED){ await ecLoad(); }
   ecPopulateFonte();
