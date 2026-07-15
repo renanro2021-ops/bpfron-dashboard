@@ -1083,12 +1083,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="kpi t"><div class="kpi-ico">🔴</div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="k-mun">—</div><div class="kpi-sub">Unidades</div></div>
     </div>
 
-    <!-- LINHA 3: TCO, Gasolina, Diesel, GLP -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+    <!-- LINHA 3: TCO, Gasolina, Diesel, GLP, Cigarros -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
       <div class="kpi b"><div class="kpi-ico">📄</div><div class="kpi-lbl">TCO</div><div class="kpi-val" id="k-tco">—</div><div class="kpi-sub">Termos Circunstanciados</div></div>
-      <div class="kpi t"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Gasolina Boliviana</div><div class="kpi-val sm" id="k-gas">—</div><div class="kpi-sub">Litros</div></div>
-      <div class="kpi g"><div class="kpi-ico">🛢️</div><div class="kpi-lbl">Diesel Boliviano</div><div class="kpi-val sm" id="k-die">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi t"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Gasolina</div><div class="kpi-val sm" id="k-gas">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi g"><div class="kpi-ico">🛢️</div><div class="kpi-lbl">Diesel</div><div class="kpi-val sm" id="k-die">—</div><div class="kpi-sub">Litros</div></div>
       <div class="kpi y"><div class="kpi-ico">🔥</div><div class="kpi-lbl">GLP</div><div class="kpi-val" id="k-glp">—</div><div class="kpi-sub">Botijas</div></div>
+      <div class="kpi o"><div class="kpi-ico">🚬</div><div class="kpi-lbl">Cigarros</div><div class="kpi-val sm" id="k-cig">—</div><div class="kpi-sub">Maços</div></div>
     </div>
 
     <!-- PREJUÍZO AO CRIME — BANNER DESTAQUE -->
@@ -2763,6 +2764,7 @@ function renderKPIs() {
   $('k-gas', fD(s('gasolina_l'),0)+' L');
   $('k-die', fD(s('diesel_l'),0)+' L');
   $('k-glp', fN(s('glp'))+' un.');
+  $('k-cig', fN(s('cigarros'))+' maços');
   // Subcategorias do prejuízo (cálculo local)
   const pj_dr = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
   const pj_ar = s('armas') * 19333;
@@ -3656,6 +3658,7 @@ const EC_COORDS = [
   ['fronteiras e divisas',[-10.80,-63.40], 'Fronteiras e Divisas (RO)'],
   ['fronteira e divisas', [-10.80,-63.40], 'Fronteira e Divisas (RO)'],
   // municípios / localidades específicas
+  ['embarcado',           [-8.743929142339876, -63.91820946715832], 'Embarcado'],
   ['machadinho',          [-9.44, -61.98], 'Machadinho D\'Oeste'],
   ['nova mutum',          [-9.55, -64.55], 'Nova Mutum Paraná'],
   ['jaci',                [-9.26, -64.39], 'Jaci-Paraná'],
@@ -3678,6 +3681,12 @@ const EC_COORDS = [
   ['abuna',               [-9.69, -65.42], 'Abunã'],
   ['vista alegre',        [-9.66, -65.36], 'Vista Alegre do Abunã'],
   ['extrema',             [-9.71, -66.61], 'Extrema (RO)'],
+];
+// Bases físicas do BPFRON (marcadores de referência fixos no mapa)
+const EC_BASES = [
+  { nome:'Base Nova Mutum',       coord:[-9.288841377237633, -64.54871227827671] },
+  { nome:'Base Nova Mamoré',      coord:[-10.413397783721724, -65.3300341942589] },
+  { nome:'Base Nova Brasilândia', coord:[-11.733020071873222, -62.30762351948917] },
 ];
 function ecGeocode(txt){
   if(!txt) return null;
@@ -4183,7 +4192,22 @@ function ecInitMap(){
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:17 }).addTo(EC_MAP);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom:17, opacity:.9 }).addTo(EC_MAP);
   ensureGeoOverlay(EC_MAP, true);   // municípios + rodovias ligados por padrão
+  ecAddBases();
   setTimeout(()=>EC_MAP.invalidateSize(), 120);
+}
+// marcadores fixos das bases físicas do BPFRON
+function ecAddBases(){
+  if(!EC_MAP) return;
+  EC_BASES.forEach(b=>{
+    const ic = L.divIcon({ className:'ec-base-icon', html:
+      `<div style="display:flex;flex-direction:column;align-items:center;line-height:1">
+         <div style="font-size:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">🛡️</div>
+         <div style="background:#0a0f1a;color:#F5C518;font:800 10px Inter,sans-serif;padding:1px 6px;border-radius:6px;border:1px solid #F5C518;white-space:nowrap;margin-top:-2px">${ecEsc(b.nome)}</div>
+       </div>`, iconSize:[120,40], iconAnchor:[60,34] });
+    L.marker(b.coord, { icon:ic, interactive:true, zIndexOffset:1000 })
+      .bindPopup(`<div style="font-family:Inter,sans-serif;color:#0a0f1a;font-weight:800">🛡️ ${ecEsc(b.nome)}</div>`, { className:'ec-popup' })
+      .addTo(EC_MAP);
+  });
 }
 function ecClearMarkers(){ EC_MARKERS.forEach(m=>EC_MAP.removeLayer(m)); EC_MARKERS=[]; }
 function ecRenderMap(escalas){
@@ -4203,10 +4227,13 @@ function ecRenderMap(escalas){
   });
   const pts=[];
   Object.values(groups).forEach(gr=>{
+    // BPFRON sempre primeiro na lista de equipes do popup
+    gr.eqs.sort((a,b)=> (ecIsBPFRON(b.q)?1:0) - (ecIsBPFRON(a.q)?1:0));
     const nPol = gr.eqs.reduce((a,x)=>a+x.q.policiais.length,0);
+    const isEmb = gr.nome === 'Embarcado';
     const jitter = (Math.random()-0.5)*0.04;
     const ll = [gr.coord[0]+jitter, gr.coord[1]+jitter];
-    const mk = L.circleMarker(ll, { radius: Math.min(8+nPol*0.7, 22), color:'#0a0f1a', weight:2, fillColor:'#F5C518', fillOpacity:.9 }).addTo(EC_MAP);
+    const mk = L.circleMarker(ll, { radius: Math.min(8+nPol*0.7, 22), color:'#0a0f1a', weight:2, fillColor:(isEmb?'#2f81f7':'#F5C518'), fillOpacity:.9 }).addTo(EC_MAP);
     const body = gr.eqs.map(({esc,q})=>{
       const pol = q.policiais.map(p=>`<div style="margin:3px 0;color:#1f2937"><b style="color:#0a0f1a">${ecEsc(p.posto)}</b> ${ecEsc(p.nome)} <span style="color:#6b7280">(${ecEsc(p.funcao)||'—'})</span>${(p.telefone||p.contato)?` · <span style="color:#6b7280">📞 ${ecEsc(p.telefone||p.contato)}</span>`:''}</div>`).join('');
       const meta = ecEsc(esc.periodoRaw);
@@ -4243,6 +4270,8 @@ function ecTeamLocalidade(q, esc){
 }
 // "GUARNIÇÃO" p/ nomes numéricos (BPFRON: 01,02…); "EQUIPE" p/ nomes (ALFA, BRAVO…)
 function ecEqTipo(q){ return /^\d/.test((q.nome||'').trim()) ? 'GUARNIÇÃO' : 'EQUIPE'; }
+// equipe é do BPFRON? (batalhão/OPM contém FRON ou guarnição de nome numérico)
+function ecIsBPFRON(q){ return /FRON/i.test(q.batalhao||'') || /FRON/i.test(q.opm||'') || /^\d/.test((q.nome||'').trim()); }
 function ecBlocoIcon(b){ const u=(b||'').toUpperCase(); if(u==='BPFRON')return'🛡️'; if(/^CRP/.test(u))return'🚔'; if(/^CPE/.test(u))return'⭐'; return'📋'; }
 function ecRoman(r){ const m={I:1,V:5,X:10}; let n=0,p=0; for(let i=r.length-1;i>=0;i--){const v=m[(r[i]||'').toUpperCase()]||0; n+= v<p?-v:v; p=v;} return n; }
 // card de uma equipe/guarnição (reutilizado na lista por bloco)
