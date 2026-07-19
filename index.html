@@ -991,6 +991,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-garagem .gar-field-v{font-size:13.5px;color:#e8edf5;font-weight:600;margin-top:2px}
       #page-garagem .gar-oleo{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:12px 14px}
       #page-garagem .gar-oleo.warn{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
+      #page-garagem .gar-oleo.soon{border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.05)}
+      #page-garagem .gar-oleo>div{flex:1;min-width:0}
+      #page-garagem .gar-oleo-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:8px}
+      #page-garagem .gar-oleo-bar>i{display:block;height:100%;border-radius:99px;background:#34d399}
+      #page-garagem .gar-oleo-bar.soon>i{background:#38bdf8}
+      #page-garagem .gar-oleo-bar.warn>i{background:#fbbf24}
+      #page-garagem .gar-oleo-bar.over>i{background:#f87171}
       #page-garagem .gar-checklist{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:13px 15px}
       #page-garagem .gar-checklist-alt{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);color:#fca5a5;font-size:12.5px;line-height:1.5;white-space:pre-line}
       #page-garagem .gar-pend{border-left:3px solid #f87171;background:rgba(248,113,113,.06);border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:8px}
@@ -3980,6 +3987,24 @@ function garStatusInfo(v){
   return {cls:'muted', label: v.status_geral || '—'};
 }
 
+// Calcula a previsão de troca de óleo a partir dos dados da viatura.
+// Retorna null quando não dá pra calcular (sem intervalo ou sem registro de troca).
+function garOleoInfo(v){
+  const intervalo = Number(v.intervalo_oleo_km) || 0;
+  const kmTroca   = Number(v.km_ultima_troca_oleo) || 0;
+  const desde     = (v.km_desde_troca_oleo === null || v.km_desde_troca_oleo === undefined) ? null : Number(v.km_desde_troca_oleo);
+  if (!intervalo || !kmTroca || desde === null || desde < 0) return null;
+  const proxima = kmTroca + intervalo;
+  const faltam  = intervalo - desde;
+  const pct     = Math.max(0, Math.min(100, desde / intervalo * 100));
+  const perto   = Math.max(300, Math.round(intervalo * 0.1)); // "chegando" = últimos 10% do intervalo
+  let state = 'ok';
+  if (faltam <= 0) state = 'over';
+  else if (faltam <= perto) state = 'warn';
+  else if (faltam <= perto * 2) state = 'soon';
+  return {intervalo, kmTroca, desde, proxima, faltam, pct, state};
+}
+
 function renderGaragemKPIs(){
   const el = document.getElementById('gar-kpis');
   if (!el || !GAR_DATA) return;
@@ -4033,7 +4058,11 @@ function renderGaragemGrid(){
       <div class="gar-modelo">${ecEsc(v.modelo||'—')}${v.ano?(' · '+ecEsc(v.ano)):''}</div>
       <div class="gar-badges">
         <span class="gb ${st.cls}">${ecEsc(st.label)}</span>
-        ${v.oleo_alerta?'<span class="gb warn">🛢️ Trocar óleo</span>':''}
+        ${(()=>{ const o=garOleoInfo(v);
+          if (o && o.faltam<=0) return '<span class="gb warn">🛢️ Trocar óleo</span>';
+          if (o && o.state==='warn') return `<span class="gb warn">🛢️ Faltam ${fN(o.faltam)} km</span>`;
+          if (!o && v.oleo_alerta) return '<span class="gb warn">🛢️ Trocar óleo</span>';
+          return ''; })()}
         ${nPend?`<span class="gb bad">⚠️ ${nPend} pendência(s)</span>`:''}
         ${cond?`<span class="gb ${cond.toLowerCase()==='limpa'?'ok':'info'}">${ecEsc(cond)}</span>`:''}
       </div>
@@ -4067,15 +4096,23 @@ function renderGaragemDetail(){
       </div>
     </div>`;
 
+  const ol = garOleoInfo(v);
+  const olLinha = !ol ? '' : (ol.faltam > 0
+      ? `<div style="color:${ol.state==='warn'?'#fbbf24':(ol.state==='soon'?'#38bdf8':'#34d399')};font-weight:700;margin-top:4px">Faltam ${fN(ol.faltam)} km para a próxima troca</div>`
+      : `<div style="color:#f87171;font-weight:700;margin-top:4px">⚠️ Troca vencida há ${fN(Math.abs(ol.faltam))} km</div>`);
+
   const oleoHTML = `
     <div class="gar-section">
       <div class="gar-section-ttl">Óleo</div>
-      <div class="gar-oleo${v.oleo_alerta?' warn':''}">
-        <span style="font-size:22px">${v.oleo_alerta?'🛢️⚠️':'🛢️'}</span>
+      <div class="gar-oleo${ol?(ol.state==='over'?' warn':(ol.state==='warn'?' warn':(ol.state==='soon'?' soon':''))):(v.oleo_alerta?' warn':'')}">
+        <span style="font-size:22px">${(ol&&ol.state==='over')||v.oleo_alerta?'🛢️⚠️':'🛢️'}</span>
         <div>
           ${v.km_ultima_troca_oleo?`<div>Última troca: <b>${fN(v.km_ultima_troca_oleo)} km</b></div>`:'<div>Sem registro de troca.</div>'}
+          ${ol?`<div style="margin-top:2px">Próxima troca em: <b>${fN(ol.proxima)} km</b></div>`:''}
           ${v.intervalo_oleo_km?`<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Intervalo: a cada ${fN(v.intervalo_oleo_km)} km${v.km_desde_troca_oleo!==null?(v.km_desde_troca_oleo>=0?(' · rodados desde a troca: '+fN(v.km_desde_troca_oleo)+' km'):' · ⚠️ KM da última troca é maior que o KM atual (checar lançamento na planilha)'):''}</div>`:''}
-          ${v.oleo_alerta?'<div style="color:#fbbf24;font-weight:700;margin-top:3px">⚠️ Troca de óleo necessária</div>':''}
+          ${olLinha}
+          ${ol?`<div class="gar-oleo-bar ${ol.state}"><i style="width:${ol.pct.toFixed(1)}%"></i></div>`:''}
+          ${(!ol && v.oleo_alerta)?'<div style="color:#fbbf24;font-weight:700;margin-top:3px">⚠️ Troca de óleo necessária</div>':''}
         </div>
       </div>
     </div>`;
