@@ -5122,9 +5122,21 @@ function matDistinct(tab, col){
   const arr = tab==='municao' ? (MAT_DATA.municao_itens||[]) : (MAT_DATA.itens||[]);
   const s = new Set();
   arr.forEach(x=>{ const v=(x._raw&&x._raw[col]||'').trim(); if(v) s.add(v); });
-  return [...s].sort((a,b)=>a.localeCompare(b,'pt-BR')).slice(0,80);
+  const vals = [...s];
+  const numerico = vals.length && vals.every(v=>/^-?\d+(?:[.,]\d+)?$/.test(v));
+  vals.sort(numerico ? (a,b)=>parseFloat(a.replace(',','.'))-parseFloat(b.replace(',','.')) : (a,b)=>a.localeCompare(b,'pt-BR'));
+  return vals.slice(0,80);
 }
 function matKeyField(tab){ const c=matColumns(tab); return c.includes('Nº') ? 'Nº' : (c[0]||''); }
+// Próximo número da coluna-chave (maior valor numérico existente + 1).
+function matNextNum(tab, col){
+  const arr = tab==='municao' ? (MAT_DATA.municao_itens||[]) : (MAT_DATA.itens||[]);
+  let max = 0;
+  arr.forEach(x=>{ const n=parseInt(((x._raw&&x._raw[col])||'').replace(/\D/g,''),10); if(!isNaN(n)&&n>max) max=n; });
+  return max+1;
+}
+// Campos onde a sugestão (autocomplete) não ajuda — valores únicos de cada item.
+function matSemSugestao(col){ return /marca|modelo|s[eé]rie|patrim|data|validade|venc/i.test(col); }
 
 let MAT_EDIT = null; // { tab, row(null=novo), key }
 function openMatEditor(tab, row){
@@ -5134,8 +5146,11 @@ function openMatEditor(tab, row){
   const isNew = (row===null || row===undefined);
   const item = isNew ? null : matItemByRow(tab, row);
   if (!isNew && !item){ alert('Item não encontrado (a lista pode ter mudado). Recarregue a página.'); return; }
-  const raw = item ? item._raw : {};
-  MAT_EDIT = { tab, row: isNew?null:row, key: matKeyField(tab) };
+  const keyCol0 = matKeyField(tab);
+  const raw = item ? {...item._raw} : {};
+  // Item novo: gera o "Nº" automaticamente (maior número existente + 1).
+  if (isNew && keyCol0) raw[keyCol0] = String(matNextNum(tab, keyCol0));
+  MAT_EDIT = { tab, row: isNew?null:row, key: keyCol0 };
 
   const nomeAba = tab==='municao' ? 'munição' : 'material';
   document.getElementById('me-ttl').textContent = isNew ? `Adicionar ${nomeAba}` : `Editar ${nomeAba}`;
@@ -5143,14 +5158,18 @@ function openMatEditor(tab, row){
   document.getElementById('me-err').textContent = '';
 
   // Um campo por coluna. Campos longos (obs/alterações/localização) viram textarea.
+  const keyCol = matKeyField(tab);
   document.getElementById('me-body').innerHTML = cols.map((c,i)=>{
     const val = raw[c]!=null ? String(raw[c]) : '';
     const longo = /obs|observa|altera|descri|localiza/i.test(c);
+    // Sem sugestões na coluna-chave (Nº) nem em campos de valor único (série,
+    // patrimônio, modelo, datas, validade) — a lista de autocomplete só atrapalha.
+    const semSugestao = (c === keyCol) || matSemSugestao(c);
     const dlId = 'me-dl-'+i;
-    const opts = matDistinct(tab,c).map(v=>`<option value="${matAttr(v)}">`).join('');
+    const opts = semSugestao ? '' : matDistinct(tab,c).map(v=>`<option value="${matAttr(v)}">`).join('');
     const field = longo
       ? `<textarea id="me-f-${i}" data-col="${matAttr(c)}">${ecEsc(val)}</textarea>`
-      : `<input id="me-f-${i}" data-col="${matAttr(c)}" value="${matAttr(val)}" list="${dlId}" autocomplete="off"><datalist id="${dlId}">${opts}</datalist>`;
+      : `<input id="me-f-${i}" data-col="${matAttr(c)}" value="${matAttr(val)}"${semSugestao?'':` list="${dlId}"`} autocomplete="off">${semSugestao?'':`<datalist id="${dlId}">${opts}</datalist>`}`;
     return `<div class="me-fg${longo?' wide':''}"><label>${ecEsc(c)}</label>${field}</div>`;
   }).join('');
 
