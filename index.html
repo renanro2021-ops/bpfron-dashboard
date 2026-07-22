@@ -1103,14 +1103,171 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       </div>
     </div>
 
-    <!-- PÁGINA: MATERIAL BÉLICO (em construção) -->
+    <!-- PÁGINA: MATERIAL BÉLICO -->
+    <style>
+      #page-material .mt-sub{font-size:12.5px;color:var(--muted);margin:-4px 2px 14px}
+      #page-material .mt-status{font-size:12px;color:var(--muted);margin:0 2px 12px}
+      #page-material .mt-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px}
+      #page-material .mt-kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;position:relative;overflow:hidden}
+      #page-material .mt-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--yellow)}
+      #page-material .mt-kpi.danger::before{background:#f87171}
+      #page-material .mt-kpi.ok::before{background:#34d399}
+      #page-material .mt-kpi.info::before{background:#38bdf8}
+      #page-material .mt-kpi .ic{font-size:18px;opacity:.9}
+      #page-material .mt-kpi .v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px;line-height:1.05;color:#fff;margin-top:4px}
+      #page-material .mt-kpi.danger .v{color:#fca5a5}
+      #page-material .mt-kpi .l{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+      #page-material .mt-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:14px}
+      #page-material .mt-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+      #page-material .mt-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+      #page-material .mt-card-ttl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;letter-spacing:.4px;color:var(--yellow);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+      #page-material .mt-chart{position:relative;height:260px}
+      #page-material .mt-chart.tall{height:340px}
+      #page-material table.mt-tb{width:100%;border-collapse:collapse;font-size:12.5px}
+      #page-material table.mt-tb th{text-align:left;color:var(--muted);font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card)}
+      #page-material table.mt-tb td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);color:#dfe6f0}
+      #page-material table.mt-tb tr:hover td{background:rgba(255,255,255,.02)}
+      #page-material table.mt-tb td.num,#page-material table.mt-tb th.num{text-align:right;font-variant-numeric:tabular-nums}
+      #page-material .mt-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;min-width:60px}
+      #page-material .mt-bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#34d399)}
+      #page-material .mt-bar.low i{background:linear-gradient(90deg,#dc2626,#f87171)}
+      #page-material .mt-bar.mid i{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+      #page-material .mt-mun-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+      #page-material .mt-mun-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:11px;padding:11px 13px}
+      #page-material .mt-mun-card .v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:24px;color:#fff}
+      #page-material .mt-mun-card .l{font-size:11px;color:var(--muted);margin-top:1px}
+      #page-material .mt-mun-card .s{font-size:10.5px;color:#64748b;margin-top:4px}
+      #page-material .mt-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+      #page-material .mt-filters input,#page-material .mt-filters select{background:rgba(6,9,18,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e8edf5;font-family:'Inter',sans-serif;font-size:12.5px;padding:8px 11px;outline:none}
+      #page-material .mt-filters input:focus,#page-material .mt-filters select:focus{border-color:var(--yellow)}
+      #page-material .mt-filters .grow{flex:1;min-width:180px}
+      #page-material .mt-count{font-size:11.5px;color:var(--muted);margin-left:auto}
+      #page-material .mt-table-wrap{max-height:520px;overflow:auto;border:1px solid var(--border);border-radius:12px}
+      #page-material .mt-chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+      #page-material .mt-chip.reserva{background:rgba(56,189,248,.12);color:#7dd3fc}
+      #page-material .mt-chip.cautelado{background:rgba(245,197,24,.14);color:#fbbf24}
+      #page-material .mt-chip.vencido{background:rgba(248,113,113,.14);color:#fca5a5}
+      #page-material .mt-chip.manutencao{background:rgba(251,146,60,.14);color:#fdba74}
+      #page-material .mt-chip.pericia{background:rgba(167,139,250,.14);color:#c4b5fd}
+      #page-material .mt-chip.gray{background:rgba(148,163,184,.12);color:#cbd5e1}
+      #page-material .mt-est{font-weight:600}
+      #page-material .mt-est.otimo{color:#34d399}#page-material .mt-est.bom{color:#86efac}
+      #page-material .mt-est.regular{color:#fbbf24}#page-material .mt-est.ruim{color:#f87171}
+      /* Explorador de tipos */
+      #page-material .mt-sec-ttl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;color:var(--yellow);text-transform:uppercase;margin:4px 2px 10px;display:flex;align-items:center;gap:8px}
+      #page-material .mt-sec-ttl small{font-family:'Inter',sans-serif;font-weight:400;font-size:11px;letter-spacing:0;color:var(--muted);text-transform:none}
+      #page-material .mt-types{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-bottom:14px}
+      #page-material .mt-type{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 12px 11px;cursor:pointer;transition:.15s;position:relative;text-align:left}
+      #page-material .mt-type:hover{border-color:rgba(245,197,24,.45);transform:translateY(-2px)}
+      #page-material .mt-type.active{border-color:var(--yellow);background:rgba(245,197,24,.07);box-shadow:0 0 0 1px var(--yellow)}
+      #page-material .mt-type .ic{font-size:20px}
+      #page-material .mt-type .v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:26px;line-height:1.05;color:#fff;margin-top:3px}
+      #page-material .mt-type .l{font-size:11.5px;font-weight:600;color:#dfe6f0;margin-top:1px}
+      #page-material .mt-type .h{font-size:10px;color:var(--muted);margin-top:3px}
+      #page-material .mt-type .go{position:absolute;top:11px;right:12px;font-size:11px;color:var(--muted);opacity:0;transition:.15s}
+      #page-material .mt-type:hover .go,#page-material .mt-type.active .go{opacity:1;color:var(--yellow)}
+      #page-material .mt-type.arma::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:#f5c518}
+      #page-material .mt-type.municao::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:#fb923c}
+      #page-material .mt-type.equip::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:#38bdf8}
+      #page-material .mt-detail{background:var(--card);border:1px solid var(--yellow);border-radius:14px;padding:0;margin-bottom:16px;overflow:hidden;animation:mtFade .2s ease}
+      @keyframes mtFade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+      #page-material .mt-detail-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(245,197,24,.06);border-bottom:1px solid var(--border);flex-wrap:wrap}
+      #page-material .mt-detail-head .di{font-size:26px}
+      #page-material .mt-detail-head .dt{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:#fff}
+      #page-material .mt-detail-head .dq{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--yellow);background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);border-radius:20px;padding:3px 12px}
+      #page-material .mt-detail-head .dx{margin-left:auto;background:rgba(255,255,255,.06);border:1px solid var(--border);color:#cbd5e1;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer}
+      #page-material .mt-detail-head .dx:hover{border-color:#f87171;color:#f87171}
+      #page-material .mt-detail-body{padding:16px 18px}
+      #page-material .mt-mini{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+      #page-material .mt-mini span{font-size:11.5px;color:#cbd5e1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:5px 10px}
+      #page-material .mt-mini b{color:#fff}
+      /* KPIs clicáveis */
+      #page-material .mt-kpi.clk{cursor:pointer;transition:.15s}
+      #page-material .mt-kpi.clk:hover{border-color:rgba(245,197,24,.45);transform:translateY(-2px)}
+      #page-material .mt-kpi.sel{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow);background:rgba(245,197,24,.06)}
+      #page-material .mt-kpi .mk-go{position:absolute;top:11px;right:12px;font-size:10.5px;color:var(--muted);opacity:0;transition:.15s}
+      #page-material .mt-kpi.clk:hover .mk-go,#page-material .mt-kpi.sel .mk-go{opacity:1;color:var(--yellow)}
+      /* Botão limpar tudo */
+      #page-material .mt-clear-btn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:9px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s}
+      #page-material .mt-clear-btn:hover{background:rgba(248,113,113,.18);border-color:#f87171;color:#fecaca}
+      /* Navegação (voltar) do explorador */
+      #page-material .mt-type-nav{display:none;align-items:center;gap:12px;margin:2px 2px 12px}
+      #page-material .mt-type-nav.on{display:flex}
+      #page-material .mt-back{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;color:#cbd5e1;cursor:pointer;transition:.15s}
+      #page-material .mt-back:hover{border-color:var(--yellow);color:var(--yellow)}
+      #page-material .mt-nav-ctx{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fff;display:flex;align-items:center;gap:8px}
+      #page-material .mt-nav-ctx .q{font-size:12px;color:var(--yellow);background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);border-radius:20px;padding:2px 10px;font-family:'Inter',sans-serif}
+      #page-material .mt-nav-hint{margin-left:auto;font-size:11.5px;color:var(--muted)}
+      /* Resumo por categoria — barra de condição empilhada */
+      #page-material .mt-cat-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:10.5px;color:var(--muted)}
+      #page-material .mt-cat-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+      #page-material .mt-stack{display:flex;height:14px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.05);min-width:120px}
+      #page-material .mt-stack>span{height:100%}
+      #page-material .mt-stack .s-otimo{background:#22c55e}#page-material .mt-stack .s-bom{background:#86efac}
+      #page-material .mt-stack .s-regular{background:#fbbf24}#page-material .mt-stack .s-ruim{background:#f87171}
+      #page-material .mt-stack .s-na{background:rgba(148,163,184,.25)}
+      @media(max-width:1100px){#page-material .mt-kpis{grid-template-columns:repeat(3,1fr)}#page-material .mt-grid,#page-material .mt-grid2{grid-template-columns:1fr}}
+      @media(max-width:600px){#page-material .mt-kpis{grid-template-columns:repeat(2,1fr)}#page-material .mt-types{grid-template-columns:repeat(2,1fr)}}
+    </style>
     <div id="page-material" class="page-content">
       <div class="sec">🔫 Material Bélico — Poder de Fogo</div>
-      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
-        <div style="font-size:46px;margin-bottom:10px">🚧</div>
-        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
-        <p>Aqui vai entrar o inventário do <b>poder bélico</b>: armamento, munição, quantidades, situação e distribuição. Vamos montar nos próximos passos.</p>
+      <div class="mt-sub">Inventário de armamento, proteção balística, equipamentos e munição — dados ao vivo da planilha <b>BPFRON_Patrimonio_BI</b>.</div>
+      <div id="mat-status" class="mt-status">Carregando…</div>
+
+      <div id="mat-kpis" class="mt-kpis"></div>
+
+      <div class="mt-sec-ttl" id="mat-types-ttl">🎯 Explorar por Tipo <small>— clique num tipo (ou num indicador acima) para ver e pesquisar os itens</small><span id="mat-clear-wrap" style="margin-left:auto"></span></div>
+      <div id="mat-type-nav"></div>
+      <div id="mat-type-cards" class="mt-types"></div>
+      <div id="mat-type-detail"></div>
+
+      <div id="mat-analytics">
+      <div class="mt-grid">
+        <div class="mt-card">
+          <div class="mt-card-ttl">📦 Resumo por Categoria &amp; Condição</div>
+          <div class="mt-cat-legend" id="mat-cat-legend"></div>
+          <div class="mt-table-wrap" style="max-height:360px">
+            <table class="mt-tb" id="mat-cat-table"></table>
+          </div>
+        </div>
+        <div class="mt-card">
+          <div class="mt-card-ttl">🔫 Situação do Armamento</div>
+          <div class="mt-chart"><canvas id="c-mat-sit"></canvas></div>
+        </div>
       </div>
+
+      <div class="mt-grid2">
+        <div class="mt-card">
+          <div class="mt-card-ttl">🏢 Distribuição por Companhia</div>
+          <div class="mt-chart"><canvas id="c-mat-comp"></canvas></div>
+        </div>
+        <div class="mt-card">
+          <div class="mt-card-ttl">🛠️ Condição Física do Material</div>
+          <div class="mt-chart"><canvas id="c-mat-estado"></canvas></div>
+        </div>
+      </div>
+
+      <div class="mt-card" style="margin-bottom:14px">
+        <div class="mt-card-ttl">💥 Munição &amp; Granadas — Saldo em Estoque</div>
+        <div id="mat-mun-cards" class="mt-mun-cards"></div>
+        <div class="mt-table-wrap" style="max-height:300px">
+          <table class="mt-tb" id="mat-mun-table"></table>
+        </div>
+      </div>
+
+      <div class="mt-card">
+        <div class="mt-card-ttl">📋 Inventário Detalhado</div>
+        <div class="mt-filters">
+          <input type="text" id="mat-busca" class="grow" placeholder="🔎 Buscar por modelo, nº de série, patrimônio, responsável…" oninput="renderMaterialTable()">
+          <select id="mat-f-cat" onchange="renderMaterialTable()"><option value="">Todas as categorias</option></select>
+          <select id="mat-f-sit" onchange="renderMaterialTable()"><option value="">Todas as situações</option></select>
+          <span id="mat-count" class="mt-count"></span>
+        </div>
+        <div class="mt-table-wrap">
+          <table class="mt-tb" id="mat-inv-table"></table>
+        </div>
+      </div>
+      </div><!-- /#mat-analytics -->
     </div>
 
     <!-- PÁGINA: POLICIAIS EM CAMPO -->
@@ -2526,6 +2683,7 @@ function showPage(pageId) {
   if (pageId === 'mapa')       { setTimeout(() => { if(MAP){ MAP.invalidateSize(); renderMap(); } }, 120); }
   if (pageId === 'policiais-campo') initCampo();
   if (pageId === 'garagem') initGaragem();
+  if (pageId === 'material') initMaterial();
   if (pageId === 'consultas')  {
     // Exige login: o gate decide se mostra a tela de login ou os dados.
     gateConsultas();
@@ -3423,6 +3581,7 @@ function apiLogout(){
   AUTH.token = ''; AUTH.user = '';
   ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
   GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; destroyC('gar-ranking'); destroyC('gar-km-mes');
+  MAT_LOADED = false; MAT_DATA = null; MAT_GROUPS = []; MAT_GROUP_SEL = null; MAT_SUB_SEL = null; MAT_SEL = null; ['mat-sit','mat-comp','mat-estado'].forEach(destroyC);
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
   applyUserRestrictions();
@@ -4437,6 +4596,425 @@ function ecRenderMap(escalas){
     pts.push(ll);
   });
   if(pts.length){ try{ EC_MAP.fitBounds(pts, { padding:[40,40], maxZoom:9 }); }catch(e){} }
+}
+
+/* ═══════════════ MATERIAL BÉLICO (/api/material) ═══════════════ */
+let MAT_LOADED = false, MAT_DATA = null, MAT_GROUPS = [], MAT_GROUP_SEL = null, MAT_SUB_SEL = null, MAT_SEL = null;
+
+async function initMaterial(){
+  if (!AUTH.logged) return; // showPage já bloqueou (gate de Gestão)
+  if (MAT_LOADED){ renderMaterialAll(); return; }
+  const status = document.getElementById('mat-status');
+  showPageLoader('Carregando material bélico…');
+  try {
+    MAT_DATA = await apiFetchJSON('/api/material');
+    MAT_LOADED = true;
+    renderMaterialAll();
+  } catch(e){
+    if (status) status.textContent = '❌ ' + (e.message || 'Erro ao carregar o material bélico.');
+  } finally {
+    hidePageLoader();
+  }
+}
+
+function matSitClass(s){
+  const k = (s||'').toLowerCase();
+  if (k.includes('reserva')) return 'reserva';
+  if (k.includes('cautel')) return 'cautelado';
+  if (k.includes('vencid')) return 'vencido';
+  if (k.includes('manuten')) return 'manutencao';
+  if (k.includes('perícia')||k.includes('pericia')||k.includes('judic')) return 'pericia';
+  return 'gray';
+}
+function matEstClass(e){
+  const k = (e||'').toLowerCase();
+  if (k.startsWith('ótimo')||k.startsWith('otimo')) return 'otimo';
+  if (k.startsWith('bom')) return 'bom';
+  if (k.startsWith('regular')) return 'regular';
+  if (k.startsWith('ruim')||k.startsWith('inserv')) return 'ruim';
+  return '';
+}
+
+function renderMaterialAll(){
+  if (!MAT_DATA) return;
+  const k = MAT_DATA.kpis, a = MAT_DATA.alertas;
+  const status = document.getElementById('mat-status');
+  if (status){
+    const dt = MAT_DATA.atualizado_em ? new Date(MAT_DATA.atualizado_em*1000).toLocaleString('pt-BR') : '';
+    status.textContent = `${fN(k.total_itens)} itens cadastrados · ${fN(k.municao_itens)} lotes de munição` + (dt?` · atualizado ${dt}`:'');
+  }
+
+  // KPIs
+  const kpis = [
+    ['📦', k.total_itens, 'Total de Itens', ''],
+    ['🔫', k.armamento, 'Armamento', ''],
+    ['🤝', k.armas_cauteladas, 'Armas Cauteladas', 'info'],
+    ['🦺', k.coletes_validos, 'Coletes Válidos', 'ok'],
+    ['🦺', k.coletes_vencidos, 'Coletes Vencidos', 'danger'],
+    ['💥', fN(k.saldo_municao), 'Saldo Munição', ''],
+  ];
+  document.getElementById('mat-kpis').innerHTML = kpis.map((x,i)=>
+    `<div class="mt-kpi clk ${x[3]}" data-mk="${i}" onclick="selectMatKpi(${i})"><span class="mk-go">ver ›</span><div class="ic">${x[0]}</div><div class="v">${typeof x[1]==='number'?fN(x[1]):x[1]}</div><div class="l">${x[2]}</div></div>`
+  ).join('');
+  matHighlightKpis();
+
+  // Explorador de tipos (grupos clicáveis com drill-down em 2 níveis)
+  renderMaterialTypes();
+
+  // Resumo por categoria + condição (barra empilhada por condição física)
+  const cats = MAT_DATA.por_categoria || [];
+  const leg = document.getElementById('mat-cat-legend');
+  if (leg) leg.innerHTML = `<span><i style="background:#22c55e"></i>Ótimo</span><span><i style="background:#86efac"></i>Bom</span><span><i style="background:#fbbf24"></i>Regular</span><span><i style="background:#f87171"></i>Ruim</span><span><i style="background:rgba(148,163,184,.25)"></i>Sem registro</span>`;
+  document.getElementById('mat-cat-table').innerHTML =
+    `<thead><tr><th>Categoria</th><th class="num">Qtd</th><th style="min-width:140px">Condição física</th><th class="num" style="width:64px">Bom+Ót.</th></tr></thead><tbody>` +
+    cats.map(c=>{
+      const na = c.total - (c.otimo+c.bom+c.regular+c.ruim);
+      const seg = (n,cl,lbl)=> n>0 ? `<span class="s-${cl}" style="width:${(n/c.total*100).toFixed(2)}%" title="${lbl}: ${n}"></span>` : '';
+      const stack = `<div class="mt-stack">${seg(c.otimo,'otimo','Ótimo')}${seg(c.bom,'bom','Bom')}${seg(c.regular,'regular','Regular')}${seg(c.ruim,'ruim','Ruim')}${seg(na,'na','Sem registro')}</div>`;
+      const pctCol = c.ruim>0 ? '#fca5a5' : (c.pct_bom_otimo>=70?'#86efac':'var(--muted)');
+      return `<tr><td>${ecEsc(c.categoria)}</td><td class="num">${c.total}</td><td>${stack}</td><td class="num" style="color:${pctCol};font-weight:600">${c.pct_bom_otimo}%</td></tr>`;
+    }).join('') + `</tbody>`;
+
+  // Situação do armamento (doughnut)
+  const sit = MAT_DATA.situacao_armamento || [];
+  destroyC('mat-sit');
+  CHARTS['mat-sit'] = new Chart(document.getElementById('c-mat-sit'), {
+    type:'doughnut',
+    data:{ labels: sit.map(s=>s.chave), datasets:[{ data: sit.map(s=>s.qtd), backgroundColor:['#38bdf8','#f5c518','#fb923c','#a78bfa','#f87171','#34d399'], borderColor:'#13161e', borderWidth:3, hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{display:true,position:'bottom',labels:{color:'#94a3b8',font:{size:11},padding:10,boxWidth:11}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}`}} } }
+  });
+
+  // Por companhia (barra horizontal)
+  const comp = MAT_DATA.por_companhia || [];
+  destroyC('mat-comp');
+  CHARTS['mat-comp'] = new Chart(document.getElementById('c-mat-comp'), {
+    type:'bar',
+    data:{ labels: comp.map(c=>c.chave), datasets:[{ label:'Itens', data: comp.map(c=>c.qtd), backgroundColor: comp.map((_,i)=>PAL[i%PAL.length]), borderRadius:4, borderWidth:0, maxBarThickness:36 }] },
+    options:{ ...cOpts('Itens'), indexAxis:'y', plugins:{legend:{display:false},tooltip:{...cOpts().plugins.tooltip,callbacks:{label:c=>` ${fN(c.parsed.x)} itens`}}}, scales:{x:{...cOpts().scales.x,beginAtZero:true},y:{...cOpts().scales.y,ticks:{color:'#94a3b8',font:{size:11}}}} }
+  });
+
+  // Condição física geral (doughnut)
+  const est = MAT_DATA.por_estado || [];
+  const estColor = e=>{const c=matEstClass(e.chave);return c==='otimo'?'#34d399':c==='bom'?'#86efac':c==='regular'?'#fbbf24':c==='ruim'?'#f87171':'#94a3b8';};
+  destroyC('mat-estado');
+  CHARTS['mat-estado'] = new Chart(document.getElementById('c-mat-estado'), {
+    type:'doughnut',
+    data:{ labels: est.map(e=>e.chave), datasets:[{ data: est.map(e=>e.qtd), backgroundColor: est.map(estColor), borderColor:'#13161e', borderWidth:3, hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{display:true,position:'bottom',labels:{color:'#94a3b8',font:{size:11},padding:10,boxWidth:11}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}`}} } }
+  });
+
+  // Munição — cards por categoria + tabela
+  const munCat = MAT_DATA.municao_por_categoria || [];
+  const cardTotal = `<div class="mt-mun-card" style="border-color:rgba(245,197,24,.4);background:rgba(245,197,24,.05)"><div class="v" style="color:var(--yellow)">${fN(k.saldo_municao)}</div><div class="l">Saldo total</div><div class="s">${fN(k.municao_itens)} lotes</div></div>`;
+  document.getElementById('mat-mun-cards').innerHTML = cardTotal + munCat.map(m=>
+    `<div class="mt-mun-card"><div class="v">${fN(m.saldo)}</div><div class="l">${ecEsc(m.categoria)}</div><div class="s">${m.itens} lote(s) · consumido ${fN(m.consumida)}</div></div>`
+  ).join('');
+  const mun = MAT_DATA.municao_itens || [];
+  document.getElementById('mat-mun-table').innerHTML =
+    `<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabr.</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th></tr></thead><tbody>`+
+    mun.map(m=>`<tr><td>${ecEsc(m.tipo)}</td><td>${ecEsc(m.categoria)}</td><td>${ecEsc(m.fabricante)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td></tr>`).join('')+`</tbody>`;
+
+  // Filtros do inventário
+  const fc = document.getElementById('mat-f-cat'), fs = document.getElementById('mat-f-sit');
+  if (fc && fc.options.length<=1){
+    cats.forEach(c=> fc.insertAdjacentHTML('beforeend', `<option value="${ecEsc(c.categoria)}">${ecEsc(c.categoria)} (${c.total})</option>`));
+  }
+  if (fs && fs.options.length<=1){
+    const sits = [...new Set((MAT_DATA.itens||[]).map(i=>i.situacao).filter(Boolean))].sort();
+    sits.forEach(s=> fs.insertAdjacentHTML('beforeend', `<option value="${ecEsc(s)}">${ecEsc(s)}</option>`));
+  }
+  renderMaterialTable();
+}
+
+// Monta os GRUPOS de tipos (nível 0) e seus subtipos (nível 1):
+//   Armas (por Subtipo), Munições (por categoria, qtd=saldo), Coletes & Proteção
+//   (Colete+Placa+Painel+Capa), Taser, Algema, Eletrônicos.
+function matGroups(){
+  const itens = MAT_DATA.itens||[], mun = MAT_DATA.municao_itens||[];
+  const inCats = cats => itens.filter(i=> cats.includes(i.categoria));
+  const groups = [];
+
+  // Armas — por subtipo
+  const arm = itens.filter(i=>(i.categoria||'').toLowerCase()==='armamento');
+  const subOrder = ['Fuzil','Carabina','Pistola','Espingarda','Metralhadora','Submetralhadora','Revólver'];
+  const bySub = {}; arm.forEach(i=>{const s=i.subtipo||'Outros';(bySub[s]=bySub[s]||[]).push(i);});
+  const armSubs = Object.keys(bySub).sort((a,b)=>{const ia=subOrder.indexOf(a),ib=subOrder.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||bySub[b].length-bySub[a].length;})
+    .map(s=>({key:'arma:'+s,kind:'arma',icon:'🔫',label:s,qty:bySub[s].length,items:bySub[s]}));
+  if (arm.length) groups.push({key:'armas',icon:'🔫',label:'Armas',qty:arm.length,unit:'unidades',subs:armSubs,items:arm});
+
+  // Munições — por categoria da aba (qtd = saldo em estoque)
+  const munOrder=['Munição','Munição Borracha','Granada'];
+  const byMun={}; mun.forEach(m=>{const c=m.categoria||'Munição';(byMun[c]=byMun[c]||[]).push(m);});
+  const munSubs=Object.keys(byMun).sort((a,b)=>{const ia=munOrder.indexOf(a),ib=munOrder.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);})
+    .map(c=>({key:'mun:'+c,kind:'municao',icon:/granada/i.test(c)?'💣':(/borracha/i.test(c)?'⚪':'💥'),label:c,qty:byMun[c].reduce((a,m)=>a+(m.saldo||0),0),munItems:byMun[c]}));
+  if (mun.length) groups.push({key:'municoes',icon:'💥',label:'Munições',qty:mun.reduce((a,m)=>a+(m.saldo||0),0),unit:'em estoque',subs:munSubs,munItems:mun});
+
+  // Coletes & Proteção Balística
+  const protCats=['Colete Balístico','Placa Balística','Painel Balístico','Capa de Compressão'];
+  const protIcon={'Colete Balístico':'🦺','Placa Balística':'🛡️','Painel Balístico':'🟦','Capa de Compressão':'🎽'};
+  const protSubs=protCats.filter(c=>inCats([c]).length).map(c=>{const arr=inCats([c]);return {key:'cat:'+c,kind:'equip',icon:protIcon[c]||'🦺',label:c,qty:arr.length,items:arr};});
+  const prot=inCats(protCats);
+  if (prot.length) groups.push({key:'coletes',icon:'🦺',label:'Coletes & Proteção',qty:prot.length,unit:'unidades',subs:protSubs,items:prot});
+
+  // Taser e Algema — grupos simples (1 subtipo → abre direto no detalhe)
+  const taser=inCats(['Taser']);
+  if (taser.length) groups.push({key:'taser',icon:'⚡',label:'Taser',qty:taser.length,unit:'unidades',subs:[{key:'cat:Taser',kind:'equip',icon:'⚡',label:'Taser',qty:taser.length,items:taser}],items:taser});
+  const algema=inCats(['Algema']);
+  if (algema.length) groups.push({key:'algema',icon:'⛓️',label:'Algema',qty:algema.length,unit:'unidades',subs:[{key:'cat:Algema',kind:'equip',icon:'⛓️',label:'Algema',qty:algema.length,items:algema}],items:algema});
+
+  // Eletrônicos
+  const eletCats=['Rádio/Comunicação','Body Cam','Impressora','Celular/Tablet','Outros Eletrônicos'];
+  const eletIcon={'Rádio/Comunicação':'📻','Body Cam':'📷','Impressora':'🖨️','Celular/Tablet':'📱','Outros Eletrônicos':'🔌'};
+  const eletSubs=eletCats.filter(c=>inCats([c]).length).map(c=>{const arr=inCats([c]);return {key:'cat:'+c,kind:'equip',icon:eletIcon[c]||'📦',label:c,qty:arr.length,items:arr};});
+  const elet=inCats(eletCats);
+  if (elet.length) groups.push({key:'eletronicos',icon:'📱',label:'Eletrônicos',qty:elet.length,unit:'unidades',subs:eletSubs,items:elet});
+
+  return groups;
+}
+
+function matFindSub(subKey){
+  for (const g of MAT_GROUPS){ const s=(g.subs||[]).find(x=>x.key===subKey); if(s) return {g,s}; }
+  return null;
+}
+
+function matTypeCard(o, kind, hint, active, isGroup){
+  const unit = kind==='municao' ? 'un. estoque' : 'unidades';
+  const key = o.key.replace(/'/g,"\\'");
+  const onclick = isGroup ? `selectMatGroup('${key}')` : `selectMatSub('${key}')`;
+  const go = (isGroup && o.subs && o.subs.length>1) ? 'abrir ›' : 'ver ›';
+  return `<div class="mt-type ${kind}${active?' active':''}" onclick="${onclick}">
+    <span class="go">${go}</span>
+    <div class="ic">${o.icon}</div>
+    <div class="v">${fN(o.qty)}</div>
+    <div class="l">${ecEsc(o.label)}</div>
+    <div class="h">${hint} · ${unit}</div>
+  </div>`;
+}
+
+function renderMaterialTypes(){
+  const cardsEl = document.getElementById('mat-type-cards');
+  const navEl = document.getElementById('mat-type-nav');
+  const anaEl = document.getElementById('mat-analytics');
+  if (!cardsEl || !MAT_DATA) return;
+  MAT_GROUPS = matGroups();
+
+  // Nível 0 — grupos
+  if (!MAT_GROUP_SEL){
+    if (navEl){ navEl.className='mt-type-nav'; navEl.innerHTML=''; }
+    cardsEl.style.display='';
+    cardsEl.innerHTML = MAT_GROUPS.map(g=>{
+      const kind = g.key==='municoes'?'municao':(g.key==='armas'?'arma':'equip');
+      const hint = g.subs.length>1 ? (g.subs.length+' tipos') : ((g.subs[0]&&g.subs[0].items) ? new Set(g.subs[0].items.map(i=>i.modelo||'—')).size+' modelo(s)' : '1 tipo');
+      const active = MAT_SEL && MAT_SEL.src==='group' && MAT_SEL.key===g.key;
+      return matTypeCard(g, kind, hint, active, true);
+    }).join('');
+  } else {
+    // Nível 1 — dentro de um grupo
+    const g = MAT_GROUPS.find(x=>x.key===MAT_GROUP_SEL);
+    if (!g){ MAT_GROUP_SEL=null; MAT_SUB_SEL=null; return renderMaterialTypes(); }
+    if (navEl){
+      navEl.className='mt-type-nav on';
+      navEl.innerHTML = `<div class="mt-back" onclick="matBackTop()">← Todos os tipos</div>
+        <div class="mt-nav-ctx">${g.icon} ${ecEsc(g.label)} <span class="q">${fN(g.qty)} ${g.unit}</span></div>
+        ${g.subs.length>1?'<div class="mt-nav-hint">clique num tipo abaixo para ver os modelos</div>':''}`;
+    }
+    if (g.subs.length>1){
+      cardsEl.style.display='';
+      cardsEl.innerHTML = g.subs.map(s=>{
+        const hint = s.kind==='municao' ? (s.munItems.length+' lote(s)') : (new Set(s.items.map(i=>i.modelo||'—')).size+' modelo(s)');
+        return matTypeCard(s, s.kind, hint, MAT_SUB_SEL===s.key, false);
+      }).join('');
+    } else {
+      cardsEl.style.display='none';
+      cardsEl.innerHTML='';
+    }
+  }
+  if (anaEl) anaEl.style.display = MAT_SEL ? 'none' : '';
+  matHighlightKpis();
+  matRenderClear();
+  matRenderExplorer();
+}
+
+// ── Seleções (KPI, grupo, subtipo) → alimentam o explorador de itens ──
+function matKpiSel(i){
+  const itens = MAT_DATA.itens||[];
+  const arm = itens.filter(x=>(x.categoria||'').toLowerCase()==='armamento');
+  const coletes = itens.filter(x=>/colete/i.test(x.categoria||''));
+  const isVenc = x=> /vencid/i.test(x.situacao||'') || /vencid/i.test(x.estado||'');
+  const K = (key,icon,label,ctx,items)=>({src:'kpi',key,icon,label,ctx,kind:'item',items});
+  switch(i){
+    case 0: return K('kpi:0','📦','Todos os Itens','inventário completo cadastrado',itens);
+    case 1: return K('kpi:1','🔫','Armamento','todas as armas cadastradas',arm);
+    case 2: return K('kpi:2','🤝','Armas Cauteladas','armas sob responsabilidade de policiais',arm.filter(x=>/cautel/i.test(x.situacao||'')));
+    case 3: return K('kpi:3','🦺','Coletes Válidos','proteção balística dentro da validade',coletes.filter(x=>!isVenc(x)));
+    case 4: return K('kpi:4','🦺','Coletes Vencidos','proteção balística fora da validade',coletes.filter(isVenc));
+    case 5: return {src:'kpi',key:'kpi:5',icon:'💥',label:'Saldo de Munição',ctx:'lotes de munição e granadas em estoque',kind:'municao',munItems:MAT_DATA.municao_itens||[]};
+  }
+}
+function matSelFromGroup(g){
+  if(g.key==='municoes') return {src:'group',key:g.key,icon:g.icon,label:g.label,ctx:'todos os lotes deste grupo',kind:'municao',munItems:g.munItems||[]};
+  return {src:'group',key:g.key,icon:g.icon,label:g.label,ctx:'todos os itens deste grupo',kind:'item',items:g.items||[]};
+}
+function matSelFromSub(s,g){
+  if(s.kind==='municao') return {src:'sub',key:s.key,icon:s.icon,label:s.label,ctx:g.label,kind:'municao',munItems:s.munItems||[]};
+  return {src:'sub',key:s.key,icon:s.icon,label:s.label,ctx:g.label,kind:'item',items:s.items||[]};
+}
+
+function selectMatKpi(i){
+  if (MAT_SEL && MAT_SEL.key==='kpi:'+i){ matClearAll(); return; } // clicar de novo = fechar
+  MAT_GROUP_SEL=null; MAT_SUB_SEL=null;
+  MAT_SEL = matKpiSel(i);
+  renderMaterialTypes();
+  const d=document.getElementById('mat-type-detail'); if(d) setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+function selectMatGroup(key){
+  MAT_GROUP_SEL = key;
+  const g = MAT_GROUPS.find(x=>x.key===key);
+  MAT_SUB_SEL = (g && g.subs.length===1) ? g.subs[0].key : null;
+  if (g){ MAT_SEL = MAT_SUB_SEL ? matSelFromSub(g.subs[0],g) : matSelFromGroup(g); }
+  renderMaterialTypes();
+  const d=document.getElementById('mat-type-detail'); if(d) setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+function selectMatSub(key){
+  const deselect = (MAT_SUB_SEL===key);
+  MAT_SUB_SEL = deselect ? null : key;
+  const g = MAT_GROUPS.find(x=>x.key===MAT_GROUP_SEL);
+  if (deselect){ MAT_SEL = g ? matSelFromGroup(g) : null; }
+  else { const f=matFindSub(key); MAT_SEL = f ? matSelFromSub(f.s,f.g) : null; }
+  renderMaterialTypes();
+  const d=document.getElementById('mat-type-detail'); if(d) setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+function matBackTop(){
+  MAT_GROUP_SEL=null; MAT_SUB_SEL=null; MAT_SEL=null;
+  renderMaterialTypes();
+  const t=document.getElementById('mat-types-ttl'); if(t) setTimeout(()=>t.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+// Limpa tudo e volta a mostrar a página inteira de Material Bélico
+function matClearAll(){
+  MAT_SEL=null; MAT_GROUP_SEL=null; MAT_SUB_SEL=null;
+  renderMaterialTypes();
+  const p=document.getElementById('mat-types-ttl'); if(p) setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+
+function matHighlightKpis(){
+  document.querySelectorAll('#mat-kpis .mt-kpi').forEach(el=>{
+    const on = MAT_SEL && MAT_SEL.src==='kpi' && MAT_SEL.key==='kpi:'+el.dataset.mk;
+    el.classList.toggle('sel', !!on);
+  });
+}
+
+function matRenderClear(){
+  const w=document.getElementById('mat-clear-wrap'); if(!w) return;
+  w.innerHTML = MAT_SEL ? `<button class="mt-clear-btn" onclick="matClearAll()">🧹 Limpar tudo</button>` : '';
+}
+
+// Info resumida (relevante) da seleção atual
+function matExplorerMini(){
+  if(!MAT_SEL) return '';
+  if(MAT_SEL.kind==='municao'){
+    const its=MAT_SEL.munItems||[];
+    const saldo=its.reduce((a,m)=>a+(m.saldo||0),0), ent=its.reduce((a,m)=>a+(m.entrada||0),0), con=its.reduce((a,m)=>a+(m.consumida||0),0);
+    return `<div class="mt-mini"><span>Saldo em estoque: <b>${fN(saldo)}</b></span><span>Entrada total: <b>${fN(ent)}</b></span><span>Consumido: <b>${fN(con)}</b></span><span>Lotes: <b>${its.length}</b></span></div>`;
+  }
+  const its=MAT_SEL.items||[];
+  const byMod={}; its.forEach(i=>{const k=i.modelo||'(sem modelo)';(byMod[k]=byMod[k]||[]).push(i);});
+  const est={otimo:0,bom:0,regular:0,ruim:0}; its.forEach(i=>{const c=matEstClass(i.estado); if(est[c]!==undefined) est[c]++;});
+  const sit={}; its.forEach(i=>{const s=i.situacao||'—'; sit[s]=(sit[s]||0)+1;});
+  return `<div class="mt-mini">
+    <span>Total: <b>${its.length}</b></span>
+    <span>Modelos: <b>${Object.keys(byMod).length}</b></span>
+    ${est.otimo?`<span class="mt-est otimo">Ótimo: <b>${est.otimo}</b></span>`:''}
+    ${est.bom?`<span class="mt-est bom">Bom: <b>${est.bom}</b></span>`:''}
+    ${est.regular?`<span class="mt-est regular">Regular: <b>${est.regular}</b></span>`:''}
+    ${est.ruim?`<span class="mt-est ruim">Ruim: <b>${est.ruim}</b></span>`:''}
+    ${Object.entries(sit).slice(0,6).map(([s,n])=>`<span>${ecEsc(s)}: <b>${n}</b></span>`).join('')}
+  </div>`;
+}
+
+// Renderiza o explorador: cabeçalho + info + busca + lista de CADA item
+function matRenderExplorer(){
+  const el = document.getElementById('mat-type-detail');
+  if (!el) return;
+  if (!MAT_SEL){ el.innerHTML=''; return; }
+  const s = MAT_SEL;
+  const qtd = s.kind==='municao' ? (s.munItems||[]).reduce((a,m)=>a+(m.saldo||0),0) : (s.items||[]).length;
+  const unit = s.kind==='municao' ? 'em estoque' : 'itens';
+  const ph = s.kind==='municao' ? '🔎 Buscar por tipo/calibre, fabricante ou lote…' : '🔎 Buscar por modelo, nº de série, companhia ou responsável…';
+  el.innerHTML = `<div class="mt-detail">
+    <div class="mt-detail-head">
+      <span class="di">${s.icon}</span>
+      <span class="dt">${ecEsc(s.label)}</span>
+      <span class="dq">${fN(qtd)} ${unit}</span>
+      ${s.ctx?`<span style="font-size:12px;color:var(--muted)">${ecEsc(s.ctx)}</span>`:''}
+      <button class="dx" onclick="matClearAll()">✕ Limpar</button>
+    </div>
+    <div class="mt-detail-body">
+      ${matExplorerMini()}
+      <div class="mt-filters"><input type="text" id="mat-exp-busca" class="grow" placeholder="${ph}" oninput="matExplorerList()"><span id="mat-exp-count" class="mt-count"></span></div>
+      <div class="mt-table-wrap"><table class="mt-tb" id="mat-exp-list"></table></div>
+    </div>
+  </div>`;
+  matExplorerList();
+}
+
+// Lista filtrável de cada item da seleção atual
+function matExplorerList(){
+  const el=document.getElementById('mat-exp-list'); if(!el||!MAT_SEL) return;
+  const q=(document.getElementById('mat-exp-busca')?.value||'').trim().toLowerCase();
+  const cnt=document.getElementById('mat-exp-count');
+  if(MAT_SEL.kind==='municao'){
+    let rows=MAT_SEL.munItems||[];
+    if(q) rows=rows.filter(m=>(`${m.tipo} ${m.categoria} ${m.fabricante} ${m.lote}`).toLowerCase().includes(q));
+    if(cnt) cnt.textContent=`${fN(rows.length)} de ${fN((MAT_SEL.munItems||[]).length)} lote(s)`;
+    el.innerHTML=`<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabricante</th><th>Lote</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th><th>Validade</th></tr></thead><tbody>`+
+      rows.map(m=>`<tr><td>${ecHL(m.tipo,q)}</td><td>${ecEsc(m.categoria)}</td><td>${ecHL(m.fabricante||'—',q)}</td><td>${ecHL(m.lote||'—',q)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td><td>${ecEsc(m.validade||'—')}</td></tr>`).join('')+`</tbody>`;
+    return;
+  }
+  let rows=MAT_SEL.items||[];
+  if(q) rows=rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao} ${r.companhia} ${r.situacao} ${r.estado}`).toLowerCase().includes(q));
+  if(cnt) cnt.textContent=`${fN(rows.length)} de ${fN((MAT_SEL.items||[]).length)} item(ns)`;
+  el.innerHTML=`<thead><tr><th>Modelo</th><th>Subtipo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr>
+      <td><b>${ecHL(r.modelo||'—',q)}</b></td>
+      <td>${ecEsc(r.subtipo||'—')}</td>
+      <td>${ecEsc(r.calibre||'—')}</td>
+      <td style="font-variant-numeric:tabular-nums">${ecHL(r.serie||'—',q)}</td>
+      <td>${ecEsc(r.companhia||'—')}</td>
+      <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}</td>
+      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
+      <td>${ecHL(r.responsavel||'—',q)}</td>
+      <td>${ecEsc(r.validade||'—')}</td>
+    </tr>`).join('')+`</tbody>`;
+}
+
+function renderMaterialTable(){
+  if (!MAT_DATA) return;
+  const busca = (document.getElementById('mat-busca')?.value||'').trim().toLowerCase();
+  const fcat = document.getElementById('mat-f-cat')?.value||'';
+  const fsit = document.getElementById('mat-f-sit')?.value||'';
+  let rows = MAT_DATA.itens||[];
+  if (fcat) rows = rows.filter(r=>r.categoria===fcat);
+  if (fsit) rows = rows.filter(r=>r.situacao===fsit);
+  if (busca) rows = rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao}`).toLowerCase().includes(busca));
+  const cnt = document.getElementById('mat-count');
+  if (cnt) cnt.textContent = `${fN(rows.length)} de ${fN((MAT_DATA.itens||[]).length)} itens`;
+  document.getElementById('mat-inv-table').innerHTML =
+    `<thead><tr><th>Categoria</th><th>Modelo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr>
+      <td>${ecEsc(r.categoria)}${r.subtipo?`<div style="font-size:10.5px;color:var(--muted)">${ecEsc(r.subtipo)}</div>`:''}</td>
+      <td>${ecEsc(r.modelo||'—')}</td>
+      <td>${ecEsc(r.calibre||'—')}</td>
+      <td style="font-variant-numeric:tabular-nums">${ecEsc(r.serie||'—')}</td>
+      <td>${ecEsc(r.companhia||'—')}</td>
+      <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}</td>
+      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
+      <td>${ecEsc(r.responsavel||'—')}</td>
+      <td>${ecEsc(r.validade||'—')}</td>
+    </tr>`).join('') + `</tbody>`;
 }
 
 /* ── Render principal ── */
