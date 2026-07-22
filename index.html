@@ -1255,7 +1255,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       </div>
 
       <div class="mt-card" style="margin-bottom:14px">
-        <div class="mt-card-ttl"><i class="ico-img ico-municao"></i> Munição &amp; Granadas — Saldo em Estoque</div>
+        <div class="mt-card-ttl" style="display:flex;align-items:center;gap:8px"><i class="ico-img ico-municao"></i> Munição &amp; Granadas — Saldo em Estoque<span id="mat-add-mun" style="margin-left:auto"></span></div>
         <div id="mat-mun-cards" class="mt-mun-cards"></div>
         <div class="mt-table-wrap" style="max-height:300px">
           <table class="mt-tb" id="mat-mun-table"></table>
@@ -1263,7 +1263,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       </div>
 
       <div class="mt-card">
-        <div class="mt-card-ttl">📋 Inventário Detalhado</div>
+        <div class="mt-card-ttl" style="display:flex;align-items:center;gap:8px">📋 Inventário Detalhado<span id="mat-add-inv" style="margin-left:auto"></span></div>
         <div class="mt-filters">
           <input type="text" id="mat-busca" class="grow" placeholder="🔎 Buscar por modelo, nº de série, patrimônio, responsável…" oninput="renderMaterialTable()">
           <select id="mat-f-cat" onchange="renderMaterialTable()"><option value="">Todas as categorias</option></select>
@@ -1275,6 +1275,46 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         </div>
       </div>
       </div><!-- /#mat-analytics -->
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DO MATERIAL (só editores autorizados) -->
+    <style>
+      #mat-edit-modal{position:fixed;inset:0;z-index:6000;display:none;align-items:flex-start;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(3px);overflow-y:auto;padding:32px 14px}
+      #mat-edit-modal.open{display:flex}
+      #mat-edit-modal .me-box{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;width:min(720px,100%);box-shadow:0 24px 60px rgba(0,0,0,.5);margin:auto}
+      #mat-edit-modal .me-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border,#334155)}
+      #mat-edit-modal .me-head .me-ttl{font-size:16px;font-weight:800;color:var(--fg,#e2e8f0)}
+      #mat-edit-modal .me-head .me-x{margin-left:auto;background:none;border:none;color:var(--muted,#94a3b8);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px}
+      #mat-edit-modal .me-body{padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+      #mat-edit-modal .me-fg{display:flex;flex-direction:column;gap:4px;min-width:0}
+      #mat-edit-modal .me-fg.wide{grid-column:1/-1}
+      #mat-edit-modal .me-fg label{font-size:11.5px;font-weight:700;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.3px}
+      #mat-edit-modal .me-fg input,#mat-edit-modal .me-fg textarea{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:8px;padding:9px 10px;color:var(--fg,#e2e8f0);font-size:14px;font-family:inherit;width:100%}
+      #mat-edit-modal .me-fg textarea{min-height:60px;resize:vertical}
+      #mat-edit-modal .me-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--border,#334155);flex-wrap:wrap}
+      #mat-edit-modal .me-err{color:#f87171;font-size:13px;flex:1;min-width:120px}
+      #mat-edit-modal .me-btn{border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
+      #mat-edit-modal .me-save{background:#f59e0b;color:#111}
+      #mat-edit-modal .me-cancel{background:transparent;border:1px solid var(--border,#334155);color:var(--fg,#e2e8f0)}
+      #mat-edit-modal .me-del{background:#dc2626;color:#fff;margin-right:auto}
+      #mat-edit-modal .me-btn[disabled]{opacity:.55;cursor:default}
+      .mat-actcell{white-space:nowrap;display:flex;gap:6px}
+      .mat-actbtn{border:1px solid var(--border,#334155);background:var(--bg,#0b1220);color:var(--fg,#e2e8f0);border-radius:7px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1.2}
+      .mat-actbtn:hover{border-color:#f59e0b}
+      .mat-addbtn{border:1px solid #f59e0b;background:rgba(245,158,11,.14);color:#f59e0b;border-radius:9px;padding:7px 13px;font-weight:700;cursor:pointer;font-size:13px}
+      @media(max-width:600px){#mat-edit-modal .me-body{grid-template-columns:1fr}}
+    </style>
+    <div id="mat-edit-modal" onclick="if(event.target===this)closeMatEditor()">
+      <div class="me-box">
+        <div class="me-head"><span class="me-ttl" id="me-ttl">Editar item</span><button class="me-x" onclick="closeMatEditor()">✕</button></div>
+        <div class="me-body" id="me-body"></div>
+        <div class="me-foot">
+          <button class="me-btn me-del" id="me-del" onclick="matDeleteFromEditor()" style="display:none">🗑️ Excluir</button>
+          <span class="me-err" id="me-err"></span>
+          <button class="me-btn me-cancel" onclick="closeMatEditor()">Cancelar</button>
+          <button class="me-btn me-save" id="me-save" onclick="matSubmitEditor()">Salvar</button>
+        </div>
+      </div>
     </div>
 
     <!-- PÁGINA: POLICIAIS EM CAMPO -->
@@ -3616,6 +3656,19 @@ async function apiFetchJSON(path){
   return await r.json();
 }
 
+// POST autenticado (JSON → JSON). Lança Error com a mensagem do backend quando dá erro.
+async function apiPostJSON(path, body){
+  const r = await fetch(API_BASE + path, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + AUTH.token, 'Content-Type':'application/json' },
+    body: JSON.stringify(body||{})
+  });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+
 // Decide entre mostrar a tela de login ou os dados restritos
 function gateConsultas(){
   const gate    = document.getElementById('cons-login');
@@ -4722,8 +4775,9 @@ function renderMaterialAll(){
   ).join('');
   const mun = MAT_DATA.municao_itens || [];
   document.getElementById('mat-mun-table').innerHTML =
-    `<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabr.</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th></tr></thead><tbody>`+
-    mun.map(m=>`<tr><td>${ecEsc(m.tipo)}</td><td>${ecEsc(m.categoria)}</td><td>${ecEsc(m.fabricante)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td></tr>`).join('')+`</tbody>`;
+    `<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabr.</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th>${matActTh()}</tr></thead><tbody>`+
+    mun.map(m=>`<tr><td>${ecEsc(m.tipo)}</td><td>${ecEsc(m.categoria)}</td><td>${ecEsc(m.fabricante)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td>${matActTd('municao', m._row)}</tr>`).join('')+`</tbody>`;
+  renderMatAddButtons();
 
   // Filtros do inventário
   const fc = document.getElementById('mat-f-cat'), fs = document.getElementById('mat-f-sit');
@@ -4988,14 +5042,14 @@ function matExplorerList(){
     let rows=MAT_SEL.munItems||[];
     if(q) rows=rows.filter(m=>(`${m.tipo} ${m.categoria} ${m.fabricante} ${m.lote}`).toLowerCase().includes(q));
     if(cnt) cnt.textContent=`${fN(rows.length)} de ${fN((MAT_SEL.munItems||[]).length)} lote(s)`;
-    el.innerHTML=`<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabricante</th><th>Lote</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th><th>Validade</th></tr></thead><tbody>`+
-      rows.map(m=>`<tr><td>${ecHL(m.tipo,q)}</td><td>${ecEsc(m.categoria)}</td><td>${ecHL(m.fabricante||'—',q)}</td><td>${ecHL(m.lote||'—',q)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td><td>${ecEsc(m.validade||'—')}</td></tr>`).join('')+`</tbody>`;
+    el.innerHTML=`<thead><tr><th>Tipo / Calibre</th><th>Categoria</th><th>Fabricante</th><th>Lote</th><th class="num">Entrada</th><th class="num">Consumido</th><th class="num">Saldo</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
+      rows.map(m=>`<tr><td>${ecHL(m.tipo,q)}</td><td>${ecEsc(m.categoria)}</td><td>${ecHL(m.fabricante||'—',q)}</td><td>${ecHL(m.lote||'—',q)}</td><td class="num">${fN(m.entrada)}</td><td class="num">${fN(m.consumida)}</td><td class="num" style="font-weight:700;color:#fff">${fN(m.saldo)}</td><td>${ecEsc(m.validade||'—')}</td>${matActTd('municao', m._row)}</tr>`).join('')+`</tbody>`;
     return;
   }
   let rows=MAT_SEL.items||[];
   if(q) rows=rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao} ${r.companhia} ${r.situacao} ${r.estado}`).toLowerCase().includes(q));
   if(cnt) cnt.textContent=`${fN(rows.length)} de ${fN((MAT_SEL.items||[]).length)} item(ns)`;
-  el.innerHTML=`<thead><tr><th>Modelo</th><th>Subtipo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th></tr></thead><tbody>`+
+  el.innerHTML=`<thead><tr><th>Modelo</th><th>Subtipo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
     rows.map(r=>`<tr>
       <td><b>${ecHL(r.modelo||'—',q)}</b></td>
       <td>${ecEsc(r.subtipo||'—')}</td>
@@ -5006,6 +5060,7 @@ function matExplorerList(){
       <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
       <td>${ecHL(r.responsavel||'—',q)}</td>
       <td>${ecEsc(r.validade||'—')}</td>
+      ${matActTd('dados', r._row)}
     </tr>`).join('')+`</tbody>`;
 }
 
@@ -5021,7 +5076,7 @@ function renderMaterialTable(){
   const cnt = document.getElementById('mat-count');
   if (cnt) cnt.textContent = `${fN(rows.length)} de ${fN((MAT_DATA.itens||[]).length)} itens`;
   document.getElementById('mat-inv-table').innerHTML =
-    `<thead><tr><th>Categoria</th><th>Modelo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th></tr></thead><tbody>`+
+    `<thead><tr><th>Categoria</th><th>Modelo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
     rows.map(r=>`<tr>
       <td>${ecEsc(r.categoria)}${r.subtipo?`<div style="font-size:10.5px;color:var(--muted)">${ecEsc(r.subtipo)}</div>`:''}</td>
       <td>${ecEsc(r.modelo||'—')}</td>
@@ -5032,7 +5087,143 @@ function renderMaterialTable(){
       <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
       <td>${ecEsc(r.responsavel||'—')}</td>
       <td>${ecEsc(r.validade||'—')}</td>
+      ${matActTd('dados', r._row)}
     </tr>`).join('') + `</tbody>`;
+}
+
+/* ═══════════════ Edição do Material Bélico (só editores autorizados) ═══════════════ */
+// Editores com permissão de gravar. O backend REVALIDA isso (a trava real está lá);
+// aqui é só pra mostrar/esconder os botões. Fonte: MAT_DATA.editores (do Worker).
+function matCanEdit(){
+  if (!AUTH.logged) return false;
+  const eds = (MAT_DATA && MAT_DATA.editores) || ['p4bel','desousa'];
+  return eds.includes(AUTH.user);
+}
+function matAttr(s){ return ecEsc(s).replace(/"/g,'&quot;'); }
+function matActTh(){ return matCanEdit() ? '<th style="width:1%">Ações</th>' : ''; }
+function matActTd(tab, row){
+  if (!matCanEdit()) return '';
+  return `<td class="mat-actcell">
+    <button class="mat-actbtn" title="Editar" onclick="openMatEditor('${tab}',${row})">✏️</button>
+    <button class="mat-actbtn" title="Excluir" onclick="matDeleteItem('${tab}',${row})">🗑️</button>
+  </td>`;
+}
+// Colunas (nomes de cabeçalho da planilha) de cada aba.
+function matColumns(tab){
+  return (tab==='municao' ? (MAT_DATA&&MAT_DATA.columns_municao) : (MAT_DATA&&MAT_DATA.columns_dados)) || [];
+}
+// Item cru (cabeçalho→valor) pelo nº da linha.
+function matItemByRow(tab, row){
+  const arr = tab==='municao' ? (MAT_DATA.municao_itens||[]) : (MAT_DATA.itens||[]);
+  return arr.find(x=> x._row===row) || null;
+}
+// Valores distintos de uma coluna (pra sugestões/autocomplete no formulário).
+function matDistinct(tab, col){
+  const arr = tab==='municao' ? (MAT_DATA.municao_itens||[]) : (MAT_DATA.itens||[]);
+  const s = new Set();
+  arr.forEach(x=>{ const v=(x._raw&&x._raw[col]||'').trim(); if(v) s.add(v); });
+  return [...s].sort((a,b)=>a.localeCompare(b,'pt-BR')).slice(0,80);
+}
+function matKeyField(tab){ const c=matColumns(tab); return c.includes('Nº') ? 'Nº' : (c[0]||''); }
+
+let MAT_EDIT = null; // { tab, row(null=novo), key }
+function openMatEditor(tab, row){
+  if (!matCanEdit()) return;
+  const cols = matColumns(tab);
+  if (!cols.length){ alert('A edição ainda não está ativa: o servidor (Worker) precisa ser atualizado com a versão nova (npx wrangler deploy). Enquanto isso, a página funciona só para leitura.'); return; }
+  const isNew = (row===null || row===undefined);
+  const item = isNew ? null : matItemByRow(tab, row);
+  if (!isNew && !item){ alert('Item não encontrado (a lista pode ter mudado). Recarregue a página.'); return; }
+  const raw = item ? item._raw : {};
+  MAT_EDIT = { tab, row: isNew?null:row, key: matKeyField(tab) };
+
+  const nomeAba = tab==='municao' ? 'munição' : 'material';
+  document.getElementById('me-ttl').textContent = isNew ? `Adicionar ${nomeAba}` : `Editar ${nomeAba}`;
+  document.getElementById('me-del').style.display = isNew ? 'none' : '';
+  document.getElementById('me-err').textContent = '';
+
+  // Um campo por coluna. Campos longos (obs/alterações/localização) viram textarea.
+  document.getElementById('me-body').innerHTML = cols.map((c,i)=>{
+    const val = raw[c]!=null ? String(raw[c]) : '';
+    const longo = /obs|observa|altera|descri|localiza/i.test(c);
+    const dlId = 'me-dl-'+i;
+    const opts = matDistinct(tab,c).map(v=>`<option value="${matAttr(v)}">`).join('');
+    const field = longo
+      ? `<textarea id="me-f-${i}" data-col="${matAttr(c)}">${ecEsc(val)}</textarea>`
+      : `<input id="me-f-${i}" data-col="${matAttr(c)}" value="${matAttr(val)}" list="${dlId}" autocomplete="off"><datalist id="${dlId}">${opts}</datalist>`;
+    return `<div class="me-fg${longo?' wide':''}"><label>${ecEsc(c)}</label>${field}</div>`;
+  }).join('');
+
+  document.getElementById('mat-edit-modal').classList.add('open');
+}
+function closeMatEditor(){ document.getElementById('mat-edit-modal').classList.remove('open'); MAT_EDIT=null; }
+
+// Lê os campos do formulário → { coluna: valor }.
+function matReadForm(){
+  const out = {};
+  document.querySelectorAll('#me-body [data-col]').forEach(el=>{ out[el.getAttribute('data-col')] = el.value; });
+  return out;
+}
+async function matSubmitEditor(){
+  if (!MAT_EDIT) return;
+  const { tab, row } = MAT_EDIT;
+  const btn = document.getElementById('me-save'), err = document.getElementById('me-err');
+  const vals = matReadForm();
+  err.textContent=''; btn.disabled=true; const old=btn.textContent; btn.textContent='Salvando…';
+  try{
+    let payload;
+    if (row===null){
+      payload = { tab, op:'add', values: vals };
+    } else {
+      const item = matItemByRow(tab, row), raw = item ? item._raw : {};
+      const changes = {};
+      Object.keys(vals).forEach(c=>{ if (String(vals[c]) !== String(raw[c]!=null?raw[c]:'')) changes[c]=vals[c]; });
+      if (!Object.keys(changes).length){ closeMatEditor(); return; }
+      const key = matKeyField(tab);
+      payload = { tab, op:'update', row, keyField:key, keyValue: raw[key]!=null?String(raw[key]):'', changes };
+    }
+    await apiPostJSON('/api/material/save', payload);
+    closeMatEditor();
+    await matReload();
+  }catch(e){
+    err.textContent = (e&&e.message) || 'Falha ao salvar.';
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+async function matDeleteFromEditor(){
+  if (!MAT_EDIT || MAT_EDIT.row===null) return;
+  await matDeleteItem(MAT_EDIT.tab, MAT_EDIT.row, true);
+}
+async function matDeleteItem(tab, row, fromModal){
+  if (!matCanEdit()) return;
+  const item = matItemByRow(tab, row);
+  const nome = item ? (tab==='municao' ? `${item._raw['Tipo / Calibre']||item.tipo||''} (lote ${item._raw['Lote']||item.lote||''})` : `${item.modelo||item._raw['Marca / Modelo']||''} ${item.serie?('nº '+item.serie):''}`) : 'este item';
+  if (!confirm(`Excluir definitivamente:\n\n${nome.trim()||'este item'}\n\nEssa ação apaga a linha na planilha e não pode ser desfeita.`)) return;
+  try{
+    const key = matKeyField(tab);
+    await apiPostJSON('/api/material/save', { tab, op:'delete', row, keyField:key, keyValue: item&&item._raw[key]!=null?String(item._raw[key]):'' });
+    if (fromModal) closeMatEditor();
+    await matReload();
+  }catch(e){ alert('Não foi possível excluir: ' + ((e&&e.message)||'')); }
+}
+// Recarrega os dados do Material após uma gravação e re-renderiza tudo.
+async function matReload(){
+  const st = document.getElementById('mat-status');
+  if (st){ st.style.display=''; st.textContent='Atualizando…'; }
+  try{
+    MAT_DATA = await apiFetchJSON('/api/material');
+    MAT_LOADED = true;
+    // Fecha o drill-down (as referências de item ficam obsoletas após recarregar).
+    MAT_SEL = null; MAT_GROUP_SEL = null; MAT_SUB_SEL = null;
+    renderMaterialAll();
+    matRenderExplorer();
+  }catch(e){ if(st) st.textContent='Erro ao recarregar: '+((e&&e.message)||''); }
+}
+// Botões "➕ Adicionar" no topo das seções (só editores). Chamado por renderMaterialAll.
+function renderMatAddButtons(){
+  const inv = document.getElementById('mat-add-inv'), mun = document.getElementById('mat-add-mun');
+  const can = matCanEdit();
+  if (inv) inv.innerHTML = can ? `<button class="mat-addbtn" onclick="openMatEditor('dados',null)">➕ Adicionar item</button>` : '';
+  if (mun) mun.innerHTML = can ? `<button class="mat-addbtn" onclick="openMatEditor('municao',null)">➕ Adicionar munição</button>` : '';
 }
 
 /* ── Render principal ── */
