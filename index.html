@@ -1025,16 +1025,26 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
     <!-- PÁGINA: GARAGEM (em construção) -->
     <style>
-      #page-garagem .gar-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-      #page-garagem .gar-kpis .mst{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;min-width:120px}
-      #page-garagem .gar-kpis .mst-v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;color:var(--yellow)}
+      #page-garagem .gar-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+      @media(max-width:1100px){#page-garagem .gar-kpis{grid-template-columns:repeat(3,1fr)}}
+      @media(max-width:700px){#page-garagem .gar-kpis{grid-template-columns:repeat(2,1fr)}}
+      #page-garagem .gar-kpis .mst{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;position:relative;overflow:hidden;transition:transform .15s,border-color .15s,background .15s}
+      #page-garagem .gar-kpis .mst.clk{cursor:pointer}
+      #page-garagem .gar-kpis .mst.clk:hover{transform:translateY(-2px);border-color:rgba(245,197,24,.35)}
+      #page-garagem .gar-kpis .mst.sel{border-color:var(--yellow);background:rgba(245,197,24,.08);box-shadow:0 0 0 1px rgba(245,197,24,.3)}
+      #page-garagem .gar-kpis .mst-ic{font-size:15px;line-height:1;opacity:.9}
+      #page-garagem .gar-kpis .mst-v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:24px;color:var(--yellow);margin-top:3px;line-height:1.05}
+      #page-garagem .gar-kpis .mst.danger .mst-v{color:#fca5a5}
+      #page-garagem .gar-kpis .mst.warn .mst-v{color:#fbbf24}
       #page-garagem .gar-kpis .mst-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
       #page-garagem .gar-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
       #page-garagem .gar-search{background:rgba(6,9,18,.8);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#e8edf5;font-family:'Inter',sans-serif;font-size:12.5px;padding:9px 12px;outline:none;min-width:240px}
       #page-garagem .gar-search:focus{border-color:var(--yellow)}
       #page-garagem .gar-status{font-size:12px;color:var(--muted);margin:0 2px 12px}
-      #page-garagem .gar-layout{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;align-items:start}
-      @media (max-width:900px){#page-garagem .gar-layout{grid-template-columns:1fr}}
+      #page-garagem .gar-layout{display:block}
+      #page-garagem .gar-clear-btn{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:8px;padding:8px 13px;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer}
+      #page-garagem .gar-clear-btn:hover{background:rgba(248,113,113,.2)}
+      #page-garagem .gar-hint{font-size:11.5px;color:var(--muted);margin-left:auto}
       #page-garagem .gar-ranking{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-top:16px}
       #page-garagem .gar-ranking-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
       #page-garagem .gar-ranking-ttl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fff;letter-spacing:.3px}
@@ -1042,14 +1052,29 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-garagem .gar-ranking-total b{color:var(--yellow);font-size:15px}
       #page-garagem .gar-km-chart-wrap{height:260px;margin-top:12px}
       #page-garagem .gar-km-mes-wrap{height:150px;margin-top:10px}
-      #page-garagem .gar-grid{display:flex;flex-direction:column;gap:9px;max-height:76vh;overflow-y:auto;padding-right:4px}
-      #page-garagem .gar-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
-      #page-garagem .gar-card:hover{border-color:rgba(245,197,24,.35)}
-      #page-garagem .gar-card.active{border-color:var(--yellow);background:rgba(245,197,24,.07)}
+      #page-garagem .gar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+      #page-garagem .gar-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 15px 12px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,border-color .15s,background .15s,box-shadow .15s}
+      #page-garagem .gar-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--muted);opacity:.5}
+      #page-garagem .gar-card.st-ok::before{background:#34d399;opacity:1}
+      #page-garagem .gar-card.st-warn::before{background:#fbbf24;opacity:1}
+      #page-garagem .gar-card.st-bad::before{background:#f87171;opacity:1}
+      #page-garagem .gar-card:hover{transform:translateY(-3px);border-color:rgba(245,197,24,.35);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+      #page-garagem .gar-card.active{border-color:var(--yellow);background:rgba(245,197,24,.07);box-shadow:0 0 0 1px rgba(245,197,24,.3)}
       #page-garagem .gar-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-      #page-garagem .gar-prefixo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;letter-spacing:.3px}
-      #page-garagem .gar-placa{font-size:11px;color:var(--muted);letter-spacing:.5px}
-      #page-garagem .gar-modelo{font-size:11.5px;color:#aab4c0;margin-top:2px}
+      #page-garagem .gar-prefixo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:#fff;letter-spacing:.4px}
+      #page-garagem .gar-placa{font-size:11px;color:var(--muted);letter-spacing:.6px;font-variant-numeric:tabular-nums}
+      #page-garagem .gar-modelo{font-size:11.5px;color:#aab4c0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #page-garagem .gar-mini{display:flex;gap:14px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.05)}
+      #page-garagem .gar-mini>div{flex:1;min-width:0}
+      #page-garagem .gar-mini .l{font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
+      #page-garagem .gar-mini .v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14.5px;color:#e8edf5;margin-top:1px}
+      #page-garagem .gar-oleo-mini{margin-top:9px}
+      #page-garagem .gar-oleo-mini .t{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px}
+      #page-garagem .gar-oleo-mini .bar{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+      #page-garagem .gar-oleo-mini .bar>i{display:block;height:100%;border-radius:99px;background:#34d399}
+      #page-garagem .gar-oleo-mini .bar.soon>i{background:#38bdf8}
+      #page-garagem .gar-oleo-mini .bar.warn>i{background:#fbbf24}
+      #page-garagem .gar-oleo-mini .bar.over>i{background:#f87171}
       #page-garagem .gar-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
       #page-garagem .gb{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2.5px 8px;border-radius:20px;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
       #page-garagem .gb.ok{color:#34d399;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3)}
@@ -1057,10 +1082,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-garagem .gb.bad{color:#f87171;background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3)}
       #page-garagem .gb.info{color:#8fb3ff;background:rgba(120,150,255,.1);border-color:rgba(120,150,255,.3)}
       #page-garagem .gb.muted{color:var(--muted);background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08)}
-      #page-garagem .gar-detail{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;min-height:260px}
+      #page-garagem .gar-detail{background:var(--card);border:1px solid rgba(245,197,24,.35);border-radius:14px;padding:20px;margin-top:14px;animation:garIn .18s ease-out}
+      @keyframes garIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
       #page-garagem .gar-detail-empty{text-align:center;padding:70px 20px;color:var(--muted);font-size:14px;line-height:1.8}
-      #page-garagem .gar-det-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:16px}
+      #page-garagem .gar-det-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:16px}
       #page-garagem .gar-det-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:24px;color:var(--yellow)}
+      #page-garagem .gar-det-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+      @media(max-width:900px){#page-garagem .gar-det-cols{grid-template-columns:1fr}}
       #page-garagem .gar-det-sub{font-size:12px;color:#aab4c0;margin-top:3px}
       #page-garagem .gar-section{margin-bottom:18px}
       #page-garagem .gar-section:last-child{margin-bottom:0}
@@ -1095,11 +1123,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="gar-kpis" id="gar-kpis"></div>
       <div class="gar-toolbar">
         <input type="text" id="gar-busca" class="gar-search" placeholder="🔍 Buscar por prefixo, placa ou modelo..." oninput="renderGaragemGrid()">
+        <span id="gar-clear-wrap"></span>
+        <span class="gar-hint">clique numa viatura para abrir a ficha completa abaixo</span>
       </div>
       <div class="gar-status" id="gar-status">Carregando frota...</div>
       <div class="gar-layout">
         <div class="gar-grid" id="gar-grid"></div>
-        <div class="gar-detail" id="gar-detail"><div class="gar-detail-empty">🚓<br>Selecione uma viatura ao lado<br>para ver os detalhes em tempo real.</div></div>
+        <div id="gar-detail"></div>
       </div>
       <div class="gar-ranking" id="gar-ranking-card" style="display:none">
         <div class="gar-ranking-head">
@@ -1465,37 +1495,88 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </div>
 
     <!-- PÁGINA: VISÃO GERAL -->
+    <style>
+      /* ── Drill-down dos KPIs da Visão Geral (mesmo padrão do Material Bélico) ── */
+      #page-visao-geral .kpi{cursor:pointer}
+      #page-visao-geral .kpi.sel{border-color:var(--yellow)!important;background:rgba(245,197,24,.07);box-shadow:0 0 0 1px rgba(245,197,24,.35)}
+      #page-visao-geral .kpi.sel::after{background:linear-gradient(135deg,rgba(245,197,24,.1) 0%,transparent 60%)}
+      .vg-clear-btn{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:8px;padding:5px 12px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;text-transform:none}
+      .vg-clear-btn:hover{background:rgba(248,113,113,.2)}
+      #vg-detail-wrap{margin-bottom:14px}
+      .vg-detail{background:var(--card);border:1px solid rgba(245,197,24,.35);border-radius:14px;overflow:hidden;animation:vgIn .18s ease-out}
+      @keyframes vgIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+      .vg-det-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 18px;background:rgba(245,197,24,.07);border-bottom:1px solid rgba(245,197,24,.2)}
+      .vg-det-head .di{font-size:22px;line-height:1}
+      .vg-det-head .dt{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:var(--yellow);letter-spacing:.3px}
+      .vg-det-head .dq{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:#fff}
+      .vg-det-head .dc{font-size:11.5px;color:var(--muted)}
+      .vg-det-head .dx{margin-left:auto}
+      .vg-det-body{padding:16px 18px 18px}
+      .vg-mini{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
+      .vg-mini .m{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 13px;min-width:120px;flex:1 1 140px}
+      .vg-mini .m .l{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:700}
+      .vg-mini .m .v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:#fff;margin-top:2px;line-height:1.15}
+      .vg-mini .m .h{font-size:10.5px;color:var(--muted);margin-top:2px}
+      .vg-mini .m.prej{background:rgba(249,115,22,.09);border-color:rgba(249,115,22,.38)}
+      .vg-mini .m.prej .v{color:#fed7aa}
+      .vg-det-head .dp{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fed7aa;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.35);border-radius:8px;padding:1px 10px;white-space:nowrap}
+      .vg-charts{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+      @media(max-width:900px){.vg-charts{grid-template-columns:1fr}}
+      .vg-box{background:rgba(6,9,18,.45);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px}
+      .vg-box-ttl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+      .vg-chart-wrap{height:210px}
+      .vg-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+      @media(max-width:900px){.vg-cols{grid-template-columns:1fr}}
+      .vg-bars .b{margin-bottom:8px}
+      .vg-bars .b:last-child{margin-bottom:0}
+      .vg-bars .bl{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:#d3dae3;margin-bottom:3px}
+      .vg-bars .bl b{color:#fff;font-variant-numeric:tabular-nums}
+      .vg-bars .bl .bp{color:#fed7aa;font-weight:600;font-size:10.5px;margin-left:7px;font-variant-numeric:tabular-nums}
+      .vg-bars .bt{height:6px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+      .vg-bars .bt>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#c9a030,#F5C518)}
+      table.vg-tb{width:100%;border-collapse:collapse;font-size:11.5px}
+      table.vg-tb th{text-align:left;font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);padding:6px 9px;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap}
+      table.vg-tb td{padding:6px 9px;border-bottom:1px solid rgba(255,255,255,.035);color:#d3dae3;vertical-align:top}
+      table.vg-tb td.num,table.vg-tb th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+      table.vg-tb tr:hover td{background:rgba(255,255,255,.02)}
+      table.vg-tb td.money{color:#fed7aa;font-weight:600}
+      .vg-tb-wrap{overflow-x:auto}
+      .vg-empty{color:var(--muted);font-size:12px;padding:10px 2px}
+    </style>
     <div id="page-visao-geral" class="page-content active">
 
     <!-- KPIs -->
-    <div class="sec">📊 Indicadores Operacionais</div>
+    <div class="sec">📊 Indicadores Operacionais <span style="font-size:10px;letter-spacing:.5px;color:var(--muted);text-transform:none;font-weight:500">— clique num card para ver os detalhes</span><span id="vg-clear-wrap" style="margin-left:auto"></span></div>
 
     <!-- LINHA 1: Ocorrências, Presos, Drogas, Maconha, Pasta Base -->
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
-      <div class="kpi y"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="k-oc">—</div><div class="kpi-sub">Boletins registrados</div></div>
-      <div class="kpi b"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="k-pr">—</div><div class="kpi-sub">Indivíduos detidos</div></div>
-      <div class="kpi g"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
-      <div class="kpi r"><div class="kpi-ico"><i class="ico-img ico-maconha"></i></div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
-      <div class="kpi p"><div class="kpi-ico">🧴</div><div class="kpi-lbl">Pasta Base</div><div class="kpi-val sm" id="k-pb">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi y" data-vk="oc" onclick="selectVGKpi('oc')"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="k-oc">—</div><div class="kpi-sub">Boletins registrados</div></div>
+      <div class="kpi b" data-vk="pr" onclick="selectVGKpi('pr')"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="k-pr">—</div><div class="kpi-sub">Indivíduos detidos</div></div>
+      <div class="kpi g" data-vk="dr" onclick="selectVGKpi('dr')"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
+      <div class="kpi r" data-vk="ma" onclick="selectVGKpi('ma')"><div class="kpi-ico"><i class="ico-img ico-maconha"></i></div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p" data-vk="pb" onclick="selectVGKpi('pb')"><div class="kpi-ico">🧴</div><div class="kpi-lbl">Pasta Base</div><div class="kpi-val sm" id="k-pb">—</div><div class="kpi-sub">kg</div></div>
     </div>
 
     <!-- LINHA 2: Cocaína, Veículos, Madeira, Armas, Munições -->
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
-      <div class="kpi o"><div class="kpi-ico"><i class="ico-img ico-cocaina"></i></div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
-      <div class="kpi p"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val sm" id="k-ve">—</div><div class="kpi-sub" id="k-ve-sub">Apreendidos</div></div>
-      <div class="kpi y"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
-      <div class="kpi o"><div class="kpi-ico"><i class="ico-img ico-pistola"></i></div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
-      <div class="kpi t"><div class="kpi-ico"><i class="ico-img ico-municao"></i></div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="k-mun">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi o" data-vk="co" onclick="selectVGKpi('co')"><div class="kpi-ico"><i class="ico-img ico-cocaina"></i></div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p" data-vk="ve" onclick="selectVGKpi('ve')"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val sm" id="k-ve">—</div><div class="kpi-sub" id="k-ve-sub">Apreendidos</div></div>
+      <div class="kpi y" data-vk="mad" onclick="selectVGKpi('mad')"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
+      <div class="kpi o" data-vk="ar" onclick="selectVGKpi('ar')"><div class="kpi-ico"><i class="ico-img ico-pistola"></i></div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi t" data-vk="mun" onclick="selectVGKpi('mun')"><div class="kpi-ico"><i class="ico-img ico-municao"></i></div><div class="kpi-lbl">Munições</div><div class="kpi-val" id="k-mun">—</div><div class="kpi-sub">Unidades</div></div>
     </div>
 
     <!-- LINHA 3: TCO, Gasolina, Diesel, GLP, Cigarros -->
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
-      <div class="kpi b"><div class="kpi-ico">📄</div><div class="kpi-lbl">TCO</div><div class="kpi-val" id="k-tco">—</div><div class="kpi-sub">Termos Circunstanciados</div></div>
-      <div class="kpi t"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Gasolina</div><div class="kpi-val sm" id="k-gas">—</div><div class="kpi-sub">Litros</div></div>
-      <div class="kpi g"><div class="kpi-ico">🛢️</div><div class="kpi-lbl">Diesel</div><div class="kpi-val sm" id="k-die">—</div><div class="kpi-sub">Litros</div></div>
-      <div class="kpi y"><div class="kpi-ico">🔥</div><div class="kpi-lbl">GLP</div><div class="kpi-val" id="k-glp">—</div><div class="kpi-sub">Botijas</div></div>
-      <div class="kpi o"><div class="kpi-ico">🚬</div><div class="kpi-lbl">Cigarros</div><div class="kpi-val sm" id="k-cig">—</div><div class="kpi-sub">Maços</div></div>
+      <div class="kpi b" data-vk="tco" onclick="selectVGKpi('tco')"><div class="kpi-ico">📄</div><div class="kpi-lbl">TCO</div><div class="kpi-val" id="k-tco">—</div><div class="kpi-sub">Termos Circunstanciados</div></div>
+      <div class="kpi t" data-vk="gas" onclick="selectVGKpi('gas')"><div class="kpi-ico">⛽</div><div class="kpi-lbl">Gasolina</div><div class="kpi-val sm" id="k-gas">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi g" data-vk="die" onclick="selectVGKpi('die')"><div class="kpi-ico">🛢️</div><div class="kpi-lbl">Diesel</div><div class="kpi-val sm" id="k-die">—</div><div class="kpi-sub">Litros</div></div>
+      <div class="kpi y" data-vk="glp" onclick="selectVGKpi('glp')"><div class="kpi-ico">🔥</div><div class="kpi-lbl">GLP</div><div class="kpi-val" id="k-glp">—</div><div class="kpi-sub">Botijas</div></div>
+      <div class="kpi o" data-vk="cig" onclick="selectVGKpi('cig')"><div class="kpi-ico">🚬</div><div class="kpi-lbl">Cigarros</div><div class="kpi-val sm" id="k-cig">—</div><div class="kpi-sub">Maços</div></div>
     </div>
+
+    <!-- Painel de detalhes do card selecionado -->
+    <div id="vg-detail-wrap"></div>
 
     <!-- PREJUÍZO AO CRIME — BANNER DESTAQUE -->
     <div class="kpi-prej-banner">
@@ -1505,32 +1586,32 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         <div class="prej-sub">Valor total estimado das apreensões</div>
       </div>
       <div class="prej-right">
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('dr')">
           <span class="prej-cat-ico">💊</span>
           <span class="prej-cat-lbl">Drogas</span>
           <span class="prej-cat-val" id="pj-dr">—</span>
         </div>
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('ar')">
           <span class="prej-cat-ico"><i class="ico-img ico-pistola"></i></span>
           <span class="prej-cat-lbl">Armas</span>
           <span class="prej-cat-val" id="pj-ar">—</span>
         </div>
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('ve')">
           <span class="prej-cat-ico">🚗</span>
           <span class="prej-cat-lbl">Veículos</span>
           <span class="prej-cat-val" id="pj-ve">—</span>
         </div>
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('comb')">
           <span class="prej-cat-ico">⛽</span>
           <span class="prej-cat-lbl">Combust.</span>
           <span class="prej-cat-val" id="pj-cb">—</span>
         </div>
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('cig')">
           <span class="prej-cat-ico">🚬</span>
           <span class="prej-cat-lbl">Cigarros</span>
           <span class="prej-cat-val" id="pj-ci">—</span>
         </div>
-        <div class="prej-cat">
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('mad')">
           <span class="prej-cat-ico">🌳</span>
           <span class="prej-cat-lbl">Madeira</span>
           <span class="prej-cat-val" id="pj-ma">—</span>
@@ -2128,7 +2209,8 @@ function fDataBR(raw){
   const d = parseDate(s);
   return d ? fDate(d) : s;
 }
-const fMes  = d => d ? d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace(/\.\s/,'/').replace('.','') : '';
+// "jun. de 25" / "jun 25" → "jun/25" (o formato curto varia conforme o navegador)
+const fMes  = d => d ? d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace(/\./g,'').replace(/\s*de\s*/i,' ').trim().replace(/\s+/,'/') : '';
 
 /* ── DADOS EMBUTIDOS — fallback quando não há acesso ao Google Sheets ──
    Gerados diretamente da planilha BPFRON_BD em 23/04/2026.
@@ -3219,6 +3301,28 @@ function applyFilters() {
   if (pgOp && pgOp.classList.contains('active')) renderOperacoes();
 }
 
+/* ── Prejuízo ao crime: valor unitário por item apreendido ──
+   (mesmos multiplicadores usados no banner de Prejuízo Estimado) */
+const PREJ_UNIT = {
+  cocaina_kg:    75000,
+  pasta_base_kg: 50000,
+  maconha_kg:     5000,
+  armas:         19333,
+  gasolina_l:      6.8,
+  diesel_l:        6.8,
+  glp:             300,
+  cigarros:      9.799,
+  madeira_m3:     1500,
+};
+// prejuízo calculado de UMA ocorrência (todas as categorias + valor dos veículos)
+function prejCalcRow(r){
+  let t = r.valor_veiculos || 0;
+  for (const f in PREJ_UNIT) t += (r[f]||0) * PREJ_UNIT[f];
+  return t;
+}
+// prejuízo oficial da ocorrência (coluna da planilha) com fallback no cálculo local
+function prejRow(r){ return (r.prejuizo > 0) ? r.prejuizo : prejCalcRow(r); }
+
 /* ── KPIs ── */
 function renderKPIs() {
   const s = f => FIL.reduce((a,r)=>a+(r[f]||0),0);
@@ -3241,12 +3345,13 @@ function renderKPIs() {
   $('k-glp', fN(s('glp'))+' un.');
   $('k-cig', fN(s('cigarros'))+' maços');
   // Subcategorias do prejuízo (cálculo local)
-  const pj_dr = s('cocaina_kg')*75000 + s('pasta_base_kg')*50000 + s('maconha_kg')*5000;
-  const pj_ar = s('armas') * 19333;
+  const U = PREJ_UNIT;
+  const pj_dr = s('cocaina_kg')*U.cocaina_kg + s('pasta_base_kg')*U.pasta_base_kg + s('maconha_kg')*U.maconha_kg;
+  const pj_ar = s('armas') * U.armas;
   const pj_ve = s('valor_veiculos');
-  const pj_cb = (s('gasolina_l') + s('diesel_l')) * 6.8 + s('glp') * 300;
-  const pj_ci = s('cigarros') * 9.799;
-  const pj_ma = s('madeira_m3') * 1500;
+  const pj_cb = (s('gasolina_l') + s('diesel_l')) * U.gasolina_l + s('glp') * U.glp;
+  const pj_ci = s('cigarros') * U.cigarros;
+  const pj_ma = s('madeira_m3') * U.madeira_m3;
   $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
   $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
   // Total do prejuízo:
@@ -3261,8 +3366,264 @@ function renderKPIs() {
     else if (calc > 0)   $('k-prej', fR(calc)); // fallback: soma das categorias (multiplicadores do site)
     else                 $('k-prej', '—');
   }
+  // mantém o painel de detalhe do card selecionado em sincronia com os filtros
+  if (typeof renderVGDetail === 'function') renderVGDetail();
 }
 function $(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+/* ============================================================
+   DRILL-DOWN DOS KPIs DA VISÃO GERAL
+   Clicar num card abre um painel logo abaixo com as estatísticas
+   daquele indicador (mesmo padrão da página Material Bélico).
+============================================================ */
+let VG_SEL = null;
+
+const ICO_MACONHA = '<i class="ico-img ico-maconha"></i>';
+const ICO_COCA    = '<i class="ico-img ico-cocaina"></i>';
+const ICO_PISTOLA = '<i class="ico-img ico-pistola"></i>';
+const ICO_MUNICAO = '<i class="ico-img ico-municao"></i>';
+
+const VG_METRICS = {
+  oc:  {icon:'📋', label:'Ocorrências',        kind:'count', unit:'ocorrências', ctx:'boletins registrados', prejAll:true},
+  pr:  {icon:'🔒', label:'Presos',             field:'no_presos',      unit:'presos',    ctx:'indivíduos detidos', prejAll:true},
+  dr:  {icon:'💊', label:'Drogas Apreendidas', field:'drogas_total_kg',unit:'kg', dec:2, ctx:'entorpecentes no total', prejFields:['cocaina_kg','pasta_base_kg','maconha_kg']},
+  ma:  {icon:ICO_MACONHA, label:'Maconha',     field:'maconha_kg',     unit:'kg', dec:2},
+  pb:  {icon:'🧴', label:'Pasta Base',         field:'pasta_base_kg',  unit:'kg', dec:2},
+  co:  {icon:ICO_COCA, label:'Cocaína / CH',   field:'cocaina_kg',     unit:'kg', dec:2},
+  ve:  {icon:'🚗', label:'Veículos',           field:'veiculos',       unit:'veículos', money:'valor_veiculos', ctx:'veículos apreendidos', prejMoney:'valor_veiculos'},
+  mad: {icon:'🌳', label:'Madeira',            field:'madeira_m3',     unit:'m³', dec:3},
+  ar:  {icon:ICO_PISTOLA, label:'Armas',       field:'armas',          unit:'armas'},
+  mun: {icon:ICO_MUNICAO, label:'Munições',    field:'municoes',       unit:'munições', prejAll:true},
+  tco: {icon:'📄', label:'TCO',                kind:'count', unit:'termos', filter:r=>r.tipo_de_bo==='Termo Circunstanciado', ctx:'Termos Circunstanciados de Ocorrência', prejAll:true},
+  gas: {icon:'⛽', label:'Gasolina',           field:'gasolina_l',     unit:'L'},
+  die: {icon:'🛢️', label:'Diesel',            field:'diesel_l',       unit:'L'},
+  glp: {icon:'🔥', label:'GLP',                field:'glp',            unit:'botijas'},
+  cig: {icon:'🚬', label:'Cigarros',           field:'cigarros',       unit:'maços'},
+  comb:{icon:'⛽', label:'Combustíveis',       fields:['gasolina_l','diesel_l'], unit:'L', ctx:'gasolina + diesel apreendidos'},
+};
+
+// valor da métrica numa ocorrência
+function vgVal(m, r){
+  if (m.kind === 'count') return 1;
+  if (m.fields) return m.fields.reduce((a,f)=>a+(r[f]||0),0);
+  return r[m.field] || 0;
+}
+// ocorrências que alimentam a métrica (dentro do filtro atual)
+function vgRows(m, base){
+  let rows = base || FIL;
+  if (m.filter) rows = rows.filter(m.filter);
+  if (m.kind !== 'count') rows = rows.filter(r => vgVal(m,r) > 0);
+  return rows;
+}
+const vgNum = (m,v) => (m.dec ? fD(v, m.dec) : fN(v));
+
+// prejuízo ao crime referente à métrica numa ocorrência
+function vgPrej(m, r){
+  if (m.prejAll)   return prejRow(r);                    // métricas sem valor próprio → prejuízo total do BO
+  if (m.prejMoney) return r[m.prejMoney] || 0;           // veículos → valor informado
+  const fs = vgPrejFields(m);
+  return fs.reduce((a,f)=>a + (r[f]||0) * (PREJ_UNIT[f]||0), 0);
+}
+// campos com valor unitário que compõem o prejuízo da métrica
+function vgPrejFields(m){
+  if (m.prejFields) return m.prejFields;
+  const base = m.fields ? m.fields.slice() : (m.field ? [m.field] : []);
+  return base.filter(f => PREJ_UNIT[f]);
+}
+// texto explicativo do prejuízo de cada métrica
+function vgPrejNota(m){
+  if (m.prejAll)   return 'prejuízo total das ocorrências listadas';
+  if (m.prejMoney) return 'valor estimado dos veículos apreendidos';
+  const un = [...new Set(vgPrejFields(m).map(f=>PREJ_UNIT[f]))];
+  return un.length === 1 ? `${fR(un[0])} por ${m.unit||'unidade'}` : 'valor estimado das apreensões';
+}
+
+function selectVGKpi(key){
+  if (VG_SEL === key){ vgClear(); return; }   // clicar de novo fecha
+  VG_SEL = key;
+  renderVGDetail();
+  const d = document.getElementById('vg-detail-wrap');
+  if (d) setTimeout(()=>d.scrollIntoView({behavior:'smooth', block:'nearest'}), 60);
+}
+
+function vgClear(){
+  VG_SEL = null;
+  ['vg-mes','vg-mun'].forEach(destroyC);
+  renderVGDetail();
+}
+
+function vgHighlight(){
+  document.querySelectorAll('#page-visao-geral .kpi[data-vk]').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.vk === VG_SEL);
+  });
+  const w = document.getElementById('vg-clear-wrap');
+  if (w) w.innerHTML = VG_SEL ? '<button class="vg-clear-btn" onclick="vgClear()">🧹 Limpar</button>' : '';
+}
+
+// agrupa a métrica por um campo (string ou função que devolve lista de chaves)
+function vgGroup(rows, m, keyer){
+  const g = {};
+  rows.forEach(r=>{
+    const ks = typeof keyer === 'function' ? keyer(r) : [r[keyer]];
+    const v = vgVal(m,r), p = vgPrej(m,r);
+    (ks||[]).filter(Boolean).forEach(k=>{
+      if (!g[k]) g[k] = [0,0];
+      g[k][0] += v; g[k][1] += p;
+    });
+  });
+  return Object.entries(g).map(([k,[v,p]])=>[k,v,p]).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+}
+
+function vgBars(list, m, vazio){
+  if (!list.length) return `<div class="vg-empty">${vazio}</div>`;
+  const max = list[0][1] || 1;
+  return `<div class="vg-bars">` + list.map(([k,v,p])=>`
+    <div class="b">
+      <div class="bl"><span>${ecEsc(k)}</span><b>${vgNum(m,v)}${m.unit?' '+m.unit:''}${p>0?`<span class="bp">${fR(p)}</span>`:''}</b></div>
+      <div class="bt"><i style="width:${Math.max(3,(v/max*100)).toFixed(1)}%"></i></div>
+    </div>`).join('') + `</div>`;
+}
+
+function renderVGDetail(){
+  const wrap = document.getElementById('vg-detail-wrap');
+  if (!wrap) return;
+  vgHighlight();
+  const m = VG_SEL && VG_METRICS[VG_SEL];
+  if (!m){ ['vg-mes','vg-mun'].forEach(destroyC); wrap.innerHTML = ''; return; }
+
+  const rows  = vgRows(m);
+  const total = rows.reduce((a,r)=>a+vgVal(m,r), 0);
+  const totGeral = vgRows(m, ALL).reduce((a,r)=>a+vgVal(m,r), 0);
+  const media = rows.length ? total/rows.length : 0;
+  const maior = rows.length ? rows.reduce((a,r)=> vgVal(m,r) > vgVal(m,a) ? r : a) : null;
+  const datas = rows.map(r=>r._date).filter(Boolean).sort((a,b)=>a-b);
+  const grana = m.money ? rows.reduce((a,r)=>a+(r[m.money]||0),0) : 0;
+  const presos = rows.reduce((a,r)=>a+(r.no_presos||0),0);
+  const pct = totGeral ? (total/totGeral*100) : 0;
+
+  // 💰 prejuízo ao crime referente a este indicador
+  const prejT     = rows.reduce((a,r)=>a+vgPrej(m,r), 0);
+  const prejGeral = vgRows(m, ALL).reduce((a,r)=>a+vgPrej(m,r), 0);
+  const prejPct   = prejGeral ? (prejT/prejGeral*100) : 0;
+  const prejMedia = rows.length ? prejT/rows.length : 0;
+
+  // agregações por mês (para o gráfico)
+  const porMes = {}, porMesPrej = {};
+  rows.forEach(r=>{ if(!r._date) return;
+    const k = r._date.getFullYear()+'-'+String(r._date.getMonth()+1).padStart(2,'0');
+    porMes[k] = (porMes[k]||0) + vgVal(m,r);
+    porMesPrej[k] = (porMesPrej[k]||0) + vgPrej(m,r);
+  });
+  const mesesOrd = Object.entries(porMes).sort((a,b)=>a[0].localeCompare(b[0]));
+  const melhorMes = mesesOrd.length ? [...mesesOrd].sort((a,b)=>b[1]-a[1])[0] : null;
+  const rotMes = k => { const [y,mo]=k.split('-'); return fMes(new Date(+y,+mo-1,1)); };
+
+  const topMun  = vgGroup(rows, m, 'municipio').slice(0,8);
+  const topCri  = vgGroup(rows, m, r=>crimesDe(r)).slice(0,6);
+  const topOp   = vgGroup(rows, m, r=>opsDe(r)).slice(0,6);
+  const topMeio = vgGroup(rows, m, 'meio').slice(0,5);
+  const topTipo = vgGroup(rows, m, 'tipo_de_bo').slice(0,6);
+
+  // ordena pelo valor da métrica; empate (ex.: métricas de contagem) desempata pelo prejuízo
+  const topOc = [...rows].sort((a,b)=> (vgVal(m,b)-vgVal(m,a)) || (vgPrej(m,b)-vgPrej(m,a))).slice(0,10);
+
+  const mini = `<div class="vg-mini">
+    <div class="m"><div class="l">Total no filtro</div><div class="v">${vgNum(m,total)} ${m.unit||''}</div><div class="h">${pct?fD(pct,1)+'% de todo o histórico':'—'}</div></div>
+    <div class="m"><div class="l">Ocorrências</div><div class="v">${fN(rows.length)}</div><div class="h">${m.kind==='count'?'boletins':'BOs com registro deste item'}</div></div>
+    <div class="m"><div class="l">Média por ocorrência</div><div class="v">${m.kind==='count'?'—':vgNum(m,media)}</div><div class="h">${m.kind==='count'?'':m.unit||''}</div></div>
+    <div class="m"><div class="l">Maior registro único</div><div class="v">${maior?vgNum(m,vgVal(m,maior)):'—'}</div><div class="h">${maior?('BO '+ecEsc(maior.no_bo||'—')+' · '+ecEsc(maior.municipio||'—')):'—'}</div></div>
+    <div class="m"><div class="l">Mês de pico</div><div class="v">${melhorMes?rotMes(melhorMes[0]):'—'}</div><div class="h">${melhorMes?vgNum(m,melhorMes[1])+' '+(m.unit||''):'—'}</div></div>
+    <div class="m"><div class="l">Presos nessas ocorr.</div><div class="v">${fN(presos)}</div><div class="h">${datas.length?fDate(datas[0])+' → '+fDate(datas[datas.length-1]):'—'}</div></div>
+    ${(grana && !m.prejMoney)?`<div class="m"><div class="l">Valor estimado</div><div class="v" style="font-size:16px">${fR(grana)}</div><div class="h">valor dos veículos apreendidos</div></div>`:''}
+    ${prejT>0?`<div class="m prej"><div class="l">💰 Prejuízo ao crime</div><div class="v" style="font-size:16px">${fR(prejT)}</div><div class="h">${ecEsc(vgPrejNota(m))}</div></div>`:''}
+    ${prejT>0?`<div class="m prej"><div class="l">Prejuízo médio / ocorrência</div><div class="v" style="font-size:16px">${fR(prejMedia)}</div><div class="h">${prejPct?fD(prejPct,1)+'% do prejuízo histórico deste item':'—'}</div></div>`:''}
+  </div>`;
+
+  wrap.innerHTML = `<div class="vg-detail">
+    <div class="vg-det-head">
+      <span class="di">${m.icon}</span>
+      <span class="dt">${ecEsc(m.label)}</span>
+      <span class="dq">${vgNum(m,total)} ${m.unit||''}</span>
+      ${prejT>0?`<span class="dp" title="${ecEsc(vgPrejNota(m))}">💰 ${fR(prejT)}</span>`:''}
+      <span class="dc">${ecEsc(m.ctx || 'no período e filtros selecionados')} · ${fN(rows.length)} ocorrência(s)</span>
+      <button class="vg-clear-btn dx" onclick="vgClear()">✕ Limpar</button>
+    </div>
+    <div class="vg-det-body">
+      ${mini}
+      ${rows.length ? `
+      <div class="vg-charts">
+        <div class="vg-box">
+          <div class="vg-box-ttl">Evolução por mês</div>
+          <div class="vg-chart-wrap"><canvas id="c-vg-mes"></canvas></div>
+        </div>
+        <div class="vg-box">
+          <div class="vg-box-ttl">Top municípios</div>
+          <div class="vg-chart-wrap"><canvas id="c-vg-mun"></canvas></div>
+        </div>
+      </div>
+      <div class="vg-cols">
+        <div class="vg-box">
+          <div class="vg-box-ttl">Por natureza do crime</div>
+          ${vgBars(topCri, m, 'Sem crime informado.')}
+        </div>
+        <div class="vg-box">
+          <div class="vg-box-ttl">Por operação</div>
+          ${vgBars(topOp, m, 'Nenhuma operação vinculada.')}
+        </div>
+      </div>
+      <div class="vg-cols">
+        <div class="vg-box">
+          <div class="vg-box-ttl">Por meio de ação</div>
+          ${vgBars(topMeio, m, 'Sem meio informado.')}
+        </div>
+        <div class="vg-box">
+          <div class="vg-box-ttl">Por tipo de BO</div>
+          ${vgBars(topTipo, m, 'Sem tipo informado.')}
+        </div>
+      </div>
+      <div class="vg-box">
+        <div class="vg-box-ttl">Maiores ocorrências (top 10)</div>
+        <div class="vg-tb-wrap">
+          <table class="vg-tb">
+            <thead><tr><th>BO</th><th>Data</th><th>Município</th><th>Crime</th><th>Operação</th><th class="num">${ecEsc(m.label)}</th><th class="num">Prejuízo</th><th class="num">Presos</th></tr></thead>
+            <tbody>${topOc.map(r=>`<tr>
+              <td>${ecEsc(r.no_bo||'—')}</td>
+              <td>${r._date?fDate(r._date):fDataBR(r.data)}</td>
+              <td>${ecEsc(r.municipio||'—')}</td>
+              <td>${ecEsc((crimesDe(r)[0])||r.natureza_crime||'—')}</td>
+              <td>${ecEsc(r.operacao||'—')}</td>
+              <td class="num"><b style="color:var(--yellow)">${vgNum(m,vgVal(m,r))}</b></td>
+              <td class="num money">${vgPrej(m,r)>0?fR(vgPrej(m,r)):'—'}</td>
+              <td class="num">${fN(r.no_presos||0)}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>` : `<div class="vg-empty">Nenhuma ocorrência com registro deste indicador nos filtros atuais.</div>`}
+    </div>
+  </div>`;
+
+  // gráficos
+  destroyC('vg-mes'); destroyC('vg-mun');
+  if (!rows.length) return;
+  const cvMes = document.getElementById('c-vg-mes');
+  if (cvMes) CHARTS['vg-mes'] = new Chart(cvMes, {
+    type:'bar',
+    data:{ labels: mesesOrd.map(([k])=>rotMes(k)), datasets:[{ label:m.label, data: mesesOrd.map(([,v])=>v), backgroundColor:'#F5C518', borderRadius:4, borderWidth:0, maxBarThickness:34 }] },
+    options:{ ...cOpts(m.unit||''), plugins:{legend:{display:false}, tooltip:{...cOpts().plugins.tooltip, callbacks:{
+      label:c=>` ${vgNum(m,c.parsed.y)} ${m.unit||''}`,
+      afterLabel:c=>{ const k = mesesOrd[c.dataIndex] && mesesOrd[c.dataIndex][0]; const p = k?(porMesPrej[k]||0):0; return p>0 ? ` 💰 ${fR(p)}` : ''; }
+    }}}, scales:{ x:cOpts().scales.x, y:{...cOpts().scales.y, beginAtZero:true} } }
+  });
+  const cvMun = document.getElementById('c-vg-mun');
+  if (cvMun) CHARTS['vg-mun'] = new Chart(cvMun, {
+    type:'bar',
+    data:{ labels: topMun.map(([k])=>k), datasets:[{ label:m.label, data: topMun.map(([,v])=>v), backgroundColor: topMun.map((_,i)=>PAL[i%PAL.length]), borderRadius:4, borderWidth:0, maxBarThickness:26 }] },
+    options:{ ...cOpts(m.unit||''), indexAxis:'y', plugins:{legend:{display:false}, tooltip:{...cOpts().plugins.tooltip, callbacks:{
+      label:c=>` ${vgNum(m,c.parsed.x)} ${m.unit||''}`,
+      afterLabel:c=>{ const p = (topMun[c.dataIndex]||[])[2]||0; return p>0 ? ` 💰 ${fR(p)}` : ''; }
+    }}}, scales:{ x:{...cOpts().scales.x, beginAtZero:true}, y:{...cOpts().scales.y, ticks:{color:'#94a3b8',font:{size:10.5}}} } }
+  });
+}
 
 /* ── Insights ── */
 function renderInsights() {
@@ -3631,7 +3992,7 @@ async function doLoginGestao(ev){
 function apiLogout(){
   AUTH.token = ''; AUTH.user = '';
   ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
-  GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; destroyC('gar-ranking'); destroyC('gar-km-mes');
+  GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; GAR_FIL = 'todas'; destroyC('gar-ranking'); destroyC('gar-km-mes');
   MAT_LOADED = false; MAT_DATA = null; MAT_GROUPS = []; MAT_GROUP_SEL = null; MAT_SUB_SEL = null; MAT_SEL = null; ['mat-sit','mat-comp','mat-estado'].forEach(destroyC);
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
@@ -4350,21 +4711,62 @@ function garOleoInfo(v){
   return {intervalo, kmTroca, desde, proxima, faltam, pct, state};
 }
 
+// Filtros rápidos da frota (clique nos KPIs) — mesma ideia dos cards do Material Bélico
+const GAR_FILTROS = {
+  todas:  {label:'Viaturas',            icon:'🚓', test:()=>true},
+  ativas: {label:'Ativas',              icon:'✅', test:v=>/ativ/i.test(v.status_geral||'')},
+  manut:  {label:'Em manutenção',       icon:'🔧', test:v=>/manuten/i.test(v.status_geral||'')},
+  pend:   {label:'Com pendência',       icon:'⚠️', test:v=>v.pendencias_abertas.length>0},
+  oleo:   {label:'Óleo a trocar',       icon:'🛢️', test:v=>{const o=garOleoInfo(v); return o ? o.faltam<=0 : !!v.oleo_alerta;}},
+};
+let GAR_FIL = 'todas';
+
+function garViaturasFiltradas(){
+  if (!GAR_DATA) return [];
+  const f = GAR_FILTROS[GAR_FIL] || GAR_FILTROS.todas;
+  return GAR_DATA.viaturas.filter(f.test);
+}
+
+function selectGarFiltro(key){
+  GAR_FIL = (GAR_FIL === key && key !== 'todas') ? 'todas' : key;   // clicar de novo volta pra todas
+  renderGaragemKPIs();
+  renderGaragemGrid();
+  // se a viatura aberta saiu do filtro, fecha a ficha
+  if (GAR_SEL && !garViaturasFiltradas().some(v=>v.prefixo===GAR_SEL)) { GAR_SEL = null; renderGaragemDetail(); }
+}
+
+function garClearAll(){
+  GAR_FIL = 'todas'; GAR_SEL = null;
+  const b = document.getElementById('gar-busca'); if (b) b.value = '';
+  renderGaragemKPIs(); renderGaragemGrid(); renderGaragemDetail();
+}
+
+function garRenderClear(){
+  const w = document.getElementById('gar-clear-wrap');
+  if (!w) return;
+  const sujo = GAR_FIL !== 'todas' || GAR_SEL || (document.getElementById('gar-busca')?.value||'').trim();
+  w.innerHTML = sujo ? '<button class="gar-clear-btn" onclick="garClearAll()">🧹 Limpar tudo</button>' : '';
+}
+
 function renderGaragemKPIs(){
   const el = document.getElementById('gar-kpis');
   if (!el || !GAR_DATA) return;
   const vs = GAR_DATA.viaturas;
-  const ativas = vs.filter(v => /ativ/i.test(v.status_geral||'')).length;
+  const n = key => vs.filter(GAR_FILTROS[key].test).length;
   const pendTotal = vs.reduce((a,v)=>a+v.pendencias_abertas.length,0);
-  const oleo = vs.filter(v=>v.oleo_alerta).length;
   const kpis = [
-    ['Viaturas', vs.length],
-    ['Ativas', ativas],
-    ['Pendências abertas', pendTotal],
-    ['Óleo a trocar', oleo],
-    ['KM total rodado', fN(GAR_DATA.km_total_frota||0)],
+    ['todas',  '🚓', 'Viaturas',          fN(vs.length),                    ''],
+    ['ativas', '✅', 'Ativas',            fN(n('ativas')),                  ''],
+    ['pend',   '⚠️', 'Com pendência',    fN(n('pend')),                    pendTotal?'danger':''],
+    ['oleo',   '🛢️','Óleo a trocar',     fN(n('oleo')),                    n('oleo')?'warn':''],
+    [null,     '🛣️','KM total rodado',   fN(GAR_DATA.km_total_frota||0),   ''],
   ];
-  el.innerHTML = kpis.map(k=>`<div class="mst"><div class="mst-v">${k[1]}</div><div class="mst-l">${k[0]}</div></div>`).join('');
+  el.innerHTML = kpis.map(([key,ic,lbl,val,cls])=>{
+    const classes = ['mst', cls, key?'clk':'', (key&&GAR_FIL===key)?'sel':''].filter(Boolean).join(' ');
+    const onclick = key ? ` onclick="selectGarFiltro('${key}')"` : '';
+    return `<div class="${classes}"${onclick}><div class="mst-ic">${ic}</div><div class="mst-v">${val}</div><div class="mst-l">${lbl}</div></div>`;
+  }).join('');
+  garRenderClear();
 }
 
 function renderGaragemRanking(){
@@ -4387,15 +4789,24 @@ function renderGaragemGrid(){
   const el = document.getElementById('gar-grid');
   if (!el || !GAR_DATA) return;
   const busca = (document.getElementById('gar-busca')?.value || '').trim().toLowerCase();
-  let vs = GAR_DATA.viaturas;
+  let vs = garViaturasFiltradas();
   if (busca) vs = vs.filter(v => (v.prefixo+' '+v.placa+' '+v.modelo).toLowerCase().includes(busca));
   vs = [...vs].sort((a,b)=> a.prefixo.localeCompare(b.prefixo));
+  const status = document.getElementById('gar-status');
+  if (status && GAR_LOADED) {
+    const fil = GAR_FILTROS[GAR_FIL];
+    status.textContent = `${vs.length} viatura(s) exibida(s) de ${GAR_DATA.viaturas.length} na frota`
+      + (GAR_FIL!=='todas' ? ` · filtro: ${fil.label}` : '') + (busca ? ` · busca: "${busca}"` : '') + '.';
+  }
+  garRenderClear();
   if (!vs.length){ el.innerHTML = '<div class="gar-empty-mini">Nenhuma viatura encontrada.</div>'; return; }
   el.innerHTML = vs.map(v=>{
     const st = garStatusInfo(v);
     const nPend = v.pendencias_abertas.length;
-    const cond = v.ultimo_checklist ? v.ultimo_checklist.condicao : '';
-    return `<div class="gar-card${GAR_SEL===v.prefixo?' active':''}" onclick="selectViatura('${v.prefixo.replace(/'/g,"\\'")}')">
+    const uc = v.ultimo_checklist;
+    const cond = uc ? uc.condicao : '';
+    const o = garOleoInfo(v);
+    return `<div class="gar-card st-${st.cls}${GAR_SEL===v.prefixo?' active':''}" onclick="selectViatura('${v.prefixo.replace(/'/g,"\\'")}')">
       <div class="gar-card-top">
         <span class="gar-prefixo">${ecEsc(v.prefixo)}</span>
         <span class="gar-placa">${ecEsc(v.placa||'—')}</span>
@@ -4403,29 +4814,37 @@ function renderGaragemGrid(){
       <div class="gar-modelo">${ecEsc(v.modelo||'—')}${v.ano?(' · '+ecEsc(v.ano)):''}</div>
       <div class="gar-badges">
         <span class="gb ${st.cls}">${ecEsc(st.label)}</span>
-        ${(()=>{ const o=garOleoInfo(v);
-          if (o && o.faltam<=0) return '<span class="gb warn">🛢️ Trocar óleo</span>';
-          if (o && o.state==='warn') return `<span class="gb warn">🛢️ Faltam ${fN(o.faltam)} km</span>`;
-          if (!o && v.oleo_alerta) return '<span class="gb warn">🛢️ Trocar óleo</span>';
-          return ''; })()}
         ${nPend?`<span class="gb bad">⚠️ ${nPend} pendência(s)</span>`:''}
         ${cond?`<span class="gb ${cond.toLowerCase()==='limpa'?'ok':'info'}">${ecEsc(cond)}</span>`:''}
       </div>
+      <div class="gar-mini">
+        <div><div class="l">KM atual</div><div class="v">${v.km_atual?fN(v.km_atual):'—'}</div></div>
+        <div><div class="l">KM rodado</div><div class="v">${fN(v.km_rodado_total||0)}</div></div>
+        <div><div class="l">Últ. check</div><div class="v" style="font-size:12px">${uc?ecEsc(String(uc.data||'—').split(' ')[0]):'—'}</div></div>
+      </div>
+      ${o ? `<div class="gar-oleo-mini">
+        <div class="t"><span>🛢️ Óleo</span><span style="color:${o.faltam<=0?'#f87171':(o.state==='warn'?'#fbbf24':'#94a3b8')}">${o.faltam>0?('faltam '+fN(o.faltam)+' km'):('vencida há '+fN(Math.abs(o.faltam))+' km')}</span></div>
+        <div class="bar ${o.state}"><i style="width:${o.pct.toFixed(1)}%"></i></div>
+      </div>` : (v.oleo_alerta?`<div class="gar-oleo-mini"><div class="t"><span>🛢️ Óleo</span><span style="color:#fbbf24">troca necessária</span></div><div class="bar warn"><i style="width:100%"></i></div></div>`:'')}
     </div>`;
   }).join('');
 }
 
 function selectViatura(prefixo){
-  GAR_SEL = prefixo;
+  GAR_SEL = (GAR_SEL === prefixo) ? null : prefixo;   // clicar de novo fecha a ficha
   renderGaragemGrid();
   renderGaragemDetail();
+  if (GAR_SEL){
+    const d = document.getElementById('gar-detail');
+    if (d) setTimeout(()=>d.scrollIntoView({behavior:'smooth', block:'nearest'}), 60);
+  }
 }
 
 function renderGaragemDetail(){
   const el = document.getElementById('gar-detail');
   if (!el) return;
   const v = GAR_DATA && GAR_DATA.viaturas.find(x=>x.prefixo===GAR_SEL);
-  if (!v){ el.innerHTML = '<div class="gar-detail-empty">🚓<br>Selecione uma viatura ao lado<br>para ver os detalhes em tempo real.</div>'; return; }
+  if (!v){ destroyC('gar-km-mes'); el.innerHTML = ''; garRenderClear(); return; }
   const st = garStatusInfo(v);
   const uc = v.ultimo_checklist;
 
@@ -4508,21 +4927,32 @@ function renderGaragemDetail(){
     </div>`;
 
   el.innerHTML = `
+  <div class="gar-detail">
     <div class="gar-det-head">
       <div>
-        <div class="gar-det-title">${ecEsc(v.prefixo)}</div>
-        <div class="gar-det-sub">${ecEsc(v.modelo||'—')} · ${ecEsc(v.placa||'—')}</div>
+        <div class="gar-det-title">🚓 ${ecEsc(v.prefixo)}</div>
+        <div class="gar-det-sub">${ecEsc(v.modelo||'—')} · ${ecEsc(v.placa||'—')}${v.lotacao?(' · '+ecEsc(v.lotacao)):''}</div>
       </div>
-      <span class="gb ${st.cls}" style="font-size:11px;padding:4px 12px">${ecEsc(st.label)}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="gb ${st.cls}" style="font-size:11px;padding:4px 12px">${ecEsc(st.label)}</span>
+        <button class="gar-clear-btn" onclick="selectViatura('${v.prefixo.replace(/'/g,"\\'")}')">✕ Fechar ficha</button>
+      </div>
     </div>
     ${fichaHTML}
-    ${oleoHTML}
-    ${kmMesHTML}
-    ${checklistHTML}
-    ${pendHTML}
+    <div class="gar-det-cols">
+      <div>
+        ${oleoHTML}
+        ${checklistHTML}
+      </div>
+      <div>
+        ${kmMesHTML}
+        ${pendHTML}
+      </div>
+    </div>
     ${manutHTML}
-  `;
+  </div>`;
 
+  garRenderClear();
   destroyC('gar-km-mes');
   if (v.km_rodado_por_mes && v.km_rodado_por_mes.length) {
     CHARTS['gar-km-mes'] = new Chart(document.getElementById('c-gar-km-mes'), {
