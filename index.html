@@ -1474,13 +1474,191 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div id="ec-lista"></div>
     </div>
 
-    <!-- PÁGINA: DIÁRIA POR POLICIAL (em construção) -->
+    <!-- PÁGINA: DIÁRIA POR POLICIAL -->
+    <style>
+      #page-diaria .dp-sub{color:var(--muted,#94a3b8);font-size:13px;margin:-4px 0 10px}
+      #page-diaria .dp-status{font-size:12px;color:var(--muted,#94a3b8);margin-bottom:12px}
+      .dp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+      .dp-kpi{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+      .dp-kpi .dp-k-lbl{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted,#94a3b8)}
+      .dp-kpi .dp-k-val{font-size:22px;font-weight:800;font-family:'Rajdhani',sans-serif;color:var(--fg,#e2e8f0);margin-top:3px;line-height:1.1}
+      .dp-kpi .dp-k-val.money{color:#fbbf24}
+      .dp-kpi .dp-k-sub{font-size:10.5px;color:var(--muted,#64748b);margin-top:2px}
+      .dp-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+      .dp-search{flex:1;min-width:220px;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:14px;font-family:inherit}
+      .dp-select{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:13px;font-family:inherit}
+      .dp-addbtn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#111;border:none;border-radius:9px;padding:10px 16px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+      .dp-addbtn:hover{filter:brightness(1.08)}
+      .dp-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+      .dp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+      @media(max-width:900px){.dp-grid,.dp-grid2{grid-template-columns:1fr}}
+      .dp-card{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 16px}
+      .dp-card-ttl{font-size:14px;font-weight:800;color:var(--fg,#e2e8f0);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      .dp-card-ttl small{font-weight:600;color:var(--muted,#94a3b8);font-size:11px}
+      .dp-chart{height:280px}
+      .dp-oprank{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+      .dp-opcard{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;border-left:3px solid #f59e0b;position:relative}
+      .dp-opcard .r{position:absolute;top:8px;right:10px;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;color:var(--muted,#64748b)}
+      .dp-opcard .op{font-weight:700;font-size:12.5px;color:var(--fg,#e2e8f0);padding-right:28px;line-height:1.25}
+      .dp-opcard .v{font-family:'Rajdhani',sans-serif;font-weight:800;font-size:18px;color:#fbbf24;margin-top:5px}
+      .dp-opcard .m{font-size:10.5px;color:var(--muted,#94a3b8);margin-top:2px}
+      .dp-ranking{max-height:560px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+      .dp-row{display:flex;align-items:center;gap:10px;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:8px 12px;cursor:pointer;transition:border-color .12s,background .12s}
+      .dp-row:hover{border-color:rgba(245,197,24,.5)}
+      .dp-row.sel{border-color:var(--yellow,#f5c518);background:rgba(245,197,24,.07)}
+      .dp-pos{font-family:'Rajdhani',sans-serif;font-weight:800;font-size:16px;width:30px;text-align:center;color:var(--muted,#94a3b8);flex:none}
+      .dp-pos.top1{color:#fbbf24}.dp-pos.top2{color:#cbd5e1}.dp-pos.top3{color:#d19a66}
+      .dp-row-main{flex:1;min-width:0}
+      .dp-row-nome{font-weight:700;font-size:13.5px;color:var(--fg,#e2e8f0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .dp-row-meta{font-size:11px;color:var(--muted,#94a3b8);margin-top:1px}
+      .dp-row-val{text-align:right;flex:none}
+      .dp-row-val b{font-family:'Rajdhani',sans-serif;font-size:16px;color:#fbbf24;font-weight:800}
+      .dp-row-val span{display:block;font-size:10.5px;color:var(--muted,#64748b)}
+      .dp-detail{max-height:560px;overflow-y:auto}
+      .dp-empty{color:var(--muted,#64748b);font-size:13px;text-align:center;padding:40px 12px}
+      .dp-d-head{display:flex;align-items:flex-start;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border,#334155);margin-bottom:10px;flex-wrap:wrap}
+      .dp-d-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+      .dp-badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,.14);color:#cbd5e1}
+      .dp-d-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+      .dp-d-kpi{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:8px 10px;text-align:center}
+      .dp-d-kpi .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted,#94a3b8);font-weight:700}
+      .dp-d-kpi .v{font-size:16px;font-weight:800;font-family:'Rajdhani',sans-serif;color:var(--fg,#e2e8f0);margin-top:2px}
+      .dp-d-kpi .v.money{color:#fbbf24}
+      .dp-mis-ttl{font-size:12px;font-weight:800;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 8px}
+      .dp-mis{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:9px 12px;margin-bottom:7px;border-left:3px solid #f59e0b}
+      .dp-mis-top{display:flex;align-items:baseline;gap:8px;justify-content:space-between;flex-wrap:wrap}
+      .dp-mis-op{font-weight:700;font-size:13px;color:var(--fg,#e2e8f0)}
+      .dp-mis-val{font-family:'Rajdhani',sans-serif;font-weight:800;font-size:14px;color:#fbbf24;white-space:nowrap}
+      .dp-mis-info{font-size:11.5px;color:var(--muted,#94a3b8);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+      .dp-mis-info .per{color:#93c5fd;font-weight:700}
+      .dp-del{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:6px;font-size:10px;padding:2px 7px;cursor:pointer;margin-left:6px}
+
+      /* Modal de lançamento de missão */
+      #dp-modal{position:fixed;inset:0;z-index:6000;display:none;align-items:flex-start;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(3px);overflow-y:auto;padding:26px 12px}
+      #dp-modal.open{display:flex}
+      #dp-modal .dm-box{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;width:min(880px,100%);box-shadow:0 24px 60px rgba(0,0,0,.5);margin:auto}
+      #dp-modal .dm-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border,#334155)}
+      #dp-modal .dm-ttl{font-size:16px;font-weight:800;color:var(--fg,#e2e8f0)}
+      #dp-modal .dm-x{margin-left:auto;background:none;border:none;color:var(--muted,#94a3b8);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px}
+      #dp-modal .dm-body{padding:14px 18px}
+      #dp-modal .dm-sec{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fbbf24;margin:6px 0 8px}
+      #dp-modal .dm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px}
+      @media(max-width:640px){#dp-modal .dm-grid{grid-template-columns:1fr 1fr}}
+      #dp-modal .dm-fg{display:flex;flex-direction:column;gap:4px;min-width:0}
+      #dp-modal .dm-fg.wide{grid-column:1/-1}
+      #dp-modal .dm-fg label{font-size:10.5px;font-weight:700;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.3px}
+      #dp-modal input,#dp-modal select{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:8px;padding:8px 10px;color:var(--fg,#e2e8f0);font-size:13.5px;font-family:inherit;width:100%}
+      #dp-modal .dm-pols{margin-top:8px}
+      #dp-modal .dm-pol{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
+      #dp-modal .dm-pol-grid{display:grid;grid-template-columns:110px 1fr 1fr 90px 90px;gap:8px 10px}
+      @media(max-width:760px){#dp-modal .dm-pol-grid{grid-template-columns:1fr 1fr}}
+      #dp-modal .dm-pol .dm-rm{position:absolute;top:8px;right:8px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+      #dp-modal .dm-addpol{background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.4);color:#93c5fd;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+      #dp-modal .dm-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--border,#334155);flex-wrap:wrap}
+      #dp-modal .dm-calc{font-size:12px;color:var(--muted,#94a3b8);flex:1;min-width:160px}
+      #dp-modal .dm-calc b{color:#fbbf24}
+      #dp-modal .dm-err{color:#f87171;font-size:13px;flex-basis:100%}
+      #dp-modal .dm-btn{border:none;border-radius:9px;padding:10px 18px;font-weight:800;font-size:14px;cursor:pointer}
+      #dp-modal .dm-save{background:#f59e0b;color:#111}
+      #dp-modal .dm-cancel{background:transparent;border:1px solid var(--border,#334155);color:var(--fg,#e2e8f0)}
+    </style>
     <div id="page-diaria" class="page-content">
       <div class="sec">💵 Diária por Policial — Custo Operacional</div>
-      <div class="empty" style="text-align:center;padding:60px 20px;background:var(--card);border:1px dashed rgba(245,197,24,.25);border-radius:14px">
-        <div style="font-size:46px;margin-bottom:10px">🚧</div>
-        <h3 style="color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:22px;margin-bottom:8px">Módulo em construção</h3>
-        <p>Aqui vai entrar o controle das <b>diárias por policial</b>: valor, quantidade paga, total por operação e período. Vamos montar nos próximos passos.</p>
+      <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — dados ao vivo da planilha <b>Base_Efetivo_BPFRON</b>. Clique num nome para ver todas as missões.</div>
+      <div id="dp-status" class="dp-status">Carregando…</div>
+
+      <div id="dp-kpis" class="dp-kpis"></div>
+
+      <div class="dp-toolbar">
+        <input type="text" id="dp-busca" class="dp-search" placeholder="🔎 Buscar policial por nome, RE ou graduação…" oninput="dpRenderRanking()">
+        <select id="dp-f-op" class="dp-select" onchange="dpRenderRanking()"><option value="">Todas as operações</option></select>
+        <span id="dp-add-wrap"></span>
+      </div>
+
+      <div class="dp-grid">
+        <div class="dp-card">
+          <div class="dp-card-ttl">🏆 Ranking — Quem mais recebeu diárias <small id="dp-rank-count"></small></div>
+          <div id="dp-ranking" class="dp-ranking"></div>
+        </div>
+        <div class="dp-card">
+          <div class="dp-card-ttl" id="dp-detail-ttl">👤 Detalhe do policial</div>
+          <div id="dp-detail" class="dp-detail"><div class="dp-empty">Clique num policial no ranking ao lado para ver todas as missões e períodos.</div></div>
+        </div>
+      </div>
+
+      <div class="dp-grid2">
+        <div class="dp-card">
+          <div class="dp-card-ttl">💰 Top 12 — Valor recebido por policial</div>
+          <div class="dp-chart"><canvas id="c-dp-top"></canvas></div>
+        </div>
+        <div class="dp-card">
+          <div class="dp-card-ttl">🎯 Custo por Operação</div>
+          <div class="dp-chart"><canvas id="c-dp-op"></canvas></div>
+        </div>
+      </div>
+
+      <div class="dp-card" style="margin-bottom:14px">
+        <div class="dp-card-ttl">🏅 Operações que mais pagaram diárias <small id="dp-op-count"></small></div>
+        <div id="dp-op-cards" class="dp-oprank"></div>
+      </div>
+
+      <div class="dp-grid">
+        <div class="dp-card">
+          <div class="dp-card-ttl">🏢 OPMs que mais receberam diárias <small id="dp-opm-count"></small></div>
+          <div id="dp-opm-rank" class="dp-ranking"></div>
+        </div>
+        <div class="dp-card">
+          <div class="dp-card-ttl" id="dp-opm-detail-ttl">🏢 Detalhe da OPM</div>
+          <div id="dp-opm-detail" class="dp-detail"><div class="dp-empty">Clique numa OPM ao lado para ver quem mais recebeu diárias nela.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: LANÇAR MISSÃO (só editores: De Sousa, Camilo, Fonseca) -->
+    <div id="dp-modal">
+      <div class="dm-box">
+        <div class="dm-head">
+          <span class="dm-ttl">➕ Lançar missão / diárias</span>
+          <button class="dm-x" onclick="dpCloseModal()" title="Fechar">✕</button>
+        </div>
+        <div class="dm-body">
+          <div class="dm-sec">Dados da missão</div>
+          <div class="dm-grid">
+            <div class="dm-fg wide"><label>Nome da missão / operação</label>
+              <input id="dm-operacao" list="dm-operacoes" placeholder="Ex.: OPERAÇÃO DOMINUS"><datalist id="dm-operacoes"></datalist>
+            </div>
+            <div class="dm-fg"><label>ID da missão <span style="color:#f87171">*</span></label><input id="dm-idmissao" placeholder="Ex.: 03ª SESDEC/2026"></div>
+            <div class="dm-fg"><label>Órgão <span style="color:#f87171">*</span></label><input id="dm-orgao" list="dm-orgaos" placeholder="Ex.: SESDEC, SEDAM, MJ"><datalist id="dm-orgaos"></datalist></div>
+            <div class="dm-fg"><label>Tipo de diária</label>
+              <select id="dm-tipo" onchange="dpOnTipo()"><option value="">— selecione —</option></select>
+            </div>
+            <div class="dm-fg"><label>Data início</label><input id="dm-inicio" type="date" onchange="dpRecalc()"></div>
+            <div class="dm-fg"><label>Data término</label><input id="dm-fim" type="date" onchange="dpRecalc()"></div>
+            <div class="dm-fg"><label>Diárias (nº)</label><input id="dm-diarias" type="number" step="0.5" min="0" oninput="dpRecalc()"></div>
+            <div class="dm-fg"><label>Valor da diária (R$)</label><input id="dm-valor" type="number" step="0.01" min="0" oninput="dpRecalc()"></div>
+            <div class="dm-fg"><label>Município</label><input id="dm-municipio" list="dm-municipios" placeholder="Ex.: NOVA MAMORÉ"><datalist id="dm-municipios"></datalist></div>
+            <div class="dm-fg"><label>Processo relacionado</label><input id="dm-processo" placeholder="NÃO / nº do processo"></div>
+          </div>
+
+          <div class="dm-sec" style="margin-top:14px">Policiais na missão <span id="dm-pol-count" style="color:var(--muted,#94a3b8);font-weight:600"></span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+            <button class="dm-addpol" style="background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.4);color:#6ee7b7" onclick="dpEscalaToggle()">📋 Importar escala</button>
+            <span id="dm-escala-status" style="font-size:12px;color:var(--muted,#94a3b8)"></span>
+          </div>
+          <div id="dm-escala-box" style="display:none;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+            <div style="font-size:11.5px;color:var(--muted,#94a3b8);margin-bottom:8px">Escolha a aba da planilha de escalas (substitui a lista de policiais abaixo):</div>
+            <div id="dm-escala-abas" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+          <div id="dm-pols" class="dm-pols"></div>
+          <button class="dm-addpol" onclick="dpAddPolRow()">➕ Adicionar policial</button>
+          <datalist id="dm-efetivo"></datalist>
+        </div>
+        <div class="dm-foot">
+          <span id="dm-calc" class="dm-calc"></span>
+          <span id="dm-err" class="dm-err"></span>
+          <button class="dm-btn dm-cancel" onclick="dpCloseModal()">Cancelar</button>
+          <button class="dm-btn dm-save" id="dm-save-btn" onclick="dpSalvar()">💾 Lançar missão</button>
+        </div>
       </div>
     </div>
 
@@ -2700,6 +2878,7 @@ const WELCOME_NOMES = {
   subcmt:    'CEL Garibaldi',
   cmtcg:     'Comandante Geral CEL Glauber Souto',
   p3:            '2º SGT QPPM Camilo',
+  p301:          '1º SGT QPPM Fonseca',
   p3cmt:         'Tenente Caciano',
   subcmtbpfron:  'Capitão Renê',
   p4bel:         '3º SGT QPPM Xavier'
@@ -2817,6 +2996,7 @@ function showPage(pageId) {
   if (pageId === 'policiais-campo') initCampo();
   if (pageId === 'garagem') initGaragem();
   if (pageId === 'material') initMaterial();
+  if (pageId === 'diaria') initDiaria();
   if (pageId === 'consultas')  {
     // Exige login: o gate decide se mostra a tela de login ou os dados.
     gateConsultas();
@@ -3994,6 +4174,7 @@ function apiLogout(){
   ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
   GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; GAR_FIL = 'todas'; destroyC('gar-ranking'); destroyC('gar-km-mes');
   MAT_LOADED = false; MAT_DATA = null; MAT_GROUPS = []; MAT_GROUP_SEL = null; MAT_SUB_SEL = null; MAT_SEL = null; ['mat-sit','mat-comp','mat-estado'].forEach(destroyC);
+  DP_LOADED = false; DP_DATA = null; DP_SEL = null; DP_OPM_SEL = null; DP_DUP_OK = false; ['dp-top','dp-op'].forEach(destroyC);
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
   applyUserRestrictions();
@@ -5808,6 +5989,496 @@ function renderCampo(){
       <div class="ec-bloco-body">${eqHtml}</div>
     </div>`;
   }).join('');
+}
+
+/* ═══════════════ DIÁRIA POR POLICIAL (/api/diaria) ═══════════════ */
+let DP_LOADED = false, DP_DATA = null, DP_SEL = null, DP_EFET_BY_RE = {}, DP_OPM_SEL = null, DP_DUP_OK = false;
+function dpEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Chave estável de um policial (RE ou, na falta, nome em maiúsculas).
+function dpKey(p){ return p.re ? ('R:'+p.re) : ('N:'+(p.nome||'').toUpperCase()); }
+
+async function initDiaria(){
+  if (!AUTH.logged) return; // showPage já bloqueou (gate de Gestão)
+  const status = document.getElementById('dp-status');
+  if (DP_LOADED && DP_DATA){ dpRenderAll(); return; }
+  if (status) status.textContent = 'Carregando dados de diárias…';
+  try {
+    DP_DATA = await apiFetchJSON('/api/diaria');
+    DP_LOADED = true;
+    // índice do efetivo por RE (pro autocomplete do formulário)
+    DP_EFET_BY_RE = {};
+    (DP_DATA.efetivo||[]).forEach(e=>{ if(e.re) DP_EFET_BY_RE[String(e.re).trim()] = e; });
+    dpRenderAll();
+  } catch(e){
+    if (status) status.textContent = '⚠️ ' + (e && e.message ? e.message : 'Erro ao carregar diárias.');
+  }
+}
+
+function dpRenderAll(){
+  const status = document.getElementById('dp-status');
+  if (status){
+    const q = DP_DATA.atualizado_em ? new Date(DP_DATA.atualizado_em*1000).toLocaleString('pt-BR') : '';
+    status.textContent = `${(DP_DATA.policiais||[]).length} policiais • ${(DP_DATA.kpis&&DP_DATA.kpis.total_lancamentos)||0} lançamentos${q?' • atualizado '+q:''}`;
+  }
+  dpRenderKPIs();
+  dpFillOpFilter();
+  dpRenderAddBtn();
+  dpRenderRanking();
+  dpCharts();
+  dpRenderOpCards();
+  dpRenderOpmRank();
+  // Se havia um policial/OPM selecionado, re-renderiza o detalhe.
+  if (DP_SEL) dpRenderDetail();
+  if (DP_OPM_SEL) dpRenderOpmDetail();
+}
+
+function dpRenderKPIs(){
+  const k = DP_DATA.kpis || {};
+  const box = document.getElementById('dp-kpis'); if(!box) return;
+  const card = (lbl,val,sub,money)=>`<div class="dp-kpi"><div class="dp-k-lbl">${lbl}</div><div class="dp-k-val${money?' money':''}">${val}</div>${sub?`<div class="dp-k-sub">${sub}</div>`:''}</div>`;
+  box.innerHTML =
+    card('Total pago em diárias', fR(k.total_pago||0), (k.total_diarias||0).toLocaleString('pt-BR')+' diárias', true) +
+    card('Policiais beneficiados', fN(k.total_policiais||0), (k.total_lancamentos||0)+' lançamentos') +
+    card('Média por policial', fR(k.media_por_policial||0), 'valor médio recebido', true) +
+    card('Operação de maior custo', dpEsc(k.operacao_top||'—'), (DP_DATA.por_operacao&&DP_DATA.por_operacao[0])?fR(DP_DATA.por_operacao[0].valor_total):'');
+}
+
+function dpFillOpFilter(){
+  const sel = document.getElementById('dp-f-op'); if(!sel) return;
+  const cur = sel.value;
+  const ops = (DP_DATA.por_operacao||[]).map(o=>o.operacao);
+  sel.innerHTML = '<option value="">Todas as operações</option>' + ops.map(o=>`<option value="${dpEsc(o)}">${dpEsc(o)}</option>`).join('');
+  if (ops.includes(cur)) sel.value = cur;
+}
+
+function dpRenderAddBtn(){
+  const wrap = document.getElementById('dp-add-wrap'); if(!wrap) return;
+  wrap.innerHTML = dpCanEdit() ? '<button class="dp-addbtn" onclick="dpOpenModal()">➕ Lançar missão</button>' : '';
+}
+
+// Editores (o backend REVALIDA — aqui é só pra mostrar/esconder o botão).
+function dpCanEdit(){
+  if (!AUTH.logged) return false;
+  const eds = (DP_DATA && DP_DATA.editores) || ['desousa','p3','p301'];
+  return eds.includes(AUTH.user);
+}
+
+// Ranking filtrado por busca + operação. Com operação selecionada, ordena pelo
+// valor recebido NAQUELA operação (ranking da operação).
+function dpRankingData(){
+  const busca = (document.getElementById('dp-busca')?.value||'').trim().toLowerCase();
+  const op = document.getElementById('dp-f-op')?.value||'';
+  let lista = (DP_DATA.policiais||[]).map(p=>{
+    let valor = p.valor_total, diarias = p.total_diarias, missoes = p.qtd_missoes;
+    if (op){
+      const subset = p.missoes.filter(m=>m.operacao===op);
+      valor = subset.reduce((a,m)=>a+m.valor_total,0);
+      diarias = subset.reduce((a,m)=>a+m.qtd_diarias,0);
+      missoes = subset.length;
+    }
+    return { p, valor, diarias, missoes };
+  });
+  if (op) lista = lista.filter(x=>x.missoes>0);
+  if (busca) lista = lista.filter(x=>{
+    const p=x.p; return (p.nome||'').toLowerCase().includes(busca) || String(p.re||'').includes(busca) || (p.posto_grad||'').toLowerCase().includes(busca);
+  });
+  lista.sort((a,b)=> b.valor - a.valor);
+  return lista;
+}
+
+function dpRenderRanking(){
+  const box = document.getElementById('dp-ranking'); if(!box) return;
+  const lista = dpRankingData();
+  const cnt = document.getElementById('dp-rank-count');
+  if (cnt) cnt.textContent = `(${lista.length})`;
+  if (!lista.length){ box.innerHTML = '<div class="dp-empty">Nenhum policial encontrado para esse filtro.</div>'; return; }
+  box.innerHTML = lista.map((x,i)=>{
+    const p = x.p, key = dpKey(p);
+    const posCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const sel = (DP_SEL===key)?' sel':'';
+    return `<div class="dp-row${sel}" onclick="dpSelectPol('${dpEsc(key).replace(/'/g,"\\'")}')">
+      <div class="dp-pos ${posCls}">${i+1}º</div>
+      <div class="dp-row-main">
+        <div class="dp-row-nome">${dpEsc(p.nome||'—')}</div>
+        <div class="dp-row-meta">${dpEsc(p.posto_grad||'')}${p.re?' • RE '+dpEsc(p.re):''} • ${x.missoes} missão(ões)</div>
+      </div>
+      <div class="dp-row-val"><b>${fR(x.valor)}</b><span>${(x.diarias).toLocaleString('pt-BR')} diárias</span></div>
+    </div>`;
+  }).join('');
+}
+
+function dpSelectPol(key){
+  DP_SEL = (DP_SEL===key) ? null : key;
+  dpRenderRanking();
+  dpRenderDetail();
+}
+
+function dpFindPol(key){ return (DP_DATA.policiais||[]).find(p=>dpKey(p)===key) || null; }
+
+function dpRenderDetail(){
+  const box = document.getElementById('dp-detail');
+  const ttl = document.getElementById('dp-detail-ttl');
+  if(!box) return;
+  const p = DP_SEL ? dpFindPol(DP_SEL) : null;
+  if(!p){
+    if(ttl) ttl.textContent = '👤 Detalhe do policial';
+    box.innerHTML = '<div class="dp-empty">Clique num policial no ranking ao lado para ver todas as missões e períodos.</div>';
+    return;
+  }
+  if(ttl) ttl.textContent = '👤 ' + (p.nome||'—');
+  const badges = [];
+  if(p.posto_grad) badges.push(`<span class="dp-badge">${dpEsc(p.posto_grad)}</span>`);
+  if(p.re) badges.push(`<span class="dp-badge">RE ${dpEsc(p.re)}</span>`);
+  if(p.opm) badges.push(`<span class="dp-badge">${dpEsc(p.opm)}</span>`);
+  if(p.contato) badges.push(`<span class="dp-badge">📞 ${dpEsc(p.contato)}</span>`);
+  const missoes = (p.missoes||[]).map(m=>{
+    const per = (m.data_inicio||'?') + ' → ' + (m.data_fim||'?');
+    const del = dpCanEdit() ? `<button class="dp-del" title="Excluir lançamento" onclick="dpDeleteMissao(event, ${m._row}, '${dpEsc(p.re)}')">🗑️</button>` : '';
+    return `<div class="dp-mis">
+      <div class="dp-mis-top">
+        <span class="dp-mis-op">${dpEsc(m.operacao||'Sem operação')}${m.id_missao?` <small style="color:#94a3b8">· ${dpEsc(m.id_missao)}</small>`:''}</span>
+        <span class="dp-mis-val">${fR(m.valor_total)}${del}</span>
+      </div>
+      <div class="dp-mis-info">
+        <span class="per">🗓️ ${dpEsc(per)}</span>
+        <span>${(m.diarias).toLocaleString('pt-BR')} diárias × ${fR(m.valor_diaria)}</span>
+        ${m.tipo_diaria?`<span>🏷️ ${dpEsc(m.tipo_diaria)}</span>`:''}
+        ${m.orgao?`<span>🏛️ ${dpEsc(m.orgao)}</span>`:''}
+        ${m.municipio?`<span>📍 ${dpEsc(m.municipio)}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="dp-d-head"><div style="flex:1;min-width:0"><div class="dp-d-badges">${badges.join('')}</div></div></div>
+    <div class="dp-d-kpis">
+      <div class="dp-d-kpi"><div class="l">Missões</div><div class="v">${p.qtd_missoes}</div></div>
+      <div class="dp-d-kpi"><div class="l">Diárias</div><div class="v">${(p.total_diarias).toLocaleString('pt-BR')}</div></div>
+      <div class="dp-d-kpi"><div class="l">Total recebido</div><div class="v money">${fR(p.valor_total)}</div></div>
+    </div>
+    <div class="dp-mis-ttl">Missões (${p.missoes.length}) — mais recentes primeiro</div>
+    ${missoes || '<div class="dp-empty">Sem missões registradas.</div>'}`;
+}
+
+function dpCharts(){
+  destroyC('dp-top'); destroyC('dp-op');
+  const top = (DP_DATA.policiais||[]).slice(0,12);
+  const elTop = document.getElementById('c-dp-top');
+  if (elTop && top.length){
+    CHARTS['dp-top'] = new Chart(elTop, {
+      type:'bar',
+      data:{ labels: top.map(p=>{ const n=(p.nome||'').split(' '); return n.length>1?(n[0]+' '+n[n.length-1]):(p.nome||'—'); }),
+        datasets:[{ label:'R$', data: top.map(p=>p.valor_total), backgroundColor:'#f59e0b', borderRadius:4, borderWidth:0 }] },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fR(c.parsed.x) } } },
+        scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9},callback:v=>'R$ '+(v/1000)+'k'}}, y:{grid:{display:false},ticks:{color:'#cbd5e1',font:{size:10.5}}} } }
+    });
+  }
+  const ops = (DP_DATA.por_operacao||[]).slice(0,8);
+  const elOp = document.getElementById('c-dp-op');
+  if (elOp && ops.length){
+    const PALD = ['#f59e0b','#3b82f6','#10b981','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+    CHARTS['dp-op'] = new Chart(elOp, {
+      type:'doughnut',
+      data:{ labels: ops.map(o=>o.operacao), datasets:[{ data: ops.map(o=>o.valor_total), backgroundColor:PALD, borderColor:'#13161e', borderWidth:3, hoverOffset:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+        plugins:{ legend:{display:true,position:'bottom',labels:{color:'#94a3b8',font:{size:9.5},padding:8,boxWidth:9}},
+          tooltip:{ callbacks:{ label:c=>` ${c.label}: ${fR(c.parsed)}` } } } }
+    });
+  }
+}
+
+/* ── Ranking de Operações (cards) ── */
+function dpRenderOpCards(){
+  const box = document.getElementById('dp-op-cards'); if(!box) return;
+  const ops = (DP_DATA.por_operacao||[]);
+  const cnt = document.getElementById('dp-op-count'); if(cnt) cnt.textContent = `(${ops.length})`;
+  if(!ops.length){ box.innerHTML='<div class="dp-empty">Sem operações.</div>'; return; }
+  box.innerHTML = ops.map((o,i)=>`
+    <div class="dp-opcard">
+      <span class="r">${i+1}º</span>
+      <div class="op">${dpEsc(o.operacao)}</div>
+      <div class="v">${fR(o.valor_total)}</div>
+      <div class="m">${o.lancamentos} lançamentos • ${o.policiais} policiais • ${(o.diarias).toLocaleString('pt-BR')} diárias</div>
+    </div>`).join('');
+}
+
+/* ── Ranking de OPMs (agregado das missões; clicável) ── */
+function dpOpmAgg(){
+  const m = {};
+  (DP_DATA.policiais||[]).forEach(p=>{
+    (p.missoes||[]).forEach(mi=>{
+      const opm = (mi.opm||'').trim() || '—';
+      const o = m[opm] = m[opm] || { opm, valor:0, diarias:0, lancamentos:0, res:new Set() };
+      o.valor += mi.valor_total||0; o.diarias += mi.diarias||0; o.lancamentos++;
+      if(p.re) o.res.add(p.re); else o.res.add(p.nome);
+    });
+  });
+  return Object.values(m).map(o=>({ opm:o.opm, valor:o.valor, diarias:o.diarias, lancamentos:o.lancamentos, policiais:o.res.size }))
+    .sort((a,b)=>b.valor-a.valor);
+}
+function dpRenderOpmRank(){
+  const box = document.getElementById('dp-opm-rank'); if(!box) return;
+  const lista = dpOpmAgg();
+  const cnt = document.getElementById('dp-opm-count'); if(cnt) cnt.textContent = `(${lista.length})`;
+  if(!lista.length){ box.innerHTML='<div class="dp-empty">Sem OPMs.</div>'; return; }
+  box.innerHTML = lista.map((o,i)=>{
+    const posCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const sel = (DP_OPM_SEL===o.opm)?' sel':'';
+    return `<div class="dp-row${sel}" onclick="dpSelectOpm('${dpEsc(o.opm).replace(/'/g,"\\'")}')">
+      <div class="dp-pos ${posCls}">${i+1}º</div>
+      <div class="dp-row-main">
+        <div class="dp-row-nome">${dpEsc(o.opm)}</div>
+        <div class="dp-row-meta">${o.policiais} policiais • ${o.lancamentos} lançamentos</div>
+      </div>
+      <div class="dp-row-val"><b>${fR(o.valor)}</b><span>${(o.diarias).toLocaleString('pt-BR')} diárias</span></div>
+    </div>`;
+  }).join('');
+}
+function dpSelectOpm(opm){
+  DP_OPM_SEL = (DP_OPM_SEL===opm)?null:opm;
+  dpRenderOpmRank();
+  dpRenderOpmDetail();
+}
+function dpRenderOpmDetail(){
+  const box = document.getElementById('dp-opm-detail');
+  const ttl = document.getElementById('dp-opm-detail-ttl');
+  if(!box) return;
+  if(!DP_OPM_SEL){
+    if(ttl) ttl.textContent='🏢 Detalhe da OPM';
+    box.innerHTML='<div class="dp-empty">Clique numa OPM ao lado para ver quem mais recebeu diárias nela.</div>';
+    return;
+  }
+  if(ttl) ttl.textContent = '🏢 ' + DP_OPM_SEL;
+  // Policiais que mais receberam nessa OPM (soma das missões cuja OPM == selecionada).
+  const arr = [];
+  (DP_DATA.policiais||[]).forEach(p=>{
+    const sub = (p.missoes||[]).filter(m=>((m.opm||'').trim()||'—')===DP_OPM_SEL);
+    if(!sub.length) return;
+    arr.push({ nome:p.nome, posto_grad:p.posto_grad, re:p.re,
+      valor: sub.reduce((a,m)=>a+(m.valor_total||0),0),
+      diarias: sub.reduce((a,m)=>a+(m.diarias||0),0), missoes: sub.length });
+  });
+  arr.sort((a,b)=>b.valor-a.valor);
+  const tot = arr.reduce((a,x)=>a+x.valor,0);
+  box.innerHTML = `<div class="dp-mis-ttl">${arr.length} policiais • total ${fR(tot)}</div>` + arr.map((x,i)=>`
+    <div class="dp-row" style="cursor:default">
+      <div class="dp-pos">${i+1}º</div>
+      <div class="dp-row-main">
+        <div class="dp-row-nome">${dpEsc(x.nome||'—')}</div>
+        <div class="dp-row-meta">${dpEsc(x.posto_grad||'')}${x.re?' • RE '+dpEsc(x.re):''} • ${x.missoes} missão(ões)</div>
+      </div>
+      <div class="dp-row-val"><b>${fR(x.valor)}</b><span>${(x.diarias).toLocaleString('pt-BR')} diárias</span></div>
+    </div>`).join('');
+}
+
+/* ── Lançamento de missão (modal) ── */
+function dpOpenModal(){
+  if(!dpCanEdit()) return;
+  const m = document.getElementById('dp-modal'); if(!m) return;
+  const L = DP_DATA.listas||{};
+  const opts = arr => (arr||[]).map(v=>`<option value="${dpEsc(v)}">`).join('');
+  // Tipo de diária -> valor (referência)
+  const tab = DP_DATA.tabela_diarias||[];
+  document.getElementById('dm-tipo').innerHTML = '<option value="">— selecione —</option>'
+    + tab.map(t=>`<option value="${dpEsc(t.tipo_diaria)}" data-valor="${t.valor_diaria}">${dpEsc(t.tipo_diaria)} — ${fR(t.valor_diaria)}</option>`).join('');
+  // datalists de sugestão
+  document.getElementById('dm-operacoes').innerHTML = opts(L.operacoes);
+  document.getElementById('dm-orgaos').innerHTML   = opts(L.orgaos);
+  document.getElementById('dm-municipios').innerHTML = opts(L.municipios);
+  document.getElementById('dm-efetivo').innerHTML = (DP_DATA.efetivo||[]).map(e=>`<option value="${dpEsc(e.re)}">${dpEsc(e.posto_grad)} ${dpEsc(e.guerra||e.nome)}</option>`).join('');
+  // limpa campos
+  ['dm-operacao','dm-idmissao','dm-orgao','dm-inicio','dm-fim','dm-diarias','dm-valor','dm-municipio','dm-processo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('dm-tipo').value='';
+  document.getElementById('dm-processo').value='NÃO';
+  document.getElementById('dm-err').textContent='';
+  DP_POL_SEQ = 0; DP_DUP_OK = false;
+  document.getElementById('dm-pols').innerHTML='';
+  document.getElementById('dm-escala-box').style.display='none';
+  document.getElementById('dm-escala-status').textContent='';
+  const sb=document.getElementById('dm-save-btn'); sb.textContent='💾 Lançar missão'; sb.style.background='';
+  dpAddPolRow();
+  dpRecalc();
+  m.classList.add('open');
+}
+function dpCloseModal(){ const m=document.getElementById('dp-modal'); if(m) m.classList.remove('open'); }
+
+/* ── Importar escala (planilha PM_EM_CAMPO_BCCO) ── */
+async function dpEscalaToggle(){
+  const box = document.getElementById('dm-escala-box');
+  if(box.style.display!=='none'){ box.style.display='none'; return; }
+  box.style.display='block';
+  const abasEl = document.getElementById('dm-escala-abas');
+  abasEl.innerHTML = '<span style="font-size:12px;color:#94a3b8">Carregando abas…</span>';
+  try{
+    const d = await apiFetchJSON('/api/diaria/escalas');
+    const abas = d.abas||[];
+    if(!abas.length){ abasEl.innerHTML='<span style="font-size:12px;color:#94a3b8">Nenhuma aba encontrada.</span>'; return; }
+    abasEl.innerHTML = abas.map(a=>`<button class="dm-addpol" style="background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.4);color:#93c5fd" onclick="dpImportEscala('${dpEsc(a.title).replace(/'/g,"\\'")}')">🗓️ ${dpEsc(a.title)}</button>`).join('');
+  }catch(e){ abasEl.innerHTML = '<span style="font-size:12px;color:#f87171">'+((e&&e.message)||'Erro ao listar escalas.')+'</span>'; }
+}
+async function dpImportEscala(tab){
+  const st = document.getElementById('dm-escala-status');
+  st.textContent = 'Importando escala '+tab+'…';
+  try{
+    const d = await apiFetchJSON('/api/diaria/escala?tab='+encodeURIComponent(tab));
+    const pols = d.policiais||[];
+    if(!pols.length){ st.textContent='Nenhum policial encontrado nessa aba.'; return; }
+    // Substitui a lista de policiais pelos importados
+    DP_POL_SEQ = 0;
+    document.getElementById('dm-pols').innerHTML='';
+    pols.forEach(p=>dpAddPolRow(p));
+    const semCad = pols.filter(p=>!p.no_cadastro).length;
+    st.innerHTML = `✅ ${pols.length} policiais importados de <b>${dpEsc(tab)}</b>` + (semCad?` <span style="color:#fbbf24">(${semCad} não encontrados no cadastro)</span>`:'');
+    document.getElementById('dm-escala-box').style.display='none';
+    dpRecalc();
+  }catch(e){ st.textContent = (e&&e.message)||'Erro ao importar escala.'; }
+}
+
+function dpOnTipo(){
+  const sel = document.getElementById('dm-tipo');
+  const opt = sel.options[sel.selectedIndex];
+  const v = opt && opt.getAttribute('data-valor');
+  if (v){ document.getElementById('dm-valor').value = v; }
+  dpRecalc();
+}
+
+let DP_POL_SEQ = 0;
+function dpAddPolRow(prefill){
+  const wrap = document.getElementById('dm-pols');
+  const i = DP_POL_SEQ++;
+  const div = document.createElement('div');
+  div.className='dm-pol'; div.id='dm-pol-'+i;
+  div.innerHTML = `
+    <button class="dm-rm" title="Remover" onclick="dpRemovePolRow(${i})">✕</button>
+    <div class="dm-pol-grid">
+      <div class="dm-fg"><label>RE</label><input list="dm-efetivo" id="dm-re-${i}" oninput="dpOnRE(${i})" placeholder="RE"></div>
+      <div class="dm-fg"><label>Policial (guerra)</label><input id="dm-nome-${i}" placeholder="Ex.: FREIRE"></div>
+      <div class="dm-fg"><label>Posto/Grad</label><input id="dm-posto-${i}" placeholder="Ex.: 3º SGT QPPM"></div>
+      <div class="dm-fg"><label>OPM</label><input id="dm-opm-${i}" placeholder="Ex.: BPFRON"></div>
+      <div class="dm-fg" style="display:flex;align-items:flex-end"><span id="dm-full-${i}" style="font-size:11px;color:#94a3b8;line-height:1.3"></span></div>
+    </div>`;
+  wrap.appendChild(div);
+  if(prefill && typeof prefill==='object'){
+    const set=(id,v)=>{const e=document.getElementById(id); if(e&&v!=null) e.value=v;};
+    set('dm-re-'+i, prefill.re); set('dm-nome-'+i, prefill.guerra); set('dm-posto-'+i, prefill.posto_grad); set('dm-opm-'+i, prefill.opm);
+    const full=document.getElementById('dm-full-'+i); if(full && prefill.nome) full.textContent='✓ '+prefill.nome;
+  }
+  dpPolCount();
+}
+function dpRemovePolRow(i){ const el=document.getElementById('dm-pol-'+i); if(el) el.remove(); dpPolCount(); dpRecalc(); }
+function dpPolCount(){ const n=document.querySelectorAll('#dm-pols .dm-pol').length; const e=document.getElementById('dm-pol-count'); if(e) e.textContent='('+n+')'; }
+
+// Auto-preenche nome de guerra/posto/OPM ao digitar/escolher um RE conhecido.
+function dpOnRE(i){
+  const re = (document.getElementById('dm-re-'+i)?.value||'').trim();
+  const e = DP_EFET_BY_RE[re];
+  const full = document.getElementById('dm-full-'+i);
+  if(e){
+    const nome=document.getElementById('dm-nome-'+i), posto=document.getElementById('dm-posto-'+i), opm=document.getElementById('dm-opm-'+i);
+    if(nome && !nome.value) nome.value = e.guerra||'';
+    if(posto && !posto.value) posto.value = e.posto_grad||'';
+    if(opm && !opm.value) opm.value = e.opm||'';
+    if(full) full.textContent = e.nome ? '✓ '+e.nome : '';
+  } else if(full){ full.textContent=''; }
+}
+
+// Recalcula diárias (nº de dias corridos − 0,5) e o total estimado no rodapé.
+function dpRecalc(){
+  const ini=document.getElementById('dm-inicio').value, fim=document.getElementById('dm-fim').value;
+  const diasEl=document.getElementById('dm-diarias');
+  if(ini && fim){
+    const d1=new Date(ini+'T00:00:00'), d2=new Date(fim+'T00:00:00');
+    const corridos = Math.round((d2-d1)/86400000)+1;
+    const diariasAuto = corridos-0.5;
+    if(diariasAuto>0 && (!diasEl.value || diasEl.dataset.auto==='1')){ diasEl.value=diariasAuto; diasEl.dataset.auto='1'; }
+  }
+  const diarias = parseFloat(String(diasEl.value).replace(',','.'))||0;
+  const valor = parseFloat(String(document.getElementById('dm-valor').value).replace(',','.'))||0;
+  const nPol = document.querySelectorAll('#dm-pols .dm-pol').length;
+  const porPol = diarias*valor;
+  const total = porPol*nPol;
+  const el=document.getElementById('dm-calc');
+  if(el) el.innerHTML = `${diarias.toLocaleString('pt-BR')} diárias/policial × <b>${fR(valor)}</b> = <b>${fR(porPol)}</b> por policial • ${nPol} policial(is) = <b>${fR(total)}</b>`;
+}
+// marca as diárias como manuais se o usuário editar
+document.addEventListener('input', e=>{ if(e.target && e.target.id==='dm-diarias') e.target.dataset.auto='0'; });
+
+// Normaliza texto p/ comparar (maiúsculas, sem espaços extras).
+function dpNorm(s){ return String(s||'').trim().toUpperCase().replace(/\s+/g,' '); }
+// Conjuntos de lançamentos já existentes (por ID_MISSAO+ÓRGÃO+RE e por ID_MISSAO+ÓRGÃO).
+function dpExisting(){
+  const perRE=new Set(), missao=new Set();
+  (DP_DATA.policiais||[]).forEach(p=>{
+    (p.missoes||[]).forEach(m=>{
+      const mk=dpNorm(m.id_missao)+'||'+dpNorm(m.orgao);
+      missao.add(mk);
+      if(p.re) perRE.add(mk+'||'+dpNorm(p.re));
+    });
+  });
+  return { perRE, missao };
+}
+
+async function dpSalvar(){
+  const err=document.getElementById('dm-err'); err.textContent='';
+  const g=id=>document.getElementById(id).value.trim();
+  const operacao=g('dm-operacao');
+  const idMissao=g('dm-idmissao'), orgao=g('dm-orgao');
+  const diarias=parseFloat(String(g('dm-diarias')).replace(',','.'))||0;
+  const valor=parseFloat(String(g('dm-valor')).replace(',','.'))||0;
+  if(!operacao){ err.textContent='Informe o nome da missão / operação.'; return; }
+  if(!idMissao){ err.textContent='O ID da missão é obrigatório (usado para detectar escala já lançada).'; return; }
+  if(!orgao){ err.textContent='O órgão é obrigatório (usado para detectar escala já lançada).'; return; }
+  if(diarias<=0){ err.textContent='Informe as diárias (ou as datas de início/término).'; return; }
+  if(valor<=0){ err.textContent='Informe o valor da diária (selecione o tipo).'; return; }
+  const pols=[];
+  document.querySelectorAll('#dm-pols .dm-pol').forEach(div=>{
+    const i=div.id.replace('dm-pol-','');
+    const guerra=(document.getElementById('dm-nome-'+i)?.value||'').trim();
+    const re=(document.getElementById('dm-re-'+i)?.value||'').trim();
+    if(!guerra && !re) return;
+    pols.push({ re, guerra, posto_grad:(document.getElementById('dm-posto-'+i)?.value||'').trim(),
+      opm:(document.getElementById('dm-opm-'+i)?.value||'').trim() });
+  });
+  if(!pols.length){ err.textContent='Adicione ao menos um policial (com RE ou nome de guerra).'; return; }
+
+  // ⚠️ Aviso de escala já lançada (mesmo ID da missão + órgão).
+  if(!DP_DUP_OK){
+    const ex = dpExisting();
+    const mk = dpNorm(idMissao)+'||'+dpNorm(orgao);
+    const jaLancados = pols.filter(p=> p.re && ex.perRE.has(mk+'||'+dpNorm(p.re)));
+    if(ex.missao.has(mk) || jaLancados.length){
+      const nomes = jaLancados.slice(0,8).map(p=>p.guerra||('RE '+p.re)).join(', ');
+      err.innerHTML = `⚠️ <b>Escala possivelmente já lançada</b> — ID "<b>${dpEsc(idMissao)}</b>" / órgão "<b>${dpEsc(orgao)}</b>" já existe`
+        + (jaLancados.length?` para ${jaLancados.length} policial(is): ${dpEsc(nomes)}${jaLancados.length>8?'…':''}`:'')
+        + `. Confira se não é repetição. Para lançar assim mesmo, clique de novo em <b>Lançar mesmo assim</b>.`;
+      DP_DUP_OK = true;
+      const sb=document.getElementById('dm-save-btn'); sb.textContent='⚠️ Lançar mesmo assim'; sb.style.background='#f97316';
+      return;
+    }
+  }
+
+  const missao={ operacao, id_missao:idMissao, orgao, tipo_diaria:g('dm-tipo'),
+    municipio:g('dm-municipio'), data_inicio:g('dm-inicio'), data_fim:g('dm-fim'),
+    diarias, valor_diaria:valor, processo:g('dm-processo') };
+  const btn=document.getElementById('dm-save-btn'); const old=btn.textContent; btn.disabled=true; btn.textContent='Lançando…';
+  try{
+    const r=await apiPostJSON('/api/diaria/save', { op:'add', missao, policiais:pols });
+    dpCloseModal();
+    DP_LOADED=false; await initDiaria();
+    const st=document.getElementById('dp-status');
+    if(st) st.textContent = `✅ Missão lançada: ${r.inseridos} policial(is) registrado(s).`;
+  }catch(e){ err.textContent = (e&&e.message)?e.message:'Erro ao lançar missão.'; }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+async function dpDeleteMissao(ev, row, id){
+  ev.stopPropagation();
+  if(!dpCanEdit()) return;
+  if(!window.confirm('Excluir este lançamento de diária? Esta ação apaga a linha na planilha.')) return;
+  try{
+    await apiPostJSON('/api/diaria/save', { op:'delete', row, keyValue:id });
+    DP_LOADED=false; await initDiaria();
+  }catch(e){ alert((e&&e.message)?e.message:'Erro ao excluir.'); }
 }
 </script>
 </body>
