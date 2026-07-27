@@ -1484,6 +1484,20 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       .dp-kpi .dp-k-val{font-size:22px;font-weight:800;font-family:'Rajdhani',sans-serif;color:var(--fg,#e2e8f0);margin-top:3px;line-height:1.1}
       .dp-kpi .dp-k-val.money{color:#fbbf24}
       .dp-kpi .dp-k-sub{font-size:10.5px;color:var(--muted,#64748b);margin-top:2px}
+      /* Barra de filtro por comando (BPFRON / CRP / CPE) */
+      .dp-cmd{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:12px 14px;margin-bottom:16px}
+      .dp-cmd-lbl{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#94a3b8);margin-bottom:9px}
+      .dp-cmd-row{display:flex;flex-wrap:wrap;gap:8px}
+      .dp-cmd-row.sub{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border,#334155)}
+      .dp-cmd-row.sub.hide{display:none}
+      .dp-pill{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);color:var(--muted,#94a3b8);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+      .dp-pill:hover{border-color:var(--yellow,#f5c518);color:var(--yellow,#f5c518)}
+      .dp-pill.active{background:var(--yellow,#f5c518);color:#000;border-color:var(--yellow,#f5c518)}
+      .dp-pill.sm{padding:6px 13px;font-size:11.5px;font-weight:600}
+      .dp-pill .dp-b{background:rgba(148,163,184,.18);border-radius:999px;padding:1px 7px;font-size:10.5px;font-weight:800;font-family:'Rajdhani',sans-serif}
+      .dp-pill.active .dp-b{background:rgba(0,0,0,.18);color:#000}
+      .dp-cmd-info{font-size:11.5px;color:var(--muted,#94a3b8);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      .dp-cmd-info b{color:#fbbf24}
       .dp-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
       .dp-search{flex:1;min-width:220px;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:14px;font-family:inherit}
       .dp-select{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:13px;font-family:inherit}
@@ -1564,8 +1578,16 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </style>
     <div id="page-diaria" class="page-content">
       <div class="sec">💵 Diária por Policial — Custo Operacional</div>
-      <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — dados ao vivo da planilha <b>Base_Efetivo_BPFRON</b>. Clique num nome para ver todas as missões.</div>
+      <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — dados ao vivo da planilha <b>BASE DE DADOS - MISSÃO</b>. Filtre por comando (BPFRON / CRP / CPE) e clique num nome para ver todas as missões.</div>
       <div id="dp-status" class="dp-status">Carregando…</div>
+
+      <div class="dp-cmd">
+        <div class="dp-cmd-lbl">🏛️ Filtrar por comando / unidade</div>
+        <div class="dp-cmd-row" id="dp-cmd-main"></div>
+        <div class="dp-cmd-row sub hide" id="dp-cmd-sub"></div>
+        <div class="dp-cmd-row sub hide" id="dp-cmd-bat"></div>
+        <div class="dp-cmd-info" id="dp-cmd-info"></div>
+      </div>
 
       <div id="dp-kpis" class="dp-kpis"></div>
 
@@ -1624,10 +1646,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         <div class="dm-body">
           <div class="dm-sec">Dados da missão</div>
           <div class="dm-grid">
-            <div class="dm-fg wide"><label>Nome da missão / operação</label>
-              <input id="dm-operacao" list="dm-operacoes" placeholder="Ex.: OPERAÇÃO DOMINUS"><datalist id="dm-operacoes"></datalist>
+            <div class="dm-fg wide"><label>Nome da missão / operação <span style="color:#f87171">*</span></label>
+              <select id="dm-operacao" onchange="dpComposeId()"><option value="">— selecione —</option></select>
             </div>
-            <div class="dm-fg"><label>ID da missão <span style="color:#f87171">*</span></label><input id="dm-idmissao" placeholder="Ex.: 03ª SESDEC/2026"></div>
+            <div class="dm-fg"><label>Etapa</label><input id="dm-etapa" oninput="dpComposeId()" placeholder="Ex.: 16º ETAPA"></div>
+            <div class="dm-fg"><label>ID da missão <span style="font-weight:600;color:var(--muted,#94a3b8)">(automático)</span></label><input id="dm-idmissao" readonly placeholder="Etapa + operação" style="opacity:.85;cursor:not-allowed"></div>
             <div class="dm-fg"><label>Órgão <span style="color:#f87171">*</span></label><input id="dm-orgao" list="dm-orgaos" placeholder="Ex.: SESDEC, SEDAM, MJ"><datalist id="dm-orgaos"></datalist></div>
             <div class="dm-fg"><label>Tipo de diária</label>
               <select id="dm-tipo" onchange="dpOnTipo()"><option value="">— selecione —</option></select>
@@ -1636,7 +1659,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
             <div class="dm-fg"><label>Data término</label><input id="dm-fim" type="date" onchange="dpRecalc()"></div>
             <div class="dm-fg"><label>Diárias (nº)</label><input id="dm-diarias" type="number" step="0.5" min="0" oninput="dpRecalc()"></div>
             <div class="dm-fg"><label>Valor da diária (R$)</label><input id="dm-valor" type="number" step="0.01" min="0" oninput="dpRecalc()"></div>
-            <div class="dm-fg"><label>Município</label><input id="dm-municipio" list="dm-municipios" placeholder="Ex.: NOVA MAMORÉ"><datalist id="dm-municipios"></datalist></div>
+            <div class="dm-fg"><label>Município</label><select id="dm-municipio"><option value="">— selecione —</option></select></div>
             <div class="dm-fg"><label>Processo relacionado</label><input id="dm-processo" placeholder="NÃO / nº do processo"></div>
           </div>
 
@@ -4174,7 +4197,8 @@ function apiLogout(){
   ENV_LOADED = false; VEI_LOADED = false; ALL_ENV = []; ALL_VEI = [];
   GAR_LOADED = false; GAR_DATA = null; GAR_SEL = null; GAR_FIL = 'todas'; destroyC('gar-ranking'); destroyC('gar-km-mes');
   MAT_LOADED = false; MAT_DATA = null; MAT_GROUPS = []; MAT_GROUP_SEL = null; MAT_SUB_SEL = null; MAT_SEL = null; ['mat-sit','mat-comp','mat-estado'].forEach(destroyC);
-  DP_LOADED = false; DP_DATA = null; DP_SEL = null; DP_OPM_SEL = null; DP_DUP_OK = false; ['dp-top','dp-op'].forEach(destroyC);
+  DP_LOADED = false; DP_DATA = null; DP_SEL = null; DP_OPM_SEL = null; DP_DUP_OK = false;
+  DP_CMD_SEL = null; DP_SUB_SEL = null; DP_BAT_SEL = null; DP_VIEW = null; ['dp-top','dp-op'].forEach(destroyC);
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
   applyUserRestrictions();
@@ -5997,6 +6021,196 @@ function dpEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</
 // Chave estável de um policial (RE ou, na falta, nome em maiúsculas).
 function dpKey(p){ return p.re ? ('R:'+p.re) : ('N:'+(p.nome||'').toUpperCase()); }
 
+/* ── Filtro por COMANDO (BPFRON / CRP I-IV / CPE) ──
+   A planilha grava a OPM por lançamento (ex.: "1º BPM", "BPFRON", "BPTAR").
+   dpUnidade() normaliza a grafia (º vs °, typos) e dpClassOpm() diz a qual
+   comando aquela unidade pertence. */
+const DP_CRP = {
+  'CRP-I':   { sede:'Porto Velho', bats:['1º BPM','5º BPM','6º BPM','9º BPM'] },
+  'CRP-II':  { sede:'Ji-Paraná',   bats:['2º BPM','4º BPM','10º BPM','11º BPM'] },
+  'CRP-III': { sede:'Vilhena',     bats:['3º BPM'] },
+  'CRP-IV':  { sede:'Ariquemes',   bats:['7º BPM','8º BPM'] },
+};
+const DP_CPE_UNI = ['BOPE','BPCHOQUE','BPTAR','BPA','BPTRAN','BAVOP / NOA','BPFRON','CPE'];
+// unidade normalizada a partir do texto cru da coluna OPM
+function dpUnidade(raw){
+  let t = String(raw||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+  if(!t) return '';
+  const m = t.match(/(\d{1,2})\s*[º°oO]?\s*BPM/); // "4° BPM", "6º BPM/PATAMO"…
+  if(m) return m[1]+'º BPM';
+  if(/BPFRON/.test(t)) return 'BPFRON';
+  if(/BP\s*-?\s*C?HOQUE|BPCOQUE/.test(t)) return 'BPCHOQUE';
+  if(/BOPE/.test(t)) return 'BOPE';
+  if(/BPTAR/.test(t)) return 'BPTAR';
+  if(/BPTRAN/.test(t)) return 'BPTRAN';
+  if(/BAVOP|\bNOA\b/.test(t)) return 'BAVOP / NOA';
+  if(/^BPA\b|BPA-|BPAMB/.test(t)) return 'BPA';
+  const c = t.match(/\bCRP\s*([IVX]+)\b/); if(c) return 'CRP '+c[1];
+  if(/^CPE/.test(t)) return 'CPE';                          // CPE, CPEAI (agência de inteligência)
+  return t;
+}
+// { grupo:'BPFRON'|'CRP'|'CPE'|'OUTRAS', crp:'CRP-I'…, unid:'1º BPM' }
+function dpClassOpm(raw){
+  const u = dpUnidade(raw);
+  if(u === 'BPFRON') return { grupo:'BPFRON', crp:'', unid:'BPFRON' };
+  for(const k in DP_CRP) if(DP_CRP[k].bats.includes(u)) return { grupo:'CRP', crp:k, unid:u };
+  const c = u.match(/^CRP ([IVX]+)$/);
+  if(c){ const k = 'CRP-'+c[1]; if(DP_CRP[k]) return { grupo:'CRP', crp:k, unid:u }; }
+  if(DP_CPE_UNI.includes(u)) return { grupo:'CPE', crp:'', unid:u };
+  return { grupo:'OUTRAS', crp:'', unid:u || '—' };
+}
+// OPM do lançamento (cai pro cadastro do policial se a linha vier sem OPM)
+function dpMisClass(m, p){ return dpClassOpm((m && m.opm) || (p && p.opm) || ''); }
+
+let DP_CMD_SEL = null;   // 'BPFRON' | 'CRP' | 'CPE' | 'OUTRAS'
+let DP_SUB_SEL = null;   // CRP: 'CRP-I'… | CPE: 'BOPE'…
+let DP_BAT_SEL = null;   // batalhão dentro do CRP selecionado
+let DP_VIEW = null;      // recorte atual ({policiais, por_operacao, kpis})
+
+function dpMisMatch(cls){
+  if(!DP_CMD_SEL) return true;
+  if(DP_CMD_SEL === 'BPFRON') return cls.unid === 'BPFRON';
+  if(DP_CMD_SEL === 'CRP'){
+    if(cls.grupo !== 'CRP') return false;
+    if(DP_SUB_SEL && cls.crp !== DP_SUB_SEL) return false;
+    if(DP_BAT_SEL && cls.unid !== DP_BAT_SEL) return false;
+    return true;
+  }
+  if(DP_CMD_SEL === 'CPE'){
+    if(cls.grupo !== 'CPE') return false;
+    return !DP_SUB_SEL || cls.unid === DP_SUB_SEL;
+  }
+  return cls.grupo === 'OUTRAS';
+}
+
+// Recalcula policiais/operações/KPIs só com as missões do comando selecionado.
+function dpBuildView(){
+  if(!DP_DATA){ DP_VIEW = null; return; }
+  if(!DP_CMD_SEL){
+    DP_VIEW = { policiais: DP_DATA.policiais||[], por_operacao: DP_DATA.por_operacao||[], kpis: DP_DATA.kpis||{} };
+    return;
+  }
+  const pols = [], opMap = {};
+  let lanc = 0;
+  (DP_DATA.policiais||[]).forEach(p=>{
+    const ms = (p.missoes||[]).filter(m=>dpMisMatch(dpMisClass(m,p)));
+    if(!ms.length) return;
+    const valor = ms.reduce((a,m)=>a+(m.valor_total||0),0);
+    const dias  = ms.reduce((a,m)=>a+(m.diarias||0),0);
+    lanc += ms.length;
+    pols.push(Object.assign({}, p, { missoes:ms, qtd_missoes:ms.length, total_diarias:dias, valor_total:valor }));
+    ms.forEach(m=>{
+      const op = m.operacao || 'Sem operação';
+      const o = opMap[op] = opMap[op] || { operacao:op, lancamentos:0, valor_total:0, diarias:0, _pol:new Set() };
+      o.lancamentos++; o.valor_total += m.valor_total||0; o.diarias += m.diarias||0;
+      o._pol.add(p.re || p.nome);
+    });
+  });
+  pols.sort((a,b)=>b.valor_total-a.valor_total);
+  const por_operacao = Object.values(opMap).map(o=>({
+    operacao:o.operacao, lancamentos:o.lancamentos, valor_total:o.valor_total, diarias:o.diarias, policiais:o._pol.size
+  })).sort((a,b)=>b.valor_total-a.valor_total);
+  const total_pago = pols.reduce((a,p)=>a+p.valor_total,0);
+  DP_VIEW = { policiais:pols, por_operacao, kpis:{
+    total_pago, total_diarias: pols.reduce((a,p)=>a+p.total_diarias,0),
+    total_lancamentos: lanc, total_policiais: pols.length,
+    media_por_policial: pols.length ? total_pago/pols.length : 0,
+    operacao_top: por_operacao[0] ? por_operacao[0].operacao : '',
+  } };
+}
+function dpV(){ if(!DP_VIEW) dpBuildView(); return DP_VIEW || { policiais:[], por_operacao:[], kpis:{} }; }
+
+// Totais por grupo/unidade (pra badge de contagem nas pílulas) — sempre da base cheia.
+function dpCmdStats(){
+  const g = { BPFRON:{v:0,l:0}, CRP:{v:0,l:0}, CPE:{v:0,l:0}, OUTRAS:{v:0,l:0} };
+  const crp = {}, uni = {};
+  (DP_DATA.policiais||[]).forEach(p=>{
+    (p.missoes||[]).forEach(m=>{
+      const c = dpMisClass(m,p), val = m.valor_total||0;
+      g[c.grupo].v += val; g[c.grupo].l++;
+      if(c.crp){ const x = crp[c.crp] = crp[c.crp]||{v:0,l:0}; x.v+=val; x.l++; }
+      const u = uni[c.unid] = uni[c.unid]||{v:0,l:0,grupo:c.grupo,crp:c.crp}; u.v+=val; u.l++;
+    });
+  });
+  return { g, crp, uni };
+}
+
+function dpRenderCmdBar(){
+  const main = document.getElementById('dp-cmd-main'); if(!main || !DP_DATA) return;
+  const st = dpCmdStats();
+  const pill = (id,txt,on,extra)=>`<button class="dp-pill${on?' active':''}${extra||''}" onclick="${id}">${txt}</button>`;
+  const badge = x => x && x.l ? `<span class="dp-b">${fR(x.v)}</span>` : '<span class="dp-b">R$ 0</span>';
+  main.innerHTML =
+    pill(`dpSelectCmd(null)`, '📌 Todos', !DP_CMD_SEL) +
+    pill(`dpSelectCmd('BPFRON')`, '🛡️ BPFRON '+badge(st.g.BPFRON), DP_CMD_SEL==='BPFRON') +
+    pill(`dpSelectCmd('CRP')`,    '🚔 CRP (I a IV) '+badge(st.g.CRP),  DP_CMD_SEL==='CRP') +
+    pill(`dpSelectCmd('CPE')`,    '⭐ CPE '+badge(st.g.CPE),           DP_CMD_SEL==='CPE') +
+    (st.g.OUTRAS.l ? pill(`dpSelectCmd('OUTRAS')`, '🏛️ Outras OPMs '+badge(st.g.OUTRAS), DP_CMD_SEL==='OUTRAS') : '');
+
+  const sub = document.getElementById('dp-cmd-sub');
+  const bat = document.getElementById('dp-cmd-bat');
+  sub.className = 'dp-cmd-row sub hide'; bat.className = 'dp-cmd-row sub hide';
+  sub.innerHTML = ''; bat.innerHTML = '';
+
+  if(DP_CMD_SEL === 'CRP'){
+    sub.className = 'dp-cmd-row sub';
+    sub.innerHTML = pill(`dpSelectSub(null)`, 'Todos os CRPs', !DP_SUB_SEL, ' sm') +
+      Object.keys(DP_CRP).map(k=>pill(`dpSelectSub('${k}')`,
+        `${k} <small style="opacity:.7;font-weight:600">${DP_CRP[k].sede}</small> ${badge(st.crp[k])}`,
+        DP_SUB_SEL===k, ' sm')).join('');
+    if(DP_SUB_SEL){
+      bat.className = 'dp-cmd-row sub';
+      bat.innerHTML = pill(`dpSelectBat(null)`, 'Todos os batalhões', !DP_BAT_SEL, ' sm') +
+        DP_CRP[DP_SUB_SEL].bats.map(b=>pill(`dpSelectBat('${b}')`, `${b} ${badge(st.uni[b])}`, DP_BAT_SEL===b, ' sm')).join('');
+    }
+  } else if(DP_CMD_SEL === 'CPE'){
+    sub.className = 'dp-cmd-row sub';
+    // BPFRON também é do CPE, mas tem botão próprio (senão o total apareceria 2x).
+    sub.innerHTML = pill(`dpSelectSub(null)`, 'Todo o CPE', !DP_SUB_SEL, ' sm') +
+      DP_CPE_UNI.filter(u=>u!=='BPFRON' && st.uni[u]).map(u=>pill(`dpSelectSub('${u}')`, `${u} ${badge(st.uni[u])}`, DP_SUB_SEL===u, ' sm')).join('') +
+      pill(`dpSelectCmd('BPFRON')`, `🛡️ BPFRON ${badge(st.g.BPFRON)}`, false, ' sm');
+  }
+
+  const info = document.getElementById('dp-cmd-info');
+  if(info){
+    const v = dpV();
+    let alvo = 'Todos os comandos';
+    if(DP_CMD_SEL === 'BPFRON') alvo = 'BPFRON (Batalhão de Polícia de Fronteira — CPE)';
+    else if(DP_CMD_SEL === 'CRP') alvo = DP_BAT_SEL ? `${DP_BAT_SEL} (${DP_SUB_SEL})`
+      : DP_SUB_SEL ? `${DP_SUB_SEL} — ${DP_CRP[DP_SUB_SEL].sede} · ${DP_CRP[DP_SUB_SEL].bats.join(', ')}`
+      : 'CRP I a IV (todos os BPMs)';
+    else if(DP_CMD_SEL === 'CPE') alvo = DP_SUB_SEL ? DP_SUB_SEL
+      : 'CPE — '+DP_CPE_UNI.filter(u=>u!=='BPFRON' && st.uni[u]).join(', ')+' (BPFRON contado à parte)';
+    else if(DP_CMD_SEL === 'OUTRAS') alvo = 'OPMs fora de CRP/CPE (CP, CPO, CIPM, CIPO, Ajudância, QCG…)';
+    info.innerHTML = `<span>📍 <b>${dpEsc(alvo)}</b></span><span>•</span>`
+      + `<span>${(v.policiais||[]).length} policiais</span><span>•</span>`
+      + `<span>${(v.kpis.total_lancamentos||0)} lançamentos</span><span>•</span>`
+      + `<span><b>${fR(v.kpis.total_pago||0)}</b></span>`;
+  }
+}
+
+function dpApplyCmd(){
+  dpBuildView();
+  // seleções de detalhe podem não existir mais no recorte
+  if(DP_SEL && !dpFindPol(DP_SEL)) DP_SEL = null;
+  dpRenderCmdBar();
+  dpRenderKPIs();
+  dpFillOpFilter();
+  dpRenderRanking();
+  dpRenderDetail();
+  dpCharts();
+  dpRenderOpCards();
+  dpRenderOpmRank();
+  dpRenderOpmDetail();
+}
+function dpSelectCmd(cmd){
+  DP_CMD_SEL = (DP_CMD_SEL===cmd) ? null : cmd;
+  DP_SUB_SEL = null; DP_BAT_SEL = null; DP_OPM_SEL = null;
+  dpApplyCmd();
+}
+function dpSelectSub(sub){ DP_SUB_SEL = (DP_SUB_SEL===sub)?null:sub; DP_BAT_SEL = null; DP_OPM_SEL = null; dpApplyCmd(); }
+function dpSelectBat(b){ DP_BAT_SEL = (DP_BAT_SEL===b)?null:b; DP_OPM_SEL = null; dpApplyCmd(); }
+
 async function initDiaria(){
   if (!AUTH.logged) return; // showPage já bloqueou (gate de Gestão)
   const status = document.getElementById('dp-status');
@@ -6020,6 +6234,8 @@ function dpRenderAll(){
     const q = DP_DATA.atualizado_em ? new Date(DP_DATA.atualizado_em*1000).toLocaleString('pt-BR') : '';
     status.textContent = `${(DP_DATA.policiais||[]).length} policiais • ${(DP_DATA.kpis&&DP_DATA.kpis.total_lancamentos)||0} lançamentos${q?' • atualizado '+q:''}`;
   }
+  dpBuildView();
+  dpRenderCmdBar();
   dpRenderKPIs();
   dpFillOpFilter();
   dpRenderAddBtn();
@@ -6033,20 +6249,21 @@ function dpRenderAll(){
 }
 
 function dpRenderKPIs(){
-  const k = DP_DATA.kpis || {};
+  const V = dpV();
+  const k = V.kpis || {};
   const box = document.getElementById('dp-kpis'); if(!box) return;
   const card = (lbl,val,sub,money)=>`<div class="dp-kpi"><div class="dp-k-lbl">${lbl}</div><div class="dp-k-val${money?' money':''}">${val}</div>${sub?`<div class="dp-k-sub">${sub}</div>`:''}</div>`;
   box.innerHTML =
     card('Total pago em diárias', fR(k.total_pago||0), (k.total_diarias||0).toLocaleString('pt-BR')+' diárias', true) +
     card('Policiais beneficiados', fN(k.total_policiais||0), (k.total_lancamentos||0)+' lançamentos') +
     card('Média por policial', fR(k.media_por_policial||0), 'valor médio recebido', true) +
-    card('Operação de maior custo', dpEsc(k.operacao_top||'—'), (DP_DATA.por_operacao&&DP_DATA.por_operacao[0])?fR(DP_DATA.por_operacao[0].valor_total):'');
+    card('Operação de maior custo', dpEsc(k.operacao_top||'—'), (V.por_operacao&&V.por_operacao[0])?fR(V.por_operacao[0].valor_total):'');
 }
 
 function dpFillOpFilter(){
   const sel = document.getElementById('dp-f-op'); if(!sel) return;
   const cur = sel.value;
-  const ops = (DP_DATA.por_operacao||[]).map(o=>o.operacao);
+  const ops = (dpV().por_operacao||[]).map(o=>o.operacao);
   sel.innerHTML = '<option value="">Todas as operações</option>' + ops.map(o=>`<option value="${dpEsc(o)}">${dpEsc(o)}</option>`).join('');
   if (ops.includes(cur)) sel.value = cur;
 }
@@ -6068,12 +6285,12 @@ function dpCanEdit(){
 function dpRankingData(){
   const busca = (document.getElementById('dp-busca')?.value||'').trim().toLowerCase();
   const op = document.getElementById('dp-f-op')?.value||'';
-  let lista = (DP_DATA.policiais||[]).map(p=>{
+  let lista = (dpV().policiais||[]).map(p=>{
     let valor = p.valor_total, diarias = p.total_diarias, missoes = p.qtd_missoes;
     if (op){
       const subset = p.missoes.filter(m=>m.operacao===op);
       valor = subset.reduce((a,m)=>a+m.valor_total,0);
-      diarias = subset.reduce((a,m)=>a+m.qtd_diarias,0);
+      diarias = subset.reduce((a,m)=>a+(m.diarias||0),0);
       missoes = subset.length;
     }
     return { p, valor, diarias, missoes };
@@ -6113,7 +6330,7 @@ function dpSelectPol(key){
   dpRenderDetail();
 }
 
-function dpFindPol(key){ return (DP_DATA.policiais||[]).find(p=>dpKey(p)===key) || null; }
+function dpFindPol(key){ return (dpV().policiais||[]).find(p=>dpKey(p)===key) || null; }
 
 function dpRenderDetail(){
   const box = document.getElementById('dp-detail');
@@ -6161,7 +6378,7 @@ function dpRenderDetail(){
 
 function dpCharts(){
   destroyC('dp-top'); destroyC('dp-op');
-  const top = (DP_DATA.policiais||[]).slice(0,12);
+  const top = (dpV().policiais||[]).slice(0,12);
   const elTop = document.getElementById('c-dp-top');
   if (elTop && top.length){
     CHARTS['dp-top'] = new Chart(elTop, {
@@ -6173,7 +6390,7 @@ function dpCharts(){
         scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9},callback:v=>'R$ '+(v/1000)+'k'}}, y:{grid:{display:false},ticks:{color:'#cbd5e1',font:{size:10.5}}} } }
     });
   }
-  const ops = (DP_DATA.por_operacao||[]).slice(0,8);
+  const ops = (dpV().por_operacao||[]).slice(0,8);
   const elOp = document.getElementById('c-dp-op');
   if (elOp && ops.length){
     const PALD = ['#f59e0b','#3b82f6','#10b981','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
@@ -6190,7 +6407,7 @@ function dpCharts(){
 /* ── Ranking de Operações (cards) ── */
 function dpRenderOpCards(){
   const box = document.getElementById('dp-op-cards'); if(!box) return;
-  const ops = (DP_DATA.por_operacao||[]);
+  const ops = (dpV().por_operacao||[]);
   const cnt = document.getElementById('dp-op-count'); if(cnt) cnt.textContent = `(${ops.length})`;
   if(!ops.length){ box.innerHTML='<div class="dp-empty">Sem operações.</div>'; return; }
   box.innerHTML = ops.map((o,i)=>`
@@ -6205,7 +6422,7 @@ function dpRenderOpCards(){
 /* ── Ranking de OPMs (agregado das missões; clicável) ── */
 function dpOpmAgg(){
   const m = {};
-  (DP_DATA.policiais||[]).forEach(p=>{
+  (dpV().policiais||[]).forEach(p=>{
     (p.missoes||[]).forEach(mi=>{
       const opm = (mi.opm||'').trim() || '—';
       const o = m[opm] = m[opm] || { opm, valor:0, diarias:0, lancamentos:0, res:new Set() };
@@ -6251,7 +6468,7 @@ function dpRenderOpmDetail(){
   if(ttl) ttl.textContent = '🏢 ' + DP_OPM_SEL;
   // Policiais que mais receberam nessa OPM (soma das missões cuja OPM == selecionada).
   const arr = [];
-  (DP_DATA.policiais||[]).forEach(p=>{
+  (dpV().policiais||[]).forEach(p=>{
     const sub = (p.missoes||[]).filter(m=>((m.opm||'').trim()||'—')===DP_OPM_SEL);
     if(!sub.length) return;
     arr.push({ nome:p.nome, posto_grad:p.posto_grad, re:p.re,
@@ -6281,13 +6498,18 @@ function dpOpenModal(){
   const tab = DP_DATA.tabela_diarias||[];
   document.getElementById('dm-tipo').innerHTML = '<option value="">— selecione —</option>'
     + tab.map(t=>`<option value="${dpEsc(t.tipo_diaria)}" data-valor="${t.valor_diaria}">${dpEsc(t.tipo_diaria)} — ${fR(t.valor_diaria)}</option>`).join('');
-  // datalists de sugestão
-  document.getElementById('dm-operacoes').innerHTML = opts(L.operacoes);
+  // Operação: lista TRAVADA (fonte oficial = aba OPERACOES; cai p/ nomes já usados)
+  const selOpt = (v,txt)=>`<option value="${dpEsc(v)}">${dpEsc(txt==null?v:txt)}</option>`;
+  document.getElementById('dm-operacao').innerHTML = '<option value="">— selecione —</option>'
+    + (L.operacoes||[]).map(v=>selOpt(v)).join('');
+  // Município: lista TRAVADA nos 52 municípios de RO (dicionário MUN_RO)
+  document.getElementById('dm-municipio').innerHTML = '<option value="">— selecione —</option>'
+    + MUN_RO.map(v=>selOpt(v.toUpperCase(), v)).join('');
+  // Órgão continua com sugestão (não travado)
   document.getElementById('dm-orgaos').innerHTML   = opts(L.orgaos);
-  document.getElementById('dm-municipios').innerHTML = opts(L.municipios);
   document.getElementById('dm-efetivo').innerHTML = (DP_DATA.efetivo||[]).map(e=>`<option value="${dpEsc(e.re)}">${dpEsc(e.posto_grad)} ${dpEsc(e.guerra||e.nome)}</option>`).join('');
   // limpa campos
-  ['dm-operacao','dm-idmissao','dm-orgao','dm-inicio','dm-fim','dm-diarias','dm-valor','dm-municipio','dm-processo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['dm-operacao','dm-etapa','dm-idmissao','dm-orgao','dm-inicio','dm-fim','dm-diarias','dm-valor','dm-municipio','dm-processo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('dm-tipo').value='';
   document.getElementById('dm-processo').value='NÃO';
   document.getElementById('dm-err').textContent='';
@@ -6301,6 +6523,13 @@ function dpOpenModal(){
   m.classList.add('open');
 }
 function dpCloseModal(){ const m=document.getElementById('dp-modal'); if(m) m.classList.remove('open'); }
+// ID_MISSAO = Etapa + Operação (mesma célula na planilha, mas a operação fica travada).
+function dpComposeId(){
+  const op=(document.getElementById('dm-operacao')?.value||'').trim();
+  const et=(document.getElementById('dm-etapa')?.value||'').trim();
+  const el=document.getElementById('dm-idmissao');
+  if(el) el.value = (et?et+' ':'')+op;
+}
 
 /* ── Importar escala (planilha PM_EM_CAMPO_BCCO) ── */
 async function dpEscalaToggle(){
@@ -6421,12 +6650,13 @@ function dpExisting(){
 async function dpSalvar(){
   const err=document.getElementById('dm-err'); err.textContent='';
   const g=id=>document.getElementById(id).value.trim();
-  const operacao=g('dm-operacao');
+  const operacao=g('dm-operacao'), etapa=g('dm-etapa');
+  dpComposeId(); // garante ID = Etapa + Operação
   const idMissao=g('dm-idmissao'), orgao=g('dm-orgao');
   const diarias=parseFloat(String(g('dm-diarias')).replace(',','.'))||0;
   const valor=parseFloat(String(g('dm-valor')).replace(',','.'))||0;
-  if(!operacao){ err.textContent='Informe o nome da missão / operação.'; return; }
-  if(!idMissao){ err.textContent='O ID da missão é obrigatório (usado para detectar escala já lançada).'; return; }
+  if(!operacao){ err.textContent='Selecione a operação na lista.'; return; }
+  if(!idMissao){ err.textContent='O ID da missão é obrigatório (gerado a partir de Etapa + Operação).'; return; }
   if(!orgao){ err.textContent='O órgão é obrigatório (usado para detectar escala já lançada).'; return; }
   if(diarias<=0){ err.textContent='Informe as diárias (ou as datas de início/término).'; return; }
   if(valor<=0){ err.textContent='Informe o valor da diária (selecione o tipo).'; return; }
