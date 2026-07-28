@@ -1567,9 +1567,24 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #dp-modal input,#dp-modal select{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:8px;padding:8px 10px;color:var(--fg,#e2e8f0);font-size:13.5px;font-family:inherit;width:100%}
       #dp-modal .dm-pols{margin-top:8px}
       #dp-modal .dm-pol{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
-      #dp-modal .dm-pol-grid{display:grid;grid-template-columns:110px 1fr 1fr 90px 90px;gap:8px 10px}
-      @media(max-width:760px){#dp-modal .dm-pol-grid{grid-template-columns:1fr 1fr}}
+      /* RE · guerra · posto/grad · OPM (batalhão) · LOCALIDADE (col. G da escala) */
+      #dp-modal .dm-pol-grid{display:grid;grid-template-columns:100px 1fr 120px 110px 1fr;gap:8px 10px;padding-right:34px}
+      @media(max-width:760px){#dp-modal .dm-pol-grid{grid-template-columns:1fr 1fr;padding-right:0}}
       #dp-modal .dm-pol .dm-rm{position:absolute;top:8px;right:8px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.4);color:#fca5a5;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+      /* rodapé da linha: nome completo + botão de corrigir o cadastro (aba POLICIAIS) */
+      #dp-modal .dm-pol-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+      #dp-modal .dm-pol-full{font-size:11px;color:#94a3b8;line-height:1.3;flex:1;min-width:120px}
+      #dp-modal .dm-cad-btn{background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.38);color:#fbbf24;border-radius:7px;font-size:11px;font-weight:700;padding:3px 9px;cursor:pointer;font-family:inherit}
+      #dp-modal .dm-cad-btn:hover{background:rgba(245,197,24,.22)}
+      #dp-modal .dm-cad-st{font-size:11px}
+      #dp-modal .dm-cad-box{margin-top:8px;border:1px dashed rgba(245,197,24,.4);border-radius:9px;padding:10px 12px;background:rgba(245,197,24,.05)}
+      #dp-modal .dm-cad-box .dm-cad-ttl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:#fbbf24;margin-bottom:8px}
+      #dp-modal .dm-cad-grid{display:grid;grid-template-columns:100px 1fr 120px 110px;gap:8px 10px}
+      @media(max-width:760px){#dp-modal .dm-cad-grid{grid-template-columns:1fr 1fr}}
+      #dp-modal .dm-cad-acoes{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+      #dp-modal .dm-cad-ok{background:#f59e0b;border:none;color:#111;border-radius:7px;font-size:12px;font-weight:800;padding:6px 13px;cursor:pointer;font-family:inherit}
+      #dp-modal .dm-cad-cancel{background:transparent;border:1px solid var(--border,#334155);color:#cbd5e1;border-radius:7px;font-size:12px;font-weight:700;padding:6px 13px;cursor:pointer;font-family:inherit}
+      #dp-modal .dm-cad-hint{font-size:10.5px;color:#94a3b8;flex-basis:100%;line-height:1.45}
       #dp-modal .dm-addpol{background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.4);color:#93c5fd;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
       #dp-modal .dm-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--border,#334155);flex-wrap:wrap}
       #dp-modal .dm-calc{font-size:12px;color:var(--muted,#94a3b8);flex:1;min-width:160px}
@@ -1662,13 +1677,19 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
             <div class="dm-fg"><label>Data término</label><input id="dm-fim" type="date" onchange="dpRecalc()"></div>
             <div class="dm-fg"><label>Diárias (nº)</label><input id="dm-diarias" type="number" step="0.5" min="0" oninput="dpRecalc()"></div>
             <div class="dm-fg"><label>Valor da diária (R$)</label><input id="dm-valor" type="number" step="0.01" min="0" oninput="dpRecalc()"></div>
-            <div class="dm-fg"><label>Município</label><select id="dm-municipio"><option value="">— selecione —</option></select></div>
+            <div class="dm-fg"><label>📍 Localidade padrão</label><input id="dm-municipio" list="dm-municipios" placeholder="Guarnição toda no mesmo lugar" onchange="dpLocalPadrao()" title="Preenche a localidade dos policiais que estiverem sem uma. Útil quando é uma guarnição só, lançada à mão."></div>
             <div class="dm-fg"><label>Processo relacionado</label><input id="dm-processo" placeholder="NÃO / nº do processo"></div>
           </div>
 
           <div class="dm-sec" style="margin-top:14px">Policiais na missão <span id="dm-pol-count" style="color:var(--muted,#94a3b8);font-weight:600"></span></div>
+          <div style="font-size:11.5px;color:var(--muted,#94a3b8);margin-bottom:8px;line-height:1.5">
+            📍 A <b>localidade</b> é de cada policial (vem da <b>coluna G</b> da escala) e é o que vai na coluna MUNICÍPIO da planilha.
+            Se a guarnição toda estiver no mesmo lugar, preencha a <b>Localidade padrão</b> lá em cima — ela cai nos policiais que estiverem sem uma.
+            Use <b>✏️ Cadastro</b> para corrigir RE, graduação, nome ou batalhão — a correção grava <b>só na aba POLICIAIS</b>.
+          </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
             <button class="dm-addpol" style="background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.4);color:#6ee7b7" onclick="dpEscalaToggle()">📋 Importar escala</button>
+            <button class="dm-addpol" style="background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.35);color:#cbd5e1" onclick="dpLocalAll()" title="Copia a localidade do 1º policial para todos os outros">📍 Replicar localidade do 1º</button>
             <span id="dm-escala-status" style="font-size:12px;color:var(--muted,#94a3b8)"></span>
           </div>
           <div id="dm-escala-box" style="display:none;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;margin-bottom:8px">
@@ -1678,6 +1699,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div id="dm-pols" class="dm-pols"></div>
           <button class="dm-addpol" onclick="dpAddPolRow()">➕ Adicionar policial</button>
           <datalist id="dm-efetivo"></datalist>
+          <datalist id="dm-municipios"></datalist>
         </div>
         <div class="dm-foot">
           <span id="dm-calc" class="dm-calc"></span>
@@ -6726,9 +6748,11 @@ function dpOpenModal(){
   const selOpt = (v,txt)=>`<option value="${dpEsc(v)}">${dpEsc(txt==null?v:txt)}</option>`;
   document.getElementById('dm-operacao').innerHTML = '<option value="">— selecione —</option>'
     + (L.operacoes||[]).map(v=>selOpt(v)).join('');
-  // Município: lista TRAVADA nos 52 municípios de RO (dicionário MUN_RO)
-  document.getElementById('dm-municipio').innerHTML = '<option value="">— selecione —</option>'
-    + MUN_RO.map(v=>selOpt(v.toUpperCase(), v)).join('');
+  // Localidade (por policial): sugestões = 52 municípios de RO + localidades já usadas
+  // na base (a escala traz coisas como "ITINERANTE"/"NOVA MUTUM", então NÃO é travado).
+  const locs = [...new Set([...MUN_RO.map(v=>v.toUpperCase()), ...((L.municipios)||[]).map(v=>String(v).toUpperCase())])]
+    .sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('dm-municipios').innerHTML = locs.map(v=>`<option value="${dpEsc(v)}">`).join('');
   // Órgão continua com sugestão (não travado)
   document.getElementById('dm-orgaos').innerHTML   = opts(L.orgaos);
   document.getElementById('dm-efetivo').innerHTML = (DP_DATA.efetivo||[]).map(e=>`<option value="${dpEsc(e.re)}">${dpEsc(e.posto_grad)} ${dpEsc(e.guerra||e.nome)}</option>`).join('');
@@ -6737,7 +6761,7 @@ function dpOpenModal(){
   document.getElementById('dm-tipo').value='';
   document.getElementById('dm-processo').value='NÃO';
   document.getElementById('dm-err').textContent='';
-  DP_POL_SEQ = 0; DP_DUP_OK = false;
+  DP_POL_SEQ = 0; DP_DUP_OK = false; DP_POL_PREFILL = {};
   document.getElementById('dm-pols').innerHTML='';
   document.getElementById('dm-escala-box').style.display='none';
   document.getElementById('dm-escala-status').textContent='';
@@ -6777,11 +6801,16 @@ async function dpImportEscala(tab){
     const pols = d.policiais||[];
     if(!pols.length){ st.textContent='Nenhum policial encontrado nessa aba.'; return; }
     // Substitui a lista de policiais pelos importados
-    DP_POL_SEQ = 0;
+    DP_POL_SEQ = 0; DP_POL_PREFILL = {};
     document.getElementById('dm-pols').innerHTML='';
     pols.forEach(p=>dpAddPolRow(p));
     const semCad = pols.filter(p=>!p.no_cadastro).length;
-    st.innerHTML = `✅ ${pols.length} policiais importados de <b>${dpEsc(tab)}</b>` + (semCad?` <span style="color:#fbbf24">(${semCad} não encontrados no cadastro)</span>`:'');
+    const semLoc = pols.filter(p=>!(p.localidade||'').trim()).length;
+    const diverg = pols.filter(p=>p.divergente).length;
+    st.innerHTML = `✅ ${pols.length} policiais importados de <b>${dpEsc(tab)}</b>`
+      + (diverg?` <span style="color:#f87171">(${diverg} com RE de outra pessoa no cadastro — confira ✏️ Cadastro)</span>`:'')
+      + (semCad?` <span style="color:#fbbf24">(${semCad} não encontrados no cadastro — use ✏️ Cadastro)</span>`:'')
+      + (semLoc?` <span style="color:#fbbf24">(${semLoc} sem localidade na coluna G)</span>`:'');
     document.getElementById('dm-escala-box').style.display='none';
     dpRecalc();
   }catch(e){ st.textContent = (e&&e.message)||'Erro ao importar escala.'; }
@@ -6796,6 +6825,7 @@ function dpOnTipo(){
 }
 
 let DP_POL_SEQ = 0;
+let DP_POL_PREFILL = {};   // linha -> policial como veio da escala (p/ o painel ✏️ Cadastro)
 function dpAddPolRow(prefill){
   const wrap = document.getElementById('dm-pols');
   const i = DP_POL_SEQ++;
@@ -6808,17 +6838,137 @@ function dpAddPolRow(prefill){
       <div class="dm-fg"><label>Policial (guerra)</label><input id="dm-nome-${i}" placeholder="Ex.: FREIRE"></div>
       <div class="dm-fg"><label>Posto/Grad</label><input id="dm-posto-${i}" placeholder="Ex.: 3º SGT QPPM"></div>
       <div class="dm-fg"><label>OPM</label><input id="dm-opm-${i}" placeholder="Ex.: BPFRON"></div>
-      <div class="dm-fg" style="display:flex;align-items:flex-end"><span id="dm-full-${i}" style="font-size:11px;color:#94a3b8;line-height:1.3"></span></div>
-    </div>`;
+      <div class="dm-fg"><label>📍 Localidade</label><input list="dm-municipios" id="dm-loc-${i}" placeholder="Coluna G da escala"></div>
+    </div>
+    <div class="dm-pol-foot">
+      <span class="dm-pol-full" id="dm-full-${i}"></span>
+      <button class="dm-cad-btn" onclick="dpCadToggle(${i})" title="Corrigir o cadastro deste policial (grava só na aba POLICIAIS)">✏️ Cadastro</button>
+      <span class="dm-cad-st" id="dm-cad-st-${i}"></span>
+    </div>
+    <div class="dm-cad-box" id="dm-cad-${i}" style="display:none"></div>`;
   wrap.appendChild(div);
+  DP_POL_PREFILL[i] = (prefill && typeof prefill==='object') ? prefill : null;
+  // linha nova sem localidade herda a "Localidade padrão" da missão (lançamento manual)
+  const padrao=(document.getElementById('dm-municipio')?.value||'').trim();
+  if(padrao && !(prefill && (prefill.localidade||prefill.municipio))){
+    const el=document.getElementById('dm-loc-'+i); if(el) el.value=padrao;
+  }
   if(prefill && typeof prefill==='object'){
     const set=(id,v)=>{const e=document.getElementById(id); if(e&&v!=null) e.value=v;};
     set('dm-re-'+i, prefill.re); set('dm-nome-'+i, prefill.guerra); set('dm-posto-'+i, prefill.posto_grad); set('dm-opm-'+i, prefill.opm);
-    const full=document.getElementById('dm-full-'+i); if(full && prefill.nome) full.textContent='✓ '+prefill.nome;
+    set('dm-loc-'+i, prefill.localidade || prefill.municipio);
+    const full=document.getElementById('dm-full-'+i);
+    if(full){
+      if(prefill.divergente){
+        // o RE da escala está cadastrado para OUTRA pessoa — quase sempre RE digitado errado
+        full.innerHTML = `<span style="color:#f87171;font-weight:700">⚠️ RE ${dpEsc(prefill.re)} está cadastrado como ${dpEsc(prefill.nome_cadastro||'outra pessoa')}</span>`
+          + ` — a escala diz <b>${dpEsc(prefill.nome_escala||'')}</b>. Confira o RE em ✏️ Cadastro.`;
+        div.style.borderColor='rgba(248,113,113,.55)';
+      } else if(prefill.no_cadastro===false){
+        full.innerHTML = `<span style="color:#fbbf24">⚠️ fora do cadastro:</span> ${dpEsc(prefill.nome||'')} — use ✏️ Cadastro para incluir`;
+        div.style.borderColor='rgba(245,197,24,.45)';
+      } else {
+        full.innerHTML = prefill.nome ? '✓ '+dpEsc(prefill.nome) : '';
+      }
+    }
   }
   dpPolCount();
 }
-function dpRemovePolRow(i){ const el=document.getElementById('dm-pol-'+i); if(el) el.remove(); dpPolCount(); dpRecalc(); }
+
+// Localidade padrão da missão (campo do topo) — atalho pra quando é UMA guarnição só,
+// lançada à mão sem importar escala. Só preenche quem está sem localidade; quem veio da
+// coluna G da escala (ou foi digitado na linha) é preservado.
+function dpLocalPadrao(){
+  const pad=(document.getElementById('dm-municipio')?.value||'').trim();
+  if(!pad) return;
+  const vazios=[...document.querySelectorAll('#dm-pols .dm-pol input[id^="dm-loc-"]')].filter(e=>!e.value.trim());
+  vazios.forEach(e=>{ e.value=pad; });
+  const st=document.getElementById('dm-escala-status');
+  if(st) st.innerHTML = vazios.length
+    ? `📍 Localidade <b>${dpEsc(pad)}</b> aplicada a ${vazios.length} policial(is) sem localidade.`
+    : `📍 Localidade padrão <b>${dpEsc(pad)}</b> — todos os policiais já tinham a sua (use “Replicar localidade do 1º” para sobrescrever).`;
+}
+
+// Copia a localidade do 1º policial para todos os outros (útil quando a escala inteira
+// está no mesmo lugar ou quando o lançamento é digitado à mão).
+function dpLocalAll(){
+  const inputs=[...document.querySelectorAll('#dm-pols .dm-pol input[id^="dm-loc-"]')];
+  if(inputs.length<2) return;
+  const v=(inputs[0].value||'').trim();
+  if(!v){ const st=document.getElementById('dm-escala-status'); if(st) st.textContent='Preencha a localidade do 1º policial primeiro.'; return; }
+  inputs.slice(1).forEach(el=>{ el.value=v; });
+  const st=document.getElementById('dm-escala-status');
+  if(st) st.innerHTML = `📍 Localidade <b>${dpEsc(v)}</b> replicada para ${inputs.length-1} policial(is).`;
+}
+
+/* ── Corrigir o cadastro do policial (grava SÓ na aba POLICIAIS) ──
+   Serve pra quando a escala trouxe batalhão/graduação/RE errado: o editor corrige
+   aqui e a planilha de cadastro é atualizada, sem mexer em lançamento nenhum. */
+function dpCadToggle(i){
+  const box=document.getElementById('dm-cad-'+i); if(!box) return;
+  if(box.style.display!=='none'){ box.style.display='none'; box.innerHTML=''; return; }
+  const v=id=>(document.getElementById(id+'-'+i)?.value||'').trim();
+  const re=v('dm-re');
+  const pf=DP_POL_PREFILL[i]||{};
+  // Se o RE está cadastrado para outra pessoa, o nome completo do cadastro NÃO serve —
+  // prefere o que veio da escala e destaca o conflito.
+  const reg=(pf.divergente ? { nome: pf.nome_escala||'', guerra:'', posto_grad:pf.posto_grad||'', opm:pf.opm||'' } : (DP_EFET_BY_RE[re]||{}));
+  const aviso = pf.divergente
+    ? `<div style="font-size:11px;color:#fca5a5;margin-bottom:8px;line-height:1.45">⚠️ Hoje o RE <b>${dpEsc(re)}</b> está no cadastro como <b>${dpEsc(pf.nome_cadastro||'outra pessoa')}</b>.
+       Se o RE certo é outro, corrija o campo RE abaixo — <b>vai criar/atualizar o cadastro do RE que você digitar</b>.</div>`
+    : (pf.no_cadastro===false ? `<div style="font-size:11px;color:#fbbf24;margin-bottom:8px">⚠️ Este RE ainda não está na aba POLICIAIS — salvar aqui cadastra o policial.</div>` : '');
+  box.innerHTML = `
+    <div class="dm-cad-ttl">✏️ Corrigir cadastro do policial (aba POLICIAIS)</div>
+    ${aviso}
+    <div class="dm-cad-grid">
+      <div class="dm-fg"><label>RE</label><input id="dm-cre-${i}" value="${dpEsc(re)}"></div>
+      <div class="dm-fg"><label>Nome de guerra</label><input id="dm-cguerra-${i}" value="${dpEsc(v('dm-nome')||reg.guerra||'')}"></div>
+      <div class="dm-fg"><label>Posto/Grad</label><input id="dm-cposto-${i}" value="${dpEsc(v('dm-posto')||reg.posto_grad||'')}"></div>
+      <div class="dm-fg"><label>OPM / batalhão</label><input id="dm-copm-${i}" value="${dpEsc(v('dm-opm')||reg.opm||'')}"></div>
+      <div class="dm-fg" style="grid-column:1/-1"><label>Nome completo</label><input id="dm-cnome-${i}" value="${dpEsc(reg.nome||'')}" placeholder="Nome completo do policial"></div>
+    </div>
+    <div class="dm-cad-acoes">
+      <button class="dm-cad-ok" id="dm-cad-btn-${i}" onclick="dpCadSalvar(${i})">💾 Salvar no cadastro</button>
+      <button class="dm-cad-cancel" onclick="dpCadToggle(${i})">Cancelar</button>
+      <span class="dm-cad-hint">Grava apenas na aba <b>POLICIAIS</b> da planilha da Diária — não altera lançamentos já feitos na BASE_DE_DADOS.
+      Se você <b>trocar o RE</b>, a correção vai para o cadastro <b>do novo RE</b> (criado se ainda não existir) e a linha da missão passa a usá-lo; nenhum cadastro é renomeado.</span>
+    </div>`;
+  box.style.display='block';
+}
+
+async function dpCadSalvar(i){
+  const st=document.getElementById('dm-cad-st-'+i);
+  const btn=document.getElementById('dm-cad-btn-'+i);
+  const v=id=>(document.getElementById(id+'-'+i)?.value||'').trim();
+  const reAtual=(document.getElementById('dm-re-'+i)?.value||'').trim();
+  const dados={ re:v('dm-cre'), guerra:v('dm-cguerra'), posto_grad:v('dm-cposto'), opm:v('dm-copm'), nome:v('dm-cnome') };
+  if(!reAtual && !dados.re){ if(st){st.style.color='#f87171'; st.textContent='Informe o RE.';} return; }
+  // Trocou o RE? Então a correção é do cadastro DO NOVO RE (cria se não existir).
+  // Nunca renomeamos o RE de uma linha existente — isso apagaria o cadastro de outra pessoa.
+  const trocouRE = !!dados.re && !!reAtual && dados.re!==reAtual;
+  const chave = trocouRE ? dados.re : (reAtual||dados.re);
+  if(trocouRE) delete dados.re;
+  if(btn){ btn.disabled=true; btn.textContent='Salvando…'; }
+  if(st){ st.style.color='#94a3b8'; st.textContent='Salvando no cadastro…'; }
+  try{
+    const r=await apiPostJSON('/api/diaria/policial', { re: chave, dados, criar:true });
+    dados.re = chave;   // a linha da missão passa a usar o RE corrigido
+    // reflete a correção na linha da missão (é ela que vai pro lançamento)
+    const set=(id,val)=>{const e=document.getElementById(id+'-'+i); if(e && val) e.value=val;};
+    set('dm-re', dados.re); set('dm-nome', dados.guerra.toUpperCase()); set('dm-posto', dados.posto_grad.toUpperCase()); set('dm-opm', dados.opm.toUpperCase());
+    const full=document.getElementById('dm-full-'+i); if(full && dados.nome) full.innerHTML='✓ '+dpEsc(dados.nome.toUpperCase());
+    // o conflito foi resolvido: tira o alerta vermelho/amarelo da linha
+    const linha=document.getElementById('dm-pol-'+i); if(linha) linha.style.borderColor='';
+    DP_POL_PREFILL[i] = Object.assign({}, DP_POL_PREFILL[i]||{}, { re:chave, divergente:false, no_cadastro:true, nome:dados.nome, nome_escala:dados.nome, nome_cadastro:'' });
+    // atualiza o cache local do efetivo pra não voltar o valor antigo no próximo dpOnRE
+    if(dados.re) DP_EFET_BY_RE[dados.re]={ re:dados.re, guerra:dados.guerra.toUpperCase(), posto_grad:dados.posto_grad.toUpperCase(), opm:dados.opm.toUpperCase(), nome:(dados.nome||dados.guerra).toUpperCase() };
+    if(st){ st.style.color='#34d399'; st.textContent = r.op==='criado' ? '✅ cadastrado' : '✅ cadastro atualizado'; }
+    const box=document.getElementById('dm-cad-'+i); if(box){ box.style.display='none'; box.innerHTML=''; }
+  }catch(e){
+    if(st){ st.style.color='#f87171'; st.textContent=(e&&e.message)||'Erro ao salvar o cadastro.'; }
+  }finally{ if(btn){ btn.disabled=false; btn.textContent='💾 Salvar no cadastro'; } }
+}
+function dpRemovePolRow(i){ const el=document.getElementById('dm-pol-'+i); if(el) el.remove(); delete DP_POL_PREFILL[i]; dpPolCount(); dpRecalc(); }
 function dpPolCount(){ const n=document.querySelectorAll('#dm-pols .dm-pol').length; const e=document.getElementById('dm-pol-count'); if(e) e.textContent='('+n+')'; }
 
 // Auto-preenche nome de guerra/posto/OPM ao digitar/escolher um RE conhecido.
@@ -6891,7 +7041,9 @@ async function dpSalvar(){
     const re=(document.getElementById('dm-re-'+i)?.value||'').trim();
     if(!guerra && !re) return;
     pols.push({ re, guerra, posto_grad:(document.getElementById('dm-posto-'+i)?.value||'').trim(),
-      opm:(document.getElementById('dm-opm-'+i)?.value||'').trim() });
+      opm:(document.getElementById('dm-opm-'+i)?.value||'').trim(),
+      // localidade da coluna G da escala → vira o MUNICÍPIO daquela linha na planilha
+      municipio:(document.getElementById('dm-loc-'+i)?.value||'').trim().toUpperCase() });
   });
   if(!pols.length){ err.textContent='Adicione ao menos um policial (com RE ou nome de guerra).'; return; }
 
@@ -6911,8 +7063,10 @@ async function dpSalvar(){
     }
   }
 
+  // Cada policial leva a SUA localidade (coluna G da escala); a do topo é só o padrão
+  // para quem ficou sem — o Worker usa missao.municipio como fallback.
   const missao={ operacao, id_missao:idMissao, orgao, tipo_diaria:g('dm-tipo'),
-    municipio:g('dm-municipio'), data_inicio:g('dm-inicio'), data_fim:g('dm-fim'),
+    municipio:g('dm-municipio').toUpperCase(), data_inicio:g('dm-inicio'), data_fim:g('dm-fim'),
     diarias, valor_diaria:valor, processo:g('dm-processo') };
   const btn=document.getElementById('dm-save-btn'); const old=btn.textContent; btn.disabled=true; btn.textContent='Lançando…';
   try{
