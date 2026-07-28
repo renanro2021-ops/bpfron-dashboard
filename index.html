@@ -1718,8 +1718,10 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       .emb-step .q{flex:1;text-align:center;font-size:14px;font-weight:800;color:#e2e8f0}
 
       /* Carrinho / formulário */
-      .emb-cart{position:sticky;bottom:0;z-index:30;margin-top:20px;background:var(--card,#111c2e);border:1px solid rgba(245,197,24,.4);border-radius:14px;box-shadow:0 -8px 28px rgba(0,0,0,.45);overflow:hidden}
-      .emb-cart-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 16px;background:rgba(245,197,24,.08);border-bottom:1px solid rgba(245,197,24,.2)}
+      /* Fundo OPACO de propósito: --card é rgba(...,0.85) e, como o carrinho
+         flutua por cima do catálogo, os cards apareciam através dele. */
+      .emb-cart{position:sticky;bottom:0;z-index:30;margin-top:20px;background:#0c111e;border:1px solid rgba(245,197,24,.4);border-radius:14px;box-shadow:0 -8px 28px rgba(0,0,0,.6);overflow:hidden}
+      .emb-cart-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 16px;background:#161c2b;border-bottom:1px solid rgba(245,197,24,.2)}
       .emb-cart-ttl{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow,#F5C518);letter-spacing:.5px}
       .emb-cart-tot{margin-left:auto;font-size:15px;font-weight:800;color:#6ee7b7}
       .emb-cart-body{padding:14px 16px}
@@ -1757,6 +1759,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       .emb-ped .st.lock{background:rgba(148,163,184,.16);color:#cbd5e1}
       #emb-edit-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.45);border-radius:11px;padding:10px 15px;margin-bottom:14px;font-size:13px;color:#bfdbfe}
       #emb-edit-bar b{color:#fff}
+      #emb-aviso{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:11px;padding:11px 14px;margin-bottom:12px;font-size:13px;color:#fcd34d;line-height:1.5}
+      #emb-aviso b{color:#fff}
 
       .emb-gest{margin-top:18px}
       .emb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
@@ -1768,7 +1772,29 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       .emb-tbl td{padding:9px 10px;border-bottom:1px solid rgba(51,65,85,.5);color:#cbd5e1;vertical-align:top}
       .emb-tbl tr:hover td{background:rgba(245,197,24,.04)}
       .emb-wrap{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:14px;overflow:auto;max-height:60vh}
-      @media(max-width:640px){ .emb-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px} }
+      /* No desktop o carrinho fica sempre aberto; o botão de expandir não existe. */
+      .emb-cart-abrir{display:none}
+
+      @media(max-width:760px){
+        .emb-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+        /* No celular o carrinho vira uma BARRA compacta: se abrisse inteiro
+           (chips + 4 campos empilhados) tomaria a tela toda e cobriria os
+           cards, e tocar no "+" de um card escondido fazia a página pular
+           pro rodapé. Só expande quando o policial toca em "Finalizar". */
+        .emb-cart-head{cursor:pointer;padding:10px 13px}
+        .emb-cart-ttl{font-size:15px}
+        .emb-cart-abrir{display:inline-flex;align-items:center;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:8px;padding:7px 13px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+        .emb-cart-body{display:none;max-height:65vh;overflow-y:auto}
+        .emb-cart.aberto .emb-cart-body{display:block}
+        .emb-cart.aberto .emb-cart-abrir{background:rgba(148,163,184,.2);color:#e2e8f0}
+        /* 2 linhas: "🛒 Seu pedido · N unidades" / "R$ X,XX      [Finalizar]".
+           O ::after é só a quebra de linha do flex. */
+        .emb-cart-ttl{order:1}
+        #emb-cart-qtd{order:2}
+        .emb-cart-head::after{content:"";order:5;flex-basis:100%;height:0}
+        .emb-cart-tot{order:8;flex:1;margin-left:0;font-size:18px}
+        .emb-cart-abrir{order:9}
+      }
     </style>
     <div id="page-emborrachados" class="page-content">
       <div class="sec">🎽 Pedido de Emborrachados</div>
@@ -1781,7 +1807,27 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="emb-btn ghost" id="emb-edit-btn" onclick="embToggleBusca()">✏️ Editar meu pedido</button>
           <button class="emb-btn ghost" onclick="embRecarregar()">↻ Atualizar catálogo</button>
-          <button class="emb-btn" id="emb-gest-btn" style="display:none" onclick="embToggleGestao()">📊 Pedidos recebidos</button>
+          <button class="emb-btn" id="emb-gest-btn" onclick="embToggleGestao()">🔐 Área do gestor</button>
+        </div>
+      </div>
+
+      <!-- Login do gestor, dentro da própria página -->
+      <div id="emb-login" style="display:none">
+        <div class="emb-busca-box" style="border-color:rgba(245,197,24,.45);max-width:420px">
+          <div class="emb-busca-ttl" style="color:var(--yellow,#F5C518)">🔐 Área do gestor</div>
+          <div class="emb-busca-hint">Acesso restrito. Entre para ver todos os pedidos do batalhão.</div>
+          <form onsubmit="return embDoLogin(event)">
+            <div class="emb-fg" style="margin-bottom:10px">
+              <label>Usuário</label>
+              <input id="emb-l-user" type="text" autocomplete="username" required>
+            </div>
+            <div class="emb-fg" style="margin-bottom:10px">
+              <label>Senha</label>
+              <input id="emb-l-pass" type="password" autocomplete="current-password" required>
+            </div>
+            <div id="emb-l-erro" class="emb-msg err" style="margin:0 0 10px"></div>
+            <button class="emb-send" id="emb-l-btn" type="submit" style="width:100%">Entrar</button>
+          </form>
         </div>
       </div>
 
@@ -1809,13 +1855,15 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div id="emb-catalogo"><div class="emb-state">Carregando catálogo…</div></div>
 
       <div class="emb-cart" id="emb-cart" style="display:none">
-        <div class="emb-cart-head">
+        <div class="emb-cart-head" onclick="embCartToggle(event)">
           <span class="emb-cart-ttl">🛒 Seu pedido</span>
           <span id="emb-cart-qtd" style="font-size:12px;color:var(--muted,#94a3b8)"></span>
           <span class="emb-cart-tot" id="emb-cart-tot">R$ 0,00</span>
+          <button class="emb-cart-abrir" id="emb-cart-abrir" type="button">Finalizar ▲</button>
         </div>
         <div class="emb-cart-body">
           <div class="emb-lista" id="emb-lista"></div>
+          <div id="emb-aviso" style="display:none"></div>
           <div class="emb-form">
             <div class="emb-fg emb-so-novo">
               <label>RE *</label>
@@ -4324,8 +4372,9 @@ async function submitLogin(user, pass, btn, erro){
     AUTH.token = d.token; AUTH.user = d.user;
     applyUserRestrictions();
     renderUserChip();
-    // Libera o botão de gestão dos pedidos de emborrachados (só aparece logado).
-    const embB = document.getElementById('emb-gest-btn'); if (embB) embB.style.display = '';
+    // Emborrachados: o botão do gestor deixa de pedir senha.
+    const embB = document.getElementById('emb-gest-btn');
+    if (embB && !EMB_GEST_ON) embB.textContent = '📊 Pedidos recebidos';
     showWelcome(d.user);
     return true;
   } catch(e){
@@ -4370,10 +4419,12 @@ function apiLogout(){
   DP_CMD_SEL = null; DP_SUB_SEL = null; DP_BAT_SEL = null; DP_VIEW = null; ['dp-top','dp-op'].forEach(destroyC);
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
-  // Emborrachados: o catálogo é público (fica), mas a gestão dos pedidos some.
+  // Emborrachados: o catálogo é público (fica), mas a lista de pedidos some e o
+  // botão volta a pedir senha.
   EMB_GEST_ON = false;
   const embG = document.getElementById('emb-gestao'); if (embG){ embG.style.display = 'none'; embG.innerHTML = ''; }
-  const embB = document.getElementById('emb-gest-btn'); if (embB){ embB.style.display = 'none'; embB.textContent = '📊 Pedidos recebidos'; }
+  const embB = document.getElementById('emb-gest-btn'); if (embB){ embB.style.display = ''; embB.textContent = '🔐 Área do gestor'; }
+  const embL = document.getElementById('emb-login'); if (embL) embL.style.display = 'none';
   applyUserRestrictions();
   renderUserChip();
   gateConsultas();
@@ -6918,9 +6969,11 @@ function embErro(d, status){
 }
 
 async function initEmborrachados(){
-  // Botão de gestão só existe pra quem está logado.
+  // O botão do gestor fica sempre visível; sem login ele abre a caixa de senha.
   const gb = document.getElementById('emb-gest-btn');
-  if (gb) gb.style.display = AUTH.logged ? '' : 'none';
+  if (gb) gb.textContent = AUTH.logged
+    ? (EMB_GEST_ON ? '✕ Fechar pedidos' : '📊 Pedidos recebidos')
+    : '🔐 Área do gestor';
   if (EMB_LOADED){ embRender(); return; }
   await embCarregarCatalogo();
 }
@@ -7022,6 +7075,16 @@ function embCartItens(){
   }).filter(Boolean);
 }
 
+/* No celular o carrinho começa fechado (só a barra com total). Abrir/fechar
+   não mexe no scroll da página — o problema era justamente a página pular. */
+function embCartToggle(ev){
+  if (ev) ev.stopPropagation();
+  const cart = document.getElementById('emb-cart');
+  const btn = document.getElementById('emb-cart-abrir');
+  const aberto = cart.classList.toggle('aberto');
+  if (btn) btn.textContent = aberto ? 'Fechar ▼' : 'Finalizar ▲';
+}
+
 function embRenderCart(){
   const cart = document.getElementById('emb-cart');
   const lista = document.getElementById('emb-lista');
@@ -7080,8 +7143,40 @@ function embOnRE(){
         info.textContent = 'RE não encontrado no cadastro — pode preencher o nome à mão.';
         info.style.color = '#fbbf24';
       }
+      embAvisoPedidoAberto(d && d.pedido_aberto, el.value);
     }catch{ info.textContent = ''; }
   }, 450);
+}
+
+/* Um pedido em aberto por policial: ao digitar o RE, se já existir um pendente,
+   avisa e oferece editar aquele em vez de deixar criar um segundo. O bloqueio
+   de verdade é no servidor (409 ja_tem_pedido) — isto aqui é só o atalho. */
+function embAvisoPedidoAberto(aberto, re){
+  const box = document.getElementById('emb-aviso');
+  const btn = document.getElementById('emb-send');
+  if (!box) return;
+  if (!aberto || EMB_EDIT){
+    box.style.display = 'none'; box.innerHTML = '';
+    if (btn) btn.disabled = false;
+    return;
+  }
+  box.style.display = '';
+  box.innerHTML = `<span style="flex:1;min-width:220px">⚠️ Você já tem o <b>pedido nº ${embEsc(aberto.pedido)}</b>
+      (${embEsc(aberto.data)}) aguardando. Cada policial pode ter um pedido por vez —
+      edite aquele para acrescentar ou trocar itens.</span>
+    <button class="emb-btn" onclick="embIrEditar('${embEsc(re)}')">✏️ Editar o pedido nº ${embEsc(aberto.pedido)}</button>`;
+  if (btn) btn.disabled = true;
+}
+
+// Abre a busca já com o RE preenchido — falta só os 4 dígitos do telefone.
+function embIrEditar(re){
+  const busca = document.getElementById('emb-busca');
+  busca.style.display = '';
+  document.getElementById('emb-edit-btn').textContent = '✕ Fechar';
+  document.getElementById('emb-b-re').value = re || '';
+  document.getElementById('emb-b-tel').value = '';
+  busca.scrollIntoView({ behavior:'smooth', block:'center' });
+  document.getElementById('emb-b-tel').focus();
 }
 
 async function embEnviar(){
@@ -7109,6 +7204,13 @@ async function embEnviar(){
       body: JSON.stringify({ re, nome, contato: tel, itens: itens.map(i => ({ id: i.id, qtd: i.qtd })) }),
     });
     const d = await r.json().catch(()=>({}));
+    // Já tem pedido pendente: mostra o atalho de edição em vez de um erro seco.
+    if (r.status === 409 && d.error === 'ja_tem_pedido'){
+      embAvisoPedidoAberto({ pedido: d.pedido, data: '' }, re);
+      msg.className = 'emb-msg err';
+      msg.textContent = d.detail || 'Você já tem um pedido em aberto.';
+      return;
+    }
     if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
     embSucesso(d, nome);
   }catch(e){
@@ -7143,12 +7245,23 @@ function embNovoPedido(){
   if (msg){ msg.textContent = ''; msg.className = 'emb-msg'; }
   EMB_EDIT = null; EMB_CART = {};
   const bar = document.getElementById('emb-edit-bar'); if (bar) bar.style.display = 'none';
+  const c = document.getElementById('emb-cart'); if (c) c.classList.remove('aberto');
+  const ab = document.getElementById('emb-cart-abrir'); if (ab) ab.textContent = 'Finalizar ▲';
   embRender();
 }
 
 /* ── Gestão dos pedidos (exige login) ── */
 
+// Sem login: abre a caixa de login aqui mesmo. Com login: abre/fecha a lista.
 async function embToggleGestao(){
+  if (!AUTH.logged){
+    const lg = document.getElementById('emb-login');
+    const abrir = lg.style.display === 'none';
+    lg.style.display = abrir ? '' : 'none';
+    document.getElementById('emb-gest-btn').textContent = abrir ? '✕ Fechar' : '🔐 Área do gestor';
+    if (abrir) document.getElementById('emb-l-user').focus();
+    return;
+  }
   const box = document.getElementById('emb-gestao');
   EMB_GEST_ON = !EMB_GEST_ON;
   box.style.display = EMB_GEST_ON ? '' : 'none';
@@ -7161,6 +7274,25 @@ async function embToggleGestao(){
   }catch(e){
     box.innerHTML = '<div class="emb-state">❌ ' + embEsc((e&&e.message)||'Erro ao carregar os pedidos.') + '</div>';
   }
+}
+
+// Login feito na própria página (reusa o submitLogin das telas de Gestão).
+async function embDoLogin(ev){
+  ev.preventDefault();
+  const ok = await submitLogin(
+    (document.getElementById('emb-l-user').value || '').trim(),
+    document.getElementById('emb-l-pass').value || '',
+    document.getElementById('emb-l-btn'),
+    document.getElementById('emb-l-erro')
+  );
+  document.getElementById('emb-l-pass').value = '';
+  if (ok){
+    document.getElementById('emb-login').style.display = 'none';
+    document.getElementById('emb-gest-btn').textContent = '📊 Pedidos recebidos';
+    EMB_GEST_ON = false;
+    embToggleGestao();   // já abre a lista
+  }
+  return false;
 }
 
 function embRenderGestao(d){
@@ -7303,7 +7435,13 @@ function embModoCarrinho(){
   document.querySelectorAll('.emb-so-novo').forEach(el => el.style.display = editando ? 'none' : '');
   document.querySelectorAll('.emb-so-edicao').forEach(el => el.style.display = editando ? '' : 'none');
   const b = document.getElementById('emb-send');
-  if (b) b.textContent = editando ? '💾 Salvar alterações' : '✅ Enviar pedido';
+  if (b){ b.textContent = editando ? '💾 Salvar alterações' : '✅ Enviar pedido'; if (editando) b.disabled = false; }
+  if (editando){
+    const av = document.getElementById('emb-aviso'); if (av){ av.style.display = 'none'; av.innerHTML = ''; }
+    // Editando, o carrinho já abre expandido (é o que ele veio ver).
+    const c = document.getElementById('emb-cart');
+    if (c && !c.classList.contains('aberto')) embCartToggle();
+  }
   const t = document.querySelector('.emb-cart-ttl');
   if (t) t.textContent = editando ? ('✏️ Editando o pedido nº ' + EMB_EDIT.pedido) : '🛒 Seu pedido';
 }
