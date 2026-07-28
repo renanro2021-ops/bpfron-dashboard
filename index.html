@@ -1665,7 +1665,20 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div class="dm-sec">Dados da missão</div>
           <div class="dm-grid">
             <div class="dm-fg wide"><label>Nome da missão / operação <span style="color:#f87171">*</span></label>
-              <select id="dm-operacao" onchange="dpComposeId()"><option value="">— selecione —</option></select>
+              <div style="display:flex;gap:8px;align-items:center">
+                <select id="dm-operacao" onchange="dpComposeId()" style="flex:1;min-width:0"><option value="">— selecione —</option></select>
+                <button type="button" class="dm-cad-btn" style="white-space:nowrap;padding:8px 12px;font-size:12px" onclick="dpNovaOpToggle()" title="Cadastrar uma missão/operação que ainda não tem lançamento">➕ Nova missão</button>
+              </div>
+              <div id="dm-nova-op" class="dm-cad-box" style="display:none;margin-top:8px">
+                <div class="dm-cad-ttl">➕ Cadastrar missão / operação nova</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <input id="dm-nova-op-nome" placeholder="Ex.: OPERAÇÃO FRONTEIRA BLINDADA" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter'){event.preventDefault();dpNovaOpSalvar();}">
+                  <button type="button" class="dm-cad-ok" id="dm-nova-op-btn" onclick="dpNovaOpSalvar()">💾 Cadastrar</button>
+                  <button type="button" class="dm-cad-cancel" onclick="dpNovaOpToggle()">Cancelar</button>
+                </div>
+                <div id="dm-nova-op-st" style="font-size:11.5px;margin-top:7px;color:var(--muted,#94a3b8)"></div>
+                <div class="dm-cad-hint" style="margin-top:4px">A missão entra na aba <b>OPERACOES</b> da planilha da Diária e já fica selecionada aqui. Serve pra escala de operação que ainda não teve nenhum lançamento.</div>
+              </div>
             </div>
             <div class="dm-fg"><label>Etapa</label><input id="dm-etapa" oninput="dpComposeId()" placeholder="Ex.: 16º ETAPA"></div>
             <div class="dm-fg"><label>ID da missão <span style="font-weight:600;color:var(--muted,#94a3b8)">(automático)</span></label><input id="dm-idmissao" readonly placeholder="Etapa + operação" style="opacity:.85;cursor:not-allowed"></div>
@@ -6765,6 +6778,7 @@ function dpOpenModal(){
   document.getElementById('dm-pols').innerHTML='';
   document.getElementById('dm-escala-box').style.display='none';
   document.getElementById('dm-escala-status').textContent='';
+  const nop=document.getElementById('dm-nova-op'); if(nop){ nop.style.display='none'; document.getElementById('dm-nova-op-st').textContent=''; }
   const sb=document.getElementById('dm-save-btn'); sb.textContent='💾 Lançar missão'; sb.style.background='';
   dpAddPolRow();
   dpRecalc();
@@ -6777,6 +6791,48 @@ function dpComposeId(){
   const et=(document.getElementById('dm-etapa')?.value||'').trim();
   const el=document.getElementById('dm-idmissao');
   if(el) el.value = (et?et+' ':'')+op;
+}
+
+/* ── Cadastrar missão/operação nova (aba OPERACOES da planilha da Diária) ──
+   A lista de operações do formulário é travada. Antes ela só trazia nomes que JÁ tinham
+   lançamento na base, então escala de operação nova não tinha como ser lançada. */
+function dpNovaOpToggle(){
+  const box=document.getElementById('dm-nova-op'); if(!box) return;
+  const abrir = box.style.display==='none';
+  box.style.display = abrir ? 'block' : 'none';
+  document.getElementById('dm-nova-op-st').textContent='';
+  if(abrir){
+    const el=document.getElementById('dm-nova-op-nome');
+    el.value=''; el.focus();
+  }
+}
+async function dpNovaOpSalvar(){
+  const inp=document.getElementById('dm-nova-op-nome');
+  const st=document.getElementById('dm-nova-op-st');
+  const btn=document.getElementById('dm-nova-op-btn');
+  const nome=(inp.value||'').trim().replace(/\s+/g,' ').toUpperCase();
+  if(nome.length<3){ st.style.color='#f87171'; st.textContent='Informe o nome da missão (mín. 3 letras).'; return; }
+  const sel=document.getElementById('dm-operacao');
+  // já está na lista? só seleciona
+  const existe=[...sel.options].find(o=>o.value.toUpperCase()===nome);
+  if(existe){ sel.value=existe.value; dpComposeId(); st.style.color='#fbbf24'; st.textContent='Essa missão já estava na lista — selecionada.'; return; }
+  btn.disabled=true; const old=btn.textContent; btn.textContent='Cadastrando…';
+  st.style.color='#94a3b8'; st.textContent='Gravando na aba OPERACOES…';
+  try{
+    const r=await apiPostJSON('/api/diaria/operacao', { nome });
+    // insere na lista em ordem alfabética e seleciona
+    const opt=document.createElement('option'); opt.value=nome; opt.textContent=nome;
+    const depois=[...sel.options].find(o=>o.value && o.value.localeCompare(nome,'pt-BR')>0);
+    sel.insertBefore(opt, depois||null);
+    sel.value=nome; dpComposeId();
+    if(DP_DATA && DP_DATA.listas && Array.isArray(DP_DATA.listas.operacoes) && !DP_DATA.listas.operacoes.includes(nome))
+      DP_DATA.listas.operacoes.push(nome);
+    st.style.color='#34d399';
+    st.textContent = r.op==='ja_existe' ? '✅ Missão já existia — selecionada.'
+      : ('✅ Missão cadastrada'+(r.aba_criada?' (aba OPERACOES criada)':'')+' e selecionada.');
+    setTimeout(()=>{ const b=document.getElementById('dm-nova-op'); if(b) b.style.display='none'; }, 1200);
+  }catch(e){ st.style.color='#f87171'; st.textContent=(e&&e.message)||'Erro ao cadastrar a missão.'; }
+  finally{ btn.disabled=false; btn.textContent=old; }
 }
 
 /* ── Importar escala (planilha PM_EM_CAMPO_BCCO) ── */
