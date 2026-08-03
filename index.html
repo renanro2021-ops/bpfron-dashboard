@@ -2024,6 +2024,33 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="kpi o" data-vk="cig" onclick="selectVGKpi('cig')"><div class="kpi-ico">🚬</div><div class="kpi-lbl">Cigarros</div><div class="kpi-val sm" id="k-cig">—</div><div class="kpi-sub">Maços</div></div>
     </div>
 
+    <!-- LINHA 4: demais drogas (colunas novas da planilha) -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
+      <div class="kpi r" data-vk="crk" onclick="selectVGKpi('crk')"><div class="kpi-ico">🪨</div><div class="kpi-lbl">Crack</div><div class="kpi-val sm" id="k-crk">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi p" data-vk="oxi" onclick="selectVGKpi('oxi')"><div class="kpi-ico">⚗️</div><div class="kpi-lbl">Óxi</div><div class="kpi-val sm" id="k-oxi">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi t" data-vk="ecs" onclick="selectVGKpi('ecs')"><div class="kpi-ico">💊</div><div class="kpi-lbl">Ecstasy</div><div class="kpi-val sm" id="k-ecs">—</div><div class="kpi-sub">Comprimidos</div></div>
+      <div class="kpi b" data-vk="met" onclick="selectVGKpi('met')"><div class="kpi-ico">🧪</div><div class="kpi-lbl">Metanfetamina</div><div class="kpi-val sm" id="k-met">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi g" data-vk="fcc" onclick="selectVGKpi('fcc')"><div class="kpi-ico">🍃</div><div class="kpi-lbl">Folha de Coca</div><div class="kpi-val sm" id="k-fcc">—</div><div class="kpi-sub">kg</div></div>
+    </div>
+
+    <!-- LINHA 5: descaminho / contrabando -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
+      <div class="kpi b" data-vk="cel" onclick="selectVGKpi('cel')"><div class="kpi-ico">📱</div><div class="kpi-lbl">Celulares</div><div class="kpi-val sm" id="k-cel">—</div><div class="kpi-sub">Descaminho</div></div>
+      <div class="kpi t" data-vk="rou" onclick="selectVGKpi('rou')"><div class="kpi-ico">👕</div><div class="kpi-lbl">Roupas</div><div class="kpi-val sm" id="k-rou">—</div><div class="kpi-sub">Descaminho</div></div>
+      <div class="kpi p" data-vk="ele" onclick="selectVGKpi('ele')"><div class="kpi-ico">📺</div><div class="kpi-lbl">Eletrônicos</div><div class="kpi-val sm" id="k-ele">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi o" data-vk="mdc" onclick="selectVGKpi('mdc')"><div class="kpi-ico">📦</div><div class="kpi-lbl">Mercadorias</div><div class="kpi-val sm" id="k-mdc">—</div><div class="kpi-sub">Descaminho (R$)</div></div>
+      <div class="kpi g" data-vk="anp" onclick="selectVGKpi('anp')"><div class="kpi-ico">🐟</div><div class="kpi-lbl">Animais / Pescado</div><div class="kpi-val sm" id="k-anp">—</div><div class="kpi-sub">Valor (R$)</div></div>
+    </div>
+
+    <!-- LINHA 6: outros indicadores -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
+      <div class="kpi g" data-vk="din" onclick="selectVGKpi('din')"><div class="kpi-ico">💵</div><div class="kpi-lbl">Dinheiro</div><div class="kpi-val sm" id="k-din">—</div><div class="kpi-sub">Apreendido (R$)</div></div>
+      <div class="kpi y" data-vk="our" onclick="selectVGKpi('our')"><div class="kpi-ico">🥇</div><div class="kpi-lbl">Ouro</div><div class="kpi-val sm" id="k-our">—</div><div class="kpi-sub">Gramas</div></div>
+      <div class="kpi b" data-vk="emb" onclick="selectVGKpi('emb')"><div class="kpi-ico">🚤</div><div class="kpi-lbl">Embarcações</div><div class="kpi-val sm" id="k-emb">—</div><div class="kpi-sub">Apreendidas</div></div>
+      <div class="kpi t" data-vk="mtp" onclick="selectVGKpi('mtp')"><div class="kpi-ico">⚙️</div><div class="kpi-lbl">Motor de Popa</div><div class="kpi-val sm" id="k-mtp">—</div><div class="kpi-sub">Unidades</div></div>
+      <div class="kpi r" data-vk="mul" onclick="selectVGKpi('mul')"><div class="kpi-ico">⚖️</div><div class="kpi-lbl">Multas</div><div class="kpi-val sm" id="k-mul">—</div><div class="kpi-sub">Aplicadas (R$)</div></div>
+    </div>
+
     <!-- Painel de detalhes do card selecionado -->
     <div id="vg-detail-wrap"></div>
 
@@ -2064,6 +2091,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <span class="prej-cat-ico">🌳</span>
           <span class="prej-cat-lbl">Madeira</span>
           <span class="prej-cat-val" id="pj-ma">—</span>
+        </div>
+        <div class="prej-cat" style="cursor:pointer" onclick="selectVGKpi('mdc')" title="Ouro, dinheiro e descaminho">
+          <span class="prej-cat-ico">📦</span>
+          <span class="prej-cat-lbl">Outros</span>
+          <span class="prej-cat-val" id="pj-ou">—</span>
         </div>
       </div>
     </div>
@@ -2467,6 +2499,7 @@ const PAL = ['#F5C518','#3b82f6','#22c55e','#ea580c','#dc2626','#7c3aed','#0d948
 ============================================================ */
 const FIELD_MAP = {
   'n_bo':                        'no_bo',
+  'tipo_registro':               'tipo_registro',   // ← coluna nova (jul/2026)
   'data':                        'data',
   'hora':                        'hora',
   'tipo_de_bo':                  'tipo_de_bo',
@@ -2480,6 +2513,11 @@ const FIELD_MAP = {
   'cocaina_ch_kg':               'cocaina_kg',
   'pasta_base_kg':               'pasta_base_kg',
   'maconha_kg':                  'maconha_kg',
+  'crack_kg':                    'crack_kg',          // ← coluna nova
+  'oxi_kg':                      'oxi_kg',            // ← coluna nova
+  'metanfetamina_kg':            'metanfetamina_kg',  // ← coluna nova
+  'ecstasy_comprimidos':         'ecstasy',           // ← coluna nova
+  'folha_de_coca_kg':            'folha_coca_kg',     // ← coluna nova
   'armas_apreend':               'armas',
   'municoes_apreend':            'municoes',
   'veiculos_apreend':            'veiculos',
@@ -2490,6 +2528,12 @@ const FIELD_MAP = {
   'madeira_apreendida_m':        'madeira_m3',   // ← coluna nova
   'desc_celulares_un':           'celulares',
   'desc_roupas_un':              'roupas',
+  'mercadorias_descaminho_r':    'merc_descaminho',  // ← coluna nova (R$)
+  'eletronicos_un':              'eletronicos',      // ← coluna nova
+  'embarcacoes_un':              'embarcacoes',      // ← coluna nova
+  'motor_de_popa_un':            'motor_popa',       // ← coluna nova
+  'ouro_g':                      'ouro_g',           // ← coluna nova
+  'animais_pescado_r':           'animais_pescado',  // ← coluna nova (R$)
   'dinheiro_r':                  'dinheiro',
   'meio':                        'meio',
   'ambiente':                    'ambiente',
@@ -2499,7 +2543,10 @@ const FIELD_MAP = {
   'prejuizo_estimado_r':         'prejuizo',
   'descricao_resumida':          'descricao',
   'nacionalidade_operacao':      'nacionalidade',
+  'nacionalidade':               'nacionalidade',
+  'valor_estimado_descaminho_r': 'valor_descaminho', // ← coluna nova (R$)
   'valor_estimado_veiculos_r':   'valor_veiculos', // ← coluna nova
+  'multa_r':                     'multa',           // ← coluna nova (R$)
   'operacao':                    'operacao',        // ← coluna AQ
   // aliases de segurança
   'no_bo':                       'no_bo',
@@ -2510,6 +2557,11 @@ const FIELD_MAP = {
   'maconha':                     'maconha_kg',
   'pasta_base':                  'pasta_base_kg',
   'madeira_apreendida_m3':       'madeira_m3',
+  'folha_de_coca':               'folha_coca_kg',
+  'mercadorias_descaminho':      'merc_descaminho',
+  'animais_pescado':             'animais_pescado',
+  'valor_estimado_descaminho':   'valor_descaminho',
+  'motor_de_popa':               'motor_popa',
 };
 
 const NUM_FIELDS = new Set([
@@ -2517,6 +2569,10 @@ const NUM_FIELDS = new Set([
   'maconha_kg','armas','municoes','veiculos','gasolina_l','diesel_l','glp',
   'cigarros','madeira_m3','celulares','roupas','dinheiro','latitude','longitude',
   'prejuizo','valor_veiculos',
+  // colunas novas (jul/2026)
+  'crack_kg','oxi_kg','metanfetamina_kg','ecstasy','folha_coca_kg',
+  'merc_descaminho','eletronicos','embarcacoes','motor_popa','ouro_g',
+  'animais_pescado','valor_descaminho','multa',
 ]);
 
 /* ── Normaliza string para chave de mapeamento ── */
@@ -3457,19 +3513,40 @@ function renderComparativo() {
 // URL de export DIRETO da aba PAINEL (gid 1543001629) — chave viva (a antiga PAINEL_URL morreu).
 const PAINEL_EXPORT_URL = "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=1543001629";
 
-// Extrai o Prejuízo Total (última linha não-vazia: "R$ 241.916.025,87",,,,)
+/* Extrai o PREJUÍZO TOTAL ESTIMADO da aba PAINEL.
+   Procura o rótulo ("PREJUÍZO TOTAL ESTIMADO") e pega o primeiro valor em R$
+   das linhas seguintes. NÃO usa mais "a última linha do arquivo": a PAINEL
+   ganhou blocos abaixo do prejuízo (Ecstasy, Multa, Motor de Popa…) em jul/2026
+   e a leitura pela última linha passou a devolver lixo. */
 function parsePrejuizoTotal(txt) {
-  const allLines = txt.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const lastLine = allLines[allLines.length - 1] || '';
-  const cleaned = lastLine.split('R$').join('').split(' ').join('').split('"').join('');
-  const parts = cleaned.split(',');
-  if (parts.length >= 2) {
-    const intPart = parts[0].replace(/\./g, '');
-    const decPart = parts[1].substring(0, 2);
-    const value = parseFloat(intPart + '.' + decPart);
-    if (!isNaN(value) && value > 1000000) return value;
+  const linhas = txt.split(/\r?\n/);
+  const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
+  const valorDe = celula => {
+    const c = String(celula).replace(/"/g,'').replace(/R\$/gi,'').trim();
+    if (!c || !/^[\d.,\s]+$/.test(c)) return 0;
+    const v = parseFloat(c.replace(/\s/g,'').replace(/\./g,'').replace(',','.'));
+    return isNaN(v) ? 0 : v;
+  };
+  const grade = linhas.map(l => smartSplit(l, ','));
+  // localiza a célula do rótulo (linha + coluna)
+  let lin = -1, col = 0;
+  for (let i = 0; i < grade.length && lin < 0; i++) {
+    for (let j = 0; j < grade[i].length; j++) {
+      if (/PREJU[IÍ]ZO\s+TOTAL/.test(semAcento(grade[i][j]))) { lin = i; col = j; break; }
+    }
   }
-  return null;
+  // o total fica NA MESMA COLUNA do rótulo, algumas linhas abaixo.
+  // (as categorias — Drogas, Armas… — ficam em colunas à direita e não podem ser confundidas)
+  if (lin >= 0) {
+    for (let i = lin + 1; i < Math.min(grade.length, lin + 10); i++) {
+      const v = valorDe(grade[i][col] || '');
+      if (v > 1000000) return v;
+    }
+  }
+  // fallback: maior valor da primeira coluna do arquivo
+  let maior = 0;
+  grade.forEach(c => { const v = valorDe(c[0] || ''); if (v > maior) maior = v; });
+  return maior > 1000000 ? maior : null;
 }
 
 async function fetchPrejuizoTotal() {
@@ -3755,21 +3832,35 @@ function applyFilters() {
 }
 
 /* ── Prejuízo ao crime: valor unitário por item apreendido ──
-   (mesmos multiplicadores usados no banner de Prejuízo Estimado) */
+   Multiplicadores CONFERIDOS contra a coluna "Prejuízo Estimado (R$)" da planilha
+   (jul/2026): a soma reproduz o valor por BO com erro < R$ 0,10 (arredondamento)
+   e o total bate com o PREJUÍZO TOTAL ESTIMADO da aba PAINEL.
+   ⚠️ Armas passou de R$ 19.333 para R$ 5.500 na revisão da planilha. */
 const PREJ_UNIT = {
-  cocaina_kg:    75000,
-  pasta_base_kg: 50000,
-  maconha_kg:     5000,
-  armas:         19333,
-  gasolina_l:      6.8,
-  diesel_l:        6.8,
-  glp:             300,
-  cigarros:      9.799,
-  madeira_m3:     1500,
+  cocaina_kg:        75000,
+  pasta_base_kg:     50000,
+  maconha_kg:         5000,
+  crack_kg:          10000,
+  oxi_kg:            15000,
+  metanfetamina_kg: 600000,
+  folha_coca_kg:        80,
+  ouro_g:              350,
+  armas:              5500,
+  gasolina_l:          6.8,
+  diesel_l:            6.8,
+  glp:                 300,
+  cigarros:          9.799,
+  madeira_m3:         1500,
 };
-// prejuízo calculado de UMA ocorrência (todas as categorias + valor dos veículos)
+/* Colunas que JÁ vêm em R$ na planilha — entram no prejuízo pelo valor de face.
+   'multa' entra por decisão de 03/08/2026 (toda multa lançada é prejuízo ao
+   crime). A fórmula da planilha só passa a somá-la nas linhas relançadas pelo
+   Worker, então o total oficial pode ficar alguns reais atrás até lá. */
+const PREJ_FACE = ['valor_veiculos','valor_descaminho','merc_descaminho','animais_pescado','dinheiro','multa'];
+// prejuízo calculado de UMA ocorrência (todas as categorias + valores em R$)
 function prejCalcRow(r){
-  let t = r.valor_veiculos || 0;
+  let t = 0;
+  for (const f of PREJ_FACE) t += r[f] || 0;
   for (const f in PREJ_UNIT) t += (r[f]||0) * PREJ_UNIT[f];
   return t;
 }
@@ -3797,27 +3888,53 @@ function renderKPIs() {
   $('k-die', fD(s('diesel_l'),0)+' L');
   $('k-glp', fN(s('glp'))+' un.');
   $('k-cig', fN(s('cigarros'))+' maços');
-  // Subcategorias do prejuízo (cálculo local)
+  // ── Indicadores complementares (colunas novas da planilha — jul/2026) ──
+  $('k-crk', fD(s('crack_kg'),4)+' kg');
+  $('k-oxi', fD(s('oxi_kg'),3)+' kg');
+  $('k-ecs', fN(s('ecstasy'))+' compr.');
+  $('k-met', fD(s('metanfetamina_kg'),3)+' kg');
+  $('k-fcc', fD(s('folha_coca_kg'),3)+' kg');
+  $('k-cel', fN(s('celulares'))+' un.');
+  $('k-rou', fN(s('roupas'))+' un.');
+  $('k-ele', fN(s('eletronicos'))+' un.');
+  $('k-mdc', fR(s('merc_descaminho')));
+  $('k-anp', fR(s('animais_pescado')));
+  $('k-din', fR(s('dinheiro')));
+  $('k-our', fD(s('ouro_g'),2)+' g');
+  $('k-emb', fN(s('embarcacoes'))+' un.');
+  $('k-mtp', fN(s('motor_popa'))+' un.');
+  $('k-mul', fR(s('multa')));
+  // Subcategorias do prejuízo (mesma composição da aba PAINEL)
   const U = PREJ_UNIT;
-  const pj_dr = s('cocaina_kg')*U.cocaina_kg + s('pasta_base_kg')*U.pasta_base_kg + s('maconha_kg')*U.maconha_kg;
+  const pj_dr = s('cocaina_kg')*U.cocaina_kg + s('pasta_base_kg')*U.pasta_base_kg
+              + s('maconha_kg')*U.maconha_kg + s('crack_kg')*U.crack_kg
+              + s('oxi_kg')*U.oxi_kg + s('metanfetamina_kg')*U.metanfetamina_kg;
   const pj_ar = s('armas') * U.armas;
   const pj_ve = s('valor_veiculos');
   const pj_cb = (s('gasolina_l') + s('diesel_l')) * U.gasolina_l + s('glp') * U.glp;
   const pj_ci = s('cigarros') * U.cigarros;
   const pj_ma = s('madeira_m3') * U.madeira_m3;
+  // "Outros" = ouro, dinheiro, descaminho e multas (mesma categoria da PAINEL)
+  const pj_ou = s('dinheiro') + s('merc_descaminho') + s('valor_descaminho')
+              + s('animais_pescado') + s('folha_coca_kg')*U.folha_coca_kg
+              + s('ouro_g')*U.ouro_g + s('multa');
   $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
   $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
+  $('pj-ou', fR(pj_ou));
   // Total do prejuízo:
-  //  • SEM filtro ativo → total oficial da aba PAINEL (~R$ 241 mi)
-  //  • COM filtro ativo → soma a coluna oficial "Prejuízo Estimado (R$)" só das ocorrências selecionadas
-  const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma;
-  if (window._prejuizoTotal && !window._filtroAtivo) {
+  //  • coluna oficial "Prejuízo Estimado (R$)" somada nas ocorrências filtradas
+  //    (sem filtro ela reproduz exatamente o PREJUÍZO TOTAL da aba PAINEL)
+  //  • fallbacks: total da PAINEL (sem filtro) e, por último, a soma das categorias
+  const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma + pj_ou;
+  const pjReal = s('prejuizo');
+  if (pjReal > 0) {
+    $('k-prej', fR(pjReal));
+  } else if (window._prejuizoTotal && !window._filtroAtivo) {
     $('k-prej', fR(window._prejuizoTotal));
+  } else if (calc > 0) {
+    $('k-prej', fR(calc));
   } else {
-    const pjReal = s('prejuizo');             // coluna oficial por BO, somada no período filtrado
-    if (pjReal > 0)      $('k-prej', fR(pjReal));
-    else if (calc > 0)   $('k-prej', fR(calc)); // fallback: soma das categorias (multiplicadores do site)
-    else                 $('k-prej', '—');
+    $('k-prej', '—');
   }
   // mantém o painel de detalhe do card selecionado em sincronia com os filtros
   if (typeof renderVGDetail === 'function') renderVGDetail();
@@ -3839,7 +3956,7 @@ const ICO_MUNICAO = '<i class="ico-img ico-municao"></i>';
 const VG_METRICS = {
   oc:  {icon:'📋', label:'Ocorrências',        kind:'count', unit:'ocorrências', ctx:'boletins registrados', prejAll:true},
   pr:  {icon:'🔒', label:'Presos',             field:'no_presos',      unit:'presos',    ctx:'indivíduos detidos', prejAll:true},
-  dr:  {icon:'💊', label:'Drogas Apreendidas', field:'drogas_total_kg',unit:'kg', dec:2, ctx:'entorpecentes no total', prejFields:['cocaina_kg','pasta_base_kg','maconha_kg']},
+  dr:  {icon:'💊', label:'Drogas Apreendidas', field:'drogas_total_kg',unit:'kg', dec:2, ctx:'entorpecentes no total', prejFields:['cocaina_kg','pasta_base_kg','maconha_kg','crack_kg','oxi_kg','metanfetamina_kg']},
   ma:  {icon:ICO_MACONHA, label:'Maconha',     field:'maconha_kg',     unit:'kg', dec:2},
   pb:  {icon:'🧴', label:'Pasta Base',         field:'pasta_base_kg',  unit:'kg', dec:2},
   co:  {icon:ICO_COCA, label:'Cocaína / CH',   field:'cocaina_kg',     unit:'kg', dec:2},
@@ -3853,6 +3970,22 @@ const VG_METRICS = {
   glp: {icon:'🔥', label:'GLP',                field:'glp',            unit:'botijas'},
   cig: {icon:'🚬', label:'Cigarros',           field:'cigarros',       unit:'maços'},
   comb:{icon:'⛽', label:'Combustíveis',       fields:['gasolina_l','diesel_l'], unit:'L', ctx:'gasolina + diesel apreendidos'},
+  // ── colunas novas da planilha (jul/2026) ──
+  crk: {icon:'🪨', label:'Crack',              field:'crack_kg',        unit:'kg', dec:4},
+  oxi: {icon:'⚗️', label:'Óxi',                field:'oxi_kg',          unit:'kg', dec:3},
+  ecs: {icon:'💊', label:'Ecstasy',            field:'ecstasy',         unit:'comprimidos', prejAll:true},
+  met: {icon:'🧪', label:'Metanfetamina',      field:'metanfetamina_kg',unit:'kg', dec:3},
+  fcc: {icon:'🍃', label:'Folha de Coca',      field:'folha_coca_kg',   unit:'kg', dec:3},
+  cel: {icon:'📱', label:'Celulares (descaminho)', field:'celulares',   unit:'un.', prejAll:true},
+  rou: {icon:'👕', label:'Roupas (descaminho)',field:'roupas',          unit:'un.', prejAll:true},
+  ele: {icon:'📺', label:'Eletrônicos',        field:'eletronicos',     unit:'un.', prejAll:true},
+  mdc: {icon:'📦', label:'Mercadorias de Descaminho', field:'merc_descaminho', unit:'', curr:true, prejMoney:'merc_descaminho', prejNota:'valor das mercadorias apreendidas', ctx:'valor das mercadorias de descaminho'},
+  anp: {icon:'🐟', label:'Animais / Pescado',  field:'animais_pescado', unit:'', curr:true, prejMoney:'animais_pescado', prejNota:'valor informado na ocorrência'},
+  din: {icon:'💵', label:'Dinheiro',           field:'dinheiro',        unit:'', curr:true, prejMoney:'dinheiro', prejNota:'dinheiro apreendido'},
+  our: {icon:'🥇', label:'Ouro',               field:'ouro_g',          unit:'g',  dec:2},
+  emb: {icon:'🚤', label:'Embarcações',        field:'embarcacoes',     unit:'un.', prejAll:true},
+  mtp: {icon:'⚙️', label:'Motor de Popa',      field:'motor_popa',      unit:'un.', prejAll:true},
+  mul: {icon:'⚖️', label:'Multas',             field:'multa',           unit:'', curr:true, prejMoney:'multa', prejNota:'valor das multas aplicadas'},
 };
 
 // valor da métrica numa ocorrência
@@ -3868,7 +4001,7 @@ function vgRows(m, base){
   if (m.kind !== 'count') rows = rows.filter(r => vgVal(m,r) > 0);
   return rows;
 }
-const vgNum = (m,v) => (m.dec ? fD(v, m.dec) : fN(v));
+const vgNum = (m,v) => m.curr ? fR(v) : (m.dec ? fD(v, m.dec) : fN(v));
 
 // prejuízo ao crime referente à métrica numa ocorrência
 function vgPrej(m, r){
@@ -3885,6 +4018,7 @@ function vgPrejFields(m){
 }
 // texto explicativo do prejuízo de cada métrica
 function vgPrejNota(m){
+  if (m.prejNota)  return m.prejNota;
   if (m.prejAll)   return 'prejuízo total das ocorrências listadas';
   if (m.prejMoney) return 'valor estimado dos veículos apreendidos';
   const un = [...new Set(vgPrejFields(m).map(f=>PREJ_UNIT[f]))];
@@ -4089,7 +4223,7 @@ function renderInsights() {
   const tc  = maxE(cntBy('natureza_crime'));
   const mes = {}; FIL.forEach(r=>{ if(r._date){const k=fMes(r._date);mes[k]=(mes[k]||0)+1;}});
   const tmes = maxE(mes);
-  const dgs = {'Cocaína/CH':sumF('cocaina_kg'),'Pasta Base':sumF('pasta_base_kg'),'Maconha':sumF('maconha_kg')};
+  const dgs = {}; DROGAS_TIPO.forEach(d => { dgs[d.rot] = sumF(d.campo); });
   const td  = maxE(dgs);
   const presos = sumF('no_presos');
   const taxa = FIL.length ? (presos/FIL.length).toFixed(2) : '0.00';
@@ -4159,10 +4293,22 @@ function renderMeio(){
   CHARTS['me']=new Chart(document.getElementById('c-meio'),{type:'doughnut',data:{labels:s.map(e=>e[0]),datasets:[{data:s.map(e=>e[1]),backgroundColor:PAL,borderColor:'#13161e',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'bottom',labels:{color:'#94a3b8',font:{size:10},padding:10,boxWidth:10}},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}`}}}}});
 }
 
+/* Drogas por tipo — inclui as colunas novas da planilha (crack, óxi, metanfetamina).
+   Só entram no gráfico os tipos com apreensão no filtro atual. */
+const DROGAS_TIPO = [
+  {campo:'cocaina_kg',       rot:'Cocaína/CH',    cor:'#ea580c'},
+  {campo:'pasta_base_kg',    rot:'Pasta Base',    cor:'#dc2626'},
+  {campo:'maconha_kg',       rot:'Maconha',       cor:'#22c55e'},
+  {campo:'crack_kg',         rot:'Crack',         cor:'#7c3aed'},
+  {campo:'oxi_kg',           rot:'Óxi',           cor:'#0d9488'},
+  {campo:'metanfetamina_kg', rot:'Metanfetamina', cor:'#3b82f6'},
+];
 function renderDrogas(){
   destroyC('d');
-  const vals=[FIL.reduce((a,r)=>a+r.cocaina_kg,0),FIL.reduce((a,r)=>a+r.pasta_base_kg,0),FIL.reduce((a,r)=>a+r.maconha_kg,0)];
-  CHARTS['d']=new Chart(document.getElementById('c-drogas'),{type:'bar',data:{labels:['Cocaína/CH','Pasta Base','Maconha'],datasets:[{label:'kg',data:vals,backgroundColor:['#ea580c','#dc2626','#22c55e'],borderRadius:4,borderWidth:0}]},options:{...cOpts('kg'),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fD(c.parsed.y,2)} kg`}}}}});
+  const somas = DROGAS_TIPO.map(d => ({...d, v: FIL.reduce((a,r)=>a+(r[d.campo]||0),0)}));
+  const vis = somas.filter(d => d.v > 0);
+  const usar = vis.length ? vis : somas.slice(0,3);
+  CHARTS['d']=new Chart(document.getElementById('c-drogas'),{type:'bar',data:{labels:usar.map(d=>d.rot),datasets:[{label:'kg',data:usar.map(d=>d.v),backgroundColor:usar.map(d=>d.cor),borderRadius:4,borderWidth:0}]},options:{...cOpts('kg'),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fD(c.parsed.y,2)} kg`}}}}});
 }
 
 // Análise temporal por ANO: Ocorrências (barras, eixo esq.) x Drogas kg (linha, eixo dir.)
@@ -4829,6 +4975,8 @@ function verBO(bo) {
       <div class="modal-field"><div class="modal-field-lbl">Crime</div><div class="modal-field-val">${oc.natureza_crime||'—'}</div></div>
       <div class="modal-field"><div class="modal-field-lbl">Presos</div><div class="modal-field-val">${oc.no_presos||0}</div></div>
       <div class="modal-field"><div class="modal-field-lbl">Drogas</div><div class="modal-field-val">${oc.drogas_total_kg>0?fD(oc.drogas_total_kg,2)+' kg':'—'}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Operação</div><div class="modal-field-val">${oc.operacao||'—'}</div></div>
+      <div class="modal-field"><div class="modal-field-lbl">Prejuízo ao crime</div><div class="modal-field-val">${prejRow(oc)>0?fR(prejRow(oc)):'—'}</div></div>
     </div></div>` : ''}
     ${envs.length ? `<div class="modal-sec"><div class="modal-sec-ttl">👤 Envolvidos (${envs.length})</div>
       <table class="modal-mini-tbl"><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Sexo</th><th>Status</th><th>Papel</th><th>Crime</th></tr></thead>
