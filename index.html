@@ -3225,7 +3225,7 @@ const GESTAO_PAGES = ['garagem','material','policiais-campo','diaria','recursos'
 // 'emborrachados' é PÚBLICA (não entra em GESTAO_PAGES) mas também não usa os filtros.
 const NO_FILTER_PAGES = [...GESTAO_PAGES, 'consultas', 'emborrachados'];
 // Páginas bloqueadas por usuário (ex.: comandante do CPE não vê Consultas).
-const RESTRICTED_PAGES = { cpe: ['consultas'], subcmt: ['consultas'], cmtcg: ['consultas'] };
+const RESTRICTED_PAGES = { cpe: ['consultas','diaria'], subcmt: ['consultas','diaria'], cmtcg: ['consultas','diaria'], p3aux: ['material','garagem','consultas'] };
 // Nome de boas-vindas por usuário (mostrado no chip do cabeçalho e na animação de login).
 const WELCOME_NOMES = {
   desousa:   'CB QPPM De Sousa',
@@ -4560,10 +4560,17 @@ const AUTH = {
 };
 
 // Esconde itens de menu bloqueados para o usuário logado (ver RESTRICTED_PAGES).
+// Percorre TODAS as páginas citadas em RESTRICTED_PAGES (não só 'consultas') pra
+// cobrir qualquer combinação, e sempre reseta os que não estão bloqueados —
+// importante ao trocar de usuário (logout de um restrito + login de outro sem restrição).
 function applyUserRestrictions(){
   const blocked = AUTH.logged ? (RESTRICTED_PAGES[AUTH.user] || []) : [];
-  const navConsultas = document.getElementById('nav-consultas');
-  if (navConsultas) navConsultas.style.display = blocked.includes('consultas') ? 'none' : '';
+  const todasPaginasRestringiveis = new Set();
+  Object.values(RESTRICTED_PAGES).forEach(arr => arr.forEach(pg => todasPaginasRestringiveis.add(pg)));
+  todasPaginasRestringiveis.forEach(pg => {
+    const nav = document.getElementById('nav-' + pg);
+    if (nav) nav.style.display = blocked.includes(pg) ? 'none' : '';
+  });
   if (blocked.includes(currentPage)) showPage('visao-geral');
 }
 applyUserRestrictions();
