@@ -1501,6 +1501,26 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       .dp-pill.active .dp-b{background:rgba(0,0,0,.18);color:#000}
       .dp-cmd-info{font-size:11.5px;color:var(--muted,#94a3b8);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
       .dp-cmd-info b{color:#fbbf24}
+      /* Alerta de possíveis missões duplicadas (mesmo policial, período sobreposto) */
+      .dp-dup-alert{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:12px;margin-bottom:16px;overflow:hidden}
+      .dp-dup-alert.hide{display:none}
+      .dp-dup-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:13px;color:#fca5a5;font-weight:700}
+      .dp-dup-head b{color:#fecaca;font-family:'Rajdhani',sans-serif;font-size:16px}
+      .dp-dup-txt{flex:1}
+      .dp-dup-arrow{font-size:11px;font-weight:700;opacity:.85;white-space:nowrap}
+      .dp-dup-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+      .dp-dup-body.hide{display:none}
+      .dp-dup-grupo{background:var(--bg,#0b1220);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:10px 12px}
+      .dp-dup-grupo-h{font-size:12.5px;margin-bottom:7px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      .dp-dup-inflado{color:#fca5a5;font-weight:700;font-size:11.5px}
+      .dp-dup-item{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--muted,#94a3b8);padding:5px 0;border-top:1px dashed rgba(148,163,184,.15)}
+      .dp-dup-item:first-child{border-top:none}
+      .dp-dup-item .tag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;padding:2px 7px;border-radius:20px;background:rgba(148,163,184,.15);color:#cbd5e1;white-space:nowrap}
+      .dp-dup-item.orig .tag{background:rgba(34,197,94,.15);color:#86efac}
+      .dp-dup-item .op{color:var(--fg,#e2e8f0);font-weight:600}
+      .dp-dup-item .op small{color:var(--muted,#64748b);font-weight:400}
+      .dp-dup-item .per{color:#93c5fd;font-weight:700}
+      .dp-dup-item .val{font-family:'Rajdhani',sans-serif;font-weight:800;color:#fbbf24}
       .dp-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
       .dp-search{flex:1;min-width:220px;background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:14px;font-family:inherit}
       .dp-select{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:var(--fg,#e2e8f0);font-size:13px;font-family:inherit}
@@ -1598,6 +1618,15 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="sec">💵 Diária por Policial — Custo Operacional</div>
       <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — dados ao vivo da planilha <b>BASE DE DADOS - MISSÃO</b>. Filtre por comando (BPFRON / CRP / CPE) e clique num nome para ver todas as missões.</div>
       <div id="dp-status" class="dp-status">Carregando…</div>
+
+      <div id="dp-dup-alert" class="dp-dup-alert hide">
+        <div class="dp-dup-head" onclick="dpDupToggle()">
+          <span>⚠️</span>
+          <span class="dp-dup-txt">Encontrada(s) <b id="dp-dup-count">0</b> possível(is) missão(ões) duplicada(s) — mesmo policial, período sobreposto</span>
+          <span class="dp-dup-arrow" id="dp-dup-arrow">▾ ver detalhes</span>
+        </div>
+        <div id="dp-dup-body" class="dp-dup-body hide"></div>
+      </div>
 
       <div class="dp-cmd">
         <div class="dp-cmd-lbl">🏛️ Filtrar por comando / unidade</div>
@@ -3209,7 +3238,8 @@ const WELCOME_NOMES = {
   p301:          '1º SGT QPPM Fonseca',
   p3cmt:         'Tenente Caciano',
   subcmtbpfron:  'Capitão Renê',
-  p4bel:         '3º SGT QPPM Xavier'
+  p4bel:         '3º SGT QPPM Xavier',
+  p3aux:         '3º SGT QPPM Juliana'
 };
 function nomeBoasVindas(u){ return WELCOME_NOMES[(u||'').toLowerCase()] || u || ''; }
 
@@ -6423,7 +6453,7 @@ function renderCampo(){
 }
 
 /* ═══════════════ DIÁRIA POR POLICIAL (/api/diaria) ═══════════════ */
-let DP_LOADED = false, DP_DATA = null, DP_SEL = null, DP_EFET_BY_RE = {}, DP_OPM_SEL = null, DP_DUP_OK = false;
+let DP_LOADED = false, DP_DATA = null, DP_SEL = null, DP_EFET_BY_RE = {}, DP_OPM_SEL = null, DP_DUP_OK = false, DP_DUP_GRUPOS = null;
 function dpEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // Chave estável de um policial (RE ou, na falta, nome em maiúsculas).
 function dpKey(p){ return p.re ? ('R:'+p.re) : ('N:'+(p.nome||'').toUpperCase()); }
@@ -6650,9 +6680,102 @@ function dpRenderAll(){
   dpCharts();
   dpRenderOpCards();
   dpRenderOpmRank();
+  dpRenderDupAlert();
   // Se havia um policial/OPM selecionado, re-renderiza o detalhe.
   if (DP_SEL) dpRenderDetail();
   if (DP_OPM_SEL) dpRenderOpmDetail();
+}
+
+// Converte "dd/mm/aaaa" (vem da planilha) ou "aaaa-mm-dd" (<input type=date>) em Date.
+function dpParseData(s){
+  s = String(s||'').trim();
+  let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+// Dois períodos se cruzam (inclusive) — mesmo com formatos de data diferentes.
+function dpPeriodosSobrepoem(iniA, fimA, iniB, fimB){
+  const a1 = dpParseData(iniA); if(!a1) return false;
+  const a2 = dpParseData(fimA) || a1;
+  const b1 = dpParseData(iniB); if(!b1) return false;
+  const b2 = dpParseData(fimB) || b1;
+  const start = a1 > b1 ? a1 : b1, end = a2 < b2 ? a2 : b2;
+  if(start > end) return false;
+  // >=2 dias de sobreposição real. 1 dia de toque na fronteira (uma missão termina
+  // no mesmo dia em que a outra começa) é o deslocamento normal entre missões — não
+  // é duplicidade, e sinalizar isso só gera ruído/desconfiança no aviso.
+  const dias = Math.round((end - start) / 86400000) + 1;
+  return dias >= 2;
+}
+
+// Varredura: pra cada policial, agrupa missões com período sobreposto (mesmo com
+// ID_MISSAO/ÓRGÃO escritos diferente — foi assim que passaram 19 duplicatas batendo
+// só ID+ÓRGÃO em 05/08/2026). Usa union-find simples pra juntar cadeias de 3+.
+function dpScanDuplicados(){
+  const grupos = [];
+  (DP_DATA && DP_DATA.policiais || []).forEach(p=>{
+    const ms = (p.missoes||[]).filter(m=>m.data_inicio);
+    const n = ms.length; if(n < 2) return;
+    const parent = Array.from({length:n}, (_,i)=>i);
+    const find = i => parent[i]===i ? i : (parent[i] = find(parent[i]));
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+      if(dpPeriodosSobrepoem(ms[i].data_inicio, ms[i].data_fim, ms[j].data_inicio, ms[j].data_fim)){
+        const ri=find(i), rj=find(j); if(ri!==rj) parent[ri]=rj;
+      }
+    }
+    const byRoot = {};
+    ms.forEach((m,i)=>{ const r=find(i); (byRoot[r]=byRoot[r]||[]).push(m); });
+    Object.values(byRoot).filter(g=>g.length>1).forEach(g=>{
+      g.sort((a,b)=>(b._t||0)-(a._t||0)); // mais recente primeiro (a mais antiga = mantida, fica por último)
+      grupos.push({ p, missoes: g });
+    });
+  });
+  grupos.sort((a,b)=>{
+    const va = a.missoes.slice(0,-1).reduce((s,m)=>s+(m.valor_total||0),0);
+    const vb = b.missoes.slice(0,-1).reduce((s,m)=>s+(m.valor_total||0),0);
+    return vb - va;
+  });
+  return grupos;
+}
+
+function dpRenderDupAlert(){
+  const wrap = document.getElementById('dp-dup-alert'); if(!wrap) return;
+  if(!DP_DATA){ wrap.classList.add('hide'); return; }
+  const grupos = dpScanDuplicados();
+  DP_DUP_GRUPOS = grupos;
+  if(!grupos.length){ wrap.classList.add('hide'); return; }
+  wrap.classList.remove('hide');
+  const cnt = document.getElementById('dp-dup-count'); if(cnt) cnt.textContent = grupos.length;
+  const body = document.getElementById('dp-dup-body'); if(!body) return;
+  const canEdit = dpCanEdit();
+  body.innerHTML = grupos.map(g=>{
+    const excedente = g.missoes.slice(0,-1).reduce((s,m)=>s+(m.valor_total||0),0);
+    return `<div class="dp-dup-grupo">
+      <div class="dp-dup-grupo-h"><b>${dpEsc(g.p.nome||'—')}</b>${g.p.re?` <span class="dp-badge">RE ${dpEsc(g.p.re)}</span>`:''}
+        <span class="dp-dup-inflado">possível pago a mais: ${fR(excedente)}</span></div>
+      ${g.missoes.map((m,i)=>{
+        const last = i===g.missoes.length-1; // a mais antiga fica por último (mantida)
+        const per = dpEsc((m.data_inicio||'?')+' → '+(m.data_fim||'?'));
+        const del = (canEdit && !last) ? `<button class="dp-del" onclick="dpDeleteMissao(event, ${m._row}, '${dpEsc(g.p.re)}')">🗑️ Excluir</button>` : '';
+        return `<div class="dp-dup-item${last?' orig':''}">
+          <span class="tag">${last?'mais antiga · manter':'possível duplicata'}</span>
+          <span class="op">${dpEsc(m.operacao||'—')}${m.id_missao?` <small>· ${dpEsc(m.id_missao)} / ${dpEsc(m.orgao||'')}</small>`:''}</span>
+          <span class="per">🗓️ ${per}</span>
+          <span class="val">${fR(m.valor_total)}</span>
+          ${del}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function dpDupToggle(){
+  const body = document.getElementById('dp-dup-body'); const arrow = document.getElementById('dp-dup-arrow');
+  if(!body) return;
+  const hidden = body.classList.toggle('hide');
+  if(arrow) arrow.textContent = hidden ? '▾ ver detalhes' : '▴ ocultar';
 }
 
 function dpRenderKPIs(){
@@ -7251,15 +7374,36 @@ async function dpSalvar(){
   });
   if(!pols.length){ err.textContent='Adicione ao menos um policial (com RE ou nome de guerra).'; return; }
 
-  // ⚠️ Aviso de escala já lançada (mesmo ID da missão + órgão).
+  // ⚠️ Aviso de escala já lançada — duas checagens independentes:
+  //  1) mesmo ID_MISSAO + ÓRGÃO (texto igual)
+  //  2) mesmo policial já tem QUALQUER missão em período que cruza com o que está
+  //     sendo lançado agora, mesmo que ID_MISSAO/ÓRGÃO estejam escritos diferente
+  //     (foi assim que passaram 19 duplicatas em 05/08/2026 — ver dpScanDuplicados).
   if(!DP_DUP_OK){
     const ex = dpExisting();
     const mk = dpNorm(idMissao)+'||'+dpNorm(orgao);
     const jaLancados = pols.filter(p=> p.re && ex.perRE.has(mk+'||'+dpNorm(p.re)));
-    if(ex.missao.has(mk) || jaLancados.length){
+    const dataIni = g('dm-inicio'), dataFim = g('dm-fim');
+    const sobrepostos = [];
+    pols.forEach(p=>{
+      if(!p.re) return;
+      const existente = (DP_DATA.policiais||[]).find(x=>x.re===p.re);
+      if(!existente) return;
+      const conflito = (existente.missoes||[]).find(m=>dpPeriodosSobrepoem(dataIni, dataFim, m.data_inicio, m.data_fim));
+      if(conflito) sobrepostos.push({ p, m: conflito });
+    });
+    if(ex.missao.has(mk) || jaLancados.length || sobrepostos.length){
       const nomes = jaLancados.slice(0,8).map(p=>p.guerra||('RE '+p.re)).join(', ');
-      err.innerHTML = `⚠️ <b>Escala possivelmente já lançada</b> — ID "<b>${dpEsc(idMissao)}</b>" / órgão "<b>${dpEsc(orgao)}</b>" já existe`
-        + (jaLancados.length?` para ${jaLancados.length} policial(is): ${dpEsc(nomes)}${jaLancados.length>8?'…':''}`:'')
+      const nomesPeriodo = sobrepostos.slice(0,8).map(s=>{
+        const nome = dpEsc(s.p.guerra||('RE '+s.p.re));
+        const op = dpEsc(s.m.operacao||s.m.id_missao||'—');
+        const per = dpEsc((s.m.data_inicio||'?')+' → '+(s.m.data_fim||'?'));
+        return `${nome} (já tem "${op}" em ${per})`;
+      }).join('; ');
+      err.innerHTML = `⚠️ <b>Escala possivelmente já lançada</b>`
+        + (ex.missao.has(mk)||jaLancados.length ? ` — ID "<b>${dpEsc(idMissao)}</b>" / órgão "<b>${dpEsc(orgao)}</b>" já existe`
+            + (jaLancados.length?` para ${jaLancados.length} policial(is): ${dpEsc(nomes)}${jaLancados.length>8?'…':''}`:'') : '')
+        + (sobrepostos.length ? ` — ${sobrepostos.length} policial(is) já têm missão em período sobreposto: ${nomesPeriodo}${sobrepostos.length>8?'…':''}` : '')
         + `. Confira se não é repetição. Para lançar assim mesmo, clique de novo em <b>Lançar mesmo assim</b>.`;
       DP_DUP_OK = true;
       const sb=document.getElementById('dm-save-btn'); sb.textContent='⚠️ Lançar mesmo assim'; sb.style.background='#f97316';
