@@ -91,6 +91,11 @@ body{
 .rvn-fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
 .rvn-fg input,.rvn-fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px}
 .rvn-fg input:focus,.rvn-fg select:focus{border-color:rgba(245,197,24,.6)}
+.rvn-date-wrap{position:relative;display:flex}
+.rvn-date-wrap input[type=text],.rvn-date-wrap input:not([type]){width:100%;padding-right:42px}
+.rvn-date-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:transparent;color:var(--muted);font-size:17px;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.rvn-date-btn:hover{color:#f5c518;background:rgba(245,197,24,.12)}
+.rvn-date-native{position:absolute;inset:0;width:1px;height:1px;opacity:0;pointer-events:none;border:none}
 .rvn-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:13px 22px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;height:46px}
 .rvn-send:disabled{opacity:.4;cursor:not-allowed}
 .rvn-msg{font-size:14px;min-height:18px;width:100%}
@@ -226,8 +231,20 @@ body{
     <div class="sec">➕ Criar período</div>
     <form onsubmit="return gestCriarPeriodo(event)" class="rvn-form">
       <div class="rvn-fg"><label>Nome do período</label><input id="rvn-p-nome" placeholder="Ex.: 01 A 08 DE AGOSTO"></div>
-      <div class="rvn-fg"><label>Data início</label><input id="rvn-p-inicio" placeholder="DD/MM/AAAA"></div>
-      <div class="rvn-fg"><label>Data fim</label><input id="rvn-p-fim" placeholder="DD/MM/AAAA"></div>
+      <div class="rvn-fg"><label>Data início</label>
+        <div class="rvn-date-wrap">
+          <input id="rvn-p-inicio" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="off" oninput="rvnMaskData(this)">
+          <input type="date" id="rvn-p-inicio-nat" class="rvn-date-native" tabindex="-1" onchange="rvnDateFromNative(this,'rvn-p-inicio')">
+          <button type="button" class="rvn-date-btn" onclick="rvnAbrirCalendario('rvn-p-inicio','rvn-p-inicio-nat')" aria-label="Abrir calendário" title="Abrir calendário">📅</button>
+        </div>
+      </div>
+      <div class="rvn-fg"><label>Data fim</label>
+        <div class="rvn-date-wrap">
+          <input id="rvn-p-fim" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="off" oninput="rvnMaskData(this)">
+          <input type="date" id="rvn-p-fim-nat" class="rvn-date-native" tabindex="-1" onchange="rvnDateFromNative(this,'rvn-p-fim')">
+          <button type="button" class="rvn-date-btn" onclick="rvnAbrirCalendario('rvn-p-fim','rvn-p-fim-nat')" aria-label="Abrir calendário" title="Abrir calendário">📅</button>
+        </div>
+      </div>
       <button class="rvn-send" type="submit">Criar período</button>
     </form>
     <div class="rvn-msg" id="rvn-p-msg"></div>
@@ -556,6 +573,28 @@ function renderPainel(periodos){
       </div>
     </div>`
   ).join('');
+}
+
+function rvnMaskData(el){
+  let v = el.value.replace(/\D/g,'').slice(0,8);
+  if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+  else if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+  el.value = v;
+}
+
+function rvnAbrirCalendario(textId, nativeId){
+  const txt = document.getElementById(textId);
+  const nat = document.getElementById(nativeId);
+  if (!nat) return;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(txt.value);
+  nat.value = m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+  try { nat.showPicker(); } catch(e) { nat.focus(); nat.click(); }
+}
+
+function rvnDateFromNative(nat, textId){
+  if (!nat.value) return;
+  const [y,m,d] = nat.value.split('-');
+  document.getElementById(textId).value = `${d}/${m}/${y}`;
 }
 
 async function gestCriarPeriodo(ev){
