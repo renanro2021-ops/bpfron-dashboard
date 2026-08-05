@@ -186,7 +186,7 @@ body{
     <div class="sec">🔎 Encontre seu RVN</div>
     <div class="rvn-busca-box">
       <div class="rvn-busca-form">
-        <input id="rvn-q" placeholder="Digite seu RE, CPF ou nome completo" onkeydown="if(event.key==='Enter')rvnBuscar()">
+        <input id="rvn-q" placeholder="Digite seu RE, CPF ou nome completo" onfocus="rvnAquecer()" onkeydown="if(event.key==='Enter')rvnBuscar()">
         <button class="rvn-btn" onclick="rvnBuscar()">🔎 Buscar</button>
       </div>
       <div class="rvn-hint">Não precisa de senha. O PDF assinado é conferido automaticamente: assinatura digital real (gov.br/ICP-Brasil) e período correto — print ou imagem colada não passam.</div>
@@ -354,6 +354,19 @@ function rvnFoco(){
 }
 
 /* --------------------------- Busca pública --------------------------- */
+
+// Pré-aquece o índice de RVNs (Drive) no Worker antes do policial terminar
+// de digitar, pra busca de verdade não pagar o custo de varrer o Drive
+// (~3s). Fogo-e-esquece: não trava a tela, ignora erro/offline. Chamado no
+// load da página e de novo ao focar o campo de busca (cobre quem demora >5
+// min entre abrir a página e buscar — o índice no Worker expira em 5 min).
+let _rvnAquecido = 0;
+function rvnAquecer(){
+  const agora = Date.now();
+  if (agora - _rvnAquecido < 60000) return; // evita martelar em foco repetido
+  _rvnAquecido = agora;
+  fetch(API_BASE + '/api/rvn/aquecer').catch(() => {});
+}
 
 async function rvnBuscar(){
   const q = (document.getElementById('rvn-q').value || '').trim();
@@ -657,6 +670,7 @@ async function rvnLancarFila(){
 }
 
 renderUserChip();
+rvnAquecer();
 </script>
 </body>
 </html>
