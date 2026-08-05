@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RVN · Assinatura Digital · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --gold:     #c9a030;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15.5px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px}
+#rvn-userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+
+.wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,44px) clamp(18px,4vw,24px) 70px}
+
+.rvn-hero{text-align:center;padding:clamp(20px,4vw,32px) 10px clamp(30px,5vw,42px)}
+.rvn-hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,38px);font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:12px}
+.rvn-hero p{color:var(--muted);font-size:16px;max-width:560px;margin:0 auto 26px;line-height:1.7}
+.rvn-hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.rvn-cta{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:15px 26px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,filter .12s}
+.rvn-cta:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.rvn-cta.ghost{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);padding:14px 25px}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:36px 0 16px;display:flex;align-items:center;gap:10px}
+
+.rvn-busca-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.rvn-busca-form{display:flex;gap:12px;flex-wrap:wrap}
+.rvn-busca-form input{flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:16px;outline:none;min-height:50px}
+.rvn-busca-form input:focus{border-color:rgba(245,197,24,.6)}
+.rvn-btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:50px;transition:background .12s,border-color .12s}
+.rvn-btn:hover{background:rgba(245,197,24,.22)}
+.rvn-btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
+.rvn-hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+
+#rvn-resultados{margin-top:18px;display:flex;flex-direction:column;gap:14px}
+.rvn-state{text-align:center;padding:32px 18px;color:var(--muted);font-size:15px}
+.rvn-state.err{color:#fca5a5}
+.rvn-quem{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.35);border-radius:12px;padding:14px 16px;font-size:15px;color:#bfdbfe}
+.rvn-cand{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px 16px;cursor:pointer;font-size:15px}
+.rvn-cand:hover{border-color:rgba(245,197,24,.5)}
+
+.rvn-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:19px 20px}
+.rvn-card.ok{border-color:rgba(16,185,129,.35)}
+.rvn-card-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.rvn-card-top b{font-size:15.5px}
+.rvn-badge{font-size:11px;font-weight:800;letter-spacing:.5px;padding:4px 11px;border-radius:999px}
+.rvn-badge.pend{background:rgba(251,191,36,.16);color:#fcd34d}
+.rvn-badge.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
+.rvn-periodo-datas{margin-left:auto;font-size:13px;color:var(--muted)}
+.rvn-card-actions{display:flex;gap:12px;flex-wrap:wrap}
+.rvn-enviar-box{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+
+.rvn-fg{display:flex;flex-direction:column;gap:5px}
+.rvn-fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.rvn-fg input,.rvn-fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px}
+.rvn-fg input:focus,.rvn-fg select:focus{border-color:rgba(245,197,24,.6)}
+.rvn-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:13px 22px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;height:46px}
+.rvn-send:disabled{opacity:.4;cursor:not-allowed}
+.rvn-msg{font-size:14px;min-height:18px;width:100%}
+.rvn-msg.err{color:#fca5a5}
+.rvn-msg.ok{color:#6ee7b7}
+
+.rvn-dropzone{border:2px dashed var(--border);border-radius:16px;padding:40px 22px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;font-size:15px;line-height:1.6}
+.rvn-dropzone:hover,.rvn-dropzone.over{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.06);color:#e2e8f0}
+.rvn-fila-item{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:8px;font-size:14px;flex-wrap:wrap}
+.rvn-fila-item.ok{border-color:rgba(16,185,129,.4)}
+.rvn-fila-item.erro{border-color:rgba(220,38,38,.5)}
+.rvn-fila-nome{flex:1;min-width:140px;word-break:break-all;color:#cbd5e1}
+.rvn-fila-item input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:13.5px;min-height:40px}
+.rvn-fila-status{font-size:12.5px;color:var(--muted);white-space:nowrap}
+
+.rvn-gest-toggle{margin-top:50px;text-align:center}
+#rvn-login{max-width:420px;margin:18px auto 0}
+.rvn-user-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px;font-size:15px;color:var(--muted)}
+.rvn-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:end;margin-bottom:10px}
+.rvn-painel-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.rvn-painel-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.rvn-painel-lbl{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.rvn-painel-item{font-size:14.5px;color:#cbd5e1;padding:4px 0}
+.rvn-painel-item.vazio{color:var(--muted)}
+
+/* ---------------- tablet / mobile ---------------- */
+@media(max-width:760px){
+  body{font-size:15px}
+  .hdr-inner{padding:10px 14px;gap:10px}
+  .hdr-logo{height:38px}
+  .hdr-title{font-size:16.5px}
+  .hdr-sub{font-size:10.5px}
+  .hdr-back{font-size:12px}
+  .wrap{padding:20px 14px 56px}
+  .rvn-hero{padding:14px 4px 26px}
+  .rvn-hero h1{font-size:25px;margin-bottom:10px}
+  .rvn-hero p{font-size:14.5px;margin-bottom:20px}
+  .rvn-hero-btns{flex-direction:column;gap:10px}
+  .rvn-hero-btns .rvn-cta{width:100%}
+  .sec{margin:28px 0 14px;font-size:12px}
+  .rvn-busca-box{padding:16px}
+  .rvn-busca-form{flex-direction:column}
+  .rvn-busca-form input,.rvn-busca-form button{width:100%}
+  .rvn-card{padding:16px}
+  .rvn-card-actions{flex-direction:column}
+  .rvn-card-actions .rvn-btn{width:100%;text-align:center}
+  .rvn-periodo-datas{margin-left:0;flex-basis:100%}
+  .rvn-enviar-box{flex-direction:column;align-items:stretch}
+  .rvn-enviar-box .rvn-fg,.rvn-enviar-box .rvn-send{width:100%}
+  .rvn-form{grid-template-columns:1fr}
+  .rvn-painel-cols{grid-template-columns:1fr}
+  .rvn-dropzone{padding:30px 16px;font-size:14px}
+  .rvn-fila-item{flex-direction:column;align-items:stretch}
+  .rvn-fila-item input{width:100%!important}
+  .rvn-fila-nome{min-width:0}
+  .rvn-fila-status{white-space:normal}
+}
+@media(max-width:380px){
+  .hdr-sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">RVN <em>Assinatura Digital</em></div>
+        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="rvn-userchip"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="rvn-hero">
+    <h1>Assinatura de RVN</h1>
+    <p>Baixe seu Relatório de Viagem (RVN) pendente, assine digitalmente no gov.br e devolva o assinado — tudo por aqui, sem precisar de senha.</p>
+    <div class="rvn-hero-btns">
+      <button class="rvn-cta" onclick="rvnFoco()">⬇️ Baixar meu RVN</button>
+      <button class="rvn-cta ghost" onclick="rvnFoco()">⬆️ Mandar RVN assinado</button>
+    </div>
+  </div>
+
+  <div id="rvn-busca-sec">
+    <div class="sec">🔎 Encontre seu RVN</div>
+    <div class="rvn-busca-box">
+      <div class="rvn-busca-form">
+        <input id="rvn-q" placeholder="Digite seu RE, CPF ou nome completo" onkeydown="if(event.key==='Enter')rvnBuscar()">
+        <button class="rvn-btn" onclick="rvnBuscar()">🔎 Buscar</button>
+      </div>
+      <div class="rvn-hint">Não precisa de senha. O PDF assinado é conferido automaticamente: assinatura digital real (gov.br/ICP-Brasil) e período correto — print ou imagem colada não passam.</div>
+      <div class="rvn-msg err" id="rvn-busca-msg"></div>
+    </div>
+    <div id="rvn-resultados"></div>
+  </div>
+
+  <div class="rvn-gest-toggle">
+    <button class="rvn-btn ghost" id="rvn-gest-btn" onclick="gestToggle()">🔐 Área da gestão</button>
+  </div>
+
+  <div id="rvn-login" style="display:none">
+    <div class="rvn-busca-box">
+      <div class="sec" style="margin-top:0">🔐 Área da gestão</div>
+      <form onsubmit="return gestDoLogin(event)">
+        <div class="rvn-fg" style="margin-bottom:10px">
+          <label>Usuário</label>
+          <input id="rvn-l-user" type="text" autocomplete="username" required>
+        </div>
+        <div class="rvn-fg" style="margin-bottom:10px">
+          <label>Senha</label>
+          <input id="rvn-l-pass" type="password" autocomplete="current-password" required>
+        </div>
+        <div id="rvn-l-erro" class="rvn-msg err" style="margin:0 0 10px"></div>
+        <button class="rvn-send" id="rvn-l-btn" type="submit" style="width:100%">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="rvn-gestao" style="display:none">
+    <div class="rvn-user-bar">Logado como <b id="rvn-gest-user"></b> · <a href="#" onclick="apiLogout();return false" style="color:var(--muted)">sair</a></div>
+
+    <div class="sec">📋 Painel de períodos</div>
+    <div id="rvn-painel"><div class="rvn-state">Carregando…</div></div>
+
+    <div class="sec">➕ Criar período</div>
+    <form onsubmit="return gestCriarPeriodo(event)" class="rvn-form">
+      <div class="rvn-fg"><label>Nome do período</label><input id="rvn-p-nome" placeholder="Ex.: 01 A 08 DE AGOSTO"></div>
+      <div class="rvn-fg"><label>Data início</label><input id="rvn-p-inicio" placeholder="DD/MM/AAAA"></div>
+      <div class="rvn-fg"><label>Data fim</label><input id="rvn-p-fim" placeholder="DD/MM/AAAA"></div>
+      <button class="rvn-send" type="submit">Criar período</button>
+    </form>
+    <div class="rvn-msg" id="rvn-p-msg"></div>
+
+    <div class="sec">📤 Lançar RVN pendente</div>
+    <div class="rvn-form" style="margin-bottom:12px">
+      <div class="rvn-fg"><label>Período</label><select id="rvn-l-periodo"></select></div>
+      <div class="rvn-fg" style="justify-content:center">
+        <label style="display:flex;align-items:center;gap:6px;text-transform:none;font-weight:500;font-size:12px;color:#cbd5e1">
+          <input type="checkbox" id="rvn-l-subst" style="width:auto"> substituir se já existir
+        </label>
+      </div>
+    </div>
+
+    <div class="rvn-dropzone" id="rvn-dropzone"
+         onclick="document.getElementById('rvn-l-files').click()"
+         ondragover="event.preventDefault(); this.classList.add('over')"
+         ondragleave="this.classList.remove('over')"
+         ondrop="event.preventDefault(); this.classList.remove('over'); rvnAdicionarArquivos(event.dataTransfer.files)">
+      📎 Arraste vários PDFs aqui, ou clique pra selecionar<br>
+      <small style="color:var(--muted)">o sistema lê o CPF e o nome de dentro de cada PDF sozinho — confira antes de lançar</small>
+      <input type="file" id="rvn-l-files" accept="application/pdf" multiple style="display:none" onchange="rvnAdicionarArquivos(this.files); this.value=''">
+    </div>
+
+    <div id="rvn-l-fila" style="margin-top:12px"></div>
+    <button class="rvn-send" id="rvn-l-enviar-btn" onclick="rvnLancarFila()" disabled style="margin-top:10px">🚀 Lançar 0 arquivo(s)</button>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+// Núcleo do login — mesmo endpoint/token do dashboard principal (localStorage
+// é do mesmo domínio, então quem já logou no dashboard já está logado aqui).
+async function submitLogin(user, pass, btn, erro){
+  erro.textContent = ''; btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'Entrando...';
+  try {
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token = d.token; AUTH.user = d.user;
+    renderUserChip();
+    return true;
+  } catch(e){
+    erro.textContent = (e && e.message) ? e.message : 'Não foi possível conectar ao servidor.';
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = oldTxt || 'Entrar';
+  }
+}
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
+  return await r.json();
+}
+async function apiPostJSON(path, body){
+  const r = await fetch(API_BASE + path, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + AUTH.token, 'Content-Type':'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+async function apiPostForm(path, formData){
+  const r = await fetch(API_BASE + path, { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token }, body: formData });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+async function apiPostJSONPublic(path, body){
+  const r = await fetch(API_BASE + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+async function apiPostFormPublic(path, formData){
+  const r = await fetch(API_BASE + path, { method:'POST', body: formData });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+
+function renderUserChip(){
+  const el = document.getElementById('rvn-userchip');
+  el.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
+  document.getElementById('rvn-gest-btn').textContent = AUTH.logged ? '📋 Painel da gestão' : '🔐 Área da gestão';
+}
+
+function apiLogout(){
+  AUTH.token = ''; AUTH.user = '';
+  RVN_FILA = [];
+  document.getElementById('rvn-gestao').style.display = 'none';
+  document.getElementById('rvn-login').style.display = 'none';
+  renderUserChip();
+}
+
+function rvnFoco(){
+  document.getElementById('rvn-busca-sec').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('rvn-q').focus();
+}
+
+/* --------------------------- Busca pública --------------------------- */
+
+async function rvnBuscar(){
+  const q = (document.getElementById('rvn-q').value || '').trim();
+  const wrap = document.getElementById('rvn-resultados');
+  const msg = document.getElementById('rvn-busca-msg');
+  msg.textContent = '';
+  if (q.length < 3){ msg.textContent = 'Digite RE, CPF ou nome (mínimo 3 caracteres).'; return; }
+  wrap.innerHTML = '<div class="rvn-state">Buscando…</div>';
+  try {
+    const d = await apiPostJSONPublic('/api/rvn/buscar', { query: q });
+    renderResultado(d);
+  } catch(e){
+    wrap.innerHTML = '';
+    msg.textContent = e.message || 'Erro ao buscar.';
+  }
+}
+
+let RVN_CANDS = [];
+function rvnBuscarExato(valor){
+  document.getElementById('rvn-q').value = valor;
+  rvnBuscar();
+}
+function rvnBuscarCand(i){
+  const c = RVN_CANDS[i];
+  if (c) rvnBuscarExato(c.nome);
+}
+
+function renderResultado(data){
+  const wrap = document.getElementById('rvn-resultados');
+
+  if (data.ambiguo) {
+    RVN_CANDS = data.candidatos;
+    wrap.innerHTML = '<div class="rvn-hint">Encontramos mais de uma pessoa. Escolha quem é você:</div>' +
+      data.candidatos.map((c, i) =>
+        `<div class="rvn-cand" onclick="rvnBuscarCand(${i})"><b>${esc(c.nome)}</b></div>`
+      ).join('');
+    return;
+  }
+  if (!data.encontrado) {
+    wrap.innerHTML = '<div class="rvn-state">Não encontramos nenhum RVN pendente ou assinado com essa busca.</div>';
+    return;
+  }
+
+  const quemInfo = [data.posto_grad, data.re ? ('RE ' + data.re) : ''].filter(Boolean).join(' · ');
+  let html = `<div class="rvn-quem"><b>${esc(data.nome)}</b>${quemInfo ? ' · ' + esc(quemInfo) : ''}</div>`;
+  if (!data.pendentes.length && !data.assinados.length) {
+    html += '<div class="rvn-state">Nenhum RVN pendente ou assinado encontrado para você ainda.</div>';
+  }
+  data.pendentes.forEach((p, i) => {
+    html += `
+    <div class="rvn-card" id="rvn-pend-${i}">
+      <div class="rvn-card-top">
+        <span class="rvn-badge pend">PENDENTE</span>
+        <b>${esc(p.periodo)}</b>
+        <span class="rvn-periodo-datas">${esc(p.dataInicio || '—')} a ${esc(p.dataFim || '—')}</span>
+      </div>
+      <div class="rvn-card-actions">
+        <button class="rvn-btn" onclick="rvnBaixar('${p.fileId}')">⬇️ Baixar RVN</button>
+        <button class="rvn-btn ghost" onclick="rvnToggleEnviar(${i})">⬆️ Enviar assinado</button>
+      </div>
+      <div class="rvn-enviar-box" id="rvn-enviar-${i}" style="display:none">
+        <div class="rvn-fg"><label>Seu CPF completo (só números)</label><input id="rvn-cpf-${i}" inputmode="numeric" maxlength="14" placeholder="Ex.: 12345678900"></div>
+        <div class="rvn-fg"><label>PDF assinado</label><input id="rvn-file-${i}" type="file" accept="application/pdf"></div>
+        <button class="rvn-send" onclick="rvnEnviar(${i}, '${p.fileId}')">Enviar assinado</button>
+        <div class="rvn-msg" id="rvn-msg-${i}"></div>
+      </div>
+    </div>`;
+  });
+  data.assinados.forEach((a) => {
+    html += `
+    <div class="rvn-card ok">
+      <div class="rvn-card-top">
+        <span class="rvn-badge ok">✅ ASSINADO</span>
+        <b>${esc(a.periodo)}</b>
+        <span class="rvn-periodo-datas">${esc(a.dataInicio || '—')} a ${esc(a.dataFim || '—')}</span>
+      </div>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function rvnBaixar(fileId){
+  window.open(API_BASE + '/api/rvn/download?fileId=' + encodeURIComponent(fileId), '_blank');
+}
+
+function rvnToggleEnviar(i){
+  const box = document.getElementById('rvn-enviar-' + i);
+  box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function rvnEnviar(i, fileId){
+  const cpf = (document.getElementById('rvn-cpf-' + i).value || '').replace(/\D/g, '');
+  const fileInput = document.getElementById('rvn-file-' + i);
+  const msg = document.getElementById('rvn-msg-' + i);
+  msg.className = 'rvn-msg'; msg.textContent = '';
+
+  if (cpf.length !== 11){ msg.className = 'rvn-msg err'; msg.textContent = 'Informe seu CPF completo (11 dígitos).'; return; }
+  const file = fileInput.files && fileInput.files[0];
+  if (!file){ msg.className = 'rvn-msg err'; msg.textContent = 'Selecione o PDF assinado.'; return; }
+
+  const fd = new FormData();
+  fd.append('fileId', fileId);
+  fd.append('cpf', cpf);
+  fd.append('file', file);
+
+  msg.textContent = 'Enviando e conferindo (assinatura + período)…';
+  try {
+    await apiPostFormPublic('/api/rvn/enviar', fd);
+    msg.className = 'rvn-msg ok';
+    msg.textContent = '✅ RVN assinado recebido e validado com sucesso!';
+    setTimeout(rvnBuscar, 1400);
+  } catch(e){
+    msg.className = 'rvn-msg err';
+    msg.textContent = '❌ ' + (e.message || 'Falha ao enviar.');
+  }
+}
+
+/* ------------------------------ Gestão ------------------------------ */
+
+function gestToggle(){
+  if (!AUTH.logged){
+    const box = document.getElementById('rvn-login');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+  const gestao = document.getElementById('rvn-gestao');
+  const abrir = gestao.style.display === 'none';
+  gestao.style.display = abrir ? 'block' : 'none';
+  if (abrir) gestAbrir();
+}
+
+async function gestDoLogin(ev){
+  ev.preventDefault();
+  const ok = await submitLogin(
+    (document.getElementById('rvn-l-user').value || '').trim(),
+    document.getElementById('rvn-l-pass').value || '',
+    document.getElementById('rvn-l-btn'),
+    document.getElementById('rvn-l-erro')
+  );
+  if (ok){
+    document.getElementById('rvn-l-pass').value = '';
+    document.getElementById('rvn-login').style.display = 'none';
+    gestAbrir();
+  }
+  return false;
+}
+
+function gestAbrir(){
+  document.getElementById('rvn-gestao').style.display = 'block';
+  document.getElementById('rvn-gest-user').textContent = AUTH.user;
+  gestCarregarPainel();
+}
+
+async function gestCarregarPainel(){
+  const wrap = document.getElementById('rvn-painel');
+  wrap.innerHTML = '<div class="rvn-state">Carregando…</div>';
+  try {
+    const d = await apiFetchJSON('/api/rvn/painel');
+    renderPainel(d.periodos || []);
+  } catch(e){
+    wrap.innerHTML = '<div class="rvn-state err">' + esc(e.message) + '</div>';
+  }
+}
+
+function renderPainel(periodos){
+  const wrap = document.getElementById('rvn-painel');
+  const sel = document.getElementById('rvn-l-periodo');
+  sel.innerHTML = periodos.map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+
+  if (!periodos.length){ wrap.innerHTML = '<div class="rvn-state">Nenhum período criado ainda.</div>'; return; }
+
+  wrap.innerHTML = periodos.map((p) => `
+    <div class="rvn-painel-card">
+      <div class="rvn-card-top">
+        <b>${esc(p.nome)}</b>
+        <span class="rvn-periodo-datas">${esc(p.dataInicio || '—')} a ${esc(p.dataFim || '—')}</span>
+      </div>
+      <div class="rvn-painel-cols">
+        <div>
+          <div class="rvn-painel-lbl">⏳ Pendentes (${p.pendentes.length})</div>
+          ${p.pendentes.map((x) => `<div class="rvn-painel-item">${esc(x.nome || x.cpf)} · CPF ${esc(x.cpf)}</div>`).join('') || '<div class="rvn-painel-item vazio">—</div>'}
+        </div>
+        <div>
+          <div class="rvn-painel-lbl">✅ Assinados (${p.assinados.length})</div>
+          ${p.assinados.map((x) => `<div class="rvn-painel-item">${esc(x.nome || x.cpf)} · CPF ${esc(x.cpf)}</div>`).join('') || '<div class="rvn-painel-item vazio">—</div>'}
+        </div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+async function gestCriarPeriodo(ev){
+  ev.preventDefault();
+  const msg = document.getElementById('rvn-p-msg');
+  msg.className = 'rvn-msg'; msg.textContent = 'Criando…';
+  try {
+    await apiPostJSON('/api/rvn/periodo', {
+      op: 'add',
+      nome: document.getElementById('rvn-p-nome').value,
+      dataInicio: document.getElementById('rvn-p-inicio').value,
+      dataFim: document.getElementById('rvn-p-fim').value,
+    });
+    msg.className = 'rvn-msg ok'; msg.textContent = '✅ Período criado.';
+    document.getElementById('rvn-p-nome').value = '';
+    document.getElementById('rvn-p-inicio').value = '';
+    document.getElementById('rvn-p-fim').value = '';
+    gestCarregarPainel();
+  } catch(e){
+    msg.className = 'rvn-msg err'; msg.textContent = '❌ ' + e.message;
+  }
+  return false;
+}
+
+// Fila de lançamento em massa: solta/seleciona vários PDFs de uma vez. O
+// Worker lê CPF+Nome de dentro de cada PDF (o RVN do MJSP tem texto
+// selecionável, não é imagem — sem OCR de verdade) e pré-preenche a fila;
+// o RE nunca é digitado aqui, é resolvido a partir do CPF só na hora de
+// lançar (handleRvnLancar), contra o cadastro POLICIAIS.
+let RVN_FILA = [];
+
+function rvnAdicionarArquivos(fileList){
+  Array.from(fileList).forEach((file) => {
+    if (!/\.pdf$/i.test(file.name)) return;
+    const item = { file, cpf: '', nome: '', status: 'pendente', msg: '' };
+    RVN_FILA.push(item);
+    rvnIdentificarPdf(item);
+  });
+  renderFila();
+}
+
+async function rvnIdentificarPdf(item){
+  item.msg = '🔎 lendo PDF…'; renderFila();
+  try {
+    const fd = new FormData();
+    fd.append('file', item.file);
+    const d = await apiPostForm('/api/rvn/identificar-pdf', fd);
+    if (d.encontrado){
+      item.cpf = d.cpf || ''; item.nome = d.nome || '';
+      item.msg = (item.cpf && item.nome) ? '✅ lido do PDF' : 'leitura parcial — confira CPF e nome';
+    } else {
+      item.msg = 'não consegui ler o PDF — preencha CPF e nome';
+    }
+  } catch(e){
+    item.msg = 'não consegui ler o PDF — preencha CPF e nome';
+  }
+  renderFila();
+}
+
+function rvnRemoverFila(i){
+  RVN_FILA.splice(i, 1);
+  renderFila();
+}
+
+function renderFila(){
+  const wrap = document.getElementById('rvn-l-fila');
+  const btn = document.getElementById('rvn-l-enviar-btn');
+  const pendentes = RVN_FILA.filter((it) => it.status !== 'ok').length;
+  btn.textContent = `🚀 Lançar ${pendentes} arquivo(s)`;
+  btn.disabled = pendentes === 0;
+
+  wrap.innerHTML = RVN_FILA.map((it, i) => `
+    <div class="rvn-fila-item ${it.status}">
+      <div class="rvn-fila-nome">${esc(it.file.name)}</div>
+      <input placeholder="CPF" value="${esc(it.cpf)}" maxlength="11" oninput="RVN_FILA[${i}].cpf=this.value.replace(/\D/g,'')" style="width:110px">
+      <input placeholder="Nome completo" value="${esc(it.nome)}" oninput="RVN_FILA[${i}].nome=this.value" style="flex:1;min-width:140px">
+      <span class="rvn-fila-status">${esc(it.msg)}</span>
+      <button type="button" class="rvn-btn ghost" onclick="rvnRemoverFila(${i})">✕</button>
+    </div>`
+  ).join('') || '<div class="rvn-state">Nenhum arquivo selecionado ainda.</div>';
+}
+
+async function rvnLancarFila(){
+  const periodoId = document.getElementById('rvn-l-periodo').value;
+  const substituir = document.getElementById('rvn-l-subst').checked;
+  if (!periodoId){ alert('Escolha o período primeiro.'); return; }
+
+  for (let i = 0; i < RVN_FILA.length; i++){
+    const it = RVN_FILA[i];
+    if (it.status === 'ok') continue;
+    if (!it.cpf || it.cpf.length !== 11 || it.nome.length < 3){
+      it.status = 'erro'; it.msg = '❌ CPF (11 dígitos) e nome são obrigatórios'; renderFila();
+      continue;
+    }
+    it.status = 'enviando'; it.msg = 'enviando…'; renderFila();
+
+    const fd = new FormData();
+    fd.append('periodoId', periodoId);
+    fd.append('cpf', it.cpf);
+    fd.append('nome', it.nome);
+    fd.append('substituir', substituir ? '1' : '0');
+    fd.append('file', it.file);
+    try {
+      await apiPostForm('/api/rvn/lancar', fd);
+      it.status = 'ok'; it.msg = '✅ lançado';
+    } catch(e){
+      it.status = 'erro'; it.msg = '❌ ' + e.message;
+    }
+    renderFila();
+  }
+  gestCarregarPainel();
+}
+
+renderUserChip();
+</script>
+</body>
+</html>
