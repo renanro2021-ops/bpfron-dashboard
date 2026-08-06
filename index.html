@@ -590,11 +590,12 @@ tbody tr:last-child td{border-bottom:none}
 /* Botões flutuantes no mapa de Policiais em Campo (Bases / Policiais) */
 #ec-map-tools {
   position:absolute; top:12px; right:12px; z-index:600;
-  display:flex; flex-direction:column; gap:7px; align-items:flex-end;
+  display:flex; flex-direction:column; gap:7px; align-items:stretch;   /* stretch = todos os botões com a MESMA largura */
 }
 #ec-map-tools .ec-map-btn {
   font-family:'Inter',sans-serif; font-size:12px; font-weight:700;
   padding:7px 12px; border-radius:8px; cursor:pointer; white-space:nowrap;
+  min-width:132px; text-align:center;   /* mesmo tamanho mesmo quando o ✓ some/aparece */
   background:rgba(10,15,26,.82); color:#e8edf5; border:1px solid rgba(255,255,255,.18);
   -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
   box-shadow:0 2px 10px rgba(0,0,0,.4); transition:.15s;
@@ -1467,6 +1468,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div id="ec-map-tools">
             <button class="ec-map-btn active" id="ec-btn-bases" onclick="ecToggleBases(this)">🛡️ Bases ✓</button>
             <button class="ec-map-btn active" id="ec-btn-pol" onclick="ecTogglePol(this)">👮 Policiais ✓</button>
+            <button class="ec-map-btn" id="ec-btn-p2" onclick="ecToggleP2(this)">🕵️ P2</button>
           </div>
           <div id="ec-map-stats"></div>
         </div>
@@ -5045,6 +5047,8 @@ const EC_ANO_PADRAO = 2026;   // as abas/datas não trazem o ano
 const EC_PROXIES = ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy/?quest='];
 let EC_LOADED = false, EC_LOADING = false, EC_DATA = [], EC_MAP = null, EC_MARKERS = [];
 let EC_BASE_MARKERS = [], EC_SHOW_BASES = true, EC_SHOW_POL = true;
+let EC_P2_ONLY = false;       // botão P2: mostra no mapa só as equipes de inteligência (NI / AI CRP)
+let EC_LAST_ESC = [];         // últimas escalas desenhadas (p/ redesenhar sem passar por renderCampo)
 let EC_BAT_SEL = new Set();   // batalhões selecionados no filtro (vazio = todos)
 
 // busca tolerante a CORS: tenta direto (futuro Worker/same-origin) e cai nos proxies
@@ -5687,6 +5691,27 @@ function ecTogglePol(btn){
   btn.classList.toggle('active', EC_SHOW_POL);
   btn.innerHTML = '👮 Policiais' + (EC_SHOW_POL ? ' ✓' : '');
 }
+// equipe é do P2 (inteligência)? NI (Núcleo de Inteligência) ou AI CRP (Agência de Inteligência do CRP).
+// O rótulo pode vir no batalhão (ecTeamBat já devolve 'AI CRP'), no cabeçalho da equipe
+// (ex.: "BPFRON - NI") ou nos campos dos próprios policiais (função/OPM/localidade).
+function ecIsP2(q){
+  const P2 = /\bAI\s*[-\/]?\s*CRP\b|\bAICRP\b|\bNI\b|\bP2\b|INTELIG/i;
+  if(P2.test(q.batalhao||'')) return true;
+  if(P2.test([q.nome, q.local, q.locHint, q.opm].join(' '))) return true;
+  return (q.policiais||[]).some(p => P2.test([p.funcao, p.opm, p.localidade].join(' ')));
+}
+// liga/desliga o recorte "só P2" nos marcadores de policiais do mapa
+function ecToggleP2(btn){
+  EC_P2_ONLY = !EC_P2_ONLY;
+  btn.classList.toggle('active', EC_P2_ONLY);
+  btn.innerHTML = '🕵️ P2' + (EC_P2_ONLY ? ' ✓' : '');
+  // filtrar sem os marcadores de policiais visíveis não mostraria nada → religa junto
+  if(EC_P2_ONLY && !EC_SHOW_POL){
+    const bp = document.getElementById('ec-btn-pol');
+    if(bp) ecTogglePol(bp);
+  }
+  ecRenderMap(EC_LAST_ESC);
+}
 // resolve a localidade (coord + nome) de uma equipe — mesma lógica do render do mapa
 function ecTeamGeo(q, esc){
   const teamTxt = [q.nome, q.local, q.locHint, q.opm, q.bloco, esc&&esc.local,
@@ -5698,13 +5723,15 @@ function ecTeamGeo(q, esc){
 }
 function ecClearMarkers(){ EC_MARKERS.forEach(m=>EC_MAP.removeLayer(m)); EC_MARKERS=[]; }
 function ecRenderMap(escalas){
+  EC_LAST_ESC = escalas || [];
   if(!EC_MAP) return;
   ecClearMarkers();
   // agrupa por LOCALIDADE reconhecida (granularidade por equipe): a localidade da equipe
   // = 1ª localidade reconhecida dos seus policiais, senão local/OPM da equipe ou da escala
   const groups={};
-  escalas.forEach(esc => {
+  (EC_LAST_ESC||[]).forEach(esc => {
     esc.equipes.forEach(q=>{
+      if(EC_P2_ONLY && !ecIsP2(q)) return;   // botão 🕵️ P2: só inteligência (NI / AI CRP)
       // Itinerante: "NI" e "ITINERANTE" podem vir SEPARADOS — um no cabeçalho da equipe (a "linha",
       // ex.: "BPFRON - NI") e o outro na coluna LOCALIDADE (col. G, ex.: "ITINERANTE"). ecTeamGeo junta
       // cabeçalho + campos dos policiais e decide: com "NI" → Base Nova Brasilândia; outro → Base Nova Mutum.
