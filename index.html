@@ -5195,6 +5195,8 @@ const EC_COORDS = [
   ['nova brasilandia',    [-11.733020071873222, -62.30762351948917], 'Base Nova Brasilândia'],
   ['guajará',             [-10.78,-65.34], 'Guajará-Mirim'],
   ['guajara',             [-10.78,-65.34], 'Guajará-Mirim'],
+  ['entrocamento',        [-9.723830791857642, -65.22150082103808], 'Entroncamento'],
+  ['entroncamento',       [-9.723830791857642, -65.22150082103808], 'Entroncamento'],
   ['costa marques',       [-12.44,-64.23], 'Costa Marques'],
   ['são francisco',       [-12.06,-63.99], 'São Francisco do Guaporé'],
   ['mapinguari',          [-9.70, -64.40], 'PARNA Mapinguari'],
@@ -5710,7 +5712,8 @@ function ecToggleP2(btn){
     const bp = document.getElementById('ec-btn-pol');
     if(bp) ecTogglePol(bp);
   }
-  ecRenderMap(EC_LAST_ESC);
+  // recalcula tudo (KPIs do mapa + lista de efetivo por bloco), não só os marcadores
+  renderCampo();
 }
 // resolve a localidade (coord + nome) de uma equipe — mesma lógica do render do mapa
 function ecTeamGeo(q, esc){
@@ -6419,6 +6422,12 @@ function renderCampo(){
                .filter(e=>e.equipes.length);
   }
 
+  // filtro do botão 🕵️ P2 (mapa): mantém só as equipes de inteligência — afeta KPIs, mapa e lista
+  if(EC_P2_ONLY){
+    escs = escs.map(e=>({ ...e, equipes: e.equipes.filter(ecIsP2) }))
+               .filter(e=>e.equipes.length);
+  }
+
   // filtro por busca de policial (aplica a cada escala, mantendo só equipes/policiais que casam)
   if(busca){
     escs = escs.map(e=>{
@@ -6442,9 +6451,10 @@ function renderCampo(){
 
   // status
   const dataFmt = dref.toLocaleDateString('pt-BR');
-  st.innerHTML = busca
+  st.innerHTML = (busca
     ? `Busca por <b style="color:#dfe6f0">"${ecEsc(busca)}"</b> — ${reSet.size} policial(is) em ${escs.length} escala(s).`
-    : (soAtivos ? `Mostrando o efetivo <b style="color:#34d399">ativo em ${dataFmt}</b> — ${reSet.size} policiais em campo.` : `Mostrando <b>todas</b> as escalas (${escs.length}).`);
+    : (soAtivos ? `Mostrando o efetivo <b style="color:#34d399">ativo em ${dataFmt}</b> — ${reSet.size} policiais em campo.` : `Mostrando <b>todas</b> as escalas (${escs.length}).`))
+    + (EC_P2_ONLY ? ` <b style="color:#F5C518">🕵️ Somente P2 (inteligência)</b>` : '');
 
   // mapa
   ecRenderMap(escs);
