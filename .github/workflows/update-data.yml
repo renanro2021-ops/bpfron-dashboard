@@ -17,30 +17,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Buscar CSV do Google Sheets
+      - name: Buscar CSVs do Google Sheets
         run: |
-          curl -L \
-            -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -o data.csv \
-            "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=992567398"
+          KEY="2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy"
+          PUB="https://docs.google.com/spreadsheets/d/e/${KEY}/pub"
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-          BYTES=$(wc -c < data.csv)
-          FIRST=$(head -c 1 data.csv)
-          echo "Baixado: ${BYTES} bytes | Primeiro char: '${FIRST}'"
-          echo "--- Primeiras 3 linhas ---"
-          head -3 data.csv
-          echo "--------------------------"
+          buscar() {
+            local GID=$1 ARQUIVO=$2 MINBYTES=$3
+            curl -L -A "$UA" -o "$ARQUIVO" "${PUB}?gid=${GID}&single=true&output=csv"
+            BYTES=$(wc -c < "$ARQUIVO")
+            FIRST=$(head -c 1 "$ARQUIVO")
+            echo "${ARQUIVO}: ${BYTES} bytes"
+            if [ "$FIRST" = "<" ]; then echo "ERRO em ${ARQUIVO}: HTML retornado"; exit 1; fi
+            if [ "$BYTES" -lt "$MINBYTES" ]; then echo "ERRO em ${ARQUIVO}: muito pequeno"; exit 1; fi
+          }
 
-          if [ "$FIRST" = "<" ]; then
-            echo "ERRO: Google retornou HTML em vez de CSV (planilha não está compartilhada publicamente?)"
-            exit 1
-          fi
-          if [ "$BYTES" -lt 500 ]; then
-            echo "ERRO: CSV muito pequeno ou vazio"
-            exit 1
-          fi
+          buscar 992567398  data.csv              500
 
-      - name: Salvar data.csv no repositório
+      - name: Remover dados pessoais do data.csv público
+        run: |
+          python3 - <<'PY'
+          import csv, io
+
+          COLUNAS_PII = {"Descrição Resumida", "Destino dos Envolvidos", "Endereço"}
+
+          with open("data.csv", newline="", encoding="utf-8") as f:
+              linhas = list(csv.reader(f))
+
+          if linhas:
+              header = linhas[0]
+              idxs = [i for i, h in enumerate(header) if h.strip() in COLUNAS_PII]
+              for row in linhas[1:]:
+                  for i in idxs:
+                      if i < len(row):
+                          row[i] = ""
+
+          with open("data.csv", "w", newline="", encoding="utf-8") as f:
+              csv.writer(f).writerows(linhas)
+          PY
+
+      - name: Salvar CSVs no repositório
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
