@@ -285,6 +285,14 @@ const AUTH = {
   set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
   get logged(){ return !!this.token; }
 };
+// Quem PODE abrir a Área da gestão do RVN — allowlist, não lista de bloqueio:
+// o painel mostra nome completo + CPF de todo o efetivo, então o certo é
+// liberar só quem precisa em vez de tentar lembrar de bloquear cada login novo.
+// ⚠️ Isto é só a interface. A trava de verdade é o `rvnEditors` do worker.js
+// (padrão ["p3aux","desousa"], override pelo secret RVN_EDITORS) — se mudar lá,
+// mudar aqui também, senão o botão aparece e o painel devolve 403.
+const RVN_GESTORES = ['desousa','p3aux'];
+function rvnPodeGerir(){ return AUTH.logged && RVN_GESTORES.includes(AUTH.user); }
 
 function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -354,7 +362,13 @@ async function apiPostFormPublic(path, formData){
 function renderUserChip(){
   const el = document.getElementById('rvn-userchip');
   el.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
-  document.getElementById('rvn-gest-btn').textContent = AUTH.logged ? '📋 Painel da gestão' : '🔐 Área da gestão';
+  // Deslogado o botão continua aparecendo (é por ele que se faz o login);
+  // logado, some pra quem não é gestor de RVN.
+  const semAcesso = AUTH.logged && !rvnPodeGerir();
+  const gestBtn = document.getElementById('rvn-gest-btn');
+  gestBtn.style.display = semAcesso ? 'none' : '';
+  gestBtn.textContent = AUTH.logged ? '📋 Painel da gestão' : '🔐 Área da gestão';
+  if (semAcesso) document.getElementById('rvn-gestao').style.display = 'none';
 }
 
 function apiLogout(){
@@ -504,6 +518,7 @@ async function rvnEnviar(i, fileId){
 /* ------------------------------ Gestão ------------------------------ */
 
 function gestToggle(){
+  if (AUTH.logged && !rvnPodeGerir()) return;
   if (!AUTH.logged){
     const box = document.getElementById('rvn-login');
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
@@ -525,6 +540,13 @@ async function gestDoLogin(ev){
   );
   if (ok){
     document.getElementById('rvn-l-pass').value = '';
+    // Login válido não significa acesso à gestão do RVN (o painel tem CPF do efetivo).
+    if (!rvnPodeGerir()){
+      document.getElementById('rvn-l-erro').textContent =
+        'Seu usuário não tem acesso à área de gestão do RVN.';
+      renderUserChip();
+      return false;
+    }
     document.getElementById('rvn-login').style.display = 'none';
     gestAbrir();
   }
