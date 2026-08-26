@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 · Seção Pessoal · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --gold:     #c9a030;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15.5px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px}
+#p1-userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+
+.wrap{max-width:920px;margin:0 auto;padding:clamp(24px,5vw,44px) clamp(18px,4vw,24px) 70px}
+
+.p1-hero{text-align:center;padding:clamp(20px,4vw,32px) 10px clamp(30px,5vw,42px)}
+.p1-hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,38px);font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:12px}
+.p1-hero p{color:var(--muted);font-size:16px;max-width:600px;margin:0 auto;line-height:1.7}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:36px 0 16px;display:flex;align-items:center;gap:10px}
+.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+
+.p1-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.p1-hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+
+.p1-fg{display:flex;flex-direction:column;gap:5px}
+.p1-fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.p1-fg input,.p1-fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px;width:100%}
+.p1-fg input:focus,.p1-fg select:focus{border-color:rgba(245,197,24,.6)}
+.p1-fg input:read-only{opacity:.65}
+
+.p1-form-inline{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.p1-form-inline .p1-fg{flex:1;min-width:200px}
+
+.p1-btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:46px;transition:background .12s,border-color .12s}
+.p1-btn:hover{background:rgba(245,197,24,.22)}
+.p1-btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
+.p1-btn.small{padding:8px 14px;font-size:13px;min-height:36px}
+.p1-btn.danger{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
+.p1-btn:disabled{opacity:.45;cursor:not-allowed}
+.p1-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:14px 26px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;min-height:50px}
+.p1-send:disabled{opacity:.4;cursor:not-allowed}
+
+.p1-msg{font-size:14px;min-height:18px;margin-top:10px}
+.p1-msg.err{color:#fca5a5}
+.p1-msg.ok{color:#6ee7b7}
+.p1-quem{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.35);border-radius:12px;padding:12px 16px;font-size:14.5px;color:#bfdbfe;margin-top:14px}
+.p1-aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 16px;font-size:13.5px;color:#fcd34d;margin-top:14px}
+
+#p1-form{display:none}
+
+.p1-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.p1-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.p1-grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+
+.p1-curso-row{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:grid;grid-template-columns:2fr .9fr .6fr .6fr .7fr .6fr auto;gap:10px;align-items:end}
+.p1-curso-row .p1-fg input,.p1-curso-row .p1-fg select{min-height:42px;font-size:14.5px}
+.p1-curso-x{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.4);color:#fca5a5;border-radius:8px;width:42px;height:42px;cursor:pointer;font-size:16px}
+
+.p1-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.p1-chip{background:var(--bg);border:1px solid var(--border);color:#cbd5e1;border-radius:999px;padding:9px 16px;font-size:13.5px;cursor:pointer;user-select:none;transition:background .12s,border-color .12s,color .12s}
+.p1-chip:hover{border-color:rgba(245,197,24,.4)}
+.p1-chip.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.55);color:var(--yellow);font-weight:700}
+.p1-chip.custom{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.35);color:#bfdbfe}
+.p1-chip .rm{margin-left:6px;opacity:.7}
+.p1-add-sistema{display:flex;gap:10px;margin-top:8px}
+.p1-add-sistema input{flex:1;text-transform:uppercase}
+
+.p1-gest-toggle{margin-top:50px;text-align:center}
+#p1-login{max-width:420px;margin:18px auto 0}
+.p1-user-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px;font-size:15px;color:var(--muted)}
+
+.p1-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.p1-kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.p1-kpi b{display:block;font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff;font-weight:700}
+.p1-kpi span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+
+.p1-search{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-size:15px;margin-bottom:14px;min-height:46px}
+.p1-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto;padding-right:4px}
+.p1-row{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 14px;cursor:pointer;font-size:14.5px}
+.p1-row:hover{border-color:rgba(245,197,24,.4)}
+.p1-row .re{color:var(--muted);font-size:12.5px}
+.p1-row.pend{border-color:rgba(220,38,38,.3)}
+.p1-detail{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-top:16px}
+.p1-detail-empty{color:var(--muted);text-align:center;padding:24px}
+.p1-tag{display:inline-block;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:var(--yellow);border-radius:999px;padding:4px 12px;font-size:12.5px;margin:3px 6px 3px 0}
+.p1-tag.gray{background:rgba(148,163,184,.12);border-color:var(--border);color:#cbd5e1}
+.p1-tag.red{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
+.p1-freq{display:flex;flex-wrap:wrap;gap:8px}
+.p1-freq-item{background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:#cbd5e1}
+.p1-freq-item b{color:var(--yellow)}
+
+@media(max-width:760px){
+  body{font-size:15px}
+  .hdr-inner{padding:10px 14px;gap:10px}
+  .hdr-logo{height:38px}
+  .hdr-title{font-size:16.5px}
+  .hdr-sub{font-size:10.5px}
+  .wrap{padding:20px 14px 56px}
+  .p1-hero{padding:14px 4px 26px}
+  .p1-hero h1{font-size:25px;margin-bottom:10px}
+  .p1-hero p{font-size:14.5px}
+  .sec{margin:28px 0 14px;font-size:12px}
+  .p1-box{padding:16px}
+  .p1-form-inline{flex-direction:column;align-items:stretch}
+  .p1-grid2,.p1-grid3,.p1-grid4{grid-template-columns:1fr}
+  .p1-curso-row{grid-template-columns:1fr;gap:8px}
+  .p1-curso-x{width:100%}
+}
+@media(max-width:380px){
+  .hdr-sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">P1 <em>Seção Pessoal</em></div>
+        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="p1-userchip"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="p1-hero">
+    <h1>Atualização Cadastral</h1>
+    <p>Preencha (ou atualize) seus dados pessoais, os cursos que já fez na PM e os sistemas a que você tem acesso. Não precisa de senha — só o seu RE.</p>
+  </div>
+
+  <div class="sec">🔎 Identificação</div>
+  <div class="p1-box">
+    <div class="p1-form-inline">
+      <div class="p1-fg">
+        <label>RE</label>
+        <input id="p1-re" inputmode="numeric" placeholder="Seu RE" onblur="p1LookupRE()" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1Continuar();}">
+      </div>
+      <div class="p1-fg" id="p1-cpf4-wrap" style="display:none">
+        <label>4 últimos dígitos do CPF</label>
+        <input id="p1-cpf4" inputmode="numeric" maxlength="4" placeholder="0000" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1Continuar();}">
+      </div>
+      <button class="p1-send" onclick="p1Continuar()">Continuar</button>
+    </div>
+    <div id="p1-id-hint"></div>
+    <div class="p1-msg err" id="p1-id-msg"></div>
+    <div class="p1-hint">Se o seu RE já tiver CPF no cadastro, pedimos os 4 últimos dígitos só pra confirmar que é você mesmo — ninguém mais consegue editar sua ficha.</div>
+  </div>
+
+  <div id="p1-form">
+
+    <div class="sec">👤 Informações Pessoais</div>
+    <div class="p1-box">
+      <div id="p1-sem-cadastro" class="p1-aviso" style="display:none">⚠️ Seu RE ainda não está no cadastro oficial de policiais — seus dados serão salvos mesmo assim, mas não foi possível confirmar automaticamente seu nome/posto.</div>
+      <div class="p1-grid4">
+        <div class="p1-fg"><label>RE</label><input id="p1-f-re" readonly></div>
+        <div class="p1-fg"><label>Posto ou Graduação</label><input id="p1-f-posto" placeholder="Ex.: 3º SGT QPPM"></div>
+        <div class="p1-fg"><label>Data de nascimento</label>
+          <input id="p1-f-nasc" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="off" oninput="p1MaskData(this)">
+        </div>
+        <div class="p1-fg"><label>Telefone</label>
+          <input id="p1-f-tel" placeholder="(69) 99999-9999" inputmode="numeric" maxlength="15" autocomplete="off" oninput="p1MaskTelefone(this)">
+        </div>
+      </div>
+      <div class="p1-fg" style="margin-top:14px"><label>Nome completo</label><input id="p1-f-nome" placeholder="Seu nome completo"></div>
+    </div>
+
+    <div class="sec">🎓 Cursos na PM <small>coloque mesmo que não concluiu</small></div>
+    <div class="p1-box">
+      <div id="p1-cursos-list"></div>
+      <button type="button" class="p1-btn" onclick="p1AddCurso()">➕ Adicionar curso</button>
+      <div class="p1-hint">Digite o nome completo do curso — a sigla é sugerida automaticamente (pode editar se estiver errada).</div>
+    </div>
+
+    <div class="sec">💻 Sistemas com Acesso <small>tudo em CAIXA ALTA</small></div>
+    <div class="p1-box">
+      <div class="p1-chips" id="p1-sistemas-comuns"></div>
+      <div class="p1-chips" id="p1-sistemas-extra"></div>
+      <div class="p1-add-sistema">
+        <input id="p1-sistema-novo" placeholder="Outro sistema (ex.: SEI)" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1AddSistemaCustom();}">
+        <button type="button" class="p1-btn" onclick="p1AddSistemaCustom()">➕ Adicionar</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:26px">
+      <button class="p1-send" onclick="p1Salvar()">💾 Salvar minha ficha</button>
+      <div class="p1-msg" id="p1-save-msg" style="text-align:center"></div>
+    </div>
+
+  </div>
+
+  <div class="p1-gest-toggle">
+    <button class="p1-btn ghost" id="p1-gest-btn" onclick="gestToggle()">🔐 Área da gestão (P1)</button>
+  </div>
+
+  <div id="p1-login" style="display:none">
+    <div class="p1-box">
+      <div class="sec" style="margin-top:0">🔐 Área da gestão</div>
+      <form onsubmit="return gestDoLogin(event)">
+        <div class="p1-fg" style="margin-bottom:10px">
+          <label>Usuário</label>
+          <input id="p1-l-user" type="text" autocomplete="username" required>
+        </div>
+        <div class="p1-fg" style="margin-bottom:10px">
+          <label>Senha</label>
+          <input id="p1-l-pass" type="password" autocomplete="current-password" required>
+        </div>
+        <div id="p1-l-erro" class="p1-msg err" style="margin:0 0 10px"></div>
+        <button class="p1-send" id="p1-l-btn" type="submit" style="width:100%">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="p1-gestao" style="display:none">
+    <div class="p1-user-bar">Logado como <b id="p1-gest-user"></b> · <a href="#" onclick="apiLogout();return false" style="color:var(--muted)">sair</a></div>
+
+    <div class="sec">📊 Painel Consolidado</div>
+    <div id="p1-painel"><div class="p1-detail-empty">Carregando…</div></div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+// Allowlist (não bloqueio) — o painel do P1 tem nome/data de nascimento/cursos
+// de todo o efetivo. ⚠️ Isto é só a interface; a trava de verdade é o
+// `p1Editors` do worker.js (padrão ["desousa","p3aux","p1aux"], override via
+// secret P1_EDITORS) — se mudar lá, mudar aqui também.
+const P1_GESTORES = ['desousa','p3aux','p1aux'];
+function p1PodeGerir(){ return AUTH.logged && P1_GESTORES.includes(AUTH.user); }
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+async function submitLogin(user, pass, btn, erro){
+  erro.textContent = ''; btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'Entrando...';
+  try {
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token = d.token; AUTH.user = d.user;
+    renderUserChip();
+    return true;
+  } catch(e){
+    erro.textContent = (e && e.message) ? e.message : 'Não foi possível conectar ao servidor.';
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = oldTxt || 'Entrar';
+  }
+}
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
+  return await r.json();
+}
+async function apiPostJSONPublic(path, body){
+  const r = await fetch(API_BASE + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.code = d.error; throw e; }
+  return d;
+}
+
+function renderUserChip(){
+  const el = document.getElementById('p1-userchip');
+  el.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
+  const semAcesso = AUTH.logged && !p1PodeGerir();
+  const gestBtn = document.getElementById('p1-gest-btn');
+  gestBtn.style.display = semAcesso ? 'none' : '';
+  gestBtn.textContent = AUTH.logged ? '📋 Painel da gestão' : '🔐 Área da gestão (P1)';
+  if (semAcesso) document.getElementById('p1-gestao').style.display = 'none';
+}
+
+function apiLogout(){
+  AUTH.token = ''; AUTH.user = '';
+  document.getElementById('p1-gestao').style.display = 'none';
+  document.getElementById('p1-login').style.display = 'none';
+  renderUserChip();
+}
+
+/* --------------------------- Identificação --------------------------- */
+
+let P1_RE = '', P1_POL = null, P1_SEM_CADASTRO = false;
+
+async function p1LookupRE(){
+  const re = (document.getElementById('p1-re').value || '').replace(/\D/g,'');
+  const hint = document.getElementById('p1-id-hint');
+  if (re.length < 4){ hint.innerHTML = ''; document.getElementById('p1-cpf4-wrap').style.display = 'none'; return; }
+  try {
+    const r = await fetch(API_BASE + '/api/p1/policial?re=' + encodeURIComponent(re));
+    const d = await r.json();
+    if (d.encontrado){
+      hint.innerHTML = `<div class="p1-quem">Encontramos: <b>${esc(d.nome)}</b>${d.posto_grad ? ' · ' + esc(d.posto_grad) : ''}</div>`;
+      document.getElementById('p1-cpf4-wrap').style.display = d.precisa_cpf4 ? '' : 'none';
+    } else {
+      hint.innerHTML = `<div class="p1-hint">RE não encontrado no cadastro oficial — você ainda pode preencher sua ficha normalmente.</div>`;
+      document.getElementById('p1-cpf4-wrap').style.display = 'none';
+    }
+  } catch(e){ hint.innerHTML = ''; }
+}
+
+async function p1Continuar(){
+  const re = (document.getElementById('p1-re').value || '').replace(/\D/g,'');
+  const cpf4 = (document.getElementById('p1-cpf4').value || '').replace(/\D/g,'');
+  const msg = document.getElementById('p1-id-msg');
+  msg.textContent = '';
+  if (re.length < 4){ msg.textContent = 'Informe seu RE.'; return; }
+  try {
+    const d = await apiPostJSONPublic('/api/p1/identificar', { re, cpf4 });
+    if (d.precisa_cpf4){
+      document.getElementById('p1-cpf4-wrap').style.display = '';
+      msg.textContent = 'Informe os 4 últimos dígitos do seu CPF pra continuar.';
+      return;
+    }
+    P1_RE = re; P1_POL = d.pol; P1_SEM_CADASTRO = !!d.sem_cadastro;
+    p1AbrirForm(d);
+  } catch(e){
+    msg.textContent = e.message || 'Erro ao identificar.';
+  }
+}
+
+function p1AbrirForm(d){
+  document.getElementById('p1-form').style.display = 'block';
+  document.getElementById('p1-sem-cadastro').style.display = P1_SEM_CADASTRO ? '' : 'none';
+  document.getElementById('p1-f-re').value = P1_RE;
+  const ficha = d.ficha || {};
+  document.getElementById('p1-f-nome').value = ficha.nome_completo || (P1_POL && P1_POL.nome) || '';
+  document.getElementById('p1-f-posto').value = ficha.posto_grad || (P1_POL && P1_POL.posto_grad) || '';
+  document.getElementById('p1-f-nasc').value = ficha.data_nascimento || '';
+  document.getElementById('p1-f-tel').value = ficha.telefone || '';
+
+  P1_CURSOS = (d.cursos || []).map((c) => ({ ...c, estado: c.estado || 'RO' }));
+  if (!P1_CURSOS.length) P1_CURSOS.push({ curso:'', sigla:'', edicao:'', ano:'', concluiu:'SIM', estado:'RO' });
+  renderCursos();
+
+  P1_ACESSOS = new Set(d.acessos || []);
+  renderSistemas();
+
+  document.getElementById('p1-form').scrollIntoView({ behavior:'smooth' });
+}
+
+function p1MaskData(el){
+  let v = el.value.replace(/\D/g,'').slice(0,8);
+  if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+  else if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+  el.value = v;
+}
+
+function p1MaskTelefone(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+  else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  el.value = v;
+}
+
+/* ------------------------------ Cursos ------------------------------ */
+
+// Lista própria (não é busca na internet — decisão do projeto: sem custo, sem
+// depender de rede, e o campo de sigla continua editável se a sugestão errar).
+// Cobre os cursos mais citados na PM/BPFRON; dá pra ir completando com o tempo.
+const P1_CURSOS_CONHECIDOS = [
+  { nome:'Curso de Formação de Soldados', sigla:'CFSD' },
+  { nome:'Curso de Formação de Oficiais', sigla:'CFO' },
+  { nome:'Curso de Habilitação de Oficiais', sigla:'CHO' },
+  { nome:'Curso de Aperfeiçoamento de Oficiais', sigla:'CAO' },
+  { nome:'Curso Superior de Polícia', sigla:'CSP' },
+  { nome:'Curso de Aperfeiçoamento de Sargentos', sigla:'CAS' },
+  { nome:'Curso Avançado de Sargentos', sigla:'CASO' },
+  { nome:'Curso de Especialização em Segurança Pública', sigla:'CESP' },
+  { nome:'Curso Especial para Tripulação de Embarcações de Estado no Serviço Público', sigla:'ETSP' },
+  { nome:'Curso de Operações Especiais', sigla:'COESP' },
+  { nome:'Curso de Operações Táticas Especiais', sigla:'COTE' },
+  { nome:'Curso de Instrutor de Tiro Policial', sigla:'CITP' },
+  { nome:'Curso de Tiro Defensivo Policial', sigla:'CTD' },
+  { nome:'Curso de Direitos Humanos', sigla:'CDH' },
+  { nome:'Curso Avançado de Direitos Humanos', sigla:'CADH' },
+  { nome:'Curso de Investigação Policial Militar', sigla:'CIPM' },
+  { nome:'Curso Nacional de Inteligência de Segurança Pública', sigla:'CNIESP' },
+  { nome:'Curso de Analista de Inteligência', sigla:'CAI' },
+  { nome:'Curso Básico de Mergulho Policial', sigla:'CBMP' },
+  { nome:'Curso de Salvamento Aquático', sigla:'CSA' },
+  { nome:'Curso de Cinotecnia Policial', sigla:'CCP' },
+  { nome:'Curso de Negociação em Crise', sigla:'CNC' },
+  { nome:'Curso de Gerenciamento de Crise', sigla:'CGC' },
+  { nome:'Curso de Perícia Criminal e Preservação de Local de Crime', sigla:'CPLC' },
+  { nome:'Curso de Patrulha Rural', sigla:'CPR' },
+  { nome:'Curso de Policiamento Ambiental', sigla:'CPA' },
+  { nome:'Curso de Vigilância de Fronteira', sigla:'CVF' },
+  { nome:'Curso de Direção Veicular em Perseguição', sigla:'CDVP' },
+  { nome:'Curso de Suporte Básico de Vida', sigla:'SBV' },
+  { nome:'Curso de Piloto de Aeronave Remotamente Pilotada', sigla:'RPA' },
+  { nome:'Curso Nacional de Multiplicador em Segurança Pública e Direitos Humanos', sigla:'RENAESP' },
+  { nome:'Academia Nacional de Polícia', sigla:'ANP' },
+  { nome:'Curso de Patrulhamento Tático Móvel', sigla:'CPATAMO' },
+  { nome:'Curso de Operações Especiais (COE)', sigla:'COE' },
+  { nome:'Curso de Operações de Choque', sigla:'COC' },
+  { nome:'Curso de Ações Táticas Especiais', sigla:'CATE' },
+  { nome:'Curso de Motociclista Policial', sigla:'CMP' },
+  { nome:'Curso de Operações de Fronteira', sigla:'COPFRON' },
+  { nome:'Curso de Caçador Designado Policial', sigla:'CCDP' },
+  { nome:'Curso de Unidades Especializadas de Divisas', sigla:'CUED' },
+];
+
+function p1TokensNome(s){
+  return new Set(String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toUpperCase().split(/[^A-Z0-9]+/).filter((t) => t.length >= 3));
+}
+function p1SugerirSigla(nomeCurso){
+  const alvo = p1TokensNome(nomeCurso);
+  if (!alvo.size) return '';
+  let melhor = null, melhorScore = 0;
+  P1_CURSOS_CONHECIDOS.forEach((c) => {
+    const toks = p1TokensNome(c.nome);
+    let score = 0;
+    toks.forEach((t) => { if (alvo.has(t)) score++; });
+    const rel = score / Math.max(toks.size, 1);
+    if (rel > melhorScore){ melhorScore = rel; melhor = c; }
+  });
+  return (melhor && melhorScore >= 0.5) ? melhor.sigla : '';
+}
+
+const P1_UFS = ['RO','AC','AM','RR','PA','AP','TO','MA','PI','CE','RN','PB','PE','AL','SE','BA','MG','ES','RJ','SP','PR','SC','RS','MS','MT','GO','DF'];
+
+let P1_CURSOS = [];
+
+function p1AddCurso(){
+  P1_CURSOS.push({ curso:'', sigla:'', edicao:'', ano:'', concluiu:'SIM', estado:'RO' });
+  renderCursos();
+}
+function p1RemoverCurso(i){
+  P1_CURSOS.splice(i,1);
+  renderCursos();
+}
+function p1BuscarPorSigla(valor){
+  const alvo = String(valor||'').trim().toUpperCase();
+  if (!alvo) return null;
+  return P1_CURSOS_CONHECIDOS.find((c) => c.sigla.toUpperCase() === alvo) || null;
+}
+
+function p1CursoInput(i, campo, valor){
+  P1_CURSOS[i][campo] = valor;
+  if (campo === 'curso'){
+    // Digitou a SIGLA no campo de curso (ex.: "CCDP") -> troca pro nome completo.
+    const porSigla = p1BuscarPorSigla(valor);
+    if (porSigla){
+      P1_CURSOS[i].curso = porSigla.nome;
+      P1_CURSOS[i].sigla = porSigla.sigla;
+      P1_CURSOS[i]._siglaEditada = true; // já é a sigla certa, não sobrescrever depois
+      renderCursos();
+      return;
+    }
+    if (!P1_CURSOS[i]._siglaEditada){
+      const sug = p1SugerirSigla(valor);
+      if (sug){ P1_CURSOS[i].sigla = sug; renderCursos(); }
+    }
+  }
+}
+function p1CursoSiglaEdit(i, valor){
+  P1_CURSOS[i].sigla = valor;
+  P1_CURSOS[i]._siglaEditada = true;
+}
+
+function renderCursos(){
+  const wrap = document.getElementById('p1-cursos-list');
+  wrap.innerHTML = P1_CURSOS.map((c, i) => `
+    <div class="p1-curso-row">
+      <div class="p1-fg"><label>Curso</label>
+        <input list="p1-cursos-dl" value="${esc(c.curso)}" placeholder="Nome completo do curso"
+          oninput="p1CursoInput(${i},'curso',this.value)">
+      </div>
+      <div class="p1-fg"><label>Sigla</label>
+        <input value="${esc(c.sigla)}" placeholder="Sigla" oninput="p1CursoSiglaEdit(${i},this.value.toUpperCase())">
+      </div>
+      <div class="p1-fg"><label>Edição</label>
+        <input value="${esc(c.edicao)}" placeholder="Ex.: 12ª" oninput="p1CursoInput(${i},'edicao',this.value)">
+      </div>
+      <div class="p1-fg"><label>Ano</label>
+        <input value="${esc(c.ano)}" maxlength="4" inputmode="numeric" placeholder="Ano" oninput="p1CursoInput(${i},'ano',this.value.replace(/\\D/g,''))">
+      </div>
+      <div class="p1-fg"><label>Estado</label>
+        <select onchange="p1CursoInput(${i},'estado',this.value)">
+          ${P1_UFS.map((uf) => `<option value="${uf}" ${(c.estado||'RO')===uf?'selected':''}>${uf}</option>`).join('')}
+        </select>
+      </div>
+      <div class="p1-fg"><label>Concluiu?</label>
+        <select onchange="p1CursoInput(${i},'concluiu',this.value)">
+          <option value="SIM" ${c.concluiu!=='NÃO'?'selected':''}>Sim</option>
+          <option value="NÃO" ${c.concluiu==='NÃO'?'selected':''}>Não</option>
+        </select>
+      </div>
+      <button type="button" class="p1-curso-x" onclick="p1RemoverCurso(${i})" title="Remover">✕</button>
+    </div>`
+  ).join('') + `<datalist id="p1-cursos-dl">${P1_CURSOS_CONHECIDOS.map((c) => `<option value="${esc(c.nome)}">`).join('')}${P1_CURSOS_CONHECIDOS.map((c) => `<option value="${esc(c.sigla)}">`).join('')}</datalist>`;
+}
+
+/* ----------------------------- Sistemas ------------------------------ */
+
+// Lista curada (base de conhecimento do BPFRON) — sempre aparece primeiro.
+const P1_SISTEMAS_COMUNS = ['SISEG','INFOSEG','SEISP - RONDÔNIA','DETRANET','APOLO - ACRE','SENTRY (MURALHA)','CORTEX (Fichas)','CORTEX (Análise de Rotas)','SEI'];
+// Sistemas que OUTROS policiais já cadastraram e não estão na lista curada acima
+// — buscado do Worker (público, só nomes de sistema, sem PII) e mesclado na
+// renderização, assim quem cadastrar um sistema novo faz ele aparecer pros
+// próximos a preencherem a ficha, sem precisar editar o código do site.
+let P1_SISTEMAS_EXTRA_CONHECIDOS = [];
+let P1_ACESSOS = new Set();
+
+async function p1CarregarSistemasConhecidos(){
+  try {
+    const r = await fetch(API_BASE + '/api/p1/sistemas');
+    const d = await r.json();
+    P1_SISTEMAS_EXTRA_CONHECIDOS = Array.isArray(d.sistemas) ? d.sistemas : [];
+    renderSistemas();
+  } catch(e){ /* segue só com a lista curada */ }
+}
+
+function p1ToggleSistema(s){
+  if (P1_ACESSOS.has(s)) P1_ACESSOS.delete(s); else P1_ACESSOS.add(s);
+  renderSistemas();
+}
+function p1AddSistemaCustom(){
+  const el = document.getElementById('p1-sistema-novo');
+  const v = (el.value || '').trim().toUpperCase();
+  if (!v) return;
+  P1_ACESSOS.add(v);
+  el.value = '';
+  renderSistemas();
+}
+function p1RemoverSistemaExtra(s){
+  P1_ACESSOS.delete(s);
+  renderSistemas();
+}
+
+function renderSistemas(){
+  const conhecidos = [...new Set([...P1_SISTEMAS_COMUNS, ...P1_SISTEMAS_EXTRA_CONHECIDOS])];
+  document.getElementById('p1-sistemas-comuns').innerHTML = conhecidos.map((s) =>
+    `<div class="p1-chip ${P1_ACESSOS.has(s)?'on':''}" onclick="p1ToggleSistema('${esc(s)}')">${esc(s)}</div>`
+  ).join('');
+  const extras = [...P1_ACESSOS].filter((s) => !conhecidos.includes(s));
+  document.getElementById('p1-sistemas-extra').innerHTML = extras.map((s) =>
+    `<div class="p1-chip on custom">${esc(s)} <span class="rm" onclick="p1RemoverSistemaExtra('${esc(s)}')">✕</span></div>`
+  ).join('');
+}
+
+/* ------------------------------- Salvar ------------------------------- */
+
+async function p1Salvar(){
+  const msg = document.getElementById('p1-save-msg');
+  msg.className = 'p1-msg err'; msg.textContent = '';
+
+  const nome = (document.getElementById('p1-f-nome').value || '').trim();
+  const posto = (document.getElementById('p1-f-posto').value || '').trim();
+  const nasc = (document.getElementById('p1-f-nasc').value || '').trim();
+  const tel = (document.getElementById('p1-f-tel').value || '').trim();
+  if (!nome){ msg.textContent = 'Informe seu nome completo.'; return; }
+  if (!posto){ msg.textContent = 'Informe seu posto ou graduação.'; return; }
+  if (!nasc){ msg.textContent = 'Informe sua data de nascimento.'; return; }
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(nasc)){ msg.textContent = 'Data de nascimento inválida — use DD/MM/AAAA.'; return; }
+  if (!tel){ msg.textContent = 'Informe seu telefone.'; return; }
+  if (tel.replace(/\D/g,'').length < 10){ msg.textContent = 'Telefone inválido — informe DDD + número.'; return; }
+
+  // Linha totalmente em branco (rascunho nunca preenchido) é ignorada; qualquer
+  // linha com algo digitado precisa ter TODOS os campos preenchidos.
+  const algumCampo = (c) => (c.curso||'').trim() || (c.sigla||'').trim() || (c.edicao||'').trim() || (c.ano||'').trim();
+  const cursosPreenchidos = P1_CURSOS.filter(algumCampo);
+  const incompleto = cursosPreenchidos.find((c) => !((c.curso||'').trim() && (c.sigla||'').trim() && (c.edicao||'').trim() && (c.ano||'').trim() && (c.estado||'').trim()));
+  if (incompleto){
+    msg.textContent = `Complete todos os campos do curso "${incompleto.curso || '(sem nome)'}" (nome, sigla, edição, ano e estado) ou remova a linha.`;
+    return;
+  }
+
+  const cpf4 = (document.getElementById('p1-cpf4').value || '').replace(/\D/g,'');
+  const body = {
+    re: P1_RE, cpf4,
+    nome_completo: nome,
+    posto_grad: posto,
+    data_nascimento: nasc,
+    telefone: tel,
+    cursos: cursosPreenchidos,
+    acessos: [...P1_ACESSOS],
+  };
+  msg.className = 'p1-msg'; msg.textContent = 'Salvando…';
+  try {
+    await apiPostJSONPublic('/api/p1/salvar', body);
+    msg.className = 'p1-msg ok';
+    msg.textContent = '✅ Ficha salva com sucesso!';
+  } catch(e){
+    msg.className = 'p1-msg err';
+    msg.textContent = '❌ ' + (e.message || 'Falha ao salvar.');
+  }
+}
+
+/* ------------------------------ Gestão ------------------------------ */
+
+function gestToggle(){
+  if (AUTH.logged && !p1PodeGerir()) return;
+  if (!AUTH.logged){
+    const box = document.getElementById('p1-login');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+  const gestao = document.getElementById('p1-gestao');
+  const abrir = gestao.style.display === 'none';
+  gestao.style.display = abrir ? 'block' : 'none';
+  if (abrir) gestAbrir();
+}
+
+async function gestDoLogin(ev){
+  ev.preventDefault();
+  const ok = await submitLogin(
+    (document.getElementById('p1-l-user').value || '').trim(),
+    document.getElementById('p1-l-pass').value || '',
+    document.getElementById('p1-l-btn'),
+    document.getElementById('p1-l-erro')
+  );
+  if (ok){
+    document.getElementById('p1-l-pass').value = '';
+    if (!p1PodeGerir()){
+      document.getElementById('p1-l-erro').textContent = 'Seu usuário não tem acesso à área de gestão do P1.';
+      renderUserChip();
+      return false;
+    }
+    document.getElementById('p1-login').style.display = 'none';
+    gestAbrir();
+  }
+  return false;
+}
+
+function gestAbrir(){
+  document.getElementById('p1-gestao').style.display = 'block';
+  document.getElementById('p1-gest-user').textContent = AUTH.user;
+  gestCarregarPainel();
+}
+
+let P1_PAINEL = null, P1_SEL_RE = null;
+
+async function gestCarregarPainel(){
+  const wrap = document.getElementById('p1-painel');
+  wrap.innerHTML = '<div class="p1-detail-empty">Carregando…</div>';
+  try {
+    P1_PAINEL = await apiFetchJSON('/api/p1/painel');
+    renderPainel();
+  } catch(e){
+    wrap.innerHTML = '<div class="p1-detail-empty">' + esc(e.message) + '</div>';
+  }
+}
+
+function renderPainel(){
+  const d = P1_PAINEL;
+  const k = d.kpis;
+  let html = `
+    <div class="p1-kpis">
+      <div class="p1-kpi"><b>${k.total_efetivo}</b><span>Efetivo total</span></div>
+      <div class="p1-kpi"><b>${k.total_preenchidos}</b><span>Fichas preenchidas</span></div>
+      <div class="p1-kpi"><b>${k.total_pendentes}</b><span>Ainda faltam</span></div>
+      <div class="p1-kpi"><b>${k.percentual.toFixed(0)}%</b><span>Completude</span></div>
+      <div class="p1-kpi"><b>${k.total_cursos}</b><span>Cursos registrados</span></div>
+    </div>
+    <input class="p1-search" id="p1-busca" placeholder="🔎 Buscar por nome, RE ou posto…" oninput="renderLista()">
+    <div class="p1-grid2">
+      <div>
+        <div class="sec" style="margin-top:0">✅ Preencheram</div>
+        <div class="p1-list" id="p1-lista-ok"></div>
+        <div class="sec">⏳ Ainda não preencheram</div>
+        <div class="p1-list" id="p1-lista-pend"></div>
+      </div>
+      <div>
+        <div class="sec" style="margin-top:0">👤 Detalhe</div>
+        <div class="p1-detail" id="p1-detail"><div class="p1-detail-empty">Clique num nome na lista ao lado.</div></div>
+        <div class="sec">🎓 Cursos mais comuns</div>
+        <div class="p1-freq">${d.cursos_frequentes.map((c) => `<div class="p1-freq-item"><b>${c.qtd}</b> ${esc(c.nome)}</div>`).join('') || '<div class="p1-detail-empty">—</div>'}</div>
+        <div class="sec">💻 Sistemas mais comuns</div>
+        <div class="p1-freq">${d.sistemas_frequentes.map((c) => `<div class="p1-freq-item"><b>${c.qtd}</b> ${esc(c.nome)}</div>`).join('') || '<div class="p1-detail-empty">—</div>'}</div>
+      </div>
+    </div>`;
+  document.getElementById('p1-painel').innerHTML = html;
+  renderLista();
+}
+
+function renderLista(){
+  const q = (document.getElementById('p1-busca').value || '').toLowerCase();
+  const match = (p) => !q || (p.nome + ' ' + p.re + ' ' + p.posto_grad).toLowerCase().includes(q);
+  const okList = P1_PAINEL.efetivo.filter(match);
+  const pendList = P1_PAINEL.pendentes.filter(match);
+  document.getElementById('p1-lista-ok').innerHTML = okList.map((p) => `
+    <div class="p1-row" onclick="p1SelecionarRE('${esc(p.re)}')">
+      <b>${esc(p.nome || '(sem nome)')}</b><br>
+      <span class="re">RE ${esc(p.re)}${p.posto_grad ? ' · ' + esc(p.posto_grad) : ''}${p.opm ? ' · ' + esc(p.opm) : ''}</span>
+    </div>`
+  ).join('') || '<div class="p1-detail-empty">Nenhum resultado.</div>';
+  document.getElementById('p1-lista-pend').innerHTML = pendList.map((p) => `
+    <div class="p1-row pend" onclick="p1SelecionarRE('${esc(p.re)}')">
+      <b>${esc(p.nome || '(sem nome)')}</b><br>
+      <span class="re">RE ${esc(p.re)}${p.posto_grad ? ' · ' + esc(p.posto_grad) : ''}${p.opm ? ' · ' + esc(p.opm) : ''}</span>
+    </div>`
+  ).join('') || '<div class="p1-detail-empty">Ninguém pendente 🎉</div>';
+}
+
+function p1SelecionarRE(re){
+  P1_SEL_RE = re;
+  const p = P1_PAINEL.efetivo.find((x) => x.re === re) || P1_PAINEL.pendentes.find((x) => x.re === re);
+  if (!p) return;
+  const cursosHtml = p.cursos.length
+    ? p.cursos.map((c) => `<div class="p1-tag ${c.concluiu==='NÃO'?'gray':''}">${esc(c.sigla || c.curso)}${c.edicao ? ' · ' + esc(c.edicao) : ''}${c.ano ? ' · ' + esc(c.ano) : ''}${c.estado && c.estado!=='RO' ? ' · ' + esc(c.estado) : ''}${c.concluiu==='NÃO' ? ' · em andamento' : ''}</div>`).join('')
+    : '<span style="color:var(--muted)">Nenhum curso informado.</span>';
+  const acessosHtml = p.acessos.length
+    ? p.acessos.map((s) => `<div class="p1-tag">${esc(s)}</div>`).join('')
+    : '<span style="color:var(--muted)">Nenhum sistema informado.</span>';
+  document.getElementById('p1-detail').innerHTML = `
+    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${esc(p.nome || '(sem nome)')}</div>
+    <div style="color:var(--muted);font-size:13.5px;margin-bottom:14px">RE ${esc(p.re)}${p.posto_grad ? ' · ' + esc(p.posto_grad) : ''}${p.opm ? ' · ' + esc(p.opm) : ''}${p.data_nascimento ? ' · nasc. ' + esc(p.data_nascimento) : ''}${p.telefone ? ' · ' + esc(p.telefone) : ''}</div>
+    ${p.sem_cadastro ? '<div class="p1-tag red">⚠️ fora do cadastro oficial</div><br>' : ''}
+    <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px">Cursos</div>
+    ${cursosHtml}
+    <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">Sistemas</div>
+    ${acessosHtml}
+    ${p.atualizado_em ? `<div style="color:var(--muted);font-size:12px;margin-top:14px">Atualizado em ${esc(p.atualizado_em)}</div>` : ''}
+  `;
+}
+
+renderUserChip();
+renderCursos();
+renderSistemas();
+p1CarregarSistemasConhecidos();
+</script>
+</body>
+</html>

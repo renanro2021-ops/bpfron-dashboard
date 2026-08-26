@@ -925,6 +925,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <div class="sb-group">🛒 Serviços ao Efetivo</div>
   <button class="sb-item" id="nav-emborrachados" onclick="showPage('emborrachados')"><span class="ic">🎽</span> Pedido de Emborrachados</button>
 
+  <div class="sb-group">👤 P1 - Seção Pessoal</div>
+  <button class="sb-item" id="nav-p1" onclick="showPage('p1')"><span class="ic">🗂️</span> Ficha do Efetivo</button>
+
   <div class="sb-spacer"></div>
   <button class="sb-item sb-apres" id="btn-apresentacao" onclick="toggleApresentacao()"><span class="ic">▶</span> Apresentação</button>
 </nav>
@@ -1862,6 +1865,65 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         .emb-cart-abrir{order:9}
       }
     </style>
+    <style>
+      #page-p1 .p1d-sub{font-size:12.5px;color:var(--muted);margin:-4px 2px 14px}
+      #page-p1 .p1d-status{font-size:12px;color:var(--muted);margin:0 2px 12px}
+      #page-p1 .p1d-link{display:inline-block;margin:0 0 16px;font-size:13px;color:#F5C518;text-decoration:none;border:1px solid rgba(245,197,24,.4);background:rgba(245,197,24,.1);border-radius:8px;padding:8px 14px}
+      #page-p1 .p1d-link:hover{background:rgba(245,197,24,.18)}
+      #page-p1 .p1d-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+      #page-p1 .p1d-kpi{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 16px}
+      #page-p1 .p1d-kpi b{display:block;font-size:24px;color:#fff;font-weight:700}
+      #page-p1 .p1d-kpi span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      #page-p1 .p1d-search{width:100%;background:#0b1220;border:1px solid var(--border,#334155);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:14.5px;margin-bottom:14px}
+      #page-p1 .p1d-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+      #page-p1 .p1d-card{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 16px}
+      #page-p1 .p1d-card-ttl{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:10px}
+      #page-p1 .p1d-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow-y:auto}
+      #page-p1 .p1d-row{background:#0b1220;border:1px solid var(--border,#334155);border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px}
+      #page-p1 .p1d-row:hover{border-color:rgba(245,197,24,.5)}
+      #page-p1 .p1d-row.pend{border-color:rgba(220,38,38,.35)}
+      #page-p1 .p1d-row .re{color:var(--muted);font-size:12px}
+      #page-p1 .p1d-detail{min-height:120px}
+      #page-p1 .p1d-empty{color:var(--muted);text-align:center;padding:22px}
+      #page-p1 .p1d-tag{display:inline-block;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:#F5C518;border-radius:999px;padding:4px 12px;font-size:12px;margin:3px 6px 3px 0}
+      #page-p1 .p1d-tag.gray{background:rgba(148,163,184,.12);border-color:var(--border,#334155);color:#cbd5e1}
+      #page-p1 .p1d-tag.red{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
+      #page-p1 .p1d-freq{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+      #page-p1 .p1d-freq-item{background:#0b1220;border:1px solid var(--border,#334155);border-radius:999px;padding:6px 13px;font-size:12.5px;color:#cbd5e1}
+      #page-p1 .p1d-freq-item b{color:#F5C518}
+      @media(max-width:1100px){#page-p1 .p1d-kpis{grid-template-columns:repeat(3,1fr)}#page-p1 .p1d-grid{grid-template-columns:1fr}}
+      @media(max-width:600px){#page-p1 .p1d-kpis{grid-template-columns:repeat(2,1fr)}}
+    </style>
+    <div id="page-p1" class="page-content">
+      <div class="sec">🗂️ P1 - Seção Pessoal — Ficha do Efetivo</div>
+      <div class="p1d-sub">Dados pessoais, cursos na PM e sistemas de acesso, preenchidos pelo próprio policial — dados ao vivo da planilha <b>BPFRON_Ficha_Pessoal</b>.</div>
+      <a class="p1d-link" href="p1.html" target="_blank" rel="noopener">📝 Abrir página de autoatualização (p1.html) ↗</a>
+      <div id="p1d-status" class="p1d-status">Carregando…</div>
+      <div id="p1d-kpis" class="p1d-kpis"></div>
+      <input type="text" id="p1d-busca" class="p1d-search" placeholder="🔎 Buscar por nome, RE ou posto…" oninput="renderP1Lista()">
+      <div class="p1d-grid">
+        <div class="p1d-card">
+          <div class="p1d-card-ttl">✅ Preencheram <small id="p1d-ok-count"></small></div>
+          <div id="p1d-lista-ok" class="p1d-list"></div>
+          <div class="p1d-card-ttl" style="margin-top:14px">⏳ Ainda não preencheram <small id="p1d-pend-count"></small></div>
+          <div id="p1d-lista-pend" class="p1d-list"></div>
+        </div>
+        <div>
+          <div class="p1d-card">
+            <div class="p1d-card-ttl">👤 Detalhe</div>
+            <div id="p1d-detail" class="p1d-detail"><div class="p1d-empty">Clique num nome na lista ao lado.</div></div>
+          </div>
+          <div class="p1d-card" style="margin-top:14px">
+            <div class="p1d-card-ttl">🎓 Cursos mais comuns</div>
+            <div id="p1d-freq-cursos" class="p1d-freq"></div>
+          </div>
+          <div class="p1d-card" style="margin-top:14px">
+            <div class="p1d-card-ttl">💻 Sistemas mais comuns</div>
+            <div id="p1d-freq-sistemas" class="p1d-freq"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="page-emborrachados" class="page-content">
       <div class="sec">🎽 Pedido de Emborrachados</div>
 
@@ -3222,12 +3284,19 @@ let apresentacaoTimer = null;
 let apresentacaoIdx = 0;
 
 // Páginas da área de Gestão que exigem login (mesmo gate da Consultas).
-const GESTAO_PAGES = ['garagem','material','policiais-campo','diaria','recursos'];
+const GESTAO_PAGES = ['garagem','material','policiais-campo','diaria','recursos','p1'];
 // Páginas SEM os botões de Período e o painel de Filtros Avançados (Gestão + Consultas)
 // 'emborrachados' é PÚBLICA (não entra em GESTAO_PAGES) mas também não usa os filtros.
 const NO_FILTER_PAGES = [...GESTAO_PAGES, 'consultas', 'emborrachados'];
 // Páginas bloqueadas por usuário (ex.: comandante do CPE não vê Consultas).
 const RESTRICTED_PAGES = { cpe: ['consultas','diaria'], subcmt: ['consultas','diaria'], cmtcg: ['consultas','diaria'], p3aux: ['material','garagem','consultas'] };
+// P1 - Seção Pessoal: ALLOWLIST (não bloqueio) — o painel tem nome/data de
+// nascimento/cursos de TODO o efetivo, então o certo é liberar só quem precisa
+// (mesmo raciocínio do RVN_GESTORES em rvn.html), não tentar lembrar de bloquear
+// cada login novo. ⚠️ A trava de verdade é o `p1Editors` do worker.js (padrão
+// ["desousa","p3aux","p1aux"], override via secret P1_EDITORS) — mudar aqui e lá.
+const P1_GESTORES = ['desousa','p3aux','p1aux'];
+function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && P1_GESTORES.includes(AUTH.user); }
 // Nome de boas-vindas por usuário (mostrado no chip do cabeçalho e na animação de login).
 const WELCOME_NOMES = {
   desousa:   'CB QPPM De Sousa',
@@ -3241,7 +3310,8 @@ const WELCOME_NOMES = {
   p3cmt:         'Tenente Caciano',
   subcmtbpfron:  'Capitão Renê',
   p4bel:         '3º SGT QPPM Xavier',
-  p3aux:         '3º SGT QPPM Juliana'
+  p3aux:         '3º SGT QPPM Juliana',
+  p1aux:         '3º SGT QPPM Holanda'
 };
 function nomeBoasVindas(u){ return WELCOME_NOMES[(u||'').toLowerCase()] || u || ''; }
 
@@ -3314,6 +3384,10 @@ function showPage(pageId) {
   if (typeof AUTH !== 'undefined' && AUTH.logged && (RESTRICTED_PAGES[AUTH.user] || []).includes(pageId)) {
     pageId = 'visao-geral';
   }
+  // P1 - Seção Pessoal: allowlist (o painel tem PII de todo o efetivo).
+  if (pageId === 'p1' && typeof AUTH !== 'undefined' && AUTH.logged && !p1PodeGerir()) {
+    pageId = 'visao-geral';
+  }
   document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.btn-page-nav, .sb-item').forEach(b => b.classList.remove('active'));
 
@@ -3335,7 +3409,7 @@ function showPage(pageId) {
   if (sbar) sbar.style.display = (pageId === 'visao-geral') ? '' : 'none';
 
   // Tabela só nas páginas analíticas (não em comparativo, consultas, garagem, material)
-  const semTabela = ['comparativo','consultas','garagem','material','policiais-campo','diaria','recursos','emborrachados'];
+  const semTabela = ['comparativo','consultas','garagem','material','policiais-campo','diaria','recursos','emborrachados','p1'];
   const tbl = document.getElementById('page-tabela');
   if (tbl) tbl.classList.toggle('active', !semTabela.includes(pageId));
 
@@ -3358,6 +3432,7 @@ function showPage(pageId) {
   if (pageId === 'material') initMaterial();
   if (pageId === 'diaria') initDiaria();
   if (pageId === 'emborrachados') initEmborrachados();
+  if (pageId === 'p1') initP1();
   if (pageId === 'consultas')  {
     // Exige login: o gate decide se mostra a tela de login ou os dados.
     gateConsultas();
@@ -4574,6 +4649,11 @@ function applyUserRestrictions(){
     if (nav) nav.style.display = blocked.includes(pg) ? 'none' : '';
   });
   if (blocked.includes(currentPage)) showPage('visao-geral');
+  // P1 - Seção Pessoal: allowlist própria (ver P1_GESTORES). Deslogado o item
+  // continua visível (é ele quem leva pro login de Gestão).
+  const navP1 = document.getElementById('nav-p1');
+  if (navP1) navP1.style.display = (AUTH.logged && !p1PodeGerir()) ? 'none' : '';
+  if (currentPage === 'p1' && AUTH.logged && !p1PodeGerir()) showPage('visao-geral');
 }
 applyUserRestrictions();
 renderUserChip();
@@ -4637,6 +4717,7 @@ function apiLogout(){
   MAT_LOADED = false; MAT_DATA = null; MAT_GROUPS = []; MAT_GROUP_SEL = null; MAT_SUB_SEL = null; MAT_SEL = null; ['mat-sit','mat-comp','mat-estado'].forEach(destroyC);
   DP_LOADED = false; DP_DATA = null; DP_SEL = null; DP_OPM_SEL = null; DP_DUP_OK = false;
   DP_CMD_SEL = null; DP_SUB_SEL = null; DP_BAT_SEL = null; DP_VIEW = null; ['dp-top','dp-op'].forEach(destroyC);
+  P1_LOADED = false; P1_DATA = null; P1_SEL_RE = null;
   const hE = document.getElementById('ch-total-env'); if (hE) hE.textContent = '—';
   const hV = document.getElementById('ch-total-vei'); if (hV) hV.textContent = '—';
   // Emborrachados: o catálogo é público (fica), mas a lista de pedidos some e o
@@ -8056,6 +8137,96 @@ async function embCancelarPedido(){
     msg.className = 'emb-msg err';
     msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao cancelar o pedido.');
   }
+}
+
+/* ============================ P1 - Seção Pessoal ============================ */
+// Painel consolidado (nome/cursos/acessos de todo o efetivo). O preenchimento
+// em si é feito pelo próprio policial em p1.html (autoatendimento, sem senha);
+// aqui é só a visão de gestão — showPage já bloqueou por allowlist (P1_GESTORES).
+let P1_LOADED = false, P1_DATA = null, P1_SEL_RE = null;
+
+async function initP1(){
+  if (!AUTH.logged) return; // showPage já bloqueou (gate de Gestão)
+  if (P1_LOADED){ renderP1All(); return; }
+  const status = document.getElementById('p1d-status');
+  showPageLoader('Carregando ficha do efetivo…');
+  try {
+    P1_DATA = await apiFetchJSON('/api/p1/painel');
+    P1_LOADED = true;
+    renderP1All();
+  } catch(e){
+    if (status) status.textContent = '❌ ' + (e.message || 'Erro ao carregar o P1.');
+  } finally {
+    hidePageLoader();
+  }
+}
+
+function renderP1All(){
+  const d = P1_DATA;
+  const status = document.getElementById('p1d-status');
+  if (status) status.textContent = `${d.kpis.total_efetivo} no efetivo · atualizado agora`;
+
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  document.getElementById('p1d-kpis').innerHTML = `
+    <div class="p1d-kpi"><b>${d.kpis.total_efetivo}</b><span>Efetivo total</span></div>
+    <div class="p1d-kpi"><b>${d.kpis.total_preenchidos}</b><span>Fichas preenchidas</span></div>
+    <div class="p1d-kpi"><b>${d.kpis.total_pendentes}</b><span>Ainda faltam</span></div>
+    <div class="p1d-kpi"><b>${d.kpis.percentual.toFixed(0)}%</b><span>Completude</span></div>
+    <div class="p1d-kpi"><b>${d.kpis.total_cursos}</b><span>Cursos registrados</span></div>`;
+
+  document.getElementById('p1d-freq-cursos').innerHTML = d.cursos_frequentes.map(c =>
+    `<div class="p1d-freq-item"><b>${c.qtd}</b> ${p1dEsc(c.nome)}</div>`
+  ).join('') || '<div class="p1d-empty">—</div>';
+  document.getElementById('p1d-freq-sistemas').innerHTML = d.sistemas_frequentes.map(c =>
+    `<div class="p1d-freq-item"><b>${c.qtd}</b> ${p1dEsc(c.nome)}</div>`
+  ).join('') || '<div class="p1d-empty">—</div>';
+
+  renderP1Lista();
+}
+
+function p1dEsc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderP1Lista(){
+  const d = P1_DATA; if (!d) return;
+  const q = (document.getElementById('p1d-busca').value || '').toLowerCase();
+  const match = p => !q || (p.nome + ' ' + p.re + ' ' + p.posto_grad).toLowerCase().includes(q);
+  const okList = d.efetivo.filter(match);
+  const pendList = d.pendentes.filter(match);
+  document.getElementById('p1d-ok-count').textContent = '(' + okList.length + ')';
+  document.getElementById('p1d-pend-count').textContent = '(' + pendList.length + ')';
+
+  const rowHtml = (p, pend) => `
+    <div class="p1d-row${pend ? ' pend' : ''}" onclick="p1dSelecionar('${p1dEsc(p.re)}')">
+      <b>${p1dEsc(p.nome || '(sem nome)')}</b><br>
+      <span class="re">RE ${p1dEsc(p.re)}${p.posto_grad ? ' · ' + p1dEsc(p.posto_grad) : ''}${p.opm ? ' · ' + p1dEsc(p.opm) : ''}</span>
+    </div>`;
+  document.getElementById('p1d-lista-ok').innerHTML = okList.map(p => rowHtml(p, false)).join('') || '<div class="p1d-empty">Nenhum resultado.</div>';
+  document.getElementById('p1d-lista-pend').innerHTML = pendList.map(p => rowHtml(p, true)).join('') || '<div class="p1d-empty">Ninguém pendente 🎉</div>';
+}
+
+function p1dSelecionar(re){
+  P1_SEL_RE = re;
+  const d = P1_DATA;
+  const p = d.efetivo.find(x => x.re === re) || d.pendentes.find(x => x.re === re);
+  if (!p) return;
+  const cursosHtml = p.cursos.length
+    ? p.cursos.map(c => `<div class="p1d-tag${c.concluiu==='NÃO' ? ' gray' : ''}">${p1dEsc(c.sigla || c.curso)}${c.edicao ? ' · ' + p1dEsc(c.edicao) : ''}${c.ano ? ' · ' + p1dEsc(c.ano) : ''}${c.estado && c.estado!=='RO' ? ' · ' + p1dEsc(c.estado) : ''}${c.concluiu==='NÃO' ? ' · em andamento' : ''}</div>`).join('')
+    : '<span style="color:var(--muted)">Nenhum curso informado.</span>';
+  const acessosHtml = p.acessos.length
+    ? p.acessos.map(s => `<div class="p1d-tag">${p1dEsc(s)}</div>`).join('')
+    : '<span style="color:var(--muted)">Nenhum sistema informado.</span>';
+  document.getElementById('p1d-detail').innerHTML = `
+    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${p1dEsc(p.nome || '(sem nome)')}</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:12px">RE ${p1dEsc(p.re)}${p.posto_grad ? ' · ' + p1dEsc(p.posto_grad) : ''}${p.opm ? ' · ' + p1dEsc(p.opm) : ''}${p.data_nascimento ? ' · nasc. ' + p1dEsc(p.data_nascimento) : ''}${p.telefone ? ' · ' + p1dEsc(p.telefone) : ''}</div>
+    ${p.sem_cadastro ? '<div class="p1d-tag red">⚠️ fora do cadastro oficial</div><br>' : ''}
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px">Cursos</div>
+    ${cursosHtml}
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">Sistemas</div>
+    ${acessosHtml}
+    ${p.atualizado_em ? `<div style="color:var(--muted);font-size:11.5px;margin-top:14px">Atualizado em ${p1dEsc(p.atualizado_em)}</div>` : ''}
+  `;
 }
 
 </script>
