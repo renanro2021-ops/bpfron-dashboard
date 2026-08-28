@@ -179,7 +179,7 @@ body{
     <div class="p1-form-inline">
       <div class="p1-fg">
         <label>RE</label>
-        <input id="p1-re" inputmode="numeric" placeholder="Seu RE" onblur="p1LookupRE()" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1Continuar();}">
+        <input id="p1-re" inputmode="numeric" placeholder="Seu RE (5 dígitos)" oninput="p1MaskRE(this)" onblur="p1LookupRE()" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1Continuar();}">
       </div>
       <div class="p1-fg" id="p1-cpf4-wrap" style="display:none">
         <label>4 últimos dígitos do CPF</label>
@@ -189,7 +189,7 @@ body{
     </div>
     <div id="p1-id-hint"></div>
     <div class="p1-msg err" id="p1-id-msg"></div>
-    <div class="p1-hint">Se o seu RE já tiver CPF no cadastro, pedimos os 4 últimos dígitos só pra confirmar que é você mesmo — ninguém mais consegue editar sua ficha.</div>
+    <div class="p1-hint">Digite os 5 dígitos do seu RE (se souber só o RE completo/longo, pode colar — o site pega os 5 últimos sozinho). Se o seu RE já tiver CPF no cadastro, pedimos os 4 últimos dígitos só pra confirmar que é você mesmo — ninguém mais consegue editar sua ficha.</div>
   </div>
 
   <div id="p1-form">
@@ -279,7 +279,7 @@ const AUTH = {
 // de todo o efetivo. ⚠️ Isto é só a interface; a trava de verdade é o
 // `p1Editors` do worker.js (padrão ["desousa","p3aux","p1aux"], override via
 // secret P1_EDITORS) — se mudar lá, mudar aqui também.
-const P1_GESTORES = ['desousa','p3aux','p1aux'];
+const P1_GESTORES = ['desousa','p3aux','p1aux','cmtfelipe'];
 function p1PodeGerir(){ return AUTH.logged && P1_GESTORES.includes(AUTH.user); }
 
 function esc(s){
@@ -341,6 +341,15 @@ function apiLogout(){
 /* --------------------------- Identificação --------------------------- */
 
 let P1_RE = '', P1_POL = null, P1_SEM_CADASTRO = false;
+
+// Mantém só dígitos e, se vier o RE "completo" (ex.: 100096357), guarda só os
+// 5 últimos — mesmo padrão usado no cadastro da Diária/RVN. Sem isso, quem
+// digita/cola o RE completo aparecia como "fora do cadastro" no painel.
+function p1MaskRE(el){
+  let d = (el.value || '').replace(/\D/g, '');
+  if (d.length > 5) d = d.slice(-5);
+  el.value = d;
+}
 
 async function p1LookupRE(){
   const re = (document.getElementById('p1-re').value || '').replace(/\D/g,'');
@@ -469,7 +478,7 @@ function p1SugerirSigla(nomeCurso){
   const alvo = p1TokensNome(nomeCurso);
   if (!alvo.size) return '';
   let melhor = null, melhorScore = 0;
-  P1_CURSOS_CONHECIDOS.forEach((c) => {
+  p1CursosTodos().forEach((c) => {
     const toks = p1TokensNome(c.nome);
     let score = 0;
     toks.forEach((t) => { if (alvo.has(t)) score++; });
@@ -491,14 +500,78 @@ function p1RemoverCurso(i){
   P1_CURSOS.splice(i,1);
   renderCursos();
 }
+// Cursos que outros policiais já cadastraram (nome+sigla) e não estão na
+// lista curada fixa acima — carregado no início e mesclado nela, assim um
+// curso cadastrado do zero (nome+sigla) passa a aparecer como opção pros
+// próximos, em vez de cada um digitar de um jeito diferente (ex.: "MARC1" /
+// "MARC I" / "MARCH1" viram 4 coisas "diferentes" sem essa padronização).
+let P1_CURSOS_APRENDIDOS = [];
+
+async function p1CarregarCursosConhecidos(){
+  try {
+    const r = await fetch(API_BASE + '/api/p1/cursos');
+    const d = await r.json();
+    P1_CURSOS_APRENDIDOS = Array.isArray(d.cursos) ? d.cursos : [];
+    renderCursos();
+  } catch(e){ /* segue só com a lista curada */ }
+}
+
+// União curada + aprendidos, sem repetir sigla (a curada tem prioridade no nome).
+function p1CursosTodos(){
+  const porSigla = new Map();
+  P1_CURSOS_CONHECIDOS.forEach((c) => porSigla.set(c.sigla.toUpperCase(), c));
+  P1_CURSOS_APRENDIDOS.forEach((c) => { const k = (c.sigla||'').toUpperCase(); if (k && !porSigla.has(k)) porSigla.set(k, c); });
+  return [...porSigla.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+}
+
 function p1BuscarPorSigla(valor){
   const alvo = String(valor||'').trim().toUpperCase();
   if (!alvo) return null;
-  return P1_CURSOS_CONHECIDOS.find((c) => c.sigla.toUpperCase() === alvo) || null;
+  return p1CursosTodos().find((c) => c.sigla.toUpperCase() === alvo) || null;
 }
 
-function p1CursoInput(i, campo, valor){
+// Acha a linha (pelo índice) e um campo dentro dela sem recriar nada — usado
+// pra preencher OUTRO campo (ex.: nome do curso quando a sigla é reconhecida)
+// sem derrubar o campo em que a pessoa está digitando.
+function p1CursoRowEl(i){
+  return document.querySelector(`.p1-curso-row[data-idx="${i}"]`);
+}
+function p1SetCampoDom(i, campo, valor){
+  const row = p1CursoRowEl(i); if (!row) return;
+  const input = row.querySelector(`[data-campo="${campo}"]`);
+  if (input && input.value !== valor) input.value = valor;
+}
+
+// IMPORTANTE: nunca chama renderCursos() daqui (recriaria os inputs e tiraria
+// o foco de quem está digitando — era o bug "vou digitando e ele sai"). Só
+// atualiza o estado em memória e, quando precisa refletir num OUTRO campo da
+// mesma linha (autopreencher sigla/nome), escreve direto no input dele.
+function p1CursoInput(i, campo, el){
+  let valor = el.value;
+
+  if (campo === 'ano'){
+    valor = valor.replace(/\D/g, '');
+    if (valor !== el.value) el.value = valor;
+  } else if (campo === 'sigla'){
+    valor = valor.toUpperCase();
+    if (valor !== el.value) el.value = valor;
+  } else if (campo === 'estado' || campo === 'concluiu'){
+    // selects: valor já vem certo
+  }
+
   P1_CURSOS[i][campo] = valor;
+
+  if (campo === 'sigla'){
+    P1_CURSOS[i]._siglaEditada = true;
+    // Digitou a SIGLA -> preenche o nome do curso (se ainda não tiver nome).
+    const porSigla = p1BuscarPorSigla(valor);
+    if (porSigla && !(P1_CURSOS[i].curso || '').trim()){
+      P1_CURSOS[i].curso = porSigla.nome;
+      p1SetCampoDom(i, 'curso', porSigla.nome);
+    }
+    return;
+  }
+
   if (campo === 'curso'){
     // Digitou a SIGLA no campo de curso (ex.: "CCDP") -> troca pro nome completo.
     const porSigla = p1BuscarPorSigla(valor);
@@ -506,51 +579,92 @@ function p1CursoInput(i, campo, valor){
       P1_CURSOS[i].curso = porSigla.nome;
       P1_CURSOS[i].sigla = porSigla.sigla;
       P1_CURSOS[i]._siglaEditada = true; // já é a sigla certa, não sobrescrever depois
-      renderCursos();
+      el.value = porSigla.nome;
+      p1SetCampoDom(i, 'sigla', porSigla.sigla);
       return;
     }
     if (!P1_CURSOS[i]._siglaEditada){
       const sug = p1SugerirSigla(valor);
-      if (sug){ P1_CURSOS[i].sigla = sug; renderCursos(); }
+      if (sug){ P1_CURSOS[i].sigla = sug; p1SetCampoDom(i, 'sigla', sug); }
     }
   }
 }
-function p1CursoSiglaEdit(i, valor){
-  P1_CURSOS[i].sigla = valor;
-  P1_CURSOS[i]._siglaEditada = true;
+
+// Escolheu um curso da lista (ou "cadastrar novo"). Feito num select — não
+// dispara por keystroke, então não tem o problema de foco que os inputs de
+// texto tinham; pode chamar renderCursos() à vontade aqui.
+function p1CursoSelecionar(i, selEl){
+  const v = selEl.value;
+  if (v === '__novo__'){
+    P1_CURSOS[i]._modo = 'novo';
+    P1_CURSOS[i].curso = ''; P1_CURSOS[i].sigla = ''; P1_CURSOS[i]._siglaEditada = false;
+    renderCursos();
+    const row = p1CursoRowEl(i);
+    const inp = row && row.querySelector('[data-campo="curso"]');
+    if (inp) inp.focus();
+    return;
+  }
+  const achado = p1CursosTodos().find((c) => c.sigla.toUpperCase() === v.toUpperCase());
+  P1_CURSOS[i].curso = achado ? achado.nome : '';
+  P1_CURSOS[i].sigla = achado ? achado.sigla : '';
+  P1_CURSOS[i]._modo = 'lista';
+}
+// Volta pro modo "escolher da lista" (usado quando a pessoa entrou em "cadastrar
+// novo" por engano, ou quer trocar por um curso que já existe na lista).
+function p1CursoModoLista(i){
+  P1_CURSOS[i]._modo = 'lista';
+  renderCursos();
 }
 
 function renderCursos(){
   const wrap = document.getElementById('p1-cursos-list');
-  wrap.innerHTML = P1_CURSOS.map((c, i) => `
-    <div class="p1-curso-row">
-      <div class="p1-fg"><label>Curso</label>
-        <input list="p1-cursos-dl" value="${esc(c.curso)}" placeholder="Nome completo do curso"
-          oninput="p1CursoInput(${i},'curso',this.value)">
+  const lista = p1CursosTodos();
+  wrap.innerHTML = P1_CURSOS.map((c, i) => {
+    const chave = (c.sigla || '').toUpperCase();
+    const achouNaLista = chave && lista.some((x) => x.sigla.toUpperCase() === chave);
+    // Modo padrão: se já tem sigla reconhecida usa 'lista' (seleção); se tem
+    // texto que NÃO bate com nada conhecido (curso antigo digitado à mão) ou a
+    // pessoa pediu explicitamente, usa 'novo' (edição livre nome+sigla).
+    const modo = c._modo || (achouNaLista ? 'lista' : ((c.curso || c.sigla) ? 'novo' : 'lista'));
+    const cursoHtml = modo === 'novo' ? `
+        <div style="display:flex;gap:6px">
+          <input data-campo="curso" value="${esc(c.curso)}" placeholder="Nome completo do novo curso" style="flex:2"
+            oninput="p1CursoInput(${i},'curso',this)">
+          <input list="p1-siglas-dl" data-campo="sigla" value="${esc(c.sigla)}" placeholder="Sigla" style="flex:1"
+            oninput="p1CursoInput(${i},'sigla',this)">
+        </div>
+        <div style="margin-top:4px"><a href="#" onclick="p1CursoModoLista(${i});return false" style="font-size:11.5px;color:var(--muted)">↩ Escolher da lista</a></div>` : `
+        <select data-campo="cursoSel" onchange="p1CursoSelecionar(${i},this)">
+          <option value="">— selecione o curso —</option>
+          ${lista.map((cc) => `<option value="${esc(cc.sigla)}" ${chave === cc.sigla.toUpperCase() ? 'selected' : ''}>${esc(cc.sigla)} — ${esc(cc.nome)}</option>`).join('')}
+          <option value="__novo__">➕ Cadastrar novo curso…</option>
+        </select>`;
+    return `
+    <div class="p1-curso-row" data-idx="${i}">
+      <div class="p1-fg" style="grid-column:span 2"><label>Curso</label>
+        ${cursoHtml}
       </div>
-      <div class="p1-fg"><label>Sigla</label>
-        <input value="${esc(c.sigla)}" placeholder="Sigla" oninput="p1CursoSiglaEdit(${i},this.value.toUpperCase())">
-      </div>
-      <div class="p1-fg"><label>Edição</label>
-        <input value="${esc(c.edicao)}" placeholder="Ex.: 12ª" oninput="p1CursoInput(${i},'edicao',this.value)">
+      <div class="p1-fg"><label>Edição <span style="opacity:.55;font-weight:400">(opcional)</span></label>
+        <input data-campo="edicao" value="${esc(c.edicao)}" placeholder="Ex.: 12ª" oninput="p1CursoInput(${i},'edicao',this)">
       </div>
       <div class="p1-fg"><label>Ano</label>
-        <input value="${esc(c.ano)}" maxlength="4" inputmode="numeric" placeholder="Ano" oninput="p1CursoInput(${i},'ano',this.value.replace(/\\D/g,''))">
+        <input data-campo="ano" value="${esc(c.ano)}" maxlength="4" inputmode="numeric" placeholder="Ano" oninput="p1CursoInput(${i},'ano',this)">
       </div>
       <div class="p1-fg"><label>Estado</label>
-        <select onchange="p1CursoInput(${i},'estado',this.value)">
+        <select data-campo="estado" onchange="p1CursoInput(${i},'estado',this)">
           ${P1_UFS.map((uf) => `<option value="${uf}" ${(c.estado||'RO')===uf?'selected':''}>${uf}</option>`).join('')}
         </select>
       </div>
       <div class="p1-fg"><label>Concluiu?</label>
-        <select onchange="p1CursoInput(${i},'concluiu',this.value)">
+        <select data-campo="concluiu" onchange="p1CursoInput(${i},'concluiu',this)">
           <option value="SIM" ${c.concluiu!=='NÃO'?'selected':''}>Sim</option>
           <option value="NÃO" ${c.concluiu==='NÃO'?'selected':''}>Não</option>
         </select>
       </div>
       <button type="button" class="p1-curso-x" onclick="p1RemoverCurso(${i})" title="Remover">✕</button>
-    </div>`
-  ).join('') + `<datalist id="p1-cursos-dl">${P1_CURSOS_CONHECIDOS.map((c) => `<option value="${esc(c.nome)}">`).join('')}${P1_CURSOS_CONHECIDOS.map((c) => `<option value="${esc(c.sigla)}">`).join('')}</datalist>`;
+    </div>`;
+  }).join('')
+    + `<datalist id="p1-siglas-dl">${lista.map((c) => `<option value="${esc(c.sigla)}">`).join('')}</datalist>`;
 }
 
 /* ----------------------------- Sistemas ------------------------------ */
@@ -619,12 +733,12 @@ async function p1Salvar(){
   if (tel.replace(/\D/g,'').length < 10){ msg.textContent = 'Telefone inválido — informe DDD + número.'; return; }
 
   // Linha totalmente em branco (rascunho nunca preenchido) é ignorada; qualquer
-  // linha com algo digitado precisa ter TODOS os campos preenchidos.
+  // linha com algo digitado precisa ter nome/sigla/ano/estado — Edição é opcional.
   const algumCampo = (c) => (c.curso||'').trim() || (c.sigla||'').trim() || (c.edicao||'').trim() || (c.ano||'').trim();
   const cursosPreenchidos = P1_CURSOS.filter(algumCampo);
-  const incompleto = cursosPreenchidos.find((c) => !((c.curso||'').trim() && (c.sigla||'').trim() && (c.edicao||'').trim() && (c.ano||'').trim() && (c.estado||'').trim()));
+  const incompleto = cursosPreenchidos.find((c) => !((c.curso||'').trim() && (c.sigla||'').trim() && (c.ano||'').trim() && (c.estado||'').trim()));
   if (incompleto){
-    msg.textContent = `Complete todos os campos do curso "${incompleto.curso || '(sem nome)'}" (nome, sigla, edição, ano e estado) ou remova a linha.`;
+    msg.textContent = `Complete os campos do curso "${incompleto.curso || '(sem nome)'}" (nome, sigla, ano e estado) ou remova a linha.`;
     return;
   }
 
@@ -781,6 +895,7 @@ renderUserChip();
 renderCursos();
 renderSistemas();
 p1CarregarSistemasConhecidos();
+p1CarregarCursosConhecidos();
 </script>
 </body>
 </html>

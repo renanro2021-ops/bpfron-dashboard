@@ -945,6 +945,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="hdr-right-inner">
         <div class="hdr-actions">
           <div class="user-box">
+            <a class="btn-sair" style="background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.4);color:#F5C518;text-decoration:none" href="intel.html" title="Central de Inteligência (P2) — acesso restrito">🕵️ Inteligência</a>
             <div class="user-chip" id="user-chip">
               <span class="uc-ico">👤</span>
               <span class="uc-nome" id="uc-nome">Visitante</span>
@@ -1891,6 +1892,27 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-p1 .p1d-freq{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
       #page-p1 .p1d-freq-item{background:#0b1220;border:1px solid var(--border,#334155);border-radius:999px;padding:6px 13px;font-size:12.5px;color:#cbd5e1}
       #page-p1 .p1d-freq-item b{color:#F5C518}
+      #page-p1 .p1d-sec-ttl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;display:flex;align-items:center;gap:8px}
+      #page-p1 .p1d-sec-ttl .n{background:rgba(245,197,24,.14);color:#F5C518;border-radius:999px;padding:1px 8px;font-size:11px}
+      #page-p1 .p1d-item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+      #page-p1 .p1d-item-card{position:relative;background:#0b1220;border:1px solid var(--border,#334155);border-radius:10px;padding:10px 28px 10px 12px;font-size:12.5px}
+      #page-p1 .p1d-item-card b{display:block;color:#e2e8f0;font-size:13px;margin-bottom:2px}
+      #page-p1 .p1d-item-card .sub{color:var(--muted);font-size:11.5px}
+      #page-p1 .p1d-item-card.pend{border-color:rgba(148,163,184,.25);opacity:.75}
+      #page-p1 .p1d-item-card.pend b{color:#94a3b8}
+      #page-p1 .p1d-item-card.acesso{display:flex;align-items:center;min-height:38px}
+      #page-p1 .p1d-item-card.acesso b{margin-bottom:0}
+      #page-p1 .p1d-item-del{position:absolute;top:6px;right:6px;width:20px;height:20px;line-height:18px;text-align:center;border-radius:50%;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.4);color:#fca5a5;cursor:pointer;font-size:12px;padding:0}
+      #page-p1 .p1d-item-del:hover{background:rgba(220,38,38,.3)}
+      #page-p1 .p1-agg-block{margin:18px 0 4px}
+      #page-p1 .p1-agg-head{font-size:13.5px;font-weight:700;color:#e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+      #page-p1 .p1-agg-head .n{font-size:11px;font-weight:600;color:var(--muted)}
+      #page-p1 .p1d-agg-card{cursor:pointer;background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color .15s}
+      #page-p1 .p1d-agg-card:hover{border-color:rgba(245,197,24,.6)}
+      #page-p1 .p1d-agg-card.sel{border-color:#F5C518;background:rgba(245,197,24,.08)}
+      #page-p1 .p1d-agg-card b{color:#e2e8f0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #page-p1 .p1d-agg-card .qtd{flex:0 0 auto;background:rgba(245,197,24,.14);color:#F5C518;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+      #page-p1 #p1-item-detail{margin-top:6px}
       @media(max-width:1100px){#page-p1 .p1d-kpis{grid-template-columns:repeat(3,1fr)}#page-p1 .p1d-grid{grid-template-columns:1fr}}
       @media(max-width:600px){#page-p1 .p1d-kpis{grid-template-columns:repeat(2,1fr)}}
     </style>
@@ -1900,6 +1922,18 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <a class="p1d-link" href="p1.html" target="_blank" rel="noopener">📝 Abrir página de autoatualização (p1.html) ↗</a>
       <div id="p1d-status" class="p1d-status">Carregando…</div>
       <div id="p1d-kpis" class="p1d-kpis"></div>
+
+      <div class="p1-agg-block">
+        <div class="p1-agg-head">📚 Cursos Registrados <span class="n" id="p1-cursos-n"></span></div>
+        <div class="p1d-item-grid" id="p1-cursos-cards"></div>
+      </div>
+      <div class="p1-agg-block">
+        <div class="p1-agg-head">🔐 Sistemas de Acesso <span class="n" id="p1-sistemas-n"></span></div>
+        <div class="p1d-item-grid" id="p1-sistemas-cards"></div>
+      </div>
+      <div id="p1-item-detail" style="display:none"></div>
+
+      <div class="sec" style="margin-top:22px">👤 Efetivo</div>
       <input type="text" id="p1d-busca" class="p1d-search" placeholder="🔎 Buscar por nome, RE ou posto…" oninput="renderP1Lista()">
       <div class="p1d-grid">
         <div class="p1d-card">
@@ -1908,22 +1942,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div class="p1d-card-ttl" style="margin-top:14px">⏳ Ainda não preencheram <small id="p1d-pend-count"></small></div>
           <div id="p1d-lista-pend" class="p1d-list"></div>
         </div>
-        <div>
-          <div class="p1d-card">
-            <div class="p1d-card-ttl">👤 Detalhe</div>
-            <div id="p1d-detail" class="p1d-detail"><div class="p1d-empty">Clique num nome na lista ao lado.</div></div>
-          </div>
-          <div class="p1d-card" style="margin-top:14px">
-            <div class="p1d-card-ttl">🎓 Cursos mais comuns</div>
-            <div id="p1d-freq-cursos" class="p1d-freq"></div>
-          </div>
-          <div class="p1d-card" style="margin-top:14px">
-            <div class="p1d-card-ttl">💻 Sistemas mais comuns</div>
-            <div id="p1d-freq-sistemas" class="p1d-freq"></div>
-          </div>
+        <div class="p1d-card">
+          <div class="p1d-card-ttl">👤 Detalhe</div>
+          <div id="p1d-detail" class="p1d-detail"><div class="p1d-empty">Clique num nome na lista ao lado.</div></div>
         </div>
       </div>
     </div>
+
     <div id="page-emborrachados" class="page-content">
       <div class="sec">🎽 Pedido de Emborrachados</div>
 
@@ -2578,6 +2603,10 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=992567398&single=true&output=csv";
 // URL da aba PAINEL — usada apenas para buscar o Prejuízo Total Estimado
 const PAINEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=1543001629&single=true&output=csv";
+// Worker público (mesma origem CORS liberada p/ github.io + localhost:8000/5500).
+// É a fonte de dados preferida: sempre no ar, dados VIVOS, sem depender de proxy CORS
+// nem de data.csv (que só existe no deploy do GitHub Pages). Evita cair no EMBEDDED_CSV local.
+const WORKER_API = "https://bpfron-api.bpfron.workers.dev";
 /* ============================================================ */
 
 /* ── Estado global ── */
@@ -3295,7 +3324,7 @@ const RESTRICTED_PAGES = { cpe: ['consultas','diaria'], subcmt: ['consultas','di
 // (mesmo raciocínio do RVN_GESTORES em rvn.html), não tentar lembrar de bloquear
 // cada login novo. ⚠️ A trava de verdade é o `p1Editors` do worker.js (padrão
 // ["desousa","p3aux","p1aux"], override via secret P1_EDITORS) — mudar aqui e lá.
-const P1_GESTORES = ['desousa','p3aux','p1aux'];
+const P1_GESTORES = ['desousa','p3aux','p1aux','cmtfelipe'];
 function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && P1_GESTORES.includes(AUTH.user); }
 // Nome de boas-vindas por usuário (mostrado no chip do cabeçalho e na animação de login).
 const WELCOME_NOMES = {
@@ -3659,6 +3688,8 @@ function parsePrejuizoTotal(txt) {
 async function fetchPrejuizoTotal() {
   const isLocal = window.location.protocol === 'file:';
   const sources = [];
+  // 0) Worker público /api/painel — dados vivos, sem proxy, funciona local e no deploy
+  if (!isLocal) sources.push(WORKER_API + '/api/painel?_nc=' + Date.now());
   // 1) painel.csv do mesmo domínio (gerado pelo Actions, sem CORS) — preferido
   if (!isLocal) sources.push('painel.csv?_nc=' + Date.now());
   // 2) proxies CORS sobre o export VIVO da aba PAINEL
@@ -3766,16 +3797,36 @@ async function loadData() {
 
   // Busca dados online
   const isLocal = window.location.protocol === 'file:';
+
+  // 0. Worker público /api/base — funciona local e no deploy, dados vivos, sem proxy CORS.
+  if (!isLocal && !txt) {
+    try {
+      const res = await fetch(WORKER_API + '/api/base?_nc=' + Date.now());
+      if (res.ok) {
+        const fetched = await res.text();
+        if (fetched && fetched.trim().length > 100 && !fetched.trim().startsWith('<') && !fetched.trim().startsWith('{')) {
+          txt = fetched;
+          fonte = 'online';
+          console.log('[BPFRON] Dados carregados do Worker /api/base');
+        }
+      }
+    } catch(e) {
+      console.warn('[BPFRON] Worker /api/base falhou:', e.message);
+    }
+  }
+
   if (!isLocal) {
     // 1. Tenta data.csv do mesmo servidor (GitHub Pages — sem CORS)
     try {
-      const res = await fetch('data.csv?_nc=' + Date.now());
-      if (res.ok) {
-        const fetched = await res.text();
-        if (fetched && fetched.trim().length > 100 && !fetched.trim().startsWith('<')) {
-          txt = fetched;
-          fonte = 'online';
-          console.log('[BPFRON] Dados carregados de data.csv');
+      if (!txt) {
+        const res = await fetch('data.csv?_nc=' + Date.now());
+        if (res.ok) {
+          const fetched = await res.text();
+          if (fetched && fetched.trim().length > 100 && !fetched.trim().startsWith('<')) {
+            txt = fetched;
+            fonte = 'online';
+            console.log('[BPFRON] Dados carregados de data.csv');
+          }
         }
       }
     } catch(e) {
@@ -8174,18 +8225,18 @@ function renderP1All(){
     <div class="p1d-kpi"><b>${d.kpis.percentual.toFixed(0)}%</b><span>Completude</span></div>
     <div class="p1d-kpi"><b>${d.kpis.total_cursos}</b><span>Cursos registrados</span></div>`;
 
-  document.getElementById('p1d-freq-cursos').innerHTML = d.cursos_frequentes.map(c =>
-    `<div class="p1d-freq-item"><b>${c.qtd}</b> ${p1dEsc(c.nome)}</div>`
-  ).join('') || '<div class="p1d-empty">—</div>';
-  document.getElementById('p1d-freq-sistemas').innerHTML = d.sistemas_frequentes.map(c =>
-    `<div class="p1d-freq-item"><b>${c.qtd}</b> ${p1dEsc(c.nome)}</div>`
-  ).join('') || '<div class="p1d-empty">—</div>';
-
+  renderP1Agregados();
   renderP1Lista();
 }
 
 function p1dEsc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// JSON.stringify produz aspas DUPLAS — inseguro dentro de um atributo onclick="..."
+// (quebra o HTML). Usado sempre junto com um atributo onclick='...' (aspas simples).
+function p1JsStr(s){
+  return JSON.stringify(String(s == null ? '' : s)).replace(/'/g, '&#39;');
 }
 
 function renderP1Lista(){
@@ -8208,15 +8259,25 @@ function renderP1Lista(){
 
 function p1dSelecionar(re){
   P1_SEL_RE = re;
-  const d = P1_DATA;
-  const p = d.efetivo.find(x => x.re === re) || d.pendentes.find(x => x.re === re);
-  if (!p) return;
+  renderP1Detail();
+}
+
+function p1dPessoaAtual(){
+  const d = P1_DATA; if (!d || !P1_SEL_RE) return null;
+  return d.efetivo.find(x => x.re === P1_SEL_RE) || d.pendentes.find(x => x.re === P1_SEL_RE) || null;
+}
+
+function renderP1Detail(){
+  const p = p1dPessoaAtual();
+  if (!p){ document.getElementById('p1d-detail').innerHTML = '<div class="p1d-empty">Clique num nome na lista ao lado.</div>'; return; }
+
   const cursosHtml = p.cursos.length
     ? p.cursos.map(c => `<div class="p1d-tag${c.concluiu==='NÃO' ? ' gray' : ''}">${p1dEsc(c.sigla || c.curso)}${c.edicao ? ' · ' + p1dEsc(c.edicao) : ''}${c.ano ? ' · ' + p1dEsc(c.ano) : ''}${c.estado && c.estado!=='RO' ? ' · ' + p1dEsc(c.estado) : ''}${c.concluiu==='NÃO' ? ' · em andamento' : ''}</div>`).join('')
     : '<span style="color:var(--muted)">Nenhum curso informado.</span>';
   const acessosHtml = p.acessos.length
     ? p.acessos.map(s => `<div class="p1d-tag">${p1dEsc(s)}</div>`).join('')
     : '<span style="color:var(--muted)">Nenhum sistema informado.</span>';
+
   document.getElementById('p1d-detail').innerHTML = `
     <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${p1dEsc(p.nome || '(sem nome)')}</div>
     <div style="color:var(--muted);font-size:13px;margin-bottom:12px">RE ${p1dEsc(p.re)}${p.posto_grad ? ' · ' + p1dEsc(p.posto_grad) : ''}${p.opm ? ' · ' + p1dEsc(p.opm) : ''}${p.data_nascimento ? ' · nasc. ' + p1dEsc(p.data_nascimento) : ''}${p.telefone ? ' · ' + p1dEsc(p.telefone) : ''}</div>
@@ -8228,6 +8289,116 @@ function p1dSelecionar(re){
     ${p.atualizado_em ? `<div style="color:var(--muted);font-size:11.5px;margin-top:14px">Atualizado em ${p1dEsc(p.atualizado_em)}</div>` : ''}
   `;
 }
+
+/* ------------------- Painéis agregados (Cursos / Sistemas) ------------------- *
+ * Visão tipo dashboard: um card por curso/sistema DISTINTO (com a contagem de
+ * pessoas), igual à Visão Geral. Clicar abre a lista de quem tem aquele item,
+ * com botão de excluir por linha — é daqui que se tira duplicata/item errado,
+ * sem precisar entrar na ficha de cada policial.
+ */
+let P1_AGG_CURSOS = {}, P1_AGG_SISTEMAS = {}, P1_AGG_SEL = null;
+
+function p1AggCursos(){
+  const map = {};
+  (P1_DATA.efetivo || []).forEach(p => (p.cursos || []).forEach(c => {
+    const key = (c.sigla || c.curso || '').toUpperCase().trim(); if (!key) return;
+    (map[key] = map[key] || { label: c.sigla || c.curso, itens: [] }).itens.push({ ...c, re: p.re, nome: p.nome });
+  }));
+  return map;
+}
+function p1AggSistemas(){
+  const map = {};
+  (P1_DATA.efetivo || []).forEach(p => (p.acessos || []).forEach(s => {
+    const key = (s || '').toUpperCase().trim(); if (!key) return;
+    (map[key] = map[key] || { label: s, itens: [] }).itens.push({ sistema: s, re: p.re, nome: p.nome });
+  }));
+  return map;
+}
+
+function renderP1Agregados(){
+  P1_AGG_CURSOS = p1AggCursos();
+  P1_AGG_SISTEMAS = p1AggSistemas();
+  const cardHtml = (tipo, key, g) => `
+    <div class="p1d-agg-card${P1_AGG_SEL && P1_AGG_SEL.tipo===tipo && P1_AGG_SEL.key===key ? ' sel' : ''}" onclick='p1AbrirAgregado("${tipo}",${p1JsStr(key)})'>
+      <b title="${p1dEsc(g.label)}">${p1dEsc(g.label)}</b><span class="qtd">${g.itens.length}</span>
+    </div>`;
+  const cursosOrd = Object.entries(P1_AGG_CURSOS).sort((a, b) => b[1].itens.length - a[1].itens.length);
+  const sistemasOrd = Object.entries(P1_AGG_SISTEMAS).sort((a, b) => b[1].itens.length - a[1].itens.length);
+  document.getElementById('p1-cursos-n').textContent = cursosOrd.length ? '(' + cursosOrd.length + ' distintos)' : '';
+  document.getElementById('p1-sistemas-n').textContent = sistemasOrd.length ? '(' + sistemasOrd.length + ' distintos)' : '';
+  document.getElementById('p1-cursos-cards').innerHTML = cursosOrd.map(([k, g]) => cardHtml('curso', k, g)).join('') || '<div class="p1d-empty">Nenhum curso registrado ainda.</div>';
+  document.getElementById('p1-sistemas-cards').innerHTML = sistemasOrd.map(([k, g]) => cardHtml('acesso', k, g)).join('') || '<div class="p1d-empty">Nenhum sistema registrado ainda.</div>';
+  p1RenderAggDetail();
+}
+
+// Só redesenha o painel de detalhe (lista de gente com aquele item), sem
+// mexer nos cards — evita loop de render entre esta função e renderP1Agregados.
+function p1RenderAggDetail(){
+  const wrap = document.getElementById('p1-item-detail');
+  if (!P1_AGG_SEL){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const { tipo, key } = P1_AGG_SEL;
+  const map = tipo === 'curso' ? P1_AGG_CURSOS : P1_AGG_SISTEMAS;
+  const g = map[key];
+  if (!g){ P1_AGG_SEL = null; wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const rowHtml = (it, i) => `
+    <div class="p1d-item-card${tipo === 'curso' && it.concluiu === 'NÃO' ? ' pend' : ''}">
+      <button class="p1d-item-del" title="Excluir este item" onclick='p1AggExcluir("${tipo}",${p1JsStr(key)},${i})'>✕</button>
+      <b>${p1dEsc(it.nome || '(sem nome)')}</b>
+      <div class="sub">RE ${p1dEsc(it.re)}${tipo === 'curso' ? [it.edicao && ('Ed. ' + it.edicao), it.ano, it.estado && it.estado !== 'RO' ? it.estado : null, it.concluiu === 'NÃO' ? 'em andamento' : null].filter(Boolean).map(x => ' · ' + p1dEsc(x)).join('') : ''}</div>
+    </div>`;
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <div class="p1d-card">
+      <div class="p1d-card-ttl">${tipo === 'curso' ? '📚' : '🔐'} ${p1dEsc(g.label)}
+        <small style="color:var(--muted);font-weight:400">— ${g.itens.length} ${g.itens.length === 1 ? 'pessoa' : 'pessoas'}, clique no ✕ pra excluir um item específico</small>
+        <button style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px" onclick="p1FecharAgregado()">✕ Fechar</button>
+      </div>
+      <div class="p1d-item-grid">${g.itens.map(rowHtml).join('')}</div>
+      <div id="p1-agg-msg" style="color:#fca5a5;font-size:12.5px;margin-top:10px"></div>
+    </div>`;
+}
+
+function p1AbrirAgregado(tipo, key){
+  const map = tipo === 'curso' ? P1_AGG_CURSOS : P1_AGG_SISTEMAS;
+  if (!map[key]) return;
+  P1_AGG_SEL = { tipo, key };
+  renderP1Agregados();
+}
+
+function p1FecharAgregado(){
+  P1_AGG_SEL = null;
+  renderP1Agregados();
+}
+
+// Exclui UM curso ou UM sistema de UMA pessoa a partir do painel agregado do
+// topo — sem apagar o resto do que ela preencheu. Casa por conteúdo no
+// backend; se dois itens forem idênticos (duplicata), remove só um.
+async function p1AggExcluir(tipo, key, i){
+  const map = tipo === 'curso' ? P1_AGG_CURSOS : P1_AGG_SISTEMAS;
+  const g = map[key]; if (!g) return;
+  const it = g.itens[i]; if (!it) return;
+  if (!confirm(`Excluir ${tipo === 'curso' ? 'o curso' : 'o acesso'} "${g.label}" de ${it.nome || 'RE ' + it.re}?`)) return;
+  const msg = document.getElementById('p1-agg-msg');
+  const item = tipo === 'curso'
+    ? { curso: it.curso, sigla: it.sigla, edicao: it.edicao, ano: it.ano, concluiu: it.concluiu, estado: it.estado }
+    : it.sistema;
+  try {
+    await apiPostJSON('/api/p1/item/excluir', { re: it.re, tipo, item });
+    const p = P1_DATA.efetivo.find(x => x.re === it.re);
+    if (p) {
+      const arr = tipo === 'curso' ? p.cursos : p.acessos;
+      const idx = arr.findIndex(x => tipo === 'curso'
+        ? (x.curso === it.curso && x.sigla === it.sigla && x.edicao === it.edicao && x.ano === it.ano && x.estado === it.estado)
+        : x === it.sistema);
+      if (idx >= 0) arr.splice(idx, 1);
+    }
+    if (P1_SEL_RE === it.re) renderP1Detail();
+    p1AbrirAgregado(tipo, key);
+  } catch(e){
+    if (msg) msg.textContent = '❌ ' + (e.message || 'Erro ao excluir.');
+  }
+}
+
 
 </script>
 </body>
