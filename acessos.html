@@ -79,6 +79,11 @@ body{
 .fg input:focus{border-color:rgba(245,197,24,.6)}
 .fg input.bad{border-color:rgba(239,68,68,.65)}
 .fg .err{font-size:12px;color:#fca5a5;min-height:15px}
+.fg input:disabled{opacity:.4;cursor:not-allowed}
+.chk{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:14px;font-weight:500;
+     letter-spacing:0;text-transform:none;color:var(--muted);cursor:pointer}
+.chk input{width:19px;height:19px;min-height:0;flex-shrink:0;accent-color:var(--yellow);cursor:pointer}
+.chk b{color:#cbd5e1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
 
@@ -247,6 +252,14 @@ tr:last-child td{border-bottom:none}
             <input id="f-nasc" type="date">
             <div class="err" id="e-nasc"></div>
           </div>
+          <div class="fg" style="grid-column:1/-1">
+            <label for="f-email">E-mail institucional</label>
+            <input id="f-email" type="email" inputmode="email" autocomplete="email"
+                   autocapitalize="none" spellcheck="false" placeholder="seu.nome@instituicional">
+            <label class="chk"><input type="checkbox" id="f-sememail">
+              Ainda <b>não tenho</b> e-mail institucional</label>
+            <div class="err" id="e-email"></div>
+          </div>
         </div>
       </div>
 
@@ -323,7 +336,7 @@ tr:last-child td{border-bottom:none}
         <div class="tbl-wrap">
           <table id="tbl">
             <thead>
-              <tr><th>Nome completo</th><th>Guerra</th><th>RE</th><th>CPF</th><th>Nascimento</th><th>Sem acesso</th></tr>
+              <tr><th>Nome completo</th><th>Guerra</th><th>RE</th><th>E-mail institucional</th><th>CPF</th><th>Nascimento</th><th>Sem acesso</th></tr>
             </thead>
             <tbody id="tbody"></tbody>
           </table>
@@ -404,6 +417,15 @@ function dataBR(iso){
 function cpfFmt(c){
   c = String(c||'').replace(/\D/g,'');
   return c.length === 11 ? c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4') : c;
+}
+/* Quem não tem e-mail institucional aparece destacado — o P3 precisa
+   providenciar o e-mail antes de conseguir pedir o acesso. */
+var SEM_EMAIL = '(SEM E-MAIL INSTITUCIONAL)';
+function semEmailStr(e){ return !e || e === SEM_EMAIL; }
+function emailCel(e){
+  return semEmailStr(e)
+    ? '<span class="pill">sem e-mail</span>'
+    : esc(e);
 }
 
 /* ---------------------------- abas ---------------------------- */
@@ -512,8 +534,24 @@ function validar(){
     if (ano < 1930 || new Date(nasc + 'T12:00:00') > new Date()) msgN = 'Data de nascimento inválida.';
   }
   ok = erro('nasc', msgN) && ok;
+
+  var semEmail = $('f-sememail').checked;
+  var email = $('f-email').value.trim().toLowerCase();
+  var msgE = '';
+  if (!semEmail){
+    if (!email) msgE = 'Informe o e-mail institucional.';
+    else if (email.length > 120 || !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) msgE = 'E-mail inválido.';
+  }
+  ok = erro('email', msgE) && ok;
   return ok;
 }
+
+/* Quem marca "não tenho e-mail" tem o campo desabilitado e limpo. */
+$('f-sememail').addEventListener('change', function(){
+  var sem = this.checked;
+  $('f-email').disabled = sem;
+  if (sem){ $('f-email').value = ''; erro('email', ''); }
+});
 
 $('btn-enviar').addEventListener('click', async function(){
   var m = $('msg-policial'), btn = this;
@@ -537,6 +575,8 @@ $('btn-enviar').addEventListener('click', async function(){
         guerra: $('f-guerra').value.trim(),
         cpf: $('f-cpf').value,
         nascimento: $('f-nasc').value,
+        email: $('f-email').value.trim(),
+        sem_email: $('f-sememail').checked,
         sistemas: lista
       })
     });
@@ -544,7 +584,7 @@ $('btn-enviar').addEventListener('click', async function(){
     if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
 
     var corpo = '<p>Registrado em <b>' + esc(d.data) + '</b> para <b>' + esc(d.nome) +
-                '</b> (RE ' + esc(d.re) + ').</p>';
+                '</b> (RE ' + esc(d.re) + ').<br>E-mail: <b>' + esc(d.email) + '</b></p>';
     if (d.total > 0){
       corpo += '<p style="margin-top:10px">Sistemas informados como <b>SEM ACESSO</b>:</p><ul>';
       d.sem_acesso.forEach(function(s){ corpo += '<li>' + esc(s) + '</li>'; });
@@ -566,9 +606,11 @@ $('btn-enviar').addEventListener('click', async function(){
 
 $('btn-novo').addEventListener('click', function(){
   semAcesso = {};
-  ['nome','re','guerra','cpf','nasc'].forEach(function(c){
+  ['nome','re','guerra','cpf','nasc','email'].forEach(function(c){
     $('f-'+c).value = ''; erro(c, '');
   });
+  $('f-sememail').checked = false;
+  $('f-email').disabled = false;
   montarLista();
   atualizarContador();
   $('msg-policial').textContent = '';
@@ -675,6 +717,7 @@ function render(){
           +   '<td>' + esc(r.nome) + '</td>'
           +   '<td>' + esc(r.guerra) + '</td>'
           +   '<td>' + esc(r.re) + '</td>'
+          +   '<td>' + emailCel(r.email) + '</td>'
           +   '<td>' + cpfFmt(r.cpf) + '</td>'
           +   '<td>' + dataBR(r.nascimento) + '</td>'
           +   '<td><span class="pill' + (n ? '' : ' zero') + '">' + (n ? n + ' sistema' + (n>1?'s':'') : 'nenhum') + '</span></td>'
@@ -693,14 +736,17 @@ function render(){
          +   '<ol>';
     s.policiais.forEach(function(p){
       rel += '<li><span class="nm">' + esc(p.nome) + '</span> (' + esc(p.guerra) + ')<br>'
-           + '<span class="dt">RE ' + esc(p.re) + ' · CPF ' + cpfFmt(p.cpf) + ' · nasc. ' + dataBR(p.nascimento) + '</span></li>';
+           + '<span class="dt">RE ' + esc(p.re) + ' · CPF ' + cpfFmt(p.cpf) + ' · nasc. ' + dataBR(p.nascimento) + '<br>'
+           + 'E-mail: ' + (semEmailStr(p.email) ? '<b>SEM E-MAIL INSTITUCIONAL</b>' : esc(p.email)) + '</span></li>';
     });
     rel += '</ol></div>';
   });
   $('rel').innerHTML = rel || '<div class="vazio">Nenhuma pendência de acesso registrada até aqui.</div>';
+  var semEm = (dados && dados.sem_email) || 0;
   $('rel-data').textContent = 'Emitido em ' + new Date().toLocaleDateString('pt-BR')
     + ' · ' + (dados ? dados.total_policiais : 0) + ' policiais · '
-    + (dados ? dados.total_pendencias : 0) + ' pendências de acesso';
+    + (dados ? dados.total_pendencias : 0) + ' pendências de acesso'
+    + (semEm ? ' · ' + semEm + ' sem e-mail institucional' : '');
 }
 
 function relatorioTexto(){
@@ -710,7 +756,8 @@ function relatorioTexto(){
     linhas.push(s.sistema.toUpperCase() + ' — ' + s.policiais.length + ' policial(is) sem acesso');
     s.policiais.forEach(function(p, i){
       linhas.push('  ' + (i+1) + '. ' + p.nome + ' (' + p.guerra + ') · RE ' + p.re
-                + ' · CPF ' + cpfFmt(p.cpf) + ' · nasc. ' + dataBR(p.nascimento));
+                + ' · CPF ' + cpfFmt(p.cpf) + ' · nasc. ' + dataBR(p.nascimento)
+                + '\n     E-mail: ' + (semEmailStr(p.email) ? 'SEM E-MAIL INSTITUCIONAL' : p.email));
     });
     linhas.push('');
   });
@@ -741,13 +788,14 @@ $('btn-copiar-rel').addEventListener('click', function(){ copiar(relatorioTexto(
 $('btn-imprimir').addEventListener('click', function(){ window.print(); });
 
 $('btn-csv').addEventListener('click', function(){
-  var linhas = [['Nome completo','Nome de guerra','RE','CPF','Nascimento','Sistema sem acesso']];
+  var linhas = [['Nome completo','Nome de guerra','RE','E-mail institucional','CPF','Nascimento','Sistema sem acesso']];
   ((dados && dados.policiais) || []).forEach(function(r){
+    var em = semEmailStr(r.email) ? 'SEM E-MAIL INSTITUCIONAL' : r.email;
     if (!(r.sistemas || []).length){
-      linhas.push([r.nome, r.guerra, r.re, cpfFmt(r.cpf), dataBR(r.nascimento), '(tem acesso a todos)']);
+      linhas.push([r.nome, r.guerra, r.re, em, cpfFmt(r.cpf), dataBR(r.nascimento), '(tem acesso a todos)']);
     } else {
       r.sistemas.forEach(function(s){
-        linhas.push([r.nome, r.guerra, r.re, cpfFmt(r.cpf), dataBR(r.nascimento), s]);
+        linhas.push([r.nome, r.guerra, r.re, em, cpfFmt(r.cpf), dataBR(r.nascimento), s]);
       });
     }
   });
