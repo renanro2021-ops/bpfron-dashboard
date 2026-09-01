@@ -165,14 +165,21 @@ tr:last-child td{border-bottom:none}
   body{background:#fff;color:#000;background-image:none;font-size:12pt}
   .hdr,.tabs,.no-print,.btnrow,.aviso{display:none!important}
   .wrap{max-width:none;padding:0}
-  .sec{color:#000;border-bottom:2px solid #000;padding-bottom:4px;margin:18px 0 12px}
+  /* o amarelo do tema fica ilegível no papel — vira azul-escuro na impressão */
+  .sec{color:#123a63;border-bottom:2px solid #123a63;padding-bottom:4px;margin:18px 0 12px}
   .sec small{color:#333}
   .box{background:#fff;border:none;padding:0}
-  .rel-cab{display:block;text-align:center;margin-bottom:22px}
-  .rel-cab h2{font-family:'Rajdhani',sans-serif;font-size:20pt;margin-bottom:4px}
+  th{color:#123a63;border-bottom:2px solid #123a63}
+  td{border-bottom:1px solid #bbb;color:#111}
+  /* .pill.zero tem specificity maior que .pill — precisa ser nomeada aqui também */
+  .pill,.pill.zero{background:#fff;border:1px solid #666;color:#000;font-weight:600}
+  .tbl-wrap{overflow:visible}
+  .rel-cab{display:block;text-align:center;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #123a63}
+  .rel-cab h2{font-family:'Rajdhani',sans-serif;font-size:20pt;margin-bottom:4px;color:#123a63}
   .rel-cab p{font-size:11pt;color:#333}
-  .rel-plat{background:#fff;border:1px solid #999;border-left:4px solid #000;page-break-inside:avoid;margin-bottom:14px}
-  .rel-plat h3,.rel-plat li .nm{color:#000}
+  .rel-plat{background:#fff;border:1px solid #999;border-left:4px solid #123a63;page-break-inside:avoid;margin-bottom:14px}
+  .rel-plat h3{color:#123a63}
+  .rel-plat li .nm{color:#000}
   .rel-plat .qt{color:#333}
   .rel-plat li,.rel-plat li .dt{color:#111}
 }
@@ -297,6 +304,13 @@ tr:last-child td{border-bottom:none}
 
     <div id="gestor-area">
 
+      <!-- Cabeçalho que só aparece na impressão — fica no topo para encabeçar a folha. -->
+      <div class="rel-cab">
+        <h2>SOLICITAÇÃO DE ACESSO A SISTEMAS</h2>
+        <p>Batalhão de Polícia de Fronteira e Divisas — BPFRON/RO</p>
+        <p id="rel-data"></p>
+      </div>
+
       <div class="hero no-print">
         <h1>Consolidação do levantamento</h1>
         <p>Dados vindos direto da planilha. Cada policial conta pelo <b>envio mais recente</b> que fez.</p>
@@ -319,11 +333,6 @@ tr:last-child td{border-bottom:none}
 
       <div class="sec">Relatório por plataforma <small>para instruir a solicitação de acesso</small></div>
       <div class="box">
-        <div class="rel-cab">
-          <h2>SOLICITAÇÃO DE ACESSO A SISTEMAS</h2>
-          <p>Batalhão de Polícia de Fronteira e Divisas — BPFRON/RO</p>
-          <p id="rel-data"></p>
-        </div>
         <div id="rel"></div>
         <div class="btnrow no-print">
           <button class="btn" id="btn-imprimir">🖨 Imprimir / Salvar PDF</button>
