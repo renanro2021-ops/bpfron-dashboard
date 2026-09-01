@@ -84,6 +84,8 @@ body{
      letter-spacing:0;text-transform:none;color:var(--muted);cursor:pointer}
 .chk input{width:19px;height:19px;min-height:0;flex-shrink:0;accent-color:var(--yellow);cursor:pointer}
 .chk b{color:#cbd5e1}
+.fg label .dom{color:var(--yellow);font-weight:700}
+.nota{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:7px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
 
@@ -253,9 +255,11 @@ tr:last-child td{border-bottom:none}
             <div class="err" id="e-nasc"></div>
           </div>
           <div class="fg" style="grid-column:1/-1">
-            <label for="f-email">E-mail institucional</label>
+            <label for="f-email">E-mail institucional <span class="dom">(@pm.ro.gov.br)</span></label>
             <input id="f-email" type="email" inputmode="email" autocomplete="email"
-                   autocapitalize="none" spellcheck="false" placeholder="seu.nome@instituicional">
+                   autocapitalize="none" spellcheck="false" placeholder="seu.nome@pm.ro.gov.br">
+            <div class="nota">Não vale Gmail, Hotmail, Outlook ou similar — as plataformas
+              só liberam acesso pelo e-mail institucional.</div>
             <label class="chk"><input type="checkbox" id="f-sememail">
               Ainda <b>não tenho</b> e-mail institucional</label>
             <div class="err" id="e-email"></div>
@@ -403,6 +407,15 @@ const SISTEMAS = [
     fin:'Pesquisas de placas veiculares; consultas relacionadas a PF e PJ; levantamento de rotas de veículos por meio de sistemas de cercamento eletrônico em outros estados.' }
 ];
 
+/* Só e-mail institucional. Aceita o domínio exato e qualquer subdomínio
+   (nome@pm.ro.gov.br e nome@bpfron.pm.ro.gov.br).
+   MANTER IGUAL ao ACESSOS_DOMINIO do worker.js. */
+const DOMINIO = 'pm.ro.gov.br';
+function emailInstitucional(email){
+  var d = String(email).split('@')[1] || '';
+  return d === DOMINIO || d.slice(-(DOMINIO.length + 1)) === '.' + DOMINIO;
+}
+
 var $ = function(id){ return document.getElementById(id); };
 
 function esc(s){
@@ -542,6 +555,9 @@ function validar(){
   if (!semEmail){
     if (!email) msgE = 'Informe o e-mail institucional.';
     else if (email.length > 120 || !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) msgE = 'E-mail inválido.';
+    else if (!emailInstitucional(email))
+      msgE = 'Só vale o e-mail institucional (@' + DOMINIO + '). Gmail, Hotmail e '
+           + 'similares não servem. Se ainda não tem, marque a opção abaixo.';
   }
   ok = erro('email', msgE) && ok;
   return ok;
