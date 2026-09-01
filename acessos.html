@@ -212,7 +212,7 @@ tr:last-child td{border-bottom:none}
 
   <div class="tabs no-print">
     <button class="tab on" data-pane="policial">👮 Sou Policial<small>Informar sistemas sem acesso</small></button>
-    <button class="tab" data-pane="gestor">📋 Área do Gestor<small>DE SOUSA · CAMILO</small></button>
+    <button class="tab" data-pane="gestor">📋 Área do Gestor<small>Acesso restrito</small></button>
   </div>
 
   <!-- ============================== POLICIAL ============================== -->
@@ -300,7 +300,7 @@ tr:last-child td{border-bottom:none}
       <div class="sec" style="justify-content:center">Área restrita</div>
       <div class="box">
         <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
-          Consolidação do levantamento. Restrita a <b style="color:#cbd5e1">CB DE SOUSA</b>, <b style="color:#cbd5e1">2º SGT CAMILO</b> e ao <b style="color:#cbd5e1">Comandante</b> — a lista traz CPF e data de nascimento do efetivo.
+          Consolidação do levantamento. Restrita ao <b style="color:#cbd5e1">Comandante</b>, ao <b style="color:#cbd5e1">TEN CACIANO</b>, ao <b style="color:#cbd5e1">2º SGT CAMILO</b> e ao <b style="color:#cbd5e1">CB DE SOUSA</b> — a lista traz CPF, data de nascimento e e-mail de todo o efetivo.
         </p>
         <div class="fg">
           <label for="f-user">Usuário</label>
@@ -380,9 +380,10 @@ const AUTH = {
 };
 
 /* Allowlist só da interface. A trava de verdade é o `acessosEditors` do
-   worker.js (padrão ["desousa","p3","cmtfelipe"], override via secret
-   ACESSOS_EDITORS) — se mudar lá, mudar aqui também. */
-const ACESSOS_GESTORES = ['desousa','p3','cmtfelipe'];
+   worker.js (padrão ["desousa","p3","p3cmt","cmtfelipe"], override via secret
+   ACESSOS_EDITORS) — se mudar lá, mudar aqui também.
+   p3 = SGT Camilo · p3cmt = TEN Caciano · cmtfelipe = MAJ Felipe Santos */
+const ACESSOS_GESTORES = ['desousa','p3','p3cmt','cmtfelipe'];
 function podeGerir(){ return AUTH.logged && ACESSOS_GESTORES.includes(AUTH.user); }
 
 /* Mesma lista do worker.js (ACESSOS_SISTEMAS) — MANTER OS DOIS EM SINCRONIA.
