@@ -1909,6 +1909,19 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-p1 .p1d-btn-warn:hover{background:rgba(234,179,8,.28)}
       #page-p1 .p1d-btn-danger{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.45);color:#fca5a5}
       #page-p1 .p1d-btn-danger:hover{background:rgba(220,38,38,.3)}
+      #page-p1 .p1d-logbox{margin-top:22px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.02);overflow:hidden}
+      #page-p1 .p1d-log-head{padding:10px 14px;font-size:13px;font-weight:700;color:#e2e8f0;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
+      #page-p1 .p1d-log-head:hover{background:rgba(255,255,255,.03)}
+      #page-p1 .p1d-log-caret{margin-left:auto;transition:transform .15s;color:var(--muted)}
+      #page-p1 .p1d-logbox.open .p1d-log-caret{transform:rotate(180deg)}
+      #page-p1 .p1d-log-body{max-height:340px;overflow:auto;border-top:1px solid rgba(255,255,255,.08)}
+      #page-p1 .p1d-log-row{display:grid;grid-template-columns:130px 90px 1fr;gap:10px;padding:8px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05)}
+      #page-p1 .p1d-log-row:last-child{border-bottom:none}
+      #page-p1 .p1d-log-row .lq{color:var(--muted);white-space:nowrap}
+      #page-p1 .p1d-log-row .lw{font-weight:700;color:#93c5fd}
+      #page-p1 .p1d-log-row .ld{color:#cbd5e1}
+      #page-p1 .p1d-log-row .ld b{color:#fde68a;font-weight:600}
+      #page-p1 .p1d-log-empty{padding:12px 14px;font-size:12px;color:var(--muted)}
       #page-p1 .p1-agg-block{margin:18px 0 4px}
       #page-p1 .p1-agg-head{font-size:13.5px;font-weight:700;color:#e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px}
       #page-p1 .p1-agg-head .n{font-size:11px;font-weight:600;color:var(--muted)}
@@ -1951,6 +1964,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div class="p1d-card-ttl">👤 Detalhe</div>
           <div id="p1d-detail" class="p1d-detail"><div class="p1d-empty">Clique num nome na lista ao lado.</div></div>
         </div>
+      </div>
+
+      <div class="p1d-logbox" id="p1d-logbox" style="display:none">
+        <div class="p1d-log-head" onclick="p1dToggleLog()">📋 Histórico de alterações <span id="p1d-log-n"></span><span class="p1d-log-caret" id="p1d-log-caret">▾</span></div>
+        <div id="p1d-log-body" class="p1d-log-body" hidden></div>
       </div>
     </div>
 
@@ -8232,6 +8250,37 @@ function renderP1All(){
 
   renderP1Agregados();
   renderP1Lista();
+  renderP1Log();
+}
+
+// Histórico de alterações — lê d.logs (aba LOG da planilha, mais recente primeiro).
+let P1_LOG_OPEN = false;
+function p1dToggleLog(){
+  P1_LOG_OPEN = !P1_LOG_OPEN;
+  const box = document.getElementById('p1d-logbox');
+  const body = document.getElementById('p1d-log-body');
+  if (box) box.classList.toggle('open', P1_LOG_OPEN);
+  if (body) body.hidden = !P1_LOG_OPEN;
+}
+function renderP1Log(){
+  const d = P1_DATA; if (!d) return;
+  const box = document.getElementById('p1d-logbox');
+  const body = document.getElementById('p1d-log-body');
+  const n = document.getElementById('p1d-log-n');
+  const logs = d.logs || [];
+  if (!box || !body) return;
+  box.style.display = p1PodeGerir() ? '' : 'none';
+  if (n) n.textContent = logs.length ? '(' + logs.length + ')' : '';
+  box.classList.toggle('open', P1_LOG_OPEN);
+  body.hidden = !P1_LOG_OPEN;
+  body.innerHTML = logs.length
+    ? logs.map(l => `
+      <div class="p1d-log-row">
+        <span class="lq">${p1dEsc(l.quando)}</span>
+        <span class="lw">${p1dEsc(l.quem || '—')}</span>
+        <span class="ld"><b>${p1dEsc(l.acao)}</b>${l.re ? ' · RE ' + p1dEsc(l.re) : ''}${l.detalhe ? ' · ' + p1dEsc(l.detalhe) : ''}</span>
+      </div>`).join('')
+    : '<div class="p1d-log-empty">Nenhuma alteração registrada ainda.</div>';
 }
 
 function p1dEsc(s){
