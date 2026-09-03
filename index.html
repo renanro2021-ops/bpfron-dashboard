@@ -1904,6 +1904,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-p1 .p1d-item-card.acesso b{margin-bottom:0}
       #page-p1 .p1d-item-del{position:absolute;top:6px;right:6px;width:20px;height:20px;line-height:18px;text-align:center;border-radius:50%;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.4);color:#fca5a5;cursor:pointer;font-size:12px;padding:0}
       #page-p1 .p1d-item-del:hover{background:rgba(220,38,38,.3)}
+      #page-p1 .p1d-btn-warn,#page-p1 .p1d-btn-danger{font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer}
+      #page-p1 .p1d-btn-warn{background:rgba(234,179,8,.14);border:1px solid rgba(234,179,8,.45);color:#fde68a}
+      #page-p1 .p1d-btn-warn:hover{background:rgba(234,179,8,.28)}
+      #page-p1 .p1d-btn-danger{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.45);color:#fca5a5}
+      #page-p1 .p1d-btn-danger:hover{background:rgba(220,38,38,.3)}
       #page-p1 .p1-agg-block{margin:18px 0 4px}
       #page-p1 .p1-agg-head{font-size:13.5px;font-weight:700;color:#e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px}
       #page-p1 .p1-agg-head .n{font-size:11px;font-weight:600;color:var(--muted)}
@@ -8287,7 +8292,48 @@ function renderP1Detail(){
     <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">Sistemas</div>
     ${acessosHtml}
     ${p.atualizado_em ? `<div style="color:var(--muted);font-size:11.5px;margin-top:14px">Atualizado em ${p1dEsc(p.atualizado_em)}</div>` : ''}
+    ${p.preenchido && p1PodeGerir() ? `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px">
+        <button class="p1d-btn-warn" onclick='p1dCorrigirRE(${p1JsStr(p.re)})'>✏️ Corrigir RE</button>
+        <button class="p1d-btn-danger" onclick='p1dExcluirFicha(${p1JsStr(p.re)})'>🗑️ Excluir ficha inteira</button>
+      </div>
+      <div id="p1d-detail-msg" style="font-size:12.5px;margin-top:8px"></div>` : ''}
   `;
+}
+
+// Ações de gestão sobre a ficha inteira (só p1Editors — backend confere de novo).
+async function p1dRecarregarPainel(){
+  P1_LOADED = false; P1_DATA = null;
+  await initP1();
+}
+async function p1dExcluirFicha(re){
+  const p = (P1_DATA.efetivo || []).find(x => x.re === re);
+  const nome = (p && p.nome) || ('RE ' + re);
+  if (!confirm(`Excluir a ficha INTEIRA de ${nome} (dados pessoais + cursos + acessos)?\n\nUse isto só pra cadastro errado/duplicado. Não dá pra desfazer.`)) return;
+  const msg = document.getElementById('p1d-detail-msg');
+  if (msg){ msg.style.color = 'var(--muted)'; msg.textContent = 'Excluindo…'; }
+  try {
+    const r = await apiPostJSON('/api/p1/ficha/excluir', { re });
+    if (msg){ msg.style.color = '#86efac'; msg.textContent = `✅ Ficha removida (FICHA ${r.removidas.ficha}, cursos ${r.removidas.cursos}, acessos ${r.removidas.acessos}).`; }
+    P1_SEL_RE = null;
+    await p1dRecarregarPainel();
+  } catch(e){
+    if (msg){ msg.style.color = '#fca5a5'; msg.textContent = '❌ ' + (e.message || 'Erro ao excluir a ficha.'); }
+  }
+}
+async function p1dCorrigirRE(re){
+  const novo = (prompt(`RE correto para esta ficha (atual: ${re}).\nTodas as linhas (ficha, cursos, acessos) passam para o novo RE.`, re) || '').replace(/\D/g, '');
+  if (!novo || novo === re) return;
+  const msg = document.getElementById('p1d-detail-msg');
+  if (msg){ msg.style.color = 'var(--muted)'; msg.textContent = 'Corrigindo…'; }
+  try {
+    const r = await apiPostJSON('/api/p1/ficha/mover', { de: re, para: novo });
+    if (msg){ msg.style.color = '#86efac'; msg.textContent = `✅ Movido para RE ${r.para} (ficha ${r.movidas.ficha}, cursos ${r.movidas.cursos}, acessos ${r.movidas.acessos}).`; }
+    P1_SEL_RE = null;
+    await p1dRecarregarPainel();
+  } catch(e){
+    if (msg){ msg.style.color = '#fca5a5'; msg.textContent = '❌ ' + (e.message || 'Erro ao corrigir o RE.'); }
+  }
 }
 
 /* ------------------- Painéis agregados (Cursos / Sistemas) ------------------- *
