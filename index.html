@@ -1943,6 +1943,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
       <div class="p1-agg-block">
         <div class="p1-agg-head">📚 Cursos Registrados <span class="n" id="p1-cursos-n"></span></div>
+        <input type="text" id="p1-cursos-busca" class="p1d-search" placeholder="🔎 Buscar curso por sigla ou nome completo…" oninput="renderP1Agregados()" style="margin-bottom:10px">
         <div class="p1d-item-grid" id="p1-cursos-cards"></div>
       </div>
       <div class="p1-agg-block">
@@ -8417,11 +8418,20 @@ function renderP1Agregados(){
     <div class="p1d-agg-card${P1_AGG_SEL && P1_AGG_SEL.tipo===tipo && P1_AGG_SEL.key===key ? ' sel' : ''}" onclick='p1AbrirAgregado("${tipo}",${p1JsStr(key)})'>
       <b title="${p1dEsc(g.label)}">${p1dEsc(g.label)}</b><span class="qtd">${g.itens.length}</span>
     </div>`;
-  const cursosOrd = Object.entries(P1_AGG_CURSOS).sort((a, b) => b[1].itens.length - a[1].itens.length);
+  const cbEl = document.getElementById('p1-cursos-busca');
+  const cq = ((cbEl && cbEl.value) || '').toLowerCase().trim();
+  const totalCursos = Object.keys(P1_AGG_CURSOS).length;
+  let cursosOrd = Object.entries(P1_AGG_CURSOS).sort((a, b) => b[1].itens.length - a[1].itens.length);
+  if (cq) cursosOrd = cursosOrd.filter(([k, g]) =>
+    (k + ' ' + g.label).toLowerCase().includes(cq) ||
+    g.itens.some(it => ((it.curso || '') + ' ' + (it.sigla || '')).toLowerCase().includes(cq)));
   const sistemasOrd = Object.entries(P1_AGG_SISTEMAS).sort((a, b) => b[1].itens.length - a[1].itens.length);
-  document.getElementById('p1-cursos-n').textContent = cursosOrd.length ? '(' + cursosOrd.length + ' distintos)' : '';
+  document.getElementById('p1-cursos-n').textContent = totalCursos
+    ? (cq ? '(' + cursosOrd.length + ' de ' + totalCursos + ')' : '(' + totalCursos + ' distintos)')
+    : '';
   document.getElementById('p1-sistemas-n').textContent = sistemasOrd.length ? '(' + sistemasOrd.length + ' distintos)' : '';
-  document.getElementById('p1-cursos-cards').innerHTML = cursosOrd.map(([k, g]) => cardHtml('curso', k, g)).join('') || '<div class="p1d-empty">Nenhum curso registrado ainda.</div>';
+  document.getElementById('p1-cursos-cards').innerHTML = cursosOrd.map(([k, g]) => cardHtml('curso', k, g)).join('')
+    || '<div class="p1d-empty">' + (cq ? 'Nenhum curso corresponde à busca.' : 'Nenhum curso registrado ainda.') + '</div>';
   document.getElementById('p1-sistemas-cards').innerHTML = sistemasOrd.map(([k, g]) => cardHtml('acesso', k, g)).join('') || '<div class="p1d-empty">Nenhum sistema registrado ainda.</div>';
   p1RenderAggDetail();
 }
