@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedido de Emborrachados · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --gold:     #c9a030;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+  --red:      #ef4444;
+  --redsoft:  rgba(239,68,68,.12);
+  --green:    #34d399;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15.5px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+
+.wrap{max-width:920px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,4vw,24px) 70px}
+.btn-sair{background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.35);color:#cbd5e1;border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.btn-sair:hover{background:rgba(148,163,184,.22)}
+
+/* ---------- Pedido de Emborrachados ---------- */
+.emb-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;margin-bottom:12px}
+.emb-hint{font-size:12.5px;color:var(--muted,#94a3b8);max-width:640px;line-height:1.5}
+.emb-btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow,#F5C518);border-radius:9px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.emb-btn:hover{background:rgba(245,197,24,.24)}
+.emb-btn.ghost{background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.35);color:#cbd5e1}
+.emb-btn.ghost:hover{background:rgba(148,163,184,.2)}
+
+.emb-faixa-ttl{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--yellow,#F5C518);letter-spacing:.5px}
+.emb-faixa-ttl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(245,197,24,.35),transparent)}
+.emb-faixa-ttl .cnt{font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;color:var(--muted,#94a3b8);letter-spacing:0}
+
+.emb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.emb-card{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+.emb-card:hover{border-color:rgba(245,197,24,.45);transform:translateY(-2px)}
+.emb-card.has{border-color:var(--yellow,#F5C518);box-shadow:0 0 0 1px rgba(245,197,24,.3)}
+.emb-thumb{position:relative;aspect-ratio:1/1;background:#0b1220 center/contain no-repeat;display:flex;align-items:center;justify-content:center}
+.emb-thumb img{width:100%;height:100%;object-fit:contain;padding:10px}
+.emb-badge{position:absolute;top:8px;right:8px;background:rgba(11,18,32,.88);border:1px solid rgba(245,197,24,.5);color:var(--yellow,#F5C518);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.3px}
+.emb-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;flex:1}
+.emb-nome{font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.35;flex:1}
+.emb-step{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(148,163,184,.08);border:1px solid var(--border,#334155);border-radius:9px;padding:4px}
+.emb-step button{width:30px;height:28px;border-radius:7px;border:none;background:rgba(245,197,24,.16);color:var(--yellow,#F5C518);font-size:16px;font-weight:800;cursor:pointer;line-height:1}
+.emb-step button:hover{background:rgba(245,197,24,.3)}
+.emb-step button:disabled{opacity:.3;cursor:not-allowed}
+.emb-step .q{flex:1;text-align:center;font-size:14px;font-weight:800;color:#e2e8f0}
+
+/* Carrinho / formulário */
+/* Fundo OPACO de propósito: --card é rgba(...,0.85) e, como o carrinho
+   flutua por cima do catálogo, os cards apareciam através dele. */
+.emb-cart{position:sticky;bottom:0;z-index:30;margin-top:20px;background:#0c111e;border:1px solid rgba(245,197,24,.4);border-radius:14px;box-shadow:0 -8px 28px rgba(0,0,0,.6);overflow:hidden}
+.emb-cart-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 16px;background:#161c2b;border-bottom:1px solid rgba(245,197,24,.2)}
+.emb-cart-ttl{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow,#F5C518);letter-spacing:.5px}
+.emb-cart-tot{margin-left:auto;font-size:15px;font-weight:800;color:#6ee7b7}
+.emb-cart-body{padding:14px 16px}
+.emb-lista{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.emb-chip{display:inline-flex;align-items:center;gap:7px;background:rgba(148,163,184,.1);border:1px solid var(--border,#334155);border-radius:999px;padding:4px 6px 4px 11px;font-size:11.5px;color:#cbd5e1}
+.emb-chip b{color:#e2e8f0}
+.emb-chip button{border:none;background:rgba(248,113,113,.16);color:#fca5a5;border-radius:50%;width:19px;height:19px;font-size:12px;line-height:1;cursor:pointer}
+.emb-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end}
+.emb-fg{display:flex;flex-direction:column;gap:4px}
+.emb-fg label{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#94a3b8)}
+.emb-fg input{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 11px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:13px;outline:none}
+.emb-fg input:focus{border-color:rgba(245,197,24,.6)}
+.emb-fg small{font-size:10.5px;color:#6ee7b7;min-height:13px}
+.emb-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:11px 20px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;letter-spacing:.3px}
+.emb-send:disabled{opacity:.45;cursor:not-allowed}
+.emb-msg{margin-top:10px;font-size:12.5px;min-height:16px}
+.emb-msg.err{color:#fca5a5}
+.emb-msg.ok{color:#6ee7b7}
+
+.emb-ok{text-align:center;padding:44px 20px;background:var(--card,#111c2e);border:1px solid rgba(16,185,129,.4);border-radius:14px}
+.emb-ok .num{font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:800;color:#6ee7b7;line-height:1}
+.emb-state{text-align:center;padding:50px 20px;color:var(--muted,#94a3b8);font-size:13.5px}
+
+/* Gestão dos pedidos (só logado) */
+/* Buscar / editar o próprio pedido */
+.emb-busca-box{background:var(--card,#111c2e);border:1px solid rgba(96,165,250,.4);border-radius:14px;padding:15px 17px;margin-bottom:16px;animation:vgIn .18s ease-out}
+.emb-busca-ttl{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#93c5fd;letter-spacing:.5px;margin-bottom:4px}
+.emb-busca-hint{font-size:12.5px;color:var(--muted,#94a3b8);margin-bottom:12px}
+.emb-busca-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end;max-width:620px}
+.emb-ped{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(148,163,184,.07);border:1px solid var(--border,#334155);border-radius:11px;padding:11px 13px;margin-top:10px}
+.emb-ped b{color:#e2e8f0}
+.emb-ped .det{flex:1;min-width:200px;font-size:12.5px;color:#cbd5e1;line-height:1.55}
+.emb-ped .st{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.emb-ped .st.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
+.emb-ped .st.lock{background:rgba(148,163,184,.16);color:#cbd5e1}
+#emb-edit-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.45);border-radius:11px;padding:10px 15px;margin-bottom:14px;font-size:13px;color:#bfdbfe}
+#emb-edit-bar b{color:#fff}
+#emb-aviso{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:11px;padding:11px 14px;margin-bottom:12px;font-size:13px;color:#fcd34d;line-height:1.5}
+#emb-aviso b{color:#fff}
+
+.emb-gest{margin-top:18px}
+.emb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.emb-kpi{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:12px;padding:12px 14px}
+.emb-kpi .v{font-family:'Rajdhani',sans-serif;font-size:25px;font-weight:800;color:var(--yellow,#F5C518);line-height:1.1}
+.emb-kpi .l{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#94a3b8);margin-top:3px}
+.emb-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.emb-tbl th{text-align:left;padding:9px 10px;background:rgba(148,163,184,.08);color:var(--muted,#94a3b8);font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border,#334155);white-space:nowrap}
+.emb-tbl td{padding:9px 10px;border-bottom:1px solid rgba(51,65,85,.5);color:#cbd5e1;vertical-align:top}
+.emb-tbl tr:hover td{background:rgba(245,197,24,.04)}
+.emb-wrap{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:14px;overflow:auto;max-height:60vh}
+/* No desktop o carrinho fica sempre aberto; o botão de expandir não existe. */
+.emb-cart-abrir{display:none}
+
+@media(max-width:760px){
+  .emb-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+  /* No celular o carrinho vira uma BARRA compacta: se abrisse inteiro
+     (chips + 4 campos empilhados) tomaria a tela toda e cobriria os
+     cards, e tocar no "+" de um card escondido fazia a página pular
+     pro rodapé. Só expande quando o policial toca em "Finalizar". */
+  .emb-cart-head{cursor:pointer;padding:10px 13px}
+  .emb-cart-ttl{font-size:15px}
+  .emb-cart-abrir{display:inline-flex;align-items:center;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:8px;padding:7px 13px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .emb-cart-body{display:none;max-height:65vh;overflow-y:auto}
+  .emb-cart.aberto .emb-cart-body{display:block}
+  .emb-cart.aberto .emb-cart-abrir{background:rgba(148,163,184,.2);color:#e2e8f0}
+  /* 2 linhas: "🛒 Seu pedido · N unidades" / "R$ X,XX      [Finalizar]".
+     O ::after é só a quebra de linha do flex. */
+  .emb-cart-ttl{order:1}
+  #emb-cart-qtd{order:2}
+  .emb-cart-head::after{content:"";order:5;flex-basis:100%;height:0}
+  .emb-cart-tot{order:8;flex:1;margin-left:0;font-size:18px}
+  .emb-cart-abrir{order:9}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">Pedido de <em>Emborrachados</em></div>
+        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="userchip"></span>
+      <button class="btn-sair" id="btn-sair" style="display:none" onclick="apiLogout()" title="Encerrar sessão">⎋ Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="emb-top">
+  <div class="emb-hint">
+    Escolha os emborrachados e a quantidade, preencha seu <b>RE</b>, <b>nome</b> e <b>contato</b> e envie.
+    O pedido cai direto na planilha do batalhão. Não precisa de senha.
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="emb-btn ghost" id="emb-edit-btn" onclick="embToggleBusca()">✏️ Editar meu pedido</button>
+    <button class="emb-btn ghost" onclick="embRecarregar()">↻ Atualizar catálogo</button>
+    <button class="emb-btn" id="emb-gest-btn" onclick="embToggleGestao()">🔐 Área do gestor</button>
+  </div>
+</div>
+
+<!-- Login do gestor, dentro da própria página -->
+<div id="emb-login" style="display:none">
+  <div class="emb-busca-box" style="border-color:rgba(245,197,24,.45);max-width:420px">
+    <div class="emb-busca-ttl" style="color:var(--yellow,#F5C518)">🔐 Área do gestor</div>
+    <div class="emb-busca-hint">Acesso restrito. Entre para ver todos os pedidos do batalhão.</div>
+    <form onsubmit="return embDoLogin(event)">
+      <div class="emb-fg" style="margin-bottom:10px">
+        <label>Usuário</label>
+        <input id="emb-l-user" type="text" autocomplete="username" required>
+      </div>
+      <div class="emb-fg" style="margin-bottom:10px">
+        <label>Senha</label>
+        <input id="emb-l-pass" type="password" autocomplete="current-password" required>
+      </div>
+      <div id="emb-l-erro" class="emb-msg err" style="margin:0 0 10px"></div>
+      <button class="emb-send" id="emb-l-btn" type="submit" style="width:100%">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Buscar o próprio pedido: RE + 4 últimos dígitos do telefone -->
+<div id="emb-busca" style="display:none">
+  <div class="emb-busca-box">
+    <div class="emb-busca-ttl">✏️ Editar ou cancelar um pedido</div>
+    <div class="emb-busca-hint">Informe o <b>RE</b> e os <b>4 últimos dígitos do telefone</b> que você usou ao fazer o pedido.</div>
+    <div class="emb-busca-form">
+      <div class="emb-fg"><label>RE</label><input id="emb-b-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 95326"></div>
+      <div class="emb-fg"><label>4 últimos do telefone</label><input id="emb-b-tel" inputmode="numeric" maxlength="4" placeholder="Ex.: 7766"></div>
+      <div class="emb-fg"><label>&nbsp;</label><button class="emb-send" onclick="embBuscarPedido()">🔎 Buscar</button></div>
+    </div>
+    <div class="emb-msg" id="emb-b-msg"></div>
+    <div id="emb-b-lista"></div>
+  </div>
+</div>
+
+<!-- Faixa de aviso quando está editando um pedido existente -->
+<div id="emb-edit-bar" style="display:none">
+  <span>✏️ Você está editando o <b id="emb-edit-num"></b>. Ajuste as quantidades abaixo e confirme.</span>
+  <button class="emb-btn ghost" onclick="embSairEdicao()">✕ Sair da edição</button>
+</div>
+
+<div id="emb-catalogo"><div class="emb-state">Carregando catálogo…</div></div>
+
+<div class="emb-cart" id="emb-cart" style="display:none">
+  <div class="emb-cart-head" onclick="embCartToggle(event)">
+    <span class="emb-cart-ttl">🛒 Seu pedido</span>
+    <span id="emb-cart-qtd" style="font-size:12px;color:var(--muted,#94a3b8)"></span>
+    <span class="emb-cart-tot" id="emb-cart-tot">R$ 0,00</span>
+    <button class="emb-cart-abrir" id="emb-cart-abrir" type="button">Finalizar ▲</button>
+  </div>
+  <div class="emb-cart-body">
+    <div class="emb-lista" id="emb-lista"></div>
+    <div id="emb-aviso" style="display:none"></div>
+    <div class="emb-form">
+      <div class="emb-fg emb-so-novo">
+        <label>RE *</label>
+        <input id="emb-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 100123456" oninput="embOnRE()">
+        <small id="emb-re-info"></small>
+      </div>
+      <div class="emb-fg emb-so-novo">
+        <label>Nome completo *</label>
+        <input id="emb-nome" placeholder="Seu nome completo">
+        <small></small>
+      </div>
+      <div class="emb-fg emb-so-novo">
+        <label>Contato (WhatsApp) *</label>
+        <input id="emb-contato" inputmode="tel" maxlength="15" placeholder="(69) 99999-9999" oninput="embMaskTel(this)">
+        <small></small>
+      </div>
+      <div class="emb-fg">
+        <label>&nbsp;</label>
+        <button class="emb-send" id="emb-send" onclick="embEnviar()">✅ Enviar pedido</button>
+        <small></small>
+      </div>
+      <div class="emb-fg emb-so-edicao" style="display:none">
+        <label>&nbsp;</label>
+        <button class="emb-btn" style="background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.45);color:#fca5a5;padding:11px 18px" onclick="embCancelarPedido()">🗑️ Cancelar pedido</button>
+        <small></small>
+      </div>
+    </div>
+    <div class="emb-msg" id="emb-msg"></div>
+  </div>
+</div>
+
+<div class="emb-gest" id="emb-gestao" style="display:none"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   🔐 SESSÃO (só para a Área do gestor)
+   Mesmo token/localStorage do dashboard: quem já
+   entrou no index.html chega aqui logado.
+═══════════════════════════════════════════════ */
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+
+function renderUserChip(){
+  const chip = document.getElementById('userchip');
+  const sair = document.getElementById('btn-sair');
+  if (chip) chip.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
+  if (sair) sair.style.display = AUTH.logged ? '' : 'none';
+}
+
+// Núcleo do login — mesma assinatura do submitLogin do dashboard, para o
+// embDoLogin abaixo continuar idêntico ao que roda no index.html.
+async function submitLogin(user, pass, btn, erro){
+  erro.textContent = ''; btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'Entrando...';
+  try {
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token = d.token; AUTH.user = d.user;
+    renderUserChip();
+    return true;
+  } catch(e){
+    erro.textContent = (e && e.message) ? e.message : 'Não foi possível conectar ao servidor.';
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = oldTxt || 'Entrar';
+  }
+}
+
+function apiLogout(){
+  AUTH.token = ''; AUTH.user = '';
+  // O catálogo é público (fica); só a lista de pedidos some.
+  EMB_GEST_ON = false;
+  const g = document.getElementById('emb-gestao'); if (g){ g.style.display = 'none'; g.innerHTML = ''; }
+  const b = document.getElementById('emb-gest-btn'); if (b){ b.style.display = ''; b.textContent = '🔐 Área do gestor'; }
+  const l = document.getElementById('emb-login'); if (l) l.style.display = 'none';
+  renderUserChip();
+}
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
+  return await r.json();
+}
+
+/* ═══════════════════════════════════════════════
+   🎽 PEDIDO DE EMBORRACHADOS  (página pública)
+   Catálogo vem da pasta do Drive via Worker
+   (subpasta = preço). O pedido é gravado na
+   planilha pelo /api/emborrachados/pedido — sem
+   login: identifica pelo RE + nome + contato.
+   Ver os pedidos consolidados exige login.
+═══════════════════════════════════════════════ */
+let EMB_LOADED = false;
+let EMB_CAT    = null;        // { faixas:[], itens:[] }
+let EMB_CART   = {};          // { <idDoArquivo>: qtd }
+let EMB_GEST_ON = false;
+let EMB_RE_TIMER = null;
+
+function embEsc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function embMoeda(v){
+  return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// Traduz os códigos de erro do Worker pra algo que o policial entenda.
+function embErro(d, status){
+  const cod = (d && d.error) || '';
+  if (status === 404 || cod === 'not_found')
+    return 'Serviço de pedidos ainda não publicado no servidor. Avise o P4/administrador.';
+  if (cod === 'catalogo_indisponivel')
+    return 'Não foi possível ler o catálogo no Google Drive. Verifique se a pasta está compartilhada com a conta de serviço e se a Drive API está ativada.';
+  if (cod.startsWith('SHEET_ID') || /não configurado/.test(d && d.error || ''))
+    return 'A planilha de pedidos ainda não foi configurada no servidor.';
+  return (d && d.detail) || cod || 'Erro inesperado. Tente novamente.';
+}
+
+async function initEmborrachados(){
+  // O botão do gestor fica sempre visível; sem login ele abre a caixa de senha.
+  const gb = document.getElementById('emb-gest-btn');
+  if (gb) gb.textContent = AUTH.logged
+    ? (EMB_GEST_ON ? '✕ Fechar pedidos' : '📊 Pedidos recebidos')
+    : '🔐 Área do gestor';
+  if (EMB_LOADED){ embRender(); return; }
+  await embCarregarCatalogo();
+}
+
+async function embCarregarCatalogo(){
+  const box = document.getElementById('emb-catalogo');
+  if (box) box.innerHTML = '<div class="emb-state">Carregando catálogo…</div>';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/catalogo');
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    EMB_CAT = d;
+    EMB_LOADED = true;
+    embRender();
+  }catch(e){
+    if (box) box.innerHTML = '<div class="emb-state">❌ ' + embEsc((e&&e.message)||'Erro ao carregar o catálogo.') +
+      '<br><br><button class="emb-btn" onclick="embRecarregar()">↻ Tentar novamente</button></div>';
+  }
+}
+
+async function embRecarregar(){
+  EMB_LOADED = false; EMB_CAT = null;
+  await embCarregarCatalogo();
+}
+
+function embRender(){
+  const box = document.getElementById('emb-catalogo');
+  if (!box || !EMB_CAT) return;
+  const itens = EMB_CAT.itens || [];
+  if (!itens.length){
+    box.innerHTML = '<div class="emb-state">Nenhum emborrachado no catálogo ainda.<br>' +
+      'Coloque as imagens dentro das pastas de preço (ex.: <b>12,50</b>) na pasta EMBORRACHADOS do Drive.</div>';
+    return;
+  }
+  // Agrupa por faixa de preço, na ordem que o Worker mandou (mais barato primeiro).
+  const porFaixa = new Map();
+  itens.forEach(i => {
+    if (!porFaixa.has(i.faixa)) porFaixa.set(i.faixa, []);
+    porFaixa.get(i.faixa).push(i);
+  });
+
+  let html = '';
+  for (const [faixa, lista] of porFaixa){
+    const preco = lista[0].preco;
+    html += `<div class="emb-faixa-ttl">${embMoeda(preco)} <span class="cnt">${lista.length} modelo(s)</span></div>`;
+    html += '<div class="emb-grid">';
+    lista.forEach(i => {
+      const q = EMB_CART[i.id] || 0;
+      html += `
+        <div class="emb-card ${q?'has':''}" id="embc-${embEsc(i.id)}">
+          <div class="emb-thumb">
+            <img loading="lazy" src="${API_BASE}/api/emborrachados/img?id=${encodeURIComponent(i.id)}" alt="${embEsc(i.nome)}">
+            <span class="emb-badge">${embMoeda(i.preco)}</span>
+          </div>
+          <div class="emb-body">
+            <div class="emb-nome">${embEsc(i.nome)}</div>
+            <div class="emb-step">
+              <button onclick="embAdd('${embEsc(i.id)}',-1)" ${q?'':'disabled'}>−</button>
+              <span class="q" id="embq-${embEsc(i.id)}">${q}</span>
+              <button onclick="embAdd('${embEsc(i.id)}',1)">+</button>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+  box.innerHTML = html;
+  embRenderCart();
+}
+
+function embAdd(id, delta){
+  const item = (EMB_CAT.itens||[]).find(i => i.id === id);
+  if (!item) return;
+  const atual = EMB_CART[id] || 0;
+  const novo = Math.max(0, Math.min(20, atual + delta));
+  if (novo) EMB_CART[id] = novo; else delete EMB_CART[id];
+
+  // Atualiza só o card mexido (evita redesenhar/recarregar todas as imagens).
+  const q = document.getElementById('embq-' + id);
+  if (q) q.textContent = novo;
+  const card = document.getElementById('embc-' + id);
+  if (card){
+    card.classList.toggle('has', !!novo);
+    const menos = card.querySelector('.emb-step button');
+    if (menos) menos.disabled = !novo;
+  }
+  embRenderCart();
+}
+
+function embRemover(id){
+  delete EMB_CART[id];
+  embRender();
+}
+
+function embCartItens(){
+  return Object.entries(EMB_CART).map(([id, qtd]) => {
+    const it = (EMB_CAT.itens||[]).find(i => i.id === id);
+    return it ? { ...it, qtd } : null;
+  }).filter(Boolean);
+}
+
+/* No celular o carrinho começa fechado (só a barra com total). Abrir/fechar
+   não mexe no scroll da página — o problema era justamente a página pular. */
+function embCartToggle(ev){
+  if (ev) ev.stopPropagation();
+  const cart = document.getElementById('emb-cart');
+  const btn = document.getElementById('emb-cart-abrir');
+  const aberto = cart.classList.toggle('aberto');
+  if (btn) btn.textContent = aberto ? 'Fechar ▼' : 'Finalizar ▲';
+}
+
+function embRenderCart(){
+  const cart = document.getElementById('emb-cart');
+  const lista = document.getElementById('emb-lista');
+  const itens = embCartItens();
+  if (!cart) return;
+  // Em edição o carrinho fica visível mesmo vazio — é como o policial percebe
+  // que tirou tudo e ainda tem o botão de cancelar à mão.
+  cart.style.display = (itens.length || EMB_EDIT) ? '' : 'none';
+  embModoCarrinho();
+  if (!itens.length){
+    lista.innerHTML = '<span style="font-size:12.5px;color:#fca5a5">Nenhum item — adicione algo ou cancele o pedido.</span>';
+    document.getElementById('emb-cart-qtd').textContent = '';
+    document.getElementById('emb-cart-tot').textContent = embMoeda(0);
+    return;
+  }
+
+  const unid  = itens.reduce((a,i) => a + i.qtd, 0);
+  const total = itens.reduce((a,i) => a + i.qtd * i.preco, 0);
+  lista.innerHTML = itens.map(i =>
+    `<span class="emb-chip"><b>${i.qtd}×</b> ${embEsc(i.nome)} · ${embMoeda(i.qtd * i.preco)}
+       <button onclick="embRemover('${embEsc(i.id)}')" title="Remover">✕</button></span>`
+  ).join('');
+  document.getElementById('emb-cart-qtd').textContent = `${itens.length} modelo(s) · ${unid} unidade(s)`;
+  document.getElementById('emb-cart-tot').textContent = embMoeda(total);
+}
+
+/* ── Identificação ── */
+
+// Máscara (69) 99999-9999
+function embMaskTel(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 6)      v = `(${v.slice(0,2)}) ${v.slice(2,v.length-4)}-${v.slice(-4)}`;
+  else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  else if (v.length)     v = `(${v}`;
+  el.value = v;
+}
+
+// Confere o RE no cadastro e preenche o nome sozinho (não trava se não achar).
+function embOnRE(){
+  const el = document.getElementById('emb-re');
+  el.value = el.value.replace(/\D/g,'').slice(0,8);
+  const info = document.getElementById('emb-re-info');
+  clearTimeout(EMB_RE_TIMER);
+  if (el.value.length < 4){ info.textContent = ''; info.style.color = ''; return; }
+  info.textContent = 'conferindo…'; info.style.color = '#94a3b8';
+  EMB_RE_TIMER = setTimeout(async () => {
+    try{
+      const r = await fetch(API_BASE + '/api/emborrachados/policial?re=' + encodeURIComponent(el.value));
+      const d = await r.json();
+      if (d && d.encontrado){
+        info.textContent = '✔ ' + [d.posto_grad, d.guerra].filter(Boolean).join(' ');
+        info.style.color = '#6ee7b7';
+        const nome = document.getElementById('emb-nome');
+        if (nome && !nome.value.trim()) nome.value = d.nome || '';
+      } else {
+        info.textContent = 'RE não encontrado no cadastro — pode preencher o nome à mão.';
+        info.style.color = '#fbbf24';
+      }
+      embAvisoPedidoAberto(d && d.pedido_aberto, el.value);
+    }catch{ info.textContent = ''; }
+  }, 450);
+}
+
+/* Um pedido em aberto por policial: ao digitar o RE, se já existir um pendente,
+   avisa e oferece editar aquele em vez de deixar criar um segundo. O bloqueio
+   de verdade é no servidor (409 ja_tem_pedido) — isto aqui é só o atalho. */
+function embAvisoPedidoAberto(aberto, re){
+  const box = document.getElementById('emb-aviso');
+  const btn = document.getElementById('emb-send');
+  if (!box) return;
+  if (!aberto || EMB_EDIT){
+    box.style.display = 'none'; box.innerHTML = '';
+    if (btn) btn.disabled = false;
+    return;
+  }
+  box.style.display = '';
+  box.innerHTML = `<span style="flex:1;min-width:220px">⚠️ Você já tem o <b>pedido nº ${embEsc(aberto.pedido)}</b>
+      (${embEsc(aberto.data)}) aguardando. Cada policial pode ter um pedido por vez —
+      edite aquele para acrescentar ou trocar itens.</span>
+    <button class="emb-btn" onclick="embIrEditar('${embEsc(re)}')">✏️ Editar o pedido nº ${embEsc(aberto.pedido)}</button>`;
+  if (btn) btn.disabled = true;
+}
+
+// Abre a busca já com o RE preenchido — falta só os 4 dígitos do telefone.
+function embIrEditar(re){
+  const busca = document.getElementById('emb-busca');
+  busca.style.display = '';
+  document.getElementById('emb-edit-btn').textContent = '✕ Fechar';
+  document.getElementById('emb-b-re').value = re || '';
+  document.getElementById('emb-b-tel').value = '';
+  busca.scrollIntoView({ behavior:'smooth', block:'center' });
+  document.getElementById('emb-b-tel').focus();
+}
+
+async function embEnviar(){
+  if (EMB_EDIT) return embSalvarEdicao();   // mesmo botão, outro destino
+  const msg  = document.getElementById('emb-msg');
+  const btn  = document.getElementById('emb-send');
+  const re   = document.getElementById('emb-re').value.replace(/\D/g,'');
+  const nome = document.getElementById('emb-nome').value.trim();
+  const tel  = document.getElementById('emb-contato').value.replace(/\D/g,'');
+  const itens = embCartItens();
+
+  msg.className = 'emb-msg err';
+  if (!itens.length)          { msg.textContent = 'Escolha pelo menos um emborrachado.'; return; }
+  if (re.length < 4)          { msg.textContent = 'Informe seu RE.'; return; }
+  if (nome.length < 5)        { msg.textContent = 'Informe seu nome completo.'; return; }
+  if (tel.length < 10)        { msg.textContent = 'Informe um telefone com DDD.'; return; }
+
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  msg.className = 'emb-msg'; msg.textContent = '';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/pedido', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ re, nome, contato: tel, itens: itens.map(i => ({ id: i.id, qtd: i.qtd })) }),
+    });
+    const d = await r.json().catch(()=>({}));
+    // Já tem pedido pendente: mostra o atalho de edição em vez de um erro seco.
+    if (r.status === 409 && d.error === 'ja_tem_pedido'){
+      embAvisoPedidoAberto({ pedido: d.pedido, data: '' }, re);
+      msg.className = 'emb-msg err';
+      msg.textContent = d.detail || 'Você já tem um pedido em aberto.';
+      return;
+    }
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    embSucesso(d, nome);
+  }catch(e){
+    msg.className = 'emb-msg err';
+    msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao enviar o pedido.');
+  }finally{
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+function embSucesso(d, nome){
+  EMB_CART = {};
+  document.getElementById('emb-cart').style.display = 'none';
+  const box = document.getElementById('emb-catalogo');
+  box.innerHTML = `
+    <div class="emb-ok">
+      <div style="font-size:46px;margin-bottom:6px">✅</div>
+      <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido registrado</div>
+      <div class="num">Nº ${embEsc(d.pedido)}</div>
+      <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">
+        Obrigado, <b>${embEsc(nome.split(' ')[0])}</b>! Foram registradas
+        <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> modelo(s).
+      </p>
+      <p style="color:#6ee7b7;font-size:19px;font-weight:800;margin-bottom:6px">${embMoeda(d.valor_total)}</p>
+      <p style="color:#94a3b8;font-size:12px">${embEsc(d.data)} · anote o número do pedido.</p>
+      <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">➕ Fazer outro pedido</button>
+    </div>`;
+}
+
+function embNovoPedido(){
+  const msg = document.getElementById('emb-msg');
+  if (msg){ msg.textContent = ''; msg.className = 'emb-msg'; }
+  EMB_EDIT = null; EMB_CART = {};
+  const bar = document.getElementById('emb-edit-bar'); if (bar) bar.style.display = 'none';
+  const c = document.getElementById('emb-cart'); if (c) c.classList.remove('aberto');
+  const ab = document.getElementById('emb-cart-abrir'); if (ab) ab.textContent = 'Finalizar ▲';
+  embRender();
+}
+
+/* ── Gestão dos pedidos (exige login) ── */
+
+// Sem login: abre a caixa de login aqui mesmo. Com login: abre/fecha a lista.
+async function embToggleGestao(){
+  if (!AUTH.logged){
+    const lg = document.getElementById('emb-login');
+    const abrir = lg.style.display === 'none';
+    lg.style.display = abrir ? '' : 'none';
+    document.getElementById('emb-gest-btn').textContent = abrir ? '✕ Fechar' : '🔐 Área do gestor';
+    if (abrir) document.getElementById('emb-l-user').focus();
+    return;
+  }
+  const box = document.getElementById('emb-gestao');
+  EMB_GEST_ON = !EMB_GEST_ON;
+  box.style.display = EMB_GEST_ON ? '' : 'none';
+  document.getElementById('emb-gest-btn').textContent = EMB_GEST_ON ? '✕ Fechar pedidos' : '📊 Pedidos recebidos';
+  if (!EMB_GEST_ON) return;
+  box.innerHTML = '<div class="emb-state">Carregando pedidos…</div>';
+  try{
+    const d = await apiFetchJSON('/api/emborrachados/pedidos');
+    embRenderGestao(d);
+  }catch(e){
+    box.innerHTML = '<div class="emb-state">❌ ' + embEsc((e&&e.message)||'Erro ao carregar os pedidos.') + '</div>';
+  }
+}
+
+// Login feito na própria página (reusa o submitLogin das telas de Gestão).
+async function embDoLogin(ev){
+  ev.preventDefault();
+  const ok = await submitLogin(
+    (document.getElementById('emb-l-user').value || '').trim(),
+    document.getElementById('emb-l-pass').value || '',
+    document.getElementById('emb-l-btn'),
+    document.getElementById('emb-l-erro')
+  );
+  document.getElementById('emb-l-pass').value = '';
+  if (ok){
+    document.getElementById('emb-login').style.display = 'none';
+    document.getElementById('emb-gest-btn').textContent = '📊 Pedidos recebidos';
+    EMB_GEST_ON = false;
+    embToggleGestao();   // já abre a lista
+  }
+  return false;
+}
+
+function embRenderGestao(d){
+  const k = d.kpis || {};
+  const kpis = [
+    ['📋', k.total_pedidos,   'Pedidos'],
+    ['👮', k.total_policiais, 'Policiais'],
+    ['🎽', k.total_unidades,  'Unidades'],
+    ['💰', embMoeda(k.valor_total), 'Valor total'],
+    ['⏳', k.pendentes,       'Pendentes'],
+  ];
+  let html = '<div class="emb-kpis">' + kpis.map(([ic,v,l]) =>
+    `<div class="emb-kpi"><div class="v">${ic} ${v==null?'—':(typeof v==='number'? v.toLocaleString('pt-BR') : v)}</div><div class="l">${l}</div></div>`
+  ).join('') + '</div>';
+
+  html += '<div class="emb-faixa-ttl">📦 Total por modelo <span class="cnt">o que precisa ser encomendado</span></div>';
+  html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
+          '<th>Modelo</th><th>Preço</th><th>Qtd</th><th>Pedidos</th><th>Valor</th></tr></thead><tbody>' +
+          (d.resumo_itens||[]).map(i =>
+            `<tr><td><b>${embEsc(i.item)}</b></td><td>${embMoeda(i.preco)}</td>` +
+            `<td><b style="color:#F5C518">${i.qtd}</b></td><td>${i.pedidos}</td><td>${embMoeda(i.valor)}</td></tr>`
+          ).join('') + '</tbody></table></div>';
+
+  html += '<div class="emb-faixa-ttl">🧾 Pedidos <span class="cnt">mais recentes primeiro</span></div>';
+  html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
+          '<th>Nº</th><th>Data</th><th>RE</th><th>Nome</th><th>Contato</th><th>Itens</th><th>Un.</th><th>Valor</th><th>Status</th>' +
+          '</tr></thead><tbody>' +
+          (d.pedidos||[]).map(p =>
+            `<tr>
+               <td><b>${embEsc(p.pedido)}</b></td>
+               <td style="white-space:nowrap">${embEsc(p.data)}</td>
+               <td>${embEsc(p.re)}</td>
+               <td>${embEsc(p.nome)}</td>
+               <td style="white-space:nowrap">${embEsc(p.contato)}</td>
+               <td>${(p.itens||[]).map(i => `${i.qtd}× ${embEsc(i.item)}`).join('<br>')}</td>
+               <td>${p.unidades}</td>
+               <td>${embMoeda(p.valor_total)}</td>
+               <td>${embEsc(p.status)}</td>
+             </tr>`
+          ).join('') + '</tbody></table></div>';
+
+  document.getElementById('emb-gestao').innerHTML = html;
+}
+
+/* ── Editar / cancelar o próprio pedido ──
+   O policial não tem login: a chave é RE + os 4 últimos dígitos do telefone
+   que ele informou ao pedir (só o RE deixaria o pedido de qualquer um
+   visível e editável por quem soubesse o número). */
+let EMB_EDIT = null;   // { pedido, re, tel4 } quando está editando
+
+function embToggleBusca(){
+  const box = document.getElementById('emb-busca');
+  const abrir = box.style.display === 'none';
+  box.style.display = abrir ? '' : 'none';
+  document.getElementById('emb-edit-btn').textContent = abrir ? '✕ Fechar' : '✏️ Editar meu pedido';
+  if (abrir) document.getElementById('emb-b-re').focus();
+}
+
+async function embBuscarPedido(){
+  const msg  = document.getElementById('emb-b-msg');
+  const lista = document.getElementById('emb-b-lista');
+  const re   = document.getElementById('emb-b-re').value.replace(/\D/g,'');
+  const tel4 = document.getElementById('emb-b-tel').value.replace(/\D/g,'');
+  lista.innerHTML = '';
+  msg.className = 'emb-msg err';
+  if (re.length < 4)   { msg.textContent = 'Informe seu RE.'; return; }
+  if (tel4.length !== 4){ msg.textContent = 'Informe os 4 últimos dígitos do telefone.'; return; }
+
+  msg.className = 'emb-msg'; msg.textContent = 'Buscando…';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/meu-pedido', {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ re, tel4 }),
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    if (!d.encontrados){
+      msg.className = 'emb-msg err';
+      msg.textContent = 'Nenhum pedido encontrado com esse RE e telefone. Confira os dados que você usou ao pedir.';
+      return;
+    }
+    msg.textContent = '';
+    lista.innerHTML = d.pedidos.map(p => {
+      const itens = p.itens.map(i => `${i.qtd}× ${embEsc(i.item)}`).join(' · ');
+      const podeEditar = p.editavel && p.itens.every(i => i.id);
+      return `<div class="emb-ped">
+          <div class="det">
+            <b>Pedido nº ${embEsc(p.pedido)}</b> — ${embEsc(p.data)}<br>
+            ${itens}<br>
+            <b>${embMoeda(p.valor_total)}</b> · ${p.unidades} unidade(s)
+          </div>
+          <span class="st ${podeEditar?'ok':'lock'}">${podeEditar ? p.status : (p.editavel ? 'item fora do catálogo' : p.status)}</span>
+          ${podeEditar
+            ? `<button class="emb-btn" onclick="embEditarPedido('${embEsc(p.pedido)}','${re}','${tel4}')">✏️ Editar este</button>`
+            : `<span style="font-size:11.5px;color:#94a3b8;max-width:200px">${p.editavel
+                 ? 'Um item deste pedido saiu do catálogo — procure o P4.'
+                 : 'Já processado pela gestão. Procure o P4 para alterar.'}</span>`}
+        </div>`;
+    }).join('');
+  }catch(e){
+    msg.className = 'emb-msg err';
+    msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao buscar o pedido.');
+  }
+}
+
+// Carrega os itens do pedido no carrinho e entra em modo de edição.
+async function embEditarPedido(pedido, re, tel4){
+  const r = await fetch(API_BASE + '/api/emborrachados/meu-pedido', {
+    method:'POST', headers:{'content-type':'application/json'},
+    body: JSON.stringify({ re, tel4 }),
+  });
+  const d = await r.json().catch(()=>({}));
+  const p = (d.pedidos||[]).find(x => String(x.pedido) === String(pedido));
+  if (!p){ document.getElementById('emb-b-msg').textContent = 'Pedido não encontrado.'; return; }
+
+  EMB_CART = {};
+  p.itens.forEach(i => { if (i.id) EMB_CART[i.id] = (EMB_CART[i.id]||0) + i.qtd; });
+  EMB_EDIT = { pedido: String(p.pedido), re, tel4 };
+
+  document.getElementById('emb-busca').style.display = 'none';
+  document.getElementById('emb-edit-btn').textContent = '✏️ Editar meu pedido';
+  document.getElementById('emb-edit-num').textContent = 'pedido nº ' + p.pedido;
+  document.getElementById('emb-edit-bar').style.display = '';
+  embRender();
+  document.getElementById('emb-cart').scrollIntoView({ behavior:'smooth', block:'end' });
+}
+
+function embSairEdicao(){
+  EMB_EDIT = null;
+  EMB_CART = {};
+  document.getElementById('emb-edit-bar').style.display = 'none';
+  const msg = document.getElementById('emb-msg');
+  if (msg){ msg.textContent = ''; msg.className = 'emb-msg'; }
+  embRender();
+}
+
+// Alterna o rodapé do carrinho entre "novo pedido" e "editando".
+function embModoCarrinho(){
+  const editando = !!EMB_EDIT;
+  document.querySelectorAll('.emb-so-novo').forEach(el => el.style.display = editando ? 'none' : '');
+  document.querySelectorAll('.emb-so-edicao').forEach(el => el.style.display = editando ? '' : 'none');
+  const b = document.getElementById('emb-send');
+  if (b){ b.textContent = editando ? '💾 Salvar alterações' : '✅ Enviar pedido'; if (editando) b.disabled = false; }
+  if (editando){
+    const av = document.getElementById('emb-aviso'); if (av){ av.style.display = 'none'; av.innerHTML = ''; }
+    // Editando, o carrinho já abre expandido (é o que ele veio ver).
+    const c = document.getElementById('emb-cart');
+    if (c && !c.classList.contains('aberto')) embCartToggle();
+  }
+  const t = document.querySelector('.emb-cart-ttl');
+  if (t) t.textContent = editando ? ('✏️ Editando o pedido nº ' + EMB_EDIT.pedido) : '🛒 Seu pedido';
+}
+
+async function embSalvarEdicao(){
+  const msg = document.getElementById('emb-msg');
+  const btn = document.getElementById('emb-send');
+  const itens = embCartItens();
+  msg.className = 'emb-msg err';
+  if (!itens.length){
+    msg.textContent = 'O pedido ficou vazio. Use "🗑️ Cancelar pedido" se quiser desistir dele.';
+    return;
+  }
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  msg.className = 'emb-msg'; msg.textContent = '';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/editar', {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ ...EMB_EDIT, itens: itens.map(i => ({ id:i.id, qtd:i.qtd })) }),
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    const num = EMB_EDIT.pedido;
+    EMB_EDIT = null; EMB_CART = {};
+    document.getElementById('emb-edit-bar').style.display = 'none';
+    document.getElementById('emb-cart').style.display = 'none';
+    document.getElementById('emb-catalogo').innerHTML = `
+      <div class="emb-ok">
+        <div style="font-size:46px;margin-bottom:6px">💾</div>
+        <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido atualizado</div>
+        <div class="num">Nº ${embEsc(num)}</div>
+        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">Agora são <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> modelo(s).</p>
+        <p style="color:#6ee7b7;font-size:19px;font-weight:800">${embMoeda(d.valor_total)}</p>
+        <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
+      </div>`;
+  }catch(e){
+    msg.className = 'emb-msg err';
+    msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao salvar as alterações.');
+  }finally{
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+async function embCancelarPedido(){
+  if (!EMB_EDIT) return;
+  if (!window.confirm(`Cancelar o pedido nº ${EMB_EDIT.pedido}? Ele será apagado da planilha e não dá pra desfazer.`)) return;
+  const msg = document.getElementById('emb-msg');
+  msg.className = 'emb-msg'; msg.textContent = 'Cancelando…';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/editar', {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ ...EMB_EDIT, itens: [] }),
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    const num = EMB_EDIT.pedido;
+    EMB_EDIT = null; EMB_CART = {};
+    document.getElementById('emb-edit-bar').style.display = 'none';
+    document.getElementById('emb-cart').style.display = 'none';
+    document.getElementById('emb-catalogo').innerHTML = `
+      <div class="emb-ok" style="border-color:rgba(248,113,113,.4)">
+        <div style="font-size:46px;margin-bottom:6px">🗑️</div>
+        <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido cancelado</div>
+        <div class="num" style="color:#fca5a5">Nº ${embEsc(num)}</div>
+        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">O pedido foi removido da lista do batalhão.</p>
+        <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
+      </div>`;
+  }catch(e){
+    msg.className = 'emb-msg err';
+    msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao cancelar o pedido.');
+  }
+}
+
+/* ── Arranque da página ── */
+renderUserChip();
+initEmborrachados();
+</script>
+
+</body>
+</html>
