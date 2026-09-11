@@ -1619,7 +1619,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </style>
     <div id="page-diaria" class="page-content">
       <div class="sec">💵 Diária por Policial — Custo Operacional</div>
-      <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — dados ao vivo da planilha <b>BASE DE DADOS - MISSÃO</b>. Filtre por comando (BPFRON / CRP / CPE) e clique num nome para ver todas as missões.</div>
+      <div class="dp-sub">Ranking de diárias pagas por policial, missões e períodos — lançados pelos gestores a partir das <b>escalas em PDF</b> (base nova, desde 11/09/2026). Filtre por comando (BPFRON / CRP / CPE) e clique num nome para ver todas as missões.</div>
       <div id="dp-status" class="dp-status">Carregando…</div>
 
       <div id="dp-dup-alert" class="dp-dup-alert hide">
@@ -6771,13 +6771,15 @@ function dpFillOpFilter(){
 
 function dpRenderAddBtn(){
   const wrap = document.getElementById('dp-add-wrap'); if(!wrap) return;
-  wrap.innerHTML = dpCanEdit() ? '<button class="dp-addbtn" onclick="dpOpenModal()">➕ Lançar missão</button>' : '';
+  // Lançamento saiu daqui (11/09/2026): agora é pela escala em PDF, na página separada
+  // diaria.html (só gestores). Esta página ficou só de exibição.
+  wrap.innerHTML = dpCanEdit() ? '<a class="dp-addbtn" href="diaria.html" style="text-decoration:none;display:inline-block">📄 Lançar escala (PDF)</a>' : '';
 }
 
 // Editores (o backend REVALIDA — aqui é só pra mostrar/esconder o botão).
 function dpCanEdit(){
   if (!AUTH.logged) return false;
-  const eds = (DP_DATA && DP_DATA.editores) || ['desousa','p3','p301'];
+  const eds = (DP_DATA && DP_DATA.editores) || ['desousa','p3','p301','p3aux'];
   return eds.includes(AUTH.user);
 }
 

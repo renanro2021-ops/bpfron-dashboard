@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lançar Diárias · Escala em PDF · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- pdf.js (UMD) — lê o texto do PDF do SEI direto no navegador; nada sai da máquina -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.12); --line:#1e293b; --card:rgba(12,17,30,0.88);
+  --ok:#34d399; --warn:#fbbf24; --err:#f87171; --blue:#93c5fd;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1400px;margin:0 auto;padding:12px clamp(16px,3vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow)}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:14px;font-size:13px}
+.hdr-right a{color:var(--muted);text-decoration:none}.hdr-right a:hover{color:var(--yellow)}
+#userchip{color:var(--yellow);font-weight:600}
+.wrap{max-width:1400px;margin:0 auto;padding:24px clamp(16px,3vw,28px) 70px}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:28px 0 12px;display:flex;align-items:center;gap:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:10px 18px;font:700 14px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:background .12s}
+.btn:hover{background:rgba(245,197,24,.24)} .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.gray{background:rgba(148,163,184,.1);border-color:#334155;color:#cbd5e1}
+.btn.red{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fca5a5}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn-main{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:13px 24px;color:#1a1a1a;font:800 15px 'Inter',sans-serif;cursor:pointer}
+.btn-main:disabled{opacity:.45;cursor:not-allowed}
+.btn-main.orange{background:linear-gradient(135deg,#fb923c,#f97316)}
+.fg{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fg label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg label .req{color:var(--err)}
+input,select{background:var(--bg);border:1px solid #273244;border-radius:9px;padding:9px 11px;color:#e2e8f0;font:14px 'Inter',sans-serif;outline:none;min-width:0}
+input:focus,select:focus{border-color:rgba(245,197,24,.6)}
+input[readonly]{opacity:.8;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.grid .wide{grid-column:span 2}
+.hint{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.hint b{color:#cbd5e1}
+
+/* login */
+#login-box{max-width:420px;margin:40px auto}
+#login-box form{display:flex;flex-direction:column;gap:12px}
+#noaccess{max-width:560px;margin:40px auto;text-align:center}
+
+/* passo 1: dropzone */
+.drop{border:2px dashed #334155;border-radius:16px;padding:38px 22px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;font-size:15px;line-height:1.7}
+.drop:hover,.drop.over{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.05);color:#e2e8f0}
+.drop b{color:#fff;font-size:17px}
+#read-status{margin-top:12px;font-size:13.5px;min-height:20px}
+.prog{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:8px;display:none}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,#F5C518,#e0a800);transition:width .2s}
+
+/* passo 2: revisão */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{border:1px solid #334155;background:rgba(148,163,184,.08);color:#cbd5e1;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.pill.on{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.14);color:var(--yellow)}
+.pill.done{border-color:rgba(52,211,153,.5);color:var(--ok)}
+.doc-strip{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;color:#cbd5e1}
+.doc-strip span b{color:#fff}
+.avisos{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.aviso{font-size:13px;border-radius:9px;padding:8px 12px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fde68a}
+.aviso.ok{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35);color:#a7f3d0}
+.aviso.err{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fecaca}
+.conf{display:flex;gap:10px 26px;align-items:baseline;flex-wrap:wrap;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13.5px}
+.conf b.n{font:700 26px 'Rajdhani',sans-serif;color:#fff;margin-left:4px}
+.conf .msg{flex-basis:100%;font-size:14px;font-weight:600}
+.conf.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.45);color:#a7f3d0}
+.conf.bad{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);color:#fecaca}
+.conf.na{background:rgba(148,163,184,.08);border:1px solid #334155;color:#cbd5e1}
+.op-match{font-size:12px;margin-top:4px}
+.nova-op{display:none;margin-top:8px;gap:8px;flex-wrap:wrap;align-items:center}
+.nova-op.open{display:flex}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:16px 0 10px}
+.tools .fg input{width:150px}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.pol{border-collapse:collapse;width:100%;min-width:1250px;font-size:13px}
+table.pol th{position:sticky;top:0;background:#0d1322;color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.pol td{padding:5px 6px;border-bottom:1px solid #131b2b;vertical-align:top}
+table.pol tr.eq td{background:rgba(96,165,250,.06);color:var(--blue);font-weight:700;font-size:12px;padding:7px 10px}
+table.pol tr.off td{opacity:.4}
+table.pol tr.div td{background:rgba(248,113,113,.06)}
+table.pol input{width:100%;padding:6px 7px;font-size:13px;border-radius:7px}
+table.pol .c-re input{width:74px} table.pol .c-posto input{width:108px}
+table.pol .c-opm input{width:80px} table.pol .c-fun input{width:60px}
+table.pol .c-dt input{width:128px} table.pol .c-dd input{width:62px}
+table.pol .c-loc input{width:130px} table.pol .c-guerra input{width:120px}
+.st{font-size:11px;margin-top:3px;line-height:1.35}
+.nome-esc{font-weight:600;color:#e2e8f0;font-size:12.5px;min-width:210px}
+.val{white-space:nowrap;text-align:right;font-weight:700;color:#fff;padding-top:11px!important}
+.rm{background:none;border:none;color:#64748b;cursor:pointer;font-size:15px;padding:6px}
+.rm:hover{color:var(--err)}
+.foot{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.foot .calc{flex:1;min-width:260px;font-size:14px;color:#cbd5e1}
+.foot .calc b{color:#fff}
+#save-err{width:100%;font-size:13.5px;line-height:1.5}
+.extra{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+#pdf-view{display:none;margin-top:12px;max-height:80vh;overflow:auto;background:#fff;border-radius:10px;padding:8px}
+#pdf-view canvas{display:block;margin:0 auto 8px;max-width:100%;height:auto;box-shadow:0 1px 6px rgba(0,0,0,.25)}
+#raw-view{display:none;margin-top:12px;max-height:50vh;overflow:auto;background:#020409;border:1px solid var(--line);border-radius:10px;padding:12px;font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;color:#9fb0c8}
+
+/* passo 3: lotes */
+table.lotes{border-collapse:collapse;width:100%;font-size:13px;min-width:900px}
+table.lotes th{text-align:left;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+table.lotes td{padding:9px 8px;border-bottom:1px solid #131b2b}
+table.lotes td.num{text-align:right;white-space:nowrap}
+table.lotes td:nth-child(2){min-width:320px}
+.empty{text-align:center;color:var(--muted);padding:26px}
+
+@media(max-width:760px){
+  .grid .wide{grid-column:auto}
+  .hdr-sub{display:none}
+  .tools .fg input{width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Diária por Policial <em>· Lançar escala</em></div>
+        <div class="hdr-sub">Envie o PDF da escala do SEI — a página lê e preenche sozinha. Você confere e lança.</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a href="index.html">⬅ Dashboard</a>
+      <span id="userchip"></span>
+      <a href="#" id="logout-link" onclick="apiLogout();return false" style="display:none">sair</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div id="login-box" class="card" style="display:none">
+    <div class="sec" style="margin-top:0">🔐 Área dos gestores</div>
+    <form onsubmit="return doLogin(event)">
+      <div class="fg"><label>Usuário</label><input id="l-user" autocomplete="username" required></div>
+      <div class="fg"><label>Senha</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+      <div id="l-erro" class="err" style="font-size:13px;min-height:18px"></div>
+      <button class="btn-main" id="l-btn" type="submit">Entrar</button>
+    </form>
+    <div class="hint" style="margin-top:12px">Mesmo login do dashboard. Só De Sousa, Camilo, Fonseca e Juliana lançam diárias.</div>
+  </div>
+
+  <div id="noaccess" class="card" style="display:none">
+    <div style="font-size:34px">🚫</div>
+    <p style="margin:10px 0 16px">O login <b id="na-user"></b> não tem permissão para lançar diárias.<br><span class="muted">A consulta continua no dashboard, em Gestão › Diária por Policial.</span></p>
+    <a class="btn" href="index.html">⬅ Voltar ao dashboard</a>
+    <button class="btn gray" onclick="apiLogout()">Trocar de usuário</button>
+  </div>
+
+  <!-- APP -->
+  <div id="app" style="display:none">
+
+    <div class="sec" style="margin-top:4px">① Escala em PDF</div>
+    <div class="card">
+      <div class="drop" id="drop"
+           onclick="document.getElementById('f-pdf').click()"
+           ondragover="event.preventDefault(); this.classList.add('over')"
+           ondragleave="this.classList.remove('over')"
+           ondrop="event.preventDefault(); this.classList.remove('over'); lerArquivo(event.dataTransfer.files[0])">
+        📄 <b>Arraste aqui o PDF da escala</b> ou clique para escolher<br>
+        <small>Escala gerada pelo SEI (a leitura é exata). PDF escaneado também funciona, mas é mais lento e pode errar — confira com atenção.</small>
+        <input type="file" id="f-pdf" accept="application/pdf" style="display:none" onchange="lerArquivo(this.files[0]); this.value=''">
+      </div>
+      <div id="read-status" class="muted"></div>
+      <div class="prog" id="prog"><div></div></div>
+    </div>
+
+    <div id="rev" style="display:none">
+      <div class="sec">② Conferir e completar</div>
+      <div class="card">
+        <div class="pills" id="pills"></div>
+        <div class="doc-strip" id="doc-strip"></div>
+        <div id="conf-box" class="conf na"></div>
+        <div class="avisos" id="avisos"></div>
+
+        <div class="grid">
+          <div class="fg wide">
+            <label>Operação / missão <span class="req">*</span></label>
+            <select id="m-op" onchange="onMissao()"><option value="">— selecione —</option></select>
+            <div class="op-match" id="op-match"></div>
+            <div class="nova-op" id="nova-op">
+              <input id="nova-op-nome" style="flex:1;min-width:220px" placeholder="Nome da operação">
+              <button class="btn sm" id="nova-op-btn" onclick="cadastrarOperacao()">➕ Cadastrar na lista</button>
+              <span id="nova-op-st" class="hint"></span>
+            </div>
+          </div>
+          <div class="fg"><label>Etapa</label><input id="m-etapa" oninput="onMissao()" placeholder="Ex.: 25ª"></div>
+          <div class="fg"><label>ID da missão <span class="muted" style="text-transform:none">(automático)</span></label><input id="m-id" readonly></div>
+          <div class="fg"><label>Órgão <span class="req">*</span></label><input id="m-orgao" list="dl-orgaos" oninput="onMissao()" placeholder="Ex.: SENASP, SESDEC"><datalist id="dl-orgaos"></datalist></div>
+          <div class="fg"><label>Tipo de diária <span class="req">*</span></label><select id="m-tipo" onchange="onTipo()"><option value="">— selecione —</option></select></div>
+          <div class="fg"><label>Valor da diária (R$)</label><input id="m-valor" type="number" step="0.01" min="0" oninput="recalcAll()"></div>
+          <div class="fg"><label>Processo relacionado</label><input id="m-proc" placeholder="nº do processo SEI"></div>
+        </div>
+
+        <div class="tools">
+          <div class="fg"><label>Início (todos)</label><input type="date" id="t-ini"></div>
+          <div class="fg"><label>Término (todos)</label><input type="date" id="t-fim"></div>
+          <button class="btn gray sm" onclick="aplicarPeriodoTodos()">🗓️ Aplicar período a todos</button>
+          <div class="fg"><label>Localidade (vazios)</label><input id="t-loc" list="dl-locs" placeholder="Ex.: NOVA MUTUM"></div>
+          <button class="btn gray sm" onclick="aplicarLocalVazios()">📍 Preencher vazios</button>
+          <button class="btn gray sm" onclick="addLinha()">➕ Policial</button>
+          <datalist id="dl-locs"></datalist>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="pol">
+            <thead><tr>
+              <th title="Incluir no lançamento">✓</th><th>Posto/Grad</th><th>RE</th><th>Nome na escala / cadastro</th>
+              <th>Nome de guerra</th><th>OPM</th><th>Função</th><th>Localidade</th>
+              <th>Início</th><th>Término</th><th>Diárias</th><th style="text-align:right">Valor</th><th></th>
+            </tr></thead>
+            <tbody id="tb"></tbody>
+          </table>
+        </div>
+
+        <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:#cbd5e1;cursor:pointer">
+          <input type="checkbox" id="cad-faltantes" checked style="width:auto">
+          Cadastrar na aba POLICIAIS quem não está no cadastro (usa o nome de guerra digitado)
+        </label>
+
+        <div class="foot">
+          <div class="calc" id="calc"></div>
+          <button class="btn gray" onclick="descartar()">Descartar</button>
+          <button class="btn-main" id="save-btn" onclick="salvar()">💾 Lançar</button>
+          <div id="save-err"></div>
+        </div>
+
+        <div class="extra">
+          <button class="btn gray sm" onclick="togglePdf()">👁️ Ver o PDF ao lado</button>
+          <button class="btn gray sm" onclick="toggleRaw()">📝 Texto lido do PDF</button>
+        </div>
+        <div id="pdf-view"></div>
+        <pre id="raw-view"></pre>
+      </div>
+    </div>
+
+    <div class="sec">③ Escalas já lançadas <small class="muted" id="lotes-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
+    <div class="card">
+      <div class="tbl-wrap" style="border:none"><div id="lotes"><div class="empty">Carregando…</div></div></div>
+      <div class="hint" style="margin-top:10px"><a id="mis-link" class="btn gray sm" target="_blank" rel="noopener" style="display:none;text-decoration:none;margin-right:8px">📊 Abrir planilha de missões</a>Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+// Quem LANÇA diárias (allowlist). ⚠️ Isto é só a interface — a trava de verdade é o
+// diariaEditors() do worker.js (e o Worker devolve a lista em /api/diaria, que prevalece).
+const DIARIA_GESTORES = ['desousa','p3','p301','p3aux'];
+const NOMES = { desousa:'CB QPPM De Sousa', p3:'2º SGT QPPM Camilo', p301:'1º SGT QPPM Fonseca', p3aux:'3º SGT QPPM Juliana' };
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fR(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fN(v){ return (Number(v)||0).toLocaleString('pt-BR'); }
+function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim(); }
+function shortRE(v){ const d=String(v||'').replace(/\D/g,''); return d.length>5 ? d.slice(-5) : d; }
+function isoToBR(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(s||''); }
+function $(id){ return document.getElementById(id); }
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status + ' ao buscar dados.'));
+  return d;
+}
+async function apiPostJSON(path, body){
+  const r = await fetch(API_BASE + path, {
+    method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token, 'Content-Type':'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+
+/* ─────────────── login / acesso ─────────────── */
+async function doLogin(ev){
+  ev.preventDefault();
+  const btn=$('l-btn'), erro=$('l-erro');
+  erro.textContent=''; btn.disabled=true; btn.textContent='Entrando…';
+  try{
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user:$('l-user').value.trim(), pass:$('l-pass').value }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token=d.token; AUTH.user=d.user; $('l-pass').value='';
+    boot();
+  }catch(e){ erro.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally{ btn.disabled=false; btn.textContent='Entrar'; }
+  return false;
+}
+function apiLogout(){ AUTH.token=''; AUTH.user=''; DATA=null; boot(); }
+
+function boot(){
+  const logged = AUTH.logged, user = AUTH.user;
+  $('userchip').textContent = logged ? '👤 ' + (NOMES[user] || user) : '';
+  $('logout-link').style.display = logged ? '' : 'none';
+  $('login-box').style.display = logged ? 'none' : '';
+  const pode = logged && DIARIA_GESTORES.includes(user);
+  $('noaccess').style.display = (logged && !pode) ? '' : 'none';
+  $('na-user').textContent = user;
+  $('app').style.display = pode ? '' : 'none';
+  if (pode) carregar();
+}
+
+/* ─────────────── dados do Worker ─────────────── */
+let DATA = null;          // resposta de /api/diaria
+let EFET = {};            // cadastro POLICIAIS por RE curto (5 díg.)
+
+async function carregar(){
+  try{
+    DATA = await apiFetchJSON('/api/diaria');
+  }catch(e){
+    $('lotes').innerHTML = `<div class="empty err">⚠️ ${esc(e.message)}</div>`;
+    return;
+  }
+  if (Array.isArray(DATA.editores) && !DATA.editores.includes(AUTH.user)){   // o Worker manda
+    $('app').style.display='none'; $('noaccess').style.display=''; $('na-user').textContent=AUTH.user; return;
+  }
+  EFET = {};
+  (DATA.efetivo||[]).forEach(e=>{ const k=shortRE(e.re); if(k) EFET[k]=e; });
+  preencherListas();
+  renderLotes();
+  if (ESCALAS.length) renderEscala();   // recarregou com uma escala aberta: refaz os avisos
+}
+
+function preencherListas(){
+  const L = DATA.listas || {};
+  const selOp = $('m-op'), atual = selOp.value;
+  selOp.innerHTML = '<option value="">— selecione —</option>' + (L.operacoes||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if (atual) selOp.value = atual;
+  $('dl-orgaos').innerHTML = (L.orgaos||[]).map(v=>`<option value="${esc(v)}">`).join('');
+  const selT = $('m-tipo'), atualT = selT.value;
+  selT.innerHTML = '<option value="">— selecione —</option>' + (DATA.tabela_diarias||[])
+    .map(t=>`<option value="${esc(t.tipo_diaria)}" data-valor="${t.valor_diaria}">${esc(t.tipo_diaria)} — ${fR(t.valor_diaria)}</option>`).join('');
+  if (atualT) selT.value = atualT;
+  $('dl-locs').innerHTML = [...new Set((L.municipios||[]).map(v=>String(v).toUpperCase()))].sort().map(v=>`<option value="${esc(v)}">`).join('');
+}
+
+/* ─────────────── ③ escalas já lançadas (lotes) ─────────────── */
+function renderLotes(){
+  const lotes = DATA.lotes || [];
+  $('lotes-count').textContent = lotes.length ? `(${lotes.length})` : '';
+  const lk = $('mis-link'), sid = DATA.missoes_sheet_id;
+  if (lk){ lk.style.display = sid ? '' : 'none'; if (sid) lk.href = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(sid) + '/edit'; }
+  if (!lotes.length){
+    $('lotes').innerHTML = sid
+      ? '<div class="empty">Nenhuma escala lançada ainda. A planilha <b>BPFRON_Missoes_Diarias</b> está pronta — envie o primeiro PDF acima.</div>'
+      : '<div class="empty">Nenhuma escala lançada ainda. Os lançamentos começam do zero — a planilha <b>BPFRON_Missoes_Diarias</b> é criada sozinha na pasta do Drive no 1º lançamento.</div>';
+    return;
+  }
+  $('lotes').innerHTML = `<table class="lotes"><thead><tr>
+      <th>Lançado em</th><th>Operação / ID da missão</th><th>Órgão · tipo</th><th>Período</th><th>SEI</th>
+      <th style="text-align:right">Policiais</th><th style="text-align:right">Diárias</th><th style="text-align:right">Valor</th><th>Por</th><th></th>
+    </tr></thead><tbody>${lotes.map(l=>`<tr>
+      <td style="white-space:nowrap">${esc(l.lancado_em||'—')}</td>
+      <td><b>${esc(l.operacao||'—')}</b><div class="muted" style="font-size:12px">${esc(l.id_missao||'')}</div>
+        ${(l.guarnicoes||[]).length ? `<div class="muted" style="font-size:11.5px;margin-top:2px">👥 ${l.guarnicoes.map(g=>esc(g.equipe + (g.localidade ? ' · ' + g.localidade : ''))).join(' | ')}</div>` : ''}</td>
+      <td>${esc(l.orgao||'')}<div class="muted" style="font-size:12px">${esc(l.tipo_diaria||'')}</div></td>
+      <td style="white-space:nowrap">${esc(l.inicio||'?')} → ${esc(l.fim||'?')}</td>
+      <td>${esc(l.sei_doc||'—')}<div class="muted" style="font-size:11.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.arquivo||'')}">${esc(l.arquivo||'')}</div></td>
+      <td class="num">${l.policiais}</td><td class="num">${fN(l.diarias)}</td><td class="num"><b>${fR(l.valor_total)}</b></td>
+      <td>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</td>
+      <td><button class="btn red sm" onclick="excluirLote('${esc(l.id_lote)}', this)">🗑️ Excluir escala</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+async function excluirLote(id, btn){
+  const l = (DATA.lotes||[]).find(x=>x.id_lote===id); if(!l) return;
+  if (!window.confirm(`Excluir a escala "${l.operacao}" (${l.id_missao}) — ${l.policiais} policiais, ${fR(l.valor_total)}?\n\nIsso apaga todas as linhas desse lançamento na planilha.`)) return;
+  btn.disabled = true; btn.textContent = 'Excluindo…';
+  try{
+    const r = await apiPostJSON('/api/diaria/save', { op:'delete_lote', id_lote:id });
+    await carregar();
+    setStatus(`🗑️ Escala excluída (${r.removidos} linha(s) removidas da planilha).`, 'ok');
+  }catch(e){ btn.disabled=false; btn.textContent='🗑️ Excluir escala'; alert(e.message || 'Erro ao excluir.'); }
+}
+
+/* ─────────────── casamento do nome da operação ───────────────
+   O PDF traz 'PROTETOR DA FRONTEIRA E DIVISAS'; a lista pode ter 'PROTETOR DAS FRONTEIRAS E
+   DIVISAS'. Compara palavras (sem acento, sem plural, sem nº de etapa). */
+function opTokens(s){
+  return norm(s).replace(/\d+\s*[ªº°O]?/g,' ').replace(/\b(OPERACAO|OPERACOES|ETAPA)\b/g,' ')
+    .replace(/[^A-Z ]/g,' ').split(' ').filter(w=>w.length>2 && !['DAS','DOS','COM','PARA','PELA','PELO'].includes(w))
+    .map(w=>w.replace(/S$/,''));
+}
+function opMatch(nome, lista){
+  const a = new Set(opTokens(nome)); if(!a.size) return null;
+  let best=null, bs=0;
+  for (const op of (lista||[])){
+    const b = new Set(opTokens(op)); if(!b.size) continue;
+    let inter=0; a.forEach(t=>{ if(b.has(t)) inter++; });
+    const s = inter / Math.max(a.size, b.size);
+    if (s > bs){ bs=s; best=op; }
+  }
+  return bs >= 0.6 ? { op:best, score:bs } : null;
+}
+async function cadastrarOperacao(){
+  const nome = ($('nova-op-nome').value||'').trim().replace(/\s+/g,' ').toUpperCase();
+  const st = $('nova-op-st'), btn = $('nova-op-btn');
+  if (nome.length < 3){ st.className='hint err'; st.textContent='Informe o nome (mín. 3 letras).'; return; }
+  btn.disabled=true; st.className='hint'; st.textContent='Gravando na aba OPERACOES…';
+  try{
+    await apiPostJSON('/api/diaria/operacao', { nome });
+    const L = DATA.listas || (DATA.listas = {});
+    L.operacoes = [...new Set([...(L.operacoes||[]), nome])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    preencherListas(); $('m-op').value = nome;
+    $('nova-op').classList.remove('open');
+    onMissao();
+  }catch(e){ st.className='hint err'; st.textContent = e.message || 'Erro ao cadastrar.'; }
+  finally{ btn.disabled=false; }
+}
+
+/* ── Parser da escala do SEI (a partir dos itens de texto com coordenadas) ──
+   Entrada: [{p, x, y, w, h, s}] — y cresce para BAIXO (topo da página = 0).
+   Vem do pdf.js (PDF do SEI, texto exato) ou do Tesseract (PDF escaneado, palavra a palavra).
+   Saída: array de escalas (normalmente 1; um PDF com 2+ "EVENTO:" vira 2+). */
+const EP_RANK = /\b(SD|CB|SGT|SUB\s*TEN|SUBTEN|ST|TEN\s*CEL|TC|TEN|CAP|MAJ|CEL|ASP|AL|QPPM|QOPM|QOAPM|QOSPM|QPEPM)\b/i;
+const EP_RANK_G = /\b(SD|CB|SGT|SUB\s*TEN|SUBTEN|ST|TEN\s*CEL|TC|TEN|CAP|MAJ|CEL|ASP|AL|QPPM|QOPM|QOAPM|QOSPM|QPEPM)\b/gi;
+const EP_FUNC = /^(CMT|SUBCMT|MOT|AUX|PAT|OP|ENC|SEG|COMANDANTE|MOTORISTA|AUXILIAR|PATRULHEIRO|OPERADOR)$/i;
+const EP_OPM = /^(BPFRON|CPE|CRP\s*[IVX]+|BPTAR|BPCHOQUE|BOPE|ROTAM|GOE|COE|NI|P2|BPAMB|CIA\s*\S*|\d+\s*[ºª°]?\s*(BPM|CIA|BPTAR|BPTRAN|CPM|BBM)\S*|\S*BPM\S*)$/i;
+
+function epClean(s){ return String(s||'').replace(/\s+/g,' ').trim(); }
+function epDigits(s){ return String(s||'').replace(/\D/g,''); }
+function epIsRE(s){ const t=epClean(s).replace(/[.\-\s]/g,''); return /^\d{5,9}$/.test(t); }
+function epIsPhone(s){
+  const t=epClean(s); if(/[A-Za-zÀ-ú]/.test(t)) return false;
+  const d=epDigits(t);
+  return d.length>=10 && d.length<=11 || (/-/.test(t) && d.length>=8 && d.length<=9);
+}
+function epRankOnly(s){
+  const t=epClean(s);
+  if(!EP_RANK.test(t)) return false;
+  const resto=t.replace(EP_RANK_G,'').replace(/\d+\s*[ºª°]/g,'').replace(/[^A-Za-zÀ-ú]/g,'');
+  return resto.length<=2;
+}
+// "25/08/2026" | "25/08" (+ano) -> "2026-08-25"
+function epISO(d, m, y){
+  if(!d||!m||!y) return '';
+  y = String(y); if(y.length===2) y='20'+y;
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+// "25/08/2026 a 31/08/2026" | "25 A 31/08" | "25/08 a 02/09" -> {ini, fim}
+function epPeriodo(raw, anoPadrao){
+  const t=epClean(raw).toUpperCase();
+  const m=t.match(/(\d{1,2})(?:\/(\d{1,2}))?(?:\/(\d{2,4}))?\s*(?:A|À|ATÉ|ATE|-|–)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(m){
+    const yFim = m[6] || m[3] || anoPadrao;
+    const mIni = m[2] || m[5];
+    let yIni = m[3] || yFim;
+    // "28/12 a 03/01" sem ano no início: começo é no ano anterior
+    if(!m[3] && m[2] && +m[2] > +m[5]) yIni = String(+String(yFim).padStart(4,'20') - 1);
+    return { ini: epISO(m[1], mIni, yIni), fim: epISO(m[4], m[5], yFim) };
+  }
+  const one=t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(one){ const d=epISO(one[1], one[2], one[3]||anoPadrao); return { ini:d, fim:d }; }
+  return null;
+}
+
+// Agrupa itens em linhas (mesma página, y parecido) e junta palavras vizinhas em células.
+function epLines(items){
+  const its = items.filter(o=>o && String(o.s||'').trim()).map(o=>Object.assign({}, o, { s: String(o.s) }));
+  its.sort((a,b)=> a.p-b.p || a.y-b.y || a.x-b.x);
+  const lines=[];
+  for(const it of its){
+    const tol = Math.max(1.8, (it.h||6)*0.45);
+    let ln = null;
+    for(let k=lines.length-1; k>=0 && k>=lines.length-4; k--){
+      const L=lines[k];
+      if(L.p===it.p && Math.abs(L.y-it.y)<=tol){ ln=L; break; }
+    }
+    if(!ln){ ln={ p:it.p, y:it.y, items:[] }; lines.push(ln); }
+    ln.items.push(it);
+  }
+  for(const L of lines){
+    L.items.sort((a,b)=>a.x-b.x);
+    const cells=[];
+    for(const it of L.items){
+      const c=cells[cells.length-1];
+      const h = it.h || 6;
+      // palavras da mesma célula ficam a < ~0,6 altura de distância; entre colunas o vão é maior
+      if(c && it.x - (c.x + c.w) < h*0.6){
+        c.s += (/\s$/.test(c.s) || /^\s/.test(it.s) ? '' : ' ') + it.s;
+        c.w = (it.x + it.w) - c.x;
+      } else cells.push({ x:it.x, w:it.w||0, h, s:it.s });
+    }
+    cells.forEach(c=>{ c.s=epClean(c.s); });
+    L.cells = cells.filter(c=>c.s);
+    L.text = epClean(L.cells.map(c=>c.s).join(' '));
+  }
+  return lines.filter(L=>L.cells.length);
+}
+
+function epIsNoise(t){
+  return /^(GOVERNO DO ESTADO|POL[IÍ]CIA MILITAR|BATALH[AÃ]O DE (FRONTEIRA|POL[IÍ]CIA)|COMANDO DE POLICIAMENTO|DIVIS[AÃ]O OPERACIONAL|ESCALA$|QUARTEL\b|RUA\b|E-?MAIL|CEP\b|DOCUMENTO ASSINADO|FUNDAMENTO NO|A AUTENTICIDADE|REFER[EÊ]NCIA|COMANDANTE DO)/i.test(t)
+    || /\/\s*pg\.?\s*\d+\s*$/i.test(t);
+}
+
+function parseEscalaItems(items, opts){
+  opts = opts || {};
+  const lines = epLines(items);
+  const fullText = lines.map(L=>L.text).join('\n');
+  // ano de referência: PERÍODO > data da assinatura > ano corrente
+  const anoM = fullText.match(/PER[IÍ]ODO\s*:?\s*[^\n]*?\d{1,2}\/\d{1,2}\/(\d{4})/i) || fullText.match(/\b\d{1,2}\/\d{1,2}\/(20\d{2})\b/);
+  const ano = anoM ? anoM[1] : String(new Date().getFullYear());
+  // processo SEI (rodapé "SEI 0021.000110/2026-71" ou "Processo nº ...") e nº do documento
+  const procM = fullText.match(/Processo\s*n[ºo°.]*\s*(\d{4}\.\d{6}\/\d{4}-\d{2})/i) || fullText.match(/\b(\d{4}\.\d{6}\/\d{4}-\d{2})\b/);
+  const docM  = fullText.match(/SEI\s*n[ºo°.]*\s*(\d{6,10})/i) || fullText.match(/c[óo]digo verificador\s*(\d{6,10})/i) || fullText.match(/\((\d{7,10})\)\s*SEI/);
+  const processo = procM ? procM[1] : '';
+  const sei_doc = docM ? docM[1] : '';
+
+  const escalas=[];
+  let esc=null, team=null, cols=null, lastArea='';
+  const novaEscala = ()=>{
+    esc = { evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null,
+            processo, sei_doc, equipes:[], policiais:[], avisos:[] };
+    escalas.push(esc); team=null; cols=null;
+  };
+  novaEscala();
+
+  for(let i=0;i<lines.length;i++){
+    const L=lines[i], t=L.text, T=t.toUpperCase();
+    if(/^EVENTO\s*:/i.test(t)){
+      if(esc.policiais.length || esc.evento) novaEscala();
+      esc.evento = epClean(t.replace(/^EVENTO\s*:/i,''));
+      continue;
+    }
+    if(/^LOCAL DO PATRULHAMENTO\s*:/i.test(t)){ esc.local = epClean(t.replace(/^LOCAL DO PATRULHAMENTO\s*:/i,'')).replace(/\.$/,''); continue; }
+    if(/^PER[IÍ]ODO\s*:/i.test(t)){ esc.periodo = epPeriodo(t.replace(/^PER[IÍ]ODO\s*:/i,''), ano); continue; }
+    const efM = T.match(/EFETIVO ESCALADO\s*:?\s*(\d+)/); if(efM){ esc.efetivo_declarado = (esc.efetivo_declarado||0) + (+efM[1]); continue; }
+    if(/^OBS\b/i.test(t)){ cols=null; team=null; continue; }        // fim da tabela
+    if(epIsNoise(t)) continue;
+    // cabeçalho da equipe
+    if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)){
+      team = { nome: epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'', periodo:null };
+      esc.equipes.push(team); lastArea='';
+      continue;
+    }
+    if(/^DATA\s*:/i.test(t)){ if(team) team.periodo = epPeriodo(t.replace(/^DATA\s*:/i,''), ano); continue; }
+    // linha de títulos da tabela -> guarda a posição das colunas
+    if(/\bNOME\b/.test(T) && (/\bRE\b/.test(T) || /POST/.test(T))){
+      cols = {};
+      L.cells.forEach(c=>{
+        const u=c.s.toUpperCase();
+        if(/POST|GRAD/.test(u)) cols.posto=c.x;
+        else if(/^RE$|MATR/.test(u)) cols.re=c.x;
+        else if(/NOME/.test(u)) cols.nome=c.x;
+        else if(/OPM|UNIDADE/.test(u)) cols.opm=c.x;
+        else if(/FUN/.test(u)) cols.funcao=c.x;
+        else if(/CONT|TEL|FONE/.test(u)) cols.tel=c.x;
+        else if(/LOCAL|MUNIC/.test(u)) cols.loc=c.x;
+      });
+      continue;
+    }
+    const reCell = L.cells.find(c=>epIsRE(c.s));
+    const temRank = L.cells.some(c=>epRankOnly(c.s) || EP_RANK.test(c.s));
+    if(reCell && (cols || temRank)){
+      const pol = { posto:'', re_full:'', re:'', nome:'', opm:'', funcao:'', tel:'', localidade:'', equipe: team?team.nome:'', _team: team, _y:L.y, _p:L.p };
+      pol.re_full = epDigits(reCell.s);
+      pol.re = pol.re_full.length>5 ? pol.re_full.slice(-5) : pol.re_full;
+      const locX = cols && cols.loc!=null ? cols.loc - 25 : Infinity;
+      for(const c of L.cells){
+        if(c===reCell) continue;
+        const s=c.s;
+        if(c.x < reCell.x){ pol.posto = epClean(pol.posto+' '+s); continue; }
+        if(epIsPhone(s)){ pol.tel = epClean(pol.tel+' '+s); continue; }
+        if(EP_FUNC.test(s)){ pol.funcao = s.toUpperCase(); continue; }
+        if(c.x >= locX){ pol.localidade = epClean(pol.localidade+' '+s); continue; }
+        if(!pol.nome){ pol.nome=s; continue; }
+        if(!pol.opm && (EP_OPM.test(s) || (cols && cols.opm!=null && c.x >= cols.opm-25))){ pol.opm=s; continue; }
+        if(!pol.opm){ pol.nome = epClean(pol.nome+' '+s); continue; }
+        if(!pol.funcao){ pol.funcao=s; continue; }
+        pol.localidade = epClean(pol.localidade+' '+s);
+      }
+      esc.policiais.push(pol);
+      continue;
+    }
+    // linha solta dentro da tabela: localidade (célula mesclada) ou continuação de nome
+    if(cols){
+      const locX = cols.loc!=null ? cols.loc - 25 : Infinity;
+      const soLoc = L.cells.every(c=>c.x >= locX);
+      if(soLoc){ if(team) team.localidade = epClean((team.localidade?team.localidade+' ':'')+t); else lastArea=''; continue; }
+      // continuação de nome quebrado em 2 linhas: vai para o policial mais próximo em y
+      const nomeCells = L.cells.filter(c=> cols.nome!=null && c.x < (cols.opm!=null?cols.opm-25:locX) && c.x > (cols.re||0)+10 && !epIsRE(c.s));
+      if(nomeCells.length && nomeCells.length===L.cells.length){
+        let best=null, bd=Infinity;
+        for(const p of esc.policiais){ if(p._p!==L.p) continue; const d=Math.abs(p._y-L.y); if(d<bd){ bd=d; best=p; } }
+        if(best && bd < 14){ best.nome = epClean(best.nome+' '+nomeCells.map(c=>c.s).join(' ')); continue; }
+      }
+    }
+    // linha curta antes do cabeçalho da equipe ("FRONTEIRA/NOVA MUTUM - BPFRON") = área da equipe
+    if(L.cells.length===1 && t.length<60 && /[A-Z]/.test(t)) lastArea = t;
+  }
+
+  // pós-processamento: localidade/período herdados da equipe, limpeza e avisos
+  for(const e of escalas){
+    const ev = e.evento.toUpperCase();
+    const etM = ev.match(/(\d+)\s*([ªº°])\s*(ETAPA|OPERA)/) || ev.match(/(\d+)\s*([ªº°])/);
+    if(etM) e.etapa = etM[1] + (etM[2]==='°'?'º':etM[2]);
+    const qM = e.evento.match(/["“”']([^"“”']{3,})["“”']/);
+    e.operacao = epClean(qM ? qM[1] : ev.replace(/^\s*\d+\s*[ªº°]\s*(ETAPA\s*(DA|DE)?\s*)?/,'').replace(/\s*-\s*[A-Z]{2,}\s*$/,'')).toUpperCase();
+    const orgM = e.evento.match(/[-–]\s*([A-Za-z]{2,}(?:\s*\/\s*[A-Za-z]{2,})?)\s*$/);
+    if(orgM) e.orgao_hint = orgM[1].toUpperCase();
+    for(const p of e.policiais){
+      const tm = p._team || {};
+      if(!p.localidade) p.localidade = tm.localidade || '';
+      const per = tm.periodo || e.periodo || {};
+      p.ini = per.ini || ''; p.fim = per.fim || '';
+      p.posto = p.posto.replace(/\s+/g,' ').toUpperCase();
+      p.nome = p.nome.toUpperCase();
+      delete p._team; delete p._y; delete p._p;
+    }
+    if(e.efetivo_declarado!=null && e.efetivo_declarado!==e.policiais.length)
+      e.avisos.push(`O documento declara ${e.efetivo_declarado} policiais no efetivo escalado, mas a leitura encontrou ${e.policiais.length}. Confira se falta alguém.`);
+    const semLoc = e.policiais.filter(p=>!p.localidade).length;
+    if(semLoc) e.avisos.push(`${semLoc} policial(is) sem localidade — preencha na tabela.`);
+    if(!e.periodo) e.avisos.push('Não achei a linha "PERÍODO:" — confira as datas.');
+  }
+  return escalas.filter(e=>e.policiais.length || e.evento);
+}
+
+/* ─────────────── ① leitura do PDF ─────────────── */
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const TESSERACT_JS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+let PDF_DOC = null, PDF_META = { arquivo:'', hash:'' }, RAW_TEXT = '';
+let ESCALAS = [], CUR = 0, DUP_OK = false;
+
+function setStatus(html, cls){ const el=$('read-status'); el.className = cls || 'muted'; el.innerHTML = html; }
+function setProg(frac){ const p=$('prog'); if(frac==null){ p.style.display='none'; return; } p.style.display='block'; p.firstElementChild.style.width = Math.round(frac*100)+'%'; }
+function loadScript(src){ return new Promise((ok, fail)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>fail(new Error('Falha ao carregar '+src)); document.head.appendChild(s); }); }
+async function sha16(buf){
+  try{ const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16); }
+  catch(e){ return ''; }
+}
+
+async function lerArquivo(file){
+  if (!file) return;
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf'){ setStatus('⚠️ Envie um arquivo PDF.', 'err'); return; }
+  if (!window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
+  $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
+  setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
+  try{
+    const buf = await file.arrayBuffer();
+    PDF_META = { arquivo: file.name, hash: await sha16(buf.slice(0)) };
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    PDF_DOC = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+    let items = [];
+    for (let p=1; p<=PDF_DOC.numPages; p++){
+      const page = await PDF_DOC.getPage(p);
+      const vp = page.getViewport({ scale:1 });
+      const tc = await page.getTextContent();
+      for (const it of tc.items){
+        if (!it.str) continue;
+        items.push({ p, x: it.transform[4], y: vp.height - it.transform[5], w: it.width, h: it.height || Math.abs(it.transform[3]) || 6, s: it.str });
+      }
+      setProg(0.05 + 0.5 * p / PDF_DOC.numPages);
+    }
+    let viaOCR = false;
+    const chars = items.reduce((a,o)=>a + String(o.s).trim().length, 0);
+    if (chars < 80){                 // PDF sem camada de texto = escaneado/foto -> OCR
+      viaOCR = true;
+      items = await ocrPdf(PDF_DOC);
+    }
+    const linhas = epLines(items);
+    RAW_TEXT = linhas.map(L=>`p${L.p} │ ${L.text}`).join('\n');
+    const escalas = parseEscalaItems(items);
+    ESCALAS = escalas.map(e=>({ ...e, rows: e.policiais.map(novaLinha), form:null, lancado:false }));
+    setProg(null);
+    if (!ESCALAS.length || !ESCALAS.some(e=>e.rows.length)){
+      setStatus('⚠️ Não encontrei a tabela de policiais neste PDF. Confira se é a escala do SEI — ou lance à mão com <b>➕ Policial</b>. Veja o <b>📝 Texto lido</b> abaixo.', 'warn');
+      if (!ESCALAS.length) ESCALAS = [{ evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null, processo:'', sei_doc:'', equipes:[], policiais:[], avisos:[], rows:[], form:null, lancado:false }];
+    } else {
+      const n = ESCALAS.reduce((a,e)=>a+e.rows.length,0);
+      setStatus(`✅ <b>${esc(file.name)}</b> lido${viaOCR?' por OCR (PDF escaneado — confira nome e RE com atenção)':''}: ${n} policial(is) em ${ESCALAS.length} escala(s). Confira abaixo e lance.`, viaOCR ? 'warn' : 'ok');
+    }
+    CUR = 0; DUP_OK = false;
+    renderEscala();
+    $('rev').style.display = '';
+    $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
+  }catch(e){
+    setProg(null);
+    setStatus('❌ Não consegui ler o PDF: ' + esc(e.message || e), 'err');
+  }
+}
+
+// OCR de reserva (PDF escaneado): renderiza cada página e passa no Tesseract em português.
+// As palavras voltam com caixa (bbox) e entram no MESMO parser, na mesma escala do pdf.js.
+async function ocrPdf(doc){
+  setStatus('🔎 PDF sem texto (escaneado) — fazendo OCR. Pode levar cerca de 1 minuto…', 'warn');
+  if (!window.Tesseract) await loadScript(TESSERACT_JS);
+  const worker = await Tesseract.createWorker('por');
+  const items = [], SCALE = 2.5;
+  try{
+    for (let p=1; p<=doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const vp = page.getViewport({ scale: SCALE });
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+      await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+      setStatus(`🔎 OCR da página ${p} de ${doc.numPages}…`, 'warn');
+      const { data } = await worker.recognize(cv);
+      (data.words || []).forEach(w=>{
+        if (!w.text || w.confidence < 20) return;
+        items.push({ p, x: w.bbox.x0/SCALE, y: w.bbox.y1/SCALE, w: (w.bbox.x1-w.bbox.x0)/SCALE, h: (w.bbox.y1-w.bbox.y0)/SCALE, s: w.text });
+      });
+      setProg(0.55 + 0.4 * p / doc.numPages);
+    }
+  } finally { await worker.terminate(); }
+  return items;
+}
+
+/* ─────────────── ② conferência ─────────────── */
+function calcDiarias(ini, fim){
+  const a = new Date(ini+'T00:00:00'), b = new Date(fim+'T00:00:00');
+  if (!ini || !fim || isNaN(a) || isNaN(b) || b < a) return '';
+  return Math.round((b - a) / 86400000) + 1 - 0.5;   // dias corridos (inclusive) − 0,5
+}
+// Dois nomes "batem" se têm alguma palavra de 4+ letras em comum (mesma regra do Worker).
+function nomesBatem(a, b){
+  const tk = s => new Set(norm(s).split(/[^A-Z0-9]+/).filter(t=>t.length>=4 && !['JUNIOR','FILHO','NETO'].includes(t)));
+  const ta = tk(a), tb = tk(b);
+  if (!ta.size || !tb.size) return true;
+  for (const t of ta) if (tb.has(t)) return true;
+  return false;
+}
+function novaLinha(p){
+  const reg = EFET[shortRE(p.re)] || null;
+  const divergente = !!reg && !nomesBatem(p.nome, (reg.nome||'')+' '+(reg.guerra||''));
+  return {
+    on: true, equipe: p.equipe || '', posto: p.posto || (reg && reg.posto_grad) || '',
+    re: p.re || '', re_full: p.re_full || '', nome: p.nome || '',
+    guerra: (reg && !divergente) ? (reg.guerra || '') : '',
+    opm: p.opm || (reg && reg.opm) || '', funcao: p.funcao || '', localidade: p.localidade || '', tel: p.tel || '',
+    ini: p.ini || '', fim: p.fim || '', diarias: calcDiarias(p.ini, p.fim), diasManual: false,
+  };
+}
+function regDe(r){ return EFET[shortRE(r.re)] || null; }
+function isDivergente(r){ const reg = regDe(r); return !!reg && !!r.nome && !nomesBatem(r.nome, (reg.nome||'')+' '+(reg.guerra||'')); }
+function dpParse(s){
+  s = String(s||'').trim(); let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+// sobreposição de 2+ dias (1 dia de "toque" é deslocamento normal entre missões)
+function sobrepoem(iniA, fimA, iniB, fimB){
+  const a1=dpParse(iniA), b1=dpParse(iniB); if(!a1||!b1) return false;
+  const a2=dpParse(fimA)||a1, b2=dpParse(fimB)||b1;
+  const s = a1>b1?a1:b1, e = a2<b2?a2:b2; if (s>e) return false;
+  return Math.round((e-s)/86400000)+1 >= 2;
+}
+function conflitos(r){
+  if (!r.re || !r.ini) return [];
+  const p = (DATA && DATA.policiais || []).find(x=>shortRE(x.re)===shortRE(r.re));
+  return p ? (p.missoes||[]).filter(m=>sobrepoem(r.ini, r.fim, m.data_inicio, m.data_fim)) : [];
+}
+
+function renderEscala(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  // abas quando o PDF tem mais de um EVENTO
+  $('pills').innerHTML = ESCALAS.length > 1 ? ESCALAS.map((x,j)=>
+    `<span class="pill${j===CUR?' on':''}${x.lancado?' done':''}" onclick="trocarEscala(${j})">${x.lancado?'✅ ':''}${j+1}. ${esc((x.evento||'Escala').slice(0,60))} (${x.rows.length})</span>`).join('') : '';
+  const per = e.periodo ? `${isoToBR(e.periodo.ini)} a ${isoToBR(e.periodo.fim)}` : '—';
+  const decl = e.efetivo_declarado;
+  $('doc-strip').innerHTML = [
+    `📄 <b>${esc(PDF_META.arquivo)}</b>`,
+    e.sei_doc ? `SEI nº <b>${esc(e.sei_doc)}</b>` : '',
+    e.evento ? `Evento: <b>${esc(e.evento)}</b>` : '',
+    `Período: <b>${esc(per)}</b>`,
+    e.local ? `Patrulhamento: <b>${esc(e.local)}</b>` : '',
+    `Lidos: <b>${e.rows.length}</b>${decl!=null ? ` de <b>${decl}</b> declarados ${decl===e.rows.length?'✅':'⚠️'}` : ''}`,
+  ].filter(Boolean).map(s=>`<span>${s}</span>`).join('');
+
+  // formulário da missão: restaura o que o gestor já mexeu, senão vem do PDF
+  const f = e.form || {};
+  const lista = (DATA && DATA.listas && DATA.listas.operacoes) || [];
+  const match = f.op != null ? null : opMatch(e.operacao, lista);
+  $('m-op').value = f.op != null ? f.op : (match ? match.op : '');
+  $('m-etapa').value = f.etapa != null ? f.etapa : (e.etapa || '');
+  $('m-orgao').value = f.orgao != null ? f.orgao : (e.orgao_hint || '');
+  $('m-tipo').value = f.tipo || '';
+  $('m-valor').value = f.valor != null ? f.valor : '';
+  $('m-proc').value = f.proc != null ? f.proc : (e.processo || '');
+  if (!f.tipo) onTipo(true);
+  $('t-ini').value = e.periodo ? e.periodo.ini : ''; $('t-fim').value = e.periodo ? e.periodo.fim : '';
+  $('nova-op-nome').value = e.operacao || ''; $('nova-op-st').textContent = '';
+  onMissao();
+  renderTabela();
+}
+function salvarForm(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  e.form = { op:$('m-op').value, etapa:$('m-etapa').value, orgao:$('m-orgao').value, tipo:$('m-tipo').value, valor:$('m-valor').value, proc:$('m-proc').value };
+}
+function trocarEscala(j){ salvarForm(); CUR = j; DUP_OK = false; renderEscala(); }
+
+function onMissao(){
+  const op = $('m-op').value.trim(), et = $('m-etapa').value.trim();
+  $('m-id').value = (et ? et + ' ' : '') + op;
+  const e = ESCALAS[CUR] || {};
+  const box = $('op-match'), nova = $('nova-op');
+  if (op){
+    box.innerHTML = e.operacao && norm(op) !== norm(e.operacao) ? `<span class="muted">No PDF: "${esc(e.operacao)}"</span>` : '';
+    nova.classList.remove('open');
+  } else if (e.operacao){
+    box.innerHTML = `<span class="warn">⚠️ A operação do PDF ("${esc(e.operacao)}") não está na lista. Escolha uma parecida ou cadastre:</span>`;
+    nova.classList.add('open');
+  } else { box.innerHTML = ''; nova.classList.remove('open'); }
+  DUP_OK = false; resetSaveBtn();
+  renderAvisos();
+}
+function onTipo(silencioso){
+  const sel = $('m-tipo'), opt = sel.options[sel.selectedIndex];
+  const v = opt && opt.getAttribute('data-valor');
+  if (v) $('m-valor').value = v;
+  if (!silencioso) recalcAll();
+}
+
+function renderTabela(){
+  const e = ESCALAS[CUR]; const tb = $('tb');
+  let html = '', ultEq = null;
+  e.rows.forEach((r, i)=>{
+    if (r.equipe !== ultEq){
+      ultEq = r.equipe;
+      const eq = (e.equipes||[]).find(q=>q.nome===r.equipe);
+      const extra = eq ? [eq.area, eq.localidade && '📍 '+eq.localidade, eq.periodo && '🗓️ '+isoToBR(eq.periodo.ini)+' a '+isoToBR(eq.periodo.fim)].filter(Boolean).join(' · ') : '';
+      html += `<tr class="eq"><td colspan="13">👥 ${esc(r.equipe || 'Sem equipe')}${extra?` <span style="font-weight:500;color:#94a3b8">— ${esc(extra)}</span>`:''}</td></tr>`;
+    }
+    const inp = (k, cls, extra) => `<td class="${cls||''}"><input data-i="${i}" data-k="${k}" value="${esc(r[k])}" oninput="onCell(this)" ${extra||''}></td>`;
+    html += `<tr id="r-${i}" class="${r.on?'':'off'}">
+      <td><input type="checkbox" data-i="${i}" data-k="on" ${r.on?'checked':''} onchange="onCell(this)" style="width:auto;margin-top:8px"></td>
+      ${inp('posto','c-posto')}
+      ${inp('re','c-re','inputmode="numeric"')}
+      <td><input data-i="${i}" data-k="nome" value="${esc(r.nome)}" oninput="onCell(this)" class="nome-esc" style="min-width:230px"><div class="st" id="st-${i}"></div></td>
+      ${inp('guerra','c-guerra','placeholder="—"')}
+      ${inp('opm','c-opm')}
+      ${inp('funcao','c-fun')}
+      ${inp('localidade','c-loc','list="dl-locs"')}
+      ${inp('ini','c-dt','type="date"')}
+      ${inp('fim','c-dt','type="date"')}
+      ${inp('diarias','c-dd','type="number" step="0.5" min="0"')}
+      <td class="val" id="v-${i}"></td>
+      <td><button class="rm" title="Tirar da lista" onclick="rmLinha(${i})">✕</button></td>
+    </tr>`;
+  });
+  tb.innerHTML = html || '<tr><td colspan="13" class="empty">Nenhum policial. Use ➕ Policial para lançar à mão.</td></tr>';
+  e.rows.forEach((r,i)=>atualizaStatus(i));
+  recalcAll();
+}
+
+function atualizaStatus(i){
+  const e = ESCALAS[CUR], r = e.rows[i], el = $('st-'+i); if (!el) return;
+  const reg = regDe(r), tr = $('r-'+i);
+  const partes = [];
+  if (!r.re) partes.push('<span class="warn">sem RE</span>');
+  else if (reg && isDivergente(r)) partes.push(`<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`);
+  else if (reg) partes.push(`<span class="ok">✓ cadastro: ${esc(reg.guerra||reg.nome)}${reg.posto_grad?' · '+esc(reg.posto_grad):''}</span>`);
+  else partes.push('<span class="warn">⚠️ fora do cadastro — digite o nome de guerra</span>');
+  const reps = r.re ? e.rows.filter(x=>x.on && shortRE(x.re)===shortRE(r.re)).length : 0;
+  if (r.on && reps > 1) partes.push('<span class="err">RE repetido nesta escala</span>');
+  conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn">⚠️ já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
+  el.innerHTML = partes.join('<br>');
+  if (tr) tr.className = (r.on ? '' : 'off') + (isDivergente(r) ? ' div' : '');
+}
+
+function onCell(el){
+  const i = +el.dataset.i, k = el.dataset.k, r = ESCALAS[CUR].rows[i];
+  if (k === 'on') r.on = el.checked;
+  else r[k] = el.value;
+  if (k === 're'){
+    const reg = regDe(r);
+    const g = document.querySelector(`input[data-i="${i}"][data-k="guerra"]`);
+    if (reg && !isDivergente(r) && g && !g.value){ r.guerra = reg.guerra || ''; g.value = r.guerra; }
+    ESCALAS[CUR].rows.forEach((x,j)=>{ if (j!==i && shortRE(x.re)===shortRE(r.re)) atualizaStatus(j); });
+  }
+  if (k === 'ini' || k === 'fim'){
+    if (!r.diasManual){
+      r.diarias = calcDiarias(r.ini, r.fim);
+      const d = document.querySelector(`input[data-i="${i}"][data-k="diarias"]`); if (d) d.value = r.diarias;
+    }
+  }
+  if (k === 'diarias') r.diasManual = true;
+  DUP_OK = false; resetSaveBtn();
+  atualizaStatus(i); recalcAll();
+}
+function rmLinha(i){ ESCALAS[CUR].rows.splice(i,1); DUP_OK=false; resetSaveBtn(); renderTabela(); renderAvisos(); }
+function addLinha(){
+  const e = ESCALAS[CUR];
+  e.rows.push({ on:true, equipe:'LANÇADO À MÃO', posto:'', re:'', re_full:'', nome:'', guerra:'', opm:'', funcao:'', localidade:'',
+    ini:$('t-ini').value, fim:$('t-fim').value, diarias:calcDiarias($('t-ini').value, $('t-fim').value), diasManual:false });
+  renderTabela();
+  const ult = document.querySelector(`input[data-i="${e.rows.length-1}"][data-k="re"]`); if (ult) ult.focus();
+}
+function aplicarPeriodoTodos(){
+  const ini = $('t-ini').value, fim = $('t-fim').value;
+  if (!ini || !fim){ alert('Preencha início e término.'); return; }
+  ESCALAS[CUR].rows.forEach(r=>{ r.ini=ini; r.fim=fim; r.diarias=calcDiarias(ini,fim); r.diasManual=false; });
+  DUP_OK=false; resetSaveBtn(); renderTabela(); renderAvisos();
+}
+function aplicarLocalVazios(){
+  const v = ($('t-loc').value||'').trim().toUpperCase(); if (!v) return;
+  ESCALAS[CUR].rows.forEach(r=>{ if (!String(r.localidade||'').trim()) r.localidade = v; });
+  renderTabela(); renderAvisos();
+}
+
+function recalcAll(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  const valor = parseFloat(String($('m-valor').value).replace(',','.')) || 0;
+  let n=0, dd=0, tot=0;
+  e.rows.forEach((r,i)=>{
+    const d = parseFloat(String(r.diarias).replace(',','.')) || 0;
+    const v = d * valor;
+    const cell = $('v-'+i); if (cell) cell.textContent = valor ? fR(v) : '—';
+    if (r.on){ n++; dd += d; tot += v; }
+  });
+  $('calc').innerHTML = `<b>${n}</b> policial(is) · <b>${fN(dd)}</b> diárias × <b>${fR(valor)}</b> = <b>${fR(tot)}</b>`;
+  const btn = $('save-btn');
+  if (!DUP_OK) btn.textContent = `💾 Lançar ${n} policial(is)`;
+  btn.disabled = !n || e.lancado;
+  if (e.lancado) btn.textContent = '✅ Já lançada';
+  renderAvisos();
+  renderConf();
+}
+// Quadro de conferência: total que o DOCUMENTO declara ("EFETIVO ESCALADO: N") × quantos a
+// leitura achou × quantos estão marcados para lançar. É o que o gestor olha antes de lançar.
+function renderConf(){
+  const e = ESCALAS[CUR], box = $('conf-box'); if (!e || !box) return;
+  const decl = e.efetivo_declarado, lidos = e.rows.length, marc = e.rows.filter(r=>r.on).length;
+  const eqs = new Set(e.rows.map(r=>r.equipe)).size;
+  let cls = 'na', msg;
+  if (decl == null) msg = '⚠️ O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
+  else if (decl === marc) { cls = 'ok'; msg = `✅ Os números batem: o documento declara ${decl} e serão lançados ${marc}.`; }
+  else { cls = 'bad'; msg = `⛔ Não bate: o documento declara ${decl}, a leitura achou ${lidos}${marc!==lidos ? ` e estão marcados ${marc}` : ''}. Confira quem falta ou sobra antes de lançar.`; }
+  box.className = 'conf ' + cls;
+  box.innerHTML = `<span>📋 No documento:<b class="n">${decl==null ? '—' : decl}</b></span><span>📖 Lidos:<b class="n">${lidos}</b></span>`
+    + `<span>✔️ A lançar:<b class="n">${marc}</b></span><span>👥 Guarnições:<b class="n">${eqs}</b></span><span class="msg">${msg}</span>`;
+}
+function resetSaveBtn(){ const b=$('save-btn'); b.classList.remove('orange'); $('save-err').innerHTML=''; }
+
+// Avisos gerais da escala aberta (não travam; os que exigem confirmação ficam no salvar()).
+function renderAvisos(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  const on = e.rows.filter(r=>r.on);
+  // (a contagem declarada × lida fica no quadro de conferência, não repete aqui)
+  const av = e.avisos.filter(t=>!/^O documento declara/.test(t)).map(t=>`<div class="aviso">⚠️ ${esc(t)}</div>`);
+  const jaLote = jaLancado(e);
+  if (jaLote) av.unshift(`<div class="aviso err">⛔ Este documento (SEI ${esc(e.sei_doc)}) já foi lançado em ${esc(jaLote.lancado_em)} por ${esc(NOMES[jaLote.lancado_por]||jaLote.lancado_por)} — ${jaLote.policiais} policiais, ${fR(jaLote.valor_total)}. Não lance de novo; se precisar corrigir, exclua a escala em ③ e relance.</div>`);
+  const div = on.filter(isDivergente).length;
+  if (div) av.push(`<div class="aviso err">⛔ ${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE antes de lançar.</div>`);
+  const fora = on.filter(r=>r.re && !regDe(r)).length;
+  if (fora) av.push(`<div class="aviso">⚠️ ${fora} policial(is) fora do cadastro POLICIAIS. Digite o nome de guerra — com a caixa marcada lá embaixo, eles são cadastrados ao lançar.</div>`);
+  const conf = on.filter(r=>conflitos(r).length).length;
+  if (conf) av.push(`<div class="aviso">⚠️ ${conf} policial(is) já têm outra missão lançada em período que cruza com este (2+ dias).</div>`);
+  if (!av.length && on.length) av.push('<div class="aviso ok">✅ Tudo conferido: todos no cadastro, sem período sobreposto.</div>');
+  $('avisos').innerHTML = av.join('');
+}
+function jaLancado(e){
+  if (!e || !e.sei_doc || !DATA) return null;
+  const id = norm($('m-id').value);
+  return (DATA.lotes||[]).find(l=>String(l.sei_doc)===String(e.sei_doc) && (!id || norm(l.id_missao)===id)) || null;
+}
+
+/* ─────────────── gravar ─────────────── */
+async function salvar(){
+  const e = ESCALAS[CUR]; if (!e || e.lancado) return;
+  salvarForm();
+  const err = $('save-err'); err.innerHTML = '';
+  const op = $('m-op').value.trim(), idm = $('m-id').value.trim(), orgao = $('m-orgao').value.trim().toUpperCase();
+  const tipo = $('m-tipo').value, valor = parseFloat(String($('m-valor').value).replace(',','.')) || 0;
+  const fail = m => { err.innerHTML = `<span class="err">${m}</span>`; };
+  if (!op) return fail('Escolha a operação na lista (ou cadastre a do PDF).');
+  if (!orgao) return fail('Informe o órgão.');
+  if (!tipo) return fail('Escolha o tipo de diária.');
+  if (valor <= 0) return fail('Informe o valor da diária.');
+  const on = e.rows.filter(r=>r.on);
+  if (!on.length) return fail('Nenhum policial marcado para lançar.');
+  for (const r of on){
+    const quem = esc(r.nome || r.guerra || ('RE '+r.re));
+    if (!r.re && !r.guerra && !r.nome) return fail('Há linha sem RE e sem nome.');
+    if (!r.ini || !r.fim) return fail(`${quem}: preencha início e término.`);
+    if (dpParse(r.fim) < dpParse(r.ini)) return fail(`${quem}: o término é antes do início.`);
+    if (!(parseFloat(r.diarias) > 0)) return fail(`${quem}: nº de diárias inválido.`);
+  }
+  const res = on.map(r=>shortRE(r.re)).filter(Boolean);
+  const rep = res.filter((x,i)=>res.indexOf(x)!==i);
+  if (rep.length) return fail(`RE repetido na escala: ${[...new Set(rep)].join(', ')}. Tire a linha duplicada.`);
+
+  // Avisos que exigem 2º clique ("Lançar mesmo assim")
+  if (!DUP_OK){
+    const motivos = [];
+    const lote = jaLancado(e);
+    if (lote) motivos.push(`este documento SEI já foi lançado em ${esc(lote.lancado_em)}`);
+    const div = on.filter(isDivergente); if (div.length) motivos.push(`${div.length} com RE de outra pessoa no cadastro`);
+    const conf = on.filter(r=>conflitos(r).length); if (conf.length) motivos.push(`${conf.length} já com missão em período sobreposto (${conf.slice(0,5).map(r=>esc(r.guerra||r.nome)).join(', ')}${conf.length>5?'…':''})`);
+    if (e.efetivo_declarado!=null && e.efetivo_declarado!==on.length) motivos.push(`o documento declara ${e.efetivo_declarado} policiais e serão lançados ${on.length}`);
+    if (motivos.length){
+      DUP_OK = true;
+      err.innerHTML = `<span class="warn">⚠️ Confira antes de lançar: ${motivos.join('; ')}. Se estiver certo, clique de novo em <b>Lançar mesmo assim</b>.</span>`;
+      const b = $('save-btn'); b.textContent = '⚠️ Lançar mesmo assim'; b.classList.add('orange');
+      return;
+    }
+  }
+
+  const inis = on.map(r=>r.ini).sort(), fims = on.map(r=>r.fim).sort();
+  const missao = { operacao:op, id_missao:idm, orgao, tipo_diaria:tipo, valor_diaria:valor, processo:$('m-proc').value.trim() || 'NÃO',
+    municipio:'', data_inicio:inis[0], data_fim:fims[fims.length-1], sei_doc:e.sei_doc||'', arquivo:PDF_META.arquivo, hash:PDF_META.hash,
+    evento:e.evento||'', etapa:$('m-etapa').value.trim(), local:e.local||'', efetivo_declarado:e.efetivo_declarado };
+  // uma linha por guarnição (aba GUARNICOES da planilha de missões)
+  const eqMap = {};
+  on.forEach(r=>{
+    const k = r.equipe || 'SEM EQUIPE';
+    const g = eqMap[k] || (eqMap[k] = { equipe:k, area:'', localidade:'', inicio:r.ini, fim:r.fim, qtd:0, comandante:'', diarias:0 });
+    const eq = (e.equipes||[]).find(q=>q.nome===r.equipe);
+    if (eq && eq.area) g.area = eq.area;
+    if (!g.localidade && r.localidade) g.localidade = String(r.localidade).toUpperCase();
+    if (r.ini < g.inicio) g.inicio = r.ini;
+    if (r.fim > g.fim) g.fim = r.fim;
+    g.qtd++; g.diarias += parseFloat(r.diarias) || 0;
+    if (!g.comandante && /^CMT$/i.test(r.funcao)) g.comandante = `${r.posto} ${r.nome || r.guerra}`.trim();
+  });
+  const guarnicoes = Object.values(eqMap).map(g=>({ ...g, valor_total: g.diarias * valor }));
+  const policiais = on.map(r=>{
+    const reg = regDe(r);
+    return { re: shortRE(r.re), guerra: (r.guerra || (reg && !isDivergente(r) ? reg.guerra : '') || r.nome).toUpperCase(),
+      posto_grad: r.posto.toUpperCase(), opm: r.opm.toUpperCase(), municipio: String(r.localidade||'').toUpperCase(),
+      data_inicio: r.ini, data_fim: r.fim, diarias: parseFloat(r.diarias), funcao: r.funcao, nome_completo: r.nome, equipe: r.equipe,
+      contato: r.tel || '' };
+  });
+  const btn = $('save-btn'); btn.disabled = true; btn.textContent = 'Lançando…';
+  try{
+    const out = await apiPostJSON('/api/diaria/save', { op:'add', missao, policiais, guarnicoes, forcar: DUP_OK });
+    if (out.avisos && out.avisos.length) console.warn('[diaria] avisos do lançamento:', out.avisos);
+    // cadastra na aba POLICIAIS quem estava fora do cadastro e ganhou nome de guerra
+    let cad = 0, cadErr = 0;
+    if ($('cad-faltantes').checked){
+      const falt = on.filter(r=>r.re && !regDe(r) && String(r.guerra||'').trim());
+      for (const [k, r] of falt.entries()){
+        setStatus(`✅ ${out.inseridos} lançados · cadastrando na aba POLICIAIS ${k+1} de ${falt.length}…`, 'ok');
+        try{
+          await apiPostJSON('/api/diaria/policial', { re: shortRE(r.re), criar:true,
+            dados:{ guerra:r.guerra, nome:r.nome, posto_grad:r.posto, opm:r.opm } });
+          cad++;
+        }catch(x){ cadErr++; }
+      }
+    }
+    e.lancado = true; DUP_OK = false;
+    await carregar();
+    const prox = ESCALAS.findIndex(x=>!x.lancado);
+    const decl = e.efetivo_declarado;
+    const bate = decl == null ? '' : (decl === out.inseridos ? ` — <b>bateu</b> com os ${decl} do documento ✅` : ` — <span class="err">o documento declarava ${decl} ⚠️</span>`);
+    setStatus(`✅ Lançado: <b>${out.inseridos}</b> policial(is) em "${esc(idm)}"${bate}${cad?` · ${cad} cadastrado(s) na aba POLICIAIS`:''}${cadErr?` <span class="err">(${cadErr} cadastro(s) falharam)</span>`:''}.` +
+      (prox >= 0 ? ' Falta lançar a próxima escala deste PDF.' : ' Pode enviar outro PDF.'), 'ok');
+    if (prox >= 0){ CUR = prox; renderEscala(); }
+    else { $('rev').style.display='none'; ESCALAS=[]; window.scrollTo({ top:0, behavior:'smooth' }); }
+  }catch(x){
+    btn.disabled = false; btn.textContent = '💾 Lançar';
+    if (x.code === 'ja_lancado'){
+      DUP_OK = true; btn.textContent = '⚠️ Lançar mesmo assim'; btn.classList.add('orange');
+      err.innerHTML = `<span class="warn">⚠️ ${esc(x.message)}</span>`;
+    } else err.innerHTML = `<span class="err">❌ ${esc(x.message || 'Erro ao lançar.')}</span>`;
+  }
+}
+function descartar(){
+  if (ESCALAS.some(e=>!e.lancado && e.rows.length) && !window.confirm('Descartar a leitura deste PDF? Nada foi lançado ainda.')) return;
+  ESCALAS = []; $('rev').style.display='none'; setStatus('');
+}
+
+/* ─────────────── ver PDF / texto lido ─────────────── */
+async function togglePdf(){
+  const box = $('pdf-view');
+  if (box.style.display === 'block'){ box.style.display='none'; return; }
+  box.style.display = 'block';
+  if (box.childElementCount || !PDF_DOC) return;
+  for (let p=1; p<=PDF_DOC.numPages; p++){
+    const page = await PDF_DOC.getPage(p), vp = page.getViewport({ scale:1.6 });
+    const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+    box.appendChild(cv);
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+  }
+}
+function toggleRaw(){ const b=$('raw-view'); const vis = b.style.display==='block'; b.style.display = vis?'none':'block'; if(!vis) b.textContent = RAW_TEXT || '(nada lido)'; }
+
+boot();
+</script>
+</body>
+</html>
