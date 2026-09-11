@@ -63,6 +63,21 @@ input[readonly]{opacity:.8;cursor:not-allowed}
 .prog{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:8px;display:none}
 .prog>div{height:100%;width:0;background:linear-gradient(90deg,#F5C518,#e0a800);transition:width .2s}
 
+/* tela de carregamento (leitura do PDF / OCR / lançamento) — escala de 100+ nomes demora */
+#load-ovl{position:fixed;inset:0;z-index:99998;background:rgba(2,6,15,.82);display:none;align-items:center;justify-content:center;padding:16px}
+.load-card{background:var(--bg2);border:1px solid rgba(245,197,24,.35);border-radius:16px;padding:26px 28px;width:100%;max-width:430px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.load-spin{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid rgba(245,197,24,.18);border-top-color:var(--yellow);animation:load-rot .8s linear infinite}
+@keyframes load-rot{to{transform:rotate(360deg)}}
+.load-tit{font:800 16px 'Inter',sans-serif;color:var(--yellow);margin-bottom:6px}
+.load-sub{font-size:13.5px;color:var(--text);min-height:20px;line-height:1.5}
+.load-bar{height:8px;background:#111827;border-radius:99px;overflow:hidden;margin:14px 0 8px}
+.load-bar>div{height:100%;width:0;background:linear-gradient(90deg,#F5C518,#e0a800);transition:width .25s}
+.load-bar.ind>div{width:38%;animation:load-slide 1.1s ease-in-out infinite}
+@keyframes load-slide{0%{margin-left:-38%}100%{margin-left:100%}}
+.load-pct{font:700 12px 'Inter',sans-serif;color:var(--muted);min-height:15px}
+.load-hint{font-size:12px;color:var(--muted);margin-top:10px}
+@media (prefers-reduced-motion:reduce){.load-spin,.load-bar.ind>div{animation:none}}
+
 /* passo 2: revisão */
 .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pill{border:1px solid #334155;background:rgba(148,163,184,.08);color:#cbd5e1;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
@@ -755,6 +770,45 @@ let ESCALAS = [], CUR = 0, DUP_OK = false;
 function setStatus(html, cls){ const el=$('read-status'); el.className = cls || 'muted'; el.innerHTML = html; }
 function setProg(frac){ const p=$('prog'); if(frac==null){ p.style.display='none'; return; } p.style.display='block'; p.firstElementChild.style.width = Math.round(frac*100)+'%'; }
 function loadScript(src){ return new Promise((ok, fail)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>fail(new Error('Falha ao carregar '+src)); document.head.appendChild(s); }); }
+
+/* ── Tela de carregamento (pedido do usuário, 11/09/2026) ──
+   Escala de 100+ nomes demora tanto na leitura/OCR quanto no lançamento (o cadastro
+   dos faltantes é 1 requisição por policial). A tela cobre a página, diz em que passo
+   está e quanto falta. loadHide() TEM que estar no finally de quem abriu, senão a
+   página trava coberta. loadProg(null) = barra indeterminada (não dá pra medir). */
+let LOAD_EL = null;
+function loadShow(titulo, sub){
+  if (!LOAD_EL){
+    LOAD_EL = document.createElement('div');
+    LOAD_EL.id = 'load-ovl';
+    LOAD_EL.innerHTML = `<div class="load-card" role="status" aria-live="polite">
+      <div class="load-spin"></div>
+      <div class="load-tit"></div>
+      <div class="load-sub"></div>
+      <div class="load-bar"><div></div></div>
+      <div class="load-pct"></div>
+      <div class="load-hint">⚠️ Não feche nem atualize esta página.</div>
+    </div>`;
+    document.body.appendChild(LOAD_EL);
+  }
+  LOAD_EL.querySelector('.load-tit').textContent = titulo || 'Processando…';
+  loadProg(null);
+  loadStep(sub || '');
+  LOAD_EL.style.display = 'flex';
+}
+function loadStep(sub){ if (LOAD_EL) LOAD_EL.querySelector('.load-sub').textContent = sub || ''; }
+function loadProg(frac){
+  if (!LOAD_EL) return;
+  const bar = LOAD_EL.querySelector('.load-bar'), pct = LOAD_EL.querySelector('.load-pct');
+  if (frac == null){ bar.classList.add('ind'); pct.textContent = ''; return; }
+  bar.classList.remove('ind');
+  const v = Math.max(0, Math.min(1, frac));
+  bar.firstElementChild.style.width = (v*100).toFixed(1) + '%';
+  pct.textContent = Math.round(v*100) + '%';
+}
+function loadHide(){ if (LOAD_EL) LOAD_EL.style.display = 'none'; }
+// deixa o navegador desenhar antes de um trecho pesado e síncrono (parser, tabela)
+function pausa(ms){ return new Promise(r=>setTimeout(r, ms || 30)); }
 async function sha16(buf){
   try{ const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16); }
   catch(e){ return ''; }
@@ -766,6 +820,7 @@ async function lerArquivo(file){
   if (!window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
   $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
   setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
+  loadShow('Lendo o PDF', 'Abrindo ' + file.name + '…');
   try{
     const buf = await file.arrayBuffer();
     PDF_META = { arquivo: file.name, hash: await sha16(buf.slice(0)) };
@@ -781,6 +836,8 @@ async function lerArquivo(file){
         items.push({ p, x: it.transform[4], y: vp.height - it.transform[5], w: it.width, h: it.height || Math.abs(it.transform[3]) || 6, s: it.str });
       }
       setProg(0.05 + 0.5 * p / PDF_DOC.numPages);
+      loadStep(`Lendo a página ${p} de ${PDF_DOC.numPages}…`);
+      loadProg(0.05 + 0.5 * p / PDF_DOC.numPages);
     }
     let viaOCR = false;
     const chars = items.reduce((a,o)=>a + String(o.s).trim().length, 0);
@@ -788,6 +845,7 @@ async function lerArquivo(file){
       viaOCR = true;
       items = await ocrPdf(PDF_DOC);
     }
+    loadStep('Organizando os nomes lidos…'); loadProg(0.9); await pausa();
     const linhas = epLines(items);
     RAW_TEXT = linhas.map(L=>`p${L.p} │ ${L.text}`).join('\n');
     const escalas = parseEscalaItems(items);
@@ -801,12 +859,15 @@ async function lerArquivo(file){
       setStatus(`✅ <b>${esc(file.name)}</b> lido${viaOCR?' por OCR (PDF escaneado — confira nome e RE com atenção)':''}: ${n} policial(is) em ${ESCALAS.length} escala(s). Confira abaixo e lance.`, viaOCR ? 'warn' : 'ok');
     }
     CUR = 0; DUP_OK = false;
+    loadStep('Montando a tabela de conferência…'); loadProg(1); await pausa();
     renderEscala();
     $('rev').style.display = '';
     $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
   }catch(e){
     setProg(null);
     setStatus('❌ Não consegui ler o PDF: ' + esc(e.message || e), 'err');
+  } finally {
+    loadHide();   // sem isto a página fica coberta pela tela de carregamento
   }
 }
 
@@ -814,6 +875,7 @@ async function lerArquivo(file){
 // As palavras voltam com caixa (bbox) e entram no MESMO parser, na mesma escala do pdf.js.
 async function ocrPdf(doc){
   setStatus('🔎 PDF sem texto (escaneado) — fazendo OCR. Pode levar cerca de 1 minuto…', 'warn');
+  loadShow('Reconhecendo o texto (OCR)', 'Este PDF é escaneado. Carregando o leitor de OCR…');
   if (!window.Tesseract) await loadScript(TESSERACT_JS);
   const worker = await Tesseract.createWorker('por');
   const items = [], SCALE = 2.5;
@@ -824,6 +886,8 @@ async function ocrPdf(doc){
       const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
       await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
       setStatus(`🔎 OCR da página ${p} de ${doc.numPages}…`, 'warn');
+      loadStep(`Reconhecendo a página ${p} de ${doc.numPages}… (esta é a parte mais lenta)`);
+      loadProg(0.55 + 0.4 * (p - 1) / doc.numPages);
       const { data } = await worker.recognize(cv);
       (data.words || []).forEach(w=>{
         if (!w.text || w.confidence < 20) return;
@@ -1152,6 +1216,7 @@ async function salvar(){
       contato: r.tel || '' };
   });
   const btn = $('save-btn'); btn.disabled = true; btn.textContent = 'Lançando…';
+  loadShow('Lançando a escala', `Enviando ${policiais.length} policial(is) para a planilha…`);
   try{
     const out = await apiPostJSON('/api/diaria/save', { op:'add', missao, policiais, guarnicoes, forcar: DUP_OK });
     if (out.avisos && out.avisos.length) console.warn('[diaria] avisos do lançamento:', out.avisos);
@@ -1161,6 +1226,8 @@ async function salvar(){
       const falt = on.filter(r=>r.re && !regDe(r) && String(r.guerra||'').trim());
       for (const [k, r] of falt.entries()){
         setStatus(`✅ ${out.inseridos} lançados · cadastrando na aba POLICIAIS ${k+1} de ${falt.length}…`, 'ok');
+        loadStep(`Lançado! Agora cadastrando quem faltava na aba POLICIAIS: ${k+1} de ${falt.length}…`);
+        loadProg((k + 1) / falt.length);
         try{
           await apiPostJSON('/api/diaria/policial', { re: shortRE(r.re), criar:true,
             dados:{ guerra:r.guerra, nome:r.nome, posto_grad:r.posto, opm:r.opm } });
@@ -1169,6 +1236,7 @@ async function salvar(){
       }
     }
     e.lancado = true; DUP_OK = false;
+    loadStep('Atualizando a lista de escalas lançadas…'); loadProg(null);
     await carregar();
     const prox = ESCALAS.findIndex(x=>!x.lancado);
     const decl = e.efetivo_declarado;
@@ -1183,6 +1251,8 @@ async function salvar(){
       DUP_OK = true; btn.textContent = '⚠️ Lançar mesmo assim'; btn.classList.add('orange');
       err.innerHTML = `<span class="warn">⚠️ ${esc(x.message)}</span>`;
     } else err.innerHTML = `<span class="err">❌ ${esc(x.message || 'Erro ao lançar.')}</span>`;
+  } finally {
+    loadHide();   // sem isto a página fica coberta pela tela de carregamento
   }
 }
 function descartar(){
