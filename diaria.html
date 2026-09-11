@@ -653,6 +653,17 @@ function parseEscalaItems(items, opts){
 
   const escalas=[];
   let esc=null, team=null, cols=null, lastArea='';
+  /* Nome quebrado em 2 linhas: a 1ª linha pode vir ANTES da linha do RE (célula
+     alinhada embaixo) ou DEPOIS. Não dá pra decidir na hora — segura a linha órfã
+     e resolve quando souber a distância do próximo policial. Antes o código colava
+     sempre no policial ANTERIOR e trocava o nome de duas pessoas (caso real:
+     "JAQUELINE ... BARRÊTO" foi parar no PAULO ROBERTO, 11/09/2026). */
+  let pendNome = null;
+  const flushPend = ()=>{
+    if(pendNome && pendNome.prev && pendNome.prevDist < 14)
+      pendNome.prev.nome = epClean(pendNome.prev.nome + ' ' + pendNome.texto);
+    pendNome = null;
+  };
   const novaEscala = ()=>{
     esc = { evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null,
             processo, sei_doc, equipes:[], policiais:[], avisos:[] };
@@ -670,11 +681,12 @@ function parseEscalaItems(items, opts){
     if(/^LOCAL DO PATRULHAMENTO\s*:/i.test(t)){ esc.local = epClean(t.replace(/^LOCAL DO PATRULHAMENTO\s*:/i,'')).replace(/\.$/,''); continue; }
     if(/^PER[IÍ]ODO\s*:/i.test(t)){ esc.periodo = epPeriodo(t.replace(/^PER[IÍ]ODO\s*:/i,''), ano); continue; }
     const efM = T.match(/EFETIVO ESCALADO\s*:?\s*(\d+)/); if(efM){ esc.efetivo_declarado = (esc.efetivo_declarado||0) + (+efM[1]); continue; }
-    if(/^OBS\b/i.test(t)){ cols=null; team=null; continue; }        // fim da tabela
+    if(/^OBS\b/i.test(t)){ flushPend(); cols=null; team=null; continue; }        // fim da tabela
     if(epIsNoise(t)) continue;
     // cabeçalho da equipe
     if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)){
-      team = { nome: epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'', periodo:null };
+      flushPend();
+      team = { nome: epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'', periodo:null, _loc:[] };
       esc.equipes.push(team); lastArea='';
       continue;
     }
@@ -707,32 +719,45 @@ function parseEscalaItems(items, opts){
         if(c.x < reCell.x){ pol.posto = epClean(pol.posto+' '+s); continue; }
         if(epIsPhone(s)){ pol.tel = epClean(pol.tel+' '+s); continue; }
         if(EP_FUNC.test(s)){ pol.funcao = s.toUpperCase(); continue; }
-        if(c.x >= locX){ pol.localidade = epClean(pol.localidade+' '+s); continue; }
+        if(c.x >= locX){ pol.localidade = epClean(pol.localidade+' '+s); if(team && team._loc) team._loc.push({ y:L.y, s }); continue; }
         if(!pol.nome){ pol.nome=s; continue; }
         if(!pol.opm && (EP_OPM.test(s) || (cols && cols.opm!=null && c.x >= cols.opm-25))){ pol.opm=s; continue; }
         if(!pol.opm){ pol.nome = epClean(pol.nome+' '+s); continue; }
         if(!pol.funcao){ pol.funcao=s; continue; }
         pol.localidade = epClean(pol.localidade+' '+s);
       }
+      // a linha órfã guardada é DESTE policial se ele estiver mais perto que o anterior
+      const dPend = pendNome && pendNome.p===L.p ? Math.abs(L.y - pendNome.y) : Infinity;
+      if(dPend < 14 && dPend <= pendNome.prevDist){
+        pol.nome = epClean(pendNome.texto + ' ' + pol.nome);
+        pendNome = null;
+      } else flushPend();
       esc.policiais.push(pol);
       continue;
     }
     // linha solta dentro da tabela: localidade (célula mesclada) ou continuação de nome
     if(cols){
       const locX = cols.loc!=null ? cols.loc - 25 : Infinity;
-      const soLoc = L.cells.every(c=>c.x >= locX);
-      if(soLoc){ if(team) team.localidade = epClean((team.localidade?team.localidade+' ':'')+t); else lastArea=''; continue; }
-      // continuação de nome quebrado em 2 linhas: vai para o policial mais próximo em y
+      const locCells = L.cells.filter(c=>c.x >= locX);
+      if(locCells.length === L.cells.length){ if(team){ team.localidade = epClean((team.localidade?team.localidade+' ':'')+t); if(team._loc) team._loc.push({ y:L.y, s:t }); } else lastArea=''; continue; }
+      // continuação de nome quebrado em 2 linhas: vai para o policial mais próximo em y.
+      // A continuação pode vir GRUDADA na localidade mesclada (y quase igual, viram a
+      // mesma linha) — caso real "ALEXANDRE ... BRASIL" + "ABUNÃ", 11/09/2026. Então
+      // aceita a linha mista e separa cada pedaço no seu lugar.
       const nomeCells = L.cells.filter(c=> cols.nome!=null && c.x < (cols.opm!=null?cols.opm-25:locX) && c.x > (cols.re||0)+10 && !epIsRE(c.s));
-      if(nomeCells.length && nomeCells.length===L.cells.length){
+      if(nomeCells.length && nomeCells.length + locCells.length === L.cells.length){
+        if(locCells.length && team && team._loc) locCells.forEach(c=>team._loc.push({ y:L.y, s:c.s }));
         let best=null, bd=Infinity;
         for(const p of esc.policiais){ if(p._p!==L.p) continue; const d=Math.abs(p._y-L.y); if(d<bd){ bd=d; best=p; } }
-        if(best && bd < 14){ best.nome = epClean(best.nome+' '+nomeCells.map(c=>c.s).join(' ')); continue; }
+        flushPend();
+        pendNome = { texto: nomeCells.map(c=>c.s).join(' '), y:L.y, p:L.p, prev:best, prevDist:bd };
+        continue;
       }
     }
     // linha curta antes do cabeçalho da equipe ("FRONTEIRA/NOVA MUTUM - BPFRON") = área da equipe
-    if(L.cells.length===1 && t.length<60 && /[A-Z]/.test(t)) lastArea = t;
+    if(L.cells.length===1 && t.length<60 && /[A-Z]/.test(t)){ flushPend(); lastArea = t; }
   }
+  flushPend();   // sobrou linha órfã no fim do documento
 
   // pós-processamento: localidade/período herdados da equipe, limpeza e avisos
   for(const e of escalas){
@@ -743,15 +768,28 @@ function parseEscalaItems(items, opts){
     e.operacao = epClean(qM ? qM[1] : ev.replace(/^\s*\d+\s*[ªº°]\s*(ETAPA\s*(DA|DE)?\s*)?/,'').replace(/\s*-\s*[A-Z]{2,}\s*$/,'')).toUpperCase();
     const orgM = e.evento.match(/[-–]\s*([A-Za-z]{2,}(?:\s*\/\s*[A-Za-z]{2,})?)\s*$/);
     if(orgM) e.orgao_hint = orgM[1].toUpperCase();
+    /* LOCALIDADE é célula mesclada POR GUARNIÇÃO e pode quebrar em 2 linhas
+       ("MACHADINHO" + "D'OESTE"): junta os pedaços da equipe na ordem em que aparecem
+       e devolve o valor inteiro a quem ficou com um pedaço só — ou vazio. Só substitui
+       quando o pedaço da linha ESTÁ CONTIDO no valor da equipe, então escala com
+       localidade diferente por policial não é sobrescrita. 11/09/2026. */
+    for(const q of (e.equipes||[])){
+      if(!q._loc || !q._loc.length) continue;
+      const txt = epClean(q._loc.slice().sort((a,b)=>a.y-b.y).map(f=>f.s).join(' '));
+      if(txt.length > String(q.localidade||'').length) q.localidade = txt;
+    }
     for(const p of e.policiais){
       const tm = p._team || {};
-      if(!p.localidade) p.localidade = tm.localidade || '';
+      const tl = String(tm.localidade || '');
+      if(!p.localidade) p.localidade = tl;
+      else if(tl.length > p.localidade.length && norm(tl).includes(norm(p.localidade))) p.localidade = tl;
       const per = tm.periodo || e.periodo || {};
       p.ini = per.ini || ''; p.fim = per.fim || '';
       p.posto = p.posto.replace(/\s+/g,' ').toUpperCase();
       p.nome = p.nome.toUpperCase();
       delete p._team; delete p._y; delete p._p;
     }
+    (e.equipes||[]).forEach(q=>{ delete q._loc; });
     if(e.efetivo_declarado!=null && e.efetivo_declarado!==e.policiais.length)
       e.avisos.push(`O documento declara ${e.efetivo_declarado} policiais no efetivo escalado, mas a leitura encontrou ${e.policiais.length}. Confira se falta alguém.`);
     const semLoc = e.policiais.filter(p=>!p.localidade).length;
