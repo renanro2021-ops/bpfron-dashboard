@@ -264,7 +264,7 @@ table.lotes td:nth-child(2){min-width:320px}
     <div class="sec">③ Escalas já lançadas <small class="muted" id="lotes-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
     <div class="card">
       <div class="tbl-wrap" style="border:none"><div id="lotes"><div class="empty">Carregando…</div></div></div>
-      <div class="hint" style="margin-top:10px"><a id="mis-link" class="btn gray sm" target="_blank" rel="noopener" style="display:none;text-decoration:none;margin-right:8px">📊 Abrir planilha de missões</a>Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
+      <div class="hint" style="margin-top:10px">Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
     </div>
 
     <div class="sec">④ Histórico de alterações <small class="muted" id="log-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
@@ -425,11 +425,20 @@ function preencherListas(){
 }
 
 /* ─────────────── ③ escalas já lançadas (lotes) ─────────────── */
+// dd/mm/aaaa [hh:mm] → timestamp (0 se vazio/ilegível, vai pro fim da lista)
+function tsBR(s){
+  const m = String(s||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  return m ? new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0)).getTime() : 0;
+}
 function renderLotes(){
-  const lotes = DATA.lotes || [];
+  // missão que começa mais tarde fica no topo (empate: término, depois quando foi lançada)
+  const lotes = (DATA.lotes || []).slice().sort((a,b)=>{
+    const ia = tsBR(a.inicio), ib = tsBR(b.inicio);
+    if (!ia !== !ib) return ia ? -1 : 1;
+    return ib - ia || tsBR(b.fim) - tsBR(a.fim) || tsBR(b.lancado_em) - tsBR(a.lancado_em);
+  });
   $('lotes-count').textContent = lotes.length ? `(${lotes.length})` : '';
-  const lk = $('mis-link'), sid = DATA.missoes_sheet_id;
-  if (lk){ lk.style.display = sid ? '' : 'none'; if (sid) lk.href = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(sid) + '/edit'; }
+  const sid = DATA.missoes_sheet_id;
   if (!lotes.length){
     $('lotes').innerHTML = sid
       ? '<div class="empty">Nenhuma escala lançada ainda. A planilha <b>BPFRON_Missoes_Diarias</b> está pronta — envie o primeiro PDF acima.</div>'
