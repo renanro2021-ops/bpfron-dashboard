@@ -6252,13 +6252,16 @@ async function matDeleteItem(tab, row, fromModal){
   if (!matCanEdit()) return;
   const item = matItemByRow(tab, row);
   const nome = item ? (tab==='municao' ? `${item._raw['Tipo / Calibre']||item.tipo||''} (lote ${item._raw['Lote']||item.lote||''})` : `${item.modelo||item._raw['Marca / Modelo']||''} ${item.serie?('nº '+item.serie):''}`) : 'este item';
-  if (!confirm(`Excluir definitivamente:\n\n${nome.trim()||'este item'}\n\nEssa ação apaga a linha na planilha e não pode ser desfeita.`)) return;
-  try{
-    const key = matKeyField(tab);
-    await apiPostJSON('/api/material/save', { tab, op:'delete', row, keyField:key, keyValue: item&&item._raw[key]!=null?String(item._raw[key]):'' });
-    if (fromModal) closeMatEditor();
-    await matReload();
-  }catch(e){ alert('Não foi possível excluir: ' + ((e&&e.message)||'')); }
+  const key = matKeyField(tab);
+  const ok = await confirmarExclusao({
+    titulo: 'Excluir item do Material Bélico',
+    texto: `${nome.trim()||'este item'}\n\nApaga a linha na planilha e não pode ser desfeito.`,
+    acao: ({ senha, motivo }) => apiPostJSON('/api/material/save', { tab, op:'delete', row, keyField:key,
+      keyValue: item&&item._raw[key]!=null?String(item._raw[key]):'', senha, motivo }),
+  });
+  if (!ok) return;
+  if (fromModal) closeMatEditor();
+  await matReload();
 }
 // Recarrega os dados do Material após uma gravação e re-renderiza tudo.
 async function matReload(){
@@ -7400,14 +7403,58 @@ async function dpSalvar(){
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 
+/* ── Confirmação de exclusão por SENHA (pedido do usuário, 11/09/2026) ──
+   Toda exclusão do site pede a senha de quem está logado + motivo opcional. A trava de
+   verdade é o exigeSenha() do worker.js — isto é só a interface. `acao({senha, motivo})`
+   faz a exclusão; se der erro (ex.: senha incorreta) o quadro continua aberto pra tentar
+   de novo. Resolve true = excluiu, false = cancelou. (Mesma função na diaria/intel.) */
+function confirmarExclusao({ titulo, texto, acao }){
+  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const inp = 'width:100%;box-sizing:border-box;background:#060912;border:1px solid #334155;border-radius:9px;padding:10px 12px;color:#e2e8f0;font:14px Inter,system-ui,sans-serif;outline:none;margin-bottom:12px';
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px';
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.75);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `<form style="background:#0d1322;border:1px solid rgba(248,113,113,.5);border-radius:16px;padding:20px 22px;width:100%;max-width:440px;color:#e2e8f0;font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="font-weight:800;font-size:16px;color:#fca5a5;margin-bottom:8px">🗑️ ${e(titulo || 'Confirmar exclusão')}</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#cbd5e1;margin-bottom:14px;white-space:pre-line">${e(texto)}</div>
+      <label style="${lbl}">Sua senha${AUTH && AUTH.user ? ' (' + e(AUTH.user) + ')' : ''} — confirma a exclusão</label>
+      <input type="password" name="senha" autocomplete="current-password" style="${inp}">
+      <label style="${lbl}">Motivo (opcional)</label>
+      <input name="motivo" maxlength="300" placeholder="Ex.: lançado em duplicidade" style="${inp}">
+      <div data-err style="color:#fca5a5;font-size:13px;min-height:18px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" data-x style="background:rgba(148,163,184,.12);border:1px solid #334155;color:#cbd5e1;border-radius:9px;padding:9px 16px;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer">Cancelar</button>
+        <button type="submit" data-ok style="background:#dc2626;border:none;color:#fff;border-radius:9px;padding:9px 18px;font:800 13.5px Inter,system-ui,sans-serif;cursor:pointer">Excluir</button>
+      </div></form>`;
+    document.body.appendChild(ov);
+    const f = ov.querySelector('form'), err = ov.querySelector('[data-err]'), ok = ov.querySelector('[data-ok]');
+    let ocupado = false;
+    const fechar = v => { ov.remove(); resolve(v); };
+    ov.querySelector('[data-x]').onclick = () => { if (!ocupado) fechar(false); };
+    ov.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !ocupado) fechar(false); });
+    f.onsubmit = async ev => {
+      ev.preventDefault();
+      const senha = f.senha.value, motivo = f.motivo.value.trim();
+      if (!senha){ err.textContent = 'Digite sua senha para confirmar.'; f.senha.focus(); return; }
+      ocupado = true; ok.disabled = true; ok.textContent = 'Excluindo…'; err.textContent = '';
+      try { await acao({ senha, motivo }); fechar(true); }
+      catch(x){ ocupado = false; ok.disabled = false; ok.textContent = 'Excluir'; err.textContent = (x && x.message) || 'Erro ao excluir.'; f.senha.value = ''; f.senha.focus(); }
+    };
+    setTimeout(() => f.senha.focus(), 30);
+  });
+}
+
 async function dpDeleteMissao(ev, row, id){
   ev.stopPropagation();
   if(!dpCanEdit()) return;
-  if(!window.confirm('Excluir este lançamento de diária? Esta ação apaga a linha na planilha.')) return;
-  try{
-    await apiPostJSON('/api/diaria/save', { op:'delete', row, keyValue:id });
-    DP_LOADED=false; await initDiaria();
-  }catch(e){ alert((e&&e.message)?e.message:'Erro ao excluir.'); }
+  const ok = await confirmarExclusao({
+    titulo: 'Excluir lançamento de diária',
+    texto: 'Apaga esta linha na planilha. Fica registrado no histórico de alterações da Diária.',
+    acao: ({ senha, motivo }) => apiPostJSON('/api/diaria/save', { op:'delete', row, keyValue:id, senha, motivo }),
+  });
+  if(!ok) return;
+  DP_LOADED=false; await initDiaria();
 }
 
 /* ============================ P1 - Seção Pessoal ============================ */
@@ -7555,11 +7602,15 @@ async function p1dRecarregarPainel(){
 async function p1dExcluirFicha(re){
   const p = (P1_DATA.efetivo || []).find(x => x.re === re);
   const nome = (p && p.nome) || ('RE ' + re);
-  if (!confirm(`Excluir a ficha INTEIRA de ${nome} (dados pessoais + cursos + acessos)?\n\nUse isto só pra cadastro errado/duplicado. Não dá pra desfazer.`)) return;
+  let r = null;
+  const ok = await confirmarExclusao({
+    titulo: 'Excluir ficha inteira',
+    texto: `${nome} — dados pessoais + cursos + acessos.\n\nUse isto só pra cadastro errado/duplicado. Não dá pra desfazer.`,
+    acao: async ({ senha, motivo }) => { r = await apiPostJSON('/api/p1/ficha/excluir', { re, senha, motivo }); },
+  });
+  if (!ok) return;
   const msg = document.getElementById('p1d-detail-msg');
-  if (msg){ msg.style.color = 'var(--muted)'; msg.textContent = 'Excluindo…'; }
   try {
-    const r = await apiPostJSON('/api/p1/ficha/excluir', { re });
     if (msg){ msg.style.color = '#86efac'; msg.textContent = `✅ Ficha removida (FICHA ${r.removidas.ficha}, cursos ${r.removidas.cursos}, acessos ${r.removidas.acessos}).`; }
     P1_SEL_RE = null;
     await p1dRecarregarPainel();
@@ -7678,13 +7729,17 @@ async function p1AggExcluir(tipo, key, i){
   const map = tipo === 'curso' ? P1_AGG_CURSOS : P1_AGG_SISTEMAS;
   const g = map[key]; if (!g) return;
   const it = g.itens[i]; if (!it) return;
-  if (!confirm(`Excluir ${tipo === 'curso' ? 'o curso' : 'o acesso'} "${g.label}" de ${it.nome || 'RE ' + it.re}?`)) return;
   const msg = document.getElementById('p1-agg-msg');
   const item = tipo === 'curso'
     ? { curso: it.curso, sigla: it.sigla, edicao: it.edicao, ano: it.ano, concluiu: it.concluiu, estado: it.estado }
     : it.sistema;
+  const ok = await confirmarExclusao({
+    titulo: tipo === 'curso' ? 'Excluir curso' : 'Excluir acesso',
+    texto: `"${g.label}" de ${it.nome || 'RE ' + it.re}.`,
+    acao: ({ senha, motivo }) => apiPostJSON('/api/p1/item/excluir', { re: it.re, tipo, item, senha, motivo }),
+  });
+  if (!ok) return;
   try {
-    await apiPostJSON('/api/p1/item/excluir', { re: it.re, tipo, item });
     const p = P1_DATA.efetivo.find(x => x.re === it.re);
     if (p) {
       const arr = tipo === 'curso' ? p.cursos : p.acessos;

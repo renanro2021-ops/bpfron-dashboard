@@ -118,6 +118,13 @@ table.lotes th{text-align:left;font-size:10.5px;letter-spacing:.5px;text-transfo
 table.lotes td{padding:9px 8px;border-bottom:1px solid #131b2b}
 table.lotes td.num{text-align:right;white-space:nowrap}
 table.lotes td:nth-child(2){min-width:320px}
+#log table.lotes td:nth-child(2){min-width:0}
+#log table.lotes td:nth-child(4){min-width:240px}
+.acao{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:999px;white-space:nowrap;background:rgba(148,163,184,.12);color:#cbd5e1}
+.acao.add{background:rgba(52,211,153,.14);color:#6ee7b7}
+.acao.del{background:rgba(248,113,113,.14);color:#fca5a5}
+.acao.cad{background:rgba(96,165,250,.14);color:#93c5fd}
+.acao.op{background:rgba(245,197,24,.14);color:#fcd34d}
 .empty{text-align:center;color:var(--muted);padding:26px}
 
 @media(max-width:760px){
@@ -259,6 +266,13 @@ table.lotes td:nth-child(2){min-width:320px}
       <div class="tbl-wrap" style="border:none"><div id="lotes"><div class="empty">Carregando…</div></div></div>
       <div class="hint" style="margin-top:10px"><a id="mis-link" class="btn gray sm" target="_blank" rel="noopener" style="display:none;text-decoration:none;margin-right:8px">📊 Abrir planilha de missões</a>Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
     </div>
+
+    <div class="sec">④ Histórico de alterações <small class="muted" id="log-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
+    <div class="card">
+      <input id="log-busca" placeholder="🔎 Filtrar por usuário, ação, operação, SEI, RE…" oninput="renderLog()" style="width:100%;margin-bottom:10px">
+      <div class="tbl-wrap" style="border:none"><div id="log"><div class="empty">Carregando…</div></div></div>
+      <div class="hint" style="margin-top:10px">Tudo que muda na Diária fica registrado aqui — lançar e excluir escala, excluir lançamento, cadastro de policial e operações — com quem fez e quando. Registros com mais de <b>90 dias</b> são apagados sozinhos.</div>
+    </div>
   </div>
 </div>
 
@@ -301,6 +315,48 @@ async function apiPostJSON(path, body){
   const d = await r.json().catch(()=>({}));
   if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
   return d;
+}
+
+/* ── Confirmação de exclusão por SENHA (pedido do usuário, 11/09/2026) ──
+   Toda exclusão pede a senha de quem está logado + motivo opcional (vai pro histórico).
+   A trava de verdade é o exigeSenha() do worker.js — isto é só a interface. `acao({senha,
+   motivo})` faz a exclusão; se der erro (ex.: senha incorreta) o quadro continua aberto
+   pra tentar de novo. Resolve true = excluiu, false = cancelou. (Mesma função no index/intel.) */
+function confirmarExclusao({ titulo, texto, acao }){
+  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const inp = 'width:100%;box-sizing:border-box;background:#060912;border:1px solid #334155;border-radius:9px;padding:10px 12px;color:#e2e8f0;font:14px Inter,system-ui,sans-serif;outline:none;margin-bottom:12px';
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px';
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.75);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `<form style="background:#0d1322;border:1px solid rgba(248,113,113,.5);border-radius:16px;padding:20px 22px;width:100%;max-width:440px;color:#e2e8f0;font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="font-weight:800;font-size:16px;color:#fca5a5;margin-bottom:8px">🗑️ ${e(titulo || 'Confirmar exclusão')}</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#cbd5e1;margin-bottom:14px;white-space:pre-line">${e(texto)}</div>
+      <label style="${lbl}">Sua senha${AUTH && AUTH.user ? ' (' + e(AUTH.user) + ')' : ''} — confirma a exclusão</label>
+      <input type="password" name="senha" autocomplete="current-password" style="${inp}">
+      <label style="${lbl}">Motivo (opcional)</label>
+      <input name="motivo" maxlength="300" placeholder="Ex.: lançado em duplicidade" style="${inp}">
+      <div data-err style="color:#fca5a5;font-size:13px;min-height:18px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" data-x style="background:rgba(148,163,184,.12);border:1px solid #334155;color:#cbd5e1;border-radius:9px;padding:9px 16px;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer">Cancelar</button>
+        <button type="submit" data-ok style="background:#dc2626;border:none;color:#fff;border-radius:9px;padding:9px 18px;font:800 13.5px Inter,system-ui,sans-serif;cursor:pointer">Excluir</button>
+      </div></form>`;
+    document.body.appendChild(ov);
+    const f = ov.querySelector('form'), err = ov.querySelector('[data-err]'), ok = ov.querySelector('[data-ok]');
+    let ocupado = false;
+    const fechar = v => { ov.remove(); resolve(v); };
+    ov.querySelector('[data-x]').onclick = () => { if (!ocupado) fechar(false); };
+    ov.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !ocupado) fechar(false); });
+    f.onsubmit = async ev => {
+      ev.preventDefault();
+      const senha = f.senha.value, motivo = f.motivo.value.trim();
+      if (!senha){ err.textContent = 'Digite sua senha para confirmar.'; f.senha.focus(); return; }
+      ocupado = true; ok.disabled = true; ok.textContent = 'Excluindo…'; err.textContent = '';
+      try { await acao({ senha, motivo }); fechar(true); }
+      catch(x){ ocupado = false; ok.disabled = false; ok.textContent = 'Excluir'; err.textContent = (x && x.message) || 'Erro ao excluir.'; f.senha.value = ''; f.senha.focus(); }
+    };
+    setTimeout(() => f.senha.focus(), 30);
+  });
 }
 
 /* ─────────────── login / acesso ─────────────── */
@@ -351,6 +407,7 @@ async function carregar(){
   (DATA.efetivo||[]).forEach(e=>{ const k=shortRE(e.re); if(k) EFET[k]=e; });
   preencherListas();
   renderLotes();
+  renderLog();
   if (ESCALAS.length) renderEscala();   // recarregou com uma escala aberta: refaz os avisos
 }
 
@@ -396,13 +453,45 @@ function renderLotes(){
 }
 async function excluirLote(id, btn){
   const l = (DATA.lotes||[]).find(x=>x.id_lote===id); if(!l) return;
-  if (!window.confirm(`Excluir a escala "${l.operacao}" (${l.id_missao}) — ${l.policiais} policiais, ${fR(l.valor_total)}?\n\nIsso apaga todas as linhas desse lançamento na planilha.`)) return;
-  btn.disabled = true; btn.textContent = 'Excluindo…';
-  try{
-    const r = await apiPostJSON('/api/diaria/save', { op:'delete_lote', id_lote:id });
-    await carregar();
-    setStatus(`🗑️ Escala excluída (${r.removidos} linha(s) removidas da planilha).`, 'ok');
-  }catch(e){ btn.disabled=false; btn.textContent='🗑️ Excluir escala'; alert(e.message || 'Erro ao excluir.'); }
+  let r = null;
+  const ok = await confirmarExclusao({
+    titulo: 'Excluir escala',
+    texto: `"${l.operacao}" (${l.id_missao}) — ${l.policiais} policiais, ${fR(l.valor_total)}.\n\nApaga todas as linhas desse lançamento na planilha. Fica registrado no histórico.`,
+    acao: async ({ senha, motivo }) => { r = await apiPostJSON('/api/diaria/save', { op:'delete_lote', id_lote:id, senha, motivo }); },
+  });
+  if (!ok) return;
+  await carregar();
+  setStatus(`🗑️ Escala excluída (${r.removidos} linha(s) removidas da planilha).`, 'ok');
+}
+
+/* ─────────────── ④ histórico de alterações (aba LOG, 90 dias) ─────────────── */
+const ACOES = {
+  LANCOU_ESCALA:['add','Lançou escala'], EXCLUIU_ESCALA:['del','Excluiu escala'], EXCLUIU_LANCAMENTO:['del','Excluiu lançamento'],
+  CADASTRO_CRIADO:['cad','Cadastrou policial'], CADASTRO_ALTERADO:['cad','Alterou cadastro'],
+  OPERACAO_CRIADA:['op','Criou operação'], OPERACAO_REMOVIDA:['op','Removeu operação'],
+};
+function renderLog(){
+  const box = $('log'); if (!box || !DATA) return;
+  const todos = DATA.log || [];
+  const q = norm($('log-busca').value);
+  const lista = q ? todos.filter(l=>norm([l.quando, l.quem, NOMES[l.quem], l.acao, (ACOES[l.acao]||[])[1], l.operacao, l.id_missao, l.sei_doc, l.re, l.detalhe].join(' ')).includes(q)) : todos;
+  $('log-count').textContent = todos.length ? `(${todos.length}${DATA.log_total > todos.length ? ` mais recentes de ${DATA.log_total}` : ''} nos últimos 90 dias)` : '';
+  if (!lista.length){ box.innerHTML = `<div class="empty">${todos.length ? 'Nada encontrado nesse filtro.' : 'Nenhuma alteração registrada ainda.'}</div>`; return; }
+  box.innerHTML = `<table class="lotes"><thead><tr>
+      <th>Quando</th><th>Quem</th><th>Ação</th><th>Escala / operação</th><th>SEI</th>
+      <th style="text-align:right">Policiais</th><th style="text-align:right">Valor</th><th>Detalhe</th>
+    </tr></thead><tbody>${lista.map(l=>{
+      const a = ACOES[l.acao] || ['', l.acao];
+      return `<tr>
+        <td style="white-space:nowrap">${esc(l.quando)}</td>
+        <td style="white-space:nowrap">${esc(NOMES[l.quem] || l.quem)}</td>
+        <td><span class="acao ${a[0]}">${esc(a[1])}</span></td>
+        <td>${esc(l.operacao||'')}${l.id_missao?`<div class="muted" style="font-size:12px">${esc(l.id_missao)}</div>`:''}${l.re?`<div class="muted" style="font-size:12px">RE ${esc(l.re)}</div>`:''}</td>
+        <td>${esc(l.sei_doc||'')}</td>
+        <td class="num">${l.policiais != null ? l.policiais : ''}</td>
+        <td class="num">${l.valor != null ? fR(l.valor) : ''}</td>
+        <td style="font-size:12.5px;color:#cbd5e1;min-width:220px">${esc(l.detalhe||'')}</td>
+      </tr>`; }).join('')}</tbody></table>`;
 }
 
 /* ─────────────── casamento do nome da operação ───────────────
