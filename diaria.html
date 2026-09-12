@@ -312,6 +312,7 @@ function fN(v){ return (Number(v)||0).toLocaleString('pt-BR'); }
 function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim(); }
 function shortRE(v){ const d=String(v||'').replace(/\D/g,''); return d.length>5 ? d.slice(-5) : d; }
 function isoToBR(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(s||''); }
+function brToIso(s){ const m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}` : String(s||''); }
 function $(id){ return document.getElementById(id); }
 
 async function apiFetchJSON(path){
@@ -472,9 +473,54 @@ function renderLotes(){
       <td>${esc(l.sei_doc||'—')}<div class="muted" style="font-size:11.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.arquivo||'')}">${esc(l.arquivo||'')}</div></td>
       <td class="num">${l.policiais}</td><td class="num">${fN(l.diarias)}</td><td class="num"><b>${fR(l.valor_total)}</b></td>
       <td>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</td>
-      <td><button class="btn red sm" onclick="excluirLote('${esc(l.id_lote)}', this)">🗑️ Excluir escala</button></td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="editarLote('${esc(l.id_lote)}')" style="margin-right:6px">✏️ Editar</button><button class="btn red sm" onclick="excluirLote('${esc(l.id_lote)}', this)">🗑️ Excluir</button></td>
     </tr>`).join('')}</tbody></table>`;
 }
+/* Abre uma escala JÁ LANÇADA na mesma tela de conferência, montada com o que está
+   GRAVADO na planilha — não precisa do PDF de novo. Salvar regrava o mesmo lote
+   (op:"update_lote" no Worker), preservando quem/quando lançou. 11/09/2026. */
+function editarLote(id){
+  const l = (DATA.lotes||[]).find(x=>x.id_lote===id);
+  if (!l){ setStatus('❌ Escala não encontrada. Atualize a página.', 'err'); return; }
+  const linhas = [];
+  (DATA.policiais||[]).forEach(p=>{
+    (p.missoes||[]).forEach(m=>{
+      if (m.id_lote !== id) return;
+      linhas.push({
+        on:true, equipe: m.equipe || '', posto: m.posto_grad || '', re: p.re || '', re_full: '',
+        nome: m.nome_completo || m.policial || p.nome || '', guerra: m.policial || '',
+        opm: m.opm || '', funcao: m.funcao || '', localidade: m.municipio || '', tel: m.contato || '',
+        ini: brToIso(m.data_inicio), fim: brToIso(m.data_fim),
+        diarias: m.diarias, diasManual: true, _vd: m.valor_diaria,
+      });
+    });
+  });
+  if (!linhas.length){
+    setStatus('❌ Não achei os policiais dessa escala. Se o Worker ainda não foi atualizado, a edição não funciona.', 'err');
+    return;
+  }
+  linhas.sort((a,b)=> String(a.equipe).localeCompare(String(b.equipe),'pt-BR') || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  const equipes = [...new Set(linhas.map(r=>r.equipe))].map(nome=>{
+    const g = (l.guarnicoes||[]).find(q=>String(q.equipe||'').toUpperCase()===String(nome).toUpperCase()) || {};
+    return { nome, area: g.area||'', localidade: g.localidade||'', periodo: null };
+  });
+  const vd = (linhas.find(r=>r._vd) || {})._vd || '';
+  ESCALAS = [{
+    evento: l.operacao || '', etapa: '', operacao: l.operacao || '', orgao_hint: l.orgao || '', local: '',
+    periodo: { ini: brToIso(l.inicio), fim: brToIso(l.fim) }, efetivo_declarado: null,
+    processo: l.processo || '', sei_doc: l.sei_doc || '', equipes, policiais: [], avisos: [], rows: linhas,
+    form: { op: l.operacao||'', etapa:'', orgao: l.orgao||'', tipo: l.tipo_diaria||'', valor: vd, proc: l.processo||'' },
+    lancado: false,
+  }];
+  PDF_META = { arquivo: l.arquivo || '(escala já lançada)', hash: l.hash || '' };
+  EDIT = { id_lote: id, lancado_em: l.lancado_em, lancado_por: l.lancado_por };
+  CUR = 0; DUP_OK = false;
+  renderEscala();
+  $('rev').style.display = '';
+  setStatus(`✏️ Editando a escala lançada em <b>${esc(l.lancado_em||'')}</b> por <b>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</b> — ${linhas.length} policial(is).`, 'warn');
+  $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
 async function excluirLote(id, btn){
   const l = (DATA.lotes||[]).find(x=>x.id_lote===id); if(!l) return;
   let r = null;
@@ -804,6 +850,11 @@ const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf
 const TESSERACT_JS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 let PDF_DOC = null, PDF_META = { arquivo:'', hash:'' }, RAW_TEXT = '';
 let ESCALAS = [], CUR = 0, DUP_OK = false;
+/* Edição de escala JÁ LANÇADA (pedido do usuário, 11/09/2026): guarda qual lote está
+   aberto. Com EDIT != null a tela trabalha com o que está GRAVADO (posto/OPM da época) e
+   divergência com o cadastro de hoje vira aviso informativo, nunca erro — o policial pode
+   ter mudado de OPM ou sido promovido depois do lançamento. */
+let EDIT = null;
 
 function setStatus(html, cls){ const el=$('read-status'); el.className = cls || 'muted'; el.innerHTML = html; }
 function setProg(frac){ const p=$('prog'); if(frac==null){ p.style.display='none'; return; } p.style.display='block'; p.firstElementChild.style.width = Math.round(frac*100)+'%'; }
@@ -856,6 +907,7 @@ async function lerArquivo(file){
   if (!file) return;
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf'){ setStatus('⚠️ Envie um arquivo PDF.', 'err'); return; }
   if (!window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
+  EDIT = null;   // subir um PDF novo sai do modo edição
   $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
   setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
   loadShow('Lendo o PDF', 'Abrindo ' + file.name + '…');
@@ -980,7 +1032,9 @@ function sobrepoem(iniA, fimA, iniB, fimB){
 function conflitos(r){
   if (!r.re || !r.ini) return [];
   const p = (DATA && DATA.policiais || []).find(x=>shortRE(x.re)===shortRE(r.re));
-  return p ? (p.missoes||[]).filter(m=>sobrepoem(r.ini, r.fim, m.data_inicio, m.data_fim)) : [];
+  // Editando: a própria escala aberta não conta como "outra missão no mesmo período",
+  // senão os 77 acusariam conflito com eles mesmos. 11/09/2026.
+  return p ? (p.missoes||[]).filter(m=>(!EDIT || m.id_lote !== EDIT.id_lote) && sobrepoem(r.ini, r.fim, m.data_inicio, m.data_fim)) : [];
 }
 
 function renderEscala(){
@@ -1080,14 +1134,16 @@ function atualizaStatus(i){
   const reg = regDe(r), tr = $('r-'+i);
   const partes = [];
   if (!r.re) partes.push('<span class="warn">sem RE</span>');
-  else if (reg && isDivergente(r)) partes.push(`<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`);
+  else if (reg && isDivergente(r)) partes.push(EDIT
+    ? `<span class="warn">ℹ️ hoje no cadastro o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> — o lançamento guarda o que valia na época</span>`
+    : `<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`);
   else if (reg) partes.push(`<span class="ok">✓ cadastro: ${esc(reg.guerra||reg.nome)}${reg.posto_grad?' · '+esc(reg.posto_grad):''}</span>`);
   else partes.push('<span class="warn">⚠️ fora do cadastro — digite o nome de guerra</span>');
   const reps = r.re ? e.rows.filter(x=>x.on && shortRE(x.re)===shortRE(r.re)).length : 0;
   if (r.on && reps > 1) partes.push('<span class="err">RE repetido nesta escala</span>');
   conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn">⚠️ já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
   el.innerHTML = partes.join('<br>');
-  if (tr) tr.className = (r.on ? '' : 'off') + (isDivergente(r) ? ' div' : '');
+  if (tr) tr.className = (r.on ? '' : 'off') + (!EDIT && isDivergente(r) ? ' div' : '');
 }
 
 function onCell(el){
@@ -1142,9 +1198,9 @@ function recalcAll(){
   });
   $('calc').innerHTML = `<b>${n}</b> policial(is) · <b>${fN(dd)}</b> diárias × <b>${fR(valor)}</b> = <b>${fR(tot)}</b>`;
   const btn = $('save-btn');
-  if (!DUP_OK) btn.textContent = `💾 Lançar ${n} policial(is)`;
+  if (!DUP_OK) btn.textContent = EDIT ? `💾 Salvar alterações (${n})` : `💾 Lançar ${n} policial(is)`;
   btn.disabled = !n || e.lancado;
-  if (e.lancado) btn.textContent = '✅ Já lançada';
+  if (e.lancado) btn.textContent = EDIT ? '✅ Alterações salvas' : '✅ Já lançada';
   renderAvisos();
   renderConf();
 }
@@ -1155,7 +1211,8 @@ function renderConf(){
   const decl = e.efetivo_declarado, lidos = e.rows.length, marc = e.rows.filter(r=>r.on).length;
   const eqs = new Set(e.rows.map(r=>r.equipe)).size;
   let cls = 'na', msg;
-  if (decl == null) msg = '⚠️ O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
+  if (EDIT) msg = '✏️ Editando uma escala já lançada — a conferência com o documento não se aplica; confira pela tabela.';
+  else if (decl == null) msg = '⚠️ O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
   else if (decl === marc) { cls = 'ok'; msg = `✅ Os números batem: o documento declara ${decl} e serão lançados ${marc}.`; }
   else { cls = 'bad'; msg = `⛔ Não bate: o documento declara ${decl}, a leitura achou ${lidos}${marc!==lidos ? ` e estão marcados ${marc}` : ''}. Confira quem falta ou sobra antes de lançar.`; }
   box.className = 'conf ' + cls;
@@ -1170,10 +1227,13 @@ function renderAvisos(){
   const on = e.rows.filter(r=>r.on);
   // (a contagem declarada × lida fica no quadro de conferência, não repete aqui)
   const av = e.avisos.filter(t=>!/^O documento declara/.test(t)).map(t=>`<div class="aviso">⚠️ ${esc(t)}</div>`);
-  const jaLote = jaLancado(e);
+  const jaLote = EDIT ? null : jaLancado(e);   // editando é o MESMO lote: não é relançamento
   if (jaLote) av.unshift(`<div class="aviso err">⛔ Este documento (SEI ${esc(e.sei_doc)}) já foi lançado em ${esc(jaLote.lancado_em)} por ${esc(NOMES[jaLote.lancado_por]||jaLote.lancado_por)} — ${jaLote.policiais} policiais, ${fR(jaLote.valor_total)}. Não lance de novo; se precisar corrigir, exclua a escala em ③ e relance.</div>`);
+  if (EDIT) av.unshift(`<div class="aviso">✏️ Editando a escala lançada em <b>${esc(EDIT.lancado_em||'')}</b>. Os dados são os <b>gravados na época</b> (posto e OPM de então) — diferenças para o cadastro de hoje são apenas informativas.</div>`);
   const div = on.filter(isDivergente).length;
-  if (div) av.push(`<div class="aviso err">⛔ ${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE antes de lançar.</div>`);
+  if (div) av.push(EDIT
+    ? `<div class="aviso">ℹ️ ${div} policial(is) têm hoje no cadastro nome diferente do que foi lançado (mudança de OPM, promoção ou RE trocado). Não impede salvar.</div>`
+    : `<div class="aviso err">⛔ ${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE antes de lançar.</div>`);
   const fora = on.filter(r=>r.re && !regDe(r)).length;
   if (fora) av.push(`<div class="aviso">⚠️ ${fora} policial(is) fora do cadastro POLICIAIS. Digite o nome de guerra — com a caixa marcada lá embaixo, eles são cadastrados ao lançar.</div>`);
   const conf = on.filter(r=>conflitos(r).length).length;
@@ -1212,10 +1272,11 @@ async function salvar(){
   const rep = res.filter((x,i)=>res.indexOf(x)!==i);
   if (rep.length) return fail(`RE repetido na escala: ${[...new Set(rep)].join(', ')}. Tire a linha duplicada.`);
 
-  // Avisos que exigem 2º clique ("Lançar mesmo assim")
-  if (!DUP_OK){
+  // Avisos que exigem 2º clique ("Lançar mesmo assim"). Na EDIÇÃO não se aplicam: não há
+  // risco de relançar (é o mesmo lote) e divergência com o cadastro de hoje é informativa.
+  if (!DUP_OK && !EDIT){
     const motivos = [];
-    const lote = jaLancado(e);
+    const lote = EDIT ? null : jaLancado(e);
     if (lote) motivos.push(`este documento SEI já foi lançado em ${esc(lote.lancado_em)}`);
     const div = on.filter(isDivergente); if (div.length) motivos.push(`${div.length} com RE de outra pessoa no cadastro`);
     const conf = on.filter(r=>conflitos(r).length); if (conf.length) motivos.push(`${conf.length} já com missão em período sobreposto (${conf.slice(0,5).map(r=>esc(r.guerra||r.nome)).join(', ')}${conf.length>5?'…':''})`);
@@ -1254,9 +1315,11 @@ async function salvar(){
       contato: r.tel || '' };
   });
   const btn = $('save-btn'); btn.disabled = true; btn.textContent = 'Lançando…';
-  loadShow('Lançando a escala', `Enviando ${policiais.length} policial(is) para a planilha…`);
+  loadShow(EDIT ? 'Salvando as alterações' : 'Lançando a escala', `Enviando ${policiais.length} policial(is) para a planilha…`);
   try{
-    const out = await apiPostJSON('/api/diaria/save', { op:'add', missao, policiais, guarnicoes, forcar: DUP_OK });
+    const out = await apiPostJSON('/api/diaria/save', EDIT
+      ? { op:'update_lote', id_lote: EDIT.id_lote, missao, policiais, guarnicoes, forcar:true }
+      : { op:'add', missao, policiais, guarnicoes, forcar: DUP_OK });
     if (out.avisos && out.avisos.length) console.warn('[diaria] avisos do lançamento:', out.avisos);
     // cadastra na aba POLICIAIS quem estava fora do cadastro e ganhou nome de guerra
     let cad = 0, cadErr = 0;
@@ -1281,7 +1344,11 @@ async function salvar(){
     const bate = decl == null ? '' : (decl === out.inseridos ? ` — <b>bateu</b> com os ${decl} do documento ✅` : ` — <span class="err">o documento declarava ${decl} ⚠️</span>`);
     setStatus(`✅ Lançado: <b>${out.inseridos}</b> policial(is) em "${esc(idm)}"${bate}${cad?` · ${cad} cadastrado(s) na aba POLICIAIS`:''}${cadErr?` <span class="err">(${cadErr} cadastro(s) falharam)</span>`:''}.` +
       (prox >= 0 ? ' Falta lançar a próxima escala deste PDF.' : ' Pode enviar outro PDF.'), 'ok');
-    if (prox >= 0){ CUR = prox; renderEscala(); }
+    if (EDIT){
+      setStatus(`✅ Escala atualizada: <b>${out.inseridos}</b> policial(is) gravados${out.removidos ? ` (substituíram ${out.removidos})` : ''}. Quem lançou e quando foram preservados; a alteração ficou registrada no histórico.`, 'ok');
+      EDIT = null; $('rev').style.display='none'; ESCALAS=[]; window.scrollTo({ top:0, behavior:'smooth' });
+    }
+    else if (prox >= 0){ CUR = prox; renderEscala(); }
     else { $('rev').style.display='none'; ESCALAS=[]; window.scrollTo({ top:0, behavior:'smooth' }); }
   }catch(x){
     btn.disabled = false; btn.textContent = '💾 Lançar';
@@ -1294,8 +1361,11 @@ async function salvar(){
   }
 }
 function descartar(){
-  if (ESCALAS.some(e=>!e.lancado && e.rows.length) && !window.confirm('Descartar a leitura deste PDF? Nada foi lançado ainda.')) return;
-  ESCALAS = []; $('rev').style.display='none'; setStatus('');
+  const msg = EDIT
+    ? 'Sair da edição sem salvar? A escala continua na planilha do jeito que está.'
+    : 'Descartar a leitura deste PDF? Nada foi lançado ainda.';
+  if (ESCALAS.some(e=>!e.lancado && e.rows.length) && !window.confirm(msg)) return;
+  EDIT = null; ESCALAS = []; $('rev').style.display='none'; setStatus('');
 }
 
 /* ─────────────── ver PDF / texto lido ─────────────── */
