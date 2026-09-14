@@ -292,7 +292,25 @@ const AUTH = {
 // (padrão ["p3aux","desousa"], override pelo secret RVN_EDITORS) — se mudar lá,
 // mudar aqui também, senão o botão aparece e o painel devolve 403.
 const RVN_GESTORES = ['desousa','p3aux'];
-function rvnPodeGerir(){ return AUTH.logged && RVN_GESTORES.includes(AUTH.user); }
+function rvnPodeGerir(){ return AUTH.logged && temPerm('rvn', RVN_GESTORES); }
+/* Permissões do painel admin.html — vêm do Worker no login e no /api/me. A lista
+   fixa acima só vale enquanto essa informação não chegou (Worker antigo). */
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+// Ao abrir: se o acesso mudou no painel (ou o usuário foi desativado), recarrega já com o acesso novo.
+(async function(){
+  if (!AUTH.logged) return;
+  try{
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ AUTH.token = ''; AUTH.user = ''; location.reload(); return; }
+    if (!d.perms) return;
+    const antes = localStorage.getItem('bp_perms'); salvarPerms(d);
+    if (antes !== localStorage.getItem('bp_perms')) location.reload();
+  }catch(e){ /* sem rede: segue com o que já tem */ }
+})();
 
 function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -311,7 +329,7 @@ async function submitLogin(user, pass, btn, erro){
     });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
-    AUTH.token = d.token; AUTH.user = d.user;
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d);
     renderUserChip();
     return true;
   } catch(e){

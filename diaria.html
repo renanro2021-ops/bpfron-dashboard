@@ -313,6 +313,25 @@ const AUTH = {
   get logged(){ return !!this.token; }
 };
 
+/* Permissões do painel admin.html — vêm do Worker no login e no /api/me. A lista
+   fixa DIARIA_GESTORES só vale enquanto essa informação não chegou (Worker antigo). */
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+// Ao abrir: se o acesso mudou no painel (ou o usuário foi desativado), recarrega já com o acesso novo.
+(async function(){
+  if (!AUTH.logged) return;
+  try{
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ AUTH.token = ''; AUTH.user = ''; location.reload(); return; }
+    if (!d.perms) return;
+    const antes = localStorage.getItem('bp_perms'); salvarPerms(d);
+    if (antes !== localStorage.getItem('bp_perms')) location.reload();
+  }catch(e){ /* sem rede: segue com o que já tem */ }
+})();
+
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fR(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function fN(v){ return (Number(v)||0).toLocaleString('pt-BR'); }
@@ -392,7 +411,7 @@ async function doLogin(ev){
       body: JSON.stringify({ user:$('l-user').value.trim(), pass:$('l-pass').value }) });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
-    AUTH.token=d.token; AUTH.user=d.user; $('l-pass').value='';
+    AUTH.token=d.token; AUTH.user=d.user; salvarPerms(d); $('l-pass').value='';
     boot();
   }catch(e){ erro.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
   finally{ btn.disabled=false; btn.textContent='Entrar'; }
@@ -402,10 +421,11 @@ function apiLogout(){ AUTH.token=''; AUTH.user=''; DATA=null; boot(); }
 
 function boot(){
   const logged = AUTH.logged, user = AUTH.user;
-  $('userchip').textContent = logged ? '👤 ' + (NOMES[user] || user) : '';
+  const ps = permsSessao();
+  $('userchip').textContent = logged ? '👤 ' + ((ps && ps.nome !== user && ps.nome) || NOMES[user] || user) : '';
   $('logout-link').style.display = logged ? '' : 'none';
   $('login-box').style.display = logged ? 'none' : '';
-  const pode = logged && DIARIA_GESTORES.includes(user);
+  const pode = logged && temPerm('diaria', DIARIA_GESTORES);
   $('noaccess').style.display = (logged && !pode) ? '' : 'none';
   $('na-user').textContent = user;
   $('app').style.display = pode ? '' : 'none';

@@ -926,6 +926,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <button class="sb-item" id="nav-p1" onclick="showPage('p1')"><span class="ic">🗂️</span> Ficha do Efetivo</button>
 
   <div class="sb-spacer"></div>
+  <!-- Só aparece para administrador (ver applyUserRestrictions) -->
+  <a class="sb-item" id="nav-admin" href="admin.html" style="display:none;text-decoration:none"><span class="ic">🛡️</span> Painel de Controle</a>
   <button class="sb-item sb-apres" id="btn-apresentacao" onclick="toggleApresentacao()"><span class="ic">▶</span> Apresentação</button>
 </nav>
 
@@ -3134,7 +3136,20 @@ const RESTRICTED_PAGES = { cpe: ['consultas','diaria'], subcmt: ['consultas','di
 // cada login novo. ⚠️ A trava de verdade é o `p1Editors` do worker.js (padrão
 // ["desousa","p3aux","p1aux"], override via secret P1_EDITORS) — mudar aqui e lá.
 const P1_GESTORES = ['desousa','p3aux','p1aux','cmtfelipe'];
-function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && P1_GESTORES.includes(AUTH.user); }
+function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && temPerm('p1', P1_GESTORES); }
+
+// Permissões do logado vindas do Worker (/api/login e /api/me), configuradas no
+// painel admin.html. As listas fixas acima (RESTRICTED_PAGES, P1_GESTORES) só
+// valem enquanto essa informação não chegou (Worker antigo / sessão velha).
+function permsSessao(){
+  try { const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; } catch(e){ return null; }
+}
+function salvarPerms(d){
+  try { if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); } catch(e){}
+}
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+function bloqueiosSessao(){ const p = permsSessao(); return p ? p.bloqueios : (RESTRICTED_PAGES[AUTH.user] || []); }
+const PAGINAS_BLOQUEAVEIS = ['consultas','garagem','material','policiais-campo','diaria','recursos'];
 // Nome de boas-vindas por usuário (mostrado no chip do cabeçalho e na animação de login).
 const WELCOME_NOMES = {
   desousa:   'CB QPPM De Sousa',
@@ -3151,7 +3166,11 @@ const WELCOME_NOMES = {
   p3aux:         '3º SGT QPPM Juliana',
   p1aux:         '3º SGT QPPM Holanda'
 };
-function nomeBoasVindas(u){ return WELCOME_NOMES[(u||'').toLowerCase()] || u || ''; }
+function nomeBoasVindas(u){
+  const p = (typeof AUTH !== 'undefined') && permsSessao();
+  if (p && p.user === u && p.nome && p.nome !== u) return p.nome; // nome cadastrado no painel admin.html
+  return WELCOME_NOMES[(u||'').toLowerCase()] || u || '';
+}
 
 // Atualiza o chip do cabeçalho (desktop) e o do topo mobile com o usuário logado.
 function renderUserChip(){
@@ -3219,7 +3238,7 @@ function showPage(pageId) {
   closeNav(); // fecha a gaveta ao navegar (mobile)
   hidePageLoader(); // limpa qualquer loader de página anterior (o init reativa se precisar)
   // Bloqueio por usuário: redireciona silenciosamente para Visão Geral.
-  if (typeof AUTH !== 'undefined' && AUTH.logged && (RESTRICTED_PAGES[AUTH.user] || []).includes(pageId)) {
+  if (typeof AUTH !== 'undefined' && AUTH.logged && bloqueiosSessao().includes(pageId)) {
     pageId = 'visao-geral';
   }
   // P1 - Seção Pessoal: allowlist (o painel tem PII de todo o efetivo).
@@ -4500,9 +4519,12 @@ const AUTH = {
 // cobrir qualquer combinação, e sempre reseta os que não estão bloqueados —
 // importante ao trocar de usuário (logout de um restrito + login de outro sem restrição).
 function applyUserRestrictions(){
-  const blocked = AUTH.logged ? (RESTRICTED_PAGES[AUTH.user] || []) : [];
-  const todasPaginasRestringiveis = new Set();
+  const blocked = AUTH.logged ? bloqueiosSessao() : [];
+  const todasPaginasRestringiveis = new Set(PAGINAS_BLOQUEAVEIS);
   Object.values(RESTRICTED_PAGES).forEach(arr => arr.forEach(pg => todasPaginasRestringiveis.add(pg)));
+  const navAdmin = document.getElementById('nav-admin');
+  const pAdm = AUTH.logged && permsSessao();
+  if (navAdmin) navAdmin.style.display = (pAdm && pAdm.admin) ? '' : 'none';
   todasPaginasRestringiveis.forEach(pg => {
     const nav = document.getElementById('nav-' + pg);
     if (nav) nav.style.display = blocked.includes(pg) ? 'none' : '';
@@ -4517,6 +4539,22 @@ function applyUserRestrictions(){
 applyUserRestrictions();
 renderUserChip();
 
+// Ao abrir a página, confere com o Worker se as permissões mudaram no painel
+// admin.html (ou se o usuário foi desativado / teve a senha trocada).
+(async function sincronizarPerms(){
+  if (!AUTH.logged) return;
+  try {
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ apiLogout(); return; }
+    if (!d.perms) return;
+    salvarPerms(d);
+    applyUserRestrictions();
+    renderUserChip();
+  } catch(e){ /* sem rede: segue com o que já tem */ }
+})();
+
 // Núcleo do login (compartilhado pelas telas de Consultas e Gestão).
 // Faz o POST /api/login, guarda o token e devolve true/false.
 async function submitLogin(user, pass, btn, erro){
@@ -4528,7 +4566,7 @@ async function submitLogin(user, pass, btn, erro){
     });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error(d.error==='invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
-    AUTH.token = d.token; AUTH.user = d.user;
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d);
     applyUserRestrictions();
     renderUserChip();
     showWelcome(d.user);

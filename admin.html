@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel de Controle · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
+  --red:#ef4444; --green:#34d399; --blue:#60a5fa;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+button{font-family:inherit}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1240px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(16px,4vw,28px) 80px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,22px)}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted);line-height:1.6}
+
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg input,.fg textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15px;outline:none;min-height:44px;width:100%}
+.fg textarea{min-height:64px;resize:vertical}
+.fg input:focus,.fg textarea:focus{border-color:rgba(245,197,24,.6)}
+.fg input:read-only{opacity:.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.inrow{display:flex;gap:8px}.inrow input{flex:1;min-width:0}
+
+.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;transition:.12s;white-space:nowrap}
+.btn:hover{background:rgba(245,197,24,.22)}
+.btn.solid{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;color:#1a1a1a}
+.btn.ghost{background:rgba(148,163,184,.1);border-color:var(--line);color:#cbd5e1}.btn.ghost:hover{background:rgba(148,163,184,.18)}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.45);color:#fca5a5}.btn.danger:hover{background:rgba(239,68,68,.2)}
+.btn.small{padding:6px 12px;font-size:13px;min-height:34px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.msg{font-size:14px;min-height:19px;margin-top:10px}.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
+
+.trava{max-width:420px;margin:30px auto}
+.hidden{display:none!important}
+
+.banner{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.banner h3{font-family:'Rajdhani',sans-serif;font-size:20px;color:#bfdbfe;margin-bottom:6px}
+.banner p{font-size:14px;color:#cbd5e1;line-height:1.65;margin-bottom:12px}
+.banner .inrow{max-width:520px;flex-wrap:wrap}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:6px}
+@media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.kpi b{display:block;font-family:'Rajdhani',sans-serif;font-size:30px;line-height:1.1;color:#fff}
+.kpi span{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+.tabs{display:flex;gap:8px;margin:18px 0 16px;flex-wrap:wrap}
+.tab{background:rgba(148,163,184,.07);border:1px solid var(--line);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer}
+.tab:hover{color:#cbd5e1}.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-size:14.5px;outline:none}
+.toolbar input:focus{border-color:rgba(245,197,24,.6)}
+
+/* lista de usuários */
+.ulist{display:flex;flex-direction:column;gap:10px}
+.urow{display:grid;grid-template-columns:minmax(200px,1.1fr) 2fr auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.urow.off{opacity:.55}
+@media(max-width:820px){.urow{grid-template-columns:1fr}}
+.u-nome{font-weight:700;color:#fff;font-size:15px}
+.u-login{font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--muted)}
+.u-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:700;border:1px solid}
+.chip.g{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
+.chip.b{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);color:#fca5a5}
+.chip.a{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.chip.x{background:rgba(148,163,184,.1);border-color:var(--line);color:var(--muted)}
+
+/* matriz */
+.mwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.mx th,.mx td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:center;white-space:nowrap}
+.mx thead th{position:sticky;top:0;background:#0b1020;z-index:2;font-size:11px;font-weight:700;color:#cbd5e1;vertical-align:bottom}
+.mx thead tr.grp th{top:0;font-family:'Rajdhani',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);font-size:12px;border-bottom:none}
+.mx thead tr.col th{top:30px}
+.mx th.vt span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;max-height:150px;text-align:left}
+.mx td.nm,.mx th.nm{position:sticky;left:0;background:#0b1020;text-align:left;z-index:1;padding-left:12px;min-width:190px}
+.mx thead th.nm{z-index:3}
+.mx td.nm b{color:#fff;font-size:13.5px}.mx td.nm small{display:block;color:var(--muted);font-family:ui-monospace,Consolas,monospace}
+.mx .sep{border-left:2px solid rgba(245,197,24,.25)}
+.cell{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(148,163,184,.06);cursor:pointer;font-size:15px;line-height:1;color:transparent}
+.cell.on{background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.5);color:#6ee7b7}
+.cell.blk{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45);color:#fca5a5}
+.cell.adm.on{background:rgba(245,197,24,.18);border-color:rgba(245,197,24,.55);color:var(--yellow)}
+.cell.mud{outline:2px solid var(--blue);outline-offset:1px}
+.cell:disabled{cursor:not-allowed;opacity:.5}
+.mx tr.off td:not(.nm){opacity:.45}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:10px 2px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;border:1px solid}
+.savebar{position:sticky;bottom:14px;margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#0f1628;border:1px solid rgba(96,165,250,.5);border-radius:14px;padding:12px 16px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.savebar span{flex:1;color:#bfdbfe;font-weight:600;font-size:14px}
+
+/* histórico */
+.log{display:flex;flex-direction:column}
+.log-it{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:13.5px}
+.log-it:last-child{border-bottom:none}
+.log-it time{color:var(--muted);font-size:12.5px}
+.log-it b{color:#fff}.log-it .d{color:#cbd5e1}
+@media(max-width:560px){.log-it{grid-template-columns:1fr;gap:2px}}
+
+/* modal */
+.ovl{position:fixed;inset:0;background:rgba(2,4,10,.72);z-index:200;display:flex;justify-content:flex-end}
+.drawer{width:min(620px,100%);height:100%;overflow-y:auto;background:#0a0f1c;border-left:1px solid rgba(245,197,24,.3);padding:22px clamp(16px,3vw,26px) 40px}
+.drawer h2{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;margin-bottom:2px}
+.drawer .x{float:right}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:rgba(148,163,184,.04)}
+.opt input{width:18px;height:18px;margin-top:2px;accent-color:var(--yellow);flex-shrink:0;cursor:pointer}
+.opt b{display:block;font-size:13.5px;color:#e2e8f0}
+.opt small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
+.opt.blk{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.07)}
+.opt.admsel{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.07)}
+.zona{border-top:1px solid var(--line);margin-top:22px;padding-top:16px}
+.senhabox{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.4);border-radius:12px;padding:14px 16px;margin-top:12px}
+.senhabox code{font-size:18px;color:#fff;font-weight:700;letter-spacing:.5px;user-select:all}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f1628;border:1px solid rgba(52,211,153,.5);color:#d1fae5;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:600;z-index:300;box-shadow:0 10px 40px rgba(0,0,0,.6);max-width:calc(100% - 32px)}
+.toast.err{border-color:rgba(239,68,68,.6);color:#fecaca}
+.vazio{text-align:center;color:var(--muted);padding:30px 10px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Painel de <em>Controle</em></div>
+        <div class="hdr-sub">Usuários e níveis de acesso · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="userchip"></span>
+      <button class="btn ghost small hidden" id="btn-sair">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- login -->
+  <div class="trava hidden" id="v-login">
+    <div class="sec" style="justify-content:center">Área do administrador</div>
+    <form class="box" id="f-login">
+      <div class="fg"><label for="l-user">Usuário</label><input id="l-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="fg" style="margin-top:12px"><label for="l-pass">Senha</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+      <button class="btn solid" style="width:100%;margin-top:16px" id="l-btn">Entrar</button>
+      <div class="msg err" id="l-msg"></div>
+    </form>
+  </div>
+
+  <!-- sem permissão -->
+  <div class="trava hidden" id="v-negado">
+    <div class="box" style="text-align:center">
+      <div style="font-size:40px">🔒</div>
+      <p style="margin:8px 0 16px;color:#cbd5e1">Este painel é só do administrador.</p>
+      <div class="btnrow" style="justify-content:center"><a class="btn ghost" href="index.html" style="text-decoration:none">Voltar ao dashboard</a><button class="btn ghost" id="btn-trocar">Entrar com outro usuário</button></div>
+    </div>
+  </div>
+
+  <div class="vazio hidden" id="v-carregando">Carregando…</div>
+
+  <!-- painel -->
+  <div class="hidden" id="v-painel">
+
+    <div class="banner hidden" id="banner-ativar">
+      <h3>🔌 O painel ainda não está ativo</h3>
+      <p>Hoje os logins vêm do segredo <b>APP_USERS</b> e as permissões estão fixas no código. Abaixo está uma <b>prévia</b> do que será importado.
+        Ao ativar, todos os usuários e senhas atuais são copiados (as senhas ficam guardadas criptografadas) e, a partir daí, <b>tudo passa a ser controlado por aqui</b>. Ninguém é deslogado.</p>
+      <div class="inrow">
+        <input type="password" id="at-senha" placeholder="Sua senha, para confirmar" autocomplete="current-password" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-size:14.5px;outline:none">
+        <button class="btn solid" id="btn-ativar">Ativar painel</button>
+      </div>
+      <div class="msg err" id="at-msg"></div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="usuarios">👥 Usuários</button>
+      <button class="tab" data-tab="matriz">🔐 Matriz de acesso</button>
+      <button class="tab" data-tab="log">📜 Histórico</button>
+    </div>
+
+    <div id="t-usuarios">
+      <div class="toolbar">
+        <input id="busca" placeholder="Buscar por nome ou login…">
+        <button class="btn solid" id="btn-novo">＋ Novo usuário</button>
+        <button class="btn ghost" id="btn-recarregar" title="Recarregar">↻</button>
+      </div>
+      <div class="ulist" id="ulist"></div>
+    </div>
+
+    <div id="t-matriz" class="hidden">
+      <p class="hint">Clique nos quadrinhos para liberar ou tirar. Nada é gravado até você clicar em <b>Salvar alterações</b>. Mudanças valem na hora — quem perde um acesso é barrado já na próxima ação.</p>
+      <div class="legend">
+        <span><i style="background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.5)"></i>liberado</span>
+        <span><i style="background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45)"></i>página bloqueada</span>
+        <span><i style="background:rgba(148,163,184,.06);border-color:var(--line)"></i>sem acesso de gestor</span>
+        <span><i style="border-color:var(--blue);outline:2px solid var(--blue)"></i>alterado, ainda não salvo</span>
+      </div>
+      <div class="mwrap"><table class="mx" id="mx"></table></div>
+      <div class="savebar hidden" id="savebar">
+        <span id="sb-txt"></span>
+        <button class="btn ghost" id="sb-desc">Descartar</button>
+        <button class="btn solid" id="sb-salvar">Salvar alterações</button>
+      </div>
+    </div>
+
+    <div id="t-log" class="hidden">
+      <div class="box"><div class="log" id="log"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- editor de usuário -->
+<div class="ovl hidden" id="ovl">
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="ed-titulo">
+    <button class="btn ghost small x" id="ed-fechar">✕ Fechar</button>
+    <h2 id="ed-titulo">Novo usuário</h2>
+    <div class="hint" id="ed-sub"></div>
+
+    <div class="sec">Identificação</div>
+    <div class="grid2">
+      <div class="fg"><label for="ed-login">Login</label><input id="ed-login" autocapitalize="none" spellcheck="false" placeholder="ex.: p3aux2"></div>
+      <div class="fg"><label for="ed-nome">Nome (aparece no dashboard)</label><input id="ed-nome" placeholder="ex.: 3º SGT QPPM Fulano"></div>
+      <div class="fg" id="ed-senha-wrap" style="grid-column:1/-1">
+        <label for="ed-senha">Senha inicial</label>
+        <div class="inrow"><input id="ed-senha" type="text" autocomplete="new-password" spellcheck="false" placeholder="mínimo 6 caracteres"><button class="btn ghost" type="button" id="ed-gerar">🎲 Gerar</button></div>
+      </div>
+      <div class="fg" style="grid-column:1/-1"><label for="ed-obs">Observação (opcional)</label><textarea id="ed-obs" placeholder="ex.: substituto do P3 durante as férias"></textarea></div>
+    </div>
+
+    <div class="sec">Situação</div>
+    <div class="opts">
+      <label class="opt" id="o-ativo"><input type="checkbox" id="ed-ativo"><span><b>Usuário ativo</b><small>Desmarcado = não consegue entrar (a sessão aberta cai na hora)</small></span></label>
+      <label class="opt" id="o-admin"><input type="checkbox" id="ed-admin"><span><b>Administrador</b><small>Entra neste painel e mexe em todos os usuários</small></span></label>
+    </div>
+
+    <div class="sec">Poderes de gestor <small>o que a pessoa pode editar/ver de restrito</small></div>
+    <div class="opts" id="ed-perms"></div>
+
+    <div class="sec">Páginas do dashboard <small>desmarque para bloquear</small></div>
+    <div class="opts" id="ed-pags"></div>
+
+    <div class="btnrow" style="margin-top:22px">
+      <button class="btn solid" id="ed-salvar">Salvar</button>
+      <button class="btn ghost" id="ed-cancelar">Cancelar</button>
+    </div>
+    <div class="msg" id="ed-msg"></div>
+    <div class="senhabox hidden" id="ed-senhabox"></div>
+
+    <div id="ed-zona" class="hidden">
+      <div class="zona">
+        <div class="sec" style="margin-top:0">Senha e sessões</div>
+        <div class="inrow" style="flex-wrap:wrap">
+          <input id="ed-novasenha" type="text" autocomplete="new-password" spellcheck="false" placeholder="Nova senha (mín. 6)" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-size:14.5px;outline:none">
+          <button class="btn ghost" type="button" id="ed-gerar2">🎲</button>
+          <button class="btn" id="ed-trocar">Redefinir senha</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Redefinir a senha também desconecta a pessoa de todos os aparelhos.</p>
+        <div class="btnrow" style="margin-top:12px"><button class="btn ghost" id="ed-derrubar">⏏ Encerrar sessões abertas</button></div>
+      </div>
+      <div class="zona">
+        <div class="sec" style="margin-top:0;color:#fca5a5">Excluir usuário</div>
+        <p class="hint">Some da lista e não entra mais. Se for só temporário, prefira desmarcar <b>Usuário ativo</b>.</p>
+        <div class="inrow" style="flex-wrap:wrap;margin-top:10px">
+          <input id="ed-exsenha" type="password" autocomplete="current-password" placeholder="Sua senha, para confirmar" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-size:14.5px;outline:none">
+          <button class="btn danger" id="ed-excluir">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Painel de Controle — usuários e níveis de acesso (BPFRON/RO)
+   Tudo passa pelo Worker (/api/admin*), que confere se o login é admin.
+   Ver o bloco "ADMIN" no fim do backend/worker.js.
+   ===================================================================== */
+
+// ?api=http://127.0.0.1:8787 aponta pra um Worker local (só localhost é aceito).
+const API_BASE = (function(){
+  const q = new URLSearchParams(location.search).get('api');
+  return q && /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(q) ? q : 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let ST = null;          // estado vindo do /api/admin
+let TAB = 'usuarios';
+let PEND = {};          // alterações pendentes da matriz: { login: {ativo,admin,perms,bloqueios} }
+let ED = null;          // usuário aberto no editor (null = novo)
+
+function view(id){
+  ['v-login','v-negado','v-carregando','v-painel'].forEach(v => $(v).classList.toggle('hidden', v !== id));
+  $('btn-sair').classList.toggle('hidden', !AUTH.logged);
+  $('userchip').textContent = AUTH.logged ? '👤 ' + AUTH.user : '';
+}
+
+function toast(msg, erro){
+  const t = document.createElement('div');
+  t.className = 'toast' + (erro ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), erro ? 5000 : 2800);
+}
+
+async function api(path, body){
+  const r = await fetch(API_BASE + path, {
+    method: body ? 'POST' : 'GET',
+    headers: Object.assign({ 'Authorization': 'Bearer ' + AUTH.token }, body ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ sair(); throw new Error('Sessão expirada. Entre de novo.'); }
+  if (r.status === 403 && d.error === 'forbidden'){ view('v-negado'); throw new Error(d.detail || 'Sem permissão.'); }
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.code = d.error; throw e; }
+  return d;
+}
+
+function sair(){ AUTH.token = ''; AUTH.user = ''; try{ localStorage.removeItem('bp_perms'); }catch(e){} ST = null; view('v-login'); }
+
+/* ---------------------------- login ---------------------------- */
+$('f-login').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = $('l-btn'); $('l-msg').textContent = ''; btn.disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user: $('l-user').value.trim(), pass: $('l-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; $('l-pass').value = '';
+    carregar();
+  } catch(e){ $('l-msg').textContent = e.message || 'Não foi possível conectar.'; }
+  finally { btn.disabled = false; }
+});
+$('btn-sair').onclick = sair;
+$('btn-trocar').onclick = sair;
+
+async function carregar(){
+  if (!AUTH.logged){ view('v-login'); return; }
+  if (!ST) view('v-carregando');
+  try {
+    ST = await api('/api/admin');
+    PEND = {};
+    view('v-painel');
+    render();
+  } catch(e){
+    if (!$('v-negado').classList.contains('hidden') || !AUTH.logged) return;
+    view('v-painel'); toast(e.message, true);
+  }
+}
+
+/* ---------------------------- render ---------------------------- */
+const nomePerm = (id) => (ST.permissoes.find(p => p.id === id) || {}).nome || id;
+const nomePag  = (id) => (ST.paginas.find(p => p.id === id) || {}).nome || id;
+
+function quando(ts){
+  if (!ts) return 'nunca';
+  const s = Math.floor(Date.now()/1000) - ts;
+  if (s < 90) return 'agora há pouco';
+  if (s < 3600) return 'há ' + Math.round(s/60) + ' min';
+  if (s < 86400) return 'há ' + Math.round(s/3600) + ' h';
+  if (s < 86400*30) return 'há ' + Math.round(s/86400) + ' dia(s)';
+  return new Date(ts*1000).toLocaleDateString('pt-BR');
+}
+function dataHora(ts){ return new Date(ts*1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+
+function render(){
+  const ro = !ST.painel;
+  $('banner-ativar').classList.toggle('hidden', !ro);
+  $('btn-novo').disabled = ro;
+  const us = ST.usuarios;
+  $('kpis').innerHTML = [
+    [us.length, 'Usuários'], [us.filter(u => u.ativo).length, 'Ativos'],
+    [us.filter(u => u.admin).length, 'Administradores'], [us.filter(u => !u.ativo).length, 'Desativados']
+  ].map(([n, l]) => `<div class="kpi"><b>${n}</b><span>${l}</span></div>`).join('');
+  renderLista(); renderMatriz(); renderLog();
+}
+
+function renderLista(){
+  const q = $('busca').value.trim().toLowerCase();
+  const us = ST.usuarios.filter(u => !q || u.login.includes(q) || (u.nome||'').toLowerCase().includes(q));
+  if (!us.length){ $('ulist').innerHTML = '<div class="vazio">Nenhum usuário encontrado.</div>'; return; }
+  $('ulist').innerHTML = us.map(u => {
+    const chips = [];
+    if (u.admin) chips.push('<span class="chip a">★ Administrador</span>');
+    if (!u.ativo) chips.push('<span class="chip x">Desativado</span>');
+    u.perms.forEach(p => chips.push(`<span class="chip g">${esc(nomePerm(p))}</span>`));
+    u.bloqueios.forEach(p => chips.push(`<span class="chip b">🚫 ${esc(nomePag(p))}</span>`));
+    if (!u.admin && !u.perms.length && !u.bloqueios.length) chips.push('<span class="chip x">Acesso padrão (só as páginas liberadas)</span>');
+    return `<div class="urow ${u.ativo ? '' : 'off'}">
+      <div><div class="u-nome">${esc(u.nome || u.login)}</div><div class="u-login">${esc(u.login)}</div>
+        <div class="u-meta">Último acesso: ${quando(u.ultimo_login)}${u.obs ? ' · ' + esc(u.obs) : ''}</div></div>
+      <div class="chips">${chips.join('')}</div>
+      <div>${ST.painel ? `<button class="btn ghost small" data-edit="${esc(u.login)}">✏️ Editar</button>` : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// Estado efetivo de um usuário na matriz (gravado + pendente).
+function efetivo(u){ return Object.assign({ ativo:u.ativo, admin:u.admin, perms:u.perms.slice(), bloqueios:u.bloqueios.slice() }, PEND[u.login] || {}); }
+
+function renderMatriz(){
+  const ro = !ST.painel;
+  const P = ST.permissoes, G = ST.paginas;
+  let h = `<thead><tr class="grp"><th class="nm"></th><th colspan="2">Situação</th><th colspan="${P.length}" class="sep">Poderes de gestor</th><th colspan="${G.length}" class="sep">Páginas do dashboard</th></tr>
+    <tr class="col"><th class="nm" style="text-align:left">Usuário</th><th class="vt"><span>Ativo</span></th><th class="vt"><span>Administrador</span></th>`
+    + P.map((p, i) => `<th class="vt ${i ? '' : 'sep'}" title="${esc(p.desc)}"><span>${esc(p.nome)}</span></th>`).join('')
+    + G.map((g, i) => `<th class="vt ${i ? '' : 'sep'}"><span>${esc(g.nome)}</span></th>`).join('')
+    + '</tr></thead><tbody>';
+  ST.usuarios.forEach(u => {
+    const e = efetivo(u), eu = u.login === AUTH.user;
+    const cel = (cls, on, attrs, titulo, marca, trava) =>
+      `<td class="${cls}"><button class="cell ${on}" ${attrs} title="${esc(titulo)}" ${ro || trava ? 'disabled' : ''}>${marca}</button></td>`;
+    h += `<tr class="${e.ativo ? '' : 'off'}"><td class="nm"><b>${esc(u.nome || u.login)}</b><small>${esc(u.login)}</small></td>`;
+    h += cel('', (e.ativo ? 'on' : '') + (e.ativo !== u.ativo ? ' mud' : ''), `data-l="${esc(u.login)}" data-k="ativo"`, 'Ativo', '✓', eu);
+    h += cel('', 'adm ' + (e.admin ? 'on' : '') + (e.admin !== u.admin ? ' mud' : ''), `data-l="${esc(u.login)}" data-k="admin"`, 'Administrador', '★', eu);
+    P.forEach((p, i) => {
+      const on = e.perms.includes(p.id), era = u.perms.includes(p.id);
+      h += cel(i ? '' : 'sep', (on ? 'on' : '') + (on !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-p="${p.id}"`, p.nome, '✓');
+    });
+    G.forEach((g, i) => {
+      const blk = e.bloqueios.includes(g.id), era = u.bloqueios.includes(g.id);
+      h += cel(i ? '' : 'sep', (blk ? 'blk' : 'on') + (blk !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-g="${g.id}"`, g.nome + (blk ? ' (bloqueada)' : ' (liberada)'), blk ? '✕' : '✓');
+    });
+    h += '</tr>';
+  });
+  $('mx').innerHTML = h + '</tbody>';
+  const n = Object.keys(PEND).length;
+  $('savebar').classList.toggle('hidden', !n);
+  $('sb-txt').textContent = n + (n === 1 ? ' usuário alterado, ainda não salvo' : ' usuários alterados, ainda não salvos');
+}
+
+function renderLog(){
+  const L = ST.log || [];
+  const icone = { ativar:'🔌', criar:'➕', editar:'✏️', senha:'🔑', sessoes:'⏏', excluir:'🗑️' };
+  $('log').innerHTML = L.length ? L.map(e => `<div class="log-it"><time>${dataHora(e.em)}</time>
+      <div>${icone[e.acao] || '•'} <b>${esc(e.por)}</b> ${e.alvo ? '→ <b>' + esc(e.alvo) + '</b>' : ''} <span class="d">${esc(e.detalhe)}</span></div></div>`).join('')
+    : '<div class="vazio">' + (ST.painel ? 'Nenhuma alteração registrada ainda.' : 'O histórico começa quando o painel for ativado.') + '</div>';
+}
+
+/* ---------------------------- abas / lista ---------------------------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  if (TAB === 'matriz' && t.dataset.tab !== 'matriz' && Object.keys(PEND).length && !confirmaSaida()) return;
+  TAB = t.dataset.tab;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  ['usuarios','matriz','log'].forEach(k => $('t-' + k).classList.toggle('hidden', k !== TAB));
+}));
+function confirmaSaida(){ toast('Salve ou descarte as alterações da matriz antes de sair dela.', true); return false; }
+
+$('busca').addEventListener('input', renderLista);
+$('btn-recarregar').onclick = () => { if (Object.keys(PEND).length) return confirmaSaida(); carregar(); };
+$('ulist').addEventListener('click', (ev) => { const b = ev.target.closest('[data-edit]'); if (b) abrirEditor(b.dataset.edit); });
+$('btn-novo').onclick = () => abrirEditor(null);
+
+/* ---------------------------- matriz ---------------------------- */
+$('mx').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button.cell'); if (!b || b.disabled) return;
+  const u = ST.usuarios.find(x => x.login === b.dataset.l); if (!u) return;
+  const e = efetivo(u);
+  if (b.dataset.k) e[b.dataset.k] = !e[b.dataset.k];
+  if (b.dataset.p) e.perms = e.perms.includes(b.dataset.p) ? e.perms.filter(x => x !== b.dataset.p) : e.perms.concat(b.dataset.p);
+  if (b.dataset.g) e.bloqueios = e.bloqueios.includes(b.dataset.g) ? e.bloqueios.filter(x => x !== b.dataset.g) : e.bloqueios.concat(b.dataset.g);
+  const igual = (a, c) => a.slice().sort().join() === c.slice().sort().join();
+  if (e.ativo === u.ativo && e.admin === u.admin && igual(e.perms, u.perms) && igual(e.bloqueios, u.bloqueios)) delete PEND[u.login];
+  else PEND[u.login] = e;
+  const sc = $('mx').parentElement, x = sc.scrollLeft, y = sc.scrollTop;
+  renderMatriz(); sc.scrollLeft = x; sc.scrollTop = y;
+});
+$('sb-desc').onclick = () => { PEND = {}; renderMatriz(); };
+$('sb-salvar').onclick = async () => {
+  const btn = $('sb-salvar'); btn.disabled = true;
+  try {
+    ST = await api('/api/admin/usuario', { op:'matriz', versao: ST.versao, usuarios: PEND });
+    PEND = {}; render(); toast('✅ Acessos atualizados.');
+  } catch(e){ tratarErro(e); }
+  finally { btn.disabled = false; }
+};
+
+function tratarErro(e){
+  if (e.code === 'conflito'){ toast(e.message, true); PEND = {}; carregar(); return; }
+  toast(e.message, true);
+}
+
+/* ---------------------------- ativar ---------------------------- */
+$('btn-ativar').onclick = async () => {
+  const btn = $('btn-ativar'); $('at-msg').textContent = ''; btn.disabled = true;
+  try {
+    ST = await api('/api/admin/ativar', { senha: $('at-senha').value });
+    $('at-senha').value = ''; PEND = {}; render();
+    toast('✅ Painel ativado. A partir de agora os acessos são controlados por aqui.');
+  } catch(e){ $('at-msg').textContent = e.message; }
+  finally { btn.disabled = false; }
+};
+
+/* ---------------------------- editor ---------------------------- */
+function gerarSenha(){
+  const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const a = new Uint32Array(10); crypto.getRandomValues(a);
+  return Array.from(a, n => c[n % c.length]).join('');
+}
+
+function abrirEditor(login){
+  if (Object.keys(PEND).length){ confirmaSaida(); return; }
+  ED = login ? ST.usuarios.find(u => u.login === login) : null;
+  const u = ED || { login:'', nome:'', ativo:true, admin:false, perms:[], bloqueios:[], obs:'' };
+  const eu = ED && ED.login === AUTH.user;
+  $('ed-titulo').textContent = ED ? (u.nome || u.login) : 'Novo usuário';
+  $('ed-sub').textContent = ED ? `Login ${u.login} · último acesso: ${quando(u.ultimo_login)}` : 'A pessoa entra no dashboard com este login e senha.';
+  $('ed-login').value = u.login; $('ed-login').readOnly = !!ED;
+  $('ed-nome').value = u.nome; $('ed-obs').value = u.obs || '';
+  $('ed-senha').value = ED ? '' : gerarSenha();
+  $('ed-senha-wrap').classList.toggle('hidden', !!ED);
+  $('ed-ativo').checked = u.ativo; $('ed-admin').checked = u.admin;
+  $('ed-ativo').disabled = $('ed-admin').disabled = eu;
+  $('ed-perms').innerHTML = ST.permissoes.map(p => `<label class="opt"><input type="checkbox" data-p="${p.id}" ${u.perms.includes(p.id) ? 'checked' : ''}><span><b>${esc(p.nome)}</b><small>${esc(p.desc)}</small></span></label>`).join('');
+  $('ed-pags').innerHTML = ST.paginas.map(g => `<label class="opt"><input type="checkbox" data-g="${g.id}" ${u.bloqueios.includes(g.id) ? '' : 'checked'}><span><b>${esc(g.nome)}</b><small class="st"></small></span></label>`).join('');
+  $('ed-zona').classList.toggle('hidden', !ED);
+  $('ed-derrubar').disabled = $('ed-excluir').disabled = eu;
+  $('ed-novasenha').value = ''; $('ed-exsenha').value = '';
+  $('ed-msg').textContent = ''; $('ed-msg').className = 'msg';
+  $('ed-senhabox').classList.add('hidden');
+  pintarOpts();
+  $('ovl').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  (ED ? $('ed-nome') : $('ed-login')).focus();
+}
+function fecharEditor(){ $('ovl').classList.add('hidden'); document.body.style.overflow = ''; ED = null; }
+function pintarOpts(){
+  $('o-ativo').classList.toggle('sel', $('ed-ativo').checked);
+  $('o-admin').classList.toggle('admsel', $('ed-admin').checked);
+  $('ed-perms').querySelectorAll('input').forEach(i => i.closest('.opt').classList.toggle('sel', i.checked));
+  $('ed-pags').querySelectorAll('input').forEach(i => {
+    i.closest('.opt').classList.toggle('sel', i.checked);
+    i.closest('.opt').classList.toggle('blk', !i.checked);
+    i.closest('.opt').querySelector('.st').textContent = i.checked ? 'Liberada' : 'Bloqueada';
+  });
+}
+$('ovl').addEventListener('change', pintarOpts);
+$('ed-fechar').onclick = $('ed-cancelar').onclick = fecharEditor;
+$('ovl').addEventListener('click', (ev) => { if (ev.target === $('ovl')) fecharEditor(); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('ovl').classList.contains('hidden')) fecharEditor(); });
+$('ed-gerar').onclick = () => { $('ed-senha').value = gerarSenha(); };
+$('ed-gerar2').onclick = () => { $('ed-novasenha').value = gerarSenha(); };
+
+function edMsg(t, ok){ $('ed-msg').textContent = t; $('ed-msg').className = 'msg ' + (ok ? 'ok' : 'err'); }
+function mostrarSenha(login, senha){
+  $('ed-senhabox').innerHTML = `<div style="font-size:13px;color:#a7f3d0;margin-bottom:6px">Passe estes dados para a pessoa — a senha <b>não aparece de novo</b>:</div>
+    <div>Login: <code>${esc(login)}</code></div><div>Senha: <code>${esc(senha)}</code></div>
+    <button class="btn ghost small" style="margin-top:10px" id="cp-senha">📋 Copiar</button>`;
+  $('ed-senhabox').classList.remove('hidden');
+  $('cp-senha').onclick = () => navigator.clipboard.writeText(`Dashboard BPFRON\nLogin: ${login}\nSenha: ${senha}\nhttps://renanro2021-ops.github.io/bpfron-dashboard/`).then(() => toast('Copiado.'));
+}
+
+async function edExec(btn, body, okMsg){
+  btn.disabled = true;
+  try {
+    ST = await api('/api/admin/usuario', Object.assign({ versao: ST.versao }, body));
+    render();
+    if (okMsg) edMsg(okMsg, true);
+    return true;
+  } catch(e){
+    if (e.code === 'conflito'){ fecharEditor(); tratarErro(e); } else edMsg(e.message);
+    return false;
+  } finally { btn.disabled = false; }
+}
+
+$('ed-salvar').onclick = async () => {
+  const perms = [...$('ed-perms').querySelectorAll('input:checked')].map(i => i.dataset.p);
+  const bloqueios = [...$('ed-pags').querySelectorAll('input:not(:checked)')].map(i => i.dataset.g);
+  const dados = { nome: $('ed-nome').value.trim(), obs: $('ed-obs').value.trim(), ativo: $('ed-ativo').checked, admin: $('ed-admin').checked, perms, bloqueios };
+  if (ED){
+    if (await edExec($('ed-salvar'), Object.assign({ op:'editar', login: ED.login }, dados))){ fecharEditor(); toast('✅ Usuário atualizado.'); }
+    return;
+  }
+  const login = $('ed-login').value.trim().toLowerCase(), senha = $('ed-senha').value;
+  if (await edExec($('ed-salvar'), Object.assign({ op:'criar', login, senhaNova: senha }, dados), '✅ Usuário criado.')){
+    ED = ST.usuarios.find(u => u.login === login);
+    mostrarSenha(login, senha);
+    $('ed-login').readOnly = true; $('ed-senha-wrap').classList.add('hidden'); $('ed-zona').classList.remove('hidden');
+    $('ed-titulo').textContent = ED ? (ED.nome || login) : login;
+  }
+};
+$('ed-trocar').onclick = async () => {
+  const s = $('ed-novasenha').value;
+  if (s.length < 6) return edMsg('A senha precisa ter pelo menos 6 caracteres.');
+  if (await edExec($('ed-trocar'), { op:'senha', login: ED.login, senhaNova: s }, '✅ Senha redefinida.')){ mostrarSenha(ED.login, s); $('ed-novasenha').value = ''; }
+};
+$('ed-derrubar').onclick = () => edExec($('ed-derrubar'), { op:'derrubar', login: ED.login }, '✅ Sessões encerradas — a pessoa vai precisar entrar de novo.');
+$('ed-excluir').onclick = async () => {
+  if (!$('ed-exsenha').value) return edMsg('Digite a sua senha para confirmar a exclusão.');
+  const quem = ED.login;
+  if (await edExec($('ed-excluir'), { op:'excluir', login: quem, senha: $('ed-exsenha').value })){ fecharEditor(); toast('🗑️ Usuário ' + quem + ' excluído.'); }
+};
+
+window.addEventListener('beforeunload', (ev) => { if (Object.keys(PEND).length){ ev.preventDefault(); ev.returnValue = ''; } });
+
+carregar();
+</script>
+</body>
+</html>

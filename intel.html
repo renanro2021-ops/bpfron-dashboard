@@ -328,7 +328,25 @@ const AUTH = {
 // ALLOWLIST — igual ao MI_GESTORES do index.html E ao mapaIntelEditors() do worker.js.
 // Mudar aqui = mudar nos dois. desousa (Renan) · cmtfelipe (Maj Felipe) · ni (Núcleo de Inteligência)
 const MI_GESTORES = ['desousa','cmtfelipe','ni'];
-function miPodeGerir(){ return AUTH.logged && MI_GESTORES.includes(AUTH.user); }
+function miPodeGerir(){ return AUTH.logged && temPerm('intel', MI_GESTORES); }
+/* Permissões do painel admin.html — vêm do Worker no login e no /api/me. A lista
+   fixa acima só vale enquanto essa informação não chegou (Worker antigo). */
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+// Ao abrir: se o acesso mudou no painel (ou o usuário foi desativado), recarrega já com o acesso novo.
+(async function(){
+  if (!AUTH.logged) return;
+  try{
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ AUTH.token = ''; AUTH.user = ''; location.reload(); return; }
+    if (!d.perms) return;
+    const antes = localStorage.getItem('bp_perms'); salvarPerms(d);
+    if (antes !== localStorage.getItem('bp_perms')) location.reload();
+  }catch(e){ /* sem rede: segue com o que já tem */ }
+})();
 const currentPage = 'mapa-intel';   // shim: miKeydown() checa isto
 
 async function apiFetchJSON(path){
@@ -393,7 +411,7 @@ async function intelDoLogin(ev){
     });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
-    AUTH.token = d.token; AUTH.user = d.user;
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d);
     document.getElementById('intel-pass').value = '';
     if (!miPodeGerir()){ erro.textContent = 'Este usuário não tem acesso à Central de Inteligência.'; intelRenderChip(); return false; }
     intelShow();
