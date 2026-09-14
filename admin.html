@@ -145,6 +145,40 @@ table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f1628;border:1px solid rgba(52,211,153,.5);color:#d1fae5;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:600;z-index:300;box-shadow:0 10px 40px rgba(0,0,0,.6);max-width:calc(100% - 32px)}
 .toast.err{border-color:rgba(239,68,68,.6);color:#fecaca}
 .vazio{text-align:center;color:var(--muted);padding:30px 10px}
+.so-cel{display:none}
+
+/* ---------- celular ---------- */
+@media (max-width:640px){
+  .hdr{position:static}
+  .hdr-logo{height:34px}
+  .hdr-sub{font-size:11px}
+  .hdr-right{width:100%;justify-content:space-between}
+  /* 16px evita o zoom automático do iPhone ao tocar no campo */
+  input,textarea{font-size:16px!important}
+  .tabs{gap:6px}
+  .tab{flex:1;padding:10px 6px;font-size:13px;text-align:center}
+  .toolbar input{min-width:0;flex-basis:100%}
+  .toolbar #btn-novo{flex:1}
+  .btn.small{min-height:40px;padding:8px 14px}
+  .kpi{padding:10px 12px}.kpi b{font-size:24px}
+  .urow{padding:12px 14px;gap:10px}
+  .urow [data-edit]{width:100%}
+  .mx td.nm,.mx th.nm{min-width:112px;max-width:124px;white-space:normal;padding-left:8px}
+  .mx td.nm b{font-size:12.5px;line-height:1.25;display:block}
+  .mx td.nm small{font-size:11px}
+  .mx th,.mx td{padding:6px 4px}
+  .cell{width:34px;height:34px}
+  .mwrap{max-height:62vh}
+  .savebar{bottom:8px;padding:10px 12px}
+  .savebar span{flex-basis:100%;font-size:13px}
+  .savebar .btn{flex:1}
+  .drawer{padding-top:14px}
+  .drawer h2{font-size:21px;clear:both;padding-top:6px}
+  .inrow .btn{flex-shrink:0}
+  .banner .inrow input{flex-basis:100%}
+  .banner .inrow .btn{width:100%}
+  .so-cel{display:block}
+}
 </style>
 </head>
 <body>
@@ -223,6 +257,7 @@ table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 
     <div id="t-matriz" class="hidden">
       <p class="hint">Clique nos quadrinhos para liberar ou tirar. Nada é gravado até você clicar em <b>Salvar alterações</b>. Mudanças valem na hora — quem perde um acesso é barrado já na próxima ação.</p>
+      <p class="hint so-cel" style="margin-top:6px">📱 No celular, arraste a tabela para o lado para ver todas as colunas — ou use <b>✏️ Editar</b> na aba Usuários, que fica mais confortável.</p>
       <div class="legend">
         <span><i style="background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.5)"></i>liberado</span>
         <span><i style="background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45)"></i>página bloqueada</span>
@@ -425,6 +460,7 @@ function renderLista(){
   if (!us.length){ $('ulist').innerHTML = '<div class="vazio">Nenhum usuário encontrado.</div>'; return; }
   $('ulist').innerHTML = us.map(u => {
     const chips = [];
+    if (u.dev) chips.push('<span class="chip a">🔒 Desenvolvedor</span>');
     if (u.admin) chips.push('<span class="chip a">★ Administrador</span>');
     if (!u.ativo) chips.push('<span class="chip x">Desativado</span>');
     u.perms.forEach(p => chips.push(`<span class="chip g">${esc(nomePerm(p))}</span>`));
@@ -434,10 +470,14 @@ function renderLista(){
       <div><div class="u-nome">${esc(u.nome || u.login)}</div><div class="u-login">${esc(u.login)}</div>
         <div class="u-meta">Último acesso: ${quando(u.ultimo_login)}${u.obs ? ' · ' + esc(u.obs) : ''}</div></div>
       <div class="chips">${chips.join('')}</div>
-      <div>${ST.painel ? `<button class="btn ghost small" data-edit="${esc(u.login)}">✏️ Editar</button>` : ''}</div>
+      <div>${!ST.painel ? '' : travadoDev(u) ? '<span class="chip x" title="Só o desenvolvedor altera este usuário">🔒 Protegido</span>' : `<button class="btn ghost small" data-edit="${esc(u.login)}">✏️ Editar</button>`}</div>
     </div>`;
   }).join('');
 }
+
+// Usuário do desenvolvedor: só ele mesmo altera (a trava de verdade é o ACL_DEVS do worker.js).
+function souDev(){ const me = ST && ST.usuarios.find(x => x.login === AUTH.user); return !!(me && me.dev); }
+function travadoDev(u){ return u.dev && !souDev(); }
 
 // Estado efetivo de um usuário na matriz (gravado + pendente).
 function efetivo(u){ return Object.assign({ ativo:u.ativo, admin:u.admin, perms:u.perms.slice(), bloqueios:u.bloqueios.slice() }, PEND[u.login] || {}); }
@@ -451,19 +491,19 @@ function renderMatriz(){
     + G.map((g, i) => `<th class="vt ${i ? '' : 'sep'}"><span>${esc(g.nome)}</span></th>`).join('')
     + '</tr></thead><tbody>';
   ST.usuarios.forEach(u => {
-    const e = efetivo(u), eu = u.login === AUTH.user;
+    const e = efetivo(u), eu = u.login === AUTH.user || travadoDev(u);
     const cel = (cls, on, attrs, titulo, marca, trava) =>
       `<td class="${cls}"><button class="cell ${on}" ${attrs} title="${esc(titulo)}" ${ro || trava ? 'disabled' : ''}>${marca}</button></td>`;
-    h += `<tr class="${e.ativo ? '' : 'off'}"><td class="nm"><b>${esc(u.nome || u.login)}</b><small>${esc(u.login)}</small></td>`;
+    h += `<tr class="${e.ativo ? '' : 'off'}"><td class="nm"><b>${u.dev ? '🔒 ' : ''}${esc(u.nome || u.login)}</b><small>${esc(u.login)}</small></td>`;
     h += cel('', (e.ativo ? 'on' : '') + (e.ativo !== u.ativo ? ' mud' : ''), `data-l="${esc(u.login)}" data-k="ativo"`, 'Ativo', '✓', eu);
     h += cel('', 'adm ' + (e.admin ? 'on' : '') + (e.admin !== u.admin ? ' mud' : ''), `data-l="${esc(u.login)}" data-k="admin"`, 'Administrador', '★', eu);
     P.forEach((p, i) => {
       const on = e.perms.includes(p.id), era = u.perms.includes(p.id);
-      h += cel(i ? '' : 'sep', (on ? 'on' : '') + (on !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-p="${p.id}"`, p.nome, '✓');
+      h += cel(i ? '' : 'sep', (on ? 'on' : '') + (on !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-p="${p.id}"`, p.nome, '✓', travadoDev(u));
     });
     G.forEach((g, i) => {
       const blk = e.bloqueios.includes(g.id), era = u.bloqueios.includes(g.id);
-      h += cel(i ? '' : 'sep', (blk ? 'blk' : 'on') + (blk !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-g="${g.id}"`, g.nome + (blk ? ' (bloqueada)' : ' (liberada)'), blk ? '✕' : '✓');
+      h += cel(i ? '' : 'sep', (blk ? 'blk' : 'on') + (blk !== era ? ' mud' : ''), `data-l="${esc(u.login)}" data-g="${g.id}"`, g.nome + (blk ? ' (bloqueada)' : ' (liberada)'), blk ? '✕' : '✓', travadoDev(u));
     });
     h += '</tr>';
   });
@@ -545,6 +585,7 @@ function gerarSenha(){
 function abrirEditor(login){
   if (Object.keys(PEND).length){ confirmaSaida(); return; }
   ED = login ? ST.usuarios.find(u => u.login === login) : null;
+  if (ED && travadoDev(ED)){ toast('Este é o usuário do desenvolvedor — só ele mesmo pode alterá-lo.', true); ED = null; return; }
   const u = ED || { login:'', nome:'', ativo:true, admin:false, perms:[], bloqueios:[], obs:'' };
   const eu = ED && ED.login === AUTH.user;
   $('ed-titulo').textContent = ED ? (u.nome || u.login) : 'Novo usuário';
