@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Sistemas · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
+  --green:#34d399;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1240px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(16px,4vw,28px) 80px}
+.intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,34px);color:#fff;line-height:1.15}
+.intro p{color:var(--muted);font-size:14px;margin-top:4px}
+
+.busca{margin:20px 0 6px}
+.busca input{width:100%;max-width:460px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-family:inherit;font-size:15px;outline:none;min-height:44px}
+.busca input:focus{border-color:rgba(245,197,24,.6)}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:28px 0 12px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
+.card:hover,.card:focus-visible{border-color:rgba(245,197,24,.55);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
+.card-top{display:flex;align-items:center;gap:12px}
+.ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:rgba(245,197,24,.10);border:1px solid rgba(245,197,24,.25);flex-shrink:0}
+.card h2{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff;line-height:1.15}
+.card p{font-size:13.5px;color:var(--muted);line-height:1.55;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700;border:1px solid}
+.chip.pub{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
+.chip.res{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.go{font-size:14px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:8px 16px;white-space:nowrap}
+.vazio{color:var(--muted);padding:30px 4px}
+.hidden{display:none!important}
+
+@media (max-width:640px){
+  .hdr{position:static}
+  .hdr-logo{height:34px}
+  .busca input{font-size:16px}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Sistemas <em>BPFRON</em></div>
+        <div class="hdr-sub">Acesso rápido a todas as páginas · BPFRON/RO</div>
+      </div>
+    </div>
+    <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>Todos os sistemas</h1>
+    <p>Clique no sistema para abrir. As páginas restritas pedem o login do dashboard ao entrar.</p>
+  </div>
+
+  <div class="busca">
+    <input id="q" type="search" placeholder="🔎 Buscar sistema…" autocomplete="off" aria-label="Buscar sistema">
+  </div>
+
+  <div id="lista"></div>
+  <div id="vazio" class="vazio hidden">Nenhum sistema encontrado.</div>
+</main>
+
+<script>
+/* Para incluir um sistema novo, basta acrescentar uma linha aqui.
+   pub:true = aberto ao efetivo (sem login para entrar); false = pede login. */
+const GRUPOS = [
+  { nome:'Análise e Inteligência', itens:[
+    { href:'index.html', ic:'📊', nome:'Painel Analítico', pub:true,
+      desc:'Dashboard de operações: indicadores, mapa, gráficos e áreas de Gestão (Garagem, Material Bélico, Diárias, Consultas).' },
+    { href:'intel.html', ic:'🕵️', nome:'Central de Inteligência', pub:false,
+      desc:'Mapa de Inteligência (P2) com marcações, fotos e pesquisa cruzada de envolvidos, veículos e ocorrências.' }
+  ]},
+  { nome:'Gestão', itens:[
+    { href:'diaria.html', ic:'💵', nome:'Lançar Diárias', pub:false,
+      desc:'Lançamento das diárias a partir da escala em PDF do SEI, com edição e histórico das escalas lançadas.' },
+    { href:'rvn.html', ic:'✍️', nome:'RVN · Assinatura Digital', pub:false,
+      desc:'Assinatura digital dos RVNs e controle dos documentos pendentes e assinados.' }
+  ]},
+  { nome:'Serviços ao Efetivo', itens:[
+    { href:'p1.html', ic:'🗂️', nome:'P1 · Seção Pessoal', pub:true,
+      desc:'Autoatualização da ficha cadastral do policial: dados pessoais, cursos e acessos.' },
+    { href:'acessos.html', ic:'🔐', nome:'Acesso a Sistemas', pub:true,
+      desc:'Informe a quais sistemas policiais (INFOSEG, SEISP, DETRANET, CÓRTEX…) você ainda não tem acesso.' },
+    { href:'emborrachados.html', ic:'🛒', nome:'Pedido de Emborrachados', pub:true,
+      desc:'Catálogo e pedido de emborrachados do batalhão.' }
+  ]},
+  { nome:'Administração', itens:[
+    { href:'admin.html', ic:'🛡️', nome:'Painel de Controle', pub:false,
+      desc:'Usuários, senhas e níveis de acesso de cada login. Somente administradores.' }
+  ]}
+];
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+
+function render(){
+  const q = norm(document.getElementById('q').value.trim());
+  let html = '', total = 0;
+  GRUPOS.forEach(g => {
+    const itens = g.itens.filter(s => !q || norm(s.nome + ' ' + s.desc + ' ' + g.nome).includes(q));
+    if (!itens.length) return;
+    total += itens.length;
+    html += '<div class="sec">' + esc(g.nome) + '</div><div class="grid">'
+      + itens.map(s =>
+          '<a class="card" href="' + esc(s.href) + '">'
+        +   '<div class="card-top"><span class="ic">' + s.ic + '</span><h2>' + esc(s.nome) + '</h2></div>'
+        +   '<p>' + esc(s.desc) + '</p>'
+        +   '<div class="card-foot">'
+        +     (s.pub ? '<span class="chip pub">Aberto ao efetivo</span>' : '<span class="chip res">🔒 Requer login</span>')
+        +     '<span class="go">Acessar →</span>'
+        +   '</div>'
+        + '</a>').join('')
+      + '</div>';
+  });
+  document.getElementById('lista').innerHTML = html;
+  document.getElementById('vazio').classList.toggle('hidden', total > 0);
+}
+
+document.getElementById('q').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>
