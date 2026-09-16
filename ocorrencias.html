@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Busca de Ocorrências — BPFRON</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8E%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --bg3:#101524; --yellow:#F5C518; --gold:#c9a030;
+  --blue2:#3b82f6; --green2:#22c55e; --red:#dc2626;
+  --text:#dde3f0; --muted:#8b97a8; --border:rgba(245,197,24,0.16);
+  --card:#0f172a;
+}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
+body{padding:0 0 60px}
+a{color:var(--yellow)}
+
+/* ── cabeçalho (mesmo padrão das outras páginas satélite) ── */
+.oc-hdr{display:flex;align-items:center;gap:14px;padding:14px 22px;background:linear-gradient(180deg,#0c1120,#080b14);
+  border-bottom:3px solid var(--yellow);position:sticky;top:0;z-index:50}
+.oc-hdr img{width:40px;height:40px;object-fit:contain;mix-blend-mode:screen}
+.oc-hdr .ht{font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;letter-spacing:.5px;line-height:1}
+.oc-hdr .hs{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.oc-hdr .spacer{flex:1}
+.oc-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;background:var(--card);border:1px solid var(--border);
+  border-radius:999px;color:var(--text);font-weight:600;font-size:13px}
+.oc-sair{padding:8px 16px;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.4);border-radius:8px;
+  color:#f87171;cursor:pointer;font-size:13px;font-weight:600}
+.oc-back{padding:8px 14px;background:rgba(245,197,24,.1);border:1px solid var(--border);border-radius:8px;
+  color:var(--yellow);cursor:pointer;font-size:13px;font-weight:600;text-decoration:none}
+
+.wrap{max-width:1180px;margin:0 auto;padding:22px}
+
+/* ── login ── */
+#oc-login{max-width:400px;margin:70px auto;background:var(--card);border:1px solid #1e293b;border-radius:16px;
+  padding:32px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#oc-login .ic{text-align:center;font-size:46px;line-height:1}
+#oc-login h2{text-align:center;font-size:19px;color:#e2e8f0;margin:8px 0 4px}
+#oc-login p{text-align:center;font-size:12.5px;color:#94a3b8;margin-bottom:22px}
+#oc-login label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
+#oc-login input{width:100%;padding:11px 13px;margin-bottom:14px;background:#0b1220;border:1px solid #334155;border-radius:9px;color:#e2e8f0;font-size:14px}
+#oc-login button{width:100%;padding:12px;background:var(--yellow);border:0;border-radius:9px;color:#0a0f1a;font-weight:700;font-size:15px;cursor:pointer}
+#oc-erro{color:#f87171;font-size:12.5px;min-height:18px;margin-bottom:8px;text-align:center}
+#oc-loader{display:none;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--muted);font-size:14px}
+
+/* ── barra de busca (o coração da página) ── */
+.busca-box{background:linear-gradient(180deg,#0d1424,#0a0f1c);border:1px solid var(--border);border-radius:18px;
+  padding:20px 22px 18px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.busca-ttl{font-family:Rajdhani,sans-serif;font-weight:700;font-size:23px;color:var(--yellow);letter-spacing:.4px}
+.busca-sub{font-size:12.5px;color:var(--muted);margin:2px 0 14px;line-height:1.55}
+.busca-linha{display:flex;gap:10px;align-items:stretch}
+.busca-input-wrap{position:relative;flex:1}
+.busca-input-wrap .lupa{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:19px;opacity:.75;pointer-events:none}
+#q{width:100%;padding:17px 44px 17px 48px;background:#070b14;border:2px solid #24304a;border-radius:13px;
+  color:#e8eefc;font-size:17px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+#q:focus{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(245,197,24,.10)}
+#q::placeholder{color:#59657a}
+.q-limpar{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--muted);
+  font-size:20px;cursor:pointer;line-height:1;padding:4px;display:none}
+.q-limpar:hover{color:#f87171}
+.btn-buscar{padding:0 26px;background:var(--yellow);border:0;border-radius:13px;color:#0a0f1a;font-weight:700;
+  font-size:15px;cursor:pointer;white-space:nowrap}
+.btn-buscar:hover{background:#ffd633}
+
+.sugestoes{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;align-items:center}
+.sug-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-right:2px}
+.sug{padding:5px 11px;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.22);border-radius:999px;
+  color:#e3c96b;font-size:12px;cursor:pointer;font-family:inherit}
+.sug:hover{background:rgba(245,197,24,.17);color:var(--yellow)}
+.sug.rec{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.3);color:#93c5fd}
+.sug.rec:hover{background:rgba(59,130,246,.2)}
+
+/* aviso de expansão de termos — transparência: mostra o que a busca incluiu sozinha */
+.expansao{margin-top:12px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.22);border-radius:10px;
+  padding:9px 12px;font-size:12px;color:#a7d8b8;line-height:1.6;display:none}
+.expansao b{color:#4ade80}
+.expansao .tgl{float:right;background:none;border:1px solid rgba(34,197,94,.35);color:#86efac;border-radius:7px;
+  padding:2px 9px;font-size:11px;cursor:pointer;font-family:inherit;margin-left:10px}
+
+.opcoes{margin-top:11px}
+.opcoes .chk{font-size:12px;color:#9fb0c7;align-items:flex-start}
+.opcoes .chk b{color:#cbd5e1}
+.opcoes .chk i{color:var(--muted);font-style:normal}
+.ajuda-link{background:none;border:0;color:var(--muted);font-size:11.5px;cursor:pointer;text-decoration:underline;
+  font-family:inherit;padding:0;margin-top:11px}
+.ajuda{display:none;margin-top:10px;background:#070b14;border:1px solid #1e293b;border-radius:10px;padding:12px 14px;
+  font-size:12px;color:#9fb0c7;line-height:1.85}
+.ajuda code{background:#131c2e;border:1px solid #24304a;border-radius:4px;padding:1px 6px;color:var(--yellow);font-size:11.5px}
+
+/* ── filtros ── */
+.filtros{margin-top:14px;background:var(--card);border:1px solid #1e293b;border-radius:14px;padding:14px 16px}
+.filtros-hd{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.filtros-hd .ft{font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;color:var(--yellow)}
+.filtros-hd .fc{font-size:11.5px;color:var(--muted);flex:1}
+.filtros-hd .seta{color:var(--muted);font-size:13px;transition:transform .2s}
+.filtros.aberto .seta{transform:rotate(180deg)}
+.filtros-bd{display:none;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:11px;margin-top:13px}
+.filtros.aberto .filtros-bd{display:grid}
+.fg label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.fg select,.fg input{width:100%;padding:9px 11px;background:#070b14;border:1px solid #24304a;border-radius:8px;
+  color:#e2e8f0;font-size:13px;font-family:inherit}
+.fg select:focus,.fg input:focus{outline:none;border-color:var(--yellow)}
+.filtros-rod{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.btn-lim{padding:7px 14px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);border-radius:8px;
+  color:#fca5a5;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#b6c2d4;cursor:pointer}
+.chk input{width:15px;height:15px;accent-color:var(--yellow);cursor:pointer}
+
+/* ── KPIs do resultado ── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-top:16px}
+.kpi{background:var(--card);border:1px solid #1e293b;border-left:3px solid var(--yellow);border-radius:11px;padding:11px 13px}
+.kpi .kv{font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#fff;line-height:1.1}
+.kpi .kl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-top:2px}
+.kpi.b{border-left-color:var(--blue2)} .kpi.g{border-left-color:var(--green2)} .kpi.r{border-left-color:var(--red)}
+
+/* ── barra de resultados ── */
+.res-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0 12px}
+.res-cont{font-family:Rajdhani,sans-serif;font-size:19px;font-weight:700;color:var(--yellow);flex:1}
+.res-cont small{font-family:Inter,sans-serif;font-size:12px;font-weight:400;color:var(--muted);display:block;margin-top:1px}
+.mini{padding:7px 13px;background:rgba(245,197,24,.09);border:1px solid var(--border);border-radius:8px;
+  color:var(--yellow);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
+.mini:hover{background:rgba(245,197,24,.2)}
+.mini select,select.mini{padding:7px 10px;background:#0b1220;border:1px solid var(--border);border-radius:8px;
+  color:var(--yellow);font-size:12px;font-family:inherit;font-weight:600;cursor:pointer}
+
+/* ── cartões de ocorrência ── */
+.lista{display:flex;flex-direction:column;gap:12px}
+.oc{background:var(--card);border:1px solid #1e293b;border-left:4px solid #334155;border-radius:13px;padding:14px 16px;
+  transition:border-color .15s}
+.oc:hover{border-color:#2d3c56;border-left-color:var(--yellow)}
+.oc.aberto{border-left-color:var(--yellow)}
+.oc-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.bo{background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.4);color:#93c5fd;border-radius:6px;
+  padding:2px 9px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+.oc-top .sep{opacity:.35}
+.oc-nat{font-size:14.5px;font-weight:600;color:#e8eefc;margin:7px 0 0;line-height:1.4}
+.oc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:#131c2e;border:1px solid #24304a;border-radius:6px;padding:2px 8px;font-size:11.5px;color:#b6c2d4;font-weight:600}
+.tag.dr{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.3);color:#fca5a5}
+.tag.ap{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.28);color:#86efac}
+.tag.pr{background:rgba(245,197,24,.1);border-color:rgba(245,197,24,.3);color:#f0d264}
+.oc-snip{margin-top:9px;font-size:13px;color:#a9b7cb;line-height:1.7}
+.oc-snip mark{background:rgba(245,197,24,.28);color:#ffe680;border-radius:3px;padding:0 2px;font-weight:600}
+.oc-vazio{margin-top:9px;font-size:12.5px;color:#5b6678;font-style:italic}
+.oc-pq{margin-top:7px;font-size:11.5px;color:#7f8ea3}
+.oc-pq b{color:#a7d8b8;font-weight:600}
+.oc-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.act{background:none;border:1px solid #24304a;border-radius:7px;padding:5px 11px;color:#93a3b8;font-size:11.5px;
+  cursor:pointer;font-family:inherit;font-weight:600;text-decoration:none;display:inline-block}
+.act:hover{border-color:var(--yellow);color:var(--yellow)}
+.oc-full{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #24304a}
+.oc.aberto .oc-full{display:block}
+.oc-full .ft{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--yellow);font-weight:700;margin:10px 0 5px}
+.oc-full .txt{font-size:13px;color:#c3cfe0;line-height:1.85;white-space:pre-wrap}
+.oc-full .txt mark{background:rgba(245,197,24,.28);color:#ffe680;border-radius:3px;padding:0 2px;font-weight:600}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:5px 18px;font-size:12.5px;color:#9fb0c7}
+.kv b{color:#dde3f0;font-weight:600}
+.vazio{text-align:center;padding:50px 20px;color:var(--muted)}
+.vazio .vi{font-size:44px;opacity:.5}
+.vazio h3{font-size:16px;color:#cbd5e1;margin:10px 0 6px;font-weight:600}
+.vazio p{font-size:13px;line-height:1.7}
+.paginar{text-align:center;margin-top:18px}
+
+@media (max-width:640px){
+  .wrap{padding:14px}
+  .kpi .kv{font-size:19px;overflow-wrap:anywhere}   /* "R$ 54.071.550,00" não pode furar o card */
+  .busca-linha{flex-direction:column}
+  .btn-buscar{padding:13px}
+  #q{font-size:16px;padding:14px 40px 14px 44px}
+  .oc-hdr{padding:11px 14px;gap:10px}
+  .oc-hdr .ht{font-size:16px}
+}
+
+/* ── impressão: vira relatório limpo ── */
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .oc-hdr,.busca-box,.filtros,.res-bar .mini,.oc-acts,.paginar,#oc-login{display:none !important}
+  .wrap{max-width:none;padding:0}
+  .kpi,.oc{background:#fff;border:1px solid #bbb;color:#000;break-inside:avoid;page-break-inside:avoid}
+  .oc-nat,.kpi .kv{color:#000}
+  .oc-snip,.oc-full .txt,.kv{color:#222}
+  .oc-full{display:block !important}
+  mark{background:#ffe680 !important;color:#000 !important}
+  #print-hd{display:block !important}
+}
+#print-hd{display:none;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px}
+#print-hd h1{font-size:17px}#print-hd div{font-size:12px;color:#333}
+</style>
+</head>
+<body>
+
+<div class="oc-hdr">
+  <img src="LOGOS/bpfron_transp.avif" alt="BPFRON" onerror="this.style.display='none'">
+  <div>
+    <div class="ht">Busca de Ocorrências</div>
+    <div class="hs">BPFRON · P2/NI e P3 · Uso Restrito</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="oc-back" href="index.html">← Painel</a>
+  <span class="oc-chip" id="oc-chip" style="display:none"></span>
+  <button class="oc-sair" id="oc-sair" style="display:none" onclick="ocLogout()">⎋ Sair</button>
+</div>
+
+<div id="oc-loader">⏳ Carregando ocorrências…</div>
+
+<!-- LOGIN -->
+<div id="oc-login" style="display:none">
+  <div class="ic">🔎</div>
+  <h2>Busca de Ocorrências</h2>
+  <p>Área restrita: o texto das ocorrências tem dados pessoais de envolvidos. Informe seu login do sistema.</p>
+  <form id="oc-login-form" onsubmit="return ocDoLogin(event)">
+    <label>Usuário</label>
+    <input id="oc-user" type="text" autocomplete="username" required>
+    <label>Senha</label>
+    <input id="oc-pass" type="password" autocomplete="current-password" required>
+    <div id="oc-erro"></div>
+    <button id="oc-login-btn" type="submit">Entrar</button>
+  </form>
+</div>
+
+<!-- APLICAÇÃO -->
+<div id="oc-app" style="display:none">
+<div class="wrap">
+
+  <div id="print-hd"></div>
+
+  <div class="busca-box">
+    <div class="busca-ttl">🔎 Pesquisa livre nas ocorrências</div>
+    <div class="busca-sub">
+      Digite o que quiser — a busca varre <b>toda a descrição</b> de cada ocorrência, além de natureza, município,
+      operação, endereço e destino dos envolvidos. Ex.: <i>carro vermelho</i>, <i>starlink</i>, <i>embarcação</i>, <i>madeira</i>.
+    </div>
+
+    <div class="busca-linha">
+      <div class="busca-input-wrap">
+        <span class="lupa">🔍</span>
+        <input id="q" type="search" autocomplete="off" spellcheck="false"
+               placeholder="o que você procura? ex.: embarcação · carro vermelho · starlink · tora de madeira">
+        <button class="q-limpar" id="q-limpar" onclick="limparQ()" title="Limpar">✕</button>
+      </div>
+      <button class="btn-buscar" onclick="buscar()">Buscar</button>
+    </div>
+
+    <div class="sugestoes" id="sugestoes"></div>
+    <div class="opcoes" id="opcoes" style="display:none">
+      <label class="chk"><input type="checkbox" id="f-prox" checked onchange="buscar()">
+        <span>palavras <b>próximas</b> — na mesma frase, não espalhadas pelo texto
+        <i id="prox-dica"></i></span></label>
+    </div>
+    <div class="expansao" id="expansao"></div>
+
+    <button class="ajuda-link" onclick="toggleAjuda()">como refinar a busca (aspas, exclusão, OU)</button>
+    <div class="ajuda" id="ajuda">
+      <b style="color:#e2e8f0">Regras da barra de pesquisa</b><br>
+      • Vários termos = a ocorrência precisa ter <b>todos</b>. <code>carro vermelho</code> traz só o que tem carro <u>e</u> vermelho.<br>
+      • <code>"motor de popa"</code> entre aspas = a expressão exata, naquela ordem.<br>
+      • <code>-palavra</code> exclui. <code>madeira -caminhão</code> = madeira, mas sem citar caminhão.<br>
+      • <code>ou</code> (ou <code>|</code>) aceita alternativas: <code>voadeira ou canoa ou balsa</code>.<br>
+      • Acento e maiúscula não importam, e plural/singular são tratados como iguais (<code>embarcações</code> = <code>embarcação</code>).<br>
+      • Só números procura pelo <b>Nº do BO</b>.<br>
+      • A busca também entende as <b>colunas de apreensão</b>: <code>embarcação</code> traz quem tem "Embarcações (un.)" preenchido,
+        mesmo que o texto não use a palavra.
+    </div>
+  </div>
+
+  <div class="filtros" id="filtros">
+    <div class="filtros-hd" onclick="toggleFiltros()">
+      <span class="ft">⚙️ Filtros</span>
+      <span class="fc" id="filtros-resumo">período, município, natureza, tipo, meio, operação</span>
+      <span class="seta">▼</span>
+    </div>
+    <div class="filtros-bd">
+      <div class="fg"><label>De</label><input type="date" id="f-de" onchange="buscar()"></div>
+      <div class="fg"><label>Até</label><input type="date" id="f-ate" onchange="buscar()"></div>
+      <div class="fg"><label>Município</label><select id="f-mun" onchange="buscar()"></select></div>
+      <div class="fg"><label>Natureza / Crime</label><select id="f-nat" onchange="buscar()"></select></div>
+      <div class="fg"><label>Tipo de BO</label><select id="f-tipo" onchange="buscar()"></select></div>
+      <div class="fg"><label>Meio</label><select id="f-meio" onchange="buscar()"></select></div>
+      <div class="fg"><label>Operação</label><select id="f-op" onchange="buscar()"></select></div>
+    </div>
+    <div class="filtros-rod" id="filtros-rod" style="display:none">
+      <button class="btn-lim" onclick="limparFiltros()">✕ Limpar filtros</button>
+      <label class="chk"><input type="checkbox" id="f-comdesc" onchange="buscar()"> só com descrição escrita</label>
+      <label class="chk"><input type="checkbox" id="f-preso" onchange="buscar()"> só com preso</label>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="res-bar">
+    <div class="res-cont" id="res-cont">—</div>
+    <select class="mini" id="ordem" onchange="renderLista()">
+      <option value="rel">Mais relevantes</option>
+      <option value="novo">Mais recentes</option>
+      <option value="velho">Mais antigas</option>
+      <option value="prej">Maior prejuízo</option>
+    </select>
+    <button class="mini" onclick="expandirTodos()" id="btn-exp">⤢ Abrir todas</button>
+    <button class="mini" onclick="exportarCSV()">⬇ Exportar CSV</button>
+    <button class="mini" onclick="window.print()">🖨 Imprimir</button>
+    <button class="mini" onclick="copiarLink()">🔗 Copiar link</button>
+  </div>
+
+  <div class="lista" id="lista"></div>
+  <div class="paginar" id="paginar"></div>
+
+</div>
+</div>
+
+<script>
+/* ==========================================================================
+   BUSCA DE OCORRÊNCIAS — ocorrencias.html
+   --------------------------------------------------------------------------
+   Pedido da P2/NI e da P3 (16/09/2026): uma página só de ocorrências, com uma
+   barra de pesquisa grande onde a pessoa digita o que quiser ("carro vermelho",
+   "starlink", "embarcação") e vê TODAS as ocorrências que batem.
+
+   Por que a fonte é /api/ocorrencias/busca e não /api/base:
+   o /api/base é público e ZERA "Descrição Resumida", "Destino dos Envolvidos" e
+   "Endereço" desde o incidente de PII de 07/08/2026 — justamente as colunas que
+   esta página precisa pesquisar. O endpoint novo é autenticado e com allowlist
+   ("busca", no painel admin.html), e devolve a BASE DE DADOS inteira.
+
+   São ~380 ocorrências / 330 KB: cabe todo o índice em memória, então a busca
+   é 100% no navegador e responde enquanto se digita.
+   ========================================================================== */
+
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+// ALLOWLIST — espelha buscaEditors() do worker.js. Mudar aqui = mudar lá.
+// Só vale enquanto o painel admin.html não mandar as permissões da sessão.
+const BUSCA_GESTORES = ['desousa','cmtfelipe','ni','p3','p3cmt','p301','p3aux'];
+function podeBuscar(){ return AUTH.logged && temPerm('busca', BUSCA_GESTORES); }
+const SEM_ACESSO = 'Este usuário não tem acesso à Busca de Ocorrências. Peça a um administrador para ' +
+                   'marcar "Busca de Ocorrências" no Painel de Controle.';
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+
+/* ====================== 1. DICIONÁRIO DO DOMÍNIO ==========================
+   É aqui que a busca fica "inteligente". Cada conceito tem:
+     amplo  — palavras GENÉRICAS: digitando uma delas, a busca traz o conceito
+              inteiro ("embarcação" → barco, canoa, voadeira, balsa…).
+     termos — todas as palavras do conceito. Digitando uma específica
+              ("voadeira"), a busca NÃO abre para as irmãs — quem pede voadeira
+              quer voadeira.
+     col    — coluna numérica da planilha. Se ela vier > 0, a ocorrência entra
+              no conceito mesmo que o texto não use a palavra (ex.: linha com
+              "Embarcações (un.) = 2" aparece na busca por "embarcação").
+
+   👉 PARA ENSINAR PALAVRA NOVA À BUSCA: acrescente no array `termos` do
+   conceito certo (e em `amplo` se for uma palavra genérica). Não precisa
+   mexer em mais nada — nem no Worker, nem na planilha.
+   ========================================================================== */
+const CONCEITOS = [
+  /* "fluvial"/"navegação" ficaram DE FORA de propósito: dizem que a ocorrência
+     foi no rio, não que houve embarcação — e quase toda ocorrência de Guajará-
+     Mirim tem Meio = Fluvial. Para ver as do rio existe o filtro "Meio". */
+  { id:'embarcacao', col:'embarcacoes',
+    amplo:['embarcacao','barco'],
+    termos:['embarcacao','barco','canoa','voadeira','lancha','bote','casco','chalana','balsa','rabeta','batelao'] },
+  { id:'motorpopa', col:'motorpopa',
+    amplo:['popa','motorpopa'],
+    termos:['popa','rabeta','motorpopa'] },
+  { id:'madeira', col:'madeira',
+    amplo:['madeira','madeireira'],
+    termos:['madeira','madeireira','tora','serrada','serrado','prancha','tabua','dormente','lenha','desmatamento','romaneio','ipe','itauba','cerejeira','angelim'] },
+  { id:'arma', col:'armas',
+    amplo:['arma','armamento','armado'],
+    termos:['arma','armamento','armado','pistola','revolver','espingarda','fuzil','carabina','garrucha','calibre','coldre','cano','artefato'] },
+  { id:'municao', col:'municoes',
+    amplo:['municao','municiamento'],
+    termos:['municao','cartucho','projetil','estojo','deflagrado','intacta','calibre'] },
+  { id:'droga', col:'drogas',
+    amplo:['droga','entorpecente','narcotico','trafico'],
+    termos:['droga','entorpecente','narcotico','trafico','tablete','porcao','maconha','skunk','cannabis','cocaina','cloridrato','crack','oxi','haxixe','metanfetamina','ecstasy','pastabase','folhadecoca'] },
+  { id:'maconha', col:'maconha', amplo:['maconha'], termos:['maconha','skunk','cannabis','erva'] },
+  { id:'cocaina', col:'cocaina', amplo:['cocaina'], termos:['cocaina','cloridrato'] },
+  { id:'crack',   col:'crack',   amplo:['crack'],   termos:['crack','pedra'] },
+  { id:'oxi',     col:'oxi',     amplo:['oxi'],     termos:['oxi'] },
+  { id:'metanfetamina', col:'meta', amplo:['metanfetamina'], termos:['metanfetamina','anfetamina'] },
+  { id:'ecstasy', col:'ecstasy', amplo:['ecstasy'], termos:['ecstasy','mdma','comprimido'] },
+  /* Veículos: a descrição quase nunca diz "carro" — diz "Ford F4000 vermelho",
+     "GM/Corsa", "motocicleta Honda CG". Por isso as MARCAS entram no conceito,
+     separadas por tipo: quem procura "carro vermelho" não quer a moto Honda
+     vermelha, e quem procura "moto" não quer a S10. */
+  { id:'veiculo', col:'veiculos',
+    amplo:['veiculo','automotor'],
+    termos:['veiculo','automotor','carro','automovel','caminhao','caminhonete','camionete','caminhoneta','moto',
+            'motocicleta','motoneta','quadriciclo','bicicleta','onibus','van','carreta','reboque','utilitario','placa',
+            'ford','fiat','volkswagen','vw','chevrolet','gm','toyota','renault','nissan','hyundai','jeep','bmw','audi',
+            'honda','yamaha','scania','volvo','iveco','mercedes'] },
+  { id:'carro', amplo:['carro'],
+    termos:['carro','automovel','veiculo','ford','fiat','volkswagen','vw','chevrolet','gm','toyota','renault','nissan',
+            'hyundai','jeep','hilux','corolla','gol','uno','corsa','strada','saveiro','ranger','s10','palio','siena',
+            'onix','hb20','ecosport','montana','celta','kombi','duster','logan','sandero','voyage','fox','polo','spin',
+            'tracker','amarok','rampage','frontier','l200','triton','oroch','prisma','virtus'] },
+  { id:'moto', amplo:['moto'],
+    termos:['moto','motocicleta','motoneta','honda','yamaha','cg','titan','bros','biz','xre','pop','factor','fan',
+            'twister','nxr','fazer','crosser','falcon'] },
+  { id:'caminhao', amplo:['caminhao'],
+    termos:['caminhao','carreta','bitrem','truck','caminhonete','scania','volvo','iveco','axor','actros','mercedes',
+            'f4000','cavalo','bau','tanque'] },
+  { id:'combustivel', col:['gasolina','diesel'],
+    amplo:['combustivel'],
+    termos:['combustivel','gasolina','diesel','etanol','bombona','galao','tambor','litro','abastecimento'] },
+  { id:'gasolina', col:'gasolina', amplo:['gasolina'], termos:['gasolina'] },
+  { id:'diesel',   col:'diesel',   amplo:['diesel'],   termos:['diesel'] },
+  { id:'cigarro',  col:'cigarros', amplo:['cigarro','tabaco'], termos:['cigarro','maco','tabaco','gilbert','eight'] },
+  { id:'glp',      col:'glp',      amplo:['glp','botijao','gas'], termos:['glp','botija','botijao','gas'] },
+  { id:'ouro',     col:'ouro',     amplo:['ouro','garimpo'], termos:['ouro','garimpo','pepita','minerio','aurifero'] },
+  { id:'dinheiro', col:'dinheiro', amplo:['dinheiro','numerario'], termos:['dinheiro','numerario','especie','cedula','boliviano','dolar','bolivianos'] },
+  { id:'celular',  col:'celulares',amplo:['celular','aparelho'], termos:['celular','aparelho','smartphone','telefone','iphone','samsung','motorola','xiaomi'] },
+  { id:'eletronico',col:'eletronicos',amplo:['eletronico'], termos:['eletronico','notebook','computador','tablet','televisor','monitor','drone','caixadesom'] },
+  { id:'starlink', amplo:['starlink','satelital'], termos:['starlink','antena','satelite','satelital','parabolica','roteador','internet'] },
+  { id:'animal',   col:'animais',  amplo:['animal','semovente'],
+    termos:['animal','semovente','gado','boi','bovino','rebanho','peixe','pescado','pirarucu','tracaja','jacare','carne','cabeca'] },
+  { id:'descaminho', col:['merc','vdescaminho'],
+    amplo:['descaminho','contrabando','mercadoria'],
+    termos:['descaminho','contrabando','mercadoria','fiscal','receita','importado','paraguai'] },
+  { id:'roupa',    col:'roupas',   amplo:['roupa','vestuario'], termos:['roupa','vestuario','calcado','tenis','confeccao'] },
+  { id:'preso',    col:'presos',   amplo:['preso','prisao'],
+    termos:['preso','prisao','detido','conduzido','autuado','flagrante','capturado','recolhido','algemado'] },
+  { id:'mandado',  amplo:['mandado','foragido'],
+    termos:['mandado','foragido','evadido','procurado','recaptura','sentenca','preventiva','condenado','vara'] },
+  { id:'adolescente', amplo:['adolescente','menor'],
+    termos:['adolescente','menor','infrator','socioeducativa','infracional','cesea','tutelar'] },
+  { id:'ambiental', amplo:['ambiental'],
+    termos:['ambiental','ibama','sedam','desmatamento','fauna','pesca','flora','embargo'] },
+  { id:'tornozeleira', amplo:['tornozeleira'], termos:['tornozeleira','monitoracao','monitoramento'] },
+  { id:'fronteira', amplo:['fronteira'], termos:['fronteira','divisa','bolivia','boliviana','boliviano','mamore','abuna'] },
+];
+
+// Índices do dicionário, montados uma vez (stem → conceitos)
+const IDX_AMPLO = new Map();   // stem da palavra genérica → [conceito]
+const IDX_TERMO = new Map();   // stem de qualquer palavra   → [conceito]
+CONCEITOS.forEach(c => {
+  c._termos = new Set(c.termos.map(stem));
+  c._amplo  = new Set(c.amplo.map(stem));
+  c._cols   = c.col ? (Array.isArray(c.col) ? c.col : [c.col]) : [];
+  c._amplo.forEach(s => { if(!IDX_AMPLO.has(s)) IDX_AMPLO.set(s,[]); IDX_AMPLO.get(s).push(c); });
+  c._termos.forEach(s => { if(!IDX_TERMO.has(s)) IDX_TERMO.set(s,[]); IDX_TERMO.get(s).push(c); });
+});
+
+/* ====================== 2. TEXTO: NORMALIZAR E RADICALIZAR ================ */
+function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+
+/* Radical leve de português: só corta plural e alguns sufixos. Roda igual no
+   texto da planilha e no que a pessoa digita, então "embarcações" (planilha) e
+   "embarcação" (digitado) viram a mesma coisa. */
+function stem(p){
+  let w = norm(p).replace(/[^a-z0-9]/g,'');
+  if (w.length <= 3) return w;
+  if (/oes$|aes$/.test(w))      w = w.slice(0,-3)+'ao';   // embarcacoes → embarcacao
+  else if (/ais$/.test(w))      w = w.slice(0,-3)+'al';   // animais → animal
+  else if (/eis$/.test(w))      w = w.slice(0,-3)+'el';
+  else if (/ois$/.test(w))      w = w.slice(0,-3)+'ol';
+  else if (/ns$/.test(w))       w = w.slice(0,-2)+'m';    // bons → bom
+  else if (/[rzns]es$/.test(w) && w.length>5) w = w.slice(0,-2); // celulares → celular
+  else if (/s$/.test(w) && w.length>4)        w = w.slice(0,-1); // toras → tora
+  return w;
+}
+// Variantes de gênero só do lado de QUEM DIGITA (vermelho ↔ vermelha).
+// No índice não mexemos, senão "casa" viraria "caso".
+function variantesGenero(s){
+  if (s.length < 5) return [];
+  if (/o$/.test(s)) return [s.slice(0,-1)+'a'];
+  if (/a$/.test(s)) return [s.slice(0,-1)+'o'];
+  return [];
+}
+function palavras(txt){ return norm(txt).split(/[^a-z0-9]+/).filter(w => w.length > 1); }
+
+/* Expande um termo digitado usando o dicionário (respeitando amplo × específico).
+   - `stems`    : tudo que serve como acerto EXATO de radical.
+   - `prefixo`  : só o radical que a pessoa digitou (≥5 letras) pode valer como
+                  começo de palavra. Sinônimo do dicionário nunca vale por
+                  prefixo — senão "cigarro" traria "maconha" (maço → maco…).
+   - `@conceito`: marca das colunas de apreensão. Só entra se a palavra digitada
+                  for genérica ("embarcação"), nunca numa específica ("carro"),
+                  senão qualquer veículo apreendido viraria "carro". */
+function expandir(termo){
+  const s = stem(termo);
+  const out = new Set([s, ...variantesGenero(s)]);
+  const conceitos = [];
+  if (EXPANSAO_LIGADA){
+    (IDX_AMPLO.get(s) || []).forEach(c => {
+      conceitos.push(c);
+      c._termos.forEach(t => out.add(t));
+      if (c._cols.length) out.add('@' + c.id);
+    });
+  }
+  return { stems:[...out], prefixo: s.length >= 5 ? s : null, conceitos };
+}
+
+/* Grifo: precisa achar a palavra no texto ORIGINAL (com acento), enquanto a
+   busca trabalha sem acento. Em vez de mapear posições (o que quebra em 'ç'),
+   monta uma regex que aceita as duas formas de cada letra. */
+const CLASSES = { a:'[aáàâãä]', e:'[eéèêë]', i:'[iíìîï]', o:'[oóòôõö]', u:'[uúùûü]', c:'[cç]', n:'[nñ]' };
+const escRe = ch => ch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function corpoRe(palavra){ return palavra.split('').map(ch => CLASSES[ch] || escRe(ch)).join(''); }
+/* Uma palavra: começa em início de palavra e aceita terminação (plural/gênero). */
+function reAcento(alvo){
+  try { return new RegExp('(?<![a-zà-ú0-9])(' + corpoRe(alvo) + '[a-zà-ú0-9]{0,4})', 'gi'); }
+  catch(e){ return new RegExp('(' + corpoRe(alvo) + '[a-zà-ú0-9]{0,4})', 'gi'); } // navegador sem lookbehind
+}
+/* Uma frase: as palavras na ordem, separadas por qualquer espaço/pontuação. */
+function reFrase(frase){
+  const corpo = frase.split(/\s+/).filter(Boolean).map(corpoRe).join('[\\s\\W]{1,3}');
+  try { return new RegExp('(' + corpo + ')', 'gi'); } catch(e){ return null; }
+}
+
+/* ====================== 3. LEITURA DA PLANILHA ============================ */
+// Parser CSV de verdade (aspas e quebra de linha dentro da célula) — a
+// "Descrição Resumida" é texto corrido e pode ter os dois.
+function parseCSV(t){
+  t = String(t).replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const linhas = []; let linha = [], cel = '', aspas = false;
+  for (let i = 0; i < t.length; i++){
+    const c = t[i];
+    if (aspas){
+      if (c === '"'){ if (t[i+1] === '"'){ cel += '"'; i++; } else aspas = false; }
+      else cel += c;
+    } else {
+      if (c === '"') aspas = true;
+      else if (c === ','){ linha.push(cel); cel = ''; }
+      else if (c === '\n'){ linha.push(cel); linhas.push(linha); linha = []; cel = ''; }
+      else cel += c;
+    }
+  }
+  if (cel !== '' || linha.length){ linha.push(cel); linhas.push(linha); }
+  return linhas;
+}
+
+// Colunas resolvidas PELO NOME do cabeçalho, nunca por número: a planilha ganha
+// coluna no meio de vez em quando (Ecstasy entrou em S em 03/08/2026) e índice
+// fixo quebra calado.
+const COLS = {
+  bo:'Nº BO', tipo_registro:'Tipo Registro', data:'Data', hora:'Hora', tipo_bo:'Tipo de BO',
+  natureza:'Natureza / Crime', endereco:'Endereço', municipio:'Município', uf:'UF',
+  presos:'Nº Presos', apreensoes:'Nº Apreensões s/ Prisão', drogas:'Drogas TOTAL (kg)',
+  cocaina:'Cocaína/CH (kg)', pastabase:'Pasta Base (kg)', maconha:'Maconha (kg)', crack:'Crack (kg)',
+  oxi:'Óxi (kg)', meta:'Metanfetamina (kg)', ecstasy:'Ecstasy (comprimidos)', armas:'Armas Apreend.',
+  municoes:'Munições Apreend.', veiculos:'Veículos Apreend.', gasolina:'Gasolina Boliviana (L)',
+  diesel:'Diesel Boliviano (L)', glp:'GLP (botijas)', cigarros:'Cigarros (maços)',
+  madeira:'Madeira Apreendida (m³)', celulares:'Desc. Celulares (un.)', roupas:'Desc. Roupas (un.)',
+  merc:'Mercadorias Descaminho (R$)', eletronicos:'Eletrônicos (un.)', embarcacoes:'Embarcações (un.)',
+  motorpopa:'Motor de Popa (un.)', ouro:'Ouro (g)', animais:'Animais/Pescado (R$)',
+  folhacoca:'Folha de Coca (kg)', dinheiro:'Dinheiro (R$)', meio:'Meio', ambiente:'Ambiente',
+  destino:'Destino dos Envolvidos', lat:'Latitude', lon:'Longitude', descricao:'Descrição Resumida',
+  nacionalidade:'Nacionalidade', prejuizo:'Prejuízo Estimado (R$)',
+  vdescaminho:'Valor Estimado Descaminho (R$)', vveiculos:'Valor Estimado Veículos (R$)',
+  multa:'Multa (R$)', operacao:'Operação'
+};
+const NUMERICOS = ['presos','apreensoes','drogas','cocaina','pastabase','maconha','crack','oxi','meta','ecstasy',
+  'armas','municoes','veiculos','gasolina','diesel','glp','cigarros','madeira','celulares','roupas','merc',
+  'eletronicos','embarcacoes','motorpopa','ouro','animais','folhacoca','dinheiro','prejuizo','vdescaminho',
+  'vveiculos','multa','lat','lon'];
+
+const chave = s => norm(s).replace(/[^a-z0-9]/g,'');
+function toNum(raw){
+  let v = String(raw==null?'':raw).trim().replace(/[R$\s%]/g,'');
+  if (!v || v === '-' || v.toLowerCase() === 'n/a') return 0;
+  const temP = v.includes('.'), temV = v.includes(',');
+  if (temP && temV) v = v.lastIndexOf(',') > v.lastIndexOf('.') ? v.replace(/\./g,'').replace(',','.') : v.replace(/,/g,'');
+  else if (temV) v = v.replace(',','.');
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+/* Data: a planilha exporta dd/mm/aaaa (conferido em 16/09/2026 — 231 linhas com
+   o primeiro número > 12 e NENHUMA com o segundo > 12). Por isso o caso ambíguo
+   (ambos ≤ 12) é lido como DIA/MÊS aqui. */
+function parseData(s){
+  s = String(s||'').trim(); if (!s) return null;
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m){
+    const a = +m[1], b = +m[2], y = +m[3];
+    if (b > 12 && a <= 12) return new Date(y, a-1, b);  // só se for claramente m/d
+    return new Date(y, b-1, a);                          // padrão: dd/mm/aaaa
+  }
+  const d = new Date(s); return isNaN(d) ? null : d;
+}
+
+let DADOS = [];              // todas as ocorrências, já indexadas
+let RES = [];                // resultado da busca corrente
+let EXPANSAO_LIGADA = true;  // dicionário de sinônimos ligado/desligado
+let PAGINA = 1;
+const POR_PAGINA = 25;
+let ULTIMA = { stems:[], frases:[] };   // para grifar
+let PROX_AVISO = '';                    // recado quando a proximidade foi afrouxada
+
+async function carregar(){
+  const r = await fetch(API_BASE + '/api/ocorrencias/busca?_nc=' + Date.now(), {
+    headers:{ 'Authorization':'Bearer ' + AUTH.token }
+  });
+  if (r.status === 401){ ocLogout(); throw new Error('Sessão expirada. Entre de novo.'); }
+  if (r.status === 403) throw new Error('Este usuário não tem acesso à Busca de Ocorrências. Peça a um administrador para marcar "Busca de Ocorrências" no Painel de Controle.');
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao carregar as ocorrências.');
+  montarIndice(await r.text());
+}
+
+function montarIndice(csv){
+  const linhas = parseCSV(csv);
+  if (!linhas.length) throw new Error('A planilha voltou vazia.');
+  const cab = linhas[0].map(h => chave(h));
+  const pos = {};
+  Object.entries(COLS).forEach(([campo, nomeCab]) => { pos[campo] = cab.indexOf(chave(nomeCab)); });
+
+  DADOS = [];
+  for (let i = 1; i < linhas.length; i++){
+    const cel = linhas[i];
+    if (!cel || cel.every(c => !String(c).trim())) continue;
+    const o = {};
+    Object.keys(COLS).forEach(campo => { o[campo] = pos[campo] >= 0 ? String(cel[pos[campo]] ?? '').trim() : ''; });
+    if (!o.bo) continue;
+    NUMERICOS.forEach(f => { o['n_'+f] = toNum(o[f]); });
+    o._data = parseData(o.data);
+
+    // Texto pesquisável: tudo que é palavra na ocorrência.
+    o._txt = [o.bo, o.tipo_registro, o.tipo_bo, o.natureza, o.endereco, o.municipio, o.uf,
+              o.meio, o.ambiente, o.destino, o.nacionalidade, o.operacao, o.descricao].join(' · ');
+    o._n = norm(o._txt);
+    // Campos-chave pesam mais no ranking que o corpo da descrição.
+    // Meio/Ambiente ficam fora do bônus: são contexto ("Fluvial", "Via pública")
+    // e, se pontuassem, empurrariam para o topo ocorrências que só têm isso.
+    o._nChave = norm([o.natureza, o.tipo_bo, o.municipio, o.operacao].join(' '));
+    o._seq = palavras(o._txt).map(stem);   // na ordem, para medir distância entre palavras
+    o._tok = new Set(o._seq);
+    o._freq = new Map();                   // quantas vezes cada radical aparece (peso na relevância)
+    o._seq.forEach(t => o._freq.set(t, (o._freq.get(t) || 0) + 1));
+
+    // Marcas sintéticas das colunas de apreensão: quem tem "Embarcações = 2"
+    // entra na busca por "embarcação" mesmo sem a palavra no texto. O "@" evita
+    // colisão com palavra de verdade (palavras() só produz letras e números).
+    CONCEITOS.forEach(c => {
+      if (c._cols.some(col => (o['n_'+col] || 0) > 0)) o._tok.add('@' + c.id);
+    });
+    DADOS.push(o);
+  }
+  if (!DADOS.length) throw new Error('Nenhuma ocorrência foi lida da planilha.');
+}
+
+/* ====================== 4. MOTOR DA BUSCA ================================= */
+/* Interpreta o que foi digitado:
+     "frase exata"   → frase
+     -palavra        → proibida
+     a ou b | c      → alternativas (qualquer uma serve)
+     resto           → obrigatório (todos os termos precisam bater) */
+function interpretar(q){
+  const grupos = [], frases = [], proibidos = [];
+  const bruto = String(q||'').trim();
+  if (!bruto) return { grupos, frases, proibidos, vazio:true };
+
+  // 1) tira as frases entre aspas
+  const semAspas = bruto.replace(/"([^"]+)"|“([^”]+)”/g, (m, a, b) => {
+    const f = norm(a || b).replace(/\s+/g,' ').trim();
+    if (f) frases.push(f);
+    return ' ';
+  });
+
+  // 2) o resto vira palavras; "ou"/"|" junta a palavra anterior com a seguinte
+  const brutos = semAspas.split(/\s+/).filter(Boolean);
+  let esperandoOu = false;
+  brutos.forEach(p => {
+    const pn = norm(p);
+    if (pn === 'ou' || pn === 'or' || pn === '|'){ esperandoOu = grupos.length > 0; return; }
+    const negado = p.startsWith('-') && p.length > 1;
+    if (negado) p = p.slice(1);
+    // "Guajará-Mirim", "R$ 1.000", "GLP/botija": vira uma palavra por pedaço, todas
+    // obrigatórias. Sem isso o radical sairia "guajaramirim" e não acharia nada.
+    const partes = norm(p).split(/[^a-z0-9]+/).filter(x => x.length > 1);
+    if (!partes.length) return;
+    partes.forEach(parte => {
+      const alvo = expandir(parte);
+      alvo.palavra = parte;
+      if (negado){ proibidos.push(alvo); return; }
+      if (esperandoOu){ grupos[grupos.length-1].push(alvo); esperandoOu = false; }
+      else grupos.push([alvo]);
+    });
+    if (negado) esperandoOu = false;
+  });
+  return { grupos, frases, proibidos, vazio: !grupos.length && !frases.length };
+}
+
+// Acerto exato de radical.
+function temStem(o, s){ return o._tok.has(s); }
+// Acerto por começo de palavra — só para o que foi digitado, e a palavra achada
+// não pode ser muito maior (assim "carro" não vira "carregamento").
+function temPrefixo(o, s){
+  for (const t of o._tok) if (t.length <= s.length + 4 && t.startsWith(s)) return true;
+  return false;
+}
+function pontuar(o, alvo){
+  for (const s of alvo.stems){
+    if (!temStem(o, s)) continue;
+    // Quem repete a palavra fala mais dela: "embarcação" citada 3x vem antes de
+    // uma menção de passagem. E acerto em natureza/município/operação/tipo pesa
+    // mais que no meio do corpo do texto.
+    const vezes = o._freq.get(s) || 1;
+    return 1 + Math.min(2, (vezes - 1) * 0.4) + (o._nChave.includes(s) ? 2.5 : 0);
+  }
+  if (alvo.prefixo && temPrefixo(o, alvo.prefixo)) return 0.7;
+  return 0;
+}
+
+/* ── Proximidade ───────────────────────────────────────────────────────────
+   "carro vermelho" com os dois termos soltos no texto trazia ocorrências da
+   facção **Comando Vermelho** junto com um veículo apreendido em outro
+   parágrafo. Então, quando a pessoa digita 2+ palavras, elas precisam aparecer
+   perto umas das outras (mesma frase, mais ou menos). O ✓ "palavras próximas"
+   desliga isso para quem quiser o resultado amplo. */
+const JANELA = 8;  // distância máxima, em palavras, entre a primeira e a última
+function posicoesGrupo(o, grupo){
+  const exatos = new Set(); const prefixos = [];
+  grupo.forEach(a => {
+    a.stems.forEach(s => { if (s[0] !== '@') exatos.add(s); });   // marca de coluna não tem posição
+    if (a.prefixo) prefixos.push(a.prefixo);
+  });
+  const ps = [];
+  for (let i = 0; i < o._seq.length; i++){
+    const t = o._seq[i];
+    if (exatos.has(t) || prefixos.some(p => t.length <= p.length + 4 && t.startsWith(p))) ps.push(i);
+  }
+  return ps;
+}
+// Menor intervalo que cobre pelo menos uma posição de cada grupo.
+function janelaMinima(listas){
+  const idx = listas.map(() => 0);
+  let melhor = Infinity;
+  for(;;){
+    let min = Infinity, max = -Infinity, qualMin = 0;
+    for (let k = 0; k < listas.length; k++){
+      const v = listas[k][idx[k]];
+      if (v < min){ min = v; qualMin = k; }
+      if (v > max) max = v;
+    }
+    if (max - min < melhor) melhor = max - min;
+    if (melhor === 0) return 0;
+    if (++idx[qualMin] >= listas[qualMin].length) return melhor;
+  }
+}
+
+function filtrar(){
+  const q = document.getElementById('q').value;
+  const p = interpretar(q);
+  ULTIMA = { stems: p.grupos.flat().flatMap(a => a.stems), frases: p.frases };
+
+  const de   = document.getElementById('f-de').value ? new Date(document.getElementById('f-de').value + 'T00:00:00') : null;
+  const ate  = document.getElementById('f-ate').value ? new Date(document.getElementById('f-ate').value + 'T23:59:59') : null;
+  const mun  = document.getElementById('f-mun').value;
+  const nat  = document.getElementById('f-nat').value;
+  const tipo = document.getElementById('f-tipo').value;
+  const meio = document.getElementById('f-meio').value;
+  const op   = document.getElementById('f-op').value;
+  const soDesc  = document.getElementById('f-comdesc').checked;
+  const soPreso = document.getElementById('f-preso').checked;
+  const proximo = document.getElementById('f-prox').checked;
+
+  const out = [];
+  for (const o of DADOS){
+    if (de  && (!o._data || o._data < de))  continue;
+    if (ate && (!o._data || o._data > ate)) continue;
+    if (mun  && o.municipio !== mun)  continue;
+    if (nat  && o.natureza  !== nat)  continue;
+    if (tipo && o.tipo_bo   !== tipo) continue;
+    if (meio && o.meio      !== meio) continue;
+    if (op   && o.operacao  !== op)   continue;
+    if (soDesc  && !o.descricao.trim()) continue;
+    if (soPreso && !(o.n_presos > 0))   continue;
+
+    let score = 0, ok = true;
+    for (const f of p.frases){                       // frase exata
+      if (!o._n.includes(f)) { ok = false; break; }
+      score += 4;
+    }
+    if (!ok) continue;
+    for (const grupo of p.grupos){                   // cada grupo = 1 termo (ou alternativas)
+      let melhor = 0;
+      for (const alvo of grupo) melhor = Math.max(melhor, pontuar(o, alvo));
+      if (!melhor){ ok = false; break; }
+      score += melhor;
+    }
+    if (!ok) continue;
+    for (const proibido of p.proibidos){             // -palavra
+      if (pontuar(o, proibido)) { ok = false; break; }
+    }
+    if (!ok) continue;
+
+    // Palavras próximas: só vale quando TODOS os termos aparecem no texto. Se um
+    // deles só bateu na coluna de apreensão (sem posição), não há o que medir.
+    if (proximo && p.grupos.length > 1){
+      const listas = p.grupos.map(g => posicoesGrupo(o, g));
+      if (listas.every(l => l.length)){
+        const j = janelaMinima(listas);
+        if (j > JANELA) continue;
+        score += Math.max(0, 6 - j / 2);            // quanto mais perto, mais relevante
+      }
+    }
+
+    o._score = score;
+    out.push(o);
+  }
+  return { res: out, p };
+}
+
+/* ====================== 5. TELA ========================================== */
+const fN  = n => Math.round(n).toLocaleString('pt-BR');
+const fD  = (n,d=2) => Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fR  = n => 'R$ ' + fD(n);
+const fDt = d => d ? d.toLocaleDateString('pt-BR') : '—';
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* Marca no texto CRU com sentinelas, escapa o HTML depois e só então troca as
+   sentinelas por <mark>. Fazendo o contrário, um termo como "amp" grifaria o
+   miolo de um "&amp;" e estouraria a marcação da página. */
+function grifar(txt){
+  let h = String(txt == null ? '' : txt);
+  const alvos = [...new Set(ULTIMA.stems)]
+    .filter(s => s.length >= 3 && s[0] !== '@')      // '@conceito' é marca de coluna, não existe no texto
+    .sort((a,b) => b.length - a.length);
+  ULTIMA.frases.forEach(f => { const re = reFrase(f); if (re) h = h.replace(re, m => '' + m + ''); });
+  alvos.forEach(s => { h = h.replace(reAcento(s), (m, g) => g.includes('') ? m : '' + g + ''); });
+  return esc(h).replace(//g,'<mark>').replace(//g,'</mark>');
+}
+
+// Trecho da descrição em volta da primeira palavra encontrada.
+function trecho(o){
+  const d = o.descricao || '';
+  if (!d) return '';
+  let pos = -1;
+  for (const s of ULTIMA.stems){
+    if (s.length < 3) continue;
+    const m = reAcento(s).exec(norm(d));
+    if (m && (pos < 0 || m.index < pos)) pos = m.index;
+  }
+  for (const f of ULTIMA.frases){ const i = norm(d).indexOf(f); if (i >= 0 && (pos < 0 || i < pos)) pos = i; }
+  if (pos < 0) return d.slice(0, 230) + (d.length > 230 ? '…' : '');
+  const ini = Math.max(0, pos - 90), fim = Math.min(d.length, pos + 210);
+  return (ini > 0 ? '…' : '') + d.slice(ini, fim) + (fim < d.length ? '…' : '');
+}
+
+/* Por que esta ocorrência apareceu?
+   Quando o acerto não foi no meio da descrição (bateu no campo "Meio = Fluvial",
+   ou só na coluna "Embarcações (un.)"), o cartão não mostra grifo nenhum e a
+   pessoa fica sem entender. Aqui a gente diz onde foi. */
+function motivo(o){
+  const alvos = new Set(ULTIMA.stems);
+  const campos = [['Natureza', o.natureza], ['Tipo de BO', o.tipo_bo], ['Município', o.municipio],
+    ['Meio', o.meio], ['Ambiente', o.ambiente], ['Operação', o.operacao], ['Endereço', o.endereco],
+    ['Destino dos envolvidos', o.destino], ['Nacionalidade', o.nacionalidade], ['Nº BO', o.bo]];
+  for (const [rotulo, v] of campos){
+    if (!v || !String(v).trim()) continue;
+    if (palavras(v).map(stem).some(t => alvos.has(t))) return rotulo + ' — ' + String(v).slice(0, 70);
+  }
+  const c = CONCEITOS.find(x => x._cols.length && alvos.has('@' + x.id) && o._tok.has('@' + x.id));
+  if (c) return 'coluna de apreensão preenchida na planilha (' + c.id + ')';
+  return '';
+}
+
+// Etiquetas do que foi apreendido — o resumo que a P3 lê de relance.
+function etiquetas(o){
+  const t = [];
+  if (o.n_presos > 0)      t.push(['pr', o.n_presos + (o.n_presos > 1 ? ' presos' : ' preso')]);
+  if (o.n_drogas > 0)      t.push(['dr', fD(o.n_drogas,2) + ' kg de droga']);
+  if (o.n_maconha > 0)     t.push(['dr', fD(o.n_maconha,2) + ' kg maconha']);
+  if (o.n_cocaina > 0)     t.push(['dr', fD(o.n_cocaina,2) + ' kg cocaína']);
+  if (o.n_crack > 0)       t.push(['dr', fD(o.n_crack,2) + ' kg crack']);
+  if (o.n_armas > 0)       t.push(['ap', o.n_armas + ' arma(s)']);
+  if (o.n_municoes > 0)    t.push(['ap', fN(o.n_municoes) + ' munições']);
+  if (o.n_veiculos > 0)    t.push(['ap', o.n_veiculos + ' veículo(s)']);
+  if (o.n_embarcacoes > 0) t.push(['ap', o.n_embarcacoes + ' embarcação(ões)']);
+  if (o.n_motorpopa > 0)   t.push(['ap', o.n_motorpopa + ' motor(es) de popa']);
+  if (o.n_madeira > 0)     t.push(['ap', fD(o.n_madeira,2) + ' m³ de madeira']);
+  if (o.n_cigarros > 0)    t.push(['ap', fN(o.n_cigarros) + ' maços']);
+  if (o.n_gasolina > 0)    t.push(['ap', fN(o.n_gasolina) + ' L gasolina']);
+  if (o.n_diesel > 0)      t.push(['ap', fN(o.n_diesel) + ' L diesel']);
+  if (o.n_glp > 0)         t.push(['ap', fN(o.n_glp) + ' botijas']);
+  if (o.n_celulares > 0)   t.push(['ap', fN(o.n_celulares) + ' celulares']);
+  if (o.n_eletronicos > 0) t.push(['ap', fN(o.n_eletronicos) + ' eletrônicos']);
+  if (o.n_ouro > 0)        t.push(['ap', fD(o.n_ouro,1) + ' g de ouro']);
+  if (o.n_dinheiro > 0)    t.push(['ap', fR(o.n_dinheiro) + ' em espécie']);
+  if (o.n_prejuizo > 0)    t.push(['', 'prejuízo ' + fR(o.n_prejuizo)]);
+  return t;
+}
+
+function buscar(){
+  PAGINA = 1;
+  const { res, p } = filtrar();
+  RES = res;
+
+  // O ✓ "palavras próximas" só faz sentido com 2+ termos. Mostra também quanto
+  // o resultado cresceria sem ele, senão a pessoa nem imagina o que está fora.
+  const cx = document.getElementById('f-prox');
+  const dica = document.getElementById('prox-dica');
+  document.getElementById('opcoes').style.display = p.grupos.length > 1 ? 'block' : 'none';
+  PROX_AVISO = '';
+  if (p.grupos.length > 1 && cx.checked){
+    cx.checked = false;
+    const solto = filtrar().res;
+    cx.checked = true;
+    if (!res.length && solto.length){
+      // Nunca deixar a busca morrer em zero por causa da proximidade: mostra o
+      // resultado amplo e explica. (Foi o que aconteceu com "carro vermelho".)
+      RES = solto;
+      PROX_AVISO = 'Nenhuma ocorrência traz essas palavras juntas na mesma frase — ' +
+                   'mostrando as ' + solto.length + ' em que elas aparecem separadas.';
+      dica.textContent = '';
+    } else {
+      dica.textContent = solto.length > res.length ? ' — sem esta opção seriam ' + solto.length + ' resultados' : '';
+    }
+  }
+
+  mostrarExpansao();
+  atualizarURL();
+  renderKPIs();
+  renderLista();
+  document.getElementById('q-limpar').style.display = document.getElementById('q').value ? 'block' : 'none';
+  const temFiltro = ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op'].some(id => document.getElementById(id).value)
+    || document.getElementById('f-comdesc').checked || document.getElementById('f-preso').checked;
+  document.getElementById('filtros-rod').style.display = temFiltro ? 'flex' : 'none';
+  document.getElementById('filtros-resumo').textContent = temFiltro
+    ? '✔ filtros ativos — ' + RES.length + ' de ' + DADOS.length
+    : 'período, município, natureza, tipo, meio, operação';
+}
+
+// Mostra o que o dicionário acrescentou — a pessoa precisa saber por que
+// "embarcação" trouxe uma ocorrência que fala em "voadeira".
+function mostrarExpansao(){
+  const box = document.getElementById('expansao');
+  const p = interpretar(document.getElementById('q').value);
+  const conceitos = p.grupos.flat().flatMap(a => a.conceitos || []);
+  if (!conceitos.length){
+    if (!EXPANSAO_LIGADA && document.getElementById('q').value.trim()){
+      box.style.display = 'block';
+      box.innerHTML = '<button class="tgl" onclick="toggleExpansao()">ligar</button>' +
+        'Busca por <b>palavra exata</b> — o dicionário de termos parecidos está desligado.';
+      return;
+    }
+    box.style.display = 'none'; return;
+  }
+  const todos = [...new Set(conceitos.flatMap(c => c.termos))];
+  const extras = todos.slice(0, 14);
+  box.style.display = 'block';
+  box.innerHTML = '<button class="tgl" onclick="toggleExpansao()">desligar</button>' +
+    'Procurando também por: <b>' + esc(extras.join(' · ')) + '</b>' +
+    (todos.length > extras.length ? ' <i>(+' + (todos.length - extras.length) + ' termos)</i>' : '') +
+    (conceitos.some(c => c._cols.length) ? '<br><i>e também pelas colunas de apreensão da planilha.</i>' : '');
+}
+function toggleExpansao(){ EXPANSAO_LIGADA = !EXPANSAO_LIGADA; buscar(); }
+
+function renderKPIs(){
+  const s = f => RES.reduce((a,o) => a + (o['n_'+f]||0), 0);
+  const kpis = [
+    ['', fN(RES.length), 'ocorrências'],
+    ['b', fN(s('presos')), 'presos'],
+    ['r', fD(s('drogas'),1), 'kg de droga'],
+    ['g', fN(s('veiculos')), 'veículos'],
+    ['g', fN(s('armas')), 'armas'],
+    ['', fR(s('prejuizo')), 'prejuízo estimado'],
+  ];
+  document.getElementById('kpis').innerHTML = kpis
+    .map(([c,v,l]) => '<div class="kpi ' + c + '"><div class="kv">' + v + '</div><div class="kl">' + l + '</div></div>').join('');
+}
+
+function ordenar(){
+  const modo = document.getElementById('ordem').value;
+  const arr = RES.slice();
+  if (modo === 'rel' && ULTIMA.stems.length + ULTIMA.frases.length)
+    arr.sort((a,b) => (b._score - a._score) || ((b._data||0) - (a._data||0)));
+  else if (modo === 'prej') arr.sort((a,b) => b.n_prejuizo - a.n_prejuizo);
+  else if (modo === 'velho') arr.sort((a,b) => (a._data||0) - (b._data||0));
+  else arr.sort((a,b) => (b._data||0) - (a._data||0));
+  return arr;
+}
+
+let ABERTOS = new Set();
+function renderLista(){
+  const arr = ordenar();
+  const cont = document.getElementById('res-cont');
+  const q = document.getElementById('q').value.trim();
+  cont.innerHTML = fN(arr.length) + (arr.length === 1 ? ' ocorrência' : ' ocorrências') +
+    '<small>' + (q ? 'para “' + esc(q) + '” · ' : '') + 'de ' + fN(DADOS.length) + ' na base' +
+    (PROX_AVISO ? '<br><span style="color:#e3c96b">⚠ ' + esc(PROX_AVISO) + '</span>' : '') + '</small>';
+
+  if (!arr.length){
+    document.getElementById('lista').innerHTML =
+      '<div class="vazio"><div class="vi">🔍</div><h3>Nada encontrado</h3>' +
+      '<p>Tente uma palavra mais curta (o plural e o acento não atrapalham),<br>' +
+      'tire um filtro, ou use <b>ou</b> entre alternativas: <i>voadeira ou canoa</i>.<br>' +
+      '<span style="font-size:12px;opacity:.8">Lembrando que ' +
+      fN(DADOS.filter(o => !o.descricao.trim()).length) + ' ocorrências da base estão sem descrição escrita — ' +
+      'nelas só dá para achar por município, natureza, operação e apreensão.</span></p></div>';
+    document.getElementById('paginar').innerHTML = '';
+    return;
+  }
+
+  const ini = (PAGINA - 1) * POR_PAGINA;
+  const pag = arr.slice(ini, ini + POR_PAGINA);
+  document.getElementById('lista').innerHTML = pag.map(cartao).join('');
+
+  const totPag = Math.ceil(arr.length / POR_PAGINA);
+  document.getElementById('paginar').innerHTML = totPag <= 1 ? '' :
+    '<button class="mini" ' + (PAGINA === 1 ? 'disabled style="opacity:.4"' : '') + ' onclick="irPagina(' + (PAGINA-1) + ')">‹ anterior</button>' +
+    '<span style="margin:0 14px;font-size:12.5px;color:var(--muted)">página ' + PAGINA + ' de ' + totPag + '</span>' +
+    '<button class="mini" ' + (PAGINA === totPag ? 'disabled style="opacity:.4"' : '') + ' onclick="irPagina(' + (PAGINA+1) + ')">próxima ›</button>';
+}
+function irPagina(n){ PAGINA = n; renderLista(); window.scrollTo({ top: document.querySelector('.res-bar').offsetTop - 70, behavior:'smooth' }); }
+
+function cartao(o){
+  const aberto = ABERTOS.has(o.bo);
+  const tags = etiquetas(o).map(([c,t]) => '<span class="tag ' + c + '">' + esc(t) + '</span>').join('');
+  let snip = o.descricao.trim()
+    ? '<div class="oc-snip">' + grifar(trecho(o)) + '</div>'
+    : '<div class="oc-vazio">— sem descrição escrita nesta ocorrência —</div>';
+  // Sem grifo no trecho = o acerto foi em outro campo. Explica qual.
+  if (ULTIMA.stems.length && !snip.includes('<mark>')){
+    const pq = motivo(o);
+    if (pq) snip += '<div class="oc-pq">↳ achado em <b>' + esc(pq) + '</b></div>';
+  }
+  const mapa = (o.n_lat && o.n_lon)
+    ? '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps?q=' + o.n_lat + ',' + o.n_lon + '">📍 no mapa</a>' : '';
+  return '<div class="oc ' + (aberto ? 'aberto' : '') + '" id="oc-' + esc(o.bo) + '">' +
+    '<div class="oc-top">' +
+      '<span class="bo">BO ' + esc(o.bo) + '</span>' +
+      '<span>' + fDt(o._data) + (o.hora ? ' · ' + esc(String(o.hora).slice(0,5)) : '') + '</span>' +
+      '<span class="sep">|</span><span>📍 ' + esc(o.municipio || '—') + (o.uf ? '/' + esc(o.uf) : '') + '</span>' +
+      (o.tipo_bo ? '<span class="sep">|</span><span>' + esc(o.tipo_bo) + '</span>' : '') +
+      (o.operacao ? '<span class="sep">|</span><span>🎯 ' + esc(o.operacao) + '</span>' : '') +
+    '</div>' +
+    '<div class="oc-nat">' + grifar(o.natureza || 'Sem natureza informada') + '</div>' +
+    (tags ? '<div class="oc-tags">' + tags + '</div>' : '') +
+    snip +
+    '<div class="oc-acts">' +
+      '<button class="act" onclick="alternar(\'' + esc(o.bo) + '\')">' + (aberto ? '▲ fechar' : '▼ ver completo') + '</button>' +
+      mapa +
+      '<button class="act" onclick="copiarOc(\'' + esc(o.bo) + '\')">⧉ copiar</button>' +
+    '</div>' +
+    '<div class="oc-full">' + (aberto ? detalhe(o) : '') + '</div>' +
+  '</div>';
+}
+
+function detalhe(o){
+  const linhas = [];
+  // grifa também aqui: muita busca acerta em "Meio", "Ambiente" ou "Endereço"
+  const add = (r, v) => { if (v !== '' && v != null && v !== 0) linhas.push('<div><b>' + r + ':</b> ' + grifar(v) + '</div>'); };
+  add('Nº BO', o.bo); add('Tipo de registro', o.tipo_registro); add('Data', fDt(o._data)); add('Hora', o.hora);
+  add('Tipo de BO', o.tipo_bo); add('Natureza', o.natureza); add('Município', o.municipio + (o.uf ? '/' + o.uf : ''));
+  add('Endereço', o.endereco); add('Meio', o.meio); add('Ambiente', o.ambiente);
+  add('Nacionalidade', o.nacionalidade); add('Operação', o.operacao);
+  add('Presos', o.n_presos || ''); add('Apreensões s/ prisão', o.n_apreensoes || '');
+  add('Prejuízo estimado', o.n_prejuizo ? fR(o.n_prejuizo) : '');
+  add('Multa', o.n_multa ? fR(o.n_multa) : '');
+  add('Coordenadas', (o.n_lat && o.n_lon) ? o.lat + ', ' + o.lon : '');
+  const ap = etiquetas(o).map(([,t]) => t).join(' · ');
+  return (o.descricao.trim() ? '<div class="ft">Descrição completa</div><div class="txt">' + grifar(o.descricao) + '</div>' : '') +
+    (o.destino.trim() ? '<div class="ft">Destino dos envolvidos</div><div class="txt">' + grifar(o.destino) + '</div>' : '') +
+    (ap ? '<div class="ft">Apreensões</div><div class="kv"><div>' + esc(ap) + '</div></div>' : '') +
+    '<div class="ft">Dados do registro</div><div class="kv">' + linhas.join('') + '</div>';
+}
+
+function alternar(bo){
+  if (ABERTOS.has(bo)) ABERTOS.delete(bo); else ABERTOS.add(bo);
+  renderLista();
+}
+function expandirTodos(){
+  const arr = ordenar().slice((PAGINA-1)*POR_PAGINA, (PAGINA-1)*POR_PAGINA + POR_PAGINA);
+  const todosAbertos = arr.every(o => ABERTOS.has(o.bo));
+  arr.forEach(o => { if (todosAbertos) ABERTOS.delete(o.bo); else ABERTOS.add(o.bo); });
+  document.getElementById('btn-exp').textContent = todosAbertos ? '⤢ Abrir todas' : '⤡ Fechar todas';
+  renderLista();
+}
+function copiarOc(bo){
+  const o = DADOS.find(x => x.bo === bo); if (!o) return;
+  const txt = 'BO ' + o.bo + ' — ' + fDt(o._data) + ' — ' + o.municipio + '/' + o.uf + '\n' +
+    o.natureza + (o.operacao ? '\nOperação: ' + o.operacao : '') + '\n\n' + (o.descricao || '(sem descrição)');
+  navigator.clipboard.writeText(txt).then(() => aviso('Ocorrência copiada.'), () => aviso('Não consegui copiar.'));
+}
+
+/* ====================== 6. FILTROS, URL, EXPORTAÇÃO ====================== */
+function preencherFiltros(){
+  const opcoes = (id, campo, rotulo) => {
+    const vals = [...new Set(DADOS.map(o => o[campo]).filter(v => v && v.trim()))]
+      .sort((a,b) => a.localeCompare(b,'pt-BR'));
+    document.getElementById(id).innerHTML = '<option value="">' + rotulo + '</option>' +
+      vals.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+  };
+  opcoes('f-mun','municipio','todos os municípios');
+  opcoes('f-nat','natureza','todas as naturezas');
+  opcoes('f-tipo','tipo_bo','todos os tipos');
+  opcoes('f-meio','meio','todos os meios');
+  opcoes('f-op','operacao','todas as operações');
+}
+function toggleFiltros(){ document.getElementById('filtros').classList.toggle('aberto'); }
+function limparFiltros(){
+  ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-comdesc').checked = false;
+  document.getElementById('f-preso').checked = false;
+  buscar();
+}
+function limparQ(){ document.getElementById('q').value = ''; buscar(); document.getElementById('q').focus(); }
+function toggleAjuda(){ const a = document.getElementById('ajuda'); a.style.display = a.style.display === 'block' ? 'none' : 'block'; }
+
+function atualizarURL(){
+  const p = new URLSearchParams();
+  const q = document.getElementById('q').value.trim(); if (q) p.set('q', q);
+  ['de','ate','mun','nat','tipo','meio','op'].forEach(k => {
+    const v = document.getElementById('f-' + k).value; if (v) p.set(k, v);
+  });
+  history.replaceState(null, '', p.toString() ? '#' + p.toString() : location.pathname);
+  salvarRecente(q);
+}
+function lerURL(){
+  const p = new URLSearchParams(location.hash.replace(/^#/,''));
+  if (p.get('q')) document.getElementById('q').value = p.get('q');
+  let algum = false;
+  ['de','ate','mun','nat','tipo','meio','op'].forEach(k => {
+    if (p.get(k)){ document.getElementById('f-' + k).value = p.get(k); algum = true; }
+  });
+  if (algum) document.getElementById('filtros').classList.add('aberto');
+}
+function copiarLink(){
+  navigator.clipboard.writeText(location.href).then(
+    () => aviso('Link desta busca copiado — quem abrir precisa ter acesso.'),
+    () => aviso('Não consegui copiar o link.'));
+}
+
+// Buscas recentes (só no navegador de quem usa; não sai daqui)
+function salvarRecente(q){
+  if (!q || q.length < 2) return;
+  try{
+    let r = JSON.parse(localStorage.getItem('bp_oc_recentes') || '[]');
+    r = [q, ...r.filter(x => x !== q)].slice(0, 8);
+    localStorage.setItem('bp_oc_recentes', JSON.stringify(r));
+  }catch(e){}
+}
+const EXEMPLOS = ['embarcação','madeira','starlink','carro vermelho','arma de fogo','tornozeleira','gado','adolescente','ouro'];
+function renderSugestoes(){
+  let recentes = [];
+  try{ recentes = JSON.parse(localStorage.getItem('bp_oc_recentes') || '[]'); }catch(e){}
+  const btn = (t, cls) => '<button class="sug ' + cls + '" onclick="usarSugestao(this)">' + esc(t) + '</button>';
+  document.getElementById('sugestoes').innerHTML =
+    (recentes.length ? '<span class="sug-lbl">recentes</span>' + recentes.map(t => btn(t,'rec')).join('') : '') +
+    '<span class="sug-lbl">' + (recentes.length ? 'exemplos' : 'experimente') + '</span>' +
+    EXEMPLOS.map(t => btn(t,'')).join('');
+}
+function usarSugestao(el){ document.getElementById('q').value = el.textContent; buscar(); renderSugestoes(); }
+
+function exportarCSV(){
+  const arr = ordenar();
+  if (!arr.length) return aviso('Não há resultado para exportar.');
+  const cab = ['Nº BO','Data','Hora','Município','UF','Tipo de BO','Natureza / Crime','Operação','Meio',
+    'Presos','Drogas (kg)','Armas','Munições','Veículos','Embarcações','Madeira (m³)','Prejuízo (R$)',
+    'Endereço','Destino dos Envolvidos','Descrição Resumida'];
+  const cel = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+  const linhas = arr.map(o => [o.bo, fDt(o._data), o.hora, o.municipio, o.uf, o.tipo_bo, o.natureza, o.operacao, o.meio,
+    o.n_presos, o.n_drogas, o.n_armas, o.n_municoes, o.n_veiculos, o.n_embarcacoes, o.n_madeira, o.n_prejuizo,
+    o.endereco, o.destino, o.descricao].map(cel).join(';'));
+  // BOM + ';' para o Excel em português abrir certo
+  const blob = new Blob(['﻿' + cab.map(cel).join(';') + '\n' + linhas.join('\n')], { type:'text/csv;charset=utf-8' });
+  const q = document.getElementById('q').value.trim().replace(/[^\wà-ú ]+/gi,'').replace(/\s+/g,'-').slice(0,40);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ocorrencias' + (q ? '-' + q : '') + '-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+function aviso(msg){
+  let el = document.getElementById('toast');
+  if (!el){
+    el = document.createElement('div'); el.id = 'toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;' +
+      'border:1px solid var(--border);border-radius:10px;padding:11px 18px;color:#e2e8f0;font-size:13px;' +
+      'z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = 'none'; }, 2600);
+}
+
+/* ====================== 7. LOGIN / ABERTURA ============================== */
+function renderChip(){
+  const chip = document.getElementById('oc-chip'), sair = document.getElementById('oc-sair');
+  if (podeBuscar()){ chip.textContent = '👤 ' + AUTH.user; chip.style.display = ''; sair.style.display = ''; }
+  else { chip.style.display = 'none'; sair.style.display = 'none'; }
+}
+async function mostrar(){
+  renderChip();
+  if (!podeBuscar()){
+    document.getElementById('oc-app').style.display = 'none';
+    document.getElementById('oc-loader').style.display = 'none';
+    document.getElementById('oc-login').style.display = '';
+    if (AUTH.logged) document.getElementById('oc-erro').textContent = SEM_ACESSO;
+    return;
+  }
+  document.getElementById('oc-login').style.display = 'none';
+  document.getElementById('oc-loader').style.display = 'flex';
+  try{
+    if (!DADOS.length) await carregar();
+    document.getElementById('oc-loader').style.display = 'none';
+    document.getElementById('oc-app').style.display = '';
+    preencherFiltros();
+    renderSugestoes();
+    lerURL();
+    buscar();
+    document.getElementById('q').focus();
+  }catch(e){
+    document.getElementById('oc-loader').style.display = 'none';
+    document.getElementById('oc-login').style.display = '';
+    document.getElementById('oc-erro').textContent = (e && e.message) || 'Falha ao carregar.';
+  }
+}
+async function ocDoLogin(ev){
+  ev.preventDefault();
+  const btn = document.getElementById('oc-login-btn'), erro = document.getElementById('oc-erro');
+  const user = (document.getElementById('oc-user').value || '').trim();
+  const pass = document.getElementById('oc-pass').value || '';
+  erro.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d);
+    document.getElementById('oc-pass').value = '';
+    if (!podeBuscar()){ erro.textContent = SEM_ACESSO; renderChip(); return false; }
+    mostrar();
+  }catch(e){
+    erro.textContent = (e && e.message) || 'Não foi possível conectar ao servidor.';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+  return false;
+}
+function ocLogout(){
+  AUTH.token = ''; AUTH.user = '';
+  DADOS = []; RES = []; ABERTOS = new Set();
+  document.getElementById('lista').innerHTML = '';
+  mostrar();
+}
+
+// Se o acesso mudou no painel admin (ou o usuário foi desativado), recarrega já com o acesso novo.
+(async function(){
+  if (!AUTH.logged) return;
+  try{
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ AUTH.token = ''; AUTH.user = ''; location.reload(); return; }
+    if (!d.perms) return;
+    const antes = localStorage.getItem('bp_perms'); salvarPerms(d);
+    if (antes !== localStorage.getItem('bp_perms')) location.reload();
+  }catch(e){ /* sem rede: segue com o que já tem */ }
+})();
+
+// Busca enquanto digita (a base é pequena, roda em milissegundos)
+let _deb;
+document.getElementById('q').addEventListener('input', () => { clearTimeout(_deb); _deb = setTimeout(buscar, 160); });
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter'){ clearTimeout(_deb); buscar(); } });
+window.addEventListener('beforeprint', () => {
+  const q = document.getElementById('q').value.trim();
+  document.getElementById('print-hd').innerHTML =
+    '<h1>BPFRON — Busca de Ocorrências</h1><div>' +
+    (q ? 'Pesquisa: “' + esc(q) + '” · ' : '') + fN(RES.length) + ' ocorrência(s) · ' +
+    'emitido em ' + new Date().toLocaleString('pt-BR') + ' por ' + esc(AUTH.user) + '</div>';
+});
+
+mostrar();
+</script>
+</body>
+</html>

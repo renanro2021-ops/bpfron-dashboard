@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Sala de Reunião · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85); --green:#34d399; --red:#f87171;
+}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%)}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+.hidden{display:none!important}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55)}
+.hdr-inner{max-width:1240px;margin:0 auto;padding:12px clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{height:40px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow)}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+.hdr-right a{color:var(--muted);text-decoration:none}.hdr-right a:hover{color:var(--yellow)}
+.lnk{background:none;border:none;color:var(--muted);font-size:13px}.lnk:hover{color:var(--yellow)}
+
+.wrap{max-width:1000px;margin:0 auto;padding:28px clamp(16px,4vw,28px) 80px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:420px;margin:30px auto}
+.box h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff;line-height:1.15;margin-bottom:6px}
+.box p{color:var(--muted);font-size:14px;margin-bottom:16px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.inp{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:15px;outline:none;min-height:44px}
+.inp:focus{border-color:rgba(245,197,24,.6)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:rgba(148,163,184,.08);color:#e2e8f0;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600;min-height:40px;white-space:nowrap}
+.btn:hover{border-color:rgba(245,197,24,.5)}
+.btn.pri{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a;border-color:transparent}
+.btn.dng{color:#fecaca;border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+.btn.full{width:100%;margin-top:18px}
+.btn:disabled{opacity:.5;cursor:default}
+.erro{color:#fecaca;font-size:13px;margin-top:10px;min-height:1em}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:24px 0 12px}
+.nova{display:flex;gap:8px;flex-wrap:wrap}.nova .inp{flex:1;min-width:200px}
+.salas{display:grid;gap:12px}
+.sala-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sala-card h2{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff;line-height:1.1}
+.sala-card .info{flex:1;min-width:180px}
+.sala-card small{color:var(--muted);font-size:12.5px}
+.on{color:var(--green);font-weight:700}
+.acoes{display:flex;gap:8px;flex-wrap:wrap}
+.vazio{color:var(--muted);padding:20px 4px}
+
+/* ------------------------------ sala ------------------------------ */
+#v-sala{position:fixed;inset:0;display:flex;flex-direction:column;background:#04060c}
+.topo{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 8px) 14px 8px;border-bottom:1px solid var(--line);background:#070a13;flex-wrap:wrap}
+.topo .nome{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topo .meta{font-size:13px;color:var(--muted);display:flex;gap:12px;align-items:center}
+.status{font-size:12.5px;color:#fde68a;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.35);border-radius:999px;padding:2px 10px}
+.aviso{background:rgba(245,197,24,.1);border-bottom:1px solid rgba(245,197,24,.3);color:#fde68a;font-size:13px;padding:6px 14px;text-align:center}
+
+.corpo{flex:1;display:flex;min-height:0}
+.palco-area{flex:1;display:flex;flex-direction:column;min-width:0;padding:10px;gap:10px}
+.palco{flex:1;min-height:0;background:#000;border-radius:12px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.palco video{width:100%;height:100%;object-fit:contain;background:#000}
+.palco .rot{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.65);color:#fff;font-size:13px;padding:3px 10px;border-radius:8px}
+.grade{flex:1;min-height:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));align-content:center;overflow:auto}
+.grade.tira{flex:0 0 auto;display:flex;overflow-x:auto;overflow-y:hidden}
+.grade.tira .tile{width:180px;flex:0 0 180px}
+.tile{position:relative;aspect-ratio:16/9;background:#0d1322;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:border-color .15s}
+.tile.fala{border-color:var(--green)}
+.tile video{width:100%;height:100%;object-fit:cover;background:#000;display:block}
+.tile video.eu{transform:scaleX(-1)}
+.tile{container-type:size}
+.tile .av{position:absolute;inset:0 0 30px;display:grid;place-items:center}
+.tile .av span{height:min(56px,70cqh - 20px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:min(22px,28cqh - 8px);color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800)}
+.tile .tag{position:absolute;left:6px;bottom:6px;right:6px;display:flex;gap:6px;align-items:center;font-size:12.5px;color:#fff}
+.tile .tag b{background:rgba(0,0,0,.65);padding:2px 8px;border-radius:6px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tile .ic{background:rgba(0,0,0,.65);padding:2px 6px;border-radius:6px}
+.pag{display:flex;justify-content:center;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+
+.painel{width:340px;border-left:1px solid var(--line);background:#070a13;display:flex;flex-direction:column;min-height:0}
+.abas{display:flex;border-bottom:1px solid var(--line)}
+.abas button{flex:1;background:none;border:none;color:var(--muted);padding:11px;font-size:14px;font-weight:600;border-bottom:2px solid transparent}
+.abas button.at{color:#fff;border-bottom-color:var(--yellow)}
+.abas .fechar{flex:0 0 44px}
+.chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.msg{font-size:14px;line-height:1.45;word-wrap:break-word}
+.msg .de{font-size:12px;color:var(--yellow);font-weight:700}
+.msg .de small{color:var(--muted);font-weight:400;margin-left:6px}
+.msg.minha .de{color:var(--green)}
+.msg .tx{white-space:pre-wrap;color:#e2e8f0}
+.envio{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.envio .inp{min-height:42px}
+.lista{flex:1;overflow-y:auto;padding:8px}
+.pess{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;font-size:14px}
+.pess:hover{background:rgba(148,163,184,.06)}
+.pess .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pess .n small{color:var(--muted);margin-left:4px}
+.pess .mb{background:none;border:1px solid var(--line);border-radius:8px;color:#e2e8f0;padding:3px 7px;font-size:13px}
+.pess .mb:hover{border-color:rgba(245,197,24,.5)}
+.mod-bar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;border-bottom:1px solid var(--line)}
+.mod-bar .btn{min-height:34px;padding:6px 10px;font-size:13px}
+
+.ctrl{display:flex;justify-content:center;gap:10px;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:#070a13;flex-wrap:wrap}
+.cb{position:relative;width:54px;height:54px;border-radius:50%;border:1px solid var(--line);background:#1a2233;color:#fff;font-size:22px;display:grid;place-items:center}
+.cb:hover{border-color:rgba(245,197,24,.5)}
+.cb.off{background:#3b1d24;border-color:rgba(248,113,113,.4)}
+.cb.ativo{background:rgba(245,197,24,.2);border-color:rgba(245,197,24,.6)}
+.cb.sair{background:#b91c1c;border-color:transparent;width:64px;border-radius:27px}
+.cb .badge{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:999px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center}
+.cb[disabled]{opacity:.35;cursor:default}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 90px);background:#111827;border:1px solid rgba(245,197,24,.4);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:1000;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.err{border-color:rgba(248,113,113,.6)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:900;padding:16px}
+.modal .box{margin:0}
+.modal .acoes{justify-content:flex-end;margin-top:18px}
+.linkbox{width:100%;font-size:13px}
+
+@media (max-width:820px){
+  .painel{position:fixed;inset:0;width:auto;z-index:500;padding-top:env(safe-area-inset-top,0px)}
+  .cb{width:48px;height:48px;font-size:20px}
+  .cb.sair{width:56px}
+  .grade{grid-template-columns:repeat(2,1fr)}
+  .grade.tira .tile{width:140px;flex-basis:140px}
+  .topo .meta .dur{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="hdr" class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Sala de <em>Reunião</em></div>
+        <div class="hdr-sub">Videoconferência · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <span id="userchip"></span>
+      <button id="btn-sair" class="lnk hidden" type="button">Sair</button>
+      <a href="sistemas.html">⬅ Sistemas</a>
+    </div>
+  </div>
+</div>
+
+<main id="v-carregando" class="wrap"><div class="vazio">Carregando…</div></main>
+
+<main id="v-login" class="wrap hidden">
+  <form id="f-login" class="box">
+    <h1>Entrar</h1>
+    <p>Use o mesmo login do dashboard. Convidados entram pelo link enviado pelo moderador.</p>
+    <label for="l-user">Usuário</label>
+    <input id="l-user" class="inp" autocomplete="username" required>
+    <label for="l-pass">Senha</label>
+    <input id="l-pass" class="inp" type="password" autocomplete="current-password" required>
+    <button class="btn pri full" type="submit">Entrar</button>
+    <div id="l-erro" class="erro"></div>
+  </form>
+</main>
+
+<main id="v-convidado" class="wrap hidden">
+  <form id="f-conv" class="box">
+    <h1>Entrar na reunião</h1>
+    <p>Você foi convidado para uma reunião do BPFRON. Digite seu nome como quer aparecer para os outros.</p>
+    <label for="c-nome">Seu nome (posto/graduação e nome de guerra)</label>
+    <input id="c-nome" class="inp" maxlength="40" required placeholder="Ex.: SD Silva">
+    <button class="btn pri full" type="submit">Entrar na reunião</button>
+    <div id="c-erro" class="erro"></div>
+    <p style="margin:16px 0 0;font-size:13px">Tem login do dashboard? <button type="button" class="lnk" id="c-login" style="color:var(--yellow)">Entrar com login</button></p>
+  </form>
+</main>
+
+<main id="v-lobby" class="wrap hidden">
+  <div id="lb-mod" class="hidden">
+    <div class="sec">Nova sala</div>
+    <form id="f-nova" class="nova">
+      <input id="n-nome" class="inp" maxlength="60" placeholder="Nome da sala (ex.: Reunião P3, Instrução Geral)" required>
+      <button class="btn pri" type="submit">➕ Criar sala</button>
+    </form>
+  </div>
+  <div class="sec">Salas</div>
+  <div id="lb-salas" class="salas"></div>
+</main>
+
+<main id="v-fim" class="wrap hidden">
+  <div class="box" style="text-align:center">
+    <h1 id="fim-tit">Você saiu da reunião</h1>
+    <p id="fim-txt"></p>
+    <button id="fim-voltar" class="btn pri full" type="button">Voltar</button>
+  </div>
+</main>
+
+<section id="v-sala" class="hidden" aria-label="Sala de reunião">
+  <div class="topo">
+    <div class="nome" id="s-nome"></div>
+    <span id="s-status" class="status hidden"></span>
+    <div class="meta"><span class="dur" id="s-dur">00:00</span><span>👥 <b id="s-qtd">1</b></span></div>
+  </div>
+  <div id="s-aviso" class="aviso hidden"></div>
+  <div class="corpo">
+    <div class="palco-area">
+      <div id="palco" class="palco hidden"><video id="palco-v" autoplay playsinline muted></video><div class="rot" id="palco-rot"></div></div>
+      <div id="grade" class="grade"></div>
+      <div id="pag" class="pag hidden">
+        <button class="btn" id="pag-ant" type="button">‹</button><span id="pag-txt"></span><button class="btn" id="pag-prox" type="button">›</button>
+      </div>
+    </div>
+    <aside id="painel" class="painel hidden">
+      <div class="abas">
+        <button type="button" data-aba="chat" class="at">💬 Chat</button>
+        <button type="button" data-aba="pess">👥 Pessoas (<span id="p-qtd">1</span>)</button>
+        <button type="button" class="fechar" id="painel-x" aria-label="Fechar painel">✕</button>
+      </div>
+      <div id="aba-chat" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div id="chat" class="chat"></div>
+        <form id="f-chat" class="envio">
+          <input id="chat-inp" class="inp" maxlength="1000" placeholder="Mensagem para todos" autocomplete="off">
+          <button class="btn pri" type="submit">Enviar</button>
+        </form>
+      </div>
+      <div id="aba-pess" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div id="mod-bar" class="mod-bar hidden">
+          <button class="btn" type="button" id="m-mutar">🔇 Mutar todos</button>
+          <button class="btn" type="button" id="m-link">🔗 Link de convidado</button>
+          <button class="btn dng" type="button" id="m-encerrar">⛔ Encerrar</button>
+        </div>
+        <div id="lista" class="lista"></div>
+      </div>
+    </aside>
+  </div>
+  <div class="ctrl">
+    <button class="cb off" id="b-mic" type="button" title="Microfone">🎤</button>
+    <button class="cb off" id="b-cam" type="button" title="Câmera">📷</button>
+    <button class="cb" id="b-tela" type="button" title="Compartilhar tela">🖥️</button>
+    <button class="cb" id="b-mao" type="button" title="Levantar a mão">✋</button>
+    <button class="cb" id="b-chat" type="button" title="Chat e participantes">💬<span id="b-badge" class="badge hidden">0</span></button>
+    <button class="cb sair" id="b-sair" type="button" title="Sair da reunião">📞</button>
+  </div>
+  <div id="audios" class="hidden"></div>
+</section>
+
+<script>
+/* ======================================================================
+   Sala de reunião — front. Backend: backend/sala.js (Worker + Durable Object
+   + Cloudflare Realtime). ?api=http://127.0.0.1:8787 aponta pra Worker local.
+   ====================================================================== */
+const API_BASE = (function(){
+  const q = new URLSearchParams(location.search).get('api');
+  return q && /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(q) ? q : 'https://bpfron-api.bpfron.workers.dev';
+})();
+const WS_BASE = API_BASE.replace(/^http/, 'ws');
+const ICE = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+const POR_PAGINA = () => matchMedia('(max-width:820px)').matches ? 6 : 12;
+const MAX_VIDEOS = 12;
+
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const ls = {
+  get(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } },
+  set(k, v){ try{ v ? localStorage.setItem(k, v) : localStorage.removeItem(k); }catch(e){} }
+};
+const AUTH = {
+  get token(){ return ls.get('bp_token'); }, set token(t){ ls.set('bp_token', t); },
+  get user(){ return ls.get('bp_user'); }, set user(u){ ls.set('bp_user', u); }
+};
+
+const VIEWS = ['v-carregando','v-login','v-convidado','v-lobby','v-fim','v-sala'];
+function view(id){
+  VIEWS.forEach(v => $(v).classList.toggle('hidden', v !== id));
+  $('hdr').classList.toggle('hidden', id === 'v-sala');
+  $('btn-sair').classList.toggle('hidden', !AUTH.token || id === 'v-convidado');
+  $('userchip').textContent = AUTH.token && id !== 'v-convidado' ? '👤 ' + AUTH.user : '';
+}
+
+function toast(msg, erro){
+  const t = document.createElement('div');
+  t.className = 'toast' + (erro ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), erro ? 5000 : 3000);
+}
+
+function confirmar(titulo, texto, rotulo){
+  return new Promise(res => {
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = `<div class="box"><h1>${esc(titulo)}</h1><p>${esc(texto)}</p><div class="acoes"><button class="btn" data-r="0">Cancelar</button><button class="btn dng" data-r="1">${esc(rotulo)}</button></div></div>`;
+    m.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-r]');
+      if (!b && ev.target !== m) return;
+      m.remove(); res(!!b && b.dataset.r === '1');
+    });
+    document.body.appendChild(m);
+  });
+}
+
+function mostrarLink(link){
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `<div class="box"><h1>Link de convidado</h1><p>Quem tiver este link entra na sala só com o nome. Envie pelo WhatsApp. Para desativar, gere um link novo.</p>
+    <input class="inp linkbox" readonly value="${esc(link)}"><div class="acoes"><button class="btn" data-a="fechar">Fechar</button><button class="btn pri" data-a="copiar">📋 Copiar</button></div></div>`;
+  const inp = m.querySelector('input');
+  m.addEventListener('click', async ev => {
+    const a = ev.target.closest('[data-a]');
+    if (ev.target === m || (a && a.dataset.a === 'fechar')) return m.remove();
+    if (a && a.dataset.a === 'copiar'){
+      try { await navigator.clipboard.writeText(link); toast('Link copiado.'); }
+      catch(e){ inp.select(); document.execCommand('copy'); toast('Link copiado.'); }
+    }
+  });
+  document.body.appendChild(m);
+  inp.select();
+}
+
+async function api(path, body, token){
+  const tok = token === undefined ? AUTH.token : token; // '' = sem login (convidado)
+  const r = await fetch(API_BASE + path, {
+    method: body ? 'POST' : 'GET',
+    headers: Object.assign(tok ? { 'Authorization': 'Bearer ' + tok } : {}, body ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+
+function sairLogin(){ AUTH.token = ''; AUTH.user = ''; view('v-login'); }
+$('btn-sair').addEventListener('click', sairLogin);
+
+/* ---------------------------- entrada ---------------------------- */
+const CONVITE = new URLSearchParams(location.search).get('c');
+
+function salaDoConvite(){
+  try { return JSON.parse(atob(CONVITE.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sala || ''; } catch(e){ return ''; }
+}
+
+$('f-login').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  $('l-erro').textContent = '';
+  try {
+    const d = await api('/api/login', { user: $('l-user').value.trim(), pass: $('l-pass').value });
+    AUTH.token = d.token; AUTH.user = d.user;
+    $('l-pass').value = '';
+    iniciar();
+  } catch(e){ $('l-erro').textContent = e.status === 401 ? 'Usuário ou senha incorretos.' : e.message; }
+});
+
+$('c-login').addEventListener('click', () => view('v-login'));
+$('f-conv').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  $('c-erro').textContent = '';
+  const nome = $('c-nome').value.trim();
+  ls.set('sala_nome', nome);
+  const b = ev.submitter; if (b) b.disabled = true;
+  try { entrarNaSala(await api('/api/sala/entrar', { convite: CONVITE, nome }, '')); }
+  catch(e){ $('c-erro').textContent = e.message; }
+  finally { if (b) b.disabled = false; }
+});
+
+async function iniciar(){
+  if (CONVITE){
+    if (AUTH.token){
+      try { return entrarNaSala(await api('/api/sala/entrar', { sala: salaDoConvite() })); }
+      catch(e){ if (e.status !== 401) toast(e.message, true); else AUTH.token = ''; }
+    }
+    $('c-nome').value = ls.get('sala_nome');
+    return view('v-convidado');
+  }
+  if (!AUTH.token) return view('v-login');
+  carregarLobby();
+}
+
+/* ---------------------------- lobby ---------------------------- */
+let LOBBY_TIMER = null;
+async function carregarLobby(){
+  view('v-lobby');
+  try {
+    const d = await api('/api/sala');
+    $('lb-mod').classList.toggle('hidden', !d.moderador);
+    $('lb-salas').innerHTML = d.salas.length ? d.salas.map(s => `
+      <div class="sala-card">
+        <div class="info"><h2>${esc(s.nome)}</h2>
+          <small>${s.online ? `<span class="on">● ${s.online} na sala</span>` : 'Ninguém na sala'}</small></div>
+        <div class="acoes">
+          ${d.moderador ? `<button class="btn" data-op="convite" data-id="${s.id}">🔗 Link</button>
+            <button class="btn" data-op="novo" data-id="${s.id}" title="Gera outro link e desativa o anterior">♻️ Novo link</button>
+            <button class="btn dng" data-op="excluir" data-id="${s.id}" data-nome="${esc(s.nome)}">🗑️</button>` : ''}
+          <button class="btn pri" data-op="entrar" data-id="${s.id}">Entrar →</button>
+        </div>
+      </div>`).join('')
+      : `<div class="vazio">${d.moderador ? 'Nenhuma sala ainda. Crie a primeira acima.' : 'Nenhuma sala aberta. Peça a um moderador para criar.'}</div>`;
+  } catch(e){
+    if (e.status === 401) return sairLogin();
+    $('lb-salas').innerHTML = `<div class="vazio">${esc(e.message)}</div>`;
+  }
+  clearTimeout(LOBBY_TIMER);
+  LOBBY_TIMER = setTimeout(() => { if (!$('v-lobby').classList.contains('hidden')) carregarLobby(); }, 15000);
+}
+
+$('f-nova').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  try { await api('/api/sala', { op: 'criar', nome: $('n-nome').value.trim() }); $('n-nome').value = ''; carregarLobby(); }
+  catch(e){ toast(e.message, true); }
+});
+
+function linkConvite(convite){ return location.origin + location.pathname + '?c=' + encodeURIComponent(convite); }
+
+$('lb-salas').addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-op]');
+  if (!b) return;
+  const id = b.dataset.id;
+  try {
+    if (b.dataset.op === 'entrar') entrarNaSala(await api('/api/sala/entrar', { sala: id }));
+    else if (b.dataset.op === 'convite') mostrarLink(linkConvite((await api('/api/sala', { op: 'convite', id })).convite));
+    else if (b.dataset.op === 'novo'){
+      if (!await confirmar('Gerar novo link?', 'O link anterior para de funcionar. Quem já está na sala continua.', 'Gerar novo link')) return;
+      mostrarLink(linkConvite((await api('/api/sala', { op: 'convite', id, novo: true })).convite));
+    } else if (b.dataset.op === 'excluir'){
+      if (!await confirmar('Excluir sala?', `"${b.dataset.nome}" será excluída e quem estiver nela sai da reunião.`, 'Excluir')) return;
+      await api('/api/sala', { op: 'excluir', id }); toast('Sala excluída.'); carregarLobby();
+    }
+  } catch(e){ if (e.status === 401) sairLogin(); else toast(e.message, true); }
+});
+
+/* ============================== SALA ============================== */
+let S = null;          // { token, sala, eu, rtc }
+let WS = null, WS_TENT = 0, SAINDO = false, PING = null, DUR = null;
+let PARTS = new Map(); // id -> participante (do servidor)
+const LOCAL = { mic: false, cam: false, tela: false, mao: false };
+let MIC = null, CAM = null, TELA = null;
+const FALA = new Map(); // id -> bool
+let PAGINA = 0, PAINEL_ABA = 'chat', NAO_LIDAS = 0;
+let VISIVEIS = new Set(), PALCO_ID = '';
+
+async function entrarNaSala(d){
+  S = d; SAINDO = false; PARTS = new Map(); PAGINA = 0; NAO_LIDAS = 0;
+  Object.assign(LOCAL, { mic: false, cam: false, tela: false, mao: false });
+  $('s-nome').textContent = d.sala.nome;
+  $('chat').innerHTML = '';
+  $('mod-bar').classList.toggle('hidden', !d.eu.mod);
+  $('b-tela').classList.toggle('hidden', !(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia));
+  view('v-sala');
+  const ini = Date.now();
+  clearInterval(DUR);
+  DUR = setInterval(() => {
+    const s = Math.floor((Date.now() - ini) / 1000), h = Math.floor(s / 3600);
+    $('s-dur').textContent = (h ? h + ':' : '') + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }, 1000);
+
+  aviso(d.rtc ? '' : 'Áudio e vídeo ainda não foram configurados no servidor. Por enquanto só o chat funciona.');
+  if (d.rtc){
+    try {
+      MIC = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      MIC.getAudioTracks()[0].enabled = false;
+    } catch(e){ MIC = null; toast('Sem acesso ao microfone. Você entra só ouvindo; toque em 🎤 para tentar de novo.', true); }
+  }
+  conectarWS();
+  if (d.rtc) iniciarMidia().catch(e => { console.warn('[sala] mídia', e); aviso('Não foi possível conectar o áudio/vídeo. Tentando de novo…'); agendarReinicioMidia(); });
+  detectorDeVoz();
+  render();
+}
+
+function aviso(t){ $('s-aviso').textContent = t; $('s-aviso').classList.toggle('hidden', !t); }
+function status(t){ $('s-status').textContent = t; $('s-status').classList.toggle('hidden', !t); }
+
+/* ---------------------------- WebSocket ---------------------------- */
+function conectarWS(){
+  const ws = new WebSocket(WS_BASE + '/api/sala/ws?t=' + encodeURIComponent(S.token));
+  WS = ws;
+  ws.onopen = () => { WS_TENT = 0; status(''); };
+  ws.onmessage = ev => { if (ev.data !== 'pong') try { tratar(JSON.parse(ev.data)); } catch(e){ console.warn('[sala] msg', e); } };
+  ws.onclose = ev => {
+    if (WS !== ws || SAINDO) return;
+    if (ev.code === 4000) return fim('Você abriu a reunião em outra aba', 'Esta aba foi desconectada.');
+    if (ev.code === 4002) return fim('Reunião encerrada', '');
+    if (ev.code === 4003) return fim('Você foi removido da reunião', '');
+    if (++WS_TENT > 8) return fim('Conexão perdida', 'Não foi possível reconectar. Verifique a internet e entre de novo.');
+    status('Reconectando…');
+    setTimeout(() => { if (!SAINDO && WS === ws) conectarWS(); }, Math.min(10000, 800 * 2 ** WS_TENT));
+  };
+  clearInterval(PING);
+  PING = setInterval(() => { if (WS && WS.readyState === 1) WS.send('ping'); }, 25000);
+}
+
+function enviar(o){ if (WS && WS.readyState === 1) WS.send(JSON.stringify(o)); }
+function enviarEstado(){ enviar({ t: 'estado', mic: LOCAL.mic, cam: LOCAL.cam, tela: LOCAL.tela, mao: LOCAL.mao }); }
+
+function tratar(m){
+  switch (m.t){
+    case 'bemvindo':
+      PARTS = new Map(m.participantes.map(p => [p.id, p]));
+      $('chat').innerHTML = '';
+      m.chat.forEach(c => addChat(c, true));
+      enviarEstado();
+      if (PUB.sid) enviar({ t: 'rtc', sid: PUB.sid });
+      break;
+    case 'entrou': case 'at':
+      if (m.p.id === S.eu.id) return;
+      PARTS.set(m.p.id, m.p);
+      break;
+    case 'saiu':
+      PARTS.delete(m.id); FALA.delete(m.id);
+      break;
+    case 'fal':
+      FALA.set(m.id, m.v); marcarFala(m.id); return;
+    case 'chat':
+      addChat(m.m); return;
+    case 'cmd':
+      if (m.acao === 'mutar' && LOCAL.mic){ alternarMic(); toast(`${m.por} desligou seu microfone.`); }
+      if (m.acao === 'cam' && LOCAL.cam){ alternarCam(); toast(`${m.por} desligou sua câmera.`); }
+      return;
+    case 'removido':
+      return fim('Você foi removido da reunião', `Removido por ${m.por}.`);
+    case 'encerrada':
+      return fim('Reunião encerrada', m.motivo || '');
+  }
+  render();
+  agendarRec();
+}
+
+/* ---------------------------- chat ---------------------------- */
+function addChat(c, historico){
+  const el = document.createElement('div');
+  el.className = 'msg' + (c.de === S.eu.id ? ' minha' : '');
+  const hora = new Date(c.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  el.innerHTML = `<div class="de">${esc(c.nome)}${c.tipo === 'convidado' ? ' <small>(convidado)</small>' : ''}<small>${hora}</small></div><div class="tx"></div>`;
+  el.querySelector('.tx').textContent = c.texto;
+  const box = $('chat');
+  const noFim = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+  box.appendChild(el);
+  if (noFim || c.de === S.eu.id) box.scrollTop = box.scrollHeight;
+  if (!historico && c.de !== S.eu.id && ($('painel').classList.contains('hidden') || PAINEL_ABA !== 'chat')){
+    NAO_LIDAS++; badge();
+  }
+}
+function badge(){ $('b-badge').textContent = NAO_LIDAS > 99 ? '99+' : NAO_LIDAS; $('b-badge').classList.toggle('hidden', !NAO_LIDAS); }
+
+$('f-chat').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const t = $('chat-inp').value.trim();
+  if (!t) return;
+  if (!WS || WS.readyState !== 1) return toast('Sem conexão. Aguarde reconectar.', true);
+  enviar({ t: 'chat', texto: t });
+  $('chat-inp').value = '';
+});
+
+function abrirAba(aba){
+  PAINEL_ABA = aba;
+  document.querySelectorAll('.abas [data-aba]').forEach(b => b.classList.toggle('at', b.dataset.aba === aba));
+  $('aba-chat').classList.toggle('hidden', aba !== 'chat');
+  $('aba-pess').classList.toggle('hidden', aba !== 'pess');
+  if (aba === 'chat'){ NAO_LIDAS = 0; badge(); $('chat').scrollTop = $('chat').scrollHeight; }
+}
+document.querySelectorAll('.abas [data-aba]').forEach(b => b.addEventListener('click', () => abrirAba(b.dataset.aba)));
+$('b-chat').addEventListener('click', () => {
+  const abrir = $('painel').classList.contains('hidden');
+  $('painel').classList.toggle('hidden', !abrir);
+  if (abrir) abrirAba(PAINEL_ABA);
+});
+$('painel-x').addEventListener('click', () => $('painel').classList.add('hidden'));
+
+/* ---------------------------- moderação ---------------------------- */
+$('m-mutar').addEventListener('click', () => { enviar({ t: 'mod', acao: 'mutar' }); toast('Microfones desligados.'); });
+$('m-link').addEventListener('click', async () => {
+  try { mostrarLink(linkConvite((await api('/api/sala', { op: 'convite', id: S.sala.id })).convite)); }
+  catch(e){ toast(e.status === 401 ? 'Sua sessão do painel expirou. Entre de novo para gerar o link.' : e.message, true); }
+});
+$('m-encerrar').addEventListener('click', async () => {
+  if (!await confirmar('Encerrar a reunião?', 'Todos os participantes serão desconectados.', 'Encerrar para todos')) return;
+  enviar({ t: 'mod', acao: 'encerrar' });
+});
+$('lista').addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-mod]');
+  if (!b) return;
+  const p = PARTS.get(b.dataset.id);
+  if (!p) return;
+  if (b.dataset.mod === 'remover' && !await confirmar('Remover participante?', `${p.nome} sai da reunião e não consegue voltar com o mesmo acesso.`, 'Remover')) return;
+  enviar({ t: 'mod', acao: b.dataset.mod, alvo: p.id });
+});
+
+/* ---------------------------- controles ---------------------------- */
+async function alternarMic(){
+  if (!S.rtc) return toast('Áudio ainda não configurado no servidor.', true);
+  if (!MIC){
+    try {
+      MIC = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      MIC.getAudioTracks()[0].enabled = false;
+      if (PUB.tx.audio) await PUB.tx.audio.sender.replaceTrack(MIC.getAudioTracks()[0]);
+      detectorDeVoz();
+    } catch(e){ return toast('O navegador bloqueou o microfone. Libere no cadeado da barra de endereço.', true); }
+  }
+  LOCAL.mic = !LOCAL.mic;
+  MIC.getAudioTracks()[0].enabled = LOCAL.mic;
+  enviarEstado(); render();
+}
+
+async function alternarCam(){
+  if (!S.rtc) return toast('Vídeo ainda não configurado no servidor.', true);
+  if (!LOCAL.cam){
+    try { CAM = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 15, max: 15 } } }); }
+    catch(e){ return toast('O navegador bloqueou a câmera. Libere no cadeado da barra de endereço.', true); }
+    const t = CAM.getVideoTracks()[0];
+    t.onended = () => { if (LOCAL.cam) alternarCam(); };
+    if (PUB.tx.video) await PUB.tx.video.sender.replaceTrack(t);
+    LOCAL.cam = true;
+  } else {
+    if (PUB.tx.video) await PUB.tx.video.sender.replaceTrack(PUB.vazioV);
+    if (CAM) CAM.getTracks().forEach(t => t.stop());
+    CAM = null; LOCAL.cam = false;
+  }
+  enviarEstado(); render();
+}
+
+async function alternarTela(){
+  if (!S.rtc) return toast('Vídeo ainda não configurado no servidor.', true);
+  if (!LOCAL.tela){
+    try { TELA = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 12, max: 15 } }, audio: false }); }
+    catch(e){ return; }
+    const t = TELA.getVideoTracks()[0];
+    t.contentHint = 'detail';
+    t.onended = () => { if (LOCAL.tela) alternarTela(); };
+    if (PUB.tx.tela) await PUB.tx.tela.sender.replaceTrack(t);
+    LOCAL.tela = true;
+  } else {
+    if (PUB.tx.tela) await PUB.tx.tela.sender.replaceTrack(PUB.vazioT);
+    if (TELA) TELA.getTracks().forEach(t => t.stop());
+    TELA = null; LOCAL.tela = false;
+  }
+  enviarEstado(); render();
+}
+
+$('b-mic').addEventListener('click', alternarMic);
+$('b-cam').addEventListener('click', alternarCam);
+$('b-tela').addEventListener('click', alternarTela);
+$('b-mao').addEventListener('click', () => { LOCAL.mao = !LOCAL.mao; enviarEstado(); render(); });
+$('b-sair').addEventListener('click', () => fim('Você saiu da reunião', ''));
+$('pag-ant').addEventListener('click', () => { PAGINA--; render(); agendarRec(); });
+$('pag-prox').addEventListener('click', () => { PAGINA++; render(); agendarRec(); });
+window.addEventListener('beforeunload', () => { SAINDO = true; if (WS) WS.close(); });
+
+function fim(titulo, texto){
+  if ($('v-sala').classList.contains('hidden')) return; // já saiu
+  SAINDO = true;
+  clearInterval(PING); clearInterval(DUR); clearTimeout(REINICIO);
+  if (WS){ try { WS.close(); } catch(e){} WS = null; }
+  pararMidia();
+  [MIC, CAM, TELA].forEach(s => s && s.getTracks().forEach(t => t.stop()));
+  MIC = CAM = TELA = null;
+  $('grade').innerHTML = ''; TILES.clear();
+  $('fim-tit').textContent = titulo;
+  $('fim-txt').textContent = texto;
+  $('fim-voltar').textContent = CONVITE && !AUTH.token ? 'Entrar de novo' : 'Voltar às salas';
+  view('v-fim');
+}
+$('fim-voltar').addEventListener('click', () => iniciar());
+
+/* ---------------------------- render ---------------------------- */
+const TILES = new Map(); // id -> elemento
+// Pula posto/graduação e quadro ("CB QPPM De Sousa" -> "DS").
+const PREFIXOS = /^(SD|CB|SGT|ST|SUBTEN|TEN|CAP|MAJ|TC|CEL|QPPM|QOPM|\d+º)$/i;
+function iniciais(n){
+  const p = String(n).split(/\s+/).filter(Boolean);
+  const resto = p.filter(x => !PREFIXOS.test(x));
+  return (resto.length ? resto : p).slice(0, 2).map(x => x[0]).join('').toUpperCase() || '?';
+}
+
+function todos(){
+  const eu = Object.assign({}, S.eu, LOCAL, { sid: PUB.sid });
+  return [eu].concat([...PARTS.values()].filter(p => p.id !== S.eu.id));
+}
+
+function render(){
+  if (!S) return;
+  const lista = todos();
+  $('s-qtd').textContent = lista.length;
+  $('p-qtd').textContent = lista.length;
+
+  // Tela compartilhada no palco (a mais recente).
+  const comTela = lista.filter(p => p.tela).sort((a, b) => (b.telaEm || 0) - (a.telaEm || 0));
+  PALCO_ID = comTela.length ? comTela[0].id : '';
+  $('palco').classList.toggle('hidden', !PALCO_ID);
+  $('grade').classList.toggle('tira', !!PALCO_ID);
+  if (PALCO_ID){
+    const p = comTela[0];
+    $('palco-rot').textContent = p.id === S.eu.id ? '🖥️ Você está compartilhando a tela' : '🖥️ Tela de ' + p.nome;
+    const stream = p.id === S.eu.id ? TELA : streamDe(p.sid, 'tela');
+    if ($('palco-v').srcObject !== stream) $('palco-v').srcObject = stream || null;
+  } else $('palco-v').srcObject = null;
+
+  // Grade paginada: eu primeiro, depois câmeras ligadas, depois quem levantou a mão.
+  const ordem = [lista[0]].concat(lista.slice(1).sort((a, b) => (b.cam - a.cam) || (b.mao - a.mao) || (a.em - b.em)));
+  const pp = PALCO_ID ? 6 : POR_PAGINA();
+  const paginas = Math.max(1, Math.ceil(ordem.length / pp));
+  PAGINA = Math.min(Math.max(0, PAGINA), paginas - 1);
+  const vis = ordem.slice(PAGINA * pp, PAGINA * pp + pp);
+  VISIVEIS = new Set(vis.filter(p => p.cam).slice(0, MAX_VIDEOS).map(p => p.id));
+  $('pag').classList.toggle('hidden', paginas < 2);
+  $('pag-txt').textContent = `${PAGINA + 1} / ${paginas}`;
+  $('pag-ant').disabled = PAGINA === 0;
+  $('pag-prox').disabled = PAGINA >= paginas - 1;
+
+  const grade = $('grade');
+  const ids = new Set(vis.map(p => p.id));
+  for (const [id, el] of TILES) if (!ids.has(id)){ el.remove(); TILES.delete(id); }
+  vis.forEach((p, i) => {
+    let el = TILES.get(p.id);
+    if (!el){
+      el = document.createElement('div');
+      el.className = 'tile';
+      el.innerHTML = '<video autoplay playsinline muted></video><div class="av"><span></span></div><div class="tag"><b></b><span class="ic m"></span><span class="ic h"></span></div>';
+      TILES.set(p.id, el);
+    }
+    if (grade.children[i] !== el) grade.insertBefore(el, grade.children[i] || null);
+    const eu = p.id === S.eu.id;
+    const stream = eu ? (LOCAL.cam ? CAM : null) : (p.cam ? streamDe(p.sid, 'video') : null);
+    const v = el.querySelector('video');
+    v.classList.toggle('eu', eu);
+    if (v.srcObject !== stream) v.srcObject = stream || null;
+    v.classList.toggle('hidden', !stream);
+    el.querySelector('.av').classList.toggle('hidden', !!stream);
+    el.querySelector('.av span').textContent = iniciais(p.nome);
+    el.querySelector('b').textContent = (eu ? 'Você' : p.nome) + (p.tipo === 'convidado' && !eu ? ' (convidado)' : '');
+    el.querySelector('.m').textContent = p.mic ? '' : '🔇';
+    el.querySelector('.m').classList.toggle('hidden', !!p.mic);
+    el.querySelector('.h').textContent = '✋';
+    el.querySelector('.h').classList.toggle('hidden', !p.mao);
+    el.classList.toggle('fala', !!FALA.get(p.id) && !!p.mic);
+  });
+
+  // Controles
+  $('b-mic').classList.toggle('off', !LOCAL.mic); $('b-mic').textContent = LOCAL.mic ? '🎤' : '🔇';
+  $('b-cam').classList.toggle('off', !LOCAL.cam);
+  $('b-tela').classList.toggle('ativo', LOCAL.tela);
+  $('b-mao').classList.toggle('ativo', LOCAL.mao);
+
+  // Lista de pessoas (mão levantada no topo)
+  const mod = S.eu.mod;
+  $('lista').innerHTML = [lista[0]].concat(lista.slice(1).sort((a, b) => (b.mao - a.mao) || a.nome.localeCompare(b.nome))).map(p => {
+    const eu = p.id === S.eu.id;
+    return `<div class="pess"><span>${p.mao ? '✋' : (p.mic ? '🎤' : '🔇')}</span>
+      <span class="n">${esc(eu ? p.nome + ' (você)' : p.nome)}${p.mod ? '<small>· moderador</small>' : ''}${p.tipo === 'convidado' ? '<small>· convidado</small>' : ''}${p.tela ? ' 🖥️' : ''}${p.cam ? ' 📷' : ''}</span>
+      ${mod && !eu ? `${p.mic ? `<button class="mb" data-mod="mutar" data-id="${esc(p.id)}" title="Desligar microfone">🔇</button>` : ''}
+        ${p.cam ? `<button class="mb" data-mod="cam" data-id="${esc(p.id)}" title="Desligar câmera">📷</button>` : ''}
+        ${p.mao ? `<button class="mb" data-mod="mao" data-id="${esc(p.id)}" title="Baixar a mão">👇</button>` : ''}
+        ${!p.mod ? `<button class="mb" data-mod="remover" data-id="${esc(p.id)}" title="Remover da reunião">🚫</button>` : ''}` : ''}
+    </div>`;
+  }).join('');
+}
+
+function marcarFala(id){
+  const el = TILES.get(id);
+  const p = id === S.eu.id ? LOCAL : PARTS.get(id);
+  if (el && p) el.classList.toggle('fala', !!FALA.get(id) && !!p.mic);
+}
+
+function detectorDeVoz(){
+  if (!MIC || detectorDeVoz.ativo === MIC) return;
+  detectorDeVoz.ativo = MIC;
+  try {
+    const ac = detectorDeVoz.ac || (detectorDeVoz.ac = new (window.AudioContext || window.webkitAudioContext)());
+    const an = ac.createAnalyser();
+    an.fftSize = 512;
+    ac.createMediaStreamSource(MIC).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const esteMic = MIC;
+    let ult = 0, falando = false;
+    const iv = setInterval(() => {
+      if (MIC !== esteMic){ clearInterval(iv); return; }
+      an.getByteTimeDomainData(buf);
+      let s = 0;
+      for (let i = 0; i < buf.length; i++){ const x = (buf[i] - 128) / 128; s += x * x; }
+      if (LOCAL.mic && Math.sqrt(s / buf.length) > 0.03) ult = Date.now();
+      const agora = Date.now() - ult < 700;
+      if (agora !== falando){ falando = agora; FALA.set(S.eu.id, agora); marcarFala(S.eu.id); enviar({ t: 'falando', v: agora }); }
+    }, 150);
+  } catch(e){ console.warn('[sala] detector de voz', e); }
+}
+
+/* ============================ MÍDIA (SFU) ============================ */
+const PUB = { pc: null, sid: '', tx: {}, vazioA: null, vazioV: null, vazioT: null };
+const SUB = { pc: null, sid: '', porChave: new Map(), porMid: new Map(), fila: Promise.resolve(), falhas: new Map() };
+let REC_TIMER = null, REC_IV = null, REINICIO = null;
+
+const rtc = (op, sid, corpo) => api('/api/sala/rtc', { op, sid, corpo }, S.token).then(r => {
+  if (r.errorCode) throw new Error(r.errorCode + ': ' + (r.errorDescription || ''));
+  return r;
+});
+
+function videoVazio(){
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 9;
+  c.getContext('2d').fillRect(0, 0, 16, 9);
+  return c.captureStream(1).getVideoTracks()[0];
+}
+function audioVazio(){
+  const ac = detectorDeVoz.ac || (detectorDeVoz.ac = new (window.AudioContext || window.webkitAudioContext)());
+  return ac.createMediaStreamDestination().stream.getAudioTracks()[0];
+}
+
+async function iniciarMidia(){
+  // --- envio (1 sessão no SFU com áudio, câmera e tela) ---
+  const pc = new RTCPeerConnection({ iceServers: ICE, bundlePolicy: 'max-bundle' });
+  PUB.pc = pc;
+  PUB.vazioA = PUB.vazioA || audioVazio();
+  PUB.vazioV = PUB.vazioV || videoVazio();
+  PUB.vazioT = PUB.vazioT || videoVazio();
+  PUB.tx = {
+    audio: pc.addTransceiver(MIC ? MIC.getAudioTracks()[0] : PUB.vazioA, { direction: 'sendonly' }),
+    video: pc.addTransceiver(CAM ? CAM.getVideoTracks()[0] : PUB.vazioV, { direction: 'sendonly', sendEncodings: [{ maxBitrate: 250000, maxFramerate: 15 }] }),
+    tela:  pc.addTransceiver(TELA ? TELA.getVideoTracks()[0] : PUB.vazioT, { direction: 'sendonly', sendEncodings: [{ maxBitrate: 1500000, maxFramerate: 15 }] }),
+  };
+  pc.onconnectionstatechange = () => { if (pc === PUB.pc && pc.connectionState === 'failed') agendarReinicioMidia(); };
+  const { sessionId } = await rtc('nova');
+  PUB.sid = sessionId;
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  const r = await rtc('tracks', sessionId, {
+    sessionDescription: { type: 'offer', sdp: offer.sdp },
+    tracks: Object.entries(PUB.tx).map(([nome, t]) => ({ location: 'local', mid: t.mid, trackName: nome })),
+  });
+  await pc.setRemoteDescription(r.sessionDescription);
+  enviar({ t: 'rtc', sid: sessionId });
+
+  // --- recebimento (outra sessão; o SFU manda a oferta a cada track puxado) ---
+  const sub = new RTCPeerConnection({ iceServers: ICE, bundlePolicy: 'max-bundle' });
+  SUB.pc = sub;
+  sub.ontrack = ev => {
+    const chave = SUB.porMid.get(ev.transceiver.mid);
+    const info = chave && SUB.porChave.get(chave);
+    if (!info) return;
+    info.stream = new MediaStream([ev.track]);
+    if (chave.endsWith('/audio')){
+      const a = document.createElement('audio');
+      a.autoplay = true; a.srcObject = info.stream;
+      $('audios').appendChild(a);
+      info.el = a;
+      a.play().catch(() => toast('Toque na tela para liberar o som.', true));
+    }
+    render();
+  };
+  sub.onconnectionstatechange = () => { if (sub === SUB.pc && sub.connectionState === 'failed') agendarReinicioMidia(); };
+  SUB.sid = (await rtc('nova')).sessionId;
+  aviso('');
+  clearInterval(REC_IV);
+  REC_IV = setInterval(agendarRec, 3000);
+  agendarRec();
+}
+
+function streamDe(sid, nome){ const i = SUB.porChave.get(sid + '/' + nome); return i && i.stream || null; }
+
+function agendarRec(){
+  clearTimeout(REC_TIMER);
+  REC_TIMER = setTimeout(() => { SUB.fila = SUB.fila.then(reconciliar).catch(e => console.warn('[sala] sub', e)); }, 250);
+}
+
+// O que cada um deveria estar recebendo: áudio de todos, vídeo só de quem está
+// visível na grade, e a tela só de quem está no palco.
+async function reconciliar(){
+  if (!SUB.pc || !SUB.sid || SAINDO) return;
+  const quero = new Set();
+  for (const p of PARTS.values()){
+    if (p.id === S.eu.id || !p.sid) continue;
+    quero.add(p.sid + '/audio');
+    if (p.cam && VISIVEIS.has(p.id)) quero.add(p.sid + '/video');
+    if (p.tela && PALCO_ID === p.id) quero.add(p.sid + '/tela');
+  }
+  const agora = Date.now();
+  const tirar = [...SUB.porChave.keys()].filter(k => !quero.has(k));
+  const por = [...quero].filter(k => !SUB.porChave.has(k) && !((SUB.falhas.get(k) || 0) > agora));
+  if (tirar.length) await fecharTracks(tirar);
+  if (por.length) await puxarTracks(por);
+}
+
+async function puxarTracks(chaves){
+  const r = await api('/api/sala/rtc', {
+    op: 'tracks', sid: SUB.sid,
+    corpo: { tracks: chaves.map(k => { const [sessionId, trackName] = k.split('/'); return { location: 'remote', sessionId, trackName }; }) },
+  }, S.token);
+  if (r.errorCode && !r.tracks){ chaves.forEach(k => SUB.falhas.set(k, Date.now() + 4000)); return; }
+  (r.tracks || []).forEach((t, i) => {
+    const k = t.sessionId && t.trackName ? t.sessionId + '/' + t.trackName : chaves[i];
+    if (t.errorCode || !t.mid){ SUB.falhas.set(k, Date.now() + 4000); return; }
+    SUB.porChave.set(k, { mid: t.mid });
+    SUB.porMid.set(t.mid, k);
+  });
+  if (r.requiresImmediateRenegotiation && r.sessionDescription){
+    await SUB.pc.setRemoteDescription(r.sessionDescription);
+    const answer = await SUB.pc.createAnswer();
+    await SUB.pc.setLocalDescription(answer);
+    await rtc('renegociar', SUB.sid, { sessionDescription: { type: 'answer', sdp: answer.sdp } });
+  }
+}
+
+async function fecharTracks(chaves){
+  const mids = [];
+  for (const k of chaves){
+    const info = SUB.porChave.get(k);
+    SUB.porChave.delete(k);
+    if (!info) continue;
+    SUB.porMid.delete(info.mid);
+    if (info.el) info.el.remove();
+    const tr = SUB.pc.getTransceivers().find(t => t.mid === info.mid);
+    if (tr && tr.currentDirection !== 'stopped'){ try { tr.stop(); } catch(e){} }
+    mids.push(info.mid);
+  }
+  render();
+  if (!mids.length) return;
+  try {
+    const offer = await SUB.pc.createOffer();
+    await SUB.pc.setLocalDescription(offer);
+    const r = await rtc('fechar', SUB.sid, { tracks: mids.map(mid => ({ mid })), sessionDescription: { type: 'offer', sdp: offer.sdp }, force: false });
+    if (r.sessionDescription) await SUB.pc.setRemoteDescription(r.sessionDescription);
+  } catch(e){
+    // Participante que já saiu: o SFU pode recusar; o transceiver local já está parado.
+    console.warn('[sala] fechar', e);
+    if (SUB.pc.signalingState === 'have-local-offer') await SUB.pc.setLocalDescription({ type: 'rollback' }).catch(() => {});
+  }
+}
+
+function pararMidia(){
+  clearInterval(REC_IV); clearTimeout(REC_TIMER);
+  [PUB.pc, SUB.pc].forEach(pc => { if (pc) try { pc.close(); } catch(e){} });
+  PUB.pc = null; PUB.sid = ''; PUB.tx = {};
+  SUB.pc = null; SUB.sid = ''; SUB.porChave.clear(); SUB.porMid.clear(); SUB.falhas.clear();
+  SUB.fila = Promise.resolve();
+  $('audios').innerHTML = '';
+}
+
+function agendarReinicioMidia(){
+  if (SAINDO || REINICIO) return;
+  status('Reconectando áudio/vídeo…');
+  REINICIO = setTimeout(async () => {
+    REINICIO = null;
+    if (SAINDO) return;
+    pararMidia(); render();
+    try { await iniciarMidia(); status(''); }
+    catch(e){ console.warn('[sala] reinício', e); agendarReinicioMidia(); }
+  }, 2000);
+}
+
+iniciar();
+</script>
+</body>
+</html>

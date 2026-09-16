@@ -926,6 +926,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <button class="sb-item" id="nav-p1" onclick="showPage('p1')"><span class="ic">🗂️</span> Ficha do Efetivo</button>
 
   <div class="sb-spacer"></div>
+  <a class="sb-item" id="nav-busca-oc" href="ocorrencias.html" style="display:none;text-decoration:none"><span class="ic">🔎</span> Busca de Ocorrências</a>
   <a class="sb-item" id="nav-sistemas" href="sistemas.html" style="text-decoration:none"><span class="ic">🧭</span> Todos os Sistemas</a>
   <!-- Só aparece para administrador (ver applyUserRestrictions) -->
   <a class="sb-item" id="nav-admin" href="admin.html" style="display:none;text-decoration:none"><span class="ic">🛡️</span> Painel de Controle</a>
@@ -2574,10 +2575,10 @@ function smartSplit(line, sep) {
 }
 
 /* ── Converte data: aceita AAAA-MM-DD, DD/MM/AAAA e M/D/AAAA (export US do Sheets) ──
-   Desambiguação: o número > 12 é sempre o dia. Se ambos <= 12 (ambíguo), assume
-   M/D/AAAA, que é como o Google Sheets exporta o xlsx convertido. A exibição na
-   tela continua em dd/mm/aaaa (via fDate → toLocaleDateString 'pt-BR'). */
-function parseDate(s) {
+   Desambiguação: o número > 12 é sempre o dia. Quando ambos <= 12 (ambíguo) não dá
+   para saber pela linha sozinha — quem decide é a ordem detectada NO LOTE INTEIRO
+   (ver detectarOrdemData). A exibição na tela continua em dd/mm/aaaa (via fDate). */
+function parseDate(s, ordem) {
   if (!s) return null;
   s = String(s).trim();
   // ISO: AAAA-MM-DD (ou AAAA/MM/DD)
@@ -2589,9 +2590,37 @@ function parseDate(s) {
     const a = +m[1], b = +m[2], y = +m[3];
     if (a > 12 && b <= 12) return new Date(y, b-1, a);   // DD/MM/AAAA (BR)
     if (b > 12 && a <= 12) return new Date(y, a-1, b);   // M/D/AAAA  (US)
-    return new Date(y, a-1, b);                          // ambíguo → assume M/D (export do Sheets)
+    return (ordem || ORDEM_DATA) === 'dmy'               // ambíguo → o lote decide
+      ? new Date(y, b-1, a)
+      : new Date(y, a-1, b);
   }
   const d = new Date(s); return isNaN(d) ? null : d;
+}
+
+/* ── Dia/mês ou mês/dia? Pergunta pro próprio lote ──────────────────────────
+   A planilha já exportou nos DOIS formatos ao longo do tempo: era M/D (decisão de
+   22/06/2026) e hoje sai dd/mm — enquanto o EMBEDDED_CSV embutido aqui continua em
+   M/D. Fixar a regra no código fazia ~148 dos 379 registros vivos entrarem com dia
+   e mês trocados no filtro de período e nos gráficos.
+   Como funciona: toda linha com um número > 12 denuncia o formato do lote (só o dia
+   passa de 12). Conta as duas evidências e a maioria vence — cada fonte é lida do
+   seu jeito, sem ninguém precisar configurar nada. */
+let ORDEM_DATA = 'dmy';
+function detectarOrdemData(brutas, rotulo) {
+  let dmy = 0, mdy = 0;
+  for (const s of brutas) {
+    const m = String(s || '').trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-]\d{4}/);
+    if (!m) continue;
+    const a = +m[1], b = +m[2];
+    if (a > 12 && b <= 12) dmy++;
+    else if (b > 12 && a <= 12) mdy++;
+  }
+  // Sem nenhuma pista (lote pequeno, tudo ambíguo), fica em dd/mm — é o que a
+  // planilha exporta hoje e o que um humano digita aqui.
+  const ordem = mdy > dmy ? 'mdy' : 'dmy';
+  console.log('[BPFRON] Formato de data' + (rotulo ? ' (' + rotulo + ')' : '') + ': ' +
+    (ordem === 'dmy' ? 'dd/mm/aaaa' : 'm/d/aaaa') + ' — evidências dd/mm=' + dmy + ' m/d=' + mdy);
+  return ordem;
 }
 
 /* ── Parser CSV principal ── */
@@ -2618,7 +2647,7 @@ function parseCSV(txt) {
       row[f] = (cells[idx] || '').trim().replace(/^"|"$/g,'');
     });
 
-    row._date = parseDate(row.data);
+    // _date fica para depois do laço: a ordem dia/mês só se sabe olhando o lote inteiro.
     // Crimes: separa compostos (" / ") em categorias normalizadas; guarda o principal p/ exibição/cor
     if (row.natureza_crime) {
       row._crimes = crimesDeRaw(row.natureza_crime);
@@ -2631,6 +2660,11 @@ function parseCSV(txt) {
     if (!row.no_bo) continue;
     rows.push(row);
   }
+  // Agora que o lote está completo, descobre a ordem dia/mês e converte as datas.
+  // A planilha viva sai dd/mm; o EMBEDDED_CSV daqui de baixo ainda é m/d — cada um
+  // é lido do seu jeito porque a detecção roda por lote.
+  ORDEM_DATA = detectarOrdemData(rows.map(r => r.data), 'BASE DE DADOS');
+  rows.forEach(r => { r._date = parseDate(r.data, ORDEM_DATA); });
   console.log('[BPFRON] Registros válidos:', rows.length);
   return rows;
 }
@@ -3138,6 +3172,10 @@ const RESTRICTED_PAGES = { cpe: ['consultas','diaria'], subcmt: ['consultas','di
 // ["desousa","p3aux","p1aux"], override via secret P1_EDITORS) — mudar aqui e lá.
 const P1_GESTORES = ['desousa','p3aux','p1aux','cmtfelipe'];
 function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && temPerm('p1', P1_GESTORES); }
+// Busca de Ocorrências (ocorrencias.html) — allowlist, mesma lógica: a pesquisa
+// lê a "Descrição Resumida" inteira, que tem nome de envolvido. Espelha o
+// buscaEditors() do worker.js e o BUSCA_GESTORES do ocorrencias.html.
+const BUSCA_GESTORES = ['desousa','cmtfelipe','ni','p3','p3cmt','p301','p3aux'];
 
 // Permissões do logado vindas do Worker (/api/login e /api/me), configuradas no
 // painel admin.html. As listas fixas acima (RESTRICTED_PAGES, P1_GESTORES) só
@@ -4427,6 +4465,8 @@ renderKPIs = function() {
 let ALL_ENV = [], FIL_ENV = [], PAGE_ENV = 1, SORT_ENV = {col:null,dir:1};
 let ALL_VEI = [], FIL_VEI = [], PAGE_VEI = 1, SORT_VEI = {col:null,dir:1};
 let ENV_LOADED = false, VEI_LOADED = false;
+// Ordem dia/mês da aba ENVOLVIDOS (detectada no carregamento, ver detectarOrdemData).
+let ORDEM_ENV = 'dmy';
 const PG_B = 25;
 
 /* ── Sub-abas dentro de Consultas ── */
@@ -4526,6 +4566,10 @@ function applyUserRestrictions(){
   const navAdmin = document.getElementById('nav-admin');
   const pAdm = AUTH.logged && permsSessao();
   if (navAdmin) navAdmin.style.display = (pAdm && pAdm.admin) ? '' : 'none';
+  // Busca de Ocorrências (ocorrencias.html): allowlist própria — o texto das
+  // ocorrências tem PII, então o item só aparece para quem tem acesso.
+  const navBusca = document.getElementById('nav-busca-oc');
+  if (navBusca) navBusca.style.display = (AUTH.logged && temPerm('busca', BUSCA_GESTORES)) ? '' : 'none';
   todasPaginasRestringiveis.forEach(pg => {
     const nav = document.getElementById('nav-' + pg);
     if (nav) nav.style.display = blocked.includes(pg) ? 'none' : '';
@@ -4688,6 +4732,7 @@ async function loadEnvolvidos() {
   }
 
   ALL_ENV = parseCSVgenerico(txt);
+  ORDEM_ENV = detectarOrdemData(ALL_ENV.map(r => r.data_ocorrencia || r.data || ''), 'ENVOLVIDOS');
   ENV_LOADED = true;
   const hE = document.getElementById('ch-total-env');
   if (hE) hE.textContent = ALL_ENV.length.toLocaleString('pt-BR');
@@ -4731,15 +4776,11 @@ function filtrarEnvolvidos() {
     if (di || df) {
       const rawDate = r.data_ocorrencia||r.data||r.nascimento||'';
       if (rawDate) {
-        const parts = rawDate.split('/');
-        if (parts.length === 3) {
-          // desambigua DD/MM vs M/D: o número > 12 é o dia; ambíguo assume M/D (export US)
-          const a = +parts[0], b = +parts[1], y = parts[2];
-          let dd, mm;
-          if (a > 12 && b <= 12) { dd = a; mm = b; }
-          else if (b > 12 && a <= 12) { dd = b; mm = a; }
-          else { dd = b; mm = a; }
-          const iso = `${y}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        // Mesma regra do resto do painel (parseDate), com a ordem dia/mês detectada
+        // na própria aba ENVOLVIDOS — antes a desambiguação estava duplicada aqui.
+        const d = parseDate(rawDate, ORDEM_ENV);
+        if (d) {
+          const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
           if (di && iso < di) return false;
           if (df && iso > df) return false;
         }
