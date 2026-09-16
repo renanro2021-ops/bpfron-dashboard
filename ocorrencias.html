@@ -144,6 +144,7 @@ a{color:var(--yellow)}
   font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
 .btn-print:hover{background:#ffd633}
 .btn-print:disabled{opacity:.45;cursor:not-allowed}
+.btn-print-topo{padding:7px 15px;font-size:12.5px}   /* o mesmo botão, na barra de cima */
 
 /* ── cartões de ocorrência ── */
 .lista{display:flex;flex-direction:column;gap:12px}
@@ -175,6 +176,11 @@ a{color:var(--yellow)}
 .oc-full .ft{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--yellow);font-weight:700;margin:10px 0 5px}
 .oc-full .txt{font-size:13px;color:#c3cfe0;line-height:1.85;white-space:pre-wrap}
 .oc-full .txt mark{background:rgba(245,197,24,.28);color:#ffe680;border-radius:3px;padding:0 2px;font-weight:600}
+.env-lista{display:flex;flex-direction:column;gap:7px}
+.env-p{background:#0b1220;border:1px solid #24304a;border-left:3px solid #38bdf8;border-radius:8px;padding:8px 11px}
+.env-nome{font-weight:700;font-size:13px;color:#e2e8f0}
+.env-kv{display:flex;flex-wrap:wrap;gap:3px 15px;font-size:12px;color:#93a3b8;margin-top:3px}
+.env-kv b{color:#cbd5e1;font-weight:600}
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:5px 18px;font-size:12.5px;color:#9fb0c7}
 .kv b{color:#dde3f0;font-weight:600}
 .vazio{text-align:center;padding:50px 20px;color:var(--muted)}
@@ -204,7 +210,8 @@ a{color:var(--yellow)}
   body > *:not(#print-area){display:none !important}
   #print-area{display:block;font-size:10.5pt;line-height:1.45;color:#000}
 
-  .pr-cab{border-bottom:2.5pt solid #000;padding-bottom:7pt;margin-bottom:10pt}
+  .pr-cab{display:flex;align-items:center;gap:12pt;border-bottom:2.5pt solid #000;padding-bottom:7pt;margin-bottom:10pt}
+  .pr-cab .pr-logo{width:58pt;height:58pt;object-fit:contain;flex-shrink:0}
   .pr-cab .pr-org{font-size:9pt;letter-spacing:.6pt;text-transform:uppercase;color:#333}
   .pr-cab h1{font-size:15pt;margin:2pt 0 1pt;letter-spacing:.3pt}
   .pr-cab .pr-sub{font-size:9pt;color:#333}
@@ -218,18 +225,31 @@ a{color:var(--yellow)}
   .pr-resumo .pr-v{font-size:12pt;font-weight:700;display:block}
   .pr-resumo .pr-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.4pt;color:#444}
 
-  .pr-oc{border:.7pt solid #999;border-radius:2pt;padding:7pt 9pt;margin-bottom:8pt;
-         break-inside:avoid;page-break-inside:avoid}
-  .pr-oc h2{font-size:10.5pt;margin:0 0 4pt;padding-bottom:3pt;border-bottom:.7pt solid #ccc}
-  .pr-oc h2 .pr-n{background:#000;color:#fff;padding:1pt 5pt;border-radius:2pt;margin-right:5pt;font-size:9pt}
+  /* Uma ocorrência por página: a capa (cabeçalho + resumo) fica na 1ª, e cada
+     BO começa numa folha nova — pedido do usuário, para poder separar/anexar
+     cada ocorrência isoladamente. */
+  .pr-oc{border:.7pt solid #999;border-radius:2pt;padding:8pt 10pt;
+         break-before:page;page-break-before:always;break-inside:auto}
+  .pr-oc h2{font-size:11pt;margin:0 0 5pt;padding-bottom:3pt;border-bottom:1pt solid #000}
+  /* quadradinho com o número: BORDA, não fundo preto — se a pessoa não marcar
+     "gráficos de segundo plano" na impressão, fundo não sai e o texto sumiria */
+  .pr-oc h2 .pr-n{border:1pt solid #000;color:#000;padding:0 4pt;border-radius:2pt;margin-right:5pt;font-size:9pt}
   .pr-oc h2 .pr-dt{float:right;font-weight:400;font-size:9pt;color:#333}
   .pr-lin{font-size:9pt;margin:1.5pt 0}
   .pr-lin b{color:#000}
-  .pr-ap{background:#f2f2f2;border:.7pt solid #ccc;padding:3pt 6pt;margin:4pt 0;font-size:8.5pt}
-  .pr-desc{margin-top:4pt;font-size:9pt;text-align:justify;white-space:pre-wrap}
-  .pr-desc-t{font-size:7.5pt;text-transform:uppercase;letter-spacing:.5pt;color:#555;margin-top:5pt}
-  /* grifo que sobrevive em preto e branco */
-  #print-area mark{background:#e8e8e8;color:#000;font-weight:700;padding:0 1pt}
+  .pr-ap{background:#f2f2f2;border:.7pt solid #999;border-left:2.5pt solid #000;padding:3pt 6pt;margin:5pt 0;font-size:8.5pt}
+  .pr-desc{margin-top:3pt;font-size:9pt;text-align:justify;white-space:pre-wrap}
+  .pr-desc-t{font-size:7.5pt;text-transform:uppercase;letter-spacing:.5pt;color:#555;
+             margin-top:6pt;border-bottom:.5pt solid #ddd;padding-bottom:1pt}
+  /* envolvidos */
+  .pr-env{width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:3pt}
+  .pr-env th{text-align:left;border:.7pt solid #999;padding:2.5pt 4pt;font-size:7.5pt;
+             text-transform:uppercase;letter-spacing:.3pt;background:#f2f2f2}
+  .pr-env td{border:.7pt solid #bbb;padding:2.5pt 4pt;vertical-align:top}
+  .pr-env .pr-nome{font-weight:700}
+  .pr-sem{font-size:8.5pt;color:#555;font-style:italic;margin-top:2pt}
+  /* grifo que sobrevive em preto e branco (o sublinhado sai mesmo sem fundo) */
+  #print-area mark{background:#e8e8e8;color:#000;font-weight:700;padding:0 1pt;border-bottom:.8pt solid #777}
   .pr-fim{margin-top:10pt;padding-top:5pt;border-top:.7pt solid #999;font-size:8pt;color:#444;text-align:center}
 }
 </style>
@@ -344,6 +364,7 @@ a{color:var(--yellow)}
     <button class="mini" onclick="expandirTodos()" id="btn-exp">⤢ Abrir todas</button>
     <button class="mini" onclick="exportarCSV()">⬇ Exportar CSV</button>
     <button class="mini" onclick="copiarLink()">🔗 Copiar link</button>
+    <button class="btn-print btn-print-topo" onclick="imprimir()" id="btn-print-topo">🖨 Imprimir</button>
   </div>
 
   <div class="sel-bar" id="sel-bar">
@@ -794,6 +815,74 @@ async function carregar(){
   if (r.status === 403) throw new Error('Este usuário não tem acesso à Busca de Ocorrências. Peça a um administrador para marcar "Busca de Ocorrências" no Painel de Controle.');
   if (!r.ok) throw new Error('Erro ' + r.status + ' ao carregar as ocorrências.');
   montarIndice(await r.text());
+}
+
+/* ── ENVOLVIDOS ────────────────────────────────────────────────────────────
+   Aba ENVOLVIDOS da mesma planilha, servida pelo Worker em /api/envolvidos
+   (protegida por login, é PII pesada). Vem separada da BASE: uma linha por
+   pessoa, ligada pelo Nº BO. Sem isso o relatório saía sem saber QUEM estava
+   na ocorrência — foi o que o usuário reclamou. */
+let ENV_POR_BO = null;      // Map: Nº BO normalizado → [pessoas]
+let ENV_FALHOU = false;
+
+// Chave de BO tolerante: a BASE tem BO composto ("328... / 330...") e número de
+// processo ("7000419-50.2006.8.22.0017"). Compara só letras e dígitos.
+const boChave = s => String(s == null ? '' : s).replace(/[^0-9a-zA-Z]/g,'').toUpperCase();
+const bosDaOcorrencia = o => String(o.bo || '').split('/').map(boChave).filter(Boolean);
+// Mesma normalização de cabeçalho do index.html (nk), para os nomes das colunas.
+function nk(s){
+  return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().replace(/[^a-z0-9\s_]/g,' ').trim().replace(/\s+/g,'_');
+}
+
+async function carregarEnvolvidos(){
+  if (ENV_POR_BO) return ENV_POR_BO;
+  const r = await fetch(API_BASE + '/api/envolvidos?_nc=' + Date.now(), {
+    headers:{ 'Authorization':'Bearer ' + AUTH.token }
+  });
+  if (r.status === 401){ ocLogout(); throw new Error('Sessão expirada.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao carregar os envolvidos.');
+  const linhas = parseCSV(await r.text()).filter(l => l.some(c => String(c).trim()));
+  if (!linhas.length) throw new Error('A aba ENVOLVIDOS voltou vazia.');
+
+  // Cabeçalho pode não ser a 1ª linha (a planilha às vezes tem título em cima).
+  let hi = 0;
+  for (let i = 0; i < Math.min(linhas.length, 6); i++){
+    const ks = linhas[i].map(nk);
+    if (ks.some(k => k.includes('nome')) || ks.some(k => k === 'n_bo' || k === 'no_bo')) { hi = i; break; }
+  }
+  const cab = linhas[hi].map(nk);
+  const mapa = new Map();
+  for (let i = hi + 1; i < linhas.length; i++){
+    const p = {};
+    cab.forEach((h, j) => { p[h] = String(linhas[i][j] ?? '').trim(); });
+    const bo = p.n_bo || p.no_bo || p.bo || p[cab.find(h => h.includes('bo')) || ''] || '';
+    const k = boChave(bo);
+    if (!k) continue;
+    if (!mapa.has(k)) mapa.set(k, []);
+    mapa.get(k).push({
+      nome:   p.nome_completo || p.nome || '',
+      cpf:    p.cpf || '',
+      rg:     p.rg || '',
+      nasc:   p.nascimento || p.data_nascimento || '',
+      sexo:   p.sexo || '',
+      status: p.status || p.status_do_envolvido || '',
+      papel:  p.papel || '',
+      crime:  p.crime_natureza || p.crime || p.natureza_crime || p.natureza || '',
+      destino: p.destino || '',
+    });
+  }
+  ENV_POR_BO = mapa;
+  ENV_FALHOU = false;
+  console.log('[BPFRON] Envolvidos carregados: ' + mapa.size + ' BOs');
+  return mapa;
+}
+// Pessoas de uma ocorrência (BO composto soma as duas listas).
+function envolvidosDe(o){
+  if (!ENV_POR_BO) return null;
+  const out = [];
+  bosDaOcorrencia(o).forEach(k => (ENV_POR_BO.get(k) || []).forEach(p => out.push(p)));
+  return out;
 }
 
 function montarIndice(csv){
@@ -1278,7 +1367,27 @@ function detalhe(o){
   add('Multa', o.n_multa ? fR(o.n_multa) : '');
   add('Coordenadas', (o.n_lat && o.n_lon) ? o.lat + ', ' + o.lon : '');
   const ap = etiquetas(o).map(([,t]) => t).join(' · ');
-  return (o.descricao.trim() ? '<div class="ft">Descrição completa</div><div class="txt">' + grifar(o.descricao) + '</div>' : '') +
+  // Envolvidos na tela também: é o que vai sair no relatório, dá para conferir antes.
+  const gente = envolvidosDe(o);
+  const env = !ENV_POR_BO
+    ? '<div class="ft">Envolvidos</div><div class="oc-vazio">' +
+      (ENV_FALHOU ? 'não foi possível carregar a lista de envolvidos' : 'carregando…') + '</div>'
+    : !gente.length
+      ? '<div class="ft">Envolvidos</div><div class="oc-vazio">nenhum envolvido qualificado nesta ocorrência</div>'
+      : '<div class="ft">Envolvidos (' + gente.length + ')</div>' +
+        '<div class="env-lista">' + gente.map(p =>
+          '<div class="env-p"><div class="env-nome">' + grifar(p.nome || '—') + '</div>' +
+          '<div class="env-kv">' +
+            (p.papel ? '<span><b>Papel:</b> ' + esc(p.papel) + '</span>' : '') +
+            (p.status ? '<span><b>Situação:</b> ' + esc(p.status) + '</span>' : '') +
+            (p.cpf ? '<span><b>CPF:</b> ' + esc(p.cpf) + '</span>' : '') +
+            (p.rg ? '<span><b>RG:</b> ' + esc(p.rg) + '</span>' : '') +
+            (p.nasc ? '<span><b>Nasc.:</b> ' + esc(fDataBR(p.nasc)) + '</span>' : '') +
+            (p.sexo ? '<span><b>Sexo:</b> ' + esc(p.sexo) + '</span>' : '') +
+            (p.destino ? '<span><b>Destino:</b> ' + esc(p.destino) + '</span>' : '') +
+          '</div></div>').join('') + '</div>';
+  return env +
+    (o.descricao.trim() ? '<div class="ft">Descrição completa</div><div class="txt">' + grifar(o.descricao) + '</div>' : '') +
     (o.destino.trim() ? '<div class="ft">Destino dos envolvidos</div><div class="txt">' + grifar(o.destino) + '</div>' : '') +
     (ap ? '<div class="ft">Apreensões</div><div class="kv"><div>' + esc(ap) + '</div></div>' : '') +
     '<div class="ft">Dados do registro</div><div class="kv">' + linhas.join('') + '</div>';
@@ -1339,6 +1448,11 @@ function atualizarSelecao(){
   const btn = document.getElementById('btn-print');
   btn.textContent = '🖨 Imprimir ' + quantas + (quantas === 1 ? ' ocorrência' : ' ocorrências');
   btn.disabled = quantas === 0;
+  // o mesmo botão na barra de cima, mais curto
+  const topo = document.getElementById('btn-print-topo');
+  topo.textContent = '🖨 Imprimir ' + quantas;
+  topo.disabled = quantas === 0;
+  topo.title = total ? quantas + ' ocorrência(s) marcada(s)' : 'todas as ' + quantas + ' do resultado';
 }
 
 // O que vai pro papel: o marcado; sem nada marcado, o resultado inteiro.
@@ -1478,6 +1592,31 @@ function criteriosUsados(){
   return c.length ? c.join(' · ') : 'todas as ocorrências da base, sem filtro';
 }
 
+/* Quadro de envolvidos do relatório. Sem dado, diz o porquê em vez de sumir —
+   "não aparece" e "não tem" são coisas diferentes para quem lê o relatório. */
+function tabelaEnvolvidos(o){
+  const t = '<div class="pr-desc-t">Envolvidos</div>';
+  if (ENV_FALHOU || !ENV_POR_BO) return t + '<div class="pr-sem">— não foi possível carregar a lista de envolvidos —</div>';
+  const gente = envolvidosDe(o);
+  if (!gente.length) return t + '<div class="pr-sem">— nenhum envolvido qualificado nesta ocorrência —</div>';
+  return t + '<table class="pr-env"><tr>' +
+    '<th>Nome</th><th>CPF</th><th>Nasc.</th><th>Sexo</th><th>Papel</th><th>Situação</th><th>Destino</th></tr>' +
+    gente.map(p => '<tr>' +
+      '<td class="pr-nome">' + grifar(p.nome || '—') + '</td>' +
+      '<td>' + esc(p.cpf || '—') + '</td>' +
+      '<td>' + esc(fDataBR(p.nasc)) + '</td>' +
+      '<td>' + esc(p.sexo || '—') + '</td>' +
+      '<td>' + esc(p.papel || '—') + '</td>' +
+      '<td>' + esc(p.status || '—') + '</td>' +
+      '<td>' + esc(p.destino || '—') + '</td>' +
+    '</tr>').join('') + '</table>';
+}
+// Data vinda da aba ENVOLVIDOS (texto), mostrada em dd/mm/aaaa quando der.
+function fDataBR(s){
+  const d = parseData(s);
+  return d ? d.toLocaleDateString('pt-BR') : (String(s || '').trim() || '—');
+}
+
 function montarRelatorio(lista){
   const soma = f => lista.reduce((a,o) => a + (o['n_'+f]||0), 0);
   const resumo = [
@@ -1503,6 +1642,7 @@ function montarRelatorio(lista){
         (o.ambiente ? ' &nbsp;·&nbsp; <b>Ambiente:</b> ' + esc(o.ambiente) : '') +
         ((o.n_lat && o.n_lon) ? ' &nbsp;·&nbsp; <b>Coord.:</b> ' + esc(o.lat) + ', ' + esc(o.lon) : '') + '</div>' +
       (ap ? '<div class="pr-ap"><b>Apreensões:</b> ' + esc(ap) + '</div>' : '') +
+      tabelaEnvolvidos(o) +
       (o.descricao.trim()
         ? '<div class="pr-desc-t">Descrição</div><div class="pr-desc">' + grifar(o.descricao) + '</div>'
         : '<div class="pr-desc-t">Descrição</div><div class="pr-desc">— não registrada nesta ocorrência —</div>') +
@@ -1512,9 +1652,12 @@ function montarRelatorio(lista){
 
   document.getElementById('print-area').innerHTML =
     '<div class="pr-cab">' +
-      '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
-      '<h1>Relatório de Ocorrências</h1>' +
-      '<div class="pr-sub">BPFRON — Batalhão de Polícia de Fronteira e Divisas · Uso restrito</div>' +
+      '<img class="pr-logo" src="LOGOS/bpfron_transp.avif" alt="" onerror="this.style.display=\'none\'">' +
+      '<div>' +
+        '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
+        '<h1>Relatório de Ocorrências</h1>' +
+        '<div class="pr-sub">BPFRON — Batalhão de Polícia de Fronteira e Divisas · Uso restrito</div>' +
+      '</div>' +
     '</div>' +
     '<div class="pr-meta">' +
       '<div><b>Critérios:</b> ' + esc(criteriosUsados()) + '</div>' +
@@ -1530,9 +1673,16 @@ function montarRelatorio(lista){
       ' · contém dados pessoais de envolvidos — trate como documento de uso restrito.</div>';
 }
 
-function imprimir(){
+async function imprimir(){
   const lista = paraImprimir();
   if (!lista.length) return aviso('Não há ocorrência para imprimir.');
+  // Se os envolvidos ainda não vieram (ou falharam), tenta agora: o relatório
+  // sem os nomes não serve para o que a P2/P3 usa.
+  if (!ENV_POR_BO){
+    aviso('Buscando os envolvidos…');
+    try { await carregarEnvolvidos(); }
+    catch(e){ ENV_FALHOU = true; aviso('Sem a lista de envolvidos: ' + e.message); }
+  }
   montarRelatorio(lista);
   window.print();
 }
@@ -1569,6 +1719,13 @@ async function mostrar(){
   document.getElementById('oc-loader').style.display = 'flex';
   try{
     if (!DADOS.length) await carregar();
+    // Envolvidos vêm junto, mas sem travar a página: se falhar, a busca continua
+    // funcionando e só o quadro de envolvidos avisa que não veio.
+    if (!ENV_POR_BO){
+      document.getElementById('oc-loader').textContent = '⏳ Carregando envolvidos…';
+      try { await carregarEnvolvidos(); }
+      catch(e){ ENV_FALHOU = true; console.warn('[BPFRON] Envolvidos não carregaram:', e.message); }
+    }
     document.getElementById('oc-loader').style.display = 'none';
     document.getElementById('oc-app').style.display = '';
     preencherFiltros();
@@ -1608,6 +1765,7 @@ async function ocDoLogin(ev){
 function ocLogout(){
   AUTH.token = ''; AUTH.user = '';
   DADOS = []; RES = []; ABERTOS = new Set(); SELECIONADOS = new Set();
+  ENV_POR_BO = null; ENV_FALHOU = false;    // PII de envolvidos não fica em memória após sair
   document.getElementById('lista').innerHTML = '';
   document.getElementById('print-area').innerHTML = '';   // não deixa PII no DOM após sair
   mostrar();
