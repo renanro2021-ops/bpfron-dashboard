@@ -518,6 +518,131 @@ function reFrase(frase){
   try { return new RegExp('(' + corpo + ')', 'gi'); } catch(e){ return null; }
 }
 
+/* ====================== 2b. NATUREZA E MUNICÍPIO ==========================
+   Copiado do index.html DE PROPÓSITO (normalizeCrime/crimesDeRaw/normalizeMunicipio),
+   para as duas telas agruparem igual — se mudar lá, mudar aqui.
+
+   Sem isso o filtro de Natureza virava uma lista imensa de quase-duplicatas
+   ("TRÁFICO DE DROGAS (LEI 11.343/06, ART. 33) / ASSOCIACAO PARA O TRAFICO…"
+   repetido em dezenas de combinações), porque cada BO escreve a capitulação de
+   um jeito. Aqui cada ocorrência vira UMA OU MAIS categorias: o BO composto
+   ("tráfico / porte de arma") entra tanto em Tráfico quanto em Arma de fogo.
+   O texto original continua inteiro no cartão e na busca — só o filtro agrupa. */
+function normalizeCrime(raw) {
+  if (!raw) return '';
+  const k = String(raw).trim().normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const rules = [
+    [/uso pessoal|art\.?\s*28/,                          'Posse de drogas (uso pessoal)'],
+    [/apoio/,                                            'Apoio a órgão de segurança'],
+    [/recaptura|foragido/,                               'Recaptura de foragido'],
+    // Pesca ANTES de madeira: o Art. 34 da Lei 9.605 é pescar em local interditado,
+    // e a regra da madeira casa com "9.605" — sem esta linha, "INTERDITADO POR
+    // ORGAO COMPETENTE (ART. 34 DA LEI 9.605/98)" entrava como transporte de madeira.
+    [/pesca|pescado|petrecho|art\.?\s*34\s*d[ao]\s*lei\s*9\.?605/, 'Pesca ilegal'],
+    [/trafico|associacao para o trafico|11\.?343/,       'Tráfico de drogas'],
+    [/arma de fogo|arma de uso|porte .*arma|posse .*arma|disparo de arma|municao|10\.?826|supressao de marca/, 'Arma de fogo / munição'],
+    [/descaminho/,                                       'Descaminho'],
+    [/contrabando/,                                      'Contrabando'],
+    [/madeira|florestal|9\.?605|crime ambiental|usurpacao/, 'Transporte ilegal de madeira'],
+    [/recuperacao de veiculo|veiculo clonado|veiculo .*(furtad|roubad)/, 'Recuperação de veículo'],
+    [/receptacao/,                                       'Receptação'],
+    [/adulteracao/,                                      'Adulteração de veículo'],
+    [/roubo/,                                            'Roubo de veículo'],
+    [/furto/,                                            'Furto'],
+    [/mandado/,                                          'Cumprimento de mandado de prisão'],
+    // DEPOIS de "mandado" de propósito: existe BO escrito "Cumprimento de mandados
+    // (Lei 12.850/2013)", que é cumprimento de mandado — não tipificação de
+    // organização criminosa. Antes desta ordem, a Lei 12.850 roubava o registro.
+    [/organizacao criminosa|org\.?\s*criminosa|12\.?850/,'Organização criminosa'],
+    [/homicidio/,                                        'Homicídio'],
+    [/resistencia|desobediencia|desacato/,               'Resistência / desobediência'],
+    [/objeto encontrado/,                                'Objeto encontrado'],
+    [/apropriacao/,                                      'Apropriação indébita'],
+  ];
+  for (const [re, label] of rules) if (re.test(k)) return label;
+  return 'Outros';
+}
+/* Quebra em ";" ou " / " (barra ENTRE ESPAÇOS) — não quebra em "Lei 11.343/06". */
+function crimesDeRaw(raw) {
+  if (!raw) return [];
+  const partes = String(raw).split(/\s*;\s*|\s+\/\s+/).map(p => normalizeCrime(p.trim())).filter(Boolean);
+  return [...new Set(partes)];
+}
+
+function munKey(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\bd[oae]?\s+oeste\b/g,'doeste')   // "d'oeste"/"do oeste"/"da oeste" → mesma coisa
+    .replace(/\s+/g,' ').trim();
+}
+const MUN_RO = [
+  "Alta Floresta D'Oeste","Alto Alegre dos Parecis","Alto Paraíso","Alvorada D'Oeste",
+  "Ariquemes","Buritis","Cabixi","Cacaulândia","Cacoal","Campo Novo de Rondônia",
+  "Candeias do Jamari","Castanheiras","Cerejeiras","Chupinguaia","Colorado do Oeste",
+  "Corumbiara","Costa Marques","Cujubim","Espigão D'Oeste","Governador Jorge Teixeira",
+  "Guajará-Mirim","Itapuã do Oeste","Jaru","Ji-Paraná","Machadinho D'Oeste",
+  "Ministro Andreazza","Mirante da Serra","Monte Negro","Nova Brasilândia D'Oeste",
+  "Nova Mamoré","Nova União","Novo Horizonte do Oeste","Ouro Preto do Oeste","Parecis",
+  "Pimenta Bueno","Pimenteiras do Oeste","Porto Velho","Presidente Médici",
+  "Primavera de Rondônia","Rio Crespo","Rolim de Moura","Santa Luzia D'Oeste",
+  "São Felipe D'Oeste","São Francisco do Guaporé","São Miguel do Guaporé","Seringueiras",
+  "Teixeirópolis","Theobroma","Urupá","Vale do Anari","Vale do Paraíso","Vilhena"
+];
+const MUN_CANON = {};
+MUN_RO.forEach(n => { MUN_CANON[munKey(n)] = n; });
+// Formas abreviadas usadas no BO (sem D'Oeste / do Guaporé / dos Parecis)
+const MUN_ALIAS = {
+  "nova brasilandia":"Nova Brasilândia D'Oeste", "alta floresta":"Alta Floresta D'Oeste",
+  "alvorada":"Alvorada D'Oeste", "espigao":"Espigão D'Oeste", "machadinho":"Machadinho D'Oeste",
+  "santa luzia":"Santa Luzia D'Oeste", "sao felipe":"São Felipe D'Oeste",
+  "sao francisco":"São Francisco do Guaporé", "sao miguel":"São Miguel do Guaporé",
+  "alto alegre":"Alto Alegre dos Parecis", "novo horizonte":"Novo Horizonte do Oeste",
+  "primavera":"Primavera de Rondônia", "campo novo":"Campo Novo de Rondônia"
+};
+Object.entries(MUN_ALIAS).forEach(([k,v]) => { MUN_CANON[munKey(k)] = v; });
+
+function normalizeMunicipio(raw) {
+  if (!raw) return '';
+  const canon = MUN_CANON[munKey(raw)];
+  if (canon) return canon;                       // grafia oficial de RO (resolve acento/caixa/apóstrofo)
+  return String(raw).trim().toLowerCase()        // fora da lista (fronteira): Caixa De Título
+    .replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())
+    .replace(/\bDe\b/g,'de').replace(/\bDo\b/g,'do').replace(/\bDa\b/g,'da')
+    .replace(/\bDos\b/g,'dos').replace(/\bDas\b/g,'das').replace(/\bE\b/g,'e')
+    .replace(/\bD'oeste\b/g,"D'Oeste");
+}
+
+/* Mesma ideia para os campos que NÃO têm lista oficial (Tipo de BO, Meio,
+   Ambiente, Operação): a planilha tem a mesma coisa escrita de dois jeitos
+   ("Comunicacao de Ocorrencia" e "Comunicação de Ocorrência", "OPERACAO
+   CONJUNTA" e "Operação Conjunta"), e cada grafia virava uma linha do filtro.
+   Aqui só se junta o que é a MESMA palavra sem acento/caixa — nada de adivinhar
+   que "TCO" e "Termo Circunstanciado" são a mesma coisa, isso é decisão de quem
+   preenche o BO. A grafia escolhida é a mais bem escrita (mais acentuada e,
+   no empate, a mais usada). */
+function canonizador(valores){
+  const grupos = new Map();
+  valores.forEach(v => {
+    const t = String(v == null ? '' : v).trim();
+    if (!t) return;
+    const k = norm(t).replace(/\s+/g,' ');
+    if (!grupos.has(k)) grupos.set(k, new Map());
+    const g = grupos.get(k);
+    g.set(t, (g.get(t) || 0) + 1);
+  });
+  const canon = new Map();
+  grupos.forEach((g, k) => {
+    const melhor = [...g.entries()].sort((a, b) => {
+      const ac = (a[0].match(/[À-ÿ]/g) || []).length, bc = (b[0].match(/[À-ÿ]/g) || []).length;
+      if (ac !== bc) return bc - ac;            // quem tem acento ganha
+      if (a[1] !== b[1]) return b[1] - a[1];    // depois, a grafia mais usada
+      return a[0].localeCompare(b[0], 'pt-BR'); // desempate estável
+    })[0][0];
+    canon.set(k, melhor);
+  });
+  return t => canon.get(norm(String(t == null ? '' : t).trim()).replace(/\s+/g,' ')) || String(t || '').trim();
+}
+
 /* ====================== 3. LEITURA DA PLANILHA ============================ */
 // Parser CSV de verdade (aspas e quebra de linha dentro da célula) — a
 // "Descrição Resumida" é texto corrido e pode ter os dois.
@@ -626,6 +751,12 @@ function montarIndice(csv){
     NUMERICOS.forEach(f => { o['n_'+f] = toNum(o[f]); });
     o._data = parseData(o.data);
 
+    // O texto original da natureza fica intacto (é a capitulação, o pessoal lê isso
+    // no cartão). O agrupamento vai à parte, só para o filtro.
+    o._crimes = crimesDeRaw(o.natureza);
+    o._municipioRaw = o.municipio;
+    o.municipio = normalizeMunicipio(o.municipio);
+
     // Texto pesquisável: tudo que é palavra na ocorrência.
     o._txt = [o.bo, o.tipo_registro, o.tipo_bo, o.natureza, o.endereco, o.municipio, o.uf,
               o.meio, o.ambiente, o.destino, o.nacionalidade, o.operacao, o.descricao].join(' · ');
@@ -648,6 +779,19 @@ function montarIndice(csv){
     DADOS.push(o);
   }
   if (!DADOS.length) throw new Error('Nenhuma ocorrência foi lida da planilha.');
+
+  // Agora que o lote está completo, unifica as grafias dos campos livres. Fica
+  // depois do laço porque a grafia "boa" só se escolhe vendo todas as linhas.
+  const cTipo = canonizador(DADOS.map(o => o.tipo_bo));
+  const cMeio = canonizador(DADOS.map(o => o.meio));
+  const cAmb  = canonizador(DADOS.map(o => o.ambiente));
+  const cOp   = canonizador(DADOS.flatMap(o => partesOperacao(o.operacao)));
+  DADOS.forEach(o => {
+    o.tipo_bo  = cTipo(o.tipo_bo);
+    o.meio     = cMeio(o.meio);
+    o.ambiente = cAmb(o.ambiente);
+    o._ops     = partesOperacao(o.operacao).map(cOp);   // a célula traz operações combinadas por "/"
+  });
 }
 
 /* ====================== 4. MOTOR DA BUSCA ================================= */
@@ -771,10 +915,11 @@ function filtrar(){
     if (de  && (!o._data || o._data < de))  continue;
     if (ate && (!o._data || o._data > ate)) continue;
     if (mun  && o.municipio !== mun)  continue;
-    if (nat  && o.natureza  !== nat)  continue;
+    // BO composto entra em todas as suas categorias (tráfico E arma, por exemplo)
+    if (nat  && !o._crimes.includes(nat)) continue;
     if (tipo && o.tipo_bo   !== tipo) continue;
     if (meio && o.meio      !== meio) continue;
-    if (op   && o.operacao  !== op)   continue;
+    if (op   && !opsDe(o).includes(op)) continue;   // a célula traz operações combinadas por "/"
     if (soDesc  && !o.descricao.trim()) continue;
     if (soPreso && !(o.n_presos > 0))   continue;
 
@@ -1087,19 +1232,31 @@ function copiarOc(bo){
 }
 
 /* ====================== 6. FILTROS, URL, EXPORTAÇÃO ====================== */
+/* Monta os <select> a partir dos próprios dados, com a contagem de cada opção.
+   `valores(o)` devolve UMA lista por ocorrência — a natureza devolve várias
+   (BO composto conta em cada categoria dele). */
 function preencherFiltros(){
-  const opcoes = (id, campo, rotulo) => {
-    const vals = [...new Set(DADOS.map(o => o[campo]).filter(v => v && v.trim()))]
-      .sort((a,b) => a.localeCompare(b,'pt-BR'));
-    document.getElementById(id).innerHTML = '<option value="">' + rotulo + '</option>' +
-      vals.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+  const opcoes = (id, valores, rotulo) => {
+    const conta = new Map();
+    DADOS.forEach(o => {
+      new Set(valores(o).filter(v => v && String(v).trim())).forEach(v => conta.set(v, (conta.get(v) || 0) + 1));
+    });
+    const vals = [...conta.keys()].sort((a,b) => a.localeCompare(b,'pt-BR'));
+    document.getElementById(id).innerHTML =
+      '<option value="">' + rotulo + ' (' + DADOS.length + ')</option>' +
+      vals.map(v => '<option value="' + esc(v) + '">' + esc(v) + ' (' + conta.get(v) + ')</option>').join('');
   };
-  opcoes('f-mun','municipio','todos os municípios');
-  opcoes('f-nat','natureza','todas as naturezas');
-  opcoes('f-tipo','tipo_bo','todos os tipos');
-  opcoes('f-meio','meio','todos os meios');
-  opcoes('f-op','operacao','todas as operações');
+  opcoes('f-mun',  o => [o.municipio],  'todos os municípios');
+  opcoes('f-nat',  o => o._crimes,      'todas as naturezas');
+  opcoes('f-tipo', o => [o.tipo_bo],    'todos os tipos');
+  opcoes('f-meio', o => [o.meio],       'todos os meios');
+  opcoes('f-op',   o => opsDe(o),       'todas as operações');
 }
+// Operações vêm combinadas por "/" na mesma célula (igual ao opsDe do index.html).
+function partesOperacao(raw){
+  return String(raw || '').split('/').map(s => s.trim()).filter(Boolean);
+}
+function opsDe(o){ return o._ops || partesOperacao(o.operacao); }
 function toggleFiltros(){ document.getElementById('filtros').classList.toggle('aberto'); }
 function limparFiltros(){
   ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op'].forEach(id => document.getElementById(id).value = '');

@@ -2762,6 +2762,9 @@ const CRIME_CORES = {
   'Apoio a órgão de segurança':       '#64748b',
   'Objeto encontrado':                '#94a3b8',
   'Apropriação indébita':             '#f472b6',
+  'Organização criminosa':            '#db2777',
+  'Resistência / desobediência':      '#fb923c',
+  'Pesca ilegal':                     '#2dd4bf',
   'Outros':                           '#78716c',
 };
 const CRIME_PALETTE = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a855f7','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
@@ -3030,6 +3033,10 @@ function normalizeCrime(raw) {
     [/uso pessoal|art\.?\s*28/,                          'Posse de drogas (uso pessoal)'],
     [/apoio/,                                            'Apoio a órgão de segurança'],
     [/recaptura|foragido/,                               'Recaptura de foragido'],
+    // Pesca ANTES de madeira: o Art. 34 da Lei 9.605 é pescar em local interditado,
+    // e a regra da madeira casa com "9.605" — sem esta linha, "INTERDITADO POR
+    // ORGAO COMPETENTE (ART. 34 DA LEI 9.605/98)" entrava como transporte de madeira.
+    [/pesca|pescado|petrecho|art\.?\s*34\s*d[ao]\s*lei\s*9\.?605/, 'Pesca ilegal'],
     [/trafico|associacao para o trafico|11\.?343/,       'Tráfico de drogas'],
     [/arma de fogo|arma de uso|porte .*arma|posse .*arma|disparo de arma|municao|10\.?826|supressao de marca/, 'Arma de fogo / munição'],
     [/descaminho/,                                       'Descaminho'],
@@ -3041,7 +3048,12 @@ function normalizeCrime(raw) {
     [/roubo/,                                            'Roubo de veículo'],
     [/furto/,                                            'Furto'],
     [/mandado/,                                          'Cumprimento de mandado de prisão'],
+    // DEPOIS de "mandado" de propósito: existe BO escrito "Cumprimento de mandados
+    // (Lei 12.850/2013)", que é cumprimento de mandado — não tipificação de
+    // organização criminosa. Antes desta ordem, a Lei 12.850 roubava o registro.
+    [/organizacao criminosa|org\.?\s*criminosa|12\.?850/,'Organização criminosa'],
     [/homicidio/,                                        'Homicídio'],
+    [/resistencia|desobediencia|desacato/,               'Resistência / desobediência'],
     [/objeto encontrado/,                                'Objeto encontrado'],
     [/apropriacao/,                                      'Apropriação indébita'],
   ];
