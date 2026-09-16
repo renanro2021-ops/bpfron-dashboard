@@ -126,6 +126,25 @@ a{color:var(--yellow)}
 .mini select,select.mini{padding:7px 10px;background:#0b1220;border:1px solid var(--border);border-radius:8px;
   color:var(--yellow);font-size:12px;font-family:inherit;font-weight:600;cursor:pointer}
 
+/* ── seleção para impressão ── */
+.sel-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;margin-bottom:12px;
+  background:rgba(245,197,24,.05);border:1px dashed rgba(245,197,24,.28);border-radius:10px}
+.sel-bar #sel-info{font-size:12.5px;color:var(--muted);flex:1}
+.sel-bar b{color:var(--yellow)}
+.oc-chk{display:flex;align-items:center;cursor:pointer;padding:2px;margin-right:2px}
+.oc-chk input{width:17px;height:17px;accent-color:var(--yellow);cursor:pointer;margin:0}
+.oc.sel{border-left-color:var(--yellow);background:#111c30;box-shadow:inset 0 0 0 1px rgba(245,197,24,.18)}
+
+.rodape-print{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:26px;padding:16px 18px;
+  background:linear-gradient(180deg,#0d1424,#0a0f1c);border:1px solid var(--border);border-radius:14px}
+.rodape-print .rp-txt{flex:1;font-size:13px;color:var(--muted);min-width:200px}
+.rodape-print .rp-txt b{color:var(--yellow);font-size:15px}
+.rodape-print .rp-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-print{padding:10px 20px;background:var(--yellow);border:0;border-radius:9px;color:#0a0f1a;
+  font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.btn-print:hover{background:#ffd633}
+.btn-print:disabled{opacity:.45;cursor:not-allowed}
+
 /* ── cartões de ocorrência ── */
 .lista{display:flex;flex-direction:column;gap:12px}
 .oc{background:var(--card);border:1px solid #1e293b;border-left:4px solid #334155;border-radius:13px;padding:14px 16px;
@@ -174,20 +193,45 @@ a{color:var(--yellow)}
   .oc-hdr .ht{font-size:16px}
 }
 
-/* ── impressão: vira relatório limpo ── */
+/* ══ RELATÓRIO IMPRESSO ═══════════════════════════════════════════════════
+   A tela inteira some e entra o #print-area, montado na hora com só o que foi
+   selecionado. Antes era a própria tela indo pro papel (o "Ctrl+P cru"): saía
+   fundo escuro, botões, filtros e cartão cortado no meio da página. */
+#print-area{display:none}
 @media print{
-  body{background:#fff;color:#000;padding:0}
-  .oc-hdr,.busca-box,.filtros,.res-bar .mini,.oc-acts,.paginar,#oc-login{display:none !important}
-  .wrap{max-width:none;padding:0}
-  .kpi,.oc{background:#fff;border:1px solid #bbb;color:#000;break-inside:avoid;page-break-inside:avoid}
-  .oc-nat,.kpi .kv{color:#000}
-  .oc-snip,.oc-full .txt,.kv{color:#222}
-  .oc-full{display:block !important}
-  mark{background:#ffe680 !important;color:#000 !important}
-  #print-hd{display:block !important}
+  @page{ size:A4; margin:14mm 12mm; }
+  html,body{background:#fff !important;color:#000;padding:0;margin:0}
+  body > *:not(#print-area){display:none !important}
+  #print-area{display:block;font-size:10.5pt;line-height:1.45;color:#000}
+
+  .pr-cab{border-bottom:2.5pt solid #000;padding-bottom:7pt;margin-bottom:10pt}
+  .pr-cab .pr-org{font-size:9pt;letter-spacing:.6pt;text-transform:uppercase;color:#333}
+  .pr-cab h1{font-size:15pt;margin:2pt 0 1pt;letter-spacing:.3pt}
+  .pr-cab .pr-sub{font-size:9pt;color:#333}
+
+  .pr-meta{border:.7pt solid #999;border-left:3pt solid #000;padding:6pt 8pt;margin-bottom:9pt;font-size:9pt}
+  .pr-meta div{margin:1pt 0}
+  .pr-meta b{font-weight:700}
+
+  .pr-resumo{width:100%;border-collapse:collapse;margin-bottom:11pt;font-size:9pt}
+  .pr-resumo td{border:.7pt solid #999;padding:4pt 6pt;text-align:center}
+  .pr-resumo .pr-v{font-size:12pt;font-weight:700;display:block}
+  .pr-resumo .pr-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.4pt;color:#444}
+
+  .pr-oc{border:.7pt solid #999;border-radius:2pt;padding:7pt 9pt;margin-bottom:8pt;
+         break-inside:avoid;page-break-inside:avoid}
+  .pr-oc h2{font-size:10.5pt;margin:0 0 4pt;padding-bottom:3pt;border-bottom:.7pt solid #ccc}
+  .pr-oc h2 .pr-n{background:#000;color:#fff;padding:1pt 5pt;border-radius:2pt;margin-right:5pt;font-size:9pt}
+  .pr-oc h2 .pr-dt{float:right;font-weight:400;font-size:9pt;color:#333}
+  .pr-lin{font-size:9pt;margin:1.5pt 0}
+  .pr-lin b{color:#000}
+  .pr-ap{background:#f2f2f2;border:.7pt solid #ccc;padding:3pt 6pt;margin:4pt 0;font-size:8.5pt}
+  .pr-desc{margin-top:4pt;font-size:9pt;text-align:justify;white-space:pre-wrap}
+  .pr-desc-t{font-size:7.5pt;text-transform:uppercase;letter-spacing:.5pt;color:#555;margin-top:5pt}
+  /* grifo que sobrevive em preto e branco */
+  #print-area mark{background:#e8e8e8;color:#000;font-weight:700;padding:0 1pt}
+  .pr-fim{margin-top:10pt;padding-top:5pt;border-top:.7pt solid #999;font-size:8pt;color:#444;text-align:center}
 }
-#print-hd{display:none;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px}
-#print-hd h1{font-size:17px}#print-hd div{font-size:12px;color:#333}
 </style>
 </head>
 <body>
@@ -224,8 +268,6 @@ a{color:var(--yellow)}
 <!-- APLICAÇÃO -->
 <div id="oc-app" style="display:none">
 <div class="wrap">
-
-  <div id="print-hd"></div>
 
   <div class="busca-box">
     <div class="busca-ttl">🔎 Pesquisa livre nas ocorrências</div>
@@ -266,7 +308,8 @@ a{color:var(--yellow)}
     </div>
   </div>
 
-  <div class="filtros" id="filtros">
+  <!-- já nasce aberto: escondido atrás do cabeçalho ninguém achava -->
+  <div class="filtros aberto" id="filtros">
     <div class="filtros-hd" onclick="toggleFiltros()">
       <span class="ft">⚙️ Filtros</span>
       <span class="fc" id="filtros-resumo">período, município, natureza, tipo, meio, operação</span>
@@ -300,15 +343,34 @@ a{color:var(--yellow)}
     </select>
     <button class="mini" onclick="expandirTodos()" id="btn-exp">⤢ Abrir todas</button>
     <button class="mini" onclick="exportarCSV()">⬇ Exportar CSV</button>
-    <button class="mini" onclick="window.print()">🖨 Imprimir</button>
     <button class="mini" onclick="copiarLink()">🔗 Copiar link</button>
+  </div>
+
+  <div class="sel-bar" id="sel-bar">
+    <label class="chk"><input type="checkbox" id="sel-todos" onchange="selTodos(this.checked)">
+      <b>selecionar todas</b></label>
+    <span id="sel-info">nenhuma selecionada</span>
+    <button class="mini" id="sel-limpar" onclick="selLimpar()" style="display:none">✕ limpar seleção</button>
   </div>
 
   <div class="lista" id="lista"></div>
   <div class="paginar" id="paginar"></div>
 
+  <!-- Fim da lista: é aqui que a pessoa chega depois de ler tudo e decidir o que imprimir -->
+  <div class="rodape-print" id="rodape-print">
+    <div class="rp-txt" id="rp-txt">—</div>
+    <div class="rp-btns">
+      <button class="mini" onclick="selTodos(true)">✔ Selecionar todas</button>
+      <button class="mini" onclick="selLimpar()">✕ Limpar</button>
+      <button class="btn-print" onclick="imprimir()" id="btn-print">🖨 Imprimir relatório</button>
+    </div>
+  </div>
+
 </div>
 </div>
+
+<!-- RELATÓRIO PARA IMPRESSÃO — montado na hora, só aparece na impressão -->
+<div id="print-area"></div>
 
 <script>
 /* ==========================================================================
@@ -964,6 +1026,9 @@ const fD  = (n,d=2) => Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d
 const fR  = n => 'R$ ' + fD(n);
 const fDt = d => d ? d.toLocaleDateString('pt-BR') : '—';
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// Texto indo para DENTRO de um literal JS em atributo onclick (há Nº BO com
+// barra e espaço, e um dia pode vir com apóstrofo).
+const escJs = s => String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 
 /* Marca no texto CRU com sentinelas, escapa o HTML depois e só então troca as
    sentinelas por <mark>. Fazendo o contrário, um termo como "amp" grifaria o
@@ -1117,9 +1182,9 @@ function renderKPIs(){
     .map(([c,v,l]) => '<div class="kpi ' + c + '"><div class="kv">' + v + '</div><div class="kl">' + l + '</div></div>').join('');
 }
 
-function ordenar(){
+function ordenar(base){
   const modo = document.getElementById('ordem').value;
-  const arr = RES.slice();
+  const arr = (base || RES).slice();
   if (modo === 'rel' && ULTIMA.stems.length + ULTIMA.frases.length)
     arr.sort((a,b) => (b._score - a._score) || ((b._data||0) - (a._data||0)));
   else if (modo === 'prej') arr.sort((a,b) => b.n_prejuizo - a.n_prejuizo);
@@ -1146,6 +1211,7 @@ function renderLista(){
       fN(DADOS.filter(o => !o.descricao.trim()).length) + ' ocorrências da base estão sem descrição escrita — ' +
       'nelas só dá para achar por município, natureza, operação e apreensão.</span></p></div>';
     document.getElementById('paginar').innerHTML = '';
+    atualizarSelecao();
     return;
   }
 
@@ -1153,6 +1219,7 @@ function renderLista(){
   const pag = arr.slice(ini, ini + POR_PAGINA);
   document.getElementById('lista').innerHTML = pag.map(cartao).join('');
 
+  atualizarSelecao();
   const totPag = Math.ceil(arr.length / POR_PAGINA);
   document.getElementById('paginar').innerHTML = totPag <= 1 ? '' :
     '<button class="mini" ' + (PAGINA === 1 ? 'disabled style="opacity:.4"' : '') + ' onclick="irPagina(' + (PAGINA-1) + ')">‹ anterior</button>' +
@@ -1163,6 +1230,7 @@ function irPagina(n){ PAGINA = n; renderLista(); window.scrollTo({ top: document
 
 function cartao(o){
   const aberto = ABERTOS.has(o.bo);
+  const marcada = SELECIONADOS.has(o.bo);
   const tags = etiquetas(o).map(([c,t]) => '<span class="tag ' + c + '">' + esc(t) + '</span>').join('');
   let snip = o.descricao.trim()
     ? '<div class="oc-snip">' + grifar(trecho(o)) + '</div>'
@@ -1174,8 +1242,11 @@ function cartao(o){
   }
   const mapa = (o.n_lat && o.n_lon)
     ? '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps?q=' + o.n_lat + ',' + o.n_lon + '">📍 no mapa</a>' : '';
-  return '<div class="oc ' + (aberto ? 'aberto' : '') + '" id="oc-' + esc(o.bo) + '">' +
+  return '<div class="oc ' + (aberto ? 'aberto ' : '') + (marcada ? 'sel' : '') + '">' +
     '<div class="oc-top">' +
+      '<label class="oc-chk" title="marcar para imprimir">' +
+        '<input type="checkbox" ' + (marcada ? 'checked' : '') +
+        ' onchange="selMarcar(\'' + escJs(o.bo) + '\', this)"></label>' +
       '<span class="bo">BO ' + esc(o.bo) + '</span>' +
       '<span>' + fDt(o._data) + (o.hora ? ' · ' + esc(String(o.hora).slice(0,5)) : '') + '</span>' +
       '<span class="sep">|</span><span>📍 ' + esc(o.municipio || '—') + (o.uf ? '/' + esc(o.uf) : '') + '</span>' +
@@ -1186,9 +1257,9 @@ function cartao(o){
     (tags ? '<div class="oc-tags">' + tags + '</div>' : '') +
     snip +
     '<div class="oc-acts">' +
-      '<button class="act" onclick="alternar(\'' + esc(o.bo) + '\')">' + (aberto ? '▲ fechar' : '▼ ver completo') + '</button>' +
+      '<button class="act" onclick="alternar(\'' + escJs(o.bo) + '\')">' + (aberto ? '▲ fechar' : '▼ ver completo') + '</button>' +
       mapa +
-      '<button class="act" onclick="copiarOc(\'' + esc(o.bo) + '\')">⧉ copiar</button>' +
+      '<button class="act" onclick="copiarOc(\'' + escJs(o.bo) + '\')">⧉ copiar</button>' +
     '</div>' +
     '<div class="oc-full">' + (aberto ? detalhe(o) : '') + '</div>' +
   '</div>';
@@ -1224,6 +1295,58 @@ function expandirTodos(){
   document.getElementById('btn-exp').textContent = todosAbertos ? '⤢ Abrir todas' : '⤡ Fechar todas';
   renderLista();
 }
+/* ── Seleção para impressão ────────────────────────────────────────────────
+   A seleção é por Nº BO e vive fora da lista renderizada, então sobrevive a
+   trocar de página, reordenar e refazer a busca. */
+let SELECIONADOS = new Set();
+
+function selMarcar(bo, cb){
+  if (cb.checked) SELECIONADOS.add(bo); else SELECIONADOS.delete(bo);
+  const card = cb.closest('.oc');
+  if (card) card.classList.toggle('sel', cb.checked);
+  atualizarSelecao();
+}
+// "selecionar todas" = todas as do RESULTADO ATUAL, não só as da página na tela.
+function selTodos(marcar){
+  const alvo = ordenar();
+  if (marcar) alvo.forEach(o => SELECIONADOS.add(o.bo));
+  else alvo.forEach(o => SELECIONADOS.delete(o.bo));
+  renderLista();
+}
+function selLimpar(){ SELECIONADOS.clear(); renderLista(); }
+
+function atualizarSelecao(){
+  const total = SELECIONADOS.size;
+  const resultado = ordenar();
+  const noResultado = resultado.filter(o => SELECIONADOS.has(o.bo)).length;
+  const fora = total - noResultado;
+
+  const info = document.getElementById('sel-info');
+  info.innerHTML = total
+    ? '<b>' + total + '</b> selecionada' + (total > 1 ? 's' : '') +
+      (fora > 0 ? ' <i>(' + fora + ' de uma busca anterior)</i>' : '')
+    : 'nenhuma selecionada — sem marcar nada, a impressão sai com todas as ' + resultado.length + ' do resultado';
+  document.getElementById('sel-limpar').style.display = total ? '' : 'none';
+
+  const todos = document.getElementById('sel-todos');
+  todos.checked = resultado.length > 0 && noResultado === resultado.length;
+  todos.indeterminate = noResultado > 0 && noResultado < resultado.length;
+
+  const quantas = total || resultado.length;
+  document.getElementById('rp-txt').innerHTML = total
+    ? 'Vai imprimir as <b>' + total + '</b> ocorrência' + (total > 1 ? 's' : '') + ' que você marcou.'
+    : 'Nada marcado — vai imprimir as <b>' + resultado.length + '</b> do resultado. Marque no quadradinho de cada uma para escolher.';
+  const btn = document.getElementById('btn-print');
+  btn.textContent = '🖨 Imprimir ' + quantas + (quantas === 1 ? ' ocorrência' : ' ocorrências');
+  btn.disabled = quantas === 0;
+}
+
+// O que vai pro papel: o marcado; sem nada marcado, o resultado inteiro.
+function paraImprimir(){
+  if (!SELECIONADOS.size) return ordenar();
+  return ordenar(DADOS.filter(o => SELECIONADOS.has(o.bo)));
+}
+
 function copiarOc(bo){
   const o = DADOS.find(x => x.bo === bo); if (!o) return;
   const txt = 'BO ' + o.bo + ' — ' + fDt(o._data) + ' — ' + o.municipio + '/' + o.uf + '\n' +
@@ -1332,6 +1455,88 @@ function exportarCSV(){
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
+/* ── RELATÓRIO IMPRESSO ────────────────────────────────────────────────────
+   Monta um documento próprio no #print-area (cabeçalho, critérios da busca,
+   resumo e uma ficha por ocorrência). Roda no clique do botão E no beforeprint,
+   então o Ctrl+P do navegador sai igual ao do botão. */
+function criteriosUsados(){
+  const c = [];
+  const q = document.getElementById('q').value.trim();
+  if (q) c.push('pesquisa: “' + q + '”');
+  const de = document.getElementById('f-de').value, ate = document.getElementById('f-ate').value;
+  const brDate = s => s.split('-').reverse().join('/');
+  if (de && ate) c.push('período: ' + brDate(de) + ' a ' + brDate(ate));
+  else if (de)   c.push('a partir de ' + brDate(de));
+  else if (ate)  c.push('até ' + brDate(ate));
+  [['f-mun','município'],['f-nat','natureza'],['f-tipo','tipo de BO'],
+   ['f-meio','meio'],['f-op','operação']].forEach(([id, rot]) => {
+    const v = document.getElementById(id).value;
+    if (v) c.push(rot + ': ' + v);
+  });
+  if (document.getElementById('f-comdesc').checked) c.push('só com descrição escrita');
+  if (document.getElementById('f-preso').checked)   c.push('só com preso');
+  return c.length ? c.join(' · ') : 'todas as ocorrências da base, sem filtro';
+}
+
+function montarRelatorio(lista){
+  const soma = f => lista.reduce((a,o) => a + (o['n_'+f]||0), 0);
+  const resumo = [
+    [fN(lista.length), 'ocorrências'], [fN(soma('presos')), 'presos'],
+    [fD(soma('drogas'),1), 'kg de droga'], [fN(soma('veiculos')), 'veículos'],
+    [fN(soma('armas')), 'armas'], [fR(soma('prejuizo')), 'prejuízo estimado'],
+  ];
+  const agora = new Date().toLocaleString('pt-BR');
+  const marcadas = SELECIONADOS.size > 0;
+
+  const fichas = lista.map((o, i) => {
+    const ap = etiquetas(o).map(([,t]) => t).join(' · ');
+    const lin = (rot, v) => v ? '<div class="pr-lin"><b>' + rot + ':</b> ' + grifar(v) + '</div>' : '';
+    return '<div class="pr-oc">' +
+      '<h2><span class="pr-n">' + (i+1) + '</span>BO ' + esc(o.bo) +
+        '<span class="pr-dt">' + fDt(o._data) + (o.hora ? ' · ' + esc(String(o.hora).slice(0,5)) : '') + '</span></h2>' +
+      lin('Natureza', o.natureza) +
+      '<div class="pr-lin"><b>Município:</b> ' + grifar(o.municipio || '—') + (o.uf ? '/' + esc(o.uf) : '') +
+        (o.tipo_bo ? ' &nbsp;·&nbsp; <b>Tipo:</b> ' + esc(o.tipo_bo) : '') + '</div>' +
+      lin('Endereço', o.endereco) +
+      (o.operacao ? '<div class="pr-lin"><b>Operação:</b> ' + esc(o.operacao) + '</div>' : '') +
+      '<div class="pr-lin">' + (o.meio ? '<b>Meio:</b> ' + esc(o.meio) : '') +
+        (o.ambiente ? ' &nbsp;·&nbsp; <b>Ambiente:</b> ' + esc(o.ambiente) : '') +
+        ((o.n_lat && o.n_lon) ? ' &nbsp;·&nbsp; <b>Coord.:</b> ' + esc(o.lat) + ', ' + esc(o.lon) : '') + '</div>' +
+      (ap ? '<div class="pr-ap"><b>Apreensões:</b> ' + esc(ap) + '</div>' : '') +
+      (o.descricao.trim()
+        ? '<div class="pr-desc-t">Descrição</div><div class="pr-desc">' + grifar(o.descricao) + '</div>'
+        : '<div class="pr-desc-t">Descrição</div><div class="pr-desc">— não registrada nesta ocorrência —</div>') +
+      (o.destino.trim() ? '<div class="pr-desc-t">Destino dos envolvidos</div><div class="pr-desc">' + grifar(o.destino) + '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  document.getElementById('print-area').innerHTML =
+    '<div class="pr-cab">' +
+      '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
+      '<h1>Relatório de Ocorrências</h1>' +
+      '<div class="pr-sub">BPFRON — Batalhão de Polícia de Fronteira e Divisas · Uso restrito</div>' +
+    '</div>' +
+    '<div class="pr-meta">' +
+      '<div><b>Critérios:</b> ' + esc(criteriosUsados()) + '</div>' +
+      '<div><b>Conteúdo:</b> ' + fN(lista.length) + ' ocorrência' + (lista.length === 1 ? '' : 's') +
+        (marcadas ? ' selecionada' + (lista.length === 1 ? '' : 's') + ' manualmente' : ' (todo o resultado da busca)') + '</div>' +
+      '<div><b>Emitido por:</b> ' + esc(AUTH.user) + ' em ' + esc(agora) + '</div>' +
+    '</div>' +
+    '<table class="pr-resumo"><tr>' +
+      resumo.map(([v,l]) => '<td><span class="pr-v">' + v + '</span><span class="pr-l">' + l + '</span></td>').join('') +
+    '</tr></table>' +
+    fichas +
+    '<div class="pr-fim">Documento gerado pelo sistema BPFRON · ' + esc(agora) +
+      ' · contém dados pessoais de envolvidos — trate como documento de uso restrito.</div>';
+}
+
+function imprimir(){
+  const lista = paraImprimir();
+  if (!lista.length) return aviso('Não há ocorrência para imprimir.');
+  montarRelatorio(lista);
+  window.print();
+}
+
 function aviso(msg){
   let el = document.getElementById('toast');
   if (!el){
@@ -1402,8 +1607,9 @@ async function ocDoLogin(ev){
 }
 function ocLogout(){
   AUTH.token = ''; AUTH.user = '';
-  DADOS = []; RES = []; ABERTOS = new Set();
+  DADOS = []; RES = []; ABERTOS = new Set(); SELECIONADOS = new Set();
   document.getElementById('lista').innerHTML = '';
+  document.getElementById('print-area').innerHTML = '';   // não deixa PII no DOM após sair
   mostrar();
 }
 
@@ -1425,12 +1631,10 @@ function ocLogout(){
 let _deb;
 document.getElementById('q').addEventListener('input', () => { clearTimeout(_deb); _deb = setTimeout(buscar, 160); });
 document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter'){ clearTimeout(_deb); buscar(); } });
+// Ctrl+P do navegador sai igual ao botão: monta o mesmo relatório antes.
 window.addEventListener('beforeprint', () => {
-  const q = document.getElementById('q').value.trim();
-  document.getElementById('print-hd').innerHTML =
-    '<h1>BPFRON — Busca de Ocorrências</h1><div>' +
-    (q ? 'Pesquisa: “' + esc(q) + '” · ' : '') + fN(RES.length) + ' ocorrência(s) · ' +
-    'emitido em ' + new Date().toLocaleString('pt-BR') + ' por ' + esc(AUTH.user) + '</div>';
+  const lista = paraImprimir();
+  if (lista.length) montarRelatorio(lista);
 });
 
 mostrar();
