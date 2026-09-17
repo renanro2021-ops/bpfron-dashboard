@@ -165,6 +165,7 @@ a{color:var(--yellow)}
 .oc-snip{margin-top:9px;font-size:13px;color:#a9b7cb;line-height:1.7}
 .oc-snip mark{background:rgba(245,197,24,.28);color:#ffe680;border-radius:3px;padding:0 2px;font-weight:600}
 .oc-vazio{margin-top:9px;font-size:12.5px;color:#5b6678;font-style:italic}
+.oc-dest-cls{margin-top:5px;font-size:11.5px;color:#7c8798;font-style:italic}
 .oc-pq{margin-top:7px;font-size:11.5px;color:#7f8ea3}
 .oc-pq b{color:#a7d8b8;font-weight:600}
 .oc-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
@@ -324,7 +325,10 @@ a{color:var(--yellow)}
       • Acento e maiúscula não importam, e plural/singular são tratados como iguais (<code>embarcações</code> = <code>embarcação</code>).<br>
       • Só números procura pelo <b>Nº do BO</b>.<br>
       • A busca também entende as <b>colunas de apreensão</b>: <code>embarcação</code> traz quem tem "Embarcações (un.)" preenchido,
-        mesmo que o texto não use a palavra.
+        mesmo que o texto não use a palavra.<br>
+      • Para "quem foi entregue à PF de Guajará-Mirim", use os filtros <b>Destino (órgão)</b> + <b>Destino (cidade)</b>: eles juntam
+        as variações de escrita do BO (<code>Delegacia da Polícia Federal em Guajará-Mirim</code>, <code>Delegacia PF – Guajará-Mirim</code>,
+        <code>PF de Guajará</code>) e, na Polícia Civil, <code>DPC</code>, <code>DCP</code>, <code>Delegacia de Polícia Civil</code>, <code>UNISP</code>.
     </div>
   </div>
 
@@ -343,6 +347,8 @@ a{color:var(--yellow)}
       <div class="fg"><label>Tipo de BO</label><select id="f-tipo" onchange="buscar()"></select></div>
       <div class="fg"><label>Meio</label><select id="f-meio" onchange="buscar()"></select></div>
       <div class="fg"><label>Operação</label><select id="f-op" onchange="buscar()"></select></div>
+      <div class="fg"><label>Destino (órgão)</label><select id="f-dest" onchange="buscar()"></select></div>
+      <div class="fg"><label>Destino (cidade)</label><select id="f-destloc" onchange="buscar()"></select></div>
     </div>
     <div class="filtros-rod" id="filtros-rod" style="display:none">
       <button class="btn-lim" onclick="limparFiltros()">✕ Limpar filtros</button>
@@ -695,6 +701,104 @@ function normalizeMunicipio(raw) {
     .replace(/\bD'oeste\b/g,"D'Oeste");
 }
 
+/* ====================== 2c. DESTINO DOS ENVOLVIDOS ========================
+   A coluna "Destino dos Envolvidos" é texto livre, e o MESMO destino aparece
+   escrito de dez jeitos: "Delegacia da Polícia Federal em Guajará-Mirim/RO",
+   "Polícia Federal de Guajará-Mirim", "Delegacia PF – Guajará-Mirim",
+   "a PF Guajara-Mirim", "DPC Guajara-Mirim", "Delegacia de Polícia Civil de
+   Guajará-Mirim", "PC Guajara-Mirim". Um <select> com o texto cru viraria uma
+   lista de ~200 opções, quase todas com UMA ocorrência — inútil.
+
+   Por isso cada ocorrência ganha duas listas, do mesmo jeito que a natureza:
+     _destOrgaos → para ONDE foi (Polícia Federal, Polícia Civil, Receita…)
+     _destLocais → em QUE cidade, lida do próprio texto do destino. Não dá para
+                   usar o município da ocorrência: BO de Porto Velho com preso
+                   entregue à PF de Guajará-Mirim existe na base. Quando o BO
+                   não escreve a cidade, a ocorrência cai em DEST_SEM_LOCAL —
+                   melhor dizer "não está escrito" do que chutar.
+   Um destino pode cair em mais de um órgão ("...entregue à Receita Federal;
+   autor liberado mediante TCO"), igual ao BO composto da natureza. */
+
+// Órgãos FEDERAIS primeiro, e o trecho que casa é APAGADO do texto antes de
+// procurar a Polícia Civil: senão "Delegacia da PF de Guajará-Mirim" entrava
+// também como delegacia de polícia civil, por causa da palavra "delegacia".
+// O prefixo opcional ("delegacia da", "delegacia de") faz parte do casamento
+// justamente para ser apagado junto.
+const DEST_FEDERAIS = [
+  [/(?:delegacia|delegado|posto|unidade|plantao)?\s*(?:d[aeo]s?\s*)?(?:receita federal|\brfb\b)|\bnif\b/g, 'Receita Federal'],
+  [/(?:delegacia|superintendencia|depto|departamento|plantao|delegado)?\s*(?:d[aeo]s?\s*)?(?:policia federal|\bdpf\b|\bpf\b)/g, 'Polícia Federal'],
+  [/policia rodoviaria federal|\bprf\b/g, 'PRF'],
+];
+// DENARC, DERCCMA, DERFRVA, DRPC, UNISP e "Central de Flagrantes" são polícia
+// civil do estado. "de flagrantes" (no plural) pega "Central/Dep./Depto. de
+// Flagrantes" sem pegar "preso em flagrante", que não é destino.
+const DEST_REGRAS = [
+  [/unisp|delegacia|delegado|\bdpc\b|\bdcp\b|\bdepol\b|\bdp\b|\bpc\b|policia civil|\bdrpc\b|\bdih\b|deflag|denarc|derccma|derfrva|\bgave\b|de flagrantes|central de policia|\bcentral\b|autoridade policial|autoridade competente|autoridade de policia|policia judiciaria|comissari|comissionad|unidade integrada de seguranca/, 'Polícia Civil / UNISP / Delegacia'],
+  [/\bciop\b/, 'CIOP'],
+  [/jecrim|\btco\b|termo circunstanciado|termo de compromisso/, 'JECRIM / TCO'],
+  [/presidio|cadeia publica|casa de detencao|sistema prisional|unidade prisional/, 'Sistema prisional'],
+  [/conselho tutelar|\bcesea\b/, 'Conselho Tutelar / CESEA'],
+  [/ibama|sedam|bpamb|\banp\b|sefin|ambiental/, 'Órgão ambiental / fiscalização'],
+  [/bpfron|quartel|\bbpm\b|companhia pm|central de operacoes da pm/, 'Pátio / Quartel PM-BPFRON'],
+  [/detran/, 'DETRAN'],
+  [/hospital|pronto socorro|\biml\b|corpo de delito|papeleta/, 'Hospital / IML'],
+  [/fiel depositario|restituid|liberad|permanece|entregue ao proprietario|nao compareceu/, 'Liberado / fiel depositário'],
+  [/nao identificad|nao localizad|evadi|nenhum envolvido|nenhum autor|nenhum conduzido|nenhuma pessoa conduzida|sem autor|sem envolvidos|sem conduzido|nao qualificad|a apurar|foragido/, 'Sem envolvido conduzido'],
+  // Rede de segurança: "Tobias preso e conduzido" (sem dizer para onde) não
+  // pode virar "Outros" — some do filtro de quem procura conduzido.
+  [/conduzid|apresentad|encaminhad|preso|apreendid/, 'Conduzido (órgão não informado)'],
+];
+// Tira acento e pontuação e deixa espaço nas bordas: assim "PF/Guajará-Mirim",
+// "PF – Guajará-Mirim" e "PF de Guajará Mirim" viram o mesmo texto.
+const destTxt = s => ' ' + norm(s).replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim() + ' ';
+function orgaosDestino(raw){
+  if (!String(raw || '').trim()) return [];
+  let t = destTxt(raw);
+  const out = [];
+  for (const [re, lab] of DEST_FEDERAIS){
+    re.lastIndex = 0;
+    if (re.test(t)){ out.push(lab); re.lastIndex = 0; t = t.replace(re, ' # '); }
+  }
+  for (const [re, lab] of DEST_REGRAS){ if (!out.includes(lab) && re.test(t)) out.push(lab); }
+  // "Conduzido (órgão não informado)" só vale sozinho.
+  const i = out.indexOf('Conduzido (órgão não informado)');
+  if (i >= 0 && out.length > 1) out.splice(i, 1);
+  return out.length ? out : ['Outros'];
+}
+
+// Cidades citadas no destino. Além dos 52 municípios de RO e dos apelidos do
+// BO (MUN_ALIAS), entram as formas curtas ("PF de Guajará") e os lugares de
+// fora do estado que aparecem na base (Humaitá/AM, Itumbiara/GO).
+const DEST_EXTRA = ["Humaitá","Itumbiara","Extrema","Nova Mutum Paraná","Abunã","Jaci-Paraná","Vista Alegre do Abunã"];
+const DEST_ALIAS_CURTO = { "guajara":"Guajará-Mirim", "rolim":"Rolim de Moura", "medici":"Presidente Médici",
+  "ouro preto":"Ouro Preto do Oeste", "vale do paraiso":"Vale do Paraíso", "colorado":"Colorado do Oeste",
+  "presidente medici":"Presidente Médici", "mutum parana":"Nova Mutum Paraná", "nova mutum":"Nova Mutum Paraná" };
+const DEST_LOCAIS = (() => {
+  const m = new Map();
+  [...MUN_RO, ...DEST_EXTRA].forEach(n => m.set(destTxt(n).trim(), n));
+  Object.entries(MUN_ALIAS).forEach(([k, v]) => { if (!m.has(k)) m.set(k, v); });
+  Object.entries(DEST_ALIAS_CURTO).forEach(([k, v]) => { if (!m.has(k)) m.set(k, v); });
+  return [...m.entries()].sort((a, b) => b[0].length - a[0].length);   // nome longo primeiro
+})();
+function locaisDestino(raw){
+  if (!String(raw || '').trim()) return [];
+  let t = destTxt(raw);
+  const out = [];
+  // O nome longo é consumido antes do curto, senão "Guajará-Mirim" também
+  // casaria com o apelido "guajara" e a cidade entraria duas vezes.
+  for (const [k, nome] of DEST_LOCAIS){
+    if (t.includes(' ' + k + ' ')){
+      t = t.split(' ' + k + ' ').join(' ');
+      if (!out.includes(nome)) out.push(nome);
+    }
+  }
+  return out;
+}
+const DEST_SEM_LOCAL = '(cidade não escrita no BO)';
+const destLocaisDe = o => (o._destLocais && o._destLocais.length) ? o._destLocais : [DEST_SEM_LOCAL];
+const destResumo = o => (o._destOrgaos || []).join(' · ') +
+  ((o._destLocais && o._destLocais.length) ? ' — ' + o._destLocais.join(', ') : '');
+
 /* Mesma ideia para os campos que NÃO têm lista oficial (Tipo de BO, Meio,
    Ambiente, Operação): a planilha tem a mesma coisa escrita de dois jeitos
    ("Comunicacao de Ocorrencia" e "Comunicação de Ocorrência", "OPERACAO
@@ -905,6 +1009,8 @@ function montarIndice(csv){
     // O texto original da natureza fica intacto (é a capitulação, o pessoal lê isso
     // no cartão). O agrupamento vai à parte, só para o filtro.
     o._crimes = crimesDeRaw(o.natureza);
+    o._destOrgaos = orgaosDestino(o.destino);   // para onde foi (agrupado)
+    o._destLocais = locaisDestino(o.destino);   // cidade citada no destino
     o._municipioRaw = o.municipio;
     o.municipio = normalizeMunicipio(o.municipio);
 
@@ -1057,6 +1163,8 @@ function filtrar(){
   const tipo = document.getElementById('f-tipo').value;
   const meio = document.getElementById('f-meio').value;
   const op   = document.getElementById('f-op').value;
+  const dest = document.getElementById('f-dest').value;
+  const dloc = document.getElementById('f-destloc').value;
   const soDesc  = document.getElementById('f-comdesc').checked;
   const soPreso = document.getElementById('f-preso').checked;
   const proximo = document.getElementById('f-prox').checked;
@@ -1071,6 +1179,9 @@ function filtrar(){
     if (tipo && o.tipo_bo   !== tipo) continue;
     if (meio && o.meio      !== meio) continue;
     if (op   && !opsDe(o).includes(op)) continue;   // a célula traz operações combinadas por "/"
+    // Destino: o BO composto vale em todos os órgãos/cidades que ele cita.
+    if (dest && !o._destOrgaos.includes(dest)) continue;
+    if (dloc && !destLocaisDe(o).includes(dloc)) continue;
     if (soDesc  && !o.descricao.trim()) continue;
     if (soPreso && !(o.n_presos > 0))   continue;
 
@@ -1224,12 +1335,12 @@ function buscar(){
   renderKPIs();
   renderLista();
   document.getElementById('q-limpar').style.display = document.getElementById('q').value ? 'block' : 'none';
-  const temFiltro = ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op'].some(id => document.getElementById(id).value)
+  const temFiltro = ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op','f-dest','f-destloc'].some(id => document.getElementById(id).value)
     || document.getElementById('f-comdesc').checked || document.getElementById('f-preso').checked;
   document.getElementById('filtros-rod').style.display = temFiltro ? 'flex' : 'none';
   document.getElementById('filtros-resumo').textContent = temFiltro
     ? '✔ filtros ativos — ' + RES.length + ' de ' + DADOS.length
-    : 'período, município, natureza, tipo, meio, operação';
+    : 'período, município, natureza, tipo, meio, operação, destino';
 }
 
 // Mostra o que o dicionário acrescentou — a pessoa precisa saber por que
@@ -1388,7 +1499,8 @@ function detalhe(o){
           '</div></div>').join('') + '</div>';
   return env +
     (o.descricao.trim() ? '<div class="ft">Descrição completa</div><div class="txt">' + grifar(o.descricao) + '</div>' : '') +
-    (o.destino.trim() ? '<div class="ft">Destino dos envolvidos</div><div class="txt">' + grifar(o.destino) + '</div>' : '') +
+    (o.destino.trim() ? '<div class="ft">Destino dos envolvidos</div><div class="txt">' + grifar(o.destino) + '</div>' +
+      '<div class="oc-dest-cls">classificado como: ' + esc(destResumo(o)) + '</div>' : '') +
     (ap ? '<div class="ft">Apreensões</div><div class="kv"><div>' + esc(ap) + '</div></div>' : '') +
     '<div class="ft">Dados do registro</div><div class="kv">' + linhas.join('') + '</div>';
 }
@@ -1488,6 +1600,8 @@ function preencherFiltros(){
   opcoes('f-tipo', o => [o.tipo_bo],    'todos os tipos');
   opcoes('f-meio', o => [o.meio],       'todos os meios');
   opcoes('f-op',   o => opsDe(o),       'todas as operações');
+  opcoes('f-dest', o => o._destOrgaos,  'todos os destinos');
+  opcoes('f-destloc', o => destLocaisDe(o), 'todas as cidades de destino');
 }
 // Operações vêm combinadas por "/" na mesma célula (igual ao opsDe do index.html).
 function partesOperacao(raw){
@@ -1496,7 +1610,7 @@ function partesOperacao(raw){
 function opsDe(o){ return o._ops || partesOperacao(o.operacao); }
 function toggleFiltros(){ document.getElementById('filtros').classList.toggle('aberto'); }
 function limparFiltros(){
-  ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op'].forEach(id => document.getElementById(id).value = '');
+  ['f-de','f-ate','f-mun','f-nat','f-tipo','f-meio','f-op','f-dest','f-destloc'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-comdesc').checked = false;
   document.getElementById('f-preso').checked = false;
   buscar();
@@ -1507,7 +1621,7 @@ function toggleAjuda(){ const a = document.getElementById('ajuda'); a.style.disp
 function atualizarURL(){
   const p = new URLSearchParams();
   const q = document.getElementById('q').value.trim(); if (q) p.set('q', q);
-  ['de','ate','mun','nat','tipo','meio','op'].forEach(k => {
+  ['de','ate','mun','nat','tipo','meio','op','dest','destloc'].forEach(k => {
     const v = document.getElementById('f-' + k).value; if (v) p.set(k, v);
   });
   history.replaceState(null, '', p.toString() ? '#' + p.toString() : location.pathname);
@@ -1517,7 +1631,7 @@ function lerURL(){
   const p = new URLSearchParams(location.hash.replace(/^#/,''));
   if (p.get('q')) document.getElementById('q').value = p.get('q');
   let algum = false;
-  ['de','ate','mun','nat','tipo','meio','op'].forEach(k => {
+  ['de','ate','mun','nat','tipo','meio','op','dest','destloc'].forEach(k => {
     if (p.get(k)){ document.getElementById('f-' + k).value = p.get(k); algum = true; }
   });
   if (algum) document.getElementById('filtros').classList.add('aberto');
@@ -1554,11 +1668,11 @@ function exportarCSV(){
   if (!arr.length) return aviso('Não há resultado para exportar.');
   const cab = ['Nº BO','Data','Hora','Município','UF','Tipo de BO','Natureza / Crime','Operação','Meio',
     'Presos','Drogas (kg)','Armas','Munições','Veículos','Embarcações','Madeira (m³)','Prejuízo (R$)',
-    'Endereço','Destino dos Envolvidos','Descrição Resumida'];
+    'Endereço','Destino dos Envolvidos','Destino — órgão','Destino — cidade','Descrição Resumida'];
   const cel = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
   const linhas = arr.map(o => [o.bo, fDt(o._data), o.hora, o.municipio, o.uf, o.tipo_bo, o.natureza, o.operacao, o.meio,
     o.n_presos, o.n_drogas, o.n_armas, o.n_municoes, o.n_veiculos, o.n_embarcacoes, o.n_madeira, o.n_prejuizo,
-    o.endereco, o.destino, o.descricao].map(cel).join(';'));
+    o.endereco, o.destino, (o._destOrgaos||[]).join(' / '), (o._destLocais||[]).join(' / '), o.descricao].map(cel).join(';'));
   // BOM + ';' para o Excel em português abrir certo
   const blob = new Blob(['﻿' + cab.map(cel).join(';') + '\n' + linhas.join('\n')], { type:'text/csv;charset=utf-8' });
   const q = document.getElementById('q').value.trim().replace(/[^\wà-ú ]+/gi,'').replace(/\s+/g,'-').slice(0,40);
@@ -1583,7 +1697,7 @@ function criteriosUsados(){
   else if (de)   c.push('a partir de ' + brDate(de));
   else if (ate)  c.push('até ' + brDate(ate));
   [['f-mun','município'],['f-nat','natureza'],['f-tipo','tipo de BO'],
-   ['f-meio','meio'],['f-op','operação']].forEach(([id, rot]) => {
+   ['f-meio','meio'],['f-op','operação'],['f-dest','destino'],['f-destloc','cidade de destino']].forEach(([id, rot]) => {
     const v = document.getElementById(id).value;
     if (v) c.push(rot + ': ' + v);
   });
