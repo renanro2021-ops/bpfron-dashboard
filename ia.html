@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Plataformas de IA · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
+  --green:#34d399; --blue:#60a5fa; --red:#f87171;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+button{font-family:inherit}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1240px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(16px,4vw,28px) 80px}
+.intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,34px);color:#fff;line-height:1.15}
+.intro p{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
+.intro p b{color:#e2e8f0}
+
+.alerta{margin:20px 0 4px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.3);border-left:4px solid var(--red);border-radius:12px;padding:14px 16px}
+.alerta h3{font-family:'Rajdhani',sans-serif;font-size:17px;color:#fca5a5;letter-spacing:.5px}
+.alerta p{font-size:13.5px;color:#cbd5e1;line-height:1.65;margin-top:6px}
+.alerta b{color:#fff}
+
+.ferr{margin:16px 0 4px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.busca{flex:1;min-width:230px}
+.busca input{width:100%;max-width:460px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-family:inherit;font-size:15px;outline:none;min-height:44px}
+.busca input:focus{border-color:rgba(245,197,24,.6)}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.pill{background:rgba(148,163,184,.08);border:1px solid var(--line);color:#cbd5e1;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;min-height:36px;transition:.12s}
+.pill:hover{background:rgba(148,163,184,.16)}
+.pill.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.55);color:var(--yellow)}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:30px 0 4px}
+.sec-dica{font-size:13px;color:var(--muted);margin-bottom:12px;max-width:80ch;line-height:1.6}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
+a.card:hover,a.card:focus-visible{border-color:rgba(245,197,24,.55);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
+.card.top{border-color:rgba(245,197,24,.4);background:rgba(20,26,44,.9)}
+.card-top{display:flex;align-items:center;gap:12px}
+.ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:rgba(245,197,24,.10);border:1px solid rgba(245,197,24,.25);flex-shrink:0}
+.card h2{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff;line-height:1.15}
+.card h2 .star{color:var(--yellow);font-size:13px;letter-spacing:.5px;display:block;font-weight:700}
+.card p.d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.card p.d b{color:#cbd5e1}
+.card .dica{font-size:12.5px;color:#cbd5e1;line-height:1.55;border-left:2px solid rgba(245,197,24,.45);padding-left:9px}
+.card .dica b{color:var(--yellow);font-weight:700}
+.card .lim{font-size:12.5px;color:#94a3b8;line-height:1.5}
+.card .lim b{color:#e2e8f0}
+.card .alerta-mini{font-size:12.5px;color:#fca5a5;line-height:1.55;border-left:2px solid rgba(248,113,113,.5);padding-left:9px}
+.card .alerta-mini b{color:#fecaca}
+.espaco{flex:1;min-height:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700;border:1px solid rgba(148,163,184,.3);color:#cbd5e1;background:rgba(148,163,184,.08);white-space:nowrap}
+.chip.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
+.chip.at{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.chip.loc{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.45);color:#93c5fd}
+.card-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:2px}
+.go{font-size:14px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:8px 16px;white-space:nowrap}
+.go.interno{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#05101f}
+.semlink{font-size:12.5px;font-weight:700;color:var(--blue)}
+.vazio{color:var(--muted);padding:30px 4px}
+.rodape{margin-top:36px;font-size:13px;color:var(--muted);line-height:1.7;border-left:3px solid rgba(245,197,24,.5);padding:6px 0 6px 14px}
+.rodape b{color:#e2e8f0}
+.hidden{display:none!important}
+
+@media (max-width:640px){
+  .hdr{position:static}
+  .hdr-logo{height:34px}
+  .busca input{font-size:16px;max-width:none}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Plataformas de <em>IA</em></div>
+        <div class="hdr-sub">Ferramentas de inteligência artificial para o efetivo · BPFRON/RO</div>
+      </div>
+    </div>
+    <a class="hdr-back" href="sistemas.html">⬅ Sistemas</a>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>Ferramentas de IA para o dia a dia</h1>
+    <p>Plataformas escolhidas por serem <b>gratuitas</b> e funcionarem em <b>português do Brasil</b>. Todas abrem direto no navegador, sem instalar nada. Cada cartão diz o que a ferramenta faz, se precisa de cadastro e qual é o limite do plano grátis.</p>
+  </div>
+
+  <div class="alerta">
+    <h3>⚠️ Leia antes de colar qualquer coisa</h3>
+    <p>Estas são ferramentas <b>públicas, de empresas de fora</b>. O que você digita ou envia pode ficar guardado no servidor delas e ser usado para treinar o modelo. <b>Não coloque</b> nome completo, CPF, RE, endereço, telefone, placa, número de BO ou de procedimento, nem suba áudio, foto ou documento de ocorrência em andamento. Escreva “o condutor”, “o veículo”, “o local” no lugar. Quando precisar tratar material real, use só as ferramentas marcadas com <b style="color:#93c5fd">🔒 Roda no seu PC</b> — nessas o arquivo não sai da sua máquina.</p>
+  </div>
+
+  <div class="ferr">
+    <div class="busca">
+      <input id="q" type="search" placeholder="🔎 Buscar ferramenta… (ex.: voz, transcrever, traduzir)" autocomplete="off" aria-label="Buscar ferramenta de IA">
+    </div>
+  </div>
+  <div class="pills" id="pills"></div>
+
+  <div id="lista"></div>
+  <div id="vazio" class="vazio hidden">Nenhuma ferramenta encontrada.</div>
+
+  <div class="rodape">
+    <b>Conhece uma ferramenta que faltou aqui?</b> Fale com a P3 que ela é testada e entra na lista.<br>
+    Os limites do plano grátis mudam sem aviso — se alguma ferramenta passar a cobrar o que antes era livre, avise para atualizarmos a página.
+  </div>
+</main>
+
+<script>
+/* Para incluir uma ferramenta nova, basta acrescentar uma linha no grupo certo.
+   url:null  -> não é um site, é recurso que já existe no PC (mostra a dica no lugar do botão)
+   top:true  -> destaque de recomendada
+   tags: gratis | semconta | conta | instalado | local | ptbr                                */
+const GRUPOS = [
+  { cat:'🔊 Texto em voz',
+    dica:'Você cola o texto e a IA gera o áudio falado. Serve para gravar aviso de rádio, narração de vídeo de instrução, mensagem de ordem de serviço — ou só para ouvir um documento longo.',
+    itens:[
+    { ic:'🎧', nome:'TTSMaker', url:'https://ttsmaker.com/br', top:true,
+      desc:'Cola o texto, escolhe a voz em português e baixa o MP3. Mais de 600 vozes, várias em português do Brasil.',
+      lim:'Grátis: <b>20.000 caracteres por semana</b> (as vozes marcadas “Ilimitado” não descontam da cota, mas convertem no máximo <b>1.000 caracteres por vez</b>). Baixa em MP3 e WAV.',
+      dica:'É a melhor escolha para <b>material oficial do batalhão</b>: os termos liberam o uso institucional do áudio gerado, sem precisar citar a ferramenta. Texto grande vai <b>em pedaços</b>, e ele pede um <b>código captcha</b> a cada conversão.',
+      tags:['gratis','semconta','ptbr'] },
+    { ic:'🗣️', nome:'Luvvoice', url:'https://luvvoice.com/br/language/portuguese',
+      desc:'Mesma ideia do TTSMaker, mais simples e mais rápido. Cola, gera e baixa o MP3 em segundos.',
+      lim:'Grátis, sem cadastro. Menos opções de voz.',
+      dica:'Use como <b>plano B</b> quando o TTSMaker estiver fora do ar ou você já tiver estourado o limite da semana.',
+      tags:['gratis','semconta','ptbr'] },
+    { ic:'📖', nome:'“Ler em voz alta” do Edge', url:null,
+      desc:'O próprio navegador Microsoft Edge lê a página ou o PDF aberto, com voz natural em português, sem limite de tamanho.',
+      lim:'Já vem instalado no Windows. Serve para <b>ouvir</b>, não gera arquivo para baixar.',
+      dica:'Abra a portaria, o manual ou a lei no Edge e aperte <b>Ctrl + Shift + U</b>. Dá para trocar a voz e a velocidade na barrinha que aparece no topo.',
+      tags:['gratis','instalado','ptbr'] },
+    { ic:'🎙️', nome:'ElevenLabs', url:'https://elevenlabs.io/pt/text-to-speech',
+      desc:'A voz mais realista que existe hoje — quase não dá para perceber que é IA. Interface em português.',
+      lim:'Grátis: cerca de <b>10.000 caracteres por mês</b>. Precisa criar conta.',
+      alerta:'O plano gratuito é licenciado <b>só para uso pessoal</b> e exige citar “elevenlabs.io”. Para vídeo ou áudio oficial do batalhão, prefira o TTSMaker.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'🔈', nome:'Google Tradutor (falar texto)', url:'https://translate.google.com',
+      desc:'Cola o texto no lado esquerdo e clica no ícone do alto-falante para ouvir. Sem cadastro, sem configuração.',
+      lim:'Até 5.000 caracteres por vez. Não baixa o áudio.',
+      dica:'Bom só para <b>uma frase ou um parágrafo curto</b>. Para texto grande, use o TTSMaker.',
+      tags:['gratis','semconta','ptbr'] }
+  ]},
+
+  { cat:'🎙️ Voz em texto',
+    dica:'O contrário do anterior: você fala ou envia um áudio e a IA escreve o texto. Atenção redobrada aqui — áudio de ocorrência é material sensível.',
+    itens:[
+    { ic:'🔒', nome:'Whisper Web', url:'https://huggingface.co/spaces/Xenova/whisper-web', top:true,
+      desc:'Transcreve áudio com o Whisper (da OpenAI) <b>dentro do seu próprio navegador</b>. O arquivo não é enviado para servidor nenhum: fica na sua máquina.',
+      lim:'Grátis, sem conta. Na primeira vez baixa o modelo (uns 200 MB); depois disso funciona até sem internet.',
+      dica:'É a <b>única da lista indicada para áudio de ocorrência</b>, justamente porque nada sai do computador. Escolha o idioma “Portuguese” antes de transcrever.',
+      tags:['gratis','semconta','local','ptbr'] },
+    { ic:'⌨️', nome:'Digitação por voz do Google Docs', url:'https://docs.new',
+      desc:'Abre um documento em branco e você dita em vez de digitar. Reconhece português do Brasil muito bem, inclusive pontuação falada (“vírgula”, “ponto”, “novo parágrafo”).',
+      lim:'Grátis com conta Google. Funciona no Chrome e no Edge.',
+      dica:'No documento: menu <b>Ferramentas → Digitação por voz</b> (ou Ctrl + Shift + S). Ótimo para <b>ditar o histórico</b> e depois só revisar.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'📝', nome:'Ditar do Word', url:null,
+      desc:'Mesma coisa da anterior, só que dentro do Word que você já usa. Transcreve enquanto você fala.',
+      lim:'Já vem no Microsoft 365. Precisa de internet e de conta Microsoft.',
+      dica:'No Word: aba <b>Página Inicial → Ditar</b> (ícone do microfone, no canto direito).',
+      tags:['gratis','instalado','ptbr'] }
+  ]},
+
+  { cat:'💬 Assistentes de texto',
+    dica:'Os chats de IA. Servem para redigir, resumir, revisar o português, montar tabela e explicar texto de lei. Vale o aviso lá de cima: nada de dado pessoal na conversa.',
+    itens:[
+    { ic:'🤖', nome:'Prompts do BPFRON', url:'prompts.html', top:true, interno:true,
+      desc:'Página nossa, aqui do sistema: prompt pronto para copiar e colar em qualquer um dos chats abaixo e redigir o histórico da ocorrência no padrão certo.',
+      lim:'Interno, aberto ao efetivo.',
+      dica:'<b>Comece por aqui</b> antes de escrever um prompt do zero.',
+      tags:[] },
+    { ic:'💬', nome:'ChatGPT', url:'https://chatgpt.com',
+      desc:'O mais conhecido. Redige, resume, corrige português, organiza informação em tabela e explica texto de lei.',
+      lim:'Grátis com conta. O plano gratuito limita quantas mensagens por dia você usa o modelo melhor.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'✨', nome:'Google Gemini', url:'https://gemini.google.com',
+      desc:'Entende texto, imagem e PDF na mesma conversa. Integrado ao Google (Drive, Docs, Gmail).',
+      lim:'Grátis com a mesma conta Google que você já usa.',
+      dica:'Bom quando você precisa <b>mandar uma foto ou um PDF junto</b> com a pergunta.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'📚', nome:'Claude', url:'https://claude.ai',
+      desc:'Forte em texto longo e documento grande. Escreve em português com redação mais formal, boa para documento oficial.',
+      lim:'Grátis com conta, com limite de uso que se renova a cada poucas horas.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'🪟', nome:'Microsoft Copilot', url:'https://copilot.microsoft.com',
+      desc:'O assistente da Microsoft, já presente no Windows e no Edge. Responde mostrando os links das fontes que consultou.',
+      lim:'Grátis, entra com a conta Microsoft.',
+      tags:['gratis','instalado','ptbr'] }
+  ]},
+
+  { cat:'📄 Documentos, PDF e leis',
+    dica:'Para quem precisa achar informação dentro de portaria, manual, nota de instrução ou processo grande.',
+    itens:[
+    { ic:'📓', nome:'NotebookLM', url:'https://notebooklm.google.com', top:true,
+      desc:'Você sobe as portarias, os manuais e as leis, e pergunta em português. Ele responde <b>citando o trecho e a página</b> do documento — não inventa a resposta como um chat comum.',
+      lim:'Grátis com conta Google. Aceita PDF, Word, link e texto colado.',
+      dica:'Ótimo para montar uma base com o <b>RDPM, o CTB e as notas de instrução</b> e consultar na hora. Também gera um resumo em áudio do material, útil para instrução.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'🔍', nome:'OCR do Google Drive', url:'https://drive.google.com',
+      desc:'Transforma foto ou PDF digitalizado em texto que dá para copiar e pesquisar. Não é site novo: é um recurso do Drive que quase ninguém usa.',
+      lim:'Grátis com conta Google.',
+      dica:'Suba a imagem no Drive e clique com o <b>botão direito → Abrir com → Documentos Google</b>. O texto aparece logo abaixo da imagem.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'📑', nome:'iLovePDF', url:'https://www.ilovepdf.com',
+      desc:'Juntar, dividir, girar, comprimir, converter para Word e reconhecer texto (OCR) em PDF.',
+      lim:'Grátis nas funções básicas, sem cadastro, com limite de arquivos por dia.',
+      alerta:'O arquivo é enviado para o servidor deles. <b>Não use com documento sigiloso</b> ou de procedimento em andamento.',
+      tags:['gratis','semconta'] }
+  ]},
+
+  { cat:'🌐 Tradução',
+    dica:'Útil no contato com documento e com pessoa do lado boliviano.',
+    itens:[
+    { ic:'🌎', nome:'DeepL', url:'https://www.deepl.com/translator', top:true,
+      desc:'Tradução bem mais natural que a do Google, principalmente espanhol e inglês. Também traduz o arquivo inteiro mantendo a formatação.',
+      lim:'Grátis até 5.000 caracteres por vez, sem cadastro.',
+      tags:['gratis','semconta','ptbr'] },
+    { ic:'📷', nome:'Google Tradutor (câmera)', url:'https://translate.google.com',
+      desc:'No aplicativo do celular, aponta a câmera para o documento e ele mostra traduzido na tela, ao vivo. Tem também o modo conversa, que traduz a fala nos dois sentidos.',
+      lim:'Grátis, sem cadastro.',
+      dica:'Baixe o <b>pacote de espanhol para uso offline</b> antes de ir para a linha — em muito ponto de fronteira não tem sinal.',
+      tags:['gratis','semconta','ptbr'] }
+  ]},
+
+  { cat:'🖼️ Imagem e apresentação',
+    dica:'Para material de instrução, cartaz e apresentação. Leia o aviso do último cartaz antes de usar IA em imagem.',
+    itens:[
+    { ic:'✂️', nome:'remove.bg', url:'https://www.remove.bg',
+      desc:'Tira o fundo de uma foto automaticamente. Bom para montar apresentação, crachá e arte.',
+      lim:'Grátis em baixa resolução, sem cadastro.',
+      tags:['gratis','semconta'] },
+    { ic:'🎨', nome:'Canva', url:'https://www.canva.com',
+      desc:'Cria cartaz, apresentação, certificado e arte para rede social a partir de modelos prontos, com ajuda de IA.',
+      lim:'Grátis com conta. Boa parte dos modelos é livre; alguns são pagos.',
+      tags:['gratis','conta','ptbr'] },
+    { ic:'🚫', nome:'Nunca use IA para “melhorar” prova', url:null, aviso:true,
+      desc:'Ferramentas que prometem ampliar, dar nitidez ou recuperar placa e rosto em imagem de câmera <b>não recuperam nada</b>: a IA inventa os pixels que faltam a partir do que ela acha provável.',
+      alerta:'O resultado fica nítido, mas <b>não é o que a câmera registrou</b>. Usar isso em procedimento contamina a prova. Imagem de prova vai para a perícia do jeito que saiu da câmera.',
+      tags:[] }
+  ]}
+];
+
+const TAGS = {
+  gratis:    { txt:'Grátis',            cls:'ok'  },
+  semconta:  { txt:'Sem cadastro',      cls:'ok'  },
+  conta:     { txt:'Precisa de conta',  cls:'at'  },
+  instalado: { txt:'Já está no seu PC', cls:'loc' },
+  local:     { txt:'🔒 Roda no seu PC', cls:'loc' },
+  ptbr:      { txt:'Português BR',      cls:''    }
+};
+
+let filtro = '';
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function semTags(s){ return String(s).replace(/<[^>]*>/g,' '); }
+
+function cardHtml(it){
+  const cls = 'card' + (it.top ? ' top' : '');
+  const abre = it.url
+    ? '<a class="' + cls + '" href="' + esc(it.url) + '"' + (it.interno ? '' : ' target="_blank" rel="noopener noreferrer"') + '>'
+    : '<div class="' + cls + '">';
+  const fecha = it.url ? '</a>' : '</div>';
+  const chips = (it.tags || []).filter(t => TAGS[t])
+    .map(t => '<span class="chip ' + TAGS[t].cls + '">' + TAGS[t].txt + '</span>').join('');
+  return abre
+    + '<div class="card-top"><span class="ic">' + it.ic + '</span><h2>' + esc(it.nome)
+    +   (it.top ? '<span class="star">★ Recomendada</span>' : '') + '</h2></div>'
+    + '<p class="d">' + it.desc + '</p>'
+    + (it.lim    ? '<div class="lim">' + it.lim + '</div>' : '')
+    + (it.dica   ? '<div class="dica">' + it.dica + '</div>' : '')
+    + (it.alerta ? '<div class="alerta-mini">⚠️ ' + it.alerta + '</div>' : '')
+    + '<div class="espaco"></div>'
+    + (chips ? '<div class="chips">' + chips + '</div>' : '')
+    + '<div class="card-foot">'
+    +   (it.url
+          ? '<span class="go' + (it.interno ? ' interno' : '') + '">'
+            + (it.interno ? 'Abrir página →' : 'Abrir site ↗') + '</span>'
+          : '<span class="semlink">' + (it.aviso ? 'Aviso importante' : 'Não é um site — veja a dica acima') + '</span>')
+    + '</div>'
+    + fecha;
+}
+
+function render(){
+  const q = norm(document.getElementById('q').value.trim());
+  let html = '', total = 0;
+  GRUPOS.forEach(g => {
+    if (filtro && g.cat !== filtro) return;
+    const itens = g.itens.filter(it => !q ||
+      norm(semTags(it.nome + ' ' + it.desc + ' ' + (it.dica || '') + ' ' + (it.lim || '') + ' ' + g.cat)).includes(q));
+    if (!itens.length) return;
+    total += itens.length;
+    html += '<div class="sec">' + esc(g.cat) + '</div>'
+          + '<div class="sec-dica">' + esc(g.dica) + '</div>'
+          + '<div class="grid">' + itens.map(cardHtml).join('') + '</div>';
+  });
+  document.getElementById('lista').innerHTML = html;
+  document.getElementById('vazio').classList.toggle('hidden', total > 0);
+}
+
+function montarPills(){
+  const el = document.getElementById('pills');
+  el.innerHTML = '<button class="pill on" data-c="">Todas</button>'
+    + GRUPOS.map(g => '<button class="pill" data-c="' + esc(g.cat) + '">' + esc(g.cat) + '</button>').join('');
+  el.addEventListener('click', e => {
+    const b = e.target.closest('.pill');
+    if (!b) return;
+    filtro = b.dataset.c;
+    el.querySelectorAll('.pill').forEach(p => p.classList.toggle('on', p === b));
+    render();
+  });
+}
+
+document.getElementById('q').addEventListener('input', render);
+montarPills();
+render();
+</script>
+</body>
+</html>
