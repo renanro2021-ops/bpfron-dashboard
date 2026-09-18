@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestão da Frota · Garagem BPFRON</title>
+<meta name="theme-color" content="#060912">
+<link rel="manifest" href="garagem-gestao.webmanifest">
+<link rel="apple-touch-icon" href="garagem-gestao-icon-192.png">
+<link rel="icon" type="image/png" href="garagem-gestao-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gestão Frota">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -194,7 +202,38 @@ details.raw pre{white-space:pre-wrap;font-size:11.5px;color:#94a3b8;background:#
 .ub .tm{position:absolute;right:11px;top:10px;text-align:right;font-size:10.5px;color:var(--muted)}
 .ub .tm b{display:block;font:700 15px 'Rajdhani',sans-serif;color:var(--blue)}
 .ub.long .tm b{color:var(--warn)}
-@media (max-width:700px){#uso-pnl{left:10px;right:10px;width:auto;top:70px}}
+/* grade nunca estoura a largura por causa de gráfico/tabela dentro */
+.kpis>*,.cols>*,.charts>*,.grid>*,.toolbar>*{min-width:0}
+html,body{overflow-x:hidden}
+
+/* ── versão celular: abas viram barra inferior de app, cabeçalho compacto ── */
+@media (max-width:700px){
+  body{font-size:13.5px;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .hdr-inner{padding:8px 12px;gap:8px;flex-wrap:nowrap}
+  .hdr-logo{height:32px}
+  .hdr-title{font-size:17px}
+  .hdr-sub,.hdr-right a:not(#logout-link){display:none}
+  .hdr-right{gap:8px;font-size:12px;flex-wrap:nowrap}
+  #userchip{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:250;background:rgba(6,9,18,.98);border-top:1px solid rgba(245,197,24,.35);padding:0 4px env(safe-area-inset-bottom);gap:0;box-shadow:0 -8px 24px rgba(0,0,0,.6)}
+  .tab{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;font-size:10.5px;padding:8px 9px 7px;border-bottom:none;border-top:3px solid transparent;min-width:64px}
+  .tab.on{border-top-color:var(--yellow)}
+  .wrap{padding:12px 12px 20px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:10px 12px}.kpi .v{font-size:24px}
+  .card{padding:12px}
+  .chart-box{height:220px}
+  .toolbar .fg{min-width:calc(50% - 5px);flex:1}
+  .toolbar .grow{min-width:100%}
+  .fgrid{grid-template-columns:1fr}
+  .mov{padding:0}
+  .mbox{border-radius:0;min-height:100vh}
+  .mbody{padding:14px}
+  .grid .w2{grid-column:1/-1}
+  #uso-btn{writing-mode:horizontal-tb;top:auto;bottom:calc(76px + env(safe-area-inset-bottom));right:12px;transform:none;border-radius:999px;border-right:1px solid rgba(147,197,253,.5);padding:11px 15px}
+  #uso-pnl{left:8px;right:8px;width:auto;top:56px;bottom:calc(70px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+}
 @media print{#uso-btn,#uso-pnl{display:none!important}}
 #load-ovl{position:fixed;inset:0;z-index:9999;background:rgba(2,6,15,.8);display:none;align-items:center;justify-content:center;padding:16px}
 .load-card{background:var(--bg2);border:1px solid rgba(245,197,24,.35);border-radius:16px;padding:24px 26px;text-align:center;max-width:380px;width:100%}
@@ -218,6 +257,7 @@ details.raw pre{white-space:pre-wrap;font-size:11.5px;color:#94a3b8;background:#
       </div>
     </div>
     <div class="hdr-right">
+      <button id="btn-instalar" class="btn sm hidden" onclick="instalarApp()">📲 Instalar app</button>
       <a href="garagem.html" target="_blank">📱 Checklist do motorista</a>
       <a href="sistemas.html">⬅ Sistemas</a>
       <span id="userchip"></span>
@@ -462,7 +502,7 @@ async function carregar(silencioso){
   preencherSelects();
   $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta').length || '';
   renderTudo();
-  if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(ab === null ? innerWidth > 1500 : ab === '1'); }
+  if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(innerWidth > 700 && (ab === null ? innerWidth > 1500 : ab === '1')); }
 }
 function preencherSelects(){
   const opts = '<option value="">Todas</option>' + D.viaturas.map(v => `<option value="${esc(v.prefixo)}">${esc(v.prefixo)} · ${esc(v.modelo)}</option>`).join('');
@@ -1274,6 +1314,31 @@ function confirmarExclusao({ titulo, texto, acao }){
     };
     setTimeout(() => f.senha.focus(), 30);
   });
+}
+
+/* ── instalar como aplicativo (PWA) ──
+   Android/Chrome/Edge: botão "Instalar app" abre o instalador nativo.
+   iPhone (Safari não tem instalador): o botão mostra o passo a passo "Compartilhar > Adicionar à Tela de Início".
+   O service worker só controla as páginas da garagem (scope ./garagem). */
+let _instalador = null;
+const APP_INSTALADO = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const EH_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw-garagem.js', { scope: './garagem' }).catch(() => {});
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); _instalador = e; if (!APP_INSTALADO) document.getElementById('btn-instalar').classList.remove('hidden'); });
+window.addEventListener('appinstalled', () => { _instalador = null; document.getElementById('btn-instalar').classList.add('hidden'); });
+if (EH_IOS && !APP_INSTALADO) document.getElementById('btn-instalar').classList.remove('hidden');
+async function instalarApp(){
+  if (_instalador){ _instalador.prompt(); try{ await _instalador.userChoice; }catch(e){} _instalador = null; return; }
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.8);display:flex;align-items:flex-end;justify-content:center;padding:16px';
+  ov.innerHTML = `<div style="background:#0d1322;border:1px solid rgba(245,197,24,.45);border-radius:18px;padding:20px 22px;max-width:420px;width:100%;color:#e2e8f0;font:14.5px/1.6 Inter,system-ui,sans-serif">
+    <div style="font-weight:800;font-size:17px;color:#F5C518;margin-bottom:10px">📲 Instalar no celular</div>
+    ${EH_IOS ? `<b>iPhone (Safari):</b><br>1. Toque em <b>Compartilhar</b> <span style="font-size:18px">⎋</span> (quadrado com seta, embaixo da tela)<br>2. Role e toque em <b>“Adicionar à Tela de Início”</b><br>3. Toque em <b>Adicionar</b>`
+      : `<b>Android (Chrome):</b><br>1. Toque nos <b>três pontinhos ⋮</b> no canto de cima<br>2. Toque em <b>“Instalar app”</b> ou <b>“Adicionar à tela inicial”</b><br>3. Confirme em <b>Instalar</b>`}
+    <div style="margin-top:10px;color:#94a3b8;font-size:13px">O ícone aparece junto dos outros aplicativos e abre em tela cheia, sem a barra do navegador.</div>
+    <button style="margin-top:16px;width:100%;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:12px;font:800 15px Inter,system-ui,sans-serif;color:#141414;cursor:pointer">Entendi</button></div>`;
+  ov.onclick = (e) => { if (e.target === ov || e.target.tagName === 'BUTTON') ov.remove(); };
+  document.body.appendChild(ov);
 }
 
 boot();

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#060912">
+<link rel="manifest" href="garagem.webmanifest">
+<link rel="apple-touch-icon" href="garagem-icon-192.png">
+<link rel="icon" type="image/png" href="garagem-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Checklist VTR">
 <title>Checklist da Viatura · Garagem BPFRON</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -136,6 +143,7 @@ textarea{min-height:92px;resize:vertical}
       <div class="hdr-title">Garagem <em>· Checklist da viatura</em></div>
       <div class="hdr-sub">BPFRON/RO — início e término de uso</div>
     </div>
+    <button id="btn-instalar" class="btn hidden" style="margin-left:auto;padding:8px 12px;font-size:13px" onclick="instalarApp()">📲 Instalar app</button>
   </div>
 </div>
 
@@ -307,15 +315,27 @@ async function api(path, body){
   return d;
 }
 
+const LS_FROTA = 'bp_gar_frota';
 async function carregar(){
-  show('carregando', true); show('falha', false);
+  show('falha', false);
+  // abre na hora com a última situação salva no celular; a atualizada chega logo depois
+  let cache = null;
+  if (!APP){ try{ cache = JSON.parse(localStorage.getItem(LS_FROTA) || 'null'); }catch(e){} }
+  if (cache && cache.ok){ montar(cache); $('frota-hora').textContent = '⏳ Atualizando…'; }
+  else if (!APP) show('carregando', true);
   try{
-    APP = await api('/api/garagem/app');
+    const novo = await api('/api/garagem/app');
+    try{ localStorage.setItem(LS_FROTA, JSON.stringify(novo)); }catch(e){}
+    montar(novo);
   }catch(e){
-    show('carregando', false); show('falha', true);
+    show('carregando', false);
+    if (APP){ $('frota-hora').textContent = '⚠️ Sem conexão — mostrando a situação de ' + (APP.agora || '').slice(0,16) + '.'; return; }
+    show('falha', true);
     $('falha-msg').textContent = '⚠️ Não foi possível carregar a frota (' + e.message + '). Verifique a internet.';
-    return;
   }
+}
+function montar(dados){
+  APP = dados;
   show('carregando', false); show('nav', true);
   $('dl-cmt').innerHTML = (APP.sugestoes.comandantes||[]).map(v => `<option value="${esc(v)}">`).join('');
   $('dl-local').innerHTML = (APP.sugestoes.locais||[]).map(v => `<option value="${esc(v)}">`).join('');
@@ -576,6 +596,31 @@ function novoChecklist(){
   $('aceite').checked = false; setCond(''); erroEnvio('');
   show('s-ok', false);
   carregar();
+}
+
+/* ── instalar como aplicativo (PWA) ──
+   Android/Chrome/Edge: botão "Instalar app" abre o instalador nativo.
+   iPhone (Safari não tem instalador): o botão mostra o passo a passo "Compartilhar > Adicionar à Tela de Início".
+   O service worker só controla as páginas da garagem (scope ./garagem). */
+let _instalador = null;
+const APP_INSTALADO = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const EH_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw-garagem.js', { scope: './garagem' }).catch(() => {});
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); _instalador = e; if (!APP_INSTALADO) document.getElementById('btn-instalar').classList.remove('hidden'); });
+window.addEventListener('appinstalled', () => { _instalador = null; document.getElementById('btn-instalar').classList.add('hidden'); });
+if (EH_IOS && !APP_INSTALADO) document.getElementById('btn-instalar').classList.remove('hidden');
+async function instalarApp(){
+  if (_instalador){ _instalador.prompt(); try{ await _instalador.userChoice; }catch(e){} _instalador = null; return; }
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.8);display:flex;align-items:flex-end;justify-content:center;padding:16px';
+  ov.innerHTML = `<div style="background:#0d1322;border:1px solid rgba(245,197,24,.45);border-radius:18px;padding:20px 22px;max-width:420px;width:100%;color:#e2e8f0;font:14.5px/1.6 Inter,system-ui,sans-serif">
+    <div style="font-weight:800;font-size:17px;color:#F5C518;margin-bottom:10px">📲 Instalar no celular</div>
+    ${EH_IOS ? `<b>iPhone (Safari):</b><br>1. Toque em <b>Compartilhar</b> <span style="font-size:18px">⎋</span> (quadrado com seta, embaixo da tela)<br>2. Role e toque em <b>“Adicionar à Tela de Início”</b><br>3. Toque em <b>Adicionar</b>`
+      : `<b>Android (Chrome):</b><br>1. Toque nos <b>três pontinhos ⋮</b> no canto de cima<br>2. Toque em <b>“Instalar app”</b> ou <b>“Adicionar à tela inicial”</b><br>3. Confirme em <b>Instalar</b>`}
+    <div style="margin-top:10px;color:#94a3b8;font-size:13px">O ícone aparece junto dos outros aplicativos e abre em tela cheia, sem a barra do navegador.</div>
+    <button style="margin-top:16px;width:100%;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:12px;font:800 15px Inter,system-ui,sans-serif;color:#141414;cursor:pointer">Entendi</button></div>`;
+  ov.onclick = (e) => { if (e.target === ov || e.target.tagName === 'BUTTON') ov.remove(); };
+  document.body.appendChild(ov);
 }
 
 carregar();
