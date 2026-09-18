@@ -1429,6 +1429,21 @@ async function nfBuscaCNPJ(){
     if (d.razao_social && !$('nf-f-forn').value.trim()){ $('nf-f-forn').value = d.nome_fantasia ? `${d.razao_social} (${d.nome_fantasia})` : d.razao_social; $('nf-f-forn').classList.add('ocr'); } }catch(e){}
 }
 
+// Sobe o PDF/foto/XML da nota sem travar a tela; avisa se tentar fechar a página no meio.
+let NF_ENVIANDO = 0;
+window.addEventListener('beforeunload', e => { if (NF_ENVIANDO){ e.preventDefault(); e.returnValue = ''; } });
+async function nfEnviarArquivo(id, arquivo){
+  NF_ENVIANDO++;
+  try{
+    const fd = new FormData(); fd.append('id', id); fd.append('file', arquivo, arquivo.name);
+    const r = await fetch(API_BASE + '/api/garagem/nf/arquivo', { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token }, body: fd });
+    if (!r.ok){ const e = await r.json().catch(() => ({})); toast('⚠️ Nota lançada, mas o arquivo não subiu: ' + (e.detail || e.error || r.status) + '. Abra a nota e anexe de novo.', true); return; }
+    toast('📎 Arquivo da nota guardado no Drive.');
+    if (!$('mov')) carregar(true); // mostra o 📎 na lista (sem atrapalhar se houver janela aberta)
+  }catch(e){ toast('⚠️ Nota lançada, mas o arquivo não subiu (' + e.message + '). Abra a nota e anexe de novo.', true); }
+  finally{ NF_ENVIANDO--; }
+}
+
 async function nfSalvar(){
   const val = id => $(id).value.trim();
   const itens = [...$('nf-itens').querySelectorAll('tr')].map(tr => ({ descricao: tr.querySelector('.d').value.trim(), qtd: Number(tr.querySelector('.q').value.replace(',', '.')) || 0, valor: moneyBR(tr.querySelector('.v').value || '0') })).filter(i => i.descricao);
@@ -1451,13 +1466,11 @@ async function nfSalvar(){
   try{
     ovl('Gravando a nota…');
     const d = await apiPost('/api/garagem/gestao/save', { op:'nf_salvar', nf, sanar, registrar_manutencao: $('nf-f-man') ? $('nf-f-man').checked : false, troca_oleo: oleo });
-    if (NFF.arquivo){
-      ovl('Guardando o arquivo da nota no Drive…');
-      const fd = new FormData(); fd.append('id', d.id); fd.append('file', NFF.arquivo, NFF.arquivo.name);
-      const r = await fetch(API_BASE + '/api/garagem/nf/arquivo', { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token }, body: fd });
-      if (!r.ok){ const e = await r.json().catch(() => ({})); toast('⚠️ Nota lançada, mas o arquivo não subiu: ' + (e.detail || e.error || r.status), true); }
-    }
-    fecharModal(); toast(NFF.editId ? '✅ Nota atualizada.' : `✅ Nota lançada${sanar.length ? ' e ' + sanar.length + ' alteração(ões) sanada(s)' : ''}.`);
+    // a nota já está gravada: o arquivo sobe para o Drive por trás, enquanto o painel atualiza
+    const arquivo = NFF.arquivo, editando = NFF.editId;
+    if (arquivo) nfEnviarArquivo(d.id, arquivo);
+    fecharModal(); toast(editando ? '✅ Nota atualizada.' : `✅ Nota lançada${sanar.length ? ' e ' + sanar.length + ' alteração(ões) sanada(s)' : ''}.${arquivo ? ' Enviando o arquivo…' : ''}`);
+    ovl('Atualizando o painel…');
     await carregar(true);
   }catch(e){ toast('⚠️ ' + e.message, true); }
   finally{ ovl(''); if ($('nf-ok')) $('nf-ok').disabled = false; }
