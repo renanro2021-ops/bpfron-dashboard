@@ -125,6 +125,13 @@ input.ocr,select.ocr,textarea.ocr{border-color:rgba(167,139,250,.7);background:r
 .rk-per{display:flex;gap:4px;background:#0b1220;border:1px solid var(--border);border-radius:999px;padding:3px}
 .rk-per button{background:none;border:0;color:var(--muted);font:700 12px Inter,sans-serif;padding:5px 12px;border-radius:999px;cursor:pointer}
 .rk-per button.on{background:var(--yellow);color:#111}
+.fonte-sel{display:flex;gap:6px}
+.fonte-sel button{flex:1;background:#0b1220;border:1px solid var(--border);color:var(--muted);font:800 13px Inter,sans-serif;padding:9px 8px;border-radius:10px;cursor:pointer}
+.fonte-sel button.on[data-f=PRIME]{background:rgba(167,139,250,.18);border-color:#a78bfa;color:#ddd6fe}
+.fonte-sel button.on[data-f=RECURSO]{background:rgba(52,211,153,.14);border-color:#34d399;color:#a7f3d0}
+.fonte-sel.falta button{border-color:rgba(248,113,113,.6)}
+.chip.pr{color:#ddd6fe;border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.12)}
+.chip.rc{color:#a7f3d0;border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.1)}
 .rk{display:grid;grid-template-columns:34px minmax(0,1.3fr) minmax(0,2fr) auto;gap:4px 14px;align-items:center;padding:9px 6px;border-top:1px solid var(--border);cursor:pointer}
 .rk:first-child{border-top:0}.rk:hover{background:rgba(245,197,24,.05)}
 .rk .pos{font:700 20px 'Rajdhani',sans-serif;color:var(--muted);text-align:center}
@@ -358,8 +365,10 @@ html,body{overflow-x:hidden}
         <div class="fg grow"><label>Buscar</label><input id="pe-q" placeholder="Item, descrição, viatura…" oninput="renderPend()"></div>
         <div class="fg"><label>Viatura</label><select id="pe-v" onchange="renderPend()"></select></div>
         <div class="fg"><label>Status</label><select id="pe-s" onchange="renderPend()"><option value="Aberta">Abertas</option><option value="Sanada">Sanadas</option><option value="">Todas</option></select></div>
+        <label class="chk" style="align-self:flex-end;margin-bottom:9px"><input type="checkbox" id="pe-inat" onchange="renderPend()"> Incluir devolvidas/baixadas</label>
         <button class="btn ed" onclick="novaPendencia()">➕ Nova alteração</button>
       </div>
+      <div id="pe-orfas"></div>
       <div class="plist" id="pend"></div>
     </section>
 
@@ -385,6 +394,7 @@ html,body{overflow-x:hidden}
         <div class="fg grow"><label>Buscar</label><input id="nf-q" placeholder="Fornecedor, nº, descrição…" oninput="renderNF()"></div>
         <div class="fg"><label>Viatura</label><select id="nf-v" onchange="renderNF()"></select></div>
         <div class="fg"><label>Tipo</label><select id="nf-t" onchange="renderNF()"></select></div>
+        <div class="fg"><label>Fonte pagadora</label><select id="nf-fo" onchange="renderNF()"><option value="">Todas</option><option>PRIME</option><option>RECURSO</option><option value="-">Não informada</option></select></div>
         <div class="fg"><label>De</label><input type="date" id="nf-de" onchange="renderNF()"></div>
         <div class="fg"><label>Até</label><input type="date" id="nf-ate" onchange="renderNF()"></div>
         <button class="btn gray" onclick="exportNF()">⬇️ CSV</button>
@@ -409,13 +419,15 @@ html,body{overflow-x:hidden}
     <section data-p="cad" class="hidden">
       <div class="sec" style="margin-top:0">🚓 Viaturas <button class="btn sm ed" style="margin-left:auto" onclick="editarViatura(-1)">➕ Nova viatura</button></div>
       <div class="tbl-wrap"><table class="t" id="cad-vtr"></table></div>
+      <div class="sec">↩️ Viaturas devolvidas</div>
+      <div class="tbl-wrap"><table class="t" id="cad-dev"></table></div>
       <div class="sec">👮 Motoristas <input id="mo-q" placeholder="Buscar nome ou RE" oninput="renderCad()" style="max-width:260px;margin-left:auto"><button class="btn sm ed" onclick="editarMotorista(-1)">➕ Novo</button></div>
       <div class="tbl-wrap"><table class="t" id="cad-mot"></table></div>
     </section>
 
     <!-- HISTÓRICO -->
     <section data-p="hist" class="hidden">
-      <div class="banner info">Tudo o que a gestão muda por esta página: alteração retirada, pendência aberta, nota fiscal, manutenção, cadastro e uso encerrado — com quem fez e quando. Fica na aba <b>HISTORICO</b> da planilha.</div>
+      <div class="banner info">Tudo o que a gestão muda por esta página: alteração retirada, pendência aberta, nota fiscal, manutenção, cadastro, devolução de viatura e uso encerrado — com quem fez e quando. Fica na aba <b>HISTORICO</b> da planilha.</div>
       <div class="tbl-wrap"><table class="t" id="hist-tbl"></table></div>
     </section>
   </div>
@@ -523,7 +535,7 @@ async function carregar(silencioso){
   VMAP = {}; D.viaturas.forEach((v, i) => { v._i = i; VMAP[v.prefixo] = v; });
   D.nfs.forEach(n => n._i = D.nfs.indexOf(n));
   preencherSelects();
-  $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta').length || '';
+  $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta' && pendDeFrota(p)).length || '';
   renderTudo();
   if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(innerWidth > 700 && (ab === null ? innerWidth > 1500 : ab === '1')); }
 }
@@ -714,7 +726,8 @@ function renderFrota(){
   $('frota').innerHTML = lista.map(v => {
     const o = oleoSit(v), u = v.ultimo;
     const chips = [];
-    if (!v.ativa) chips.push(`<span class="chip n">⛔ ${esc(v.status_geral || 'Fora de uso')}</span>`);
+    const dv = !v.ativa && devDe(v.prefixo);
+    if (!v.ativa) chips.push(`<span class="chip n">⛔ ${esc(v.status_geral || 'Fora de uso')}${dv ? ' → ' + esc(dv.destino) : ''}</span>`);
     else chips.push(v.em_uso ? `<span class="chip b">🔵 Em uso</span>` : `<span class="chip g">🟢 Na base</span>`);
     if (v.critico) chips.push('<span class="chip r">⚠️ Crítico</span>');
     if (v.itens_bloqueados.length) chips.push(`<span class="chip y">🔧 ${v.itens_bloqueados.length} alteração(ões)</span>`);
@@ -770,9 +783,10 @@ function abrirFicha(i){
   const san = D.pendencias.filter(p => p.prefixo === v.prefixo && p.status !== 'Aberta').slice(0, 6);
   const km30 = (kmRodado(diasAtras(30))[v.prefixo] || {}).km || 0;
   const totNF = nfs.reduce((a,n) => a + n.valor_total, 0);
-  const u = v.ultimo;
+  const u = v.ultimo, dv = devDe(v.prefixo);
   const corpo = `
-    <div class="chips" style="margin:-4px 0 14px">${v.em_uso ? `<span class="chip b">🔵 Em uso com ${esc(u.motorista)} desde ${fDH(u.data)}</span>` : '<span class="chip g">🟢 Na base</span>'}
+    ${dv && !v.ativa ? `<div class="banner warn">↩️ <b>Devolvida em ${fD(dv.data)} para ${esc(dv.destino)}</b>${dv.documento ? ` · ${esc(dv.documento)}` : ''}${dv.km ? ` · ${fN(dv.km)} km` : ''}<br><span style="font-size:12.5px">registrada por ${esc(dv.registrado_por)} em ${fDH(dv.registrado_em)}${dv.obs ? ' — ' + esc(dv.obs) : ''}</span></div>` : ''}
+    <div class="chips" style="margin:-4px 0 14px">${!v.ativa ? `<span class="chip n">⛔ Fora de uso</span>` : v.em_uso ? `<span class="chip b">🔵 Em uso com ${esc(u.motorista)} desde ${fDH(u.data)}</span>` : '<span class="chip g">🟢 Na base</span>'}
       ${v.critico ? '<span class="chip r">⚠️ Dano crítico</span>' : ''}<span class="chip n">${esc(v.status_geral || 'Ativa')}</span><span class="chip n">${esc(v.lotacao || '—')}</span></div>
     <div class="ficha-top">
       <div class="fbox"><div class="l">Km atual</div><div class="v">${v.km_atual ? fN(v.km_atual) : '—'}</div><div class="s">${v.total_checklists} checklists</div></div>
@@ -788,8 +802,8 @@ function abrirFicha(i){
       ${cks.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td>${esc(c.momento)}</td><td>${esc(c.motorista)}</td><td class="num">${c.km ? fN(c.km) : ''}${c.ciente_km === 'Sim' ? ' ⚠️' : ''}</td><td>${esc(c.local)}</td><td>${esc(c.itens.join(', '))}${c.condicao === 'Suja' ? ' 🟫' : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sem checklist.</td></tr>'}
     </tbody></table></div>
     <div class="sec">🧾 Notas fiscais</div>
-    <div class="tbl-wrap"><table class="t"><thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>
-      ${nfs.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td class="num">${fR(n.valor_total)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhuma nota lançada.</td></tr>'}
+    <div class="tbl-wrap"><table class="t"><thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Tipo</th><th>Fonte</th><th class="num">Valor</th></tr></thead><tbody>
+      ${nfs.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td>${fonteChip(n.fonte)}</td><td class="num">${fR(n.valor_total)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Nenhuma nota lançada.</td></tr>'}
     </tbody></table></div>
     ${mns.length ? `<div class="sec">🛠️ Manutenções</div><div class="tbl-wrap"><table class="t"><thead><tr><th>Data</th><th>Situação</th><th class="num">Km</th><th>Oficina/local</th><th>Obs.</th></tr></thead><tbody>
       ${mns.map(m => `<tr><td>${fD(m.data)}</td><td>${esc(m.situacao)}</td><td class="num">${m.km ? fN(m.km) : ''}</td><td>${esc(m.localidade)}</td><td>${esc(m.obs)}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
@@ -798,6 +812,7 @@ function abrirFicha(i){
     <button class="btn gray" onclick="novaPendencia('${esc(v.prefixo)}')">➕ Alteração</button>
     <button class="btn gray" onclick="novaManutencao('${esc(v.prefixo)}')">🛠️ Manutenção</button>
     <button class="btn gray" onclick="editarViatura(${i})">✏️ Editar</button>
+    ${v.ativa ? `<button class="btn gray" onclick="devolverViatura(${esc(JSON.stringify(v.prefixo))})">↩️ Devolver</button>` : `<button class="btn green" onclick="reativarViatura(${esc(JSON.stringify(v.prefixo))})">♻️ Reativar</button>`}
     <button class="btn-main" onclick="abrirNF(null,'${esc(v.prefixo)}')">🧾 Lançar nota</button>` : '<span class="muted">Modo consulta</span>';
   modal(`🚓 ${esc(v.prefixo)} <span class="muted" style="font:500 14px Inter">${esc(v.modelo)} · ${esc(v.placa)}</span>`, corpo, rod);
 }
@@ -844,11 +859,61 @@ function encerrarUso(i){
 }
 
 /* ── pendências ── */
+// viatura devolvida/baixada sai da lista de alterações (o histórico continua na planilha e na ficha)
+function pendDeFrota(p){ const v = VMAP[p.prefixo]; return !v || v.ativa; }
 function renderPend(){
   if (!D) return;
-  const q = norm($('pe-q').value), v = $('pe-v').value, s = $('pe-s').value;
-  const L = D.pendencias.filter(p => (!s || p.status === s) && (!v || p.prefixo === v) && (!q || norm([p.prefixo, p.itens.join(' '), p.descricao, p.aberta_por].join(' ')).includes(q)));
+  const q = norm($('pe-q').value), v = $('pe-v').value, s = $('pe-s').value, inat = $('pe-inat').checked;
+  const L = D.pendencias.filter(p => (inat || v === p.prefixo || pendDeFrota(p)) && (!s || p.status === s) && (!v || p.prefixo === v) && (!q || norm([p.prefixo, p.itens.join(' '), p.descricao, p.aberta_por].join(' ')).includes(q)));
   $('pend').innerHTML = L.slice(0, 300).map(p => pendHTML(p)).join('') || '<div class="empty">Nenhuma alteração com esse filtro. ✅</div>';
+  // prefixos com alteração aberta que não estão no cadastro de viaturas (vindos do AppSheet)
+  const orf = {}; D.pendencias.forEach(p => { if (p.status === 'Aberta' && !VMAP[p.prefixo]) orf[p.prefixo] = (orf[p.prefixo] || 0) + 1; });
+  const O = Object.entries(orf);
+  $('pe-orfas').innerHTML = O.length ? `<div class="banner warn"><b>⚠️ ${O.length === 1 ? 'Viatura' : O.length + ' viaturas'} com alteração aberta mas fora do cadastro.</b> Se ela ainda roda, cadastre; se já foi entregue, use <b>Devolver</b> e as alterações dela saem desta lista.
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">${O.map(([p,n]) => `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="color:#fff;min-width:130px">${esc(p)}</b><span>${n} alteração(ões) aberta(s)</span>
+      ${CAN ? `<span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm gray" onclick="editarViatura(-1, ${esc(JSON.stringify(p))})">➕ Cadastrar</button><button class="btn sm" onclick="devolverViatura(${esc(JSON.stringify(p))})">↩️ Devolver</button></span>` : ''}</div>`).join('')}</div></div>` : '';
+}
+
+/* ── devolução de viatura ── */
+function devDe(prefixo){ return (D.devolucoes || []).find(d => d.prefixo === prefixo && d.situacao === 'Devolvida'); }
+function devolverViatura(prefixo){
+  const v = VMAP[prefixo];
+  if (v && v.em_uso){
+    return modal('↩️ Devolver viatura', `<div style="font-size:14px;line-height:1.6">A <b style="color:#fff">${esc(prefixo)}</b> está <b>em uso</b> com ${esc(v.ultimo.motorista)} desde ${fDH(v.ultimo.data)}. Encerre o uso antes de registrar a devolução.</div>`,
+      `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" onclick="encerrarUso(${v._i})">🏁 Encerrar uso</button>`, true);
+  }
+  const abertas = D.pendencias.filter(p => p.prefixo === prefixo && p.status === 'Aberta').length;
+  const destinos = [...new Set((D.devolucoes || []).map(d => d.destino).filter(Boolean))];
+  modal('↩️ Devolver viatura', `
+    <div style="font-size:14px;line-height:1.6">Viatura <b style="color:#fff">${esc(prefixo)}</b>${v ? ` — ${esc(v.modelo)} · ${esc(v.placa)}` : ' <span class="chip o">fora do cadastro</span>'}</div>
+    <div class="grid" style="margin-top:12px">
+      <div class="fg"><label>Data da devolução <span class="req">*</span></label><input type="date" id="dv-d" value="${hojeISO()}"></div>
+      <div class="fg w2"><label>Devolvida para <span class="req">*</span></label><input id="dv-dest" maxlength="200" list="dl-dest" placeholder="Ex.: Locadora X, CRP II, SESDEC/GEMAT"><datalist id="dl-dest">${destinos.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+      <div class="fg w2"><label>Documento (ofício, termo, SEI)</label><input id="dv-doc" maxlength="120" placeholder="Ex.: Termo de devolução nº 12 · SEI 0021.000000/2026-00"></div>
+      <div class="fg"><label>Km na entrega</label><input id="dv-km" inputmode="numeric" value="${v && v.km_atual ? v.km_atual : ''}"></div>
+      ${v ? '' : `<div class="fg"><label>Placa</label><input id="dv-pl" maxlength="30"></div><div class="fg w2"><label>Modelo</label><input id="dv-mo" maxlength="40"></div>`}
+      <div class="fg wall"><label>Observação</label><textarea id="dv-o" maxlength="1000" placeholder="Estado em que foi entregue, quem recebeu…"></textarea></div>
+    </div>
+    <div class="hint" style="margin-top:10px">A viatura fica com status <b>Devolvida</b>: sai da lista do motorista, da frota ativa e da aba Alterações${abertas ? ` (as <b>${abertas}</b> alteração(ões) aberta(s) dela continuam guardadas na ficha)` : ''}. Nada é apagado — dá para desfazer com <b>♻️ Reativar</b>.${v ? '' : ' Como ela não está no cadastro, entra agora já como devolvida.'}</div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="dv-ok">↩️ Registrar devolução</button>`);
+  $('dv-ok').onclick = async () => {
+    const devolucao = { prefixo, data:$('dv-d').value, destino:$('dv-dest').value.trim(), documento:$('dv-doc').value.trim(), km:$('dv-km').value, obs:$('dv-o').value.trim(),
+      placa: $('dv-pl') ? $('dv-pl').value.trim() : '', modelo: $('dv-mo') ? $('dv-mo').value.trim() : '' };
+    if (!devolucao.data) return toast('⚠️ Informe a data da devolução.', true);
+    if (devolucao.destino.length < 2) return toast('⚠️ Informe para onde a viatura foi devolvida.', true);
+    try{ await salvar('viatura_devolver', { devolucao }, `↩️ ${prefixo} devolvida para ${devolucao.destino}.`); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+function reativarViatura(prefixo){
+  const dv = devDe(prefixo);
+  modal('♻️ Reativar viatura', `<div style="font-size:14px;line-height:1.6">A <b style="color:#fff">${esc(prefixo)}</b> volta para a frota ativa${dv ? ` e a devolução para <b>${esc(dv.destino)}</b> (${fD(dv.data)}) fica marcada como desfeita` : ''}.</div>
+    <div class="fg" style="margin-top:12px"><label>Motivo (opcional)</label><input id="ra-m" maxlength="300" placeholder="Ex.: viatura voltou da locadora; devolução lançada por engano"></div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="ra-ok">♻️ Reativar</button>`, true);
+  $('ra-ok').onclick = async () => {
+    try{ await salvar('viatura_reativar', { prefixo, motivo:$('ra-m').value.trim() }, `♻️ ${prefixo} reativada.`); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
 }
 
 /* ── checklists ── */
@@ -886,8 +951,8 @@ function exportCheck(){
 
 /* ── notas fiscais (lista) ── */
 function filtraNF(){
-  const q = norm($('nf-q').value), v = $('nf-v').value, t = $('nf-t').value, de = $('nf-de').value, ate = $('nf-ate').value;
-  return D.nfs.filter(n => (!v || n.prefixo === v) && (!t || n.tipo === t) && (!de || n.data_emissao >= de) && (!ate || n.data_emissao <= ate)
+  const q = norm($('nf-q').value), v = $('nf-v').value, t = $('nf-t').value, de = $('nf-de').value, ate = $('nf-ate').value, fo = $('nf-fo').value;
+  return D.nfs.filter(n => (!v || n.prefixo === v) && (!t || n.tipo === t) && (!fo || (fo === '-' ? !n.fonte : n.fonte === fo)) && (!de || n.data_emissao >= de) && (!ate || n.data_emissao <= ate)
     && (!q || norm([n.fornecedor, n.numero, n.descricao, n.cnpj, n.prefixo, n.itens.map(i => i.descricao).join(' ')].join(' ')).includes(q)));
 }
 function renderNF(){
@@ -898,20 +963,26 @@ function renderNF(){
   const gMes = D.nfs.filter(n => n.data_emissao.startsWith(mes)).reduce((a,n) => a + n.valor_total, 0);
   const porTipo = {}; D.nfs.filter(n => n.data_emissao.startsWith(ano)).forEach(n => porTipo[n.tipo || 'Outros'] = (porTipo[n.tipo || 'Outros']||0) + n.valor_total);
   const topTipo = Object.entries(porTipo).sort((a,b) => b[1]-a[1])[0];
+  const doAno = D.nfs.filter(n => n.data_emissao.startsWith(ano));
+  const fAno = f => doAno.filter(n => n.fonte === f).reduce((a,n) => a + n.valor_total, 0);
+  const semFonte = doAno.filter(n => !n.fonte).length;
   $('nf-kpis').innerHTML = [
-    { l:'Gasto no ano', v:fR(gAno), s:`${D.nfs.filter(n => n.data_emissao.startsWith(ano)).length} notas`, c:'#34d399' },
+    { l:'Gasto no ano', v:fR(gAno), s:`${doAno.length} notas`, c:'#F5C518' },
+    { l:'💳 Pago pela PRIME', v:fR(fAno('PRIME')), s:`no ano · ${gAno ? Math.round(fAno('PRIME') / gAno * 100) : 0}% do gasto`, c:'#a78bfa', fo:'PRIME' },
+    { l:'🏛️ Pago com RECURSO', v:fR(fAno('RECURSO')), s:`no ano · ${gAno ? Math.round(fAno('RECURSO') / gAno * 100) : 0}% do gasto${semFonte ? ` · ${semFonte} sem fonte` : ''}`, c:'#34d399', fo:'RECURSO' },
     { l:'Gasto no mês', v:fR(gMes), s:'mês corrente', c:'#60a5fa' },
     { l:'Filtro atual', v:fR(tot), s:`${L.length} notas · média ${fR(L.length ? tot / L.length : 0)}`, c:'#F5C518' },
     { l:'Maior categoria no ano', v:topTipo ? esc(topTipo[0]) : '—', s:topTipo ? fR(topTipo[1]) : '', c:'#a78bfa' },
-  ].map(k => `<div class="kpi" style="--c:${k.c}"><div class="l">${k.l}</div><div class="v" style="font-size:24px">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
-  $('nf-tbl').innerHTML = `<thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Viatura</th><th>Tipo</th><th class="num">Km</th><th>Descrição</th><th class="num">Valor</th><th></th></tr></thead><tbody>
-    ${L.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td><b>${esc(n.prefixo)}</b></td><td>${esc(n.tipo)}</td>
-      <td class="num">${n.km ? fN(n.km) : ''}</td><td style="max-width:320px">${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0,120))}</td><td class="num"><b>${fR(n.valor_total)}</b></td><td>${n.tem_arquivo ? '📎' : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Nenhuma nota fiscal lançada ainda. Clique em <b>🧾 Lançar nota fiscal</b>.</td></tr>'}
-    </tbody>${L.length ? `<tfoot><tr><td colspan="7">Total (${L.length})</td><td class="num">${fR(tot)}</td><td></td></tr></tfoot>` : ''}`;
+  ].map((k,i) => `<div class="kpi ${k.fo ? 'click' : ''}" style="--c:${k.c}" ${k.fo ? `onclick="$('nf-fo').value='${k.fo}';renderNF()" title="Filtrar só ${k.fo}"` : ''}><div class="l">${k.l}</div><div class="v" style="font-size:24px">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
+  const tPr = L.filter(n => n.fonte === 'PRIME').reduce((a,n) => a + n.valor_total, 0), tRc = L.filter(n => n.fonte === 'RECURSO').reduce((a,n) => a + n.valor_total, 0);
+  $('nf-tbl').innerHTML = `<thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Viatura</th><th>Tipo</th><th>Fonte</th><th class="num">Km</th><th>Descrição</th><th class="num">Valor</th><th></th></tr></thead><tbody>
+    ${L.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td><b>${esc(n.prefixo)}</b></td><td>${esc(n.tipo)}</td><td>${fonteChip(n.fonte)}</td>
+      <td class="num">${n.km ? fN(n.km) : ''}</td><td style="max-width:320px">${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0,120))}</td><td class="num"><b>${fR(n.valor_total)}</b></td><td>${n.tem_arquivo ? '📎' : ''}</td></tr>`).join('') || '<tr><td colspan="10" class="empty">Nenhuma nota fiscal lançada ainda. Clique em <b>🧾 Lançar nota fiscal</b>.</td></tr>'}
+    </tbody>${L.length ? `<tfoot><tr><td colspan="8">Total (${L.length}) · PRIME ${fR(tPr)} · RECURSO ${fR(tRc)}${tot - tPr - tRc > 0.004 ? ` · sem fonte ${fR(tot - tPr - tRc)}` : ''}</td><td class="num">${fR(tot)}</td><td></td></tr></tfoot>` : ''}`;
 }
 function exportNF(){
-  baixarCSV('notas_fiscais_garagem.csv', [['Emissão','Número','Série','Chave','Fornecedor','CNPJ','Viatura','Placa','Km','Tipo','Descrição','Peças','Serviços','Total','Lançado por','Lançado em'],
-    ...filtraNF().map(n => [fD(n.data_emissao), n.numero, n.serie, n.chave, n.fornecedor, n.cnpj, n.prefixo, n.placa, n.km, n.tipo, n.descricao, String(n.valor_pecas).replace('.',','), String(n.valor_servicos).replace('.',','), String(n.valor_total).replace('.',','), n.lancado_por, fDH(n.lancado_em)])]);
+  baixarCSV('notas_fiscais_garagem.csv', [['Emissão','Número','Série','Chave','Fornecedor','CNPJ','Viatura','Placa','Km','Tipo','Fonte pagadora','Descrição','Peças','Serviços','Total','Lançado por','Lançado em'],
+    ...filtraNF().map(n => [fD(n.data_emissao), n.numero, n.serie, n.chave, n.fornecedor, n.cnpj, n.prefixo, n.placa, n.km, n.tipo, n.fonte, n.descricao, String(n.valor_pecas).replace('.',','), String(n.valor_servicos).replace('.',','), String(n.valor_total).replace('.',','), n.lancado_por, fDH(n.lancado_em)])]);
 }
 async function abrirArquivoNF(id){
   ovl('Abrindo o arquivo…');
@@ -924,7 +995,7 @@ async function abrirArquivoNF(id){
 function verNF(i){
   const n = D.nfs[i]; if (!n) return;
   const L = [['Emissão', fD(n.data_emissao)], ['Número / série', n.numero + (n.serie ? ' / ' + n.serie : '')], ['Fornecedor', n.fornecedor], ['CNPJ', fmtCNPJ(n.cnpj)], ['Chave de acesso', n.chave],
-    ['Viatura', n.prefixo + (n.placa ? ' · ' + n.placa : '')], ['Km', n.km ? fN(n.km) : ''], ['Tipo', n.tipo], ['Descrição', n.descricao],
+    ['Viatura', n.prefixo + (n.placa ? ' · ' + n.placa : '')], ['Km', n.km ? fN(n.km) : ''], ['Tipo', n.tipo], ['Fonte pagadora', n.fonte || 'não informada'], ['Descrição', n.descricao],
     ['Peças / Serviços', fR(n.valor_pecas) + ' / ' + fR(n.valor_servicos)], ['Valor total', fR(n.valor_total)], ['Alterações sanadas', n.pendencias_sanadas.join('\n')], ['Obs.', n.obs], ['Lançada por', n.lancado_por + ' em ' + fDH(n.lancado_em)]];
   const itens = n.itens.length ? `<div class="sec">Itens</div><div class="tbl-wrap"><table class="t"><thead><tr><th>Descrição</th><th class="num">Qtd</th><th class="num">Valor</th></tr></thead><tbody>${n.itens.map(x => `<tr><td>${esc(x.descricao)}</td><td class="num">${x.qtd || ''}</td><td class="num">${fR(x.valor)}</td></tr>`).join('')}</tbody></table></div>` : '';
   modal('🧾 Nota fiscal ' + esc(n.numero || ''), `<table class="t">${L.filter(x => x[1]).map(([k,v]) => `<tr><td class="muted" style="width:170px">${k}</td><td style="white-space:pre-line">${esc(v)}</td></tr>`).join('')}</table>${itens}`,
@@ -972,26 +1043,30 @@ function novaManutencao(prefixo, oleo){
 function renderCad(){
   if (!D) return;
   $('cad-vtr').innerHTML = `<thead><tr><th>Prefixo</th><th>Placa</th><th>Modelo</th><th>Ano</th><th>Lotação</th><th>Status</th><th class="num">Troca de óleo a cada</th><th class="num">Última troca</th><th></th></tr></thead><tbody>
-    ${D.viaturas.map(v => `<tr><td><b>${esc(v.prefixo)}</b></td><td>${esc(v.placa)}</td><td>${esc(v.modelo)}</td><td>${esc(v.ano)}</td><td>${esc(v.lotacao)}</td><td>${v.ativa ? esc(v.status_geral || 'Ativa') : `<span class="chip n">${esc(v.status_geral)}</span>`}</td>
-      <td class="num">${fN(v.intervalo_oleo_km)} km</td><td class="num">${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) : '—'}</td><td>${CAN ? `<button class="btn sm gray" onclick="editarViatura(${v._i})">✏️</button>` : ''}</td></tr>`).join('')}</tbody>`;
+    ${D.viaturas.map(v => { const dv = !v.ativa && devDe(v.prefixo); return `<tr><td><b>${esc(v.prefixo)}</b></td><td>${esc(v.placa)}</td><td>${esc(v.modelo)}</td><td>${esc(v.ano)}</td><td>${esc(v.lotacao)}</td><td>${v.ativa ? esc(v.status_geral || 'Ativa') : `<span class="chip n">${esc(v.status_geral)}</span>${dv ? `<br><span class="muted" style="font-size:12px">→ ${esc(dv.destino)} em ${fD(dv.data)}</span>` : ''}`}</td>
+      <td class="num">${fN(v.intervalo_oleo_km)} km</td><td class="num">${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) : '—'}</td><td style="white-space:nowrap">${CAN ? `<button class="btn sm gray" onclick="editarViatura(${v._i})" title="Editar">✏️</button> ${v.ativa ? `<button class="btn sm gray" onclick="devolverViatura(${esc(JSON.stringify(v.prefixo))})" title="Devolver viatura">↩️</button>` : `<button class="btn sm gray" onclick="reativarViatura(${esc(JSON.stringify(v.prefixo))})" title="Reativar">♻️</button>`}` : ''}</td></tr>`; }).join('')}</tbody>`;
+  const DV = D.devolucoes || [];
+  $('cad-dev').innerHTML = `<thead><tr><th>Data</th><th>Viatura</th><th>Devolvida para</th><th>Documento</th><th class="num">Km</th><th>Registrada por</th><th>Situação</th></tr></thead><tbody>
+    ${DV.map(d => `<tr><td>${fD(d.data)}</td><td><b>${esc(d.prefixo)}</b> <span class="muted">${esc(d.modelo)} ${esc(d.placa)}</span></td><td>${esc(d.destino)}</td><td>${esc(d.documento)}</td><td class="num">${d.km ? fN(d.km) : ''}</td><td>${esc(d.registrado_por)}</td>
+      <td>${d.situacao === 'Devolvida' ? '<span class="chip n">Devolvida</span>' : `<span class="muted" style="font-size:12px">${esc(d.situacao)}</span>`}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Nenhuma devolução registrada.</td></tr>'}</tbody>`;
   const q = norm($('mo-q').value);
   const M = D.motoristas.map((m,i) => ({ ...m, _i:i })).filter(m => !q || norm(m.re + ' ' + m.nome + ' ' + m.posto).includes(q));
   const usos = {}; D.checklists.forEach(c => usos[c.motorista_re] = (usos[c.motorista_re]||0) + 1);
   $('cad-mot').innerHTML = `<thead><tr><th>RE</th><th>Posto/grad.</th><th>Nome</th>${CAN ? '<th>Telefone</th><th>E-mail</th>' : ''}<th class="num">Checklists</th><th></th></tr></thead><tbody>
     ${M.map(m => `<tr><td>${esc(m.re)}</td><td>${esc(m.posto)}</td><td>${esc(m.nome)}</td>${CAN ? `<td>${esc(m.telefone)}</td><td>${esc(m.email)}</td>` : ''}<td class="num">${usos[m.re] || 0}</td><td>${CAN ? `<button class="btn sm gray" onclick="editarMotorista(${m._i})">✏️</button>` : ''}</td></tr>`).join('')}</tbody>`;
 }
-function editarViatura(i){
-  const nova = i < 0, v = nova ? { prefixo:'', placa:'', modelo:'', ano:'', lotacao:'', status_geral:'Ativa', intervalo_oleo_km:10000, km_ultima_troca_oleo:'' } : D.viaturas[i];
+function editarViatura(i, prefixoNovo){
+  const nova = i < 0, v = nova ? { prefixo:prefixoNovo || '', placa:'', modelo:'', ano:'', lotacao:'', status_geral:'Ativa', intervalo_oleo_km:10000, km_ultima_troca_oleo:'' } : D.viaturas[i];
   modal(nova ? '➕ Nova viatura' : '✏️ ' + esc(v.prefixo), `<div class="grid">
     <div class="fg"><label>Prefixo <span class="req">*</span></label><input id="vf-p" value="${esc(v.prefixo)}" ${nova ? '' : 'readonly'}></div>
     <div class="fg"><label>Placa</label><input id="vf-pl" value="${esc(v.placa)}"></div>
     <div class="fg"><label>Modelo</label><input id="vf-m" value="${esc(v.modelo)}"></div>
     <div class="fg"><label>Ano</label><input id="vf-a" value="${esc(v.ano)}"></div>
     <div class="fg"><label>Lotação</label><input id="vf-l" value="${esc(v.lotacao)}" list="dl-lot"><datalist id="dl-lot"><option value="FROTA"><option value="LOCADA"></datalist></div>
-    <div class="fg"><label>Status</label><select id="vf-s">${['Ativa','Na oficina','Baixada','Devolvida'].map(s => `<option ${norm(s) === norm(v.status_geral) || (s === 'Ativa' && /ATIV/.test(norm(v.status_geral))) ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    <div class="fg"><label>Status</label><select id="vf-s">${['Ativa','Na oficina','Baixada'].concat(/DEVOLVID/.test(norm(v.status_geral)) ? ['Devolvida'] : []).map(s => `<option ${norm(s) === norm(v.status_geral) || (s === 'Ativa' && /ATIV/.test(norm(v.status_geral))) ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
     <div class="fg"><label>Troca de óleo a cada (km)</label><input id="vf-i" inputmode="numeric" value="${v.intervalo_oleo_km || 10000}"></div>
     <div class="fg"><label>Km da última troca</label><input id="vf-o" inputmode="numeric" value="${v.km_ultima_troca_oleo || ''}"></div></div>
-    <div class="hint" style="margin-top:10px">“Baixada” e “Devolvida” tiram a viatura da lista do motorista. O prefixo não muda depois de criado (ele amarra todo o histórico).</div>`,
+    <div class="hint" style="margin-top:10px">“Baixada” tira a viatura da lista do motorista. Para <b>devolver</b> (locadora, outra unidade), use o botão <b>↩️ Devolver</b> da ficha — ele guarda para onde ela foi. O prefixo não muda depois de criado (ele amarra todo o histórico).</div>`,
     `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="vf-ok">Salvar</button>`);
   $('vf-ok').onclick = async () => {
     const viatura = { prefixo:$('vf-p').value, placa:$('vf-pl').value, modelo:$('vf-m').value, ano:$('vf-a').value, lotacao:$('vf-l').value, status_geral:$('vf-s').value, intervalo_oleo_km:$('vf-i').value, km_ultima_troca_oleo:$('vf-o').value };
@@ -1055,6 +1130,8 @@ function abrirNF(idx, prefixo){
       <div class="fg"><label>Série</label><input id="nf-f-serie"></div>
       <div class="fg w2"><label>Chave de acesso (44 dígitos)</label><input id="nf-f-chave" inputmode="numeric"></div>
       <div class="fg"><label>Tipo de serviço</label><select id="nf-f-tipo">${D.tipos_nf.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="fg w2"><label>Fonte pagadora <span class="req">*</span></label><div class="fonte-sel" id="nf-f-fonte">
+        <button type="button" data-f="PRIME" onclick="nfFonte('PRIME')">💳 PRIME</button><button type="button" data-f="RECURSO" onclick="nfFonte('RECURSO')">🏛️ RECURSO</button></div></div>
       <div class="fg"><label>Valor peças (R$)</label><input id="nf-f-vp" inputmode="decimal"></div>
       <div class="fg"><label>Valor serviços (R$)</label><input id="nf-f-vs" inputmode="decimal"></div>
       <div class="fg"><label>Valor total (R$) <span class="req">*</span></label><input id="nf-f-vt" inputmode="decimal" style="font-weight:800"></div>
@@ -1074,7 +1151,7 @@ function abrirNF(idx, prefixo){
     const set = (id, v) => { $(id).value = v == null ? '' : v; };
     set('nf-f-placa', ed.placa); set('nf-f-km', ed.km || ''); set('nf-f-forn', ed.fornecedor); set('nf-f-cnpj', fmtCNPJ(ed.cnpj)); set('nf-f-data', ed.data_emissao);
     set('nf-f-num', ed.numero); set('nf-f-serie', ed.serie); set('nf-f-chave', ed.chave); set('nf-f-tipo', ed.tipo); set('nf-f-vp', nfMoeda(ed.valor_pecas)); set('nf-f-vs', nfMoeda(ed.valor_servicos));
-    set('nf-f-vt', nfMoeda(ed.valor_total)); set('nf-f-desc', ed.descricao); set('nf-f-obs', ed.obs);
+    set('nf-f-vt', nfMoeda(ed.valor_total)); set('nf-f-desc', ed.descricao); set('nf-f-obs', ed.obs); nfFonte(ed.fonte);
     ed.itens.forEach(i => nfItemAdd(i));
   } else {
     $('nf-f-data').value = hojeISO();
@@ -1089,6 +1166,13 @@ function abrirNF(idx, prefixo){
   $('nf-ok').onclick = nfSalvar;
 }
 function nfMoeda(v){ return v ? Number(v).toFixed(2).replace('.', ',') : ''; }
+// quem pagou: cartão de manutenção da Prime ou recurso do batalhão
+function nfFonte(f){
+  const box = $('nf-f-fonte'); if (!box) return;
+  box.dataset.v = f || ''; box.classList.remove('falta');
+  box.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+}
+function fonteChip(f){ return f === 'PRIME' ? '<span class="chip pr">💳 PRIME</span>' : f === 'RECURSO' ? '<span class="chip rc">🏛️ RECURSO</span>' : '<span class="muted" title="Nota lançada antes de existir o campo">—</span>'; }
 function nfItemAdd(it){
   const tr = document.createElement('tr');
   tr.innerHTML = `<td><input class="d" value="${esc(it && it.descricao || '')}"></td><td><input class="q" inputmode="decimal" value="${it && it.qtd ? String(it.qtd).replace('.',',') : ''}"></td><td><input class="v" inputmode="decimal" value="${it && it.valor ? nfMoeda(it.valor) : ''}"></td><td><button class="btn sm gray" onclick="this.closest('tr').remove()">✕</button></td>`;
@@ -1266,6 +1350,7 @@ function nfDoTexto(txt){
 function nfDoOSPrime(r, T, txt){
   const V = '(\\d{1,3}(?:\\.\\d{3})*,\\d{2})';
   const os = T.match(/\bOS N[°ºO]\s*(\d{1,9})/); if (os) r.numero = os[1];
+  r.fonte = 'PRIME'; // OS do cartão de manutenção: quem paga é a Prime
   const tot = (rot) => { const m = T.match(new RegExp(rot + ':\\s*R\\$\\s*' + V)); return m ? moneyBR(m[1]) : null; };
   const t = tot('TOTAIS[\\s\\S]{0,120}?\\bTOTAL'), mo = tot('M[AÃ]O DE OBRA'), pc = tot('PE[CÇ]AS');
   if (t != null) r.total = t; if (mo != null) r.servicos = mo; if (pc != null) r.pecas = pc;
@@ -1312,6 +1397,7 @@ function nfAplicar(r){
   if (/^\d{4}-\d{2}-\d{2}$/.test(r.data || '')) put('nf-f-data', r.data);
   put('nf-f-vt', nfMoeda(r.total)); put('nf-f-vp', nfMoeda(r.pecas)); put('nf-f-vs', nfMoeda(r.servicos));
   put('nf-f-placa', r.placa); put('nf-f-km', r.km);
+  if (r.fonte) nfFonte(r.fonte);
   if (r.desc) put('nf-f-desc', r.desc.slice(0, 3000));
   else if (r.itens && r.itens.length && !$('nf-f-desc').value) put('nf-f-desc', r.itens.map(i => i.descricao).join('; ').slice(0, 600));
   const achou = r.prefixoAchado || (r.placa && (D.viaturas.find(v => normK(v.placa).startsWith(normK(r.placa))) || {}).prefixo);
@@ -1335,8 +1421,9 @@ async function nfSalvar(){
   const itens = [...$('nf-itens').querySelectorAll('tr')].map(tr => ({ descricao: tr.querySelector('.d').value.trim(), qtd: Number(tr.querySelector('.q').value.replace(',', '.')) || 0, valor: moneyBR(tr.querySelector('.v').value || '0') })).filter(i => i.descricao);
   const nf = { id: NFF.editId, prefixo: val('nf-f-v'), placa: val('nf-f-placa'), km: val('nf-f-km'), fornecedor: val('nf-f-forn'), cnpj: val('nf-f-cnpj'), data_emissao: val('nf-f-data'),
     numero: val('nf-f-num'), serie: val('nf-f-serie'), chave: val('nf-f-chave'), tipo: val('nf-f-tipo'), valor_pecas: moneyBR(val('nf-f-vp') || '0'), valor_servicos: moneyBR(val('nf-f-vs') || '0'),
-    valor_total: moneyBR(val('nf-f-vt') || '0'), descricao: val('nf-f-desc'), obs: val('nf-f-obs'), itens };
+    valor_total: moneyBR(val('nf-f-vt') || '0'), descricao: val('nf-f-desc'), obs: val('nf-f-obs'), itens, fonte: $('nf-f-fonte').dataset.v || '' };
   if (!nf.prefixo) return toast('⚠️ Escolha a viatura.', true);
+  if (!nf.fonte){ $('nf-f-fonte').classList.add('falta'); $('nf-f-fonte').scrollIntoView({ block:'center', behavior:'smooth' }); return toast('⚠️ Escolha a fonte pagadora: PRIME ou RECURSO.', true); }
   if (!(nf.valor_total > 0)) return toast('⚠️ Informe o valor total.', true);
   if (!nf.data_emissao) return toast('⚠️ Informe a data de emissão.', true);
   const sanar = [];
