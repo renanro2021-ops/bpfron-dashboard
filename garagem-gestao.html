@@ -121,6 +121,19 @@ input.ocr,select.ocr,textarea.ocr{border-color:rgba(167,139,250,.7);background:r
 .chip.y{color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
 .chip.o{color:var(--orange);border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.1)}
 .chip.n{color:#cbd5e1;border-color:#334155;background:rgba(148,163,184,.08)}
+.rk-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.rk-per{display:flex;gap:4px;background:#0b1220;border:1px solid var(--border);border-radius:999px;padding:3px}
+.rk-per button{background:none;border:0;color:var(--muted);font:700 12px Inter,sans-serif;padding:5px 12px;border-radius:999px;cursor:pointer}
+.rk-per button.on{background:var(--yellow);color:#111}
+.rk{display:grid;grid-template-columns:34px minmax(0,1.3fr) minmax(0,2fr) auto;gap:4px 14px;align-items:center;padding:9px 6px;border-top:1px solid var(--border);cursor:pointer}
+.rk:first-child{border-top:0}.rk:hover{background:rgba(245,197,24,.05)}
+.rk .pos{font:700 20px 'Rajdhani',sans-serif;color:var(--muted);text-align:center}
+.rk.p1 .pos{color:#F5C518}.rk.p2 .pos{color:#cbd5e1}.rk.p3 .pos{color:#d97706}
+.rk .pf{font-weight:800;color:#fff}.rk .md{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk .val{font:700 18px 'Rajdhani',sans-serif;color:#fff;text-align:right;white-space:nowrap}
+.rk .val small{display:block;font:500 11.5px Inter,sans-serif;color:var(--muted)}
+.rk-foot{font-size:12px;color:var(--muted);margin-top:10px;text-align:right}
+@media (max-width:640px){.rk{grid-template-columns:28px minmax(0,1fr) auto}.rk .val{grid-row:1;grid-column:3}.rk .mid{grid-column:2/4}}
 .bar{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:4px}
 .bar>div{height:100%;border-radius:99px}
 
@@ -307,6 +320,15 @@ html,body{overflow-x:hidden}
           <div class="sec" style="margin-top:0">🔧 Alterações abertas por item</div>
           <div class="chart-box"><canvas id="ch-itens"></canvas></div>
         </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="rk-hd">
+          <div class="sec" style="margin:0;flex:1">🏆 Viaturas que mais gastam</div>
+          <div class="rk-per" id="rk-per">
+            <button data-p="mes">Mês</button><button data-p="12m" class="on">12 meses</button><button data-p="ano">Ano</button><button data-p="tudo">Tudo</button>
+          </div>
+        </div>
+        <div id="rk-gasto"></div>
       </div>
       <div class="charts" style="margin-top:14px">
         <div class="card chart-card"><h3>💰 Gasto com manutenção por mês (notas fiscais)</h3><div class="chart-box"><canvas id="ch-gasto-mes"></canvas></div></div>
@@ -618,6 +640,8 @@ function renderGeral(){
       <span class="act">${a.liberar && CAN ? `<button class="btn sm gray" onclick="encerrarUso(${a.v._i})">Encerrar uso</button>` : ''}${a.v ? `<button class="btn sm gray" onclick="abrirFicha(${a.v._i})">Ver</button>` : ''}</span></div>`).join('')
     : '<div class="empty">✅ Nada pendente de atenção agora.</div>';
 
+  renderRanking();
+
   // gráficos
   const cont = {}; at.forEach(v => v.itens_bloqueados.forEach(i => cont[i] = (cont[i]||0) + 1));
   const itensOrd = Object.entries(cont).sort((a,b) => b[1]-a[1]);
@@ -645,6 +669,32 @@ function renderGeral(){
   const km = Object.entries(kmRodado(diasAtras(30))).map(([p,e]) => [p, e.km]).filter(x => x[1] > 0).sort((a,b) => b[1]-a[1]);
   chart('ch-km', { type:'bar', data:{ labels:km.map(x => x[0]), datasets:[{ data:km.map(x => x[1]), backgroundColor:'#F5C518', borderRadius:5 }] },
     options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => fN(c.raw) + ' km' } } } } });
+}
+
+// ranking das viaturas que mais gastam (notas fiscais), com período escolhido nos botões
+let RK_PER = '12m';
+function renderRanking(){
+  const ano = hojeISO().slice(0,4), mes = hojeISO().slice(0,7);
+  const d0 = new Date(Date.now() - 4*3600e3); d0.setUTCDate(1);
+  const desde = { mes: mes + '-01', '12m': new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - 11, 1)).toISOString().slice(0,10), ano: ano + '-01-01', tudo: '' }[RK_PER];
+  const nomePer = { mes:'neste mês', '12m':'nos últimos 12 meses', ano:`em ${ano}`, tudo:'desde o início' }[RK_PER];
+  const R = {};
+  D.nfs.forEach(n => { if (desde && n.data_emissao < desde) return; const e = R[n.prefixo] || (R[n.prefixo] = { p:n.prefixo, v:0, q:0 }); e.v += n.valor_total; e.q++; });
+  const km = kmRodado(desde);
+  const L = Object.values(R).filter(e => e.v > 0).sort((a,b) => b.v - a.v);
+  const tot = L.reduce((a,e) => a + e.v, 0), max = L.length ? L[0].v : 1;
+  $('rk-per').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.p === RK_PER); b.onclick = () => { RK_PER = b.dataset.p; renderRanking(); }; });
+  if (!L.length){ $('rk-gasto').innerHTML = `<div class="empty">Nenhuma nota fiscal lançada ${nomePer}.</div>`; return; }
+  $('rk-gasto').innerHTML = L.slice(0, 10).map((e,i) => {
+    const v = VMAP[e.p], k = km[e.p] ? km[e.p].km : 0, pct = e.v / tot * 100;
+    return `<div class="rk ${i < 3 ? 'p' + (i+1) : ''}" ${v ? `onclick="abrirFicha(${v._i})" title="Abrir a ficha da viatura"` : ''}>
+      <div class="pos">${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1) + 'º'}</div>
+      <div><div class="pf">${esc(e.p)}</div><div class="md">${v ? esc(v.modelo) + ' · ' + esc(v.placa) : 'viatura fora do cadastro'}</div></div>
+      <div class="mid"><div class="md">${e.q} nota${e.q > 1 ? 's' : ''} · ${pct.toLocaleString('pt-BR',{ maximumFractionDigits:1 })}% do gasto${k ? ` · ${fR(e.v / k)}/km` : ''}</div>
+        <div class="bar"><div style="width:${(e.v / max * 100).toFixed(1)}%;background:${i === 0 ? '#f87171' : i < 3 ? '#fb923c' : '#60a5fa'}"></div></div></div>
+      <div class="val">${fR(e.v)}<small>${k ? fN(k) + ' km rodados' : '&nbsp;'}</small></div>
+    </div>`; }).join('')
+    + `<div class="rk-foot">${L.length} viatura(s) com gasto ${nomePer} · total ${fR(tot)}${L.length > 10 ? ' · mostrando as 10 que mais gastaram' : ''}</div>`;
 }
 
 /* ── frota ── */
