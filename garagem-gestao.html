@@ -1226,8 +1226,10 @@ function nfDoTexto(txt){
     const m = T.match(/N[UÚ]MERO DA (?:NOTA|NFS-?E)\D{0,15}(\d{1,9})/) || T.match(/NFS?-?E?\s*N[°ºO.]*\s*[:.]?\s*(\d[\d.]{0,10})/) || T.match(/\bN[°º]\s*[:.]?\s*(\d[\d.]{2,10})/);
     if (m) r.numero = String(+m[1].replace(/\./g,''));
   }
-  // data de emissão: a que vem depois de "EMISSÃO", senão a primeira da nota
-  const de = T.match(/EMISS[AÃ]O[^0-9]{0,40}(\d{2})[\/.-](\d{2})[\/.-](\d{4})/) || T.match(/(\d{2})[\/.-](\d{2})[\/.-](20\d{2})/);
+  // data de emissão: a que vem depois de "EMISSÃO"; em OS, a da aprovação/conclusão/entrada; senão a primeira da nota que não seja data de cadastro
+  const DT = '(\\d{2})[\\/.-](\\d{2})[\\/.-](20\\d{2})';
+  const de = T.match(new RegExp('EMISS[AÃ]O[^0-9]{0,40}' + DT)) || T.match(new RegExp('(?:APROVADA|FINALIZADA|CONCLUIDA|FECHADA|ENCERRADA) POR[^\\n]{0,120}? EM\\s+' + DT))
+    || T.match(new RegExp('ENTRADA EM\\s+' + DT)) || [...T.matchAll(new RegExp('(CADASTRO\\W{0,5})?' + DT, 'g'))].find(m => !m[1])?.slice(1);
   if (de) r.data = `${de[3]}-${de[2]}-${de[1]}`;
   // valores
   const V = '(\\d{1,3}(?:[.\\s]\\d{3})*,\\d{2})';
@@ -1239,10 +1241,11 @@ function nfDoTexto(txt){
   // fornecedor: linha do topo com cara de razão social
   const linhas = norm(txt).split('\n').map(l => l.trim()).filter(Boolean);
   const razao = linhas.slice(0, 18).find(l => /\b(LTDA|EIRELI|ME|EPP|S\/?A|MEI|COMERCIO|AUTO|MECANICA|PECAS|OFICINA|SERVICOS|PNEUS|CENTER|DISTRIBUIDORA)\b/.test(l) && !/POLICIA|ESTADO DE RONDONIA|DESTINAT|RECEBEMOS/.test(l) && l.length < 90);
-  if (razao) r.fornecedor = razao.replace(/^(RAZAO SOCIAL|NOME\/?RAZAO SOCIAL|EMITENTE|PRESTADOR DE SERVICOS?)[:\s]*/,'').trim();
+  if (razao) r.fornecedor = razao.replace(/^(RAZAO SOCIAL|NOME\/?RAZAO SOCIAL|EMITENTE|PRESTADOR DE SERVICOS?)[:\s]*/,'').replace(/^\d{5,}\s*-\s*/, '').trim();
   const pl = T.match(/\b([A-Z]{3})[- ]?(\d[A-Z0-9]\d{2})\b/g);
   if (pl){ for (const p of pl){ const k = normK(p); const v = D.viaturas.find(x => normK(x.placa).startsWith(k)); if (v){ r.placa = p; r.prefixoAchado = v.prefixo; break; } } if (!r.placa) r.placa = pl[0]; }
-  const km = T.match(/(?:\bKM|QUILOMETRAGEM|HODOMETRO|ODOMETRO)\s*(?:ATUAL)?\s*[:.=]?\s*(\d{1,3}(?:\.\d{3})+|\d{3,7})\b/); if (km) r.km = km[1].replace(/\./g,'');
+  const km = T.match(/(?:\bKM(?:\s*\/\s*HORIMETRO)?|QUILOMETRAGEM|HODOMETRO|ODOMETRO)\s*(?:ATUAL|\(OS\))?\s*[:.=]?\s*(\d{1,3}(?:\.\d{3})+|\d{3,7})\b/); if (km) r.km = km[1].replace(/\./g,'');
+  if (/PRIMEBENEFICIOS|ITENS \/ VALORES/.test(T) && /\bOS N[°ºO]/.test(T)) return nfDoOSPrime(r, T, txt);
   // itens: linha com texto + valor no fim (fora cabeçalho/rodapé de impostos)
   r.itens = linhas.map(l => {
     if (/TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|DINHEIRO|CARTAO|PIX|SUBTOTAL/.test(l)) return null;
@@ -1258,6 +1261,37 @@ function nfDoTexto(txt){
   return r;
 }
 
+// OS do cartão de manutenção (Prime Benefícios): a descrição do item quebra em várias linhas e os valores
+// vêm numa linha só de números (Qtde, Preço unit., Valor hora, Mão de obra, Duração, Garantia, Total).
+function nfDoOSPrime(r, T, txt){
+  const V = '(\\d{1,3}(?:\\.\\d{3})*,\\d{2})';
+  const os = T.match(/\bOS N[°ºO]\s*(\d{1,9})/); if (os) r.numero = os[1];
+  const tot = (rot) => { const m = T.match(new RegExp(rot + ':\\s*R\\$\\s*' + V)); return m ? moneyBR(m[1]) : null; };
+  const t = tot('TOTAIS[\\s\\S]{0,120}?\\bTOTAL'), mo = tot('M[AÃ]O DE OBRA'), pc = tot('PE[CÇ]AS');
+  if (t != null) r.total = t; if (mo != null) r.servicos = mo; if (pc != null) r.pecas = pc;
+  const L = T.split('\n').map(l => l.trim()), cru = txt.split('\n').map(l => l.trim());
+  const ini = L.findIndex(l => /\bGARANTIA\b/.test(l) && /\bTOTAL\b/.test(l));
+  r.itens = [];
+  if (ini >= 0){
+    let buf = [];
+    for (let i = ini + 1; i < L.length; i++){
+      const l = L[i];
+      if (/^(OBSERVACOES|TOTAIS)\b/.test(l)) break;
+      if (!l || /^R\$/.test(l) || new RegExp('^' + V + '$').test(l)) continue;
+      const m = l.match(new RegExp('^(\\d+(?:,\\d+)?)\\s+' + V + '.*\\s' + V + '$'));
+      if (m){
+        const desc = buf.join(' ').replace(/^\d{1,3}\s+/, '').replace(/^(MAO DE OBRA|PECAS?|PRODUTO|SERVICO)\s+/, '').replace(/\s+/g, ' ').trim();
+        if (desc) r.itens.push({ descricao: desc.slice(0, 120), qtd: Number(m[1].replace(',', '.')) || 1, valor: moneyBR(m[3]) });
+        buf = [];
+      } else buf.push(l);
+    }
+  }
+  // descrição: itens + observações da OS (trazem o ofício e o processo SEI)
+  const io = L.findIndex(l => /^OBSERVACOES\b/.test(l)), obs = [];
+  if (io >= 0) for (let i = io + 1; i < cru.length && !/^(TOTAIS|HISTORICO)\b|^\d{2}\/\d{2}\/\d{4},|^https?:/.test(L[i]); i++) if (cru[i]) obs.push(cru[i]);
+  r.desc = [r.itens.map(i => i.descricao).join('; '), obs.join(' ')].filter(Boolean).join('\n');
+  return r;
+}
 function nfTipo(t){
   const T = norm(t);
   if (/TROCA DE OLEO|OLEO (DO )?MOTOR|LUBRIFICANTE|FILTRO DE OLEO/.test(T)) return 'Troca de óleo';
