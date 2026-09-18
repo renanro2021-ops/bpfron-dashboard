@@ -199,6 +199,14 @@ textarea{min-height:92px;resize:vertical}
 
   <!-- 3. checklist -->
   <div id="s-form" class="hidden">
+    <div id="bloq-uso" class="card hidden" style="border-color:rgba(248,113,113,.6);background:rgba(60,10,14,.55);text-align:center">
+      <div style="font-size:44px;line-height:1">🚫</div>
+      <div style="font:700 22px 'Rajdhani',sans-serif;color:#fecaca;margin:6px 0 4px">VIATURA EM USO</div>
+      <div id="bloq-txt" style="font-size:14.5px;line-height:1.6;color:#fde2e2"></div>
+      <div class="hint" style="margin:12px 0 14px;color:#fca5a5">Não é possível dar <b>Início de uso</b> enquanto ela não for devolvida (Término de uso).</div>
+      <button class="btn-main" onclick="SEL=null;show('s-form',false);renderViaturas();$('s-vtr').scrollIntoView({behavior:'smooth'})">⬅ Escolher outra viatura</button>
+      <button class="btn gray" style="width:100%;margin-top:10px" onclick="F.devolvendo=true;abrirForm(false)">🏁 Estou devolvendo esta viatura (registrar Término)</button>
+    </div>
     <div class="card">
       <div class="step"><span class="n">3</span> Uso da viatura <span id="f-vtr" style="color:#fff;letter-spacing:.5px"></span></div>
       <div class="opts">
@@ -212,10 +220,10 @@ textarea{min-height:92px;resize:vertical}
       <div class="hint" id="km-hint"></div>
       <div id="km-aviso" class="aviso red hidden"></div>
       <div id="km-ciente" class="hidden" style="margin-top:10px">
-        <div style="font-size:13.5px;font-weight:700;color:#fecaca;margin-bottom:8px">Você conferiu e confirma que o km está correto? <span class="req" style="color:var(--err)">*</span></div>
+        <div id="ciente-txt" style="font-size:13.5px;color:#fecaca;margin-bottom:8px;line-height:1.5"></div>
         <div class="opts">
-          <button class="opt" id="ck-sim" onclick="setCiente('Sim')">Sim, está correto</button>
-          <button class="opt" id="ck-nao" onclick="setCiente('Não')">Não, vou corrigir</button>
+          <button class="opt" id="ck-sim" onclick="setCiente('Sim')">✅ Estou ciente e confirmo</button>
+          <button class="opt" id="ck-nao" onclick="setCiente('Não')">✏️ Vou corrigir o km</button>
         </div>
       </div>
 
@@ -408,6 +416,7 @@ function renderViaturas(){
 }
 function escolher(prefixo){
   SEL = APP.viaturas.find(v => v.prefixo === prefixo);
+  F.devolvendo = false; F.ciente = '';
   renderViaturas();
   abrirForm(true);
 }
@@ -422,6 +431,15 @@ function abrirForm(rolar){
   $('m-ini').disabled = emUso; $('m-fim').disabled = !emUso;
   F.momento = emUso ? 'Término de uso' : 'Início de uso';
   const u = SEL.ultimo;
+  // em uso por OUTRA pessoa: bloqueio em tela cheia; o formulário só aparece se ela disser que está devolvendo
+  const outro = emUso && !(EU && u.motorista_re === EU.re) && !F.devolvendo;
+  show('bloq-uso', outro);
+  [...$('s-form').children].forEach(c => { if (c.id !== 'bloq-uso') c.classList.toggle('hidden', outro); });
+  if (outro){
+    $('bloq-txt').innerHTML = `A <b>${esc(SEL.prefixo)}</b> está com <b>${esc(u.motorista)}</b><br>desde ${esc(fData(u.data))} (há ${esc(tempoDesde(u.data))})${u.km ? `<br>saiu com ${fN(u.km)} km` : ''}.`;
+    if (rolar) setTimeout(() => $('s-form').scrollIntoView({ behavior:'smooth', block:'start' }), 60);
+    return;
+  }
   $('momento-info').innerHTML = emUso
     ? `🔵 Viatura <b>em uso</b> desde ${esc(fData(u.data))} por <b>${esc(u.motorista)}</b>${u.km ? ` (saiu com ${fN(u.km)} km)` : ''}. Registre o <b>Término</b>.`
       + (u.motorista_re && EU && u.motorista_re !== EU.re ? '<br><span style="font-size:12.5px">Se foi outro policial que saiu com ela, tudo bem — o término fica no seu nome. Se a viatura já tinha sido devolvida e ninguém deu baixa, avise o gestor.</span>' : '')
@@ -448,17 +466,31 @@ function renderMomento(){
   $('m-ini').classList.toggle('on', F.momento === 'Início de uso');
   $('m-fim').classList.toggle('on', F.momento === 'Término de uso');
 }
+// Compara com o maior km já lançado (o do último checklist, na prática). Mesma regra do Worker:
+// km menor, ou Início mais de 1.000 km acima -> exige "estou ciente".
+function kmRef(){
+  const u = SEL && SEL.ultimo, max = (SEL && SEL.km_atual) || 0;
+  const doUltimo = u && u.km === max;
+  return { max, onde: doUltimo ? `do último checklist (${u.momento === 'Término de uso' ? 'término' : 'início'} em ${fData(u.data)}, ${fN(max)} km)` : `do maior km já registrado nesta viatura (${fN(max)} km)` };
+}
 function kmAviso(){
   const km = Number($('km').value.replace(/\D/g,'')) || 0;
-  const max = (SEL && SEL.km_atual) || 0;
+  const { max, onde } = kmRef();
   if (!km || !max) return '';
-  if (km < max) return `🔴⚠️ <b>ATENÇÃO!</b> O km informado (${fN(km)}) é <b>MENOR</b> que o maior km já registrado nesta viatura (${fN(max)} km). Odômetro provavelmente errado — confira!`;
-  if (F.momento === 'Início de uso' && km - max > 1000) return `🔴⚠️ <b>ATENÇÃO!</b> Diferença muito alta: <b>+${fN(km - max)} km</b> acima do maior km já registrado (${fN(max)} km). Confira o odômetro!`;
+  if (km < max) return `🔴⚠️ <b>ATENÇÃO!</b> O km informado (<b>${fN(km)}</b>) está <b>${fN(max - km)} km ABAIXO</b> ${onde}. O hodômetro não volta — confira o painel!`;
+  if (F.momento === 'Início de uso' && km - max > 1000) return `🔴⚠️ <b>ATENÇÃO!</b> Você está pegando a viatura com <b>${fN(km)} km</b>, uma diferença de <b>+${fN(km - max)} km</b> ${onde}. Alguém pode ter usado a viatura sem checklist — confira o painel!`;
   return '';
+}
+function cienteTexto(){
+  const km = Number($('km').value.replace(/\D/g,'')) || 0, { max } = kmRef(), dif = km - max;
+  return dif < 0
+    ? `Estou ciente de que estou registrando a viatura com <b>${fN(-dif)} km a menos</b> que o último checklist e confirmo que o valor está correto.`
+    : `Estou ciente de que estou pegando esta viatura com uma diferença de <b>+${fN(dif)} km</b> do último checklist e confirmo que o valor está correto.`;
 }
 function kmInput(){
   const a = kmAviso();
   $('km-aviso').innerHTML = a; show('km-aviso', !!a); show('km-ciente', !!a);
+  if (a) $('ciente-txt').innerHTML = cienteTexto() + ' <span style="color:var(--err)">*</span>';
   if (!a){ F.ciente = ''; }
   $('ck-sim').classList.toggle('on', F.ciente === 'Sim');
   $('ck-nao').classList.toggle('on', F.ciente === 'Não'); $('ck-nao').classList.toggle('red', F.ciente === 'Não');
@@ -539,7 +571,7 @@ function mostrarSucesso(b, d){
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 function novoChecklist(){
-  SEL = null; F.momento = ''; F.ciente = ''; F.cond = ''; F.itens = new Set();
+  SEL = null; F.momento = ''; F.ciente = ''; F.cond = ''; F.itens = new Set(); F.devolvendo = false;
   ['km','cmt','local','alt','just','busca'].forEach(id => $(id).value = '');
   $('aceite').checked = false; setCond(''); erroEnvio('');
   show('s-ok', false);
