@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão da Frota · Garagem BPFRON</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.12); --line:#1e293b; --card:rgba(12,17,30,0.9);
+  --ok:#34d399; --warn:#fbbf24; --err:#f87171; --blue:#60a5fa; --orange:#fb923c; --violet:#a78bfa;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%);background-attachment:fixed}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1480px;margin:0 auto;padding:10px clamp(16px,3vw,28px);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:42px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow)}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:14px;font-size:13px;flex-wrap:wrap}
+.hdr-right a{color:var(--muted);text-decoration:none}.hdr-right a:hover{color:var(--yellow)}
+#userchip{color:var(--yellow);font-weight:600}
+.tabs{max-width:1480px;margin:0 auto;padding:0 clamp(16px,3vw,28px);display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;border-bottom:3px solid transparent;color:var(--muted);font:700 13.5px 'Inter',sans-serif;padding:11px 14px 10px;cursor:pointer;white-space:nowrap}
+.tab:hover{color:#e2e8f0}
+.tab.on{color:var(--yellow);border-bottom-color:var(--yellow)}
+.tab .bdg{display:inline-block;min-width:18px;padding:0 5px;border-radius:99px;background:rgba(248,113,113,.2);color:#fecaca;font-size:11px;margin-left:5px;text-align:center}
+.wrap{max-width:1480px;margin:0 auto;padding:20px clamp(16px,3vw,28px) 70px}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(245,197,24,.25),transparent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
+.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+.btn{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:9px 15px;font:700 13.5px 'Inter',sans-serif;cursor:pointer;white-space:nowrap}
+.btn:hover{background:rgba(245,197,24,.24)} .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.gray{background:rgba(148,163,184,.1);border-color:#334155;color:#cbd5e1}
+.btn.red{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fca5a5}
+.btn.green{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.45);color:#6ee7b7}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
+.btn-main{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:11px 22px;color:#1a1a1a;font:800 14.5px 'Inter',sans-serif;cursor:pointer}
+.btn-main:disabled{opacity:.45;cursor:not-allowed}
+.fg{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fg label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg label .req{color:var(--err)}
+input,select,textarea{background:var(--bg);border:1px solid #273244;border-radius:9px;padding:9px 11px;color:#e2e8f0;font:14px 'Inter',sans-serif;outline:none;min-width:0;width:100%}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
+input.ocr,select.ocr,textarea.ocr{border-color:rgba(167,139,250,.7);background:rgba(167,139,250,.07)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.grid .w2{grid-column:span 2} .grid .wall{grid-column:1/-1}
+.hint{font-size:12px;color:var(--muted);line-height:1.45}
+.hidden{display:none!important}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.toolbar .fg{min-width:160px}
+.toolbar .grow{flex:1}
+.banner{border-radius:12px;padding:11px 15px;font-size:13.5px;margin-bottom:14px}
+.banner.info{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);color:#bfdbfe}
+.banner.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.4);color:#fde68a}
+
+/* login */
+#login-box{max-width:420px;margin:40px auto}
+#login-box form{display:flex;flex-direction:column;gap:12px}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;cursor:default}
+.kpi.click{cursor:pointer}.kpi.click:hover{border-color:rgba(245,197,24,.45)}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--yellow))}
+.kpi .l{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:700 30px 'Rajdhani',sans-serif;color:#fff;line-height:1.15;margin-top:4px}
+.kpi .s{font-size:12px;color:var(--muted)}
+
+.cols{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+@media (max-width:520px){.charts{grid-template-columns:1fr}}
+.chart-card h3{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:10px}
+.chart-box{position:relative;height:260px}
+
+/* alertas */
+.alerts{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+.al{display:flex;gap:10px;align-items:flex-start;border-radius:11px;padding:10px 12px;font-size:13px;border:1px solid}
+.al .ic{font-size:18px;line-height:1.2}
+.al b{color:#fff}
+.al .act{margin-left:auto;flex:none}
+.al.r{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.4)}
+.al.o{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.4)}
+.al.y{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.35)}
+.al.b{background:rgba(96,165,250,.07);border-color:rgba(96,165,250,.35)}
+
+/* frota */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.vc{background:var(--card);border:1px solid #1f2a3d;border-radius:14px;padding:14px 15px;cursor:pointer;transition:border-color .12s,transform .12s;position:relative}
+.vc:hover{border-color:rgba(245,197,24,.45);transform:translateY(-1px)}
+.vc.crit{border-color:rgba(248,113,113,.55);box-shadow:inset 0 0 0 1px rgba(248,113,113,.2)}
+.vc .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.vc .pf{font:700 19px 'Rajdhani',sans-serif;color:#fff}
+.vc .md{font-size:12px;color:var(--muted)}
+.vc .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:10px;font-size:12.5px}
+.vc .row2 span{color:var(--muted)} .vc .row2 b{color:#e2e8f0;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:700;border:1px solid;white-space:nowrap}
+.chip.g{color:var(--ok);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.chip.b{color:var(--blue);border-color:rgba(96,165,250,.45);background:rgba(96,165,250,.1)}
+.chip.r{color:#fecaca;border-color:rgba(248,113,113,.55);background:rgba(248,113,113,.14)}
+.chip.y{color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
+.chip.o{color:var(--orange);border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.1)}
+.chip.n{color:#cbd5e1;border-color:#334155;background:rgba(148,163,184,.08)}
+.bar{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:4px}
+.bar>div{height:100%;border-radius:99px}
+
+/* pendências */
+.plist{display:flex;flex-direction:column;gap:10px}
+.pc{background:var(--card);border:1px solid #1f2a3d;border-radius:14px;padding:13px 15px}
+.pc.crit{border-color:rgba(248,113,113,.5)}
+.pc.san{opacity:.75}
+.pc .h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pc .h .pf{font:700 17px 'Rajdhani',sans-serif;color:#fff;cursor:pointer}
+.pc .h .meta{font-size:12px;color:var(--muted)}
+.pc .h .acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.pc .d{white-space:pre-line;font-size:13px;color:#d1d5db;margin-top:8px;max-height:140px;overflow:auto}
+.it{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 6px 4px 11px;font-size:12.5px;font-weight:700;border:1px solid rgba(248,113,113,.5);background:rgba(248,113,113,.1);color:#fecaca;margin:8px 6px 0 0}
+.it.crit{background:rgba(248,113,113,.22);border-color:rgba(248,113,113,.8)}
+.it.ok{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.08);color:#a7f3d0;padding-right:11px}
+.it button{background:rgba(0,0,0,.35);border:none;color:#fff;border-radius:99px;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1}
+.it button:hover{background:#16a34a}
+
+/* tabela */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+table.t th{position:sticky;top:0;background:#0d1322;color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+table.t td{padding:8px 10px;border-bottom:1px solid #131b2b;vertical-align:top}
+table.t tr.cl{cursor:pointer} table.t tr.cl:hover td{background:rgba(245,197,24,.04)}
+table.t td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t tfoot td{font-weight:800;color:#fff;background:#0d1322}
+.pag{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* modal */
+.mov{position:fixed;inset:0;z-index:500;background:rgba(2,6,15,.78);display:flex;align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
+.mbox{background:#0b1020;border:1px solid rgba(245,197,24,.3);border-radius:18px;width:100%;max-width:980px;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.mbox.sm{max-width:520px}
+.mhead{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.mhead h2{font:700 21px 'Rajdhani',sans-serif;color:#fff}
+.mhead .x{margin-left:auto;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
+.mbody{padding:18px 20px}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.ficha-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.fbox{background:#0d1426;border:1px solid #1f2a3d;border-radius:11px;padding:10px 12px}
+.fbox .l{font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.fbox .v{font:700 19px 'Rajdhani',sans-serif;color:#fff}
+.fbox .s{font-size:11.5px;color:var(--muted)}
+
+/* NF */
+.drop{border:2px dashed #334155;border-radius:14px;padding:26px 18px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;font-size:14px;line-height:1.7}
+.drop:hover,.drop.over{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.05);color:#e2e8f0}
+.drop b{color:#fff;font-size:16px}
+.prog{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:10px}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,#a78bfa,#7c3aed);transition:width .2s}
+.ocr-tag{display:inline-block;font-size:10px;font-weight:800;color:#c4b5fd;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.4);border-radius:5px;padding:0 5px;margin-left:5px;letter-spacing:.3px}
+table.itens input{padding:6px 8px;font-size:13px}
+.sanar{display:flex;flex-direction:column;gap:8px}
+.sanar .pc{padding:10px 12px}
+.sanar label{display:inline-flex;align-items:center;gap:6px;margin:6px 10px 0 0;font-size:13px;cursor:pointer}
+.sanar input[type=checkbox]{width:17px;height:17px;accent-color:var(--ok)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--yellow)}
+details.raw summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin-top:12px}
+details.raw pre{white-space:pre-wrap;font-size:11.5px;color:#94a3b8;background:#060912;border:1px solid var(--line);border-radius:10px;padding:10px;max-height:240px;overflow:auto;margin-top:8px}
+
+/* balão lateral: viaturas em uso agora */
+#uso-btn{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:300;background:linear-gradient(180deg,#1d4ed8,#1e3a8a);border:1px solid rgba(147,197,253,.5);border-right:none;color:#fff;border-radius:14px 0 0 14px;padding:14px 9px;cursor:pointer;font:800 13px 'Inter',sans-serif;writing-mode:vertical-rl;box-shadow:-6px 0 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px}
+#uso-btn b{writing-mode:horizontal-tb;background:#fff;color:#1e3a8a;border-radius:99px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+#uso-pnl{position:fixed;right:14px;top:84px;bottom:14px;width:340px;z-index:301;background:rgba(9,14,28,.97);border:1px solid rgba(96,165,250,.45);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;transform:translateX(calc(100% + 30px));transition:transform .25s ease}
+#uso-pnl.open{transform:none}
+#uso-pnl .hd{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+#uso-pnl .hd h3{font:700 17px 'Rajdhani',sans-serif;color:#fff;letter-spacing:.3px}
+#uso-pnl .hd .x{margin-left:auto;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+#uso-pnl .sb{font-size:11.5px;color:var(--muted);padding:6px 16px 8px}
+#uso-list{overflow:auto;padding:0 12px 12px;flex:1}
+.ub{position:relative;background:#0d1426;border:1px solid rgba(96,165,250,.3);border-radius:13px;padding:11px 12px;margin-top:8px;cursor:pointer}
+.ub:hover{border-color:rgba(96,165,250,.7)}
+.ub.long{border-color:rgba(251,191,36,.55)}
+.ub .pf{font:700 16px 'Rajdhani',sans-serif;color:#fff}
+.ub .md{font-size:11.5px;color:var(--muted)}
+.ub .who{font-size:13px;color:#bfdbfe;font-weight:700;margin-top:5px}
+.ub .inf{font-size:12px;color:#cbd5e1;margin-top:3px;line-height:1.45}
+.ub .tm{position:absolute;right:11px;top:10px;text-align:right;font-size:10.5px;color:var(--muted)}
+.ub .tm b{display:block;font:700 15px 'Rajdhani',sans-serif;color:var(--blue)}
+.ub.long .tm b{color:var(--warn)}
+@media (max-width:700px){#uso-pnl{left:10px;right:10px;width:auto;top:70px}}
+@media print{#uso-btn,#uso-pnl{display:none!important}}
+#load-ovl{position:fixed;inset:0;z-index:9999;background:rgba(2,6,15,.8);display:none;align-items:center;justify-content:center;padding:16px}
+.load-card{background:var(--bg2);border:1px solid rgba(245,197,24,.35);border-radius:16px;padding:24px 26px;text-align:center;max-width:380px;width:100%}
+.spin{width:40px;height:40px;margin:0 auto 14px;border-radius:50%;border:3px solid rgba(245,197,24,.18);border-top-color:var(--yellow);animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;background:#0f1a2e;border:1px solid rgba(52,211,153,.5);color:#d1fae5;border-radius:12px;padding:11px 18px;font-weight:600;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:none;max-width:90vw}
+#toast.err{border-color:rgba(248,113,113,.6);color:#fecaca}
+@media print{.hdr,.tabs,.toolbar,.btn,.pag{display:none!important}body{background:#fff;color:#000}.card,.kpi{border-color:#ccc;background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Garagem <em>· Gestão da frota</em></div>
+        <div class="hdr-sub">Checklists, alterações, notas fiscais e manutenção das viaturas</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a href="garagem.html" target="_blank">📱 Checklist do motorista</a>
+      <a href="sistemas.html">⬅ Sistemas</a>
+      <span id="userchip"></span>
+      <a href="#" id="logout-link" onclick="apiLogout();return false" style="display:none">sair</a>
+    </div>
+  </div>
+  <nav class="tabs hidden" id="tabs">
+    <button class="tab on" data-t="geral">📊 Visão geral</button>
+    <button class="tab" data-t="frota">🚓 Frota</button>
+    <button class="tab" data-t="pend">🔧 Alterações <span class="bdg" id="bdg-pend"></span></button>
+    <button class="tab" data-t="check">📋 Checklists</button>
+    <button class="tab" data-t="nf">🧾 Notas fiscais</button>
+    <button class="tab" data-t="man">🛠️ Manutenção</button>
+    <button class="tab" data-t="cad">🗂️ Cadastros</button>
+    <button class="tab" data-t="hist">🕘 Histórico</button>
+  </nav>
+</div>
+
+<div class="wrap">
+  <div id="login-box" class="card hidden">
+    <div class="sec" style="margin-top:0">🔐 Gestão da frota</div>
+    <form onsubmit="return doLogin(event)">
+      <div class="fg"><label>Usuário</label><input id="l-user" autocomplete="username" required></div>
+      <div class="fg"><label>Senha</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+      <div id="l-erro" class="err" style="font-size:13px;min-height:18px"></div>
+      <button class="btn-main" id="l-btn" type="submit">Entrar</button>
+    </form>
+    <div class="hint" style="margin-top:12px">Mesmo login do dashboard. Para <b>editar</b> (retirar alterações, lançar nota, manutenção) o usuário precisa da permissão <b>“Garagem · Gestão da frota”</b> no Painel de Controle.</div>
+  </div>
+
+  <div id="carregando" class="card hidden" style="text-align:center"><div class="spin"></div><div class="muted">Carregando a frota…</div></div>
+  <div id="falha" class="card hidden"><div class="err" id="falha-msg" style="margin-bottom:12px"></div><button class="btn" onclick="carregar()">Tentar de novo</button></div>
+
+  <div id="app" class="hidden">
+    <div id="ro-banner" class="banner warn hidden">👁️ Você está vendo a Garagem em <b>modo consulta</b>. Para retirar alterações, lançar notas e editar cadastros, peça a permissão <b>“Garagem · Gestão da frota”</b> no Painel de Controle.</div>
+
+    <!-- VISÃO GERAL -->
+    <section data-p="geral">
+      <div class="kpis" id="kpis"></div>
+      <div class="cols" style="margin-top:14px">
+        <div class="card">
+          <div class="sec" style="margin-top:0">🚨 Precisa de atenção</div>
+          <div class="alerts" id="alertas"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="sec" style="margin-top:0">🔧 Alterações abertas por item</div>
+          <div class="chart-box"><canvas id="ch-itens"></canvas></div>
+        </div>
+      </div>
+      <div class="charts" style="margin-top:14px">
+        <div class="card chart-card"><h3>💰 Gasto com manutenção por mês (notas fiscais)</h3><div class="chart-box"><canvas id="ch-gasto-mes"></canvas></div></div>
+        <div class="card chart-card"><h3>🚓 Gasto por viatura — últimos 12 meses</h3><div class="chart-box"><canvas id="ch-gasto-vtr"></canvas></div></div>
+        <div class="card chart-card"><h3>📋 Checklists por dia — últimos 30 dias</h3><div class="chart-box"><canvas id="ch-check-dia"></canvas></div></div>
+        <div class="card chart-card"><h3>🧭 Km rodado por viatura — últimos 30 dias</h3><div class="chart-box"><canvas id="ch-km"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- FROTA -->
+    <section data-p="frota" class="hidden">
+      <div class="toolbar">
+        <div class="fg grow"><label>Buscar</label><input id="fr-q" placeholder="Prefixo, placa, modelo, motorista…" oninput="renderFrota()"></div>
+        <div class="fg"><label>Situação</label><select id="fr-s" onchange="renderFrota()">
+          <option value="">Todas</option><option value="uso">Em uso</option><option value="livre">Disponíveis</option>
+          <option value="pend">Com alteração</option><option value="crit">Dano crítico</option><option value="oleo">Óleo vencido/em breve</option><option value="inativa">Fora de uso</option>
+        </select></div>
+        <button class="btn ed" onclick="editarViatura(-1)">➕ Nova viatura</button>
+      </div>
+      <div class="fgrid" id="frota"></div>
+    </section>
+
+    <!-- PENDÊNCIAS -->
+    <section data-p="pend" class="hidden">
+      <div class="banner info">Clique no <b>✓</b> ao lado de um item para <b>retirar só aquela alteração</b> (ex.: o pneu foi trocado, mas o para-choque continua). <b>Sanar tudo</b> fecha a pendência inteira. Tudo fica registrado com seu login, data e hora. Ao lançar uma nota fiscal você também pode sanar as alterações que ela resolveu.</div>
+      <div class="toolbar">
+        <div class="fg grow"><label>Buscar</label><input id="pe-q" placeholder="Item, descrição, viatura…" oninput="renderPend()"></div>
+        <div class="fg"><label>Viatura</label><select id="pe-v" onchange="renderPend()"></select></div>
+        <div class="fg"><label>Status</label><select id="pe-s" onchange="renderPend()"><option value="Aberta">Abertas</option><option value="Sanada">Sanadas</option><option value="">Todas</option></select></div>
+        <button class="btn ed" onclick="novaPendencia()">➕ Nova alteração</button>
+      </div>
+      <div class="plist" id="pend"></div>
+    </section>
+
+    <!-- CHECKLISTS -->
+    <section data-p="check" class="hidden">
+      <div class="toolbar">
+        <div class="fg grow"><label>Buscar</label><input id="ck-q" placeholder="Motorista, comandante, local, texto…" oninput="PG.ck=0;renderCheck()"></div>
+        <div class="fg"><label>Viatura</label><select id="ck-v" onchange="PG.ck=0;renderCheck()"></select></div>
+        <div class="fg"><label>Momento</label><select id="ck-m" onchange="PG.ck=0;renderCheck()"><option value="">Todos</option><option>Início de uso</option><option>Término de uso</option></select></div>
+        <div class="fg"><label>De</label><input type="date" id="ck-de" onchange="PG.ck=0;renderCheck()"></div>
+        <div class="fg"><label>Até</label><input type="date" id="ck-ate" onchange="PG.ck=0;renderCheck()"></div>
+        <div class="fg"><label>Filtro</label><select id="ck-f" onchange="PG.ck=0;renderCheck()"><option value="">—</option><option value="alt">Com alteração</option><option value="suja">Viatura suja</option><option value="km">Km divergente</option></select></div>
+        <button class="btn gray" onclick="exportCheck()">⬇️ CSV</button>
+      </div>
+      <div class="tbl-wrap"><table class="t" id="ck-tbl"></table></div>
+      <div class="pag" id="ck-pag"></div>
+    </section>
+
+    <!-- NOTAS FISCAIS -->
+    <section data-p="nf" class="hidden">
+      <div class="kpis" id="nf-kpis" style="margin-bottom:14px"></div>
+      <div class="toolbar">
+        <div class="fg grow"><label>Buscar</label><input id="nf-q" placeholder="Fornecedor, nº, descrição…" oninput="renderNF()"></div>
+        <div class="fg"><label>Viatura</label><select id="nf-v" onchange="renderNF()"></select></div>
+        <div class="fg"><label>Tipo</label><select id="nf-t" onchange="renderNF()"></select></div>
+        <div class="fg"><label>De</label><input type="date" id="nf-de" onchange="renderNF()"></div>
+        <div class="fg"><label>Até</label><input type="date" id="nf-ate" onchange="renderNF()"></div>
+        <button class="btn gray" onclick="exportNF()">⬇️ CSV</button>
+        <button class="btn-main ed" onclick="abrirNF()">🧾 Lançar nota fiscal</button>
+      </div>
+      <div class="tbl-wrap"><table class="t" id="nf-tbl"></table></div>
+    </section>
+
+    <!-- MANUTENÇÃO -->
+    <section data-p="man" class="hidden">
+      <div class="toolbar">
+        <div class="fg grow"><label>Buscar</label><input id="mn-q" placeholder="Situação, oficina, observação…" oninput="renderMan()"></div>
+        <div class="fg"><label>Viatura</label><select id="mn-v" onchange="renderMan()"></select></div>
+        <button class="btn ed" onclick="novaManutencao()">🛠️ Registrar manutenção</button>
+      </div>
+      <div class="tbl-wrap"><table class="t" id="mn-tbl"></table></div>
+      <div class="sec">🛢️ Troca de óleo por viatura</div>
+      <div class="tbl-wrap"><table class="t" id="oleo-tbl"></table></div>
+    </section>
+
+    <!-- CADASTROS -->
+    <section data-p="cad" class="hidden">
+      <div class="sec" style="margin-top:0">🚓 Viaturas <button class="btn sm ed" style="margin-left:auto" onclick="editarViatura(-1)">➕ Nova viatura</button></div>
+      <div class="tbl-wrap"><table class="t" id="cad-vtr"></table></div>
+      <div class="sec">👮 Motoristas <input id="mo-q" placeholder="Buscar nome ou RE" oninput="renderCad()" style="max-width:260px;margin-left:auto"><button class="btn sm ed" onclick="editarMotorista(-1)">➕ Novo</button></div>
+      <div class="tbl-wrap"><table class="t" id="cad-mot"></table></div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section data-p="hist" class="hidden">
+      <div class="banner info">Tudo o que a gestão muda por esta página: alteração retirada, pendência aberta, nota fiscal, manutenção, cadastro e uso encerrado — com quem fez e quando. Fica na aba <b>HISTORICO</b> da planilha.</div>
+      <div class="tbl-wrap"><table class="t" id="hist-tbl"></table></div>
+    </section>
+  </div>
+</div>
+
+<button id="uso-btn" class="hidden" onclick="togUso()">🔵 Em uso agora <b id="uso-n">0</b></button>
+<aside id="uso-pnl" aria-label="Viaturas em uso agora">
+  <div class="hd"><span style="font-size:20px">🚓</span><h3>Em uso agora</h3><button class="x" onclick="togUso(false)" title="Fechar">×</button></div>
+  <div class="sb" id="uso-sb"></div>
+  <div id="uso-list"></div>
+</aside>
+<div id="load-ovl"><div class="load-card"><div class="spin"></div><div id="load-msg" style="font-weight:700;color:var(--yellow)"></div><div class="prog hidden" id="load-prog"><div></div></div></div></div>
+<div id="toast"></div>
+
+<script>
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const TESSERACT_JS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fR(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fN(v){ return (Number(v)||0).toLocaleString('pt-BR'); }
+function fD(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; }
+function fDH(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : ''; }
+function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase(); }
+function normK(s){ return norm(s).replace(/[^A-Z0-9]/g,''); }
+function show(id, on){ $(id).classList.toggle('hidden', !on); }
+function hojeISO(){ const d = new Date(Date.now() - 4*3600e3); return d.toISOString().slice(0,10); }
+function diasAtras(n){ return new Date(Date.now() - 4*3600e3 - n*864e5).toISOString().slice(0,10); }
+function diasDesde(iso){ if (!iso) return null; return Math.floor((Date.now() - 4*3600e3 - new Date(iso.slice(0,10) + 'T00:00:00Z').getTime()) / 864e5); }
+function ovl(msg, pct){ $('load-msg').textContent = msg || ''; $('load-ovl').style.display = msg ? 'flex' : 'none';
+  show('load-prog', pct != null); if (pct != null) $('load-prog').firstElementChild.style.width = Math.round(pct*100) + '%'; }
+let _toastT = 0;
+function toast(msg, erro){ const t = $('toast'); t.textContent = msg; t.className = erro ? 'err' : ''; t.style.display = 'block'; clearTimeout(_toastT); _toastT = setTimeout(() => t.style.display = 'none', erro ? 6000 : 3500); }
+function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('Não carregou ' + src)); document.head.appendChild(s); }); }
+
+async function apiFetchJSON(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+async function apiPost(path, body){
+  const r = await fetch(API_BASE + path, { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token, 'Content-Type':'application/json' }, body: JSON.stringify(body || {}) });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  return d;
+}
+async function salvar(op, dados, okMsg){
+  ovl('Gravando na planilha…');
+  try{ const d = await apiPost('/api/garagem/gestao/save', { op, ...dados }); toast(okMsg || '✅ Salvo.'); await carregar(true); return d; }
+  finally{ ovl(''); }
+}
+
+/* ── login ── */
+async function doLogin(ev){
+  ev.preventDefault();
+  const btn = $('l-btn'), erro = $('l-erro');
+  erro.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user:$('l-user').value.trim(), pass:$('l-pass').value }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login. Tente novamente.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('l-pass').value = '';
+    boot();
+  }catch(e){ erro.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally{ btn.disabled = false; btn.textContent = 'Entrar'; }
+  return false;
+}
+function apiLogout(){ AUTH.token = ''; AUTH.user = ''; D = null; boot(); }
+function boot(){
+  const logged = AUTH.logged, ps = permsSessao();
+  $('userchip').textContent = logged ? '👤 ' + ((ps && ps.nome) || AUTH.user) : '';
+  $('logout-link').style.display = logged ? '' : 'none';
+  show('login-box', !logged); show('app', false); show('tabs', false); show('uso-btn', false); $('uso-pnl').classList.remove('open');
+  if (logged) carregar();
+}
+
+/* ── dados ── */
+let D = null, VMAP = {}, CAN = false;
+const PG = { ck:0 };
+async function carregar(silencioso){
+  if (!silencioso){ show('carregando', true); show('falha', false); }
+  try{ D = await apiFetchJSON('/api/garagem/gestao'); }
+  catch(e){ show('carregando', false); if (!silencioso){ show('falha', true); $('falha-msg').textContent = '⚠️ ' + e.message; } else toast('⚠️ ' + e.message, true); return; }
+  show('carregando', false); show('app', true); show('tabs', true);
+  CAN = !!D.pode_editar;
+  show('ro-banner', !CAN);
+  document.querySelectorAll('.ed').forEach(el => el.classList.toggle('hidden', !CAN));
+  VMAP = {}; D.viaturas.forEach((v, i) => { v._i = i; VMAP[v.prefixo] = v; });
+  D.nfs.forEach(n => n._i = D.nfs.indexOf(n));
+  preencherSelects();
+  $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta').length || '';
+  renderTudo();
+  if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(ab === null ? innerWidth > 1500 : ab === '1'); }
+}
+function preencherSelects(){
+  const opts = '<option value="">Todas</option>' + D.viaturas.map(v => `<option value="${esc(v.prefixo)}">${esc(v.prefixo)} · ${esc(v.modelo)}</option>`).join('');
+  ['pe-v','ck-v','nf-v','mn-v'].forEach(id => { const s = $(id), a = s.value; s.innerHTML = opts; s.value = a; });
+  const t = $('nf-t'), ta = t.value; t.innerHTML = '<option value="">Todos</option>' + D.tipos_nf.map(x => `<option>${esc(x)}</option>`).join(''); t.value = ta;
+}
+/* ── balão lateral: quem está com cada viatura agora ── */
+function tempoDesde(iso){
+  const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); if (!m) return { txt:'', h:0 };
+  const min = Math.max(0, Math.round((Date.now() - Date.UTC(+m[1], +m[2]-1, +m[3], +m[4] + 4, +m[5])) / 60000));
+  const h = min / 60;
+  return { h, txt: min < 60 ? min + ' min' : h < 48 ? Math.floor(h) + ' h' : Math.floor(h / 24) + ' dias' };
+}
+function togUso(abrir){
+  const p = $('uso-pnl'), on = abrir === undefined ? !p.classList.contains('open') : abrir;
+  p.classList.toggle('open', on);
+  try{ localStorage.setItem('bp_gar_uso', on ? '1' : '0'); }catch(e){}
+}
+function renderUso(){
+  if (!D) return;
+  const L = D.viaturas.filter(v => v.ativa && v.em_uso).sort((a,b) => (a.ultimo.data < b.ultimo.data ? 1 : -1));
+  const livres = D.viaturas.filter(v => v.ativa && !v.em_uso).length;
+  show('uso-btn', true); $('uso-n').textContent = L.length;
+  $('uso-sb').textContent = `${L.length} em uso · ${livres} na base · atualizado ${String(D.agora || '').slice(11,16)}`;
+  $('uso-list').innerHTML = L.map(v => {
+    const u = v.ultimo, t = tempoDesde(u.data), longo = t.h >= 24;
+    return `<div class="ub ${longo ? 'long' : ''}" onclick="abrirFicha(${v._i})" title="Abrir a ficha da viatura">
+      <div class="tm">há<b>${t.txt}</b></div>
+      <div class="pf">${esc(v.prefixo)}</div><div class="md">${esc(v.modelo)} · ${esc(v.placa)}</div>
+      <div class="who">👮 ${esc(u.motorista)}</div>
+      <div class="inf">🕐 saiu ${fDH(u.data)}${u.km ? ' · ' + fN(u.km) + ' km' : ''}<br>📍 ${esc(u.local || '—')}${u.comandante ? '<br>⭐ Cmt: ' + esc(u.comandante) : ''}</div>
+      ${longo ? `<div class="inf" style="color:#fde68a;margin-top:6px">⏱️ Em uso há mais de 24 h${CAN ? ` — <a href="#" style="color:#fde68a" onclick="event.stopPropagation();encerrarUso(${v._i});return false">encerrar uso</a>` : ''}</div>` : ''}
+    </div>`;
+  }).join('') || '<div class="empty">Nenhuma viatura em uso agora — toda a frota está na base.</div>';
+}
+// atualiza sozinho a cada 2 min (sem atrapalhar quem está com um formulário aberto)
+setInterval(() => { if (D && AUTH.logged && !$('mov') && document.visibilityState === 'visible') carregar(true); }, 120000);
+
+function renderTudo(){ renderUso(); renderGeral(); renderFrota(); renderPend(); renderCheck(); renderNF(); renderMan(); renderCad(); renderHist(); }
+
+/* ── abas ── */
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => irAba(b.dataset.t));
+function irAba(t){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.querySelectorAll('section[data-p]').forEach(s => s.classList.toggle('hidden', s.dataset.p !== t));
+  try{ localStorage.setItem('bp_gar_aba', t); }catch(e){}
+  if (t === 'geral') renderGeral();
+}
+
+/* ── derivados ── */
+function oleoSit(v){
+  if (!v.km_ultima_troca_oleo) return { txt:'Sem dado', cls:'n', pct:0 };
+  if (v.km_para_troca == null) return { txt:'Sem km atual', cls:'n', pct:0 };
+  const usado = v.intervalo_oleo_km - v.km_para_troca, pct = Math.max(0, Math.min(1, usado / v.intervalo_oleo_km));
+  if (v.km_para_troca <= 0) return { txt:`Vencido há ${fN(-v.km_para_troca)} km`, cls:'r', pct:1 };
+  if (v.km_para_troca <= 1000) return { txt:`Faltam ${fN(v.km_para_troca)} km`, cls:'o', pct };
+  return { txt:`Faltam ${fN(v.km_para_troca)} km`, cls:'g', pct };
+}
+function gastoPorVtr(desdeISO){
+  const m = {}; D.nfs.forEach(n => { if (!desdeISO || n.data_emissao >= desdeISO) m[n.prefixo] = (m[n.prefixo]||0) + n.valor_total; }); return m;
+}
+// km rodado desde uma data: soma dos saltos positivos entre leituras consecutivas (igual ao Worker)
+function kmRodado(desdeISO){
+  const por = {};
+  D.checklists.slice().sort((a,b) => a.data < b.data ? -1 : 1).forEach(c => {
+    if (!c.km) return;
+    const e = por[c.prefixo] || (por[c.prefixo] = { ult:null, km:0 });
+    if (e.ult != null && c.data >= desdeISO){ const d = c.km - e.ult; if (d > 0 && d < 5000) e.km += d; }
+    e.ult = c.km;
+  });
+  return por;
+}
+
+/* ── visão geral ── */
+const CH = {};
+function chart(id, cfg){ if (CH[id]) CH[id].destroy(); CH[id] = new Chart($(id), cfg); }
+Chart.defaults.color = '#94a3b8'; Chart.defaults.borderColor = 'rgba(148,163,184,.12)'; Chart.defaults.font.family = 'Inter';
+function renderGeral(){
+  if (!D || $('kpis').closest('section').classList.contains('hidden')) return;
+  const at = D.viaturas.filter(v => v.ativa);
+  const uso = at.filter(v => v.em_uso), crit = at.filter(v => v.critico), comPend = at.filter(v => v.pendencias.length);
+  const oleoV = at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0), oleoB = at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000);
+  const mes = hojeISO().slice(0,7), ano = hojeISO().slice(0,4);
+  const gMes = D.nfs.filter(n => n.data_emissao.startsWith(mes)).reduce((a,n) => a + n.valor_total, 0);
+  const gAno = D.nfs.filter(n => n.data_emissao.startsWith(ano)).reduce((a,n) => a + n.valor_total, 0);
+  const hoje = hojeISO(), ckHoje = D.checklists.filter(c => c.data.startsWith(hoje)).length;
+  const km30 = Object.values(kmRodado(diasAtras(30))).reduce((a,e) => a + e.km, 0);
+  const itensAbertos = at.reduce((a,v) => a + v.itens_bloqueados.length, 0);
+  const K = [
+    { l:'Frota ativa', v:at.length, s:`${D.viaturas.length - at.length} fora de uso`, c:'#F5C518', go:['frota',''] },
+    { l:'Em uso agora', v:uso.length, s:`${at.length - uso.length} na base`, c:'#60a5fa', go:['frota','uso'] },
+    { l:'Com alteração', v:comPend.length, s:`${itensAbertos} itens abertos`, c:'#fbbf24', go:['pend'] },
+    { l:'Dano crítico', v:crit.length, s:'motor / transmissão', c:'#f87171', go:['frota','crit'] },
+    { l:'Óleo', v:oleoV.length + oleoB.length, s:`${oleoV.length} vencido · ${oleoB.length} em breve`, c:'#fb923c', go:['frota','oleo'] },
+    { l:'Checklists hoje', v:ckHoje, s:`${D.checklists.length} no total`, c:'#a78bfa', go:['check'] },
+    { l:'Km rodado (30 dias)', v:fN(km30), s:'toda a frota', c:'#34d399' },
+    { l:'Gasto no mês', v:fR(gMes), s:`${fR(gAno)} no ano`, c:'#34d399', go:['nf'] },
+  ];
+  $('kpis').innerHTML = K.map((k,i) => `<div class="kpi ${k.go ? 'click' : ''}" style="--c:${k.c}" data-k="${i}"><div class="l">${k.l}</div><div class="v">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
+  $('kpis').querySelectorAll('.kpi.click').forEach(el => el.onclick = () => { const g = K[+el.dataset.k].go; irAba(g[0]); if (g[0] === 'frota'){ $('fr-s').value = g[1]; renderFrota(); } });
+
+  // alertas
+  const A = [];
+  crit.forEach(v => { const p = v.pendencias.find(p => p.itens.some(i => D.criticos.includes(i))); A.push({ o:0, cls:'r', ic:'⚠️', t:`<b>${esc(v.prefixo)}</b> com <b>${esc(p.itens.filter(i => D.criticos.includes(i)).join(' e '))}</b> em aberto${p.data ? ` há ${diasDesde(p.data)} dia(s)` : ''}.`, v }); });
+  oleoV.forEach(v => A.push({ o:1, cls:'r', ic:'🛢️', t:`<b>${esc(v.prefixo)}</b>: troca de óleo <b>vencida há ${fN(-v.km_para_troca)} km</b> (última em ${fN(v.km_ultima_troca_oleo)} km).`, v }));
+  oleoB.forEach(v => A.push({ o:2, cls:'o', ic:'🛢️', t:`<b>${esc(v.prefixo)}</b>: faltam <b>${fN(v.km_para_troca)} km</b> para a troca de óleo.`, v }));
+  uso.forEach(v => { const d = diasDesde(v.ultimo.data); if (d >= 2) A.push({ o:3, cls:'y', ic:'⏱️', t:`<b>${esc(v.prefixo)}</b> em uso há <b>${d} dias</b> (${esc(v.ultimo.motorista)}). Esqueceram de dar o término?`, v, liberar:true }); });
+  D.checklists.filter(c => c.ciente_km === 'Sim' && diasDesde(c.data) <= 7).forEach(c => A.push({ o:4, cls:'y', ic:'🧭', t:`<b>${esc(c.prefixo)}</b>: km divergente confirmado por ${esc(c.motorista)} (${fN(c.km)} km) em ${fDH(c.data)}.`, v:VMAP[c.prefixo] }));
+  D.checklists.filter(c => c.condicao === 'Suja' && diasDesde(c.data) <= 3).forEach(c => A.push({ o:5, cls:'b', ic:'🟫', t:`<b>${esc(c.prefixo)}</b> registrada suja em ${fDH(c.data)}: ${esc(c.justificativa || '—')}`, v:VMAP[c.prefixo] }));
+  A.sort((a,b) => a.o - b.o);
+  $('alertas').innerHTML = A.length ? A.map((a,i) => `<div class="al ${a.cls}"><span class="ic">${a.ic}</span><span>${a.t}</span>
+      <span class="act">${a.liberar && CAN ? `<button class="btn sm gray" onclick="encerrarUso(${a.v._i})">Encerrar uso</button>` : ''}${a.v ? `<button class="btn sm gray" onclick="abrirFicha(${a.v._i})">Ver</button>` : ''}</span></div>`).join('')
+    : '<div class="empty">✅ Nada pendente de atenção agora.</div>';
+
+  // gráficos
+  const cont = {}; at.forEach(v => v.itens_bloqueados.forEach(i => cont[i] = (cont[i]||0) + 1));
+  const itensOrd = Object.entries(cont).sort((a,b) => b[1]-a[1]);
+  chart('ch-itens', { type:'bar', data:{ labels:itensOrd.map(x => x[0]), datasets:[{ data:itensOrd.map(x => x[1]), backgroundColor:itensOrd.map(x => D.criticos.includes(x[0]) ? '#f87171' : '#fbbf24'), borderRadius:5 }] },
+    options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ precision:0 } } } } });
+
+  const meses = []; const d0 = new Date(Date.now() - 4*3600e3); d0.setUTCDate(1);
+  for (let i = 11; i >= 0; i--){ const d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - i, 1)); meses.push(d.toISOString().slice(0,7)); }
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const gm = meses.map(m => D.nfs.filter(n => n.data_emissao.startsWith(m)).reduce((a,n) => a + n.valor_total, 0));
+  chart('ch-gasto-mes', { type:'bar', data:{ labels:meses.map(m => MES[+m.slice(5)-1] + '/' + m.slice(2,4)), datasets:[{ data:gm, backgroundColor:'#34d399', borderRadius:5 }] },
+    options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => fR(c.raw) } } }, scales:{ y:{ ticks:{ callback:v => 'R$ ' + fN(v) } } } } });
+
+  const gv = Object.entries(gastoPorVtr(meses[0] + '-01')).sort((a,b) => b[1]-a[1]).slice(0,12);
+  chart('ch-gasto-vtr', { type:'bar', data:{ labels:gv.map(x => x[0]), datasets:[{ data:gv.map(x => x[1]), backgroundColor:'#60a5fa', borderRadius:5 }] },
+    options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => fR(c.raw) } } }, scales:{ x:{ ticks:{ callback:v => 'R$ ' + fN(v) } } } } });
+
+  const dias = []; for (let i = 29; i >= 0; i--) dias.push(diasAtras(i));
+  const ini = dias.map(d => D.checklists.filter(c => c.data.startsWith(d) && c.momento === 'Início de uso').length);
+  const fim = dias.map(d => D.checklists.filter(c => c.data.startsWith(d) && c.momento === 'Término de uso').length);
+  chart('ch-check-dia', { type:'bar', data:{ labels:dias.map(d => d.slice(8) + '/' + d.slice(5,7)), datasets:[
+      { label:'Início', data:ini, backgroundColor:'#60a5fa', borderRadius:3 }, { label:'Término', data:fim, backgroundColor:'#a78bfa', borderRadius:3 }] },
+    options:{ maintainAspectRatio:false, scales:{ x:{ stacked:true }, y:{ stacked:true, ticks:{ precision:0 } } } } });
+
+  const km = Object.entries(kmRodado(diasAtras(30))).map(([p,e]) => [p, e.km]).filter(x => x[1] > 0).sort((a,b) => b[1]-a[1]);
+  chart('ch-km', { type:'bar', data:{ labels:km.map(x => x[0]), datasets:[{ data:km.map(x => x[1]), backgroundColor:'#F5C518', borderRadius:5 }] },
+    options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => fN(c.raw) + ' km' } } } } });
+}
+
+/* ── frota ── */
+function renderFrota(){
+  if (!D) return;
+  const q = norm($('fr-q').value), s = $('fr-s').value;
+  const g12 = gastoPorVtr(diasAtras(365));
+  const lista = D.viaturas.filter(v => {
+    if (q && !norm([v.prefixo, v.placa, v.modelo, v.lotacao, v.ultimo && v.ultimo.motorista].join(' ')).includes(q)) return false;
+    if (s === 'inativa') return !v.ativa;
+    if (s && !v.ativa) return false;
+    if (s === 'uso') return v.em_uso; if (s === 'livre') return !v.em_uso;
+    if (s === 'pend') return v.pendencias.length; if (s === 'crit') return v.critico;
+    if (s === 'oleo') return v.km_para_troca != null && v.km_para_troca <= 1000;
+    return true;
+  });
+  $('frota').innerHTML = lista.map(v => {
+    const o = oleoSit(v), u = v.ultimo;
+    const chips = [];
+    if (!v.ativa) chips.push(`<span class="chip n">⛔ ${esc(v.status_geral || 'Fora de uso')}</span>`);
+    else chips.push(v.em_uso ? `<span class="chip b">🔵 Em uso</span>` : `<span class="chip g">🟢 Na base</span>`);
+    if (v.critico) chips.push('<span class="chip r">⚠️ Crítico</span>');
+    if (v.itens_bloqueados.length) chips.push(`<span class="chip y">🔧 ${v.itens_bloqueados.length} alteração(ões)</span>`);
+    if (o.cls === 'r' || o.cls === 'o') chips.push(`<span class="chip ${o.cls}">🛢️ ${o.cls === 'r' ? 'Óleo vencido' : 'Óleo em breve'}</span>`);
+    const cor = { r:'#f87171', o:'#fb923c', g:'#34d399', n:'#334155' }[o.cls];
+    return `<div class="vc ${v.critico ? 'crit' : ''}" onclick="abrirFicha(${v._i})">
+      <div class="top"><div><div class="pf">${esc(v.prefixo)}</div><div class="md">${esc(v.modelo)} · ${esc(v.placa)}${v.lotacao ? ' · ' + esc(v.lotacao) : ''}</div></div></div>
+      <div class="chips">${chips.join('')}</div>
+      <div class="row2">
+        <div><span>Km atual</span><br><b>${v.km_atual ? fN(v.km_atual) : '—'}</b></div>
+        <div><span>Gasto 12m</span><br><b>${fR(g12[v.prefixo] || 0)}</b></div>
+        <div style="grid-column:1/-1"><span>Óleo · ${esc(o.txt)}</span><div class="bar"><div style="width:${Math.round(o.pct*100)}%;background:${cor}"></div></div></div>
+        <div style="grid-column:1/-1"><span>${u ? (v.em_uso ? 'Com' : 'Último uso') : ''}</span> <b>${u ? esc(u.motorista) + ' · ' + fDH(u.data) : 'Sem checklist'}</b></div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">Nenhuma viatura com esse filtro.</div>';
+}
+
+/* ── modal genérico ── */
+function modal(titulo, corpo, rodape, sm){
+  fecharModal();
+  const ov = document.createElement('div'); ov.className = 'mov'; ov.id = 'mov';
+  ov.innerHTML = `<div class="mbox ${sm ? 'sm' : ''}"><div class="mhead"><h2>${titulo}</h2><button class="x" onclick="fecharModal()">×</button></div><div class="mbody">${corpo}</div>${rodape ? `<div class="mfoot">${rodape}</div>` : ''}</div>`;
+  ov.addEventListener('mousedown', e => { if (e.target === ov) fecharModal(); });
+  document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+  return ov;
+}
+function fecharModal(){ const m = $('mov'); if (m){ m.remove(); document.body.style.overflow = ''; } }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('mov') && !$('load-ovl').style.display.includes('flex')) fecharModal(); });
+
+/* ── ficha da viatura ── */
+function pendHTML(p, compacto){
+  const ab = p.status === 'Aberta';
+  const itens = p.itens.map(i => ab
+    ? `<span class="it ${D.criticos.includes(i) ? 'crit' : ''}">${esc(i)}${CAN ? `<button title="Retirar esta alteração (resolvida)" onclick="retirar('${p.id}', ${JSON.stringify(i).replace(/"/g,'&quot;')})">✓</button>` : ''}</span>`
+    : `<span class="it ok">✓ ${esc(i)}</span>`).join('');
+  return `<div class="pc ${ab ? (p.itens.some(i => D.criticos.includes(i)) ? 'crit' : '') : 'san'}">
+    <div class="h">${compacto ? '' : `<span class="pf" onclick="abrirFicha(${(VMAP[p.prefixo]||{})._i ?? -1})">${esc(p.prefixo)}</span>`}
+      <span class="chip ${ab ? 'y' : 'g'}">${ab ? 'Aberta' : 'Sanada'}</span>
+      <span class="meta">aberta em ${fD(p.data_abertura) || p.data || '—'} por ${esc(p.aberta_por || '—')}${!ab ? ` · sanada em ${fD(p.data_sanada)} por ${esc(p.sanada_por)}` : ''}</span>
+      <span class="acts">${ab && CAN ? `<button class="btn sm green" onclick="retirar('${p.id}')">✅ Sanar tudo</button>` : ''}</span></div>
+    <div>${itens || '<span class="muted" style="font-size:12.5px">sem item marcado</span>'}</div>
+    ${p.descricao ? `<div class="d">${esc(p.descricao)}</div>` : ''}
+  </div>`;
+}
+function abrirFicha(i){
+  const v = D.viaturas[i]; if (!v) return;
+  const o = oleoSit(v);
+  const cks = D.checklists.filter(c => c.prefixo === v.prefixo).slice(0, 12);
+  const nfs = D.nfs.filter(n => n.prefixo === v.prefixo);
+  const mns = D.manutencoes.filter(m => m.prefixo === v.prefixo).slice(0, 10);
+  const pend = D.pendencias.filter(p => p.prefixo === v.prefixo && p.status === 'Aberta');
+  const san = D.pendencias.filter(p => p.prefixo === v.prefixo && p.status !== 'Aberta').slice(0, 6);
+  const km30 = (kmRodado(diasAtras(30))[v.prefixo] || {}).km || 0;
+  const totNF = nfs.reduce((a,n) => a + n.valor_total, 0);
+  const u = v.ultimo;
+  const corpo = `
+    <div class="chips" style="margin:-4px 0 14px">${v.em_uso ? `<span class="chip b">🔵 Em uso com ${esc(u.motorista)} desde ${fDH(u.data)}</span>` : '<span class="chip g">🟢 Na base</span>'}
+      ${v.critico ? '<span class="chip r">⚠️ Dano crítico</span>' : ''}<span class="chip n">${esc(v.status_geral || 'Ativa')}</span><span class="chip n">${esc(v.lotacao || '—')}</span></div>
+    <div class="ficha-top">
+      <div class="fbox"><div class="l">Km atual</div><div class="v">${v.km_atual ? fN(v.km_atual) : '—'}</div><div class="s">${v.total_checklists} checklists</div></div>
+      <div class="fbox"><div class="l">Km 30 dias</div><div class="v">${fN(km30)}</div></div>
+      <div class="fbox"><div class="l">Óleo</div><div class="v" style="color:${{r:'#fca5a5',o:'#fdba74',g:'#6ee7b7',n:'#cbd5e1'}[o.cls]}">${esc(o.txt)}</div><div class="s">última troca ${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) + ' km' : '—'} · a cada ${fN(v.intervalo_oleo_km)} km</div></div>
+      <div class="fbox"><div class="l">Gasto total (NF)</div><div class="v">${fR(totNF)}</div><div class="s">${nfs.length} nota(s)</div></div>
+    </div>
+    <div class="sec" style="margin-top:6px">🔧 Alterações abertas</div>
+    <div class="plist">${pend.map(p => pendHTML(p, true)).join('') || '<div class="muted">Nenhuma alteração aberta.</div>'}</div>
+    ${san.length ? `<details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:12.5px">Últimas sanadas (${san.length})</summary><div class="plist" style="margin-top:8px">${san.map(p => pendHTML(p, true)).join('')}</div></details>` : ''}
+    <div class="sec">📋 Últimos checklists</div>
+    <div class="tbl-wrap"><table class="t"><thead><tr><th>Data</th><th>Momento</th><th>Motorista</th><th class="num">Km</th><th>Local</th><th>Alterações</th></tr></thead><tbody>
+      ${cks.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td>${esc(c.momento)}</td><td>${esc(c.motorista)}</td><td class="num">${c.km ? fN(c.km) : ''}${c.ciente_km === 'Sim' ? ' ⚠️' : ''}</td><td>${esc(c.local)}</td><td>${esc(c.itens.join(', '))}${c.condicao === 'Suja' ? ' 🟫' : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Sem checklist.</td></tr>'}
+    </tbody></table></div>
+    <div class="sec">🧾 Notas fiscais</div>
+    <div class="tbl-wrap"><table class="t"><thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Tipo</th><th class="num">Valor</th></tr></thead><tbody>
+      ${nfs.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td class="num">${fR(n.valor_total)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhuma nota lançada.</td></tr>'}
+    </tbody></table></div>
+    ${mns.length ? `<div class="sec">🛠️ Manutenções</div><div class="tbl-wrap"><table class="t"><thead><tr><th>Data</th><th>Situação</th><th class="num">Km</th><th>Oficina/local</th><th>Obs.</th></tr></thead><tbody>
+      ${mns.map(m => `<tr><td>${fD(m.data)}</td><td>${esc(m.situacao)}</td><td class="num">${m.km ? fN(m.km) : ''}</td><td>${esc(m.localidade)}</td><td>${esc(m.obs)}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
+  const rod = CAN ? `
+    ${v.em_uso ? `<button class="btn gray" onclick="encerrarUso(${i})">🏁 Encerrar uso</button>` : ''}
+    <button class="btn gray" onclick="novaPendencia('${esc(v.prefixo)}')">➕ Alteração</button>
+    <button class="btn gray" onclick="novaManutencao('${esc(v.prefixo)}')">🛠️ Manutenção</button>
+    <button class="btn gray" onclick="editarViatura(${i})">✏️ Editar</button>
+    <button class="btn-main" onclick="abrirNF(null,'${esc(v.prefixo)}')">🧾 Lançar nota</button>` : '<span class="muted">Modo consulta</span>';
+  modal(`🚓 ${esc(v.prefixo)} <span class="muted" style="font:500 14px Inter">${esc(v.modelo)} · ${esc(v.placa)}</span>`, corpo, rod);
+}
+
+/* ── retirar alteração ── */
+function retirar(id, item){
+  const p = D.pendencias.find(x => x.id === id); if (!p) return;
+  const tudo = !item || p.itens.length <= 1;
+  const alvo = item ? [item] : p.itens;
+  modal(tudo ? '✅ Sanar alteração' : '✓ Retirar alteração', `
+    <div style="font-size:14px;line-height:1.6">Viatura <b style="color:#fff">${esc(p.prefixo)}</b> — ${tudo ? 'a pendência inteira será marcada como <b style="color:var(--ok)">SANADA</b>' : 'retirar só este item; os demais continuam abertos'}:</div>
+    <div>${alvo.map(i => `<span class="it ok">✓ ${esc(i)}</span>`).join('') || '<span class="muted">(sem item marcado)</span>'}</div>
+    ${!tudo ? `<div class="hint" style="margin-top:8px">Continuam abertos: ${esc(p.itens.filter(i => i !== item).join(', '))}</div>` : ''}
+    <div class="fg" style="margin-top:14px"><label>O que foi feito (opcional)</label><input id="rt-motivo" maxlength="300" placeholder="Ex.: pneu trocado na oficina X; vidro substituído"></div>
+    <div class="hint" style="margin-top:8px">Fica registrado no histórico com seu login, data e hora. O próximo motorista já não verá esse item travado.</div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="rt-ok">Confirmar</button>`, true);
+  $('rt-ok').onclick = async () => {
+    try{ await salvar('pendencia_retirar', { id, itens: item ? [item] : [], motivo: $('rt-motivo').value.trim() }, tudo ? '✅ Alteração sanada.' : '✓ Item retirado.'); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+function novaPendencia(prefixo){
+  modal('➕ Nova alteração', `
+    <div class="grid"><div class="fg wall"><label>Viatura <span class="req">*</span></label><select id="np-v">${D.viaturas.filter(v => v.ativa).map(v => `<option ${v.prefixo === prefixo ? 'selected' : ''}>${esc(v.prefixo)}</option>`).join('')}</select></div></div>
+    <div class="fg" style="margin-top:12px"><label>Itens</label><div id="np-it">${D.itens.map(i => `<label class="chk" style="display:inline-flex;margin:4px 14px 4px 0"><input type="checkbox" value="${esc(i)}">${esc(i)}</label>`).join('')}</div></div>
+    <div class="fg" style="margin-top:12px"><label>Descrição</label><textarea id="np-d" maxlength="3000"></textarea></div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="np-ok">Abrir alteração</button>`);
+  $('np-ok').onclick = async () => {
+    const itens = [...document.querySelectorAll('#np-it input:checked')].map(x => x.value);
+    try{ await salvar('pendencia_nova', { prefixo:$('np-v').value, itens, descricao:$('np-d').value.trim() }, '✅ Alteração aberta.'); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+function encerrarUso(i){
+  const v = D.viaturas[i]; const u = v.ultimo;
+  modal('🏁 Encerrar uso', `<div style="font-size:14px;line-height:1.6">A <b style="color:#fff">${esc(v.prefixo)}</b> está em uso desde <b>${fDH(u.data)}</b> com <b>${esc(u.motorista)}</b>, e ninguém registrou o término.<br>Isso lança um <b>Término de uso</b> em nome da gestão e libera a viatura para o próximo checklist.</div>
+    <div class="grid" style="margin-top:12px"><div class="fg"><label>Km no término</label><input id="eu-km" inputmode="numeric" value="${v.km_atual || ''}"></div>
+    <div class="fg w2"><label>Motivo</label><input id="eu-m" maxlength="300" placeholder="Ex.: viatura devolvida sem checklist"></div></div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="eu-ok">Encerrar uso</button>`, true);
+  $('eu-ok').onclick = async () => {
+    try{ await salvar('viatura_liberar', { prefixo:v.prefixo, km:$('eu-km').value, motivo:$('eu-m').value.trim() }, '✅ Uso encerrado — viatura liberada.'); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+
+/* ── pendências ── */
+function renderPend(){
+  if (!D) return;
+  const q = norm($('pe-q').value), v = $('pe-v').value, s = $('pe-s').value;
+  const L = D.pendencias.filter(p => (!s || p.status === s) && (!v || p.prefixo === v) && (!q || norm([p.prefixo, p.itens.join(' '), p.descricao, p.aberta_por].join(' ')).includes(q)));
+  $('pend').innerHTML = L.slice(0, 300).map(p => pendHTML(p)).join('') || '<div class="empty">Nenhuma alteração com esse filtro. ✅</div>';
+}
+
+/* ── checklists ── */
+function filtraCheck(){
+  const q = norm($('ck-q').value), v = $('ck-v').value, m = $('ck-m').value, de = $('ck-de').value, ate = $('ck-ate').value, f = $('ck-f').value;
+  return D.checklists.filter(c => (!v || c.prefixo === v) && (!m || c.momento === m) && (!de || c.data >= de) && (!ate || c.data.slice(0,10) <= ate)
+    && (!f || (f === 'alt' ? c.itens.length : f === 'suja' ? c.condicao === 'Suja' : c.ciente_km === 'Sim'))
+    && (!q || norm([c.prefixo, c.motorista, c.comandante, c.local, c.alteracoes, c.itens.join(' ')].join(' ')).includes(q)));
+}
+function renderCheck(){
+  if (!D) return;
+  const L = filtraCheck(), por = 50, pag = Math.min(PG.ck, Math.max(0, Math.ceil(L.length / por) - 1));
+  const P = L.slice(pag*por, pag*por + por);
+  $('ck-tbl').innerHTML = `<thead><tr><th>Data/hora</th><th>Viatura</th><th>Momento</th><th>Motorista</th><th class="num">Km</th><th>Comandante</th><th>Local</th><th>Condição</th><th>Alterações</th></tr></thead><tbody>
+    ${P.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td><b>${esc(c.prefixo)}</b></td><td>${c.momento === 'Início de uso' ? '🚦 Início' : '🏁 Término'}</td><td>${esc(c.motorista)}</td>
+      <td class="num">${c.km ? fN(c.km) : ''}${c.ciente_km === 'Sim' ? ' <span title="Km divergente confirmado">⚠️</span>' : ''}</td><td>${esc(c.comandante)}</td><td>${esc(c.local)}</td>
+      <td>${c.condicao === 'Suja' ? '<span class="chip o">Suja</span>' : esc(c.condicao)}</td><td>${c.itens.length ? `<span class="chip y">${esc(c.itens.join(', '))}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Nenhum checklist.</td></tr>'}</tbody>`;
+  const tot = Math.ceil(L.length / por) || 1;
+  $('ck-pag').innerHTML = `<span class="muted">${fN(L.length)} checklists</span><button class="btn sm gray" ${pag <= 0 ? 'disabled' : ''} onclick="PG.ck=${pag-1};renderCheck()">‹</button><span>${pag+1} / ${tot}</span><button class="btn sm gray" ${pag >= tot-1 ? 'disabled' : ''} onclick="PG.ck=${pag+1};renderCheck()">›</button>`;
+}
+function verCheck(id){
+  const c = D.checklists.find(x => x.id === id); if (!c) return;
+  const L = [['Data/hora', fDH(c.data)], ['Viatura', c.prefixo], ['Momento', c.momento], ['Motorista', c.motorista + ' (RE ' + c.motorista_re + ')'], ['Hodômetro', c.km ? fN(c.km) + ' km' + (c.ciente_km === 'Sim' ? ' — ⚠️ divergente, confirmado pelo motorista' : '') : '—'],
+    ['Comandante', c.comandante], ['Local', c.local], ['Condição', c.condicao + (c.justificativa ? ' — ' + c.justificativa : '')], ['Itens alterados', c.itens.join(', ') || 'nenhum'], ['Descrição', c.alteracoes]];
+  modal('📋 Checklist ' + esc(c.prefixo), `<table class="t">${L.map(([k,v]) => `<tr><td class="muted" style="width:160px">${k}</td><td style="white-space:pre-line">${esc(v || '—')}</td></tr>`).join('')}</table>`, '<button class="btn gray" onclick="fecharModal()">Fechar</button>', true);
+}
+function baixarCSV(nome, linhas){
+  const csv = linhas.map(r => r.map(v => { const s = String(v == null ? '' : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' })); a.download = nome; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportCheck(){
+  baixarCSV('checklists_garagem.csv', [['Data','Viatura','Momento','Motorista','RE','Km','Km divergente','Comandante','Local','Condição','Justificativa','Itens','Descrição'],
+    ...filtraCheck().map(c => [fDH(c.data), c.prefixo, c.momento, c.motorista, c.motorista_re, c.km, c.ciente_km, c.comandante, c.local, c.condicao, c.justificativa, c.itens.join(', '), c.alteracoes])]);
+}
+
+/* ── notas fiscais (lista) ── */
+function filtraNF(){
+  const q = norm($('nf-q').value), v = $('nf-v').value, t = $('nf-t').value, de = $('nf-de').value, ate = $('nf-ate').value;
+  return D.nfs.filter(n => (!v || n.prefixo === v) && (!t || n.tipo === t) && (!de || n.data_emissao >= de) && (!ate || n.data_emissao <= ate)
+    && (!q || norm([n.fornecedor, n.numero, n.descricao, n.cnpj, n.prefixo, n.itens.map(i => i.descricao).join(' ')].join(' ')).includes(q)));
+}
+function renderNF(){
+  if (!D) return;
+  const L = filtraNF(), ano = hojeISO().slice(0,4), mes = hojeISO().slice(0,7);
+  const tot = L.reduce((a,n) => a + n.valor_total, 0);
+  const gAno = D.nfs.filter(n => n.data_emissao.startsWith(ano)).reduce((a,n) => a + n.valor_total, 0);
+  const gMes = D.nfs.filter(n => n.data_emissao.startsWith(mes)).reduce((a,n) => a + n.valor_total, 0);
+  const porTipo = {}; D.nfs.filter(n => n.data_emissao.startsWith(ano)).forEach(n => porTipo[n.tipo || 'Outros'] = (porTipo[n.tipo || 'Outros']||0) + n.valor_total);
+  const topTipo = Object.entries(porTipo).sort((a,b) => b[1]-a[1])[0];
+  $('nf-kpis').innerHTML = [
+    { l:'Gasto no ano', v:fR(gAno), s:`${D.nfs.filter(n => n.data_emissao.startsWith(ano)).length} notas`, c:'#34d399' },
+    { l:'Gasto no mês', v:fR(gMes), s:'mês corrente', c:'#60a5fa' },
+    { l:'Filtro atual', v:fR(tot), s:`${L.length} notas · média ${fR(L.length ? tot / L.length : 0)}`, c:'#F5C518' },
+    { l:'Maior categoria no ano', v:topTipo ? esc(topTipo[0]) : '—', s:topTipo ? fR(topTipo[1]) : '', c:'#a78bfa' },
+  ].map(k => `<div class="kpi" style="--c:${k.c}"><div class="l">${k.l}</div><div class="v" style="font-size:24px">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
+  $('nf-tbl').innerHTML = `<thead><tr><th>Emissão</th><th>Nº</th><th>Fornecedor</th><th>Viatura</th><th>Tipo</th><th class="num">Km</th><th>Descrição</th><th class="num">Valor</th><th></th></tr></thead><tbody>
+    ${L.map(n => `<tr class="cl" onclick="verNF(${n._i})"><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td><b>${esc(n.prefixo)}</b></td><td>${esc(n.tipo)}</td>
+      <td class="num">${n.km ? fN(n.km) : ''}</td><td style="max-width:320px">${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0,120))}</td><td class="num"><b>${fR(n.valor_total)}</b></td><td>${n.tem_arquivo ? '📎' : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Nenhuma nota fiscal lançada ainda. Clique em <b>🧾 Lançar nota fiscal</b>.</td></tr>'}
+    </tbody>${L.length ? `<tfoot><tr><td colspan="7">Total (${L.length})</td><td class="num">${fR(tot)}</td><td></td></tr></tfoot>` : ''}`;
+}
+function exportNF(){
+  baixarCSV('notas_fiscais_garagem.csv', [['Emissão','Número','Série','Chave','Fornecedor','CNPJ','Viatura','Placa','Km','Tipo','Descrição','Peças','Serviços','Total','Lançado por','Lançado em'],
+    ...filtraNF().map(n => [fD(n.data_emissao), n.numero, n.serie, n.chave, n.fornecedor, n.cnpj, n.prefixo, n.placa, n.km, n.tipo, n.descricao, String(n.valor_pecas).replace('.',','), String(n.valor_servicos).replace('.',','), String(n.valor_total).replace('.',','), n.lancado_por, fDH(n.lancado_em)])]);
+}
+async function abrirArquivoNF(id){
+  ovl('Abrindo o arquivo…');
+  try{
+    const r = await fetch(API_BASE + '/api/garagem/nf/arquivo?id=' + encodeURIComponent(id), { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) throw new Error('Arquivo não encontrado.');
+    const url = URL.createObjectURL(await r.blob()); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }catch(e){ toast('⚠️ ' + e.message, true); } finally{ ovl(''); }
+}
+function verNF(i){
+  const n = D.nfs[i]; if (!n) return;
+  const L = [['Emissão', fD(n.data_emissao)], ['Número / série', n.numero + (n.serie ? ' / ' + n.serie : '')], ['Fornecedor', n.fornecedor], ['CNPJ', fmtCNPJ(n.cnpj)], ['Chave de acesso', n.chave],
+    ['Viatura', n.prefixo + (n.placa ? ' · ' + n.placa : '')], ['Km', n.km ? fN(n.km) : ''], ['Tipo', n.tipo], ['Descrição', n.descricao],
+    ['Peças / Serviços', fR(n.valor_pecas) + ' / ' + fR(n.valor_servicos)], ['Valor total', fR(n.valor_total)], ['Alterações sanadas', n.pendencias_sanadas.join('\n')], ['Obs.', n.obs], ['Lançada por', n.lancado_por + ' em ' + fDH(n.lancado_em)]];
+  const itens = n.itens.length ? `<div class="sec">Itens</div><div class="tbl-wrap"><table class="t"><thead><tr><th>Descrição</th><th class="num">Qtd</th><th class="num">Valor</th></tr></thead><tbody>${n.itens.map(x => `<tr><td>${esc(x.descricao)}</td><td class="num">${x.qtd || ''}</td><td class="num">${fR(x.valor)}</td></tr>`).join('')}</tbody></table></div>` : '';
+  modal('🧾 Nota fiscal ' + esc(n.numero || ''), `<table class="t">${L.filter(x => x[1]).map(([k,v]) => `<tr><td class="muted" style="width:170px">${k}</td><td style="white-space:pre-line">${esc(v)}</td></tr>`).join('')}</table>${itens}`,
+    `${n.tem_arquivo ? `<button class="btn gray" onclick="abrirArquivoNF('${n.id}')">📎 Ver arquivo</button>` : ''}
+     ${CAN ? `<button class="btn red" onclick="excluirNF(${i})">🗑️ Excluir</button><button class="btn" onclick="abrirNF(${i})">✏️ Editar</button>` : ''}<button class="btn gray" onclick="fecharModal()">Fechar</button>`);
+}
+async function excluirNF(i){
+  const n = D.nfs[i];
+  fecharModal();
+  await confirmarExclusao({ titulo:'Excluir nota fiscal', texto:`NF ${n.numero} — ${n.fornecedor}\n${n.prefixo} · ${fR(n.valor_total)}\n\nO arquivo vai para a lixeira do Drive. Alterações sanadas por esta nota continuam sanadas.`,
+    acao: async ({ senha, motivo }) => { await apiPost('/api/garagem/gestao/save', { op:'nf_excluir', id:n.id, senha, motivo }); toast('🗑️ Nota excluída.'); await carregar(true); } });
+}
+
+/* ── manutenção ── */
+function renderMan(){
+  if (!D) return;
+  const q = norm($('mn-q').value), v = $('mn-v').value;
+  const L = D.manutencoes.filter(m => (!v || m.prefixo === v) && (!q || norm([m.situacao, m.localidade, m.obs, m.prefixo].join(' ')).includes(q)));
+  $('mn-tbl').innerHTML = `<thead><tr><th>Data</th><th>Viatura</th><th>Situação</th><th class="num">Km</th><th>Oficina / local</th><th>Óleo</th><th>Observação</th></tr></thead><tbody>
+    ${L.map(m => `<tr><td>${fD(m.data)}</td><td><b>${esc(m.prefixo)}</b></td><td>${esc(m.situacao)}</td><td class="num">${m.km ? fN(m.km) : ''}</td><td>${esc(m.localidade)}</td><td>${m.troca_oleo_km ? '🛢️ ' + fN(m.troca_oleo_km) : ''}</td><td>${esc(m.obs)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Nenhuma manutenção registrada.</td></tr>'}</tbody>`;
+  const O = D.viaturas.filter(v => v.ativa).slice().sort((a,b) => (a.km_para_troca ?? 1e9) - (b.km_para_troca ?? 1e9));
+  $('oleo-tbl').innerHTML = `<thead><tr><th>Viatura</th><th class="num">Km atual</th><th class="num">Última troca</th><th class="num">Próxima</th><th>Situação</th><th></th></tr></thead><tbody>
+    ${O.map(v => { const o = oleoSit(v); return `<tr><td><b>${esc(v.prefixo)}</b> <span class="muted">${esc(v.modelo)}</span></td><td class="num">${v.km_atual ? fN(v.km_atual) : '—'}</td><td class="num">${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) : '—'}</td><td class="num">${v.km_proxima_troca ? fN(v.km_proxima_troca) : '—'}</td>
+      <td><span class="chip ${o.cls}">${esc(o.txt)}</span></td><td>${CAN ? `<button class="btn sm gray" onclick="novaManutencao('${esc(v.prefixo)}',true)">🛢️ Registrar troca</button>` : ''}</td></tr>`; }).join('')}</tbody>`;
+}
+function novaManutencao(prefixo, oleo){
+  const v = VMAP[prefixo];
+  modal('🛠️ Registrar manutenção', `<div class="grid">
+    <div class="fg"><label>Viatura <span class="req">*</span></label><select id="mn-f-v">${D.viaturas.map(x => `<option ${x.prefixo === prefixo ? 'selected' : ''}>${esc(x.prefixo)}</option>`).join('')}</select></div>
+    <div class="fg"><label>Data <span class="req">*</span></label><input type="date" id="mn-f-d" value="${hojeISO()}"></div>
+    <div class="fg"><label>Km</label><input id="mn-f-km" inputmode="numeric" value="${v && v.km_atual ? v.km_atual : ''}"></div>
+    <div class="fg"><label>Situação</label><input id="mn-f-s" list="dl-tipos" value="${oleo ? 'Troca de óleo' : ''}" placeholder="Revisão, troca de óleo, pneus…"><datalist id="dl-tipos">${D.tipos_nf.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>
+    <div class="fg w2"><label>Oficina / local</label><input id="mn-f-l" maxlength="120"></div>
+    <div class="fg wall"><label>Observação</label><textarea id="mn-f-o" maxlength="1000"></textarea></div>
+    <label class="chk wall"><input type="checkbox" id="mn-f-oleo" ${oleo ? 'checked' : ''}> Foi troca de óleo — atualiza a “última troca” da viatura para este km</label></div>
+    <div class="hint" style="margin-top:10px">Tem nota fiscal? Use <b>🧾 Lançar nota fiscal</b> — ela já registra a manutenção junto.</div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="mn-ok">Salvar</button>`);
+  $('mn-ok').onclick = async () => {
+    try{ await salvar('manutencao_salvar', { manutencao:{ prefixo:$('mn-f-v').value, data:$('mn-f-d').value, km:$('mn-f-km').value, situacao:$('mn-f-s').value, localidade:$('mn-f-l').value, obs:$('mn-f-o').value, troca_oleo:$('mn-f-oleo').checked } }, '✅ Manutenção registrada.'); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+
+/* ── cadastros ── */
+function renderCad(){
+  if (!D) return;
+  $('cad-vtr').innerHTML = `<thead><tr><th>Prefixo</th><th>Placa</th><th>Modelo</th><th>Ano</th><th>Lotação</th><th>Status</th><th class="num">Troca de óleo a cada</th><th class="num">Última troca</th><th></th></tr></thead><tbody>
+    ${D.viaturas.map(v => `<tr><td><b>${esc(v.prefixo)}</b></td><td>${esc(v.placa)}</td><td>${esc(v.modelo)}</td><td>${esc(v.ano)}</td><td>${esc(v.lotacao)}</td><td>${v.ativa ? esc(v.status_geral || 'Ativa') : `<span class="chip n">${esc(v.status_geral)}</span>`}</td>
+      <td class="num">${fN(v.intervalo_oleo_km)} km</td><td class="num">${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) : '—'}</td><td>${CAN ? `<button class="btn sm gray" onclick="editarViatura(${v._i})">✏️</button>` : ''}</td></tr>`).join('')}</tbody>`;
+  const q = norm($('mo-q').value);
+  const M = D.motoristas.map((m,i) => ({ ...m, _i:i })).filter(m => !q || norm(m.re + ' ' + m.nome + ' ' + m.posto).includes(q));
+  const usos = {}; D.checklists.forEach(c => usos[c.motorista_re] = (usos[c.motorista_re]||0) + 1);
+  $('cad-mot').innerHTML = `<thead><tr><th>RE</th><th>Posto/grad.</th><th>Nome</th>${CAN ? '<th>Telefone</th><th>E-mail</th>' : ''}<th class="num">Checklists</th><th></th></tr></thead><tbody>
+    ${M.map(m => `<tr><td>${esc(m.re)}</td><td>${esc(m.posto)}</td><td>${esc(m.nome)}</td>${CAN ? `<td>${esc(m.telefone)}</td><td>${esc(m.email)}</td>` : ''}<td class="num">${usos[m.re] || 0}</td><td>${CAN ? `<button class="btn sm gray" onclick="editarMotorista(${m._i})">✏️</button>` : ''}</td></tr>`).join('')}</tbody>`;
+}
+function editarViatura(i){
+  const nova = i < 0, v = nova ? { prefixo:'', placa:'', modelo:'', ano:'', lotacao:'', status_geral:'Ativa', intervalo_oleo_km:10000, km_ultima_troca_oleo:'' } : D.viaturas[i];
+  modal(nova ? '➕ Nova viatura' : '✏️ ' + esc(v.prefixo), `<div class="grid">
+    <div class="fg"><label>Prefixo <span class="req">*</span></label><input id="vf-p" value="${esc(v.prefixo)}" ${nova ? '' : 'readonly'}></div>
+    <div class="fg"><label>Placa</label><input id="vf-pl" value="${esc(v.placa)}"></div>
+    <div class="fg"><label>Modelo</label><input id="vf-m" value="${esc(v.modelo)}"></div>
+    <div class="fg"><label>Ano</label><input id="vf-a" value="${esc(v.ano)}"></div>
+    <div class="fg"><label>Lotação</label><input id="vf-l" value="${esc(v.lotacao)}" list="dl-lot"><datalist id="dl-lot"><option value="FROTA"><option value="LOCADA"></datalist></div>
+    <div class="fg"><label>Status</label><select id="vf-s">${['Ativa','Na oficina','Baixada','Devolvida'].map(s => `<option ${norm(s) === norm(v.status_geral) || (s === 'Ativa' && /ATIV/.test(norm(v.status_geral))) ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    <div class="fg"><label>Troca de óleo a cada (km)</label><input id="vf-i" inputmode="numeric" value="${v.intervalo_oleo_km || 10000}"></div>
+    <div class="fg"><label>Km da última troca</label><input id="vf-o" inputmode="numeric" value="${v.km_ultima_troca_oleo || ''}"></div></div>
+    <div class="hint" style="margin-top:10px">“Baixada” e “Devolvida” tiram a viatura da lista do motorista. O prefixo não muda depois de criado (ele amarra todo o histórico).</div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="vf-ok">Salvar</button>`);
+  $('vf-ok').onclick = async () => {
+    const viatura = { prefixo:$('vf-p').value, placa:$('vf-pl').value, modelo:$('vf-m').value, ano:$('vf-a').value, lotacao:$('vf-l').value, status_geral:$('vf-s').value, intervalo_oleo_km:$('vf-i').value, km_ultima_troca_oleo:$('vf-o').value };
+    try{ await salvar('viatura_salvar', { nova, viatura }, '✅ Viatura salva.'); fecharModal(); }catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+function editarMotorista(i){
+  const novo = i < 0, m = novo ? { re:'', posto:'', nome:'', telefone:'', email:'' } : D.motoristas[i];
+  modal(novo ? '➕ Novo motorista' : '✏️ ' + esc(m.nome), `<div class="grid">
+    <div class="fg"><label>RE <span class="req">*</span></label><input id="mf-re" inputmode="numeric" value="${esc(m.re)}" ${novo ? '' : 'readonly'}></div>
+    <div class="fg"><label>Posto/graduação</label><input id="mf-p" value="${esc(m.posto)}" placeholder="CB QPPM"></div>
+    <div class="fg w2"><label>Nome <span class="req">*</span></label><input id="mf-n" value="${esc(m.nome)}"></div>
+    <div class="fg"><label>Telefone</label><input id="mf-t" value="${esc(m.telefone || '')}"></div>
+    <div class="fg w2"><label>E-mail</label><input id="mf-e" value="${esc(m.email || '')}"></div></div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="mf-ok">Salvar</button>`, true);
+  $('mf-ok').onclick = async () => {
+    try{ await salvar('motorista_salvar', { motorista:{ re:$('mf-re').value, posto:$('mf-p').value, nome:$('mf-n').value, telefone:$('mf-t').value, email:$('mf-e').value } }, '✅ Motorista salvo.'); fecharModal(); }
+    catch(e){ toast('⚠️ ' + e.message, true); }
+  };
+}
+function renderHist(){
+  if (!D) return;
+  $('hist-tbl').innerHTML = `<thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Viatura</th><th>Detalhe</th></tr></thead><tbody>
+    ${D.historico.map(h => `<tr><td>${fDH(h.quando)}</td><td>${esc(h.quem)}</td><td>${esc(h.acao)}</td><td>${esc(h.prefixo)}</td><td>${esc(h.detalhe)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nada registrado ainda.</td></tr>'}</tbody>`;
+}
+
+/* ══════════════════ NOTA FISCAL: lançamento + OCR ══════════════════
+   Ordem de confiança: XML da NF-e/NFS-e (exato) > PDF com texto (exato) > foto/PDF
+   escaneado no Tesseract (aproximado). Tudo roda NO NAVEGADOR — a nota não vai
+   pra nenhum serviço de OCR externo. O que o leitor preencheu fica roxo pra conferir. */
+let NFF = null;   // { arquivo, texto, origem }
+function fmtCNPJ(c){ const d = String(c||'').replace(/\D/g,''); return d.length === 14 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : d; }
+function moneyBR(s){ return Number(String(s).replace(/\./g,'').replace(',', '.')) || 0; }
+function cnpjValido(c){
+  c = String(c).replace(/\D/g,''); if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+  const dv = (base) => { let s = 0, p = base.length - 7; for (let i = 0; i < base.length; i++){ s += +base[i] * p--; if (p < 2) p = 9; } const r = s % 11; return r < 2 ? 0 : 11 - r; };
+  return dv(c.slice(0,12)) === +c[12] && dv(c.slice(0,13)) === +c[13];
+}
+function chaveValida(k){
+  if (!/^\d{44}$/.test(k)) return false;
+  let s = 0, p = 2; for (let i = 42; i >= 0; i--){ s += +k[i] * p; p = p === 9 ? 2 : p + 1; }
+  const r = s % 11, dv = r < 2 ? 0 : 11 - r; return dv === +k[43];
+}
+
+function abrirNF(idx, prefixo){
+  const ed = idx != null ? D.nfs[idx] : null;
+  NFF = { arquivo:null, texto:'', origem:'', editId: ed ? ed.id : '' };
+  const vs = D.viaturas.map(v => `<option value="${esc(v.prefixo)}" ${(ed ? ed.prefixo : prefixo) === v.prefixo ? 'selected' : ''}>${esc(v.prefixo)} · ${esc(v.modelo)} · ${esc(v.placa)}</option>`).join('');
+  modal(ed ? '✏️ Editar nota fiscal' : '🧾 Lançar nota fiscal', `
+    ${ed ? '' : `<div class="drop" id="nf-drop"><b>📷 Foto, PDF ou XML da nota</b><br>arraste aqui ou clique para escolher — no celular dá para tirar a foto na hora<br><span style="font-size:12px">XML da NF-e/NFS-e lê 100% certo · PDF da nota lê o texto exato · foto passa pelo OCR (confira os campos em roxo)</span></div>
+    <input type="file" id="nf-file" accept="image/*,application/pdf,.xml,text/xml" class="hidden">
+    <div id="nf-status" class="hint" style="margin-top:8px;min-height:18px"></div>`}
+    <div class="grid" style="margin-top:14px">
+      <div class="fg w2"><label>Viatura <span class="req">*</span></label><select id="nf-f-v" onchange="nfPendencias()"><option value="">— escolha —</option>${vs}</select></div>
+      <div class="fg"><label>Placa na nota</label><input id="nf-f-placa"></div>
+      <div class="fg"><label>Km na nota</label><input id="nf-f-km" inputmode="numeric"></div>
+      <div class="fg w2"><label>Fornecedor / oficina</label><input id="nf-f-forn" maxlength="160"></div>
+      <div class="fg"><label>CNPJ</label><input id="nf-f-cnpj" onchange="nfBuscaCNPJ()"></div>
+      <div class="fg"><label>Emissão <span class="req">*</span></label><input type="date" id="nf-f-data"></div>
+      <div class="fg"><label>Número</label><input id="nf-f-num"></div>
+      <div class="fg"><label>Série</label><input id="nf-f-serie"></div>
+      <div class="fg w2"><label>Chave de acesso (44 dígitos)</label><input id="nf-f-chave" inputmode="numeric"></div>
+      <div class="fg"><label>Tipo de serviço</label><select id="nf-f-tipo">${D.tipos_nf.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="fg"><label>Valor peças (R$)</label><input id="nf-f-vp" inputmode="decimal"></div>
+      <div class="fg"><label>Valor serviços (R$)</label><input id="nf-f-vs" inputmode="decimal"></div>
+      <div class="fg"><label>Valor total (R$) <span class="req">*</span></label><input id="nf-f-vt" inputmode="decimal" style="font-weight:800"></div>
+      <div class="fg wall"><label>Descrição do serviço</label><textarea id="nf-f-desc" maxlength="3000" placeholder="O que foi feito na viatura"></textarea></div>
+    </div>
+    <div class="sec">Itens da nota <button class="btn sm gray" style="margin-left:auto" onclick="nfItemAdd()">➕ Item</button></div>
+    <div class="tbl-wrap"><table class="t itens"><thead><tr><th>Descrição</th><th style="width:90px">Qtd</th><th style="width:130px">Valor (R$)</th><th style="width:40px"></th></tr></thead><tbody id="nf-itens"></tbody></table></div>
+    ${ed ? '' : `<div class="sec">✅ Alterações que esta nota resolveu</div><div class="sanar" id="nf-sanar"><div class="muted">Escolha a viatura.</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <label class="chk"><input type="checkbox" id="nf-f-man" checked> Registrar também na aba de manutenção da viatura</label>
+      <label class="chk"><input type="checkbox" id="nf-f-oleo"> Foi <b>troca de óleo</b> — atualiza a última troca da viatura para o km da nota</label>
+    </div>`}
+    <div class="fg" style="margin-top:12px"><label>Observação</label><input id="nf-f-obs" maxlength="1000"></div>
+    <details class="raw hidden" id="nf-raw"><summary>Ver o texto que o leitor extraiu</summary><pre id="nf-raw-t"></pre></details>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="nf-ok">${ed ? 'Salvar alterações' : 'Lançar nota'}</button>`);
+  if (ed){
+    const set = (id, v) => { $(id).value = v == null ? '' : v; };
+    set('nf-f-placa', ed.placa); set('nf-f-km', ed.km || ''); set('nf-f-forn', ed.fornecedor); set('nf-f-cnpj', fmtCNPJ(ed.cnpj)); set('nf-f-data', ed.data_emissao);
+    set('nf-f-num', ed.numero); set('nf-f-serie', ed.serie); set('nf-f-chave', ed.chave); set('nf-f-tipo', ed.tipo); set('nf-f-vp', nfMoeda(ed.valor_pecas)); set('nf-f-vs', nfMoeda(ed.valor_servicos));
+    set('nf-f-vt', nfMoeda(ed.valor_total)); set('nf-f-desc', ed.descricao); set('nf-f-obs', ed.obs);
+    ed.itens.forEach(i => nfItemAdd(i));
+  } else {
+    $('nf-f-data').value = hojeISO();
+    const drop = $('nf-drop'), inp = $('nf-file');
+    drop.onclick = () => inp.click();
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+    drop.ondragleave = () => drop.classList.remove('over');
+    drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) nfLer(e.dataTransfer.files[0]); };
+    inp.onchange = () => { if (inp.files[0]) nfLer(inp.files[0]); };
+    nfPendencias();
+  }
+  $('nf-ok').onclick = nfSalvar;
+}
+function nfMoeda(v){ return v ? Number(v).toFixed(2).replace('.', ',') : ''; }
+function nfItemAdd(it){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input class="d" value="${esc(it && it.descricao || '')}"></td><td><input class="q" inputmode="decimal" value="${it && it.qtd ? String(it.qtd).replace('.',',') : ''}"></td><td><input class="v" inputmode="decimal" value="${it && it.valor ? nfMoeda(it.valor) : ''}"></td><td><button class="btn sm gray" onclick="this.closest('tr').remove()">✕</button></td>`;
+  $('nf-itens').appendChild(tr);
+}
+function nfPendencias(){
+  const box = $('nf-sanar'); if (!box) return;
+  const p = $('nf-f-v').value;
+  const L = D.pendencias.filter(x => x.prefixo === p && x.status === 'Aberta');
+  box.innerHTML = !p ? '<div class="muted">Escolha a viatura.</div>' : L.length ? L.map(x => `<div class="pc" data-id="${x.id}">
+      <div class="meta" style="font-size:12px;color:var(--muted)">aberta em ${fD(x.data_abertura)} por ${esc(x.aberta_por)}${x.descricao ? ' — ' + esc(x.descricao.slice(0,140)) : ''}</div>
+      ${x.itens.length ? x.itens.map(i => `<label><input type="checkbox" value="${esc(i)}"> ${esc(i)}</label>`).join('') : `<label><input type="checkbox" value="*"> sanar esta alteração</label>`}</div>`).join('')
+    : '<div class="muted">Esta viatura não tem alteração aberta.</div>';
+  nfSugerirSanar();
+}
+// marca sozinho as alterações que batem com o texto da nota (ex.: nota fala em "pneu" -> Pneus/Estepe)
+const NF_PISTAS = { 'Pneus/Estepe':/PNEU|ESTEPE|CAMARA DE AR|BORRACHARIA/, 'Óleo do motor':/OLEO|LUBRIFIC|FILTRO DE OLEO/, 'Água/Arrefecimento':/RADIADOR|ARREFEC|ADITIVO|BOMBA D.?AGUA|MANGUEIRA/,
+  'Freios':/FREIO|PASTILHA|LONA|DISCO DE FREIO/, 'Faróis/Lanternas':/FAROL|LANTERNA|LAMPADA/, 'Setas/Pisca-alerta':/SETA|PISCA/, 'Giroflex/Sirene':/GIROFLEX|SIRENE|GIROLED/,
+  'Rádio comunicador':/RADIO|ANTENA/, 'Limpador de para-brisa':/LIMPADOR|PALHETA/, 'Vidros/Retrovisores':/VIDRO|RETROVISOR|PARA.?BRISA/, 'Ar-condicionado':/AR.?CONDICIONADO|COMPRESSOR|GAS R|HIGIENIZA/,
+  'Lataria/Pintura':/LATARIA|PINTURA|FUNILARIA|LANTERNAGEM|MARTELINHO/, 'Para-choque':/PARA.?CHOQUE/, 'Bancos/Cintos':/BANCO|CINTO|ESTOFA/, 'Motor':/MOTOR|CORREIA|JUNTA|RETIFICA|BICO INJETOR|VELA/,
+  'Transmissão':/CAMBIO|EMBREAGEM|TRANSMISS|DIFERENCIAL|CARDAN/, 'Painel':/PAINEL|INSTRUMENTO|SCANNER|INJECAO ELETRONICA/ };
+function nfSugerirSanar(){
+  if (!NFF || !NFF.texto || !$('nf-sanar')) return;
+  const t = norm(NFF.texto + ' ' + $('nf-f-desc').value);
+  $('nf-sanar').querySelectorAll('input[type=checkbox]').forEach(cb => { const re = NF_PISTAS[cb.value]; if (re && re.test(t)) cb.checked = true; });
+}
+
+async function nfLer(file){
+  NFF.arquivo = file; NFF.texto = ''; NFF.origem = '';
+  const st = $('nf-status');
+  const nome = file.name.toLowerCase();
+  try{
+    if (/\.xml$/.test(nome) || /xml/.test(file.type)){
+      st.textContent = 'Lendo o XML…';
+      const txt = await file.text();
+      NFF.texto = txt; NFF.origem = 'xml';
+      nfAplicar(nfDoXML(txt));
+      st.innerHTML = '✅ <b>XML lido</b> — dados exatos da nota. Confira a viatura e salve.';
+      return;
+    }
+    if (/pdf/.test(file.type) || /\.pdf$/.test(nome)){
+      ovl('Lendo o PDF…', 0);
+      if (!window.pdfjsLib) await loadScript(PDFJS);
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      let txt = '';
+      for (let p = 1; p <= Math.min(pdf.numPages, 6); p++){
+        const pg = await pdf.getPage(p), tc = await pg.getTextContent();
+        let linhaY = null, linha = [];
+        tc.items.forEach(it => { const y = Math.round(it.transform[5]); if (linhaY !== null && Math.abs(y - linhaY) > 3){ txt += linha.join(' ') + '\n'; linha = []; } linhaY = y; linha.push(it.str); });
+        txt += linha.join(' ') + '\n';
+      }
+      if (txt.replace(/\s/g,'').length > 80){ NFF.texto = txt; NFF.origem = 'pdf'; }
+      else {
+        const canvases = [];
+        for (let p = 1; p <= Math.min(pdf.numPages, 3); p++){
+          const pg = await pdf.getPage(p), vp = pg.getViewport({ scale: 2.5 });
+          const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+          await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; canvases.push(c);
+        }
+        NFF.texto = await nfOCR(canvases); NFF.origem = 'ocr';
+      }
+    } else if (/^image\//.test(file.type)){
+      const img = await createImageBitmap(file);
+      NFF.texto = await nfOCR([nfPreparar(img)]); NFF.origem = 'ocr';
+    } else throw new Error('Formato não suportado. Envie foto, PDF ou XML.');
+    nfAplicar(nfDoTexto(NFF.texto));
+    st.innerHTML = NFF.origem === 'pdf' ? '✅ <b>PDF lido</b> (texto exato). Campos em <b style="color:#c4b5fd">roxo</b> vieram da nota — confira.'
+      : '🔍 <b>Foto lida pelo OCR.</b> Os campos em <b style="color:#c4b5fd">roxo</b> foram preenchidos automaticamente — <b>confira cada um</b>, principalmente valores.';
+  }catch(e){ st.innerHTML = '<span class="err">⚠️ ' + esc(e.message) + ' — preencha à mão.</span>'; }
+  finally{ ovl(''); }
+}
+// foto do celular: reduz/aumenta pra ~2000 px, tons de cinza e contraste — melhora muito o Tesseract
+function nfPreparar(img){
+  const alvo = 2000, esc_ = Math.min(2.5, alvo / Math.max(img.width, img.height)) || 1;
+  const c = document.createElement('canvas'); c.width = Math.round(img.width * esc_); c.height = Math.round(img.height * esc_);
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+  const d = g.getImageData(0, 0, c.width, c.height), px = d.data;
+  for (let i = 0; i < px.length; i += 4){ let y = 0.299*px[i] + 0.587*px[i+1] + 0.114*px[i+2]; y = Math.max(0, Math.min(255, (y - 128) * 1.5 + 140)); px[i] = px[i+1] = px[i+2] = y; }
+  g.putImageData(d, 0, 0); return c;
+}
+async function nfOCR(canvases){
+  ovl('Carregando o leitor de texto (OCR)…', 0);
+  if (!window.Tesseract) await loadScript(TESSERACT_JS);
+  let atual = 0;
+  const worker = await Tesseract.createWorker('por', 1, { logger: m => { if (m.status === 'recognizing text') ovl(`Lendo a nota… página ${atual+1}/${canvases.length}`, (atual + m.progress) / canvases.length); } });
+  let txt = '';
+  try{ for (; atual < canvases.length; atual++){ const r = await worker.recognize(canvases[atual]); txt += r.data.text + '\n'; } }
+  finally{ await worker.terminate(); }
+  return txt;
+}
+
+function nfDoXML(txt){
+  const doc = new DOMParser().parseFromString(txt, 'text/xml');
+  const tag = (...nomes) => { for (const n of nomes){ const e = doc.getElementsByTagNameNS('*', n)[0] || doc.getElementsByTagName(n)[0]; if (e && e.textContent.trim()) return e.textContent.trim(); } return ''; };
+  const dentro = (pai, ...nomes) => { const p = doc.getElementsByTagNameNS('*', pai)[0]; if (!p) return ''; for (const n of nomes){ const e = p.getElementsByTagNameNS('*', n)[0]; if (e && e.textContent.trim()) return e.textContent.trim(); } return ''; };
+  const r = {};
+  const inf = doc.getElementsByTagNameNS('*', 'infNFe')[0];
+  if (inf){ // NF-e / NFC-e
+    r.chave = (inf.getAttribute('Id') || '').replace(/\D/g,'');
+    r.fornecedor = dentro('emit', 'xNome'); r.cnpj = dentro('emit', 'CNPJ');
+    r.numero = dentro('ide', 'nNF'); r.serie = dentro('ide', 'serie');
+    r.data = (dentro('ide', 'dhEmi', 'dEmi') || '').slice(0,10);
+    r.total = Number(dentro('ICMSTot', 'vNF')) || 0; r.pecas = Number(dentro('ICMSTot', 'vProd')) || 0;
+    r.servicos = Number(dentro('ISSQNtot', 'vServ')) || 0;
+    r.itens = [...doc.getElementsByTagNameNS('*', 'det')].map(d => { const g = n => (d.getElementsByTagNameNS('*', n)[0] || {}).textContent || ''; return { descricao:g('xProd').trim(), qtd:Number(g('qCom')) || 0, valor:Number(g('vProd')) || 0 }; });
+    r.extra = dentro('infAdic', 'infCpl');
+  } else { // NFS-e (ABRASF ou padrão nacional)
+    r.numero = tag('Numero', 'nNFSe', 'NumeroNfse');
+    r.data = (tag('DataEmissao', 'dhEmi', 'dhProc', 'DataEmissaoNfse') || '').slice(0,10);
+    r.fornecedor = dentro('PrestadorServico', 'RazaoSocial', 'NomeFantasia') || dentro('emit', 'xNome') || dentro('Prestador', 'xNome', 'RazaoSocial') || tag('RazaoSocial');
+    r.cnpj = dentro('PrestadorServico', 'Cnpj') || dentro('emit', 'CNPJ') || dentro('Prestador', 'CNPJ', 'Cnpj') || tag('Cnpj', 'CNPJ');
+    r.servicos = Number(tag('ValorServicos', 'vServ')) || 0;
+    r.total = Number(tag('ValorLiquidoNfse', 'vLiq', 'ValorServicos', 'vServ')) || r.servicos;
+    r.desc = tag('Discriminacao', 'xDescServ');
+    r.chave = tag('chNFSe').replace(/\D/g,'');
+  }
+  const extra = norm((r.extra || '') + ' ' + (r.desc || ''));
+  const pl = extra.match(/\b([A-Z]{3})[- ]?(\d[A-Z0-9]\d{2})\b/); if (pl) r.placa = pl[1] + '-' + pl[2];
+  const km = extra.match(/(?:\bKM|QUILOMETRAGEM|HODOMETRO|ODOMETRO)\s*[:.=]?\s*([\d.]{3,9})/); if (km) r.km = km[1].replace(/\./g,'');
+  return r;
+}
+
+function nfDoTexto(txt){
+  const T = norm(txt).replace(/[ \t]+/g, ' ');
+  const r = {};
+  // chave de acesso: 44 dígitos (em blocos de 4). Dela saem CNPJ, série, número e mês com certeza.
+  const cands = T.match(/(?:\d[\d ]{50,60}\d)/g) || [];
+  for (const c of cands){ const d = c.replace(/\D/g,''); for (let i = 0; i + 44 <= d.length; i++){ const k = d.slice(i, i+44); if (chaveValida(k)){ r.chave = k; break; } } if (r.chave) break; }
+  if (r.chave){ r.cnpj = r.chave.slice(6,20); r.serie = String(+r.chave.slice(22,25)); r.numero = String(+r.chave.slice(25,34)); }
+  const cnpjs = (T.match(/\d{2}[.,]?\d{3}[.,]?\d{3}\s?\/?\s?\d{4}\s?-?\s?\d{2}/g) || []).map(x => x.replace(/\D/g,'')).filter(cnpjValido);
+  if (!r.cnpj && cnpjs.length) r.cnpj = cnpjs[0];
+  // número da nota
+  if (!r.numero){
+    const m = T.match(/N[UÚ]MERO DA (?:NOTA|NFS-?E)\D{0,15}(\d{1,9})/) || T.match(/NFS?-?E?\s*N[°ºO.]*\s*[:.]?\s*(\d[\d.]{0,10})/) || T.match(/\bN[°º]\s*[:.]?\s*(\d[\d.]{2,10})/);
+    if (m) r.numero = String(+m[1].replace(/\./g,''));
+  }
+  // data de emissão: a que vem depois de "EMISSÃO", senão a primeira da nota
+  const de = T.match(/EMISS[AÃ]O[^0-9]{0,40}(\d{2})[\/.-](\d{2})[\/.-](\d{4})/) || T.match(/(\d{2})[\/.-](\d{2})[\/.-](20\d{2})/);
+  if (de) r.data = `${de[3]}-${de[2]}-${de[1]}`;
+  // valores
+  const V = '(\\d{1,3}(?:[.\\s]\\d{3})*,\\d{2})';
+  const acha = (...pads) => { for (const p of pads){ const m = T.match(new RegExp(p + '[^0-9]{0,40}' + V)); if (m) return moneyBR(m[1].replace(/\s/g,'')); } return 0; };
+  r.total = acha('VALOR TOTAL DA NOTA', 'VALOR TOTAL DA NFS-?E', 'VALOR L[IÍ]QUIDO DA NOTA', 'VALOR L[IÍ]QUIDO', 'TOTAL A PAGAR', 'VALOR A PAGAR', 'TOTAL GERAL', 'V(?:ALOR|L)\\.? TOTAL', 'TOTAL R\\$', 'TOTAL');
+  r.pecas = acha('VALOR TOTAL DOS PRODUTOS', 'TOTAL DOS PRODUTOS', 'TOTAL (?:DE )?PE[CÇ]AS');
+  r.servicos = acha('VALOR (?:TOTAL )?DOS SERVI[CÇ]OS', 'TOTAL (?:DE |DOS )?SERVI[CÇ]OS', 'M[AÃ]O DE OBRA');
+  if (!r.total){ const todos = (T.match(new RegExp(V, 'g')) || []).map(x => moneyBR(x.replace(/\s/g,''))); if (todos.length) r.total = Math.max(...todos); }
+  // fornecedor: linha do topo com cara de razão social
+  const linhas = norm(txt).split('\n').map(l => l.trim()).filter(Boolean);
+  const razao = linhas.slice(0, 18).find(l => /\b(LTDA|EIRELI|ME|EPP|S\/?A|MEI|COMERCIO|AUTO|MECANICA|PECAS|OFICINA|SERVICOS|PNEUS|CENTER|DISTRIBUIDORA)\b/.test(l) && !/POLICIA|ESTADO DE RONDONIA|DESTINAT|RECEBEMOS/.test(l) && l.length < 90);
+  if (razao) r.fornecedor = razao.replace(/^(RAZAO SOCIAL|NOME\/?RAZAO SOCIAL|EMITENTE|PRESTADOR DE SERVICOS?)[:\s]*/,'').trim();
+  const pl = T.match(/\b([A-Z]{3})[- ]?(\d[A-Z0-9]\d{2})\b/g);
+  if (pl){ for (const p of pl){ const k = normK(p); const v = D.viaturas.find(x => normK(x.placa).startsWith(k)); if (v){ r.placa = p; r.prefixoAchado = v.prefixo; break; } } if (!r.placa) r.placa = pl[0]; }
+  const km = T.match(/(?:\bKM|QUILOMETRAGEM|HODOMETRO|ODOMETRO)\s*(?:ATUAL)?\s*[:.=]?\s*(\d{1,3}(?:\.\d{3})+|\d{3,7})\b/); if (km) r.km = km[1].replace(/\./g,'');
+  // itens: linha com texto + valor no fim (fora cabeçalho/rodapé de impostos)
+  r.itens = linhas.map(l => {
+    if (/TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|DINHEIRO|CARTAO|PIX|SUBTOTAL/.test(l)) return null;
+    const m = l.match(new RegExp('^(.*?[A-Z]{3,}.*?)\\s+' + V + '\\s*$')); if (!m) return null;
+    // tira do fim o que é coluna numérica (qtd, unidade, valor unitário) até sobrar só o nome
+    let desc = m[1].replace(/^\d{1,4}\s+/, ''), antes;
+    do { antes = desc; desc = desc.replace(/\s+(UN|UND|PC|PCT|LT|L|KG|CX|JG|SV|UNID|H|HR|\d+(?:[.,]\d+)*)\s*$/, ''); } while (desc !== antes);
+    desc = desc.trim();
+    if (desc.replace(/[^A-Z]/g,'').length < 3) return null;
+    const q = m[1].match(/\s(\d+(?:[.,]\d+)?)\s*(?:UN|UND|PC|PCT|LT|L|KG|CX|JG|SV|UNID|H|HR)\b/);
+    return { descricao: desc.slice(0, 120), qtd: q ? Number(q[1].replace(',', '.')) : 0, valor: moneyBR(m[2].replace(/\s/g,'')) };
+  }).filter(Boolean).slice(0, 40);
+  return r;
+}
+
+function nfTipo(t){
+  const T = norm(t);
+  if (/TROCA DE OLEO|OLEO (DO )?MOTOR|LUBRIFICANTE|FILTRO DE OLEO/.test(T)) return 'Troca de óleo';
+  if (/REVIS[AÃ]O/.test(T)) return 'Revisão';
+  if (/PNEU|BORRACHARIA|ALINHAMENTO|BALANCEAMENTO/.test(T)) return 'Pneus';
+  if (/FUNILARIA|PINTURA|LANTERNAGEM|MARTELINHO/.test(T)) return 'Funilaria/Pintura';
+  if (/PARA.?BRISA|VIDRO/.test(T)) return 'Vidros';
+  if (/AR.?CONDICIONADO|COMPRESSOR|HIGIENIZA/.test(T)) return 'Ar-condicionado';
+  if (/BATERIA|ALTERNADOR|ELETRIC|LAMPADA|MOTOR DE PARTIDA/.test(T)) return 'Elétrica';
+  if (/GUINCHO|REBOQUE/.test(T)) return 'Guincho';
+  if (/LAVAGEM|LAVA.?JATO|HIGIENIZACAO/.test(T)) return 'Lavagem';
+  if (/MAO DE OBRA|SERVICO|MECANIC|RETIFICA|EMBREAGEM|SUSPENS|FREIO/.test(T)) return 'Mecânica';
+  return 'Peças';
+}
+function nfAplicar(r){
+  const put = (id, v) => { if (v === undefined || v === null || v === '' || v === 0) return; const el = $(id); el.value = v; el.classList.add('ocr'); };
+  put('nf-f-forn', r.fornecedor); put('nf-f-cnpj', fmtCNPJ(r.cnpj)); put('nf-f-num', r.numero); put('nf-f-serie', r.serie); put('nf-f-chave', r.chave);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(r.data || '')) put('nf-f-data', r.data);
+  put('nf-f-vt', nfMoeda(r.total)); put('nf-f-vp', nfMoeda(r.pecas)); put('nf-f-vs', nfMoeda(r.servicos));
+  put('nf-f-placa', r.placa); put('nf-f-km', r.km);
+  if (r.desc) put('nf-f-desc', r.desc.slice(0, 3000));
+  else if (r.itens && r.itens.length && !$('nf-f-desc').value) put('nf-f-desc', r.itens.map(i => i.descricao).join('; ').slice(0, 600));
+  const achou = r.prefixoAchado || (r.placa && (D.viaturas.find(v => normK(v.placa).startsWith(normK(r.placa))) || {}).prefixo);
+  if (achou && !$('nf-f-v').value){ $('nf-f-v').value = achou; $('nf-f-v').classList.add('ocr'); nfPendencias(); }
+  const tipo = nfTipo(NFF.texto); $('nf-f-tipo').value = tipo; $('nf-f-tipo').classList.add('ocr');
+  if (tipo === 'Troca de óleo' && $('nf-f-oleo')) $('nf-f-oleo').checked = true;
+  $('nf-itens').innerHTML = ''; (r.itens || []).forEach(nfItemAdd);
+  $('nf-raw-t').textContent = NFF.texto.slice(0, 20000); show('nf-raw', true);
+  nfSugerirSanar();
+  if (r.cnpj && !r.fornecedor) nfBuscaCNPJ();
+}
+// Razão social pelo CNPJ (BrasilAPI, dado público da Receita) — só completa se o leitor não achou o nome.
+async function nfBuscaCNPJ(){
+  const c = $('nf-f-cnpj').value.replace(/\D/g,''); if (!cnpjValido(c) || $('nf-f-forn').value.trim()) return;
+  try{ const r = await fetch('https://brasilapi.com.br/api/cnpj/v1/' + c); if (!r.ok) return; const d = await r.json();
+    if (d.razao_social && !$('nf-f-forn').value.trim()){ $('nf-f-forn').value = d.nome_fantasia ? `${d.razao_social} (${d.nome_fantasia})` : d.razao_social; $('nf-f-forn').classList.add('ocr'); } }catch(e){}
+}
+
+async function nfSalvar(){
+  const val = id => $(id).value.trim();
+  const itens = [...$('nf-itens').querySelectorAll('tr')].map(tr => ({ descricao: tr.querySelector('.d').value.trim(), qtd: Number(tr.querySelector('.q').value.replace(',', '.')) || 0, valor: moneyBR(tr.querySelector('.v').value || '0') })).filter(i => i.descricao);
+  const nf = { id: NFF.editId, prefixo: val('nf-f-v'), placa: val('nf-f-placa'), km: val('nf-f-km'), fornecedor: val('nf-f-forn'), cnpj: val('nf-f-cnpj'), data_emissao: val('nf-f-data'),
+    numero: val('nf-f-num'), serie: val('nf-f-serie'), chave: val('nf-f-chave'), tipo: val('nf-f-tipo'), valor_pecas: moneyBR(val('nf-f-vp') || '0'), valor_servicos: moneyBR(val('nf-f-vs') || '0'),
+    valor_total: moneyBR(val('nf-f-vt') || '0'), descricao: val('nf-f-desc'), obs: val('nf-f-obs'), itens };
+  if (!nf.prefixo) return toast('⚠️ Escolha a viatura.', true);
+  if (!(nf.valor_total > 0)) return toast('⚠️ Informe o valor total.', true);
+  if (!nf.data_emissao) return toast('⚠️ Informe a data de emissão.', true);
+  const sanar = [];
+  if ($('nf-sanar')) $('nf-sanar').querySelectorAll('.pc[data-id]').forEach(pc => {
+    const marc = [...pc.querySelectorAll('input:checked')].map(x => x.value); if (!marc.length) return;
+    const todos = pc.querySelectorAll('input').length;
+    sanar.push({ id: pc.dataset.id, itens: marc.includes('*') || marc.length === todos ? [] : marc });
+  });
+  const oleo = $('nf-f-oleo') && $('nf-f-oleo').checked;
+  if (oleo && !(Number(String(nf.km).replace(/\D/g,'')) > 0)) return toast('⚠️ Para registrar troca de óleo, informe o km da nota.', true);
+  $('nf-ok').disabled = true;
+  try{
+    ovl('Gravando a nota…');
+    const d = await apiPost('/api/garagem/gestao/save', { op:'nf_salvar', nf, sanar, registrar_manutencao: $('nf-f-man') ? $('nf-f-man').checked : false, troca_oleo: oleo });
+    if (NFF.arquivo){
+      ovl('Guardando o arquivo da nota no Drive…');
+      const fd = new FormData(); fd.append('id', d.id); fd.append('file', NFF.arquivo, NFF.arquivo.name);
+      const r = await fetch(API_BASE + '/api/garagem/nf/arquivo', { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token }, body: fd });
+      if (!r.ok){ const e = await r.json().catch(() => ({})); toast('⚠️ Nota lançada, mas o arquivo não subiu: ' + (e.detail || e.error || r.status), true); }
+    }
+    fecharModal(); toast(NFF.editId ? '✅ Nota atualizada.' : `✅ Nota lançada${sanar.length ? ' e ' + sanar.length + ' alteração(ões) sanada(s)' : ''}.`);
+    await carregar(true);
+  }catch(e){ toast('⚠️ ' + e.message, true); }
+  finally{ ovl(''); if ($('nf-ok')) $('nf-ok').disabled = false; }
+}
+
+/* ── exclusão com senha (mesma função do index/diaria/intel) ── */
+function confirmarExclusao({ titulo, texto, acao }){
+  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const inp = 'width:100%;box-sizing:border-box;background:#060912;border:1px solid #334155;border-radius:9px;padding:10px 12px;color:#e2e8f0;font:14px Inter,system-ui,sans-serif;outline:none;margin-bottom:12px';
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px';
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.75);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `<form style="background:#0d1322;border:1px solid rgba(248,113,113,.5);border-radius:16px;padding:20px 22px;width:100%;max-width:440px;color:#e2e8f0;font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="font-weight:800;font-size:16px;color:#fca5a5;margin-bottom:8px">🗑️ ${e(titulo || 'Confirmar exclusão')}</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#cbd5e1;margin-bottom:14px;white-space:pre-line">${e(texto)}</div>
+      <label style="${lbl}">Sua senha${AUTH && AUTH.user ? ' (' + e(AUTH.user) + ')' : ''} — confirma a exclusão</label>
+      <input type="password" name="senha" autocomplete="current-password" style="${inp}">
+      <label style="${lbl}">Motivo (opcional)</label>
+      <input name="motivo" maxlength="300" placeholder="Ex.: lançada em duplicidade" style="${inp}">
+      <div data-err style="color:#fca5a5;font-size:13px;min-height:18px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" data-x style="background:rgba(148,163,184,.12);border:1px solid #334155;color:#cbd5e1;border-radius:9px;padding:9px 16px;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer">Cancelar</button>
+        <button type="submit" data-ok style="background:#dc2626;border:none;color:#fff;border-radius:9px;padding:9px 18px;font:800 13.5px Inter,system-ui,sans-serif;cursor:pointer">Excluir</button>
+      </div></form>`;
+    document.body.appendChild(ov);
+    const f = ov.querySelector('form'), err = ov.querySelector('[data-err]'), ok = ov.querySelector('[data-ok]');
+    let ocupado = false;
+    const fechar = v => { ov.remove(); resolve(v); };
+    ov.querySelector('[data-x]').onclick = () => { if (!ocupado) fechar(false); };
+    ov.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !ocupado) fechar(false); });
+    f.onsubmit = async ev => {
+      ev.preventDefault();
+      const senha = f.senha.value, motivo = f.motivo.value.trim();
+      if (!senha){ err.textContent = 'Digite sua senha para confirmar.'; f.senha.focus(); return; }
+      ocupado = true; ok.disabled = true; ok.textContent = 'Excluindo…'; err.textContent = '';
+      try { await acao({ senha, motivo }); fechar(true); }
+      catch(x){ ocupado = false; ok.disabled = false; ok.textContent = 'Excluir'; err.textContent = (x && x.message) || 'Erro ao excluir.'; f.senha.value = ''; f.senha.focus(); }
+    };
+    setTimeout(() => f.senha.focus(), 30);
+  });
+}
+
+boot();
+try{ const a = localStorage.getItem('bp_gar_aba'); if (a && document.querySelector(`.tab[data-t="${a}"]`)) irAba(a); }catch(e){}
+</script>
+</body>
+</html>
