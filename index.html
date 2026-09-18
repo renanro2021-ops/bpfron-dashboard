@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BPFRON/RO · Painel Analítico de Operações Policiais</title>
+<script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -951,6 +952,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
               <span class="uc-ico">👤</span>
               <span class="uc-nome" id="uc-nome">Visitante</span>
             </div>
+            <button class="btn-sair" id="btn-senha" onclick="window.bpTrocarSenha&&bpTrocarSenha()" title="Trocar minha senha" hidden style="background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.35);color:#cbd5e1">🔑 Senha</button>
             <button class="btn-sair" id="btn-sair" onclick="apiLogout()" title="Encerrar sessão">⎋ Sair</button>
           </div>
           <div class="last-upd" id="last-upd">Nunca atualizado</div>
@@ -3233,6 +3235,8 @@ function renderUserChip(){
   if (chip) chip.classList.toggle('anon', !logged);
   const sair = document.getElementById('btn-sair');
   if (sair) sair.hidden = !logged;      // só aparece com sessão aberta
+  const senha = document.getElementById("btn-senha");
+  if (senha) senha.hidden = !logged;
   const mt = document.getElementById('mt-user');
   if (mt) mt.textContent = nome;
 }

@@ -34,7 +34,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  const estatico = CDN.test(req.url) || (url.origin === location.origin && /\.(png|avif|webp|svg|js|webmanifest)$/.test(url.pathname) && !/sw-garagem\.js$/.test(url.pathname));
+  const estatico = CDN.test(req.url) || (url.origin === location.origin && /\.(png|avif|webp|svg|js|webmanifest)$/.test(url.pathname) && !/(sw-garagem|conta)\.js$/.test(url.pathname)); // conta.js (troca de senha) sempre da rede
   if (estatico) {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => {
       if (r.ok || r.type === 'opaque') { const copia = r.clone(); caches.open(VERSAO).then((c) => c.put(req, copia)); }

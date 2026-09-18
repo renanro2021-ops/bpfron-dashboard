@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Painel de Controle · BPFRON/RO</title>
+<script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -292,6 +293,7 @@ table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
       <div class="fg" id="ed-senha-wrap" style="grid-column:1/-1">
         <label for="ed-senha">Senha inicial</label>
         <div class="inrow"><input id="ed-senha" type="text" autocomplete="new-password" spellcheck="false" placeholder="mínimo 6 caracteres"><button class="btn ghost" type="button" id="ed-gerar">🎲 Gerar</button></div>
+        <label class="opt" style="margin-top:8px"><input type="checkbox" id="ed-prov" checked><span><b>Senha provisória</b><small>No 1º acesso a pessoa é obrigada a trocar por uma senha dela</small></span></label>
       </div>
       <div class="fg" style="grid-column:1/-1"><label for="ed-obs">Observação (opcional)</label><textarea id="ed-obs" placeholder="ex.: substituto do P3 durante as férias"></textarea></div>
     </div>
@@ -323,6 +325,7 @@ table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
           <button class="btn ghost" type="button" id="ed-gerar2">🎲</button>
           <button class="btn" id="ed-trocar">Redefinir senha</button>
         </div>
+        <label class="opt" style="margin-top:10px" id="o-prov2"><input type="checkbox" id="ed-prov2" checked><span><b>Provisória</b><small>A pessoa troca pela dela no próximo acesso (use quando ela esqueceu a senha)</small></span></label>
         <p class="hint" style="margin-top:8px">Redefinir a senha também desconecta a pessoa de todos os aparelhos.</p>
         <div class="btnrow" style="margin-top:12px"><button class="btn ghost" id="ed-derrubar">⏏ Encerrar sessões abertas</button></div>
       </div>
@@ -463,6 +466,7 @@ function renderLista(){
     if (u.dev) chips.push('<span class="chip a">🔒 Desenvolvedor</span>');
     if (u.admin) chips.push('<span class="chip a">★ Administrador</span>');
     if (!u.ativo) chips.push('<span class="chip x">Desativado</span>');
+    if (u.trocar) chips.push('<span class="chip b" title="Ainda não trocou a senha provisória">🔑 Senha provisória</span>');
     u.perms.forEach(p => chips.push(`<span class="chip g">${esc(nomePerm(p))}</span>`));
     u.bloqueios.forEach(p => chips.push(`<span class="chip b">🚫 ${esc(nomePag(p))}</span>`));
     if (!u.admin && !u.perms.length && !u.bloqueios.length) chips.push('<span class="chip x">Acesso padrão (só as páginas liberadas)</span>');
@@ -601,6 +605,8 @@ function abrirEditor(login){
   $('ed-zona').classList.toggle('hidden', !ED);
   $('ed-derrubar').disabled = $('ed-excluir').disabled = eu;
   $('ed-novasenha').value = ''; $('ed-exsenha').value = '';
+  $('ed-prov').checked = true; $('ed-prov2').checked = !eu;
+  $('o-prov2').classList.toggle('hidden', !!eu); // a própria senha nunca é provisória
   $('ed-msg').textContent = ''; $('ed-msg').className = 'msg';
   $('ed-senhabox').classList.add('hidden');
   pintarOpts();
@@ -627,12 +633,14 @@ $('ed-gerar').onclick = () => { $('ed-senha').value = gerarSenha(); };
 $('ed-gerar2').onclick = () => { $('ed-novasenha').value = gerarSenha(); };
 
 function edMsg(t, ok){ $('ed-msg').textContent = t; $('ed-msg').className = 'msg ' + (ok ? 'ok' : 'err'); }
-function mostrarSenha(login, senha){
+function mostrarSenha(login, senha, prov){
   $('ed-senhabox').innerHTML = `<div style="font-size:13px;color:#a7f3d0;margin-bottom:6px">Passe estes dados para a pessoa — a senha <b>não aparece de novo</b>:</div>
-    <div>Login: <code>${esc(login)}</code></div><div>Senha: <code>${esc(senha)}</code></div>
+    <div>Login: <code>${esc(login)}</code></div><div>Senha${prov ? ' provisória' : ''}: <code>${esc(senha)}</code></div>
+    ${prov ? '<div style="font-size:12.5px;color:#a7f3d0;margin-top:6px">No 1º acesso o sistema pede para ela escolher uma senha própria.</div>' : ''}
     <button class="btn ghost small" style="margin-top:10px" id="cp-senha">📋 Copiar</button>`;
   $('ed-senhabox').classList.remove('hidden');
-  $('cp-senha').onclick = () => navigator.clipboard.writeText(`Dashboard BPFRON\nLogin: ${login}\nSenha: ${senha}\nhttps://renanro2021-ops.github.io/bpfron-dashboard/`).then(() => toast('Copiado.'));
+  const extra = prov ? '\n(senha provisória — no 1º acesso o sistema pede para você criar a sua)' : '';
+  $('cp-senha').onclick = () => navigator.clipboard.writeText(`Dashboard BPFRON\nLogin: ${login}\nSenha: ${senha}${extra}\nhttps://renanro2021-ops.github.io/bpfron-dashboard/`).then(() => toast('Copiado.'));
 }
 
 async function edExec(btn, body, okMsg){
@@ -657,9 +665,9 @@ $('ed-salvar').onclick = async () => {
     return;
   }
   const login = $('ed-login').value.trim().toLowerCase(), senha = $('ed-senha').value;
-  if (await edExec($('ed-salvar'), Object.assign({ op:'criar', login, senhaNova: senha }, dados), '✅ Usuário criado.')){
+  if (await edExec($('ed-salvar'), Object.assign({ op:'criar', login, senhaNova: senha, provisoria: $('ed-prov').checked }, dados), '✅ Usuário criado.')){
     ED = ST.usuarios.find(u => u.login === login);
-    mostrarSenha(login, senha);
+    mostrarSenha(login, senha, $('ed-prov').checked);
     $('ed-login').readOnly = true; $('ed-senha-wrap').classList.add('hidden'); $('ed-zona').classList.remove('hidden');
     $('ed-titulo').textContent = ED ? (ED.nome || login) : login;
   }
@@ -667,7 +675,7 @@ $('ed-salvar').onclick = async () => {
 $('ed-trocar').onclick = async () => {
   const s = $('ed-novasenha').value;
   if (s.length < 6) return edMsg('A senha precisa ter pelo menos 6 caracteres.');
-  if (await edExec($('ed-trocar'), { op:'senha', login: ED.login, senhaNova: s }, '✅ Senha redefinida.')){ mostrarSenha(ED.login, s); $('ed-novasenha').value = ''; }
+  if (await edExec($('ed-trocar'), { op:'senha', login: ED.login, senhaNova: s, provisoria: $('ed-prov2').checked }, '✅ Senha redefinida.')){ mostrarSenha(ED.login, s, $('ed-prov2').checked && ED.login !== AUTH.user);$('ed-novasenha').value = ''; }
 };
 $('ed-derrubar').onclick = () => edExec($('ed-derrubar'), { op:'derrubar', login: ED.login }, '✅ Sessões encerradas — a pessoa vai precisar entrar de novo.');
 $('ed-excluir').onclick = async () => {
