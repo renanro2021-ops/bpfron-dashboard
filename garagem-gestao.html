@@ -350,8 +350,7 @@ html,body{overflow-x:hidden}
       <div class="toolbar">
         <div class="fg grow"><label>Buscar</label><input id="fr-q" placeholder="Prefixo, placa, modelo, motorista…" oninput="renderFrota()"></div>
         <div class="fg"><label>Situação</label><select id="fr-s" onchange="renderFrota()">
-          <option value="">Todas</option><option value="uso">Em uso</option><option value="livre">Disponíveis</option>
-          <option value="pend">Com alteração</option><option value="crit">Dano crítico</option><option value="oleo">Óleo vencido/em breve</option><option value="inativa">Fora de uso</option>
+          <option value="">Ativas</option>
         </select></div>
         <button class="btn ed" onclick="editarViatura(-1)">➕ Nova viatura</button>
       </div>
@@ -627,7 +626,7 @@ function renderGeral(){
   const km30 = Object.values(kmRodado(diasAtras(30))).reduce((a,e) => a + e.km, 0);
   const itensAbertos = at.reduce((a,v) => a + v.itens_bloqueados.length, 0);
   const K = [
-    { l:'Frota ativa', v:at.length, s:`${D.viaturas.length - at.length} fora de uso`, c:'#F5C518', go:['frota',''] },
+    { l:'Frota ativa', v:at.length, s:`${D.viaturas.length} no batalhão · ${D.viaturas.length - at.length} devolvida(s)/baixada(s)`, c:'#F5C518', go:['frota',''] },
     { l:'Em uso agora', v:uso.length, s:`${at.length - uso.length} na base`, c:'#60a5fa', go:['frota','uso'] },
     { l:'Com alteração', v:comPend.length, s:`${itensAbertos} itens abertos`, c:'#fbbf24', go:['pend'] },
     { l:'Dano crítico', v:crit.length, s:'motor / transmissão', c:'#f87171', go:['frota','crit'] },
@@ -712,16 +711,30 @@ function renderRanking(){
 /* ── frota ── */
 function renderFrota(){
   if (!D) return;
-  const q = norm($('fr-q').value), s = $('fr-s').value;
+  const q = norm($('fr-q').value), sel = $('fr-s');
   const g12 = gastoPorVtr(diasAtras(365));
+  // Ativas é o padrão; devolvidas/baixadas só aparecem quando pedidas
+  const devolvida = v => /DEVOLVID/.test(norm(v.status_geral));
+  const F = [
+    ['', 'Ativas', v => v.ativa],
+    ['uso', 'Em uso', v => v.ativa && v.em_uso],
+    ['livre', 'Disponíveis', v => v.ativa && !v.em_uso],
+    ['pend', 'Com alteração', v => v.ativa && v.pendencias.length],
+    ['crit', 'Dano crítico', v => v.ativa && v.critico],
+    ['oleo', 'Óleo vencido/em breve', v => v.ativa && v.km_para_troca != null && v.km_para_troca <= 1000],
+    ['dev', 'Devolvidas', v => !v.ativa && devolvida(v)],
+    ['baix', 'Baixadas', v => !v.ativa && !devolvida(v)],
+    ['todas', 'Todas do batalhão', () => true],
+  ];
+  const n = f => D.viaturas.filter(f).length;
+  const s = F.some(f => f[0] === sel.value) ? sel.value : '';
+  sel.innerHTML = F.filter(f => f[0] !== 'baix' || n(f[2]) || s === 'baix')
+    .map(f => `${f[0] === 'dev' ? '<option disabled>──────────</option>' : ''}<option value="${f[0]}">${f[1]} (${n(f[2])})</option>`).join('');
+  sel.value = s;
+  const filtro = F.find(f => f[0] === s)[2];
   const lista = D.viaturas.filter(v => {
     if (q && !norm([v.prefixo, v.placa, v.modelo, v.lotacao, v.ultimo && v.ultimo.motorista].join(' ')).includes(q)) return false;
-    if (s === 'inativa') return !v.ativa;
-    if (s && !v.ativa) return false;
-    if (s === 'uso') return v.em_uso; if (s === 'livre') return !v.em_uso;
-    if (s === 'pend') return v.pendencias.length; if (s === 'crit') return v.critico;
-    if (s === 'oleo') return v.km_para_troca != null && v.km_para_troca <= 1000;
-    return true;
+    return filtro(v);
   });
   $('frota').innerHTML = lista.map(v => {
     const o = oleoSit(v), u = v.ultimo;
