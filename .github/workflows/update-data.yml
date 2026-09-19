@@ -17,23 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Buscar CSVs do Google Sheets
+      - name: Buscar a BASE no Worker (banco de apreensões)
         run: |
-          KEY="2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy"
-          PUB="https://docs.google.com/spreadsheets/d/e/${KEY}/pub"
-          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
-          buscar() {
-            local GID=$1 ARQUIVO=$2 MINBYTES=$3
-            curl -L -A "$UA" -o "$ARQUIVO" "${PUB}?gid=${GID}&single=true&output=csv"
-            BYTES=$(wc -c < "$ARQUIVO")
-            FIRST=$(head -c 1 "$ARQUIVO")
-            echo "${ARQUIVO}: ${BYTES} bytes"
-            if [ "$FIRST" = "<" ]; then echo "ERRO em ${ARQUIVO}: HTML retornado"; exit 1; fi
-            if [ "$BYTES" -lt "$MINBYTES" ]; then echo "ERRO em ${ARQUIVO}: muito pequeno"; exit 1; fi
-          }
-
-          buscar 992567398  data.csv              500
+          # Desde 19/09/2026 a fonte é o BANCO NOVO, servido pelo Worker em
+          # /api/base já nas 49 colunas de sempre (e sem PII). A planilha antiga
+          # (chave "2PACX-1vSobDew…") virou arquivo de consulta e parou de ser
+          # alimentada — buscar nela deixaria o data.csv congelado no dia da
+          # migração, e ele é o fallback do site quando o Worker não responde.
+          curl -fL --retry 3 --retry-delay 5 -o data.csv             "https://bpfron-api.bpfron.workers.dev/api/base"
+          BYTES=$(wc -c < data.csv)
+          FIRST=$(head -c 1 data.csv)
+          echo "data.csv: ${BYTES} bytes"
+          if [ "$FIRST" = "<" ] || [ "$FIRST" = "{" ]; then echo "ERRO: não veio CSV"; exit 1; fi
+          if [ "$BYTES" -lt 500 ]; then echo "ERRO: data.csv muito pequeno"; exit 1; fi
 
       - name: Remover dados pessoais do data.csv público
         run: |
