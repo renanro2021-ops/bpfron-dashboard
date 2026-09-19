@@ -920,6 +920,44 @@ async function carregar(){
   if (r.status === 403) throw new Error('Este usuário não tem acesso à Busca de Ocorrências. Peça a um administrador para marcar "Busca de Ocorrências" no Painel de Controle.');
   if (!r.ok) throw new Error('Erro ' + r.status + ' ao carregar as ocorrências.');
   montarIndice(await r.text());
+  await carregarApreensoes();
+}
+
+/* ── BANCO DE APREENSÕES v2 (set/2026) ─────────────────────────────────────
+   A BASE junta numa coluna só o que tem preço diferente: skunk e haxixe iam
+   como maconha, cloridrato e cocaína dividiam "Cocaína/CH", e arma era sempre
+   "média revólver/pistola". O banco novo tem UMA LINHA POR ITEM com o preço
+   certo; vem do Worker (/api/apreensoes, sem dado pessoal). Ocorrência que
+   ainda não está no banco novo fica com os números da BASE. Falhar aqui não
+   trava a busca. */
+let APRE_CAT = {};
+async function carregarApreensoes(){
+  try {
+    const r = await fetch(API_BASE + '/api/apreensoes?_nc=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const total = Object.values(j.ocorrencias || {}).reduce((a,x) => a + (x.prejuizo || 0), 0);
+    if (!(total > 0)) throw new Error('valores zerados no banco novo');
+    APRE_CAT = {};
+    (j.itens || []).forEach(c => APRE_CAT[c.codigo] = c);
+    for (const o of DADOS){
+      const a = j.ocorrencias[String(o.bo).replace(/\D/g,'')];
+      if (!a) continue;
+      o._apre = a.itens.map(([codigo, qtd, valor]) => ({ codigo, qtd, valor, ...(APRE_CAT[codigo] || {}) }));
+      o.n_prejuizo_base = o.n_prejuizo;          // o da planilha antiga, para comparar
+      o.n_prejuizo = a.prejuizo;
+    }
+  } catch(e){
+    console.warn('[BPFRON] Banco de apreensões indisponível — valores da BASE:', e.message);
+  }
+}
+// "12,5 kg Skunk", "2 Revólver"
+function apreTexto(it){
+  if (it.unidade === 'R$') return fR(it.qtd) + ' ' + String(it.item || it.codigo).replace(/\s*\(R\$\)\s*$/,'');
+  const un = it.unidade === 'kg' || it.unidade === 'g' || it.unidade === 'm³' || it.unidade === 'litro'
+    ? ' ' + (it.unidade === 'litro' ? 'L' : it.unidade) : '';
+  const q = (it.unidade === 'kg' || it.unidade === 'm³') ? fD(it.qtd, 3).replace(/,?0+$/,'') : fN(it.qtd);
+  return q + un + ' ' + (it.item || it.codigo);
 }
 
 /* ── ENVOLVIDOS ────────────────────────────────────────────────────────────
@@ -1283,10 +1321,17 @@ function etiquetas(o){
   const t = [];
   if (o.n_presos > 0)      t.push(['pr', o.n_presos + (o.n_presos > 1 ? ' presos' : ' preso')]);
   if (o.n_drogas > 0)      t.push(['dr', fD(o.n_drogas,2) + ' kg de droga']);
-  if (o.n_maconha > 0)     t.push(['dr', fD(o.n_maconha,2) + ' kg maconha']);
-  if (o.n_cocaina > 0)     t.push(['dr', fD(o.n_cocaina,2) + ' kg cocaína']);
-  if (o.n_crack > 0)       t.push(['dr', fD(o.n_crack,2) + ' kg crack']);
-  if (o.n_armas > 0)       t.push(['ap', o.n_armas + ' arma(s)']);
+  if (o._apre){
+    // banco de apreensões: droga e arma pelo NOME do item (skunk, haxixe,
+    // cloridrato, revólver, fuzil…) em vez da coluna que junta tudo
+    o._apre.filter(it => it.categoria === 'Droga').forEach(it => t.push(['dr', apreTexto(it)]));
+    o._apre.filter(it => it.categoria === 'Arma' && it.codigo !== 'MUNICAO').forEach(it => t.push(['ap', apreTexto(it)]));
+  } else {
+    if (o.n_maconha > 0)   t.push(['dr', fD(o.n_maconha,2) + ' kg maconha']);
+    if (o.n_cocaina > 0)   t.push(['dr', fD(o.n_cocaina,2) + ' kg cocaína']);
+    if (o.n_crack > 0)     t.push(['dr', fD(o.n_crack,2) + ' kg crack']);
+    if (o.n_armas > 0)     t.push(['ap', o.n_armas + ' arma(s)']);
+  }
   if (o.n_municoes > 0)    t.push(['ap', fN(o.n_municoes) + ' munições']);
   if (o.n_veiculos > 0)    t.push(['ap', o.n_veiculos + ' veículo(s)']);
   if (o.n_embarcacoes > 0) t.push(['ap', o.n_embarcacoes + ' embarcação(ões)']);
@@ -1475,7 +1520,12 @@ function detalhe(o){
   add('Endereço', o.endereco); add('Meio', o.meio); add('Ambiente', o.ambiente);
   add('Nacionalidade', o.nacionalidade); add('Operação', o.operacao);
   add('Presos', o.n_presos || ''); add('Apreensões s/ prisão', o.n_apreensoes || '');
-  add('Prejuízo estimado', o.n_prejuizo ? fR(o.n_prejuizo) : '');
+  add('Prejuízo estimado', o.n_prejuizo ? fR(o.n_prejuizo) +
+      (o._apre ? ' (preço por item — banco de apreensões)' : '') : '');
+  if (o._apre && o._apre.length){
+    add('Apreensões (item a item)', o._apre.map(it =>
+      apreTexto(it) + (it.valor > 0 ? ' — ' + fR(it.valor) : '')).join(' · '));
+  }
   add('Multa', o.n_multa ? fR(o.n_multa) : '');
   add('Coordenadas', (o.n_lat && o.n_lon) ? o.lat + ', ' + o.lon : '');
   const ap = etiquetas(o).map(([,t]) => t).join(' · ');
