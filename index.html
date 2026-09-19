@@ -3921,6 +3921,10 @@ async function loadApreensoes(){
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
     if (!j || !j.ocorrencias) throw new Error('resposta sem ocorrências');
+    // Planilha com as fórmulas de valor quebradas devolve tudo zerado: melhor
+    // o cálculo antigo do que mostrar prejuízo R$ 0 (aconteceu em 19/09/2026).
+    const total = Object.values(j.ocorrencias).reduce((a,o)=>a+(o.prejuizo||0),0);
+    if (!(total > 0)) throw new Error('valores zerados no banco novo');
     APRE = j; APRE_CAT = {};
     (j.itens||[]).forEach(c => APRE_CAT[c.codigo] = c);
     console.log('[BPFRON] Banco de apreensões: ' + Object.keys(j.ocorrencias).length + ' ocorrências');
