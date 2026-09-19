@@ -1936,13 +1936,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div class="kpi y" data-vk="oc" onclick="selectVGKpi('oc')"><div class="kpi-ico">📋</div><div class="kpi-lbl">Ocorrências</div><div class="kpi-val" id="k-oc">—</div><div class="kpi-sub">Boletins registrados</div></div>
       <div class="kpi b" data-vk="pr" onclick="selectVGKpi('pr')"><div class="kpi-ico">🔒</div><div class="kpi-lbl">Presos</div><div class="kpi-val" id="k-pr">—</div><div class="kpi-sub">Indivíduos detidos</div></div>
       <div class="kpi g" data-vk="dr" onclick="selectVGKpi('dr')"><div class="kpi-ico">💊</div><div class="kpi-lbl">Drogas Apreend.</div><div class="kpi-val sm" id="k-dr">—</div><div class="kpi-sub">kg total</div></div>
-      <div class="kpi r" data-vk="ma" onclick="selectVGKpi('ma')"><div class="kpi-ico"><i class="ico-img ico-maconha"></i></div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi r" data-vk="ma" onclick="selectVGKpi('ma')"><div class="kpi-ico"><i class="ico-img ico-maconha"></i></div><div class="kpi-lbl">Maconha</div><div class="kpi-val sm" id="k-ma">—</div><div class="kpi-sub" id="k-ma-sub">kg</div></div>
       <div class="kpi p" data-vk="pb" onclick="selectVGKpi('pb')"><div class="kpi-ico">🧴</div><div class="kpi-lbl">Pasta Base</div><div class="kpi-val sm" id="k-pb">—</div><div class="kpi-sub">kg</div></div>
     </div>
 
     <!-- LINHA 2: Cocaína, Veículos, Madeira, Armas, Munições -->
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px">
-      <div class="kpi o" data-vk="co" onclick="selectVGKpi('co')"><div class="kpi-ico"><i class="ico-img ico-cocaina"></i></div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub">kg</div></div>
+      <div class="kpi o" data-vk="co" onclick="selectVGKpi('co')"><div class="kpi-ico"><i class="ico-img ico-cocaina"></i></div><div class="kpi-lbl">Cocaína / CH</div><div class="kpi-val sm" id="k-co">—</div><div class="kpi-sub" id="k-co-sub">kg</div></div>
       <div class="kpi p" data-vk="ve" onclick="selectVGKpi('ve')"><div class="kpi-ico">🚗</div><div class="kpi-lbl">Veículos</div><div class="kpi-val sm" id="k-ve">—</div><div class="kpi-sub" id="k-ve-sub">Apreendidos</div></div>
       <div class="kpi y" data-vk="mad" onclick="selectVGKpi('mad')"><div class="kpi-ico">🌳</div><div class="kpi-lbl">Madeira</div><div class="kpi-val sm" id="k-mad">—</div><div class="kpi-sub">m³</div></div>
       <div class="kpi o" data-vk="ar" onclick="selectVGKpi('ar')"><div class="kpi-ico"><i class="ico-img ico-pistola"></i></div><div class="kpi-lbl">Armas</div><div class="kpi-val" id="k-ar">—</div><div class="kpi-sub">Unidades</div></div>
@@ -3402,7 +3402,7 @@ function renderOpKPIs(){
   set('op-k-ve',  fN(s('veiculos')));
   set('op-k-cb',  fD(s('gasolina_l')+s('diesel_l'),0)+' L');
   set('op-k-mad', fD(s('madeira_m3'),3)+' m³');
-  const pj = s('prejuizo');
+  const pj = APRE ? subset.reduce((a,r)=>a+prejRow(r),0) : s('prejuizo');
   set('op-k-prej', pj>0 ? fR(pj) : '—');
 }
 
@@ -3676,6 +3676,8 @@ async function loadData() {
   fetchPrejuizoTotal();
   // Busca a equipe policial por BO (aba POLICIAIS) em paralelo
   loadPoliciais();
+  // Banco de apreensões (preço por item) em paralelo; quando chega, recalcula
+  const apreP = (window.location.protocol === 'file:') ? Promise.resolve(false) : loadApreensoes();
 
   // Busca dados online
   const isLocal = window.location.protocol === 'file:';
@@ -3767,6 +3769,7 @@ async function loadData() {
 
     populateFilters();
     applyFilters();
+    apreP.then(ok => { if (ok) { anexarApreensoes(); applyFilters(); } });
 
     document.getElementById('filters').style.display = '';
     document.getElementById('periodo-rapido').style.display = '';
@@ -3904,8 +3907,93 @@ function prejCalcRow(r){
   for (const f in PREJ_UNIT) t += (r[f]||0) * PREJ_UNIT[f];
   return t;
 }
-// prejuízo oficial da ocorrência (coluna da planilha) com fallback no cálculo local
-function prejRow(r){ return (r.prejuizo > 0) ? r.prejuizo : prejCalcRow(r); }
+/* ── Banco de apreensões v2 (planilha BPFRON_Banco_Apreensoes_v2, set/2026) ──
+   Uma linha por ITEM, com preço próprio: skunk e haxixe não são mais maconha,
+   cloridrato e cocaína têm preços diferentes e cada tipo de arma tem o seu.
+   Vem do Worker (/api/apreensoes, público, sem dado pessoal). Ocorrência que
+   ainda não está no banco novo continua no cálculo antigo (PREJ_UNIT). */
+let APRE = null;               // { itens:[catálogo], ocorrencias:{bo:{prejuizo,itens}} }
+let APRE_CAT = {};             // código -> {item, categoria, unidade}
+const boDig = s => String(s||'').replace(/\D/g,'');
+async function loadApreensoes(){
+  try {
+    const res = await fetch(WORKER_API + '/api/apreensoes?_nc=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if (!j || !j.ocorrencias) throw new Error('resposta sem ocorrências');
+    APRE = j; APRE_CAT = {};
+    (j.itens||[]).forEach(c => APRE_CAT[c.codigo] = c);
+    console.log('[BPFRON] Banco de apreensões: ' + Object.keys(j.ocorrencias).length + ' ocorrências');
+    return true;
+  } catch(e) {
+    console.warn('[BPFRON] Banco de apreensões indisponível — prejuízo pelo cálculo antigo:', e.message);
+    return false;
+  }
+}
+// liga cada ocorrência aos seus itens (chamado depois de carregar ALL e APRE)
+function anexarApreensoes(){
+  if (!APRE || !ALL) return;
+  for (const r of ALL) {
+    const a = APRE.ocorrencias[boDig(r.no_bo)];
+    r._apre = a || null;
+    if (!a) continue;
+    const q = {};
+    for (const [c, n] of a.itens) q[c] = (q[c]||0) + n;
+    r._apreQ = q;
+    r.skunk_kg = q.SKUNK || 0;
+    r.haxixe_kg = q.HAXIXE || 0;
+    r.cloridrato_kg = q.CLORIDRATO || 0;
+    r.cocaina_comum_kg = q.COCAINA || 0;
+  }
+}
+// parte do prejuízo de UMA ocorrência por grupo (mesma divisão dos cards pj-*)
+function prejPartes(r){
+  const p = {dr:0, ar:0, ve:0, cb:0, ci:0, ma:0, ou:0};
+  if (r._apre) {
+    for (const [c, , v] of r._apre.itens) {
+      const cat = (APRE_CAT[c]||{}).categoria || '';
+      if (c === 'CIGARRO') p.ci += v;
+      else if (c === 'MADEIRA') p.ma += v;
+      else if (cat === 'Droga') p.dr += v;
+      else if (cat === 'Arma') p.ar += v;
+      else if (cat === 'Veículo') p.ve += v;
+      else if (cat === 'Combustível') p.cb += v;
+      else p.ou += v;
+    }
+    return p;
+  }
+  const U = PREJ_UNIT, g = f => r[f]||0;
+  p.dr = g('cocaina_kg')*U.cocaina_kg + g('pasta_base_kg')*U.pasta_base_kg + g('maconha_kg')*U.maconha_kg
+       + g('crack_kg')*U.crack_kg + g('oxi_kg')*U.oxi_kg + g('metanfetamina_kg')*U.metanfetamina_kg;
+  p.ar = g('armas')*U.armas;
+  p.ve = g('valor_veiculos');
+  p.cb = (g('gasolina_l') + g('diesel_l'))*U.gasolina_l + g('glp')*U.glp;
+  p.ci = g('cigarros')*U.cigarros;
+  p.ma = g('madeira_m3')*U.madeira_m3;
+  p.ou = g('dinheiro') + g('merc_descaminho') + g('valor_descaminho') + g('animais_pescado')
+       + g('folha_coca_kg')*U.folha_coca_kg + g('ouro_g')*U.ouro_g + g('multa');
+  return p;
+}
+// campo da ocorrência -> códigos do catálogo que ele representa (prejuízo por métrica)
+const APRE_DO_CAMPO = {
+  maconha_kg:['MACONHA','SKUNK','HAXIXE'], cocaina_kg:['CLORIDRATO','COCAINA'],
+  pasta_base_kg:['PASTA_BASE'], crack_kg:['CRACK'], oxi_kg:['OXI'],
+  metanfetamina_kg:['METANFETAMINA'], folha_coca_kg:['FOLHA_COCA'], ouro_g:['OURO'],
+  gasolina_l:['GASOLINA'], diesel_l:['DIESEL'], glp:['GLP'], cigarros:['CIGARRO'],
+  madeira_m3:['MADEIRA'],
+};
+function apreValorCampo(r, f){
+  if (f === 'armas') return r._apre.itens.reduce((a,[c,,v]) =>
+    a + (((APRE_CAT[c]||{}).categoria === 'Arma' && c !== 'MUNICAO') ? v : 0), 0);
+  const cods = APRE_DO_CAMPO[f]; if (!cods) return 0;
+  return r._apre.itens.reduce((a,[c,,v]) => a + (cods.includes(c) ? v : 0), 0);
+}
+
+// prejuízo da ocorrência: banco novo (preço por item) > coluna da planilha > cálculo local
+function prejRow(r){
+  if (r._apre) return r._apre.prejuizo;
+  return (r.prejuizo > 0) ? r.prejuizo : prejCalcRow(r);
+}
 
 /* ── KPIs ── */
 function renderKPIs() {
@@ -3944,20 +4032,19 @@ function renderKPIs() {
   $('k-emb', fN(s('embarcacoes'))+' un.');
   $('k-mtp', fN(s('motor_popa'))+' un.');
   $('k-mul', fR(s('multa')));
-  // Subcategorias do prejuízo (mesma composição da aba PAINEL)
-  const U = PREJ_UNIT;
-  const pj_dr = s('cocaina_kg')*U.cocaina_kg + s('pasta_base_kg')*U.pasta_base_kg
-              + s('maconha_kg')*U.maconha_kg + s('crack_kg')*U.crack_kg
-              + s('oxi_kg')*U.oxi_kg + s('metanfetamina_kg')*U.metanfetamina_kg;
-  const pj_ar = s('armas') * U.armas;
-  const pj_ve = s('valor_veiculos');
-  const pj_cb = (s('gasolina_l') + s('diesel_l')) * U.gasolina_l + s('glp') * U.glp;
-  const pj_ci = s('cigarros') * U.cigarros;
-  const pj_ma = s('madeira_m3') * U.madeira_m3;
-  // "Outros" = ouro, dinheiro, descaminho e multas (mesma categoria da PAINEL)
-  const pj_ou = s('dinheiro') + s('merc_descaminho') + s('valor_descaminho')
-              + s('animais_pescado') + s('folha_coca_kg')*U.folha_coca_kg
-              + s('ouro_g')*U.ouro_g + s('multa');
+  // Banco de apreensões: o que a coluna junta, separado no subtítulo do card
+  if (APRE) {
+    const sk = s('skunk_kg'), hx = s('haxixe_kg'), cl = s('cloridrato_kg'), cc = s('cocaina_comum_kg');
+    const sub = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
+    sub('k-ma-sub', (sk || hx) ? 'kg · skunk ' + fD(sk,1) + ' · haxixe ' + fD(hx,1) : 'kg');
+    sub('k-co-sub', (cl || cc) ? 'kg · cloridrato ' + fD(cl,1) + ' · cocaína ' + fD(cc,1) : 'kg');
+  }
+  // Subcategorias do prejuízo. Com o banco de apreensões, cada item entra pelo
+  // seu próprio preço (skunk, haxixe, tipo de arma…); sem ele, cálculo antigo.
+  const pj = {dr:0, ar:0, ve:0, cb:0, ci:0, ma:0, ou:0};
+  for (const r of FIL) { const p = prejPartes(r); for (const k in pj) pj[k] += p[k]; }
+  const pj_dr = pj.dr, pj_ar = pj.ar, pj_ve = pj.ve, pj_cb = pj.cb,
+        pj_ci = pj.ci, pj_ma = pj.ma, pj_ou = pj.ou;
   $('pj-dr', fR(pj_dr)); $('pj-ar', fR(pj_ar)); $('pj-ve', fR(pj_ve));
   $('pj-cb', fR(pj_cb)); $('pj-ci', fR(pj_ci)); $('pj-ma', fR(pj_ma));
   $('pj-ou', fR(pj_ou));
@@ -3966,7 +4053,7 @@ function renderKPIs() {
   //    (sem filtro ela reproduz exatamente o PREJUÍZO TOTAL da aba PAINEL)
   //  • fallbacks: total da PAINEL (sem filtro) e, por último, a soma das categorias
   const calc = pj_dr + pj_ar + pj_ve + pj_cb + pj_ci + pj_ma + pj_ou;
-  const pjReal = s('prejuizo');
+  const pjReal = APRE ? FIL.reduce((a,r)=>a+prejRow(r),0) : s('prejuizo');
   if (pjReal > 0) {
     $('k-prej', fR(pjReal));
   } else if (window._prejuizoTotal && !window._filtroAtivo) {
@@ -4048,6 +4135,7 @@ function vgPrej(m, r){
   if (m.prejAll)   return prejRow(r);                    // métricas sem valor próprio → prejuízo total do BO
   if (m.prejMoney) return r[m.prejMoney] || 0;           // veículos → valor informado
   const fs = vgPrejFields(m);
+  if (r._apre) return fs.reduce((a,f)=>a + apreValorCampo(r, f), 0);   // preço por item
   return fs.reduce((a,f)=>a + (r[f]||0) * (PREJ_UNIT[f]||0), 0);
 }
 // campos com valor unitário que compõem o prejuízo da métrica
