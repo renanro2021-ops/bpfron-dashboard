@@ -548,6 +548,34 @@ const DOC_MAX = 60000;   // recorte de segurança: prompt gigante trava a conver
 let DOC_TEXTO = '';
 let DOC_NOME = '';
 
+/* CONTEXTO DA UNIDADE — a razão de existir deste campo:
+   o ofício que chega é genérico (vai para toda a PMRO), então a IA, sozinha,
+   devolve um questionário que serviria para qualquer batalhão do país. Quem é
+   da fronteira precisa perguntar do que só acontece aqui: autor estrangeiro,
+   apreensão de embarcação e motor de popa, base longe do IML e da comarca,
+   ocorrência de competência federal. Este texto vai junto com o documento e é
+   o que faz a diferença entre um formulário genérico e um formulário útil.
+   Fica guardado no navegador (bp_pesq_contexto) para não redigitar toda vez. */
+const CONTEXTO_PADRAO =
+  'BPFRON — Batalhão de Polícia de Fronteira e Divisas da Polícia Militar de Rondônia.\n' +
+  'Onde atua: faixa de fronteira com a Bolívia e divisas do estado, com policiamento ' +
+  'terrestre e FLUVIAL (rios Mamoré, Guaporé e Madeira), incluindo bases distantes da sede.\n' +
+  'Ocorrências mais comuns: tráfico e transporte de drogas, contrabando e descaminho, ' +
+  'transporte ilegal de madeira, pesca e crimes ambientais, apreensão de embarcações e ' +
+  'motores de popa, veículos, armas e munições.\n' +
+  'Particularidades da unidade: autores, vítimas e testemunhas estrangeiros (bolivianos) ou ' +
+  'residentes do outro lado da fronteira; distância grande até a comarca, o IML e a perícia; ' +
+  'locais sem sinal de internet para registro no sistema; ocorrências que podem ser de ' +
+  'competência da Justiça Federal; efetivo escalado em missão longe da sede do batalhão.';
+
+function contextoAtual(){
+  try { return localStorage.getItem('bp_pesq_contexto') || CONTEXTO_PADRAO; }
+  catch (e) { return CONTEXTO_PADRAO; }
+}
+function salvarContexto(v){
+  try { localStorage.setItem('bp_pesq_contexto', v); } catch (e) { /* sem storage: vale só nesta sessão */ }
+}
+
 function abrirDoc(){
   DOC_TEXTO = ''; DOC_NOME = '';
   abrirModal(
@@ -568,7 +596,16 @@ function abrirDoc(){
       '<div id="doc-st" style="font-size:12px;color:var(--muted);margin-top:7px"></div>' +
     '</div>' +
 
-    '<div class="passo" id="doc-p2"><div class="cab">② Levar para a IA</div>' +
+    '<div class="passo feito" id="doc-p15"><div class="cab">② A sua unidade</div>' +
+      '<p>É isto que faz a IA perguntar do que <b>só acontece aqui</b>, em vez de devolver um ' +
+      'formulário que serviria para qualquer batalhão. Ajuste se a pesquisa for de uma companhia ' +
+      'ou de um assunto específico — fica salvo para a próxima vez.</p>' +
+      '<textarea id="doc-ctx" style="min-height:120px" oninput="salvarContexto(this.value)">' +
+        esc(contextoAtual()) + '</textarea>' +
+      '<button class="btn sec pq" style="margin-top:7px" onclick="resetContexto()">↩️ Voltar ao texto padrão</button>' +
+    '</div>' +
+
+    '<div class="passo" id="doc-p2"><div class="cab">③ Levar para a IA</div>' +
       '<p>Copie o pedido pronto e cole no seu Claude (ou ChatGPT). Ele devolve o questionário.</p>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<button class="btn" id="doc-copiar" onclick="copiarPrompt(this)" disabled>📋 Copiar o pedido</button>' +
@@ -576,7 +613,7 @@ function abrirDoc(){
       '</div>' +
     '</div>' +
 
-    '<div class="passo" id="doc-p3"><div class="cab">③ Trazer a resposta de volta</div>' +
+    '<div class="passo" id="doc-p3"><div class="cab">④ Trazer a resposta de volta</div>' +
       '<p>Cole aqui o que a IA respondeu. Pode colar com as crases e o texto em volta — eu acho o questionário.</p>' +
       '<textarea id="doc-json" class="mono" placeholder=\'{ "titulo": "...", "perguntas": [ ... ] }\' ' +
         'style="min-height:110px"></textarea>' +
@@ -658,20 +695,31 @@ async function docArquivo(file){
    é isso que faz a resposta voltar pronta para importar, sem ajuste na mão. */
 function montarPrompt(){
   const doc = (DOC_TEXTO || '').slice(0, DOC_MAX);
+  const ctx = (($('doc-ctx') && $('doc-ctx').value) || contextoAtual()).slice(0, 4000);
   return (
-'Você vai transformar o documento oficial abaixo em um FORMULÁRIO DE PESQUISA que o BPFRON\n' +
-'(Batalhão de Polícia de Fronteira e Divisas, Polícia Militar de Rondônia) vai enviar ao efetivo\n' +
-'para conseguir responder ao que o documento pede.\n\n' +
+'Você vai transformar o documento oficial abaixo em um FORMULÁRIO DE PESQUISA que uma unidade\n' +
+'da Polícia Militar vai enviar ao seu efetivo para conseguir responder ao que o documento pede.\n\n' +
+'=== A UNIDADE QUE VAI APLICAR A PESQUISA ===\n' + ctx + '\n=== FIM DO CONTEXTO ===\n\n' +
+'REGRA MAIS IMPORTANTE — LEIA DUAS VEZES:\n' +
+'O documento oficial é genérico: foi mandado para várias unidades. A pesquisa NÃO pode ser.\n' +
+'Se o questionário que você escrever serviria igualzinho para qualquer batalhão do país,\n' +
+'ele FALHOU. Cruze o assunto do documento com a realidade da unidade acima e pergunte sobre\n' +
+'as situações que só acontecem LÁ — o tipo de ocorrência que ela atende, o lugar onde ela\n' +
+'atua, as dificuldades materiais e geográficas dela, o perfil de quem ela aborda.\n' +
+'Pelo menos METADE das perguntas tem que ser desse tipo. Cite as situações pelo nome\n' +
+'(o rio, a fronteira, o tipo de apreensão, a distância), não em abstrato.\n\n' +
 'COMO PENSAR:\n' +
 '1. Primeiro identifique O QUE o documento está pedindo e QUAL É O PRAZO.\n' +
 '2. Depois pergunte-se: que respostas eu preciso ter do efetivo para responder isso bem?\n' +
-'3. Escreva as perguntas para PRAÇAS E OFICIAIS que atendem ocorrência, não para gabinete:\n' +
+'3. Em seguida: onde o assunto do documento ENCOSTA na realidade desta unidade? É daí que\n' +
+'   sai a contribuição que ninguém mais tem para dar — e é isso que o documento quer.\n' +
+'4. Escreva as perguntas para PRAÇAS E OFICIAIS que atendem ocorrência, não para gabinete:\n' +
 '   linguagem direta, sem jargão desnecessário, uma ideia por pergunta.\n' +
-'4. Entre 6 e 12 perguntas. Prefira poucas e boas — formulário longo o efetivo não responde.\n' +
-'5. Misture perguntas fechadas (dá para somar e virar gráfico) com 1 a 3 abertas\n' +
+'5. Entre 6 e 12 perguntas. Prefira poucas e boas — formulário longo o efetivo não responde.\n' +
+'6. Misture perguntas fechadas (dá para somar e virar gráfico) com 1 a 3 abertas\n' +
 '   (é de onde saem as contribuições que valem ouro no relatório).\n' +
-'6. NÃO invente fatos, números, nomes ou prazos que não estejam no documento.\n' +
-'7. Se o documento tiver prazo, use uma data ANTES dele em "encerra_em", para sobrar tempo de consolidar.\n\n' +
+'7. NÃO invente fatos, números, nomes ou prazos que não estejam no documento.\n' +
+'8. Se o documento tiver prazo, use uma data ANTES dele em "encerra_em", para sobrar tempo de consolidar.\n\n' +
 'RESPONDA SOMENTE COM UM JSON no formato abaixo, sem nenhum texto antes ou depois:\n' +
 '{\n' +
 '  "titulo": "título curto da pesquisa",\n' +
@@ -696,6 +744,11 @@ function montarPrompt(){
 '  Para levantamento técnico use false, que identifica quem respondeu.\n' +
 '- Toda pergunta aberta deve ter "obrig": false, para ninguém travar no formulário.\n\n' +
 '=== DOCUMENTO (' + (DOC_NOME || 'documento') + ') ===\n' + doc + '\n=== FIM DO DOCUMENTO ===');
+}
+
+function resetContexto(){
+  salvarContexto(CONTEXTO_PADRAO);
+  if ($('doc-ctx')) $('doc-ctx').value = CONTEXTO_PADRAO;
 }
 
 function copiarPrompt(btn){
