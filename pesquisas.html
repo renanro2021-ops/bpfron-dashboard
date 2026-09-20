@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisas e Formulários — BPFRON</title>
+<script src="conta.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   PESQUISAS E FORMULÁRIOS — área do gestor.
+   Monta o questionário, publica o link (pesquisa.html, público) e acompanha as
+   respostas. O relatório impresso é o produto final: é o que vai pro papel /
+   PDF quando a PM pede o resultado do levantamento.
+   Permissão "pesquisa" no Painel de Controle (admin.html).
+   =========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --bg3:#101524; --yellow:#F5C518; --gold:#c9a030;
+  --blue2:#3b82f6; --green2:#22c55e; --red:#dc2626;
+  --text:#dde3f0; --muted:#8b97a8; --border:rgba(245,197,24,0.16);
+  --card:#0f172a;
+}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
+body{padding:0 0 70px}
+a{color:var(--yellow)}
+
+/* ---------- cabeçalho ---------- */
+.pg-hdr{background:linear-gradient(180deg,#0b1020,#070b14);border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30;flex-wrap:wrap}
+.pg-hdr .ic{font-size:22px}
+.pg-hdr .ht{font-family:Rajdhani,sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--yellow)}
+.pg-hdr .hs{font-size:11.5px;color:var(--muted)}
+.pg-hdr .dir{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;color:var(--muted);background:#0c1220;border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px}
+
+.wrap{max-width:1020px;margin:0 auto;padding:18px 16px}
+
+/* ---------- blocos ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 17px;margin-bottom:14px}
+.sec-t{font-family:Rajdhani,sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px}
+.sec-t .dir{margin-left:auto;display:flex;gap:7px}
+
+.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+input[type=text],input[type=password],input[type=number],input[type=date],textarea,select{
+  width:100%;background:#0a0f1c;border:1px solid rgba(255,255,255,.12);border-radius:9px;
+  color:var(--text);padding:9px 11px;font-size:14px;font-family:inherit}
+textarea{min-height:70px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--yellow)}
+input::placeholder,textarea::placeholder{color:#55607a}
+select option{background:#0a0f1c}
+
+.btn{background:linear-gradient(180deg,#f5c518,#d4a017);color:#141414;border:none;border-radius:9px;
+  padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:Rajdhani,sans-serif;
+  letter-spacing:.6px;text-transform:uppercase}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sec{background:#1a2234;color:var(--text);border:1px solid var(--border)}
+.btn.pq{padding:7px 12px;font-size:12px}
+.btn.dan{background:#2a1416;color:#fca5a5;border:1px solid rgba(220,38,38,.45)}
+.btn.ok{background:linear-gradient(180deg,#22c55e,#15803d);color:#fff}
+
+.msg{border-radius:10px;padding:11px 13px;font-size:13.5px;margin-bottom:12px;line-height:1.5}
+.msg.err{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.45);color:#fca5a5}
+.msg.warn{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);color:#fde68a}
+.msg.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#86efac}
+
+/* ---------- login ---------- */
+.login-box{max-width:390px;margin:50px auto;background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:26px 24px}
+.login-box h2{font-family:Rajdhani,sans-serif;font-size:21px;color:var(--yellow);margin-bottom:5px;text-align:center}
+.login-box p{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5}
+.login-box .campo{margin-bottom:12px}
+.login-box .btn{width:100%;padding:12px}
+#pg-erro{color:#fca5a5;font-size:13px;margin-top:10px;text-align:center;line-height:1.5}
+
+/* ---------- lista de pesquisas ---------- */
+.pq-card{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:12px;
+  padding:14px 15px;margin-bottom:11px;border-left:4px solid var(--muted)}
+.pq-card.aberta{border-left-color:var(--green2)}
+.pq-card.fechada{border-left-color:var(--muted)}
+.pq-card h3{font-size:16px;color:#eaf0fa;margin-bottom:3px;font-weight:600;line-height:1.3}
+.pq-card .met{font-size:11.5px;color:var(--muted);margin-bottom:9px}
+.pq-card .acoes{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted);
+  background:#0c1220;display:inline-block;margin-right:6px}
+.pill.on{border-color:rgba(34,197,94,.45);color:#86efac}
+.pill.off{border-color:rgba(255,255,255,.14);color:#94a3b8}
+.pill.an{border-color:rgba(59,130,246,.45);color:#93c5fd}
+.pill.n{border-color:rgba(245,197,24,.45);color:var(--yellow);font-weight:600}
+.vazio{text-align:center;color:var(--muted);padding:34px 16px;font-size:14px;line-height:1.6}
+
+/* ---------- construtor ---------- */
+.q-edit{background:var(--bg3);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 14px;margin-bottom:11px}
+.q-edit .top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.q-edit .top .n{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.6px}
+.q-edit .top .dir{margin-left:auto;display:flex;gap:5px}
+.icb{background:#151c2e;border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:7px;
+  width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1}
+.icb:hover{border-color:var(--yellow)}
+.icb.dan:hover{border-color:var(--red);color:#fca5a5}
+.grid2{display:grid;grid-template-columns:1fr 200px;gap:10px;align-items:end}
+.opcoes{margin-top:9px}
+.opc-lin{display:flex;gap:7px;margin-bottom:6px;align-items:center}
+.opc-lin input{flex:1}
+.chkline{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:13px;color:var(--muted);cursor:pointer}
+.chkline input{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer}
+
+/* ---------- respostas / resumo ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px;text-align:center}
+.kpi .v{font-family:Rajdhani,sans-serif;font-size:26px;font-weight:700;color:var(--yellow);line-height:1}
+.kpi .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+
+.qr-blk{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 15px;margin-bottom:12px}
+.qr-blk h4{font-size:14.5px;color:#eaf0fa;margin-bottom:9px;font-weight:600;line-height:1.35}
+.qr-blk .tipo{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.freq{width:100%;border-collapse:collapse;font-size:13.5px}
+.freq td{padding:5px 6px;vertical-align:middle}
+.freq td.op{width:36%;color:#dbe3f0}
+.freq td.ba{width:44%}
+.freq td.nu{width:20%;text-align:right;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.freq td.nu b{color:var(--yellow);font-size:14px}
+.bar{height:16px;background:#0a0f1c;border:1px solid rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#d4a017,#f5c518)}
+.txt-lista{max-height:300px;overflow:auto;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#0a0f1c;padding:6px}
+.txt-lista div{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.txt-lista div:last-child{border-bottom:none}
+.txt-lista .quem{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.tabela{width:100%;border-collapse:collapse;font-size:13px}
+.tabela th{text-align:left;padding:7px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--gold);border-bottom:1px solid var(--border)}
+.tabela td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+.rolar{overflow:auto;max-height:420px}
+
+/* ---------- modal ---------- */
+.ovl{position:fixed;inset:0;background:rgba(3,6,14,.82);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+.ovl.on{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:480px;width:100%}
+.modal h3{font-family:Rajdhani,sans-serif;font-size:19px;color:var(--yellow);margin-bottom:10px}
+.modal p{font-size:13.5px;color:#c3ccdb;line-height:1.55;margin-bottom:13px}
+.modal .fim{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
+.link-box{display:flex;gap:7px;margin:10px 0}
+.link-box input{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+
+.load{text-align:center;padding:46px 20px;color:var(--muted)}
+.sp{width:32px;height:32px;border:3px solid rgba(245,197,24,.2);border-top-color:var(--yellow);
+  border-radius:50%;animation:gira .8s linear infinite;margin:0 auto 13px}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+@media(max-width:640px){
+  .wrap{padding:13px 11px}
+  .grid2{grid-template-columns:1fr}
+  .pg-hdr .dir{width:100%;margin-left:0}
+}
+
+/* ═══ RELATÓRIO IMPRESSO ═══════════════════════════════════════════════════
+   A tela some e sai só o #print-area, montado na hora com o resultado da
+   pesquisa escolhida. Mesmo formato do relatório do ocorrencias.html. */
+#print-area{display:none}
+@media print{
+  @page{ size:A4; margin:14mm 12mm; }
+  html,body{background:#fff !important;color:#000;padding:0;margin:0}
+  body > *:not(#print-area){display:none !important}
+  #print-area{display:block;font-size:10.5pt;line-height:1.45;color:#000}
+
+  .pr-cab{display:flex;align-items:center;gap:12pt;border-bottom:2.5pt solid #000;padding-bottom:7pt;margin-bottom:10pt}
+  .pr-cab .pr-logo{width:58pt;height:58pt;object-fit:contain;flex-shrink:0}
+  .pr-cab .pr-org{font-size:9pt;letter-spacing:.6pt;text-transform:uppercase;color:#333}
+  .pr-cab h1{font-size:15pt;margin:2pt 0 1pt;letter-spacing:.3pt}
+  .pr-cab .pr-sub{font-size:9pt;color:#333}
+
+  .pr-meta{border:.7pt solid #999;border-left:3pt solid #000;padding:6pt 8pt;margin-bottom:9pt;font-size:9pt}
+  .pr-meta div{margin:1pt 0}
+
+  .pr-resumo{width:100%;border-collapse:collapse;margin-bottom:11pt;font-size:9pt}
+  .pr-resumo td{border:.7pt solid #999;padding:5pt 6pt;text-align:center}
+  .pr-resumo .pr-v{font-size:13pt;font-weight:700;display:block}
+  .pr-resumo .pr-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.4pt;color:#444}
+
+  .pr-q{border:.7pt solid #999;border-radius:2pt;padding:7pt 9pt;margin-bottom:8pt;break-inside:avoid;page-break-inside:avoid}
+  .pr-q h2{font-size:10.5pt;margin:0 0 2pt;line-height:1.3}
+  .pr-q .pr-tipo{font-size:7.5pt;text-transform:uppercase;letter-spacing:.4pt;color:#555;margin-bottom:5pt}
+  .pr-q .pr-tipo b{color:#000}
+
+  .pr-fr{width:100%;border-collapse:collapse;font-size:9pt}
+  .pr-fr td{border-bottom:.5pt solid #ddd;padding:3pt 4pt;vertical-align:middle}
+  .pr-fr td.op{width:40%}
+  .pr-fr td.ba{width:38%}
+  .pr-fr td.nu{width:22%;text-align:right;white-space:nowrap}
+  .pr-fr td.nu b{font-size:10pt}
+  /* a barra sai em cinza; se a impressora não imprimir fundo, o número ao lado
+     continua dizendo tudo — nenhuma informação depende só da cor */
+  .pr-bar{height:8pt;border:.5pt solid #666}
+  .pr-bar i{display:block;height:100%;background:#666;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .pr-txt{font-size:8.5pt;margin-top:3pt}
+  .pr-txt div{border-bottom:.5pt solid #eee;padding:2.5pt 0;white-space:pre-wrap}
+  .pr-txt .quem{color:#555;font-size:7.5pt}
+  .pr-tab{width:100%;border-collapse:collapse;font-size:8pt;margin-top:4pt}
+  .pr-tab th{text-align:left;border:.7pt solid #999;padding:2.5pt 4pt;font-size:7pt;
+    text-transform:uppercase;letter-spacing:.3pt;background:#f2f2f2;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tab td{border:.7pt solid #bbb;padding:2.5pt 4pt;vertical-align:top}
+  .pr-nominal{break-before:page;page-break-before:always}
+  .pr-fim{margin-top:10pt;padding-top:5pt;border-top:.7pt solid #999;font-size:8pt;color:#444;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="pg-hdr">
+  <span class="ic">📊</span>
+  <div>
+    <div class="ht">PESQUISAS E FORMULÁRIOS</div>
+    <div class="hs">BPFRON · criação, acompanhamento e relatório</div>
+  </div>
+  <div class="dir" id="hdr-dir"></div>
+</div>
+
+<div class="wrap">
+  <div id="tela-login" style="display:none">
+    <div class="login-box">
+      <h2>🔐 Acesso restrito</h2>
+      <p>Área de criação de pesquisas do BPFRON.<br>Entre com o seu login do sistema.</p>
+      <form onsubmit="return fazerLogin(event)">
+        <div class="campo"><label class="lbl" for="pg-user">Usuário</label>
+          <input type="text" id="pg-user" autocomplete="username" required></div>
+        <div class="campo"><label class="lbl" for="pg-pass">Senha</label>
+          <input type="password" id="pg-pass" autocomplete="current-password" required></div>
+        <button class="btn" id="pg-login-btn" type="submit">Entrar</button>
+      </form>
+      <div id="pg-erro"></div>
+    </div>
+  </div>
+
+  <div id="tela-carregando" class="load" style="display:none"><div class="sp"></div>Carregando…</div>
+  <div id="tela-lista" style="display:none"></div>
+  <div id="tela-editor" style="display:none"></div>
+  <div id="tela-resp" style="display:none"></div>
+</div>
+
+<!-- modal genérico (link público, confirmação de arquivar) -->
+<div class="ovl" id="ovl"><div class="modal" id="modal"></div></div>
+
+<div id="print-area"></div>
+
+<script>
+/* ==========================================================================
+   Estado e autenticação — mesmo padrão das outras páginas do BPFRON:
+   token JWT no localStorage, permissões da sessão vindas do /api/login.
+   ========================================================================== */
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+// ALLOWLIST — espelha pesquisaEditors() do worker.js. Mudar aqui = mudar lá.
+// Só vale enquanto o painel admin.html não mandar as permissões da sessão.
+const PESQUISA_GESTORES = ['desousa','cmtfelipe','p3','p3cmt','p301','p3aux'];
+const SEM_ACESSO = 'Este usuário não tem acesso às Pesquisas. Peça a um administrador para marcar ' +
+                   '"Pesquisas e Formulários" no Painel de Controle.';
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.includes(id) : listaFixa.includes(AUTH.user); }
+function podeGerir(){ return AUTH.logged && temPerm('pesquisa', PESQUISA_GESTORES); }
+
+let LISTA = [];        // pesquisas do gestor
+let EDIT = null;       // rascunho no construtor
+let VENDO = null;      // { pesquisa, respostas } da tela de resultados
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const TIPOS = {
+  curta:'Texto curto', longa:'Parágrafo', unica:'Múltipla escolha (uma)',
+  multipla:'Caixas (várias)', escala:'Escala de nota', simnao:'Sim / Não',
+  numero:'Número', data:'Data'
+};
+
+function api(rota, opts){
+  const o = Object.assign({ headers:{} }, opts || {});
+  o.headers = Object.assign({ 'Authorization':'Bearer ' + AUTH.token }, o.headers);
+  if (o.body) o.headers['Content-Type'] = 'application/json';
+  return fetch(API_BASE + rota, o);
+}
+
+function telas(qual){
+  ['tela-login','tela-carregando','tela-lista','tela-editor','tela-resp'].forEach((t) => {
+    $(t).style.display = (t === qual) ? '' : 'none';
+  });
+}
+
+function renderChip(){
+  const d = $('hdr-dir');
+  if (!AUTH.logged){ d.innerHTML = ''; return; }
+  const p = permsSessao();
+  d.innerHTML = '<span class="chip">👤 ' + esc((p && p.nome) || AUTH.user) + '</span>' +
+                '<button class="btn sec pq" onclick="sair()">Sair</button>';
+}
+
+/* ==========================================================================
+   Entrada
+   ========================================================================== */
+async function inicio(){
+  renderChip();
+  if (!AUTH.logged){ telas('tela-login'); return; }
+  if (!podeGerir()){ telas('tela-login'); $('pg-erro').textContent = SEM_ACESSO; return; }
+  await carregarLista();
+}
+
+async function fazerLogin(ev){
+  ev.preventDefault();
+  const btn = $('pg-login-btn'), erro = $('pg-erro');
+  const user = ($('pg-user').value || '').trim(), pass = $('pg-pass').value || '';
+  erro.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const r = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, pass })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d);
+    $('pg-pass').value = '';
+    renderChip();
+    if (!podeGerir()){ erro.textContent = SEM_ACESSO; return false; }
+    await carregarLista();
+  }catch(e){
+    erro.textContent = (e && e.message) || 'Não foi possível conectar ao servidor.';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+  return false;
+}
+
+function sair(){
+  AUTH.token = ''; AUTH.user = '';
+  LISTA = []; EDIT = null; VENDO = null;
+  $('print-area').innerHTML = '';   // não deixa resposta de ninguém no DOM
+  renderChip(); telas('tela-login');
+}
+
+/* ==========================================================================
+   Lista de pesquisas
+   ========================================================================== */
+async function carregarLista(){
+  telas('tela-carregando');
+  try{
+    const r = await api('/api/pesquisas?_nc=' + Date.now());
+    if (r.status === 401){ sair(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || 'Falha ao carregar as pesquisas.');
+    LISTA = d.pesquisas || [];
+    renderLista();
+  }catch(e){
+    telas('tela-lista');
+    $('tela-lista').innerHTML = '<div class="msg err">' + esc(e.message || 'Falha ao carregar.') + '</div>' +
+      '<button class="btn sec" onclick="carregarLista()">Tentar de novo</button>';
+  }
+}
+
+function renderLista(){
+  telas('tela-lista');
+  const ativas = LISTA.filter((p) => p.status !== 'ARQUIVADA');
+  let h = '<div class="card">' +
+    '<div class="sec-t">Minhas pesquisas' +
+      '<span class="dir"><button class="btn" onclick="novaPesquisa()">+ Nova pesquisa</button></span>' +
+    '</div>';
+
+  if (!ativas.length){
+    h += '<div class="vazio">Nenhuma pesquisa ainda.<br>' +
+         'Clique em <b>+ Nova pesquisa</b> para montar o primeiro formulário.</div>';
+  } else {
+    h += ativas.map(cardPesquisa).join('');
+  }
+  h += '</div>';
+
+  const arq = LISTA.filter((p) => p.status === 'ARQUIVADA');
+  if (arq.length){
+    h += '<div class="card"><div class="sec-t">Arquivadas (' + arq.length + ')</div>' +
+      arq.map((p) =>
+        '<div class="pq-card"><h3>' + esc(p.titulo) + '</h3>' +
+        '<div class="met">' + p.respostas + ' resposta(s) · arquivada</div>' +
+        '<div class="acoes">' +
+          '<button class="btn sec pq" onclick="verRespostas(\'' + p.id + '\')">📊 Resultado</button>' +
+          '<button class="btn sec pq" onclick="mudarStatus(\'' + p.id + '\',\'FECHADA\')">↩️ Desarquivar</button>' +
+        '</div></div>').join('') + '</div>';
+  }
+  $('tela-lista').innerHTML = h;
+}
+
+function cardPesquisa(p){
+  const aberta = p.status === 'ABERTA' && !p.expirada;
+  const prazo = p.encerra_em ? ' · até ' + dataBR(p.encerra_em) : '';
+  return '<div class="pq-card ' + (aberta ? 'aberta' : 'fechada') + '">' +
+    '<h3>' + esc(p.titulo) + '</h3>' +
+    '<div class="met">Código <b>' + esc(p.id) + '</b> · criada em ' + esc((p.criado_em || '').split(' ')[0]) + prazo + '</div>' +
+    '<div>' +
+      (aberta ? '<span class="pill on">● Aberta</span>'
+              : '<span class="pill off">● ' + (p.expirada ? 'Prazo vencido' : 'Fechada') + '</span>') +
+      (p.anonima ? '<span class="pill an">Anônima</span>' : '<span class="pill">Identificada</span>') +
+      '<span class="pill n">' + p.respostas + ' resposta' + (p.respostas === 1 ? '' : 's') + '</span>' +
+      '<span class="pill">' + (p.perguntas || []).length + ' pergunta(s)</span>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button class="btn pq" onclick="verRespostas(\'' + p.id + '\')">📊 Resultado</button>' +
+      '<button class="btn sec pq" onclick="mostrarLink(\'' + p.id + '\')">🔗 Link</button>' +
+      '<button class="btn sec pq" onclick="editar(\'' + p.id + '\')">✏️ Editar</button>' +
+      (aberta
+        ? '<button class="btn sec pq" onclick="mudarStatus(\'' + p.id + '\',\'FECHADA\')">⏹️ Encerrar</button>'
+        : '<button class="btn sec pq" onclick="mudarStatus(\'' + p.id + '\',\'ABERTA\')">▶️ Reabrir</button>') +
+      '<button class="btn dan pq" onclick="pedirArquivar(\'' + p.id + '\')">🗄️ Arquivar</button>' +
+    '</div></div>';
+}
+
+function dataBR(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : (iso || '');
+}
+
+/* ==========================================================================
+   Link público / modais
+   ========================================================================== */
+function linkDe(id){
+  const base = location.origin + location.pathname.replace(/pesquisas\.html.*$/i, 'pesquisa.html');
+  return base + '?id=' + id;
+}
+function fecharModal(){ $('ovl').classList.remove('on'); }
+function abrirModal(html){ $('modal').innerHTML = html; $('ovl').classList.add('on'); }
+
+function mostrarLink(id){
+  const p = LISTA.find((x) => x.id === id);
+  const url = linkDe(id);
+  abrirModal(
+    '<h3>🔗 Link da pesquisa</h3>' +
+    '<p>Mande este link para quem vai responder. <b>Não precisa de login</b> — quem abrir, responde.</p>' +
+    '<div class="link-box">' +
+      '<input type="text" id="mk-link" value="' + esc(url) + '" readonly onclick="this.select()">' +
+      '<button class="btn pq" onclick="copiarLink(this)">Copiar</button>' +
+    '</div>' +
+    '<p style="font-size:12px;color:var(--muted)">Código da pesquisa: <b>' + esc(id) + '</b>' +
+      (p && !(p.status === 'ABERTA' && !p.expirada)
+        ? '<br><span style="color:#fde68a">⚠️ A pesquisa está encerrada: quem abrir o link verá o aviso de encerrada.</span>'
+        : '') + '</p>' +
+    '<div class="fim">' +
+      '<a class="btn sec pq" href="' + esc(url) + '" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Abrir</a>' +
+      '<button class="btn pq" onclick="fecharModal()">Fechar</button>' +
+    '</div>');
+}
+function copiarLink(btn){
+  const el = $('mk-link');
+  el.select(); el.setSelectionRange(0, 99999);   // celular precisa do range
+  const aviso = () => { const t = btn.textContent; btn.textContent = 'Copiado!'; setTimeout(() => { btn.textContent = t; }, 1400); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(el.value).then(aviso).catch(() => { document.execCommand('copy'); aviso(); });
+  } else { document.execCommand('copy'); aviso(); }
+}
+
+function pedirArquivar(id){
+  const p = LISTA.find((x) => x.id === id);
+  abrirModal(
+    '<h3>🗄️ Arquivar pesquisa</h3>' +
+    '<p>A pesquisa <b>' + esc(p.titulo) + '</b> sai da lista e o link para de aceitar respostas. ' +
+    'As respostas já dadas <b>continuam na planilha</b> e o resultado segue disponível em "Arquivadas".</p>' +
+    '<label class="lbl" for="mk-senha">Digite sua senha para confirmar</label>' +
+    '<input type="password" id="mk-senha" autocomplete="current-password">' +
+    '<div id="mk-erro" style="color:#fca5a5;font-size:13px;margin-top:9px"></div>' +
+    '<div class="fim">' +
+      '<button class="btn sec pq" onclick="fecharModal()">Cancelar</button>' +
+      '<button class="btn dan pq" id="mk-ok" onclick="confirmarArquivar(\'' + id + '\')">Arquivar</button>' +
+    '</div>');
+  setTimeout(() => $('mk-senha').focus(), 60);
+}
+
+async function confirmarArquivar(id){
+  const senha = $('mk-senha').value || '';
+  if (!senha){ $('mk-erro').textContent = 'Digite a senha.'; return; }
+  const btn = $('mk-ok'); btn.disabled = true; btn.textContent = 'Arquivando…';
+  try{
+    const r = await api('/api/pesquisas/salvar', {
+      method:'POST', body: JSON.stringify({ op:'status', id, status:'ARQUIVADA', senha })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok){ $('mk-erro').textContent = d.detail || 'Não foi possível arquivar.'; return; }
+    fecharModal(); await carregarLista();
+  }catch(e){
+    $('mk-erro').textContent = 'Sem conexão com o servidor.';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Arquivar';
+  }
+}
+
+async function mudarStatus(id, status){
+  try{
+    const r = await api('/api/pesquisas/salvar', {
+      method:'POST', body: JSON.stringify({ op:'status', id, status })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok){ alert(d.detail || 'Não foi possível alterar.'); return; }
+    await carregarLista();
+  }catch(e){ alert('Sem conexão com o servidor.'); }
+}
+
+/* ==========================================================================
+   Construtor de perguntas
+   ========================================================================== */
+function novaPesquisa(){
+  EDIT = { id:null, titulo:'', descricao:'', anonima:false, encerra_em:'', perguntas:[novaPergunta()], travado:false };
+  renderEditor();
+}
+function novaPergunta(){
+  return { texto:'', tipo:'unica', obrig:true, opcoes:['',''], max:5, rotulo_min:'', rotulo_max:'' };
+}
+function editar(id){
+  const p = LISTA.find((x) => x.id === id);
+  EDIT = {
+    id: p.id, titulo: p.titulo, descricao: p.descricao, anonima: p.anonima,
+    encerra_em: p.encerra_em || '',
+    perguntas: (p.perguntas || []).map((q) => ({
+      texto:q.texto, tipo:q.tipo, obrig:q.obrig !== false,
+      opcoes:(q.opcoes || ['','']).slice(), max:q.max || 5,
+      rotulo_min:q.rotulo_min || '', rotulo_max:q.rotulo_max || ''
+    })),
+    // Pesquisa que já tem resposta não muda de questionário (o Worker recusa):
+    // aqui a gente já avisa e trava os campos das perguntas.
+    travado: p.respostas > 0, respostas: p.respostas
+  };
+  renderEditor();
+}
+
+function renderEditor(){
+  telas('tela-editor');
+  const e = EDIT;
+  let h = '<div class="card">' +
+    '<div class="sec-t">' + (e.id ? 'Editar pesquisa · ' + esc(e.id) : 'Nova pesquisa') +
+      '<span class="dir"><button class="btn sec pq" onclick="carregarLista()">← Voltar</button></span>' +
+    '</div>';
+
+  if (e.travado){
+    h += '<div class="msg warn">Esta pesquisa já tem <b>' + e.respostas + ' resposta(s)</b>. ' +
+         'Dá para ajustar título, descrição e prazo, mas <b>as perguntas ficam travadas</b> — ' +
+         'mudar o questionário no meio desalinha o que já foi respondido. Se precisar de outro ' +
+         'questionário, crie uma pesquisa nova.</div>';
+  }
+
+  h += '<div style="margin-bottom:11px"><label class="lbl" for="e-tit">Título da pesquisa</label>' +
+       '<input type="text" id="e-tit" maxlength="160" value="' + esc(e.titulo) + '" ' +
+       'placeholder="Ex.: Levantamento de interesse em curso de operações" oninput="EDIT.titulo=this.value"></div>' +
+       '<div style="margin-bottom:11px"><label class="lbl" for="e-desc">Descrição / orientações (opcional)</label>' +
+       '<textarea id="e-desc" maxlength="1500" placeholder="Explique para quem vai responder o objetivo e o prazo." ' +
+       'oninput="EDIT.descricao=this.value">' + esc(e.descricao) + '</textarea></div>' +
+       '<div class="grid2">' +
+         '<div><label class="lbl" for="e-prazo">Responder até (opcional)</label>' +
+           '<input type="date" id="e-prazo" value="' + esc(e.encerra_em) + '" oninput="EDIT.encerra_em=this.value"></div>' +
+         '<div><label class="chkline" style="margin:0"><input type="checkbox" id="e-anon" ' +
+           (e.anonima ? 'checked' : '') + (e.travado ? ' disabled' : '') + ' onchange="EDIT.anonima=this.checked">' +
+           '<span>Pesquisa anônima</span></label>' +
+           '<div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4">' +
+           (e.anonima ? 'Não pede RE nem nome.' : 'Pede RE e nome; um RE responde uma vez.') + '</div></div>' +
+       '</div></div>';
+
+  h += '<div class="card"><div class="sec-t">Perguntas (' + e.perguntas.length + ')</div>' +
+       '<div id="e-qs">' + e.perguntas.map((q, i) => qEditor(q, i)).join('') + '</div>' +
+       (e.travado ? '' : '<button class="btn sec" onclick="addPergunta()">+ Adicionar pergunta</button>') +
+       '</div>';
+
+  h += '<div id="e-msg"></div>' +
+       '<div style="display:flex;gap:9px;flex-wrap:wrap">' +
+         '<button class="btn" id="e-salvar" onclick="salvar()">' + (e.id ? 'Salvar alterações' : 'Criar pesquisa') + '</button>' +
+         '<button class="btn sec" onclick="carregarLista()">Cancelar</button>' +
+       '</div>';
+
+  $('tela-editor').innerHTML = h;
+}
+
+function qEditor(q, i){
+  const dis = EDIT.travado ? ' disabled' : '';
+  let extra = '';
+  if (q.tipo === 'unica' || q.tipo === 'multipla'){
+    extra = '<div class="opcoes"><label class="lbl">Opções de resposta</label>' +
+      q.opcoes.map((o, j) =>
+        '<div class="opc-lin">' +
+          '<input type="text" maxlength="160" value="' + esc(o) + '" placeholder="Opção ' + (j + 1) + '"' + dis +
+            ' oninput="EDIT.perguntas[' + i + '].opcoes[' + j + ']=this.value">' +
+          (EDIT.travado ? '' : '<button class="icb dan" title="Remover opção" onclick="delOpcao(' + i + ',' + j + ')">✕</button>') +
+        '</div>').join('') +
+      (EDIT.travado ? '' : '<button class="btn sec pq" onclick="addOpcao(' + i + ')">+ Opção</button>') +
+      '</div>';
+  } else if (q.tipo === 'escala'){
+    extra = '<div class="opcoes"><div class="grid2">' +
+      '<div><label class="lbl">Rótulo da nota mais baixa</label>' +
+        '<input type="text" maxlength="40" value="' + esc(q.rotulo_min) + '" placeholder="Ex.: Péssimo"' + dis +
+        ' oninput="EDIT.perguntas[' + i + '].rotulo_min=this.value"></div>' +
+      '<div><label class="lbl">Nota máxima</label><select' + dis + ' onchange="EDIT.perguntas[' + i + '].max=+this.value">' +
+        [3,4,5,10].map((n) => '<option value="' + n + '"' + (q.max === n ? ' selected' : '') + '>1 a ' + n + '</option>').join('') +
+        '</select></div></div>' +
+      '<div style="margin-top:9px"><label class="lbl">Rótulo da nota mais alta</label>' +
+        '<input type="text" maxlength="40" value="' + esc(q.rotulo_max) + '" placeholder="Ex.: Excelente"' + dis +
+        ' oninput="EDIT.perguntas[' + i + '].rotulo_max=this.value"></div></div>';
+  }
+
+  return '<div class="q-edit">' +
+    '<div class="top"><span class="n">PERGUNTA ' + (i + 1) + '</span>' +
+      (EDIT.travado ? '' :
+        '<span class="dir">' +
+          '<button class="icb" title="Subir" onclick="mover(' + i + ',-1)">▲</button>' +
+          '<button class="icb" title="Descer" onclick="mover(' + i + ',1)">▼</button>' +
+          '<button class="icb dan" title="Remover pergunta" onclick="delPergunta(' + i + ')">🗑</button>' +
+        '</span>') +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div><label class="lbl">Enunciado</label>' +
+        '<input type="text" maxlength="300" value="' + esc(q.texto) + '" placeholder="O que você quer perguntar?"' + dis +
+        ' oninput="EDIT.perguntas[' + i + '].texto=this.value"></div>' +
+      '<div><label class="lbl">Tipo de resposta</label>' +
+        '<select' + dis + ' onchange="trocarTipo(' + i + ', this.value)">' +
+        Object.keys(TIPOS).map((t) => '<option value="' + t + '"' + (q.tipo === t ? ' selected' : '') + '>' + TIPOS[t] + '</option>').join('') +
+        '</select></div>' +
+    '</div>' + extra +
+    '<label class="chkline"><input type="checkbox"' + (q.obrig ? ' checked' : '') + dis +
+      ' onchange="EDIT.perguntas[' + i + '].obrig=this.checked"><span>Resposta obrigatória</span></label>' +
+  '</div>';
+}
+
+function addPergunta(){ EDIT.perguntas.push(novaPergunta()); renderEditor(); }
+function delPergunta(i){
+  if (EDIT.perguntas.length === 1){ alert('A pesquisa precisa de pelo menos uma pergunta.'); return; }
+  EDIT.perguntas.splice(i, 1); renderEditor();
+}
+function mover(i, d){
+  const j = i + d;
+  if (j < 0 || j >= EDIT.perguntas.length) return;
+  const t = EDIT.perguntas[i]; EDIT.perguntas[i] = EDIT.perguntas[j]; EDIT.perguntas[j] = t;
+  renderEditor();
+}
+function trocarTipo(i, t){
+  const q = EDIT.perguntas[i];
+  q.tipo = t;
+  if ((t === 'unica' || t === 'multipla') && (!q.opcoes || q.opcoes.length < 2)) q.opcoes = ['',''];
+  renderEditor();
+}
+function addOpcao(i){ EDIT.perguntas[i].opcoes.push(''); renderEditor(); }
+function delOpcao(i, j){
+  const q = EDIT.perguntas[i];
+  if (q.opcoes.length <= 2){ alert('Uma pergunta de escolha precisa de pelo menos 2 opções.'); return; }
+  q.opcoes.splice(j, 1); renderEditor();
+}
+
+async function salvar(){
+  const e = EDIT, msg = $('e-msg');
+  msg.innerHTML = '';
+  if ((e.titulo || '').trim().length < 3){ msg.innerHTML = '<div class="msg err">Dê um título à pesquisa.</div>'; return; }
+  for (let i = 0; i < e.perguntas.length; i++){
+    const q = e.perguntas[i];
+    if (!(q.texto || '').trim()){ msg.innerHTML = '<div class="msg err">A pergunta ' + (i + 1) + ' está sem enunciado.</div>'; return; }
+    if (q.tipo === 'unica' || q.tipo === 'multipla'){
+      const ops = q.opcoes.map((o) => (o || '').trim()).filter(Boolean);
+      if (new Set(ops).size < 2){ msg.innerHTML = '<div class="msg err">A pergunta ' + (i + 1) + ' precisa de pelo menos 2 opções diferentes.</div>'; return; }
+    }
+  }
+
+  const btn = $('e-salvar'); btn.disabled = true; btn.textContent = 'Salvando…';
+  try{
+    const r = await api('/api/pesquisas/salvar', {
+      method:'POST',
+      body: JSON.stringify({
+        op: e.id ? 'editar' : 'criar', id: e.id, titulo: e.titulo, descricao: e.descricao,
+        anonima: !!e.anonima, encerra_em: e.encerra_em || '',
+        perguntas: e.perguntas.map((q) => ({
+          texto:q.texto, tipo:q.tipo, obrig:q.obrig,
+          opcoes:(q.opcoes || []).map((o) => (o || '').trim()).filter(Boolean),
+          max:q.max, rotulo_min:q.rotulo_min, rotulo_max:q.rotulo_max
+        }))
+      })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok){ msg.innerHTML = '<div class="msg err">' + esc(d.detail || 'Não foi possível salvar.') + '</div>'; return; }
+    await carregarLista();
+    if (d.criada) mostrarLink(d.id);   // recém-criada: já mostra o link para distribuir
+  }catch(err){
+    msg.innerHTML = '<div class="msg err">Sem conexão com o servidor.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = e.id ? 'Salvar alterações' : 'Criar pesquisa';
+  }
+}
+
+/* ==========================================================================
+   Resultados — a mesma apuração alimenta a tela e o relatório impresso
+   ========================================================================== */
+async function verRespostas(id){
+  telas('tela-carregando');
+  try{
+    const r = await api('/api/pesquisas/respostas?id=' + encodeURIComponent(id) + '&_nc=' + Date.now());
+    if (r.status === 401){ sair(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || 'Falha ao carregar as respostas.');
+    VENDO = d;
+    renderRespostas();
+  }catch(e){
+    telas('tela-lista');
+    renderLista();
+    alert(e.message || 'Falha ao carregar as respostas.');
+  }
+}
+
+/* Apura uma pergunta: devolve as linhas da tabela de frequência (ou a lista de
+   textos, quando é resposta aberta). É o coração do relatório. */
+function apurar(q, respostas){
+  const brutas = respostas.map((r) => String(r.itens[q.n] ?? '').trim());
+  const dadas = brutas.filter((v) => v !== '');
+  const base = { n: q.n, texto: q.texto, tipo: q.tipo, respondidas: dadas.length,
+                 embranco: respostas.length - dadas.length };
+
+  if (q.tipo === 'unica' || q.tipo === 'simnao' || q.tipo === 'multipla'){
+    const opcoes = q.tipo === 'simnao' ? ['SIM','NÃO'] : (q.opcoes || []).slice();
+    const cont = {};
+    opcoes.forEach((o) => { cont[o] = 0; });
+    dadas.forEach((v) => {
+      // múltipla escolha grava "A | B" na mesma célula
+      (q.tipo === 'multipla' ? v.split('|') : [v]).forEach((parte) => {
+        const t = parte.trim();
+        if (!t) return;
+        if (!(t in cont)) cont[t] = 0;   // opção que saiu do questionário depois
+        cont[t]++;
+      });
+    });
+    const totalMarcas = Object.values(cont).reduce((a, b) => a + b, 0);
+    // o denominador do % é quem respondeu (na múltipla, cada um pode marcar várias)
+    const divisor = q.tipo === 'multipla' ? (dadas.length || 1) : (totalMarcas || 1);
+    base.linhas = Object.keys(cont).map((o) => ({
+      rotulo: o, n: cont[o], pct: (cont[o] * 100) / divisor
+    })).sort((a, b) => b.n - a.n);
+    base.nota_pct = q.tipo === 'multipla' ? 'sobre quem respondeu (várias marcações por pessoa)' : '';
+    return base;
+  }
+
+  if (q.tipo === 'escala'){
+    const max = q.max || 5;
+    const cont = {};
+    for (let i = 1; i <= max; i++) cont[i] = 0;
+    let soma = 0;
+    dadas.forEach((v) => { const n = parseInt(v, 10); if (cont[n] !== undefined){ cont[n]++; soma += n; } });
+    base.linhas = Object.keys(cont).map((k) => ({
+      rotulo: 'Nota ' + k, n: cont[k], pct: (cont[k] * 100) / (dadas.length || 1)
+    }));
+    base.media = dadas.length ? soma / dadas.length : 0;
+    base.max = max;
+    base.rotulos = [q.rotulo_min || '', q.rotulo_max || ''];
+    return base;
+  }
+
+  if (q.tipo === 'numero'){
+    const nums = dadas.map(Number).filter(Number.isFinite);
+    base.numeros = {
+      soma: nums.reduce((a, b) => a + b, 0),
+      media: nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0,
+      min: nums.length ? Math.min(...nums) : 0,
+      max: nums.length ? Math.max(...nums) : 0,
+      n: nums.length
+    };
+    return base;
+  }
+
+  if (q.tipo === 'curta' || q.tipo === 'data'){
+    // texto curto e data repetem bastante: vale contar em vez de listar
+    const cont = {};
+    dadas.forEach((v) => { const k = q.tipo === 'data' ? dataBR(v) : v; cont[k] = (cont[k] || 0) + 1; });
+    const linhas = Object.keys(cont).map((k) => ({ rotulo:k, n:cont[k], pct:(cont[k] * 100) / (dadas.length || 1) }))
+      .sort((a, b) => b.n - a.n || a.rotulo.localeCompare(b.rotulo));
+    if (linhas.length <= 25){ base.linhas = linhas; return base; }
+  }
+
+  // parágrafo (e texto curto muito variado): lista as respostas
+  base.textos = respostas
+    .map((r) => ({ txt: String(r.itens[q.n] ?? '').trim(), quem: r.nome ? (r.nome + (r.re ? ' · RE ' + r.re : '')) : '' }))
+    .filter((x) => x.txt);
+  return base;
+}
+
+function renderRespostas(){
+  telas('tela-resp');
+  const p = VENDO.pesquisa, R = VENDO.respostas || [];
+  const apurado = p.perguntas.map((q) => apurar(q, R));
+
+  let h = '<div class="card">' +
+    '<div class="sec-t">Resultado · ' + esc(p.id) +
+      '<span class="dir">' +
+        '<button class="btn pq" onclick="imprimir()">🖨️ Relatório (PDF)</button>' +
+        '<button class="btn sec pq" onclick="verRespostas(\'' + p.id + '\')">🔄 Atualizar</button>' +
+        '<button class="btn sec pq" onclick="carregarLista()">← Voltar</button>' +
+      '</span>' +
+    '</div>' +
+    '<h2 style="font-family:Rajdhani,sans-serif;font-size:22px;color:#fff;margin-bottom:4px">' + esc(p.titulo) + '</h2>' +
+    (p.descricao ? '<div style="color:#c3ccdb;font-size:13.5px;white-space:pre-wrap;line-height:1.5;margin-bottom:10px">' + esc(p.descricao) + '</div>' : '') +
+    '<div class="kpis">' +
+      '<div class="kpi"><div class="v">' + R.length + '</div><div class="l">Respostas</div></div>' +
+      '<div class="kpi"><div class="v">' + p.perguntas.length + '</div><div class="l">Perguntas</div></div>' +
+      '<div class="kpi"><div class="v">' + (p.anonima ? 'Sim' : 'Não') + '</div><div class="l">Anônima</div></div>' +
+      '<div class="kpi"><div class="v" style="font-size:18px">' +
+        (p.status === 'ABERTA' && !p.expirada ? 'Aberta' : (p.status === 'ARQUIVADA' ? 'Arquivada' : 'Encerrada')) +
+        '</div><div class="l">Situação</div></div>' +
+    '</div>';
+
+  if (!R.length){
+    h += '<div class="vazio">Ainda não há respostas.<br>' +
+         'Distribua o link: <b>' + esc(linkDe(p.id)) + '</b></div></div>';
+    $('tela-resp').innerHTML = h;
+    return;
+  }
+  h += '</div>';
+
+  h += '<div class="card"><div class="sec-t">Apuração por pergunta</div>' +
+       apurado.map(blocoApuracao).join('') + '</div>';
+
+  if (!p.anonima){
+    h += '<div class="card"><div class="sec-t">Quem respondeu (' + R.length + ')</div><div class="rolar">' +
+      '<table class="tabela"><thead><tr><th>RE</th><th>Nome</th><th>Unidade</th><th>Data</th></tr></thead><tbody>' +
+      R.map((r) => '<tr><td>' + esc(r.re) + '</td><td>' + esc(r.nome) + '</td><td>' +
+        esc(r.opm) + '</td><td style="white-space:nowrap">' + esc(r.data) + '</td></tr>').join('') +
+      '</tbody></table></div></div>';
+  }
+
+  $('tela-resp').innerHTML = h;
+}
+
+function blocoApuracao(a){
+  let corpo = '';
+  if (a.linhas){
+    corpo = '<table class="freq"><tbody>' + a.linhas.map((l) =>
+      '<tr><td class="op">' + esc(l.rotulo) + '</td>' +
+      '<td class="ba"><div class="bar"><i style="width:' + Math.max(0, Math.min(100, l.pct)).toFixed(1) + '%"></i></div></td>' +
+      '<td class="nu"><b>' + l.n + '</b> · ' + l.pct.toFixed(1).replace('.', ',') + '%</td></tr>').join('') +
+      '</tbody></table>';
+    if (a.media !== undefined){
+      corpo += '<div style="margin-top:8px;font-size:13px;color:var(--muted)">Média: <b style="color:var(--yellow)">' +
+               a.media.toFixed(2).replace('.', ',') + '</b> de ' + a.max +
+               (a.rotulos && (a.rotulos[0] || a.rotulos[1]) ? ' · ' + esc(a.rotulos[0]) + ' → ' + esc(a.rotulos[1]) : '') + '</div>';
+    }
+    if (a.nota_pct) corpo += '<div style="margin-top:6px;font-size:11.5px;color:var(--muted)">% ' + a.nota_pct + '</div>';
+  } else if (a.numeros){
+    const f = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits:2 });
+    corpo = '<div class="kpis" style="margin:0">' +
+      '<div class="kpi"><div class="v">' + f(a.numeros.media) + '</div><div class="l">Média</div></div>' +
+      '<div class="kpi"><div class="v">' + f(a.numeros.min) + '</div><div class="l">Menor</div></div>' +
+      '<div class="kpi"><div class="v">' + f(a.numeros.max) + '</div><div class="l">Maior</div></div>' +
+      '<div class="kpi"><div class="v">' + f(a.numeros.soma) + '</div><div class="l">Soma</div></div>' +
+      '</div>';
+  } else if (a.textos){
+    corpo = '<div class="txt-lista">' + a.textos.map((t) =>
+      '<div>' + esc(t.txt) + (t.quem ? '<span class="quem">— ' + esc(t.quem) + '</span>' : '') + '</div>').join('') + '</div>';
+  }
+
+  return '<div class="qr-blk">' +
+    '<div class="tipo">Pergunta ' + a.n + ' · ' + esc(TIPOS[a.tipo] || a.tipo) +
+      ' · ' + a.respondidas + ' resposta(s)' + (a.embranco ? ' · ' + a.embranco + ' em branco' : '') + '</div>' +
+    '<h4>' + esc(a.texto) + '</h4>' + corpo + '</div>';
+}
+
+/* ==========================================================================
+   Relatório impresso — o produto final que vai para a PM
+   ========================================================================== */
+function montarRelatorio(){
+  if (!VENDO) return;
+  const p = VENDO.pesquisa, R = VENDO.respostas || [];
+  const apurado = p.perguntas.map((q) => apurar(q, R));
+  const agora = new Date().toLocaleString('pt-BR');
+  const periodo = R.length
+    ? (R[0].data || '').split(' ')[0] + ' a ' + (R[R.length - 1].data || '').split(' ')[0]
+    : '—';
+
+  let h = '<div class="pr-cab">' +
+      '<img class="pr-logo" src="LOGOS/bpfron_transp.avif" alt="" onerror="this.style.display=\'none\'">' +
+      '<div>' +
+        '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
+        '<h1>' + esc(p.titulo) + '</h1>' +
+        '<div class="pr-sub">Batalhão de Polícia de Fronteira e Divisas — Relatório de pesquisa</div>' +
+      '</div>' +
+    '</div>';
+
+  h += '<div class="pr-meta">' +
+    '<div><b>Código da pesquisa:</b> ' + esc(p.id) + '</div>' +
+    (p.descricao ? '<div><b>Objeto:</b> ' + esc(p.descricao) + '</div>' : '') +
+    '<div><b>Tipo de coleta:</b> ' + (p.anonima ? 'Anônima (sem identificação do respondente)' : 'Identificada (RE e nome)') + '</div>' +
+    '<div><b>Período das respostas:</b> ' + esc(periodo) + '</div>' +
+    '<div><b>Situação:</b> ' + (p.status === 'ABERTA' && !p.expirada ? 'Aberta (coleta em andamento)' : 'Encerrada') +
+      (p.encerra_em ? ' · prazo até ' + dataBR(p.encerra_em) : '') + '</div>' +
+    '<div><b>Emitido em:</b> ' + esc(agora) + ' por ' + esc((permsSessao() || {}).nome || AUTH.user) + '</div>' +
+  '</div>';
+
+  h += '<table class="pr-resumo"><tr>' +
+    '<td><span class="pr-v">' + R.length + '</span><span class="pr-l">Respostas</span></td>' +
+    '<td><span class="pr-v">' + p.perguntas.length + '</span><span class="pr-l">Perguntas</span></td>' +
+    '<td><span class="pr-v">' + esc((p.criado_em || '').split(' ')[0]) + '</span><span class="pr-l">Início da coleta</span></td>' +
+    '</tr></table>';
+
+  h += apurado.map(blocoImpresso).join('');
+
+  // Quem respondeu: só na pesquisa identificada, em folha própria
+  if (!p.anonima && R.length){
+    h += '<div class="pr-nominal"><h2 style="font-size:12pt;margin-bottom:5pt">Relação dos respondentes</h2>' +
+      '<table class="pr-tab"><thead><tr><th>#</th><th>RE</th><th>Nome</th><th>Unidade</th><th>Data</th></tr></thead><tbody>' +
+      R.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(r.re) + '</td><td>' + esc(r.nome) +
+        '</td><td>' + esc(r.opm) + '</td><td>' + esc(r.data) + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+
+  h += '<div class="pr-fim">Relatório gerado pelo sistema de pesquisas do BPFRON · ' + esc(agora) + '</div>';
+  $('print-area').innerHTML = h;
+}
+
+function blocoImpresso(a){
+  let corpo = '';
+  if (a.linhas){
+    corpo = '<table class="pr-fr"><tbody>' + a.linhas.map((l) =>
+      '<tr><td class="op">' + esc(l.rotulo) + '</td>' +
+      '<td class="ba"><div class="pr-bar"><i style="width:' + Math.max(0, Math.min(100, l.pct)).toFixed(1) + '%"></i></div></td>' +
+      '<td class="nu"><b>' + l.n + '</b> · ' + l.pct.toFixed(1).replace('.', ',') + '%</td></tr>').join('') +
+      '</tbody></table>';
+    if (a.media !== undefined){
+      corpo += '<div style="font-size:9pt;margin-top:3pt"><b>Média: ' + a.media.toFixed(2).replace('.', ',') +
+               '</b> de ' + a.max + (a.rotulos && (a.rotulos[0] || a.rotulos[1]) ? ' (' + esc(a.rotulos[0]) + ' → ' + esc(a.rotulos[1]) + ')' : '') + '</div>';
+    }
+    if (a.nota_pct) corpo += '<div style="font-size:7.5pt;color:#555;margin-top:2pt">% ' + a.nota_pct + '</div>';
+  } else if (a.numeros){
+    const f = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits:2 });
+    corpo = '<table class="pr-tab"><thead><tr><th>Respostas</th><th>Média</th><th>Menor</th><th>Maior</th><th>Soma</th></tr></thead>' +
+      '<tbody><tr><td>' + a.numeros.n + '</td><td>' + f(a.numeros.media) + '</td><td>' + f(a.numeros.min) +
+      '</td><td>' + f(a.numeros.max) + '</td><td>' + f(a.numeros.soma) + '</td></tr></tbody></table>';
+  } else if (a.textos){
+    corpo = '<div class="pr-txt">' + a.textos.map((t) =>
+      '<div>' + esc(t.txt) + (t.quem ? '<span class="quem"> — ' + esc(t.quem) + '</span>' : '') + '</div>').join('') + '</div>';
+  }
+
+  return '<div class="pr-q">' +
+    '<h2>' + a.n + '. ' + esc(a.texto) + '</h2>' +
+    '<div class="pr-tipo">' + esc(TIPOS[a.tipo] || a.tipo) + ' · <b>' + a.respondidas + '</b> resposta(s)' +
+      (a.embranco ? ' · ' + a.embranco + ' em branco' : '') + '</div>' +
+    corpo + '</div>';
+}
+
+function imprimir(){ montarRelatorio(); window.print(); }
+// Ctrl+P sai igual ao botão: monta o mesmo relatório antes.
+window.addEventListener('beforeprint', () => { if (VENDO) montarRelatorio(); });
+
+// Se o acesso mudou no painel admin (ou o usuário foi desativado), recarrega já com o acesso novo.
+(async function(){
+  if (!AUTH.logged) return;
+  try{
+    const r = await fetch(API_BASE + '/api/me', { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.authenticated){ AUTH.token = ''; AUTH.user = ''; location.reload(); return; }
+    if (!d.perms) return;
+    const antes = localStorage.getItem('bp_perms'); salvarPerms(d);
+    if (antes !== localStorage.getItem('bp_perms')) location.reload();
+  }catch(e){ /* sem rede: segue com o que já tem */ }
+})();
+
+$('ovl').addEventListener('click', (e) => { if (e.target.id === 'ovl') fecharModal(); });
+inicio();
+</script>
+</body>
+</html>

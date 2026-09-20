@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisa — BPFRON</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   PESQUISA — formulário PÚBLICO. Quem responde não tem login: o link já é a
+   credencial. A página só sabe o que o Worker mandou em /api/pesquisa?id=.
+   Irmã da pesquisas.html (área do gestor, que cria o formulário).
+   =========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --bg3:#101524; --yellow:#F5C518; --gold:#c9a030;
+  --blue2:#3b82f6; --green2:#22c55e; --red:#dc2626;
+  --text:#dde3f0; --muted:#8b97a8; --border:rgba(245,197,24,0.16);
+  --card:#0f172a;
+}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
+body{padding:0 0 70px}
+a{color:var(--yellow)}
+
+.ps-hdr{background:linear-gradient(180deg,#0b1020,#070b14);border-bottom:1px solid var(--border);
+  padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20}
+.ps-hdr .ic{font-size:22px}
+.ps-hdr .ht{font-family:Rajdhani,sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--yellow)}
+.ps-hdr .hs{font-size:11.5px;color:var(--muted)}
+
+.wrap{max-width:780px;margin:0 auto;padding:20px 16px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 18px;margin-bottom:14px}
+.capa{border-left:4px solid var(--yellow)}
+.capa h1{font-family:Rajdhani,sans-serif;font-size:26px;line-height:1.2;color:#fff;margin-bottom:6px}
+.capa .desc{color:#c3ccdb;font-size:14.5px;white-space:pre-wrap;line-height:1.55}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tag{font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:#0c1220}
+.tag.ok{border-color:rgba(34,197,94,.4);color:#86efac}
+.tag.id{border-color:rgba(59,130,246,.4);color:#93c5fd}
+
+.sec-t{font-family:Rajdhani,sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.q{background:var(--bg3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 15px;margin-bottom:12px}
+.q.falta{border-color:rgba(220,38,38,.6)}
+.q .qn{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.6px;margin-bottom:4px}
+.q .qt{font-size:15px;color:#eaf0fa;line-height:1.4;margin-bottom:10px;font-weight:500}
+.q .qt .ob{color:#f87171;margin-left:3px}
+
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;background:#0a0f1c;border:1px solid rgba(255,255,255,.12);border-radius:9px;
+  color:var(--text);padding:10px 12px;font-size:14.5px;font-family:inherit}
+textarea{min-height:92px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--yellow)}
+input::placeholder,textarea::placeholder{color:#55607a}
+
+.op{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid rgba(255,255,255,.1);
+  border-radius:9px;margin-bottom:7px;cursor:pointer;background:#0a0f1c;transition:.12s}
+.op:hover{border-color:rgba(245,197,24,.4)}
+.op input{margin-top:2px;accent-color:var(--yellow);width:17px;height:17px;flex-shrink:0;cursor:pointer}
+.op span{font-size:14.5px;line-height:1.35}
+.op.sel{border-color:var(--yellow);background:rgba(245,197,24,.07)}
+
+.esc{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.esc button{width:46px;height:46px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
+  background:#0a0f1c;color:var(--text);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit}
+.esc button.sel{background:var(--yellow);border-color:var(--yellow);color:#111;font-weight:700}
+.esc-rot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:7px}
+
+.ident{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.ident .full{grid-column:1/-1}
+.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+
+.btn{background:linear-gradient(180deg,#f5c518,#d4a017);color:#141414;border:none;border-radius:10px;
+  padding:14px 26px;font-size:15.5px;font-weight:700;cursor:pointer;font-family:Rajdhani,sans-serif;
+  letter-spacing:.6px;text-transform:uppercase;width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.sec{background:#1a2234;color:var(--text);border:1px solid var(--border)}
+
+.msg{border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:14px;line-height:1.5}
+.msg.err{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.45);color:#fca5a5}
+.msg.warn{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);color:#fde68a}
+.msg.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#86efac}
+
+.fim{text-align:center;padding:36px 20px}
+.fim .ic{font-size:56px;margin-bottom:12px}
+.fim h2{font-family:Rajdhani,sans-serif;font-size:26px;color:var(--yellow);margin-bottom:8px}
+.fim p{color:#c3ccdb;font-size:15px;line-height:1.6;margin-bottom:6px}
+.fim .prot{display:inline-block;margin-top:14px;font-family:ui-monospace,Consolas,monospace;font-size:18px;
+  letter-spacing:2px;background:#0a0f1c;border:1px solid var(--border);border-radius:10px;padding:10px 18px;color:var(--yellow)}
+
+.load{text-align:center;padding:60px 20px;color:var(--muted)}
+.sp{width:34px;height:34px;border:3px solid rgba(245,197,24,.2);border-top-color:var(--yellow);
+  border-radius:50%;animation:gira .8s linear infinite;margin:0 auto 14px}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+.rodape{text-align:center;color:#4d5870;font-size:11.5px;margin-top:18px;line-height:1.6}
+
+@media(max-width:560px){
+  .wrap{padding:14px 12px}
+  .capa h1{font-size:22px}
+  .ident{grid-template-columns:1fr}
+  .esc button{width:42px;height:42px}
+}
+</style>
+</head>
+<body>
+
+<div class="ps-hdr">
+  <span class="ic">📋</span>
+  <div>
+    <div class="ht">PESQUISA</div>
+    <div class="hs">Polícia Militar de Rondônia · BPFRON</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="carregando" class="load"><div class="sp"></div>Carregando a pesquisa…</div>
+  <div id="erro-geral" style="display:none"></div>
+  <div id="form-area" style="display:none"></div>
+  <div id="fim" style="display:none"></div>
+  <div class="rodape">
+    Batalhão de Polícia de Fronteira e Divisas · BPFRON<br>
+    Em caso de dúvida sobre esta pesquisa, procure a seção responsável.
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+let PESQ = null;           // o formulário que veio do Worker
+const RESP = {};           // respostas em memória: { [n]: valor }
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+function idDaURL(){
+  const u = new URL(location.href);
+  // aceita ?id=XXXX e também ?XXXX (link curto colado na mão)
+  const id = u.searchParams.get('id') || (u.search.startsWith('?') && !u.search.includes('=') ? u.search.slice(1) : '');
+  return (id || '').trim().toUpperCase();
+}
+
+function telaErro(titulo, detalhe){
+  $('carregando').style.display = 'none';
+  $('form-area').style.display = 'none';
+  const el = $('erro-geral');
+  el.style.display = '';
+  el.innerHTML = '<div class="card"><div class="fim"><div class="ic">🔒</div>' +
+    '<h2>' + esc(titulo) + '</h2><p>' + esc(detalhe) + '</p></div></div>';
+}
+
+async function carregar(){
+  const id = idDaURL();
+  if (!id){
+    telaErro('Link incompleto', 'Abra a pesquisa pelo link completo que você recebeu (ele termina com ?id=CÓDIGO).');
+    return;
+  }
+  try{
+    const r = await fetch(API_BASE + '/api/pesquisa?id=' + encodeURIComponent(id) + '&_nc=' + Date.now());
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok){
+      telaErro(r.status === 404 ? 'Pesquisa não encontrada' : 'Não foi possível abrir',
+               d.detail || 'Confira o link com quem enviou a pesquisa.');
+      return;
+    }
+    PESQ = d.pesquisa;
+    document.title = (PESQ.titulo || 'Pesquisa') + ' — BPFRON';
+    if (!PESQ.aberta){
+      telaErro('Pesquisa encerrada',
+        'Esta pesquisa foi encerrada e não aceita mais respostas. Obrigado pelo interesse.');
+      return;
+    }
+    render();
+  }catch(e){
+    telaErro('Sem conexão', 'Não foi possível falar com o servidor. Tente de novo em instantes.');
+  }
+}
+
+function render(){
+  $('carregando').style.display = 'none';
+  const area = $('form-area');
+  area.style.display = '';
+
+  let h = '';
+  h += '<div class="card capa">' +
+         '<h1>' + esc(PESQ.titulo) + '</h1>' +
+         (PESQ.descricao ? '<div class="desc">' + esc(PESQ.descricao) + '</div>' : '') +
+         '<div class="tags">' +
+           (PESQ.anonima
+             ? '<span class="tag ok">🕶️ Resposta anônima — não pedimos seu nome</span>'
+             : '<span class="tag id">🪪 Resposta identificada (RE e nome)</span>') +
+           '<span class="tag">' + PESQ.perguntas.length + ' pergunta' + (PESQ.perguntas.length > 1 ? 's' : '') + '</span>' +
+           (PESQ.encerra_em ? '<span class="tag">Responda até ' + esc(dataBR(PESQ.encerra_em)) + '</span>' : '') +
+         '</div>' +
+       '</div>';
+
+  if (!PESQ.anonima){
+    h += '<div class="card">' +
+           '<div class="sec-t">Identificação</div>' +
+           '<div class="ident">' +
+             '<div><label class="lbl" for="f-re">RE</label>' +
+               '<input type="text" id="f-re" inputmode="numeric" placeholder="123456" maxlength="12"></div>' +
+             '<div><label class="lbl" for="f-nome">Nome completo</label>' +
+               '<input type="text" id="f-nome" placeholder="Nome e sobrenome" maxlength="120"></div>' +
+             '<div class="full"><label class="lbl" for="f-opm">Unidade / OPM <span style="text-transform:none">(opcional)</span></label>' +
+               '<input type="text" id="f-opm" placeholder="Ex.: BPFRON · 1ª Cia" maxlength="80"></div>' +
+           '</div>' +
+         '</div>';
+  }
+
+  h += '<div class="card"><div class="sec-t">Perguntas</div><div id="qs">' +
+       PESQ.perguntas.map(campo).join('') + '</div></div>';
+
+  h += '<div id="msg-envio"></div>' +
+       '<button class="btn" id="btn-env" onclick="enviar()">Enviar resposta</button>';
+
+  area.innerHTML = h;
+}
+
+function dataBR(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : (iso || '');
+}
+
+/* Um campo por tipo de pergunta. O `n` é a chave que o Worker espera de volta. */
+function campo(q){
+  const ob = q.obrig !== false ? '<span class="ob" title="obrigatória">*</span>' : '';
+  let c = '';
+
+  if (q.tipo === 'curta'){
+    c = '<input type="text" maxlength="300" oninput="setResp(' + q.n + ', this.value)" placeholder="Sua resposta">';
+  } else if (q.tipo === 'longa'){
+    c = '<textarea maxlength="2000" oninput="setResp(' + q.n + ', this.value)" placeholder="Escreva sua resposta"></textarea>';
+  } else if (q.tipo === 'numero'){
+    c = '<input type="number" step="any" oninput="setResp(' + q.n + ', this.value)" placeholder="0">';
+  } else if (q.tipo === 'data'){
+    c = '<input type="date" oninput="setResp(' + q.n + ', this.value)">';
+  } else if (q.tipo === 'simnao'){
+    c = ['SIM','NÃO'].map((o) =>
+      '<label class="op" data-q="' + q.n + '">' +
+        '<input type="radio" name="q' + q.n + '" value="' + o + '" onchange="escolher(' + q.n + ', this)">' +
+        '<span>' + o + '</span></label>').join('');
+  } else if (q.tipo === 'unica'){
+    c = (q.opcoes || []).map((o) =>
+      '<label class="op" data-q="' + q.n + '">' +
+        '<input type="radio" name="q' + q.n + '" value="' + esc(o) + '" onchange="escolher(' + q.n + ', this)">' +
+        '<span>' + esc(o) + '</span></label>').join('');
+  } else if (q.tipo === 'multipla'){
+    c = (q.opcoes || []).map((o) =>
+      '<label class="op" data-q="' + q.n + '">' +
+        '<input type="checkbox" value="' + esc(o) + '" onchange="marcar(' + q.n + ', this)">' +
+        '<span>' + esc(o) + '</span></label>').join('') +
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:4px">Pode marcar mais de uma.</div>';
+  } else if (q.tipo === 'escala'){
+    const max = q.max || 5;
+    let b = '<div class="esc">';
+    for (let i = 1; i <= max; i++) b += '<button type="button" onclick="nota(' + q.n + ',' + i + ',this)">' + i + '</button>';
+    b += '</div>';
+    if (q.rotulo_min || q.rotulo_max){
+      b += '<div class="esc-rot"><span>' + esc(q.rotulo_min || '') + '</span><span>' + esc(q.rotulo_max || '') + '</span></div>';
+    }
+    c = b;
+  }
+
+  return '<div class="q" id="q-' + q.n + '">' +
+           '<div class="qn">PERGUNTA ' + q.n + '</div>' +
+           '<div class="qt">' + esc(q.texto) + ob + '</div>' + c +
+         '</div>';
+}
+
+function limparFalta(n){ const el = $('q-' + n); if (el) el.classList.remove('falta'); }
+function setResp(n, v){ RESP[n] = v; limparFalta(n); }
+
+function escolher(n, input){
+  RESP[n] = input.value;
+  document.querySelectorAll('.op[data-q="' + n + '"]').forEach((l) => l.classList.toggle('sel', l.contains(input)));
+  limparFalta(n);
+}
+function marcar(n, input){
+  const sel = Array.from(document.querySelectorAll('.op[data-q="' + n + '"] input:checked')).map((i) => i.value);
+  RESP[n] = sel;
+  document.querySelectorAll('.op[data-q="' + n + '"]').forEach((l) => {
+    const i = l.querySelector('input'); l.classList.toggle('sel', i && i.checked);
+  });
+  limparFalta(n);
+}
+function nota(n, v, btn){
+  RESP[n] = v;
+  btn.parentElement.querySelectorAll('button').forEach((b) => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  limparFalta(n);
+}
+
+function vazio(v){
+  if (Array.isArray(v)) return v.length === 0;
+  return v === undefined || v === null || String(v).trim() === '';
+}
+
+function aviso(tipo, txt){
+  $('msg-envio').innerHTML = '<div class="msg ' + tipo + '">' + esc(txt) + '</div>';
+  $('msg-envio').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+async function enviar(){
+  const btn = $('btn-env');
+  $('msg-envio').innerHTML = '';
+
+  // 1) obrigatórias — marca todas as que faltam, não só a primeira
+  const faltando = PESQ.perguntas.filter((q) => q.obrig !== false && vazio(RESP[q.n]));
+  document.querySelectorAll('.q').forEach((el) => el.classList.remove('falta'));
+  if (faltando.length){
+    faltando.forEach((q) => { const el = $('q-' + q.n); if (el) el.classList.add('falta'); });
+    const el = $('q-' + faltando[0].n);
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    aviso('err', faltando.length === 1
+      ? 'Falta responder a pergunta ' + faltando[0].n + '.'
+      : 'Faltam ' + faltando.length + ' perguntas obrigatórias (marcadas em vermelho).');
+    return;
+  }
+
+  const corpo = { id: PESQ.id, respostas: RESP };
+  if (!PESQ.anonima){
+    const re = ($('f-re').value || '').replace(/\D/g, '');
+    const nome = ($('f-nome').value || '').trim();
+    if (re.length < 4){ aviso('err', 'Informe o seu RE.'); $('f-re').focus(); return; }
+    if (nome.length < 5 || !nome.includes(' ')){ aviso('err', 'Informe o nome completo.'); $('f-nome').focus(); return; }
+    corpo.re = re; corpo.nome = nome; corpo.opm = ($('f-opm').value || '').trim();
+  }
+
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try{
+    const r = await fetch(API_BASE + '/api/pesquisa/responder', {
+      method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(corpo)
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok){
+      aviso(d.error === 'ja_respondeu' ? 'warn' : 'err',
+            d.detail || 'Não foi possível registrar a resposta. Tente de novo.');
+      btn.disabled = false; btn.textContent = 'Enviar resposta';
+      return;
+    }
+    telaFim(d);
+  }catch(e){
+    aviso('err', 'Sem conexão com o servidor. Verifique a internet e tente de novo.');
+    btn.disabled = false; btn.textContent = 'Enviar resposta';
+  }
+}
+
+function telaFim(d){
+  $('form-area').style.display = 'none';
+  const el = $('fim');
+  el.style.display = '';
+  el.innerHTML = '<div class="card"><div class="fim">' +
+      '<div class="ic">✅</div>' +
+      '<h2>Resposta registrada</h2>' +
+      '<p>Obrigado por responder <b>' + esc(PESQ.titulo) + '</b>.</p>' +
+      (PESQ.anonima
+        ? '<p>Esta pesquisa é anônima: não guardamos quem respondeu.</p>'
+        : '<p>Sua resposta foi vinculada ao seu RE. Você não precisa responder de novo.</p>') +
+      '<div class="prot">' + esc(d.protocolo || '') + '</div>' +
+      '<p style="font-size:12px;color:var(--muted);margin-top:8px">Protocolo · ' + esc(d.data || '') + '</p>' +
+    '</div></div>';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+carregar();
+</script>
+</body>
+</html>

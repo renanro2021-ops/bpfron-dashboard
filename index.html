@@ -928,6 +928,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
   <div class="sb-spacer"></div>
   <a class="sb-item" id="nav-busca-oc" href="ocorrencias.html" style="display:none;text-decoration:none"><span class="ic">🔎</span> Busca de Ocorrências</a>
+  <a class="sb-item" id="nav-pesquisas" href="pesquisas.html" style="display:none;text-decoration:none"><span class="ic">📊</span> Pesquisas e Formulários</a>
   <a class="sb-item" id="nav-sistemas" href="sistemas.html" style="text-decoration:none"><span class="ic">🧭</span> Todos os Sistemas</a>
   <!-- Só aparece para administrador (ver applyUserRestrictions) -->
   <a class="sb-item" id="nav-admin" href="admin.html" style="display:none;text-decoration:none"><span class="ic">🛡️</span> Painel de Controle</a>
@@ -3190,6 +3191,10 @@ function p1PodeGerir(){ return typeof AUTH !== 'undefined' && AUTH.logged && tem
 // lê a "Descrição Resumida" inteira, que tem nome de envolvido. Espelha o
 // buscaEditors() do worker.js e o BUSCA_GESTORES do ocorrencias.html.
 const BUSCA_GESTORES = ['desousa','cmtfelipe','ni','p3','p3cmt','p301','p3aux'];
+// Pesquisas e Formulários (pesquisas.html) — allowlist: quem cria pesquisa vê
+// também as respostas (que podem ter RE e nome de quem respondeu). Espelha o
+// pesquisaEditors() do worker.js e o PESQUISA_GESTORES do pesquisas.html.
+const PESQUISA_GESTORES = ['desousa','cmtfelipe','p3','p3cmt','p301','p3aux'];
 
 // Permissões do logado vindas do Worker (/api/login e /api/me), configuradas no
 // painel admin.html. As listas fixas acima (RESTRICTED_PAGES, P1_GESTORES) só
@@ -4678,6 +4683,9 @@ function applyUserRestrictions(){
   // ocorrências tem PII, então o item só aparece para quem tem acesso.
   const navBusca = document.getElementById('nav-busca-oc');
   if (navBusca) navBusca.style.display = (AUTH.logged && temPerm('busca', BUSCA_GESTORES)) ? '' : 'none';
+  // Pesquisas e Formulários (pesquisas.html): idem — allowlist própria.
+  const navPesq = document.getElementById('nav-pesquisas');
+  if (navPesq) navPesq.style.display = (AUTH.logged && temPerm('pesquisa', PESQUISA_GESTORES)) ? '' : 'none';
   todasPaginasRestringiveis.forEach(pg => {
     const nav = document.getElementById('nav-' + pg);
     if (nav) nav.style.display = blocked.includes(pg) ? 'none' : '';
