@@ -111,6 +111,18 @@ select option{background:#0a0f1c}
 .opc-lin input{flex:1}
 .chkline{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:13px;color:var(--muted);cursor:pointer}
 .chkline input{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer}
+/* cartão de escolha (quem responde) */
+.op{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px 13px;background:#0a0f1c;transition:.12s}
+.op:hover{border-color:rgba(245,197,24,.45)}
+.op.sel{border-color:var(--yellow);background:rgba(245,197,24,.08)}
+/* quem ainda não respondeu */
+.pend{max-height:340px;overflow:auto;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#0a0f1c}
+.pend table{width:100%;border-collapse:collapse;font-size:13px}
+.pend td{padding:6px 9px;border-bottom:1px solid rgba(255,255,255,.05)}
+.pend tr:last-child td{border-bottom:none}
+.pend .re{color:var(--muted);width:78px;white-space:nowrap}
+.barra-ad{height:12px;background:#0a0f1c;border:1px solid rgba(255,255,255,.1);border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.barra-ad i{display:block;height:100%;background:linear-gradient(90deg,#15803d,#22c55e)}
 
 /* ---------- respostas / resumo ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
@@ -424,7 +436,9 @@ function cardPesquisa(p){
     '<div>' +
       (aberta ? '<span class="pill on">● Aberta</span>'
               : '<span class="pill off">● ' + (p.expirada ? 'Prazo vencido' : 'Fechada') + '</span>') +
-      (p.anonima ? '<span class="pill an">Anônima</span>' : '<span class="pill">Identificada</span>') +
+      (p.publico === 'bpfron'
+        ? '<span class="pill id2" style="border-color:rgba(245,197,24,.45);color:var(--yellow)">🎖️ Exclusiva BPFRON</span>'
+        : (p.anonima ? '<span class="pill an">Anônima</span>' : '<span class="pill">Identificada</span>')) +
       '<span class="pill n">' + p.respostas + ' resposta' + (p.respostas === 1 ? '' : 's') + '</span>' +
       '<span class="pill">' + (p.perguntas || []).length + ' pergunta(s)</span>' +
     '</div>' +
@@ -845,7 +859,8 @@ function docImportar(){
    Construtor de perguntas
    ========================================================================== */
 function novaPesquisa(){
-  EDIT = { id:null, titulo:'', descricao:'', anonima:false, encerra_em:'', perguntas:[novaPergunta()], travado:false };
+  EDIT = { id:null, titulo:'', descricao:'', anonima:false, encerra_em:'',
+           publico:'bpfron', perguntas:[novaPergunta()], travado:false };
   renderEditor();
 }
 function novaPergunta(){
@@ -855,7 +870,7 @@ function editar(id){
   const p = LISTA.find((x) => x.id === id);
   EDIT = {
     id: p.id, titulo: p.titulo, descricao: p.descricao, anonima: p.anonima,
-    encerra_em: p.encerra_em || '',
+    encerra_em: p.encerra_em || '', publico: p.publico || 'aberta',
     perguntas: (p.perguntas || []).map((q) => ({
       texto:q.texto, tipo:q.tipo, obrig:q.obrig !== false,
       opcoes:(q.opcoes || ['','']).slice(), max:q.max || 5,
@@ -883,6 +898,19 @@ function renderEditor(){
          'questionário, crie uma pesquisa nova.</div>';
   }
 
+  /* Quem responde — decide o resto do comportamento, por isso vem primeiro:
+     exclusiva do batalhão preenche os campos pelo cadastro e habilita o
+     controle de quem ainda não respondeu. */
+  const trPub = e.travado ? ' style="opacity:.55;pointer-events:none"' : '';
+  h += '<label class="lbl">Quem responde</label>' +
+       '<div' + trPub + ' style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px">' +
+         escolhaPublico('bpfron', '🎖️ Exclusiva do BPFRON',
+           'Todo o efetivo é obrigado. O policial entra com o RE e os dados preenchem sozinhos (nome, posto, OPM e CPF). Você acompanha quem ainda não respondeu.', e.publico) +
+         escolhaPublico('aberta', '🌐 Aberta',
+           'Qualquer pessoa com o link responde, digitando os dados. Serve para outras OPMs, órgãos parceiros ou pesquisa anônima.', e.publico) +
+       '</div>' +
+       (e.travado ? '<div style="font-size:11.5px;color:var(--muted);margin:-6px 0 12px">Não dá para trocar isso depois que a pesquisa recebeu resposta.</div>' : '');
+
   h += '<div style="margin-bottom:11px"><label class="lbl" for="e-tit">Título da pesquisa</label>' +
        '<input type="text" id="e-tit" maxlength="160" value="' + esc(e.titulo) + '" ' +
        'placeholder="Ex.: Levantamento de interesse em curso de operações" oninput="EDIT.titulo=this.value"></div>' +
@@ -892,11 +920,14 @@ function renderEditor(){
        '<div class="grid2">' +
          '<div><label class="lbl" for="e-prazo">Responder até (opcional)</label>' +
            '<input type="date" id="e-prazo" value="' + esc(e.encerra_em) + '" oninput="EDIT.encerra_em=this.value"></div>' +
-         '<div><label class="chkline" style="margin:0"><input type="checkbox" id="e-anon" ' +
-           (e.anonima ? 'checked' : '') + (e.travado ? ' disabled' : '') + ' onchange="EDIT.anonima=this.checked">' +
+         '<div><label class="chkline" style="margin:0' + (e.publico === 'bpfron' ? ';opacity:.5' : '') + '">' +
+           '<input type="checkbox" id="e-anon" ' + (e.anonima && e.publico !== 'bpfron' ? 'checked' : '') +
+           ((e.travado || e.publico === 'bpfron') ? ' disabled' : '') + ' onchange="EDIT.anonima=this.checked">' +
            '<span>Pesquisa anônima</span></label>' +
            '<div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4">' +
-           (e.anonima ? 'Não pede RE nem nome.' : 'Pede RE e nome; um RE responde uma vez.') + '</div></div>' +
+           (e.publico === 'bpfron'
+             ? 'Indisponível na exclusiva do BPFRON — não há como cobrar quem falta sem saber quem respondeu.'
+             : (e.anonima ? 'Não pede RE nem nome.' : 'Pede RE e nome; um RE responde uma vez.')) + '</div></div>' +
        '</div></div>';
 
   h += '<div class="card"><div class="sec-t">Perguntas (' + e.perguntas.length + ')</div>' +
@@ -911,6 +942,14 @@ function renderEditor(){
        '</div>';
 
   $('tela-editor').innerHTML = h;
+}
+
+function escolhaPublico(valor, titulo, desc, atual){
+  const sel = atual === valor;
+  return '<div class="op' + (sel ? ' sel' : '') + '" style="display:block;cursor:pointer" ' +
+    'onclick="EDIT.publico=\'' + valor + '\';if(EDIT.publico===\'bpfron\')EDIT.anonima=false;renderEditor()">' +
+    '<b style="font-size:13.5px;color:#eaf0fa">' + titulo + '</b>' +
+    '<div style="font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px">' + desc + '</div></div>';
 }
 
 function qEditor(q, i){
@@ -1005,7 +1044,8 @@ async function salvar(){
       method:'POST',
       body: JSON.stringify({
         op: e.id ? 'editar' : 'criar', id: e.id, titulo: e.titulo, descricao: e.descricao,
-        anonima: !!e.anonima, encerra_em: e.encerra_em || '',
+        anonima: e.publico === 'bpfron' ? false : !!e.anonima,
+        publico: e.publico || 'aberta', encerra_em: e.encerra_em || '',
         perguntas: e.perguntas.map((q) => ({
           texto:q.texto, tipo:q.tipo, obrig:q.obrig,
           opcoes:(q.opcoes || []).map((o) => (o || '').trim()).filter(Boolean),
@@ -1120,12 +1160,15 @@ function apurar(q, respostas){
 function renderRespostas(){
   telas('tela-resp');
   const p = VENDO.pesquisa, R = VENDO.respostas || [];
+  const PEND = VENDO.pendentes || [];
+  const esperados = VENDO.esperados || 0;
   const apurado = p.perguntas.map((q) => apurar(q, R));
 
   let h = '<div class="card">' +
     '<div class="sec-t">Resultado · ' + esc(p.id) +
       '<span class="dir">' +
         '<button class="btn pq" onclick="imprimir()">🖨️ Relatório (PDF)</button>' +
+        (PEND.length ? '<button class="btn sec pq" onclick="imprimirPendentes()">🖨️ Quem falta</button>' : '') +
         '<button class="btn sec pq" onclick="verRespostas(\'' + p.id + '\')">🔄 Atualizar</button>' +
         '<button class="btn sec pq" onclick="carregarLista()">← Voltar</button>' +
       '</span>' +
@@ -1134,12 +1177,20 @@ function renderRespostas(){
     (p.descricao ? '<div style="color:#c3ccdb;font-size:13.5px;white-space:pre-wrap;line-height:1.5;margin-bottom:10px">' + esc(p.descricao) + '</div>' : '') +
     '<div class="kpis">' +
       '<div class="kpi"><div class="v">' + R.length + '</div><div class="l">Respostas</div></div>' +
+      (esperados
+        ? '<div class="kpi"><div class="v">' + PEND.length + '</div><div class="l">Ainda não responderam</div></div>' +
+          '<div class="kpi"><div class="v">' + Math.round((R.length * 100) / esperados) + '%</div><div class="l">de ' + esperados + ' do efetivo</div></div>'
+        : '<div class="kpi"><div class="v">' + (p.anonima ? 'Sim' : 'Não') + '</div><div class="l">Anônima</div></div>') +
       '<div class="kpi"><div class="v">' + p.perguntas.length + '</div><div class="l">Perguntas</div></div>' +
-      '<div class="kpi"><div class="v">' + (p.anonima ? 'Sim' : 'Não') + '</div><div class="l">Anônima</div></div>' +
       '<div class="kpi"><div class="v" style="font-size:18px">' +
         (p.status === 'ABERTA' && !p.expirada ? 'Aberta' : (p.status === 'ARQUIVADA' ? 'Arquivada' : 'Encerrada')) +
         '</div><div class="l">Situação</div></div>' +
-    '</div>';
+    '</div>' +
+    (esperados
+      ? '<div class="barra-ad"><i style="width:' + Math.min(100, (R.length * 100) / esperados).toFixed(1) + '%"></i></div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + R.length + ' de ' + esperados +
+        ' policiais do BPFRON já responderam</div>'
+      : '');
 
   if (!R.length){
     h += '<div class="vazio">Ainda não há respostas.<br>' +
@@ -1152,15 +1203,67 @@ function renderRespostas(){
   h += '<div class="card"><div class="sec-t">Apuração por pergunta</div>' +
        apurado.map(blocoApuracao).join('') + '</div>';
 
+  /* Quem ainda não respondeu: é a tela de COBRANÇA. Fica fora do relatório do
+     resultado de propósito (pedido do usuário) — tem botão próprio de impressão. */
+  if (PEND.length){
+    h += '<div class="card"><div class="sec-t">⏳ Ainda não responderam (' + PEND.length + ')' +
+        '<span class="dir">' +
+          '<button class="btn sec pq" onclick="copiarPendentes()">📋 Copiar lista</button>' +
+          '<button class="btn sec pq" onclick="imprimirPendentes()">🖨️ Imprimir</button>' +
+        '</span></div>' +
+      '<input type="text" id="pend-busca" placeholder="Filtrar por nome ou RE…" style="margin-bottom:9px" ' +
+        'oninput="filtrarPendentes(this.value)">' +
+      '<div class="pend"><table id="pend-tab"><tbody>' +
+      PEND.map((x) => '<tr data-k="' + esc(((x.nome || '') + ' ' + (x.guerra || '') + ' ' + x.re).toLowerCase()) + '">' +
+        '<td class="re">' + esc(x.re) + '</td>' +
+        '<td>' + esc([x.posto_grad, x.guerra || x.nome].filter(Boolean).join(' ')) + '</td>' +
+        '<td style="color:var(--muted);font-size:12px">' + esc(x.opm) + '</td></tr>').join('') +
+      '</tbody></table></div>' +
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">' +
+        'Lista vinda do cadastro de policiais (quem tem OPM do BPFRON). Quem não responder ' +
+        '<b>não aparece no relatório do resultado</b> — esta relação é só para a cobrança.</div>' +
+      '</div>';
+  } else if (esperados){
+    h += '<div class="card"><div class="msg ok" style="margin:0">✅ Todo o efetivo cadastrado já respondeu (' +
+         esperados + ' de ' + esperados + ').</div></div>';
+  }
+
   if (!p.anonima){
+    const temFora = R.some((r) => r.fora_cadastro);
     h += '<div class="card"><div class="sec-t">Quem respondeu (' + R.length + ')</div><div class="rolar">' +
-      '<table class="tabela"><thead><tr><th>RE</th><th>Nome</th><th>Unidade</th><th>Data</th></tr></thead><tbody>' +
-      R.map((r) => '<tr><td>' + esc(r.re) + '</td><td>' + esc(r.nome) + '</td><td>' +
+      '<table class="tabela"><thead><tr><th>RE</th><th>Posto</th><th>Nome</th><th>CPF</th><th>Unidade</th><th>Data</th></tr></thead><tbody>' +
+      R.map((r) => '<tr><td>' + esc(r.re) + '</td><td>' + esc(r.posto_grad || '') + '</td><td>' + esc(r.nome) +
+        (r.fora_cadastro ? ' <span class="pill" style="border-color:rgba(245,197,24,.45);color:var(--yellow)">fora do cadastro</span>' : '') +
+        '</td><td style="white-space:nowrap">' + esc(fCPF(r.cpf)) + '</td><td>' +
         esc(r.opm) + '</td><td style="white-space:nowrap">' + esc(r.data) + '</td></tr>').join('') +
-      '</tbody></table></div></div>';
+      '</tbody></table></div>' +
+      (temFora ? '<div style="font-size:11.5px;color:#fde68a;margin-top:8px;line-height:1.5">' +
+        '⚠️ Quem está marcado como <b>fora do cadastro</b> digitou os próprios dados porque o RE não ' +
+        'foi encontrado na aba POLICIAIS — vale conferir e atualizar o cadastro.</div>' : '') +
+      '</div>';
   }
 
   $('tela-resp').innerHTML = h;
+}
+
+function fCPF(v){
+  const d = String(v || '').replace(/\D/g, '');
+  return d.length === 11 ? d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9) : (v || '');
+}
+
+function filtrarPendentes(q){
+  const k = (q || '').trim().toLowerCase();
+  document.querySelectorAll('#pend-tab tr').forEach((tr) => {
+    tr.style.display = (!k || (tr.dataset.k || '').includes(k)) ? '' : 'none';
+  });
+}
+
+function copiarPendentes(){
+  const txt = (VENDO.pendentes || []).map((x) =>
+    [x.re, [x.posto_grad, x.guerra || x.nome].filter(Boolean).join(' '), x.opm].filter(Boolean).join(' — ')).join('\n');
+  const aviso = () => alert((VENDO.pendentes || []).length + ' nome(s) copiado(s). Cole onde precisar.');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(aviso).catch(() => {});
+  else aviso();
 }
 
 function blocoApuracao(a){
@@ -1227,8 +1330,16 @@ function montarRelatorio(){
     '<div><b>Emitido em:</b> ' + esc(agora) + ' por ' + esc((permsSessao() || {}).nome || AUTH.user) + '</div>' +
   '</div>';
 
+  /* Quantos responderam de quantos era esperado é informação de QUALIDADE da
+     amostra e entra no relatório. A relação NOMINAL de quem faltou não entra —
+     ela sai no relatório próprio de cobrança (imprimirPendentes). */
+  const esperados = VENDO.esperados || 0;
   h += '<table class="pr-resumo"><tr>' +
     '<td><span class="pr-v">' + R.length + '</span><span class="pr-l">Respostas</span></td>' +
+    (esperados
+      ? '<td><span class="pr-v">' + esperados + '</span><span class="pr-l">Efetivo consultado</span></td>' +
+        '<td><span class="pr-v">' + Math.round((R.length * 100) / esperados) + '%</span><span class="pr-l">Participação</span></td>'
+      : '') +
     '<td><span class="pr-v">' + p.perguntas.length + '</span><span class="pr-l">Perguntas</span></td>' +
     '<td><span class="pr-v">' + esc((p.criado_em || '').split(' ')[0]) + '</span><span class="pr-l">Início da coleta</span></td>' +
     '</tr></table>';
@@ -1279,8 +1390,51 @@ function blocoImpresso(a){
 }
 
 function imprimir(){ montarRelatorio(); window.print(); }
+
+/* Relatório SEPARADO: só a relação de quem ainda não respondeu, para cobrança
+   pela cadeia de comando. Não se mistura com o relatório do resultado. */
+function montarPendentes(){
+  if (!VENDO) return;
+  const p = VENDO.pesquisa, R = VENDO.respostas || [], PEND = VENDO.pendentes || [];
+  const agora = new Date().toLocaleString('pt-BR');
+  $('print-area').innerHTML =
+    '<div class="pr-cab">' +
+      '<img class="pr-logo" src="LOGOS/bpfron_transp.avif" alt="" onerror="this.style.display=\'none\'">' +
+      '<div>' +
+        '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
+        '<h1>Pendentes de resposta</h1>' +
+        '<div class="pr-sub">' + esc(p.titulo) + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pr-meta">' +
+      '<div><b>Código da pesquisa:</b> ' + esc(p.id) + '</div>' +
+      (p.encerra_em ? '<div><b>Prazo para responder:</b> ' + dataBR(p.encerra_em) + '</div>' : '') +
+      '<div><b>Situação:</b> ' + (p.status === 'ABERTA' && !p.expirada ? 'Aberta' : 'Encerrada') + '</div>' +
+      '<div><b>Emitido em:</b> ' + esc(agora) + ' por ' + esc((permsSessao() || {}).nome || AUTH.user) + '</div>' +
+    '</div>' +
+    '<table class="pr-resumo"><tr>' +
+      '<td><span class="pr-v">' + (VENDO.esperados || 0) + '</span><span class="pr-l">Efetivo consultado</span></td>' +
+      '<td><span class="pr-v">' + R.length + '</span><span class="pr-l">Já responderam</span></td>' +
+      '<td><span class="pr-v">' + PEND.length + '</span><span class="pr-l">Faltam responder</span></td>' +
+    '</tr></table>' +
+    '<table class="pr-tab"><thead><tr><th>#</th><th>RE</th><th>Posto/Grad</th><th>Nome</th><th>Unidade</th></tr></thead><tbody>' +
+      PEND.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(x.re) + '</td><td>' + esc(x.posto_grad || '') +
+        '</td><td>' + esc(x.guerra || x.nome) + '</td><td>' + esc(x.opm) + '</td></tr>').join('') +
+    '</tbody></table>' +
+    '<div class="pr-fim">Relação extraída do cadastro de policiais (OPM BPFRON) · ' + esc(agora) + '</div>';
+}
+
+let _imprimindoPend = false;
+function imprimirPendentes(){
+  _imprimindoPend = true;
+  montarPendentes();
+  window.print();
+  setTimeout(() => { _imprimindoPend = false; }, 500);
+}
 // Ctrl+P sai igual ao botão: monta o mesmo relatório antes.
-window.addEventListener('beforeprint', () => { if (VENDO) montarRelatorio(); });
+window.addEventListener('beforeprint', () => {
+  if (VENDO && !_imprimindoPend) montarRelatorio();   // Ctrl+P = relatório do resultado
+});
 
 // Se o acesso mudou no painel admin (ou o usuário foi desativado), recarrega já com o acesso novo.
 (async function(){

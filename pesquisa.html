@@ -132,6 +132,13 @@ const API_BASE = "https://bpfron-api.bpfron.workers.dev";
 let PESQ = null;           // o formulário que veio do Worker
 const RESP = {};           // respostas em memória: { [n]: valor }
 
+/* Identificação (só na pesquisa exclusiva do batalhão):
+   IDENT = { re, confirma, pol } depois de confirmado, ou
+           { re, manual:true } quando o RE não está no cadastro.
+   O CPF de quem está no cadastro NUNCA passa por aqui — o Worker pega direto
+   do cadastro na hora de gravar. */
+let IDENT = null;
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -173,10 +180,161 @@ async function carregar(){
         'Esta pesquisa foi encerrada e não aceita mais respostas. Obrigado pelo interesse.');
       return;
     }
-    render();
+    // Exclusiva do batalhão: identifica ANTES de mostrar as perguntas
+    if (PESQ.publico === 'bpfron' && !IDENT) renderIdent();
+    else render();
   }catch(e){
     telaErro('Sem conexão', 'Não foi possível falar com o servidor. Tente de novo em instantes.');
   }
+}
+
+/* ==========================================================================
+   IDENTIFICAÇÃO (pesquisa exclusiva do batalhão)
+   Em duas etapas: primeiro o RE; o servidor diz qual confirmação ele exige
+   (data de nascimento ou os 4 últimos do CPF) e só depois devolve os dados.
+   Quem não está no cadastro preenche à mão e a resposta entra marcada.
+   ========================================================================== */
+function renderIdent(){
+  $('carregando').style.display = 'none';
+  const area = $('form-area');
+  area.style.display = '';
+  area.innerHTML =
+    '<div class="card capa">' +
+      '<h1>' + esc(PESQ.titulo) + '</h1>' +
+      (PESQ.descricao ? '<div class="desc">' + esc(PESQ.descricao) + '</div>' : '') +
+      '<div class="tags">' +
+        '<span class="tag id">🎖️ Exclusiva do BPFRON — resposta obrigatória</span>' +
+        '<span class="tag">' + PESQ.perguntas.length + ' pergunta' + (PESQ.perguntas.length > 1 ? 's' : '') + '</span>' +
+        (PESQ.encerra_em ? '<span class="tag">Responda até ' + esc(dataBR(PESQ.encerra_em)) + '</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="sec-t">Identifique-se</div>' +
+      '<p style="font-size:13.5px;color:#c3ccdb;line-height:1.55;margin-bottom:13px">' +
+        'Informe o seu RE. Seus dados vêm do cadastro do batalhão — você não precisa digitar nada além disso.</p>' +
+      '<div id="id-etapa1">' +
+        '<label class="lbl" for="i-re">RE</label>' +
+        '<input type="text" id="i-re" inputmode="numeric" placeholder="123456" maxlength="12" ' +
+          'onkeydown="if(event.key===\'Enter\')identPasso1()">' +
+        '<button class="btn" style="margin-top:12px" id="i-btn" onclick="identPasso1()">Continuar</button>' +
+      '</div>' +
+      '<div id="id-etapa2"></div>' +
+      '<div id="i-msg"></div>' +
+    '</div>';
+  setTimeout(() => { const e = $('i-re'); if (e) e.focus(); }, 80);
+}
+
+function identMsg(tipo, txt){
+  $('i-msg').innerHTML = txt ? '<div class="msg ' + tipo + '" style="margin-top:12px">' + esc(txt) + '</div>' : '';
+}
+
+async function identChamar(re, confirma){
+  const r = await fetch(API_BASE + '/api/pesquisa/identificar', {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ id: PESQ.id, re, confirma: confirma || '' })
+  });
+  return { ok: r.ok, d: await r.json().catch(() => ({})) };
+}
+
+async function identPasso1(){
+  const re = ($('i-re').value || '').replace(/\D/g, '');
+  const btn = $('i-btn');
+  identMsg('', '');
+  if (re.length < 4){ identMsg('err', 'Informe o seu RE.'); return; }
+  btn.disabled = true; btn.textContent = 'Consultando…';
+  try{
+    const { ok, d } = await identChamar(re, '');
+    if (!ok){ identMsg('err', d.detail || 'Não foi possível consultar o cadastro.'); return; }
+
+    if (d.encontrado === false){ identManual(re, d.detail); return; }
+    if (d.ja_respondeu){ identMsg('warn', 'Este RE já respondeu esta pesquisa. Obrigado!'); return; }
+    if (d.precisa){ identPasso2(re, d.precisa); return; }
+    if (d.pol){ identOk(re, '', d.pol); return; }
+    identMsg('err', 'Resposta inesperada do servidor.');
+  }catch(e){
+    identMsg('err', 'Sem conexão com o servidor.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Continuar';
+  }
+}
+
+function identPasso2(re, precisa){
+  const nasc = precisa === 'nascimento';
+  $('id-etapa1').style.display = 'none';
+  $('id-etapa2').innerHTML =
+    '<div class="msg ok" style="margin-bottom:12px">RE <b>' + esc(re) + '</b> encontrado no cadastro.</div>' +
+    '<label class="lbl" for="i-conf">' + (nasc ? 'Confirme a sua data de nascimento' : 'Confirme os 4 últimos dígitos do seu CPF') + '</label>' +
+    (nasc
+      ? '<input type="date" id="i-conf">'
+      : '<input type="text" id="i-conf" inputmode="numeric" maxlength="4" placeholder="0000">') +
+    '<div style="display:flex;gap:8px;margin-top:12px">' +
+      '<button class="btn" id="i-btn2" onclick="identPasso2Enviar(\'' + re + '\')">Confirmar</button>' +
+      '<button class="btn sec" onclick="renderIdent()">Trocar o RE</button>' +
+    '</div>';
+  setTimeout(() => { const e = $('i-conf'); if (e) e.focus(); }, 80);
+}
+
+async function identPasso2Enviar(re){
+  const v = ($('i-conf').value || '').trim();
+  const btn = $('i-btn2');
+  identMsg('', '');
+  if (!v){ identMsg('err', 'Preencha a confirmação.'); return; }
+  btn.disabled = true; btn.textContent = 'Conferindo…';
+  try{
+    const { ok, d } = await identChamar(re, v);
+    if (!ok){ identMsg('err', d.detail || 'Não conferiu.'); return; }
+    if (d.ja_respondeu){ identMsg('warn', 'Este RE já respondeu esta pesquisa. Obrigado!'); return; }
+    if (d.precisa){ identMsg('err', 'Confirmação não conferiu. Tente de novo.'); return; }
+    identOk(re, v, d.pol);
+  }catch(e){
+    identMsg('err', 'Sem conexão com o servidor.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Confirmar';
+  }
+}
+
+function identOk(re, confirma, pol){
+  IDENT = { re, confirma, pol, manual:false };
+  render();
+}
+
+/* RE fora do cadastro: não trava quem tem obrigação de responder. */
+function identManual(re, aviso){
+  $('id-etapa1').style.display = 'none';
+  $('id-etapa2').innerHTML =
+    '<div class="msg warn" style="margin-bottom:12px">' +
+      esc(aviso || 'Este RE não está no cadastro do batalhão.') +
+      ' Preencha os dados abaixo para responder — a sua resposta entra normalmente e a seção confere depois.</div>' +
+    '<div class="ident">' +
+      '<div><label class="lbl" for="m-re">RE</label>' +
+        '<input type="text" id="m-re" inputmode="numeric" maxlength="12" value="' + esc(re) + '"></div>' +
+      '<div><label class="lbl" for="m-nome">Nome completo</label>' +
+        '<input type="text" id="m-nome" maxlength="120" placeholder="Nome e sobrenome"></div>' +
+      '<div><label class="lbl" for="m-posto">Posto / graduação</label>' +
+        '<input type="text" id="m-posto" maxlength="40" placeholder="Ex.: 3º SGT PM"></div>' +
+      '<div><label class="lbl" for="m-cpf">CPF</label>' +
+        '<input type="text" id="m-cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"></div>' +
+      '<div class="full"><label class="lbl" for="m-opm">Unidade / OPM</label>' +
+        '<input type="text" id="m-opm" maxlength="80" value="BPFRON"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px">' +
+      '<button class="btn" onclick="identManualSeguir()">Continuar</button>' +
+      '<button class="btn sec" onclick="renderIdent()">Trocar o RE</button>' +
+    '</div>';
+}
+
+function identManualSeguir(){
+  const re = ($('m-re').value || '').replace(/\D/g, '');
+  const nome = ($('m-nome').value || '').trim();
+  const cpf = ($('m-cpf').value || '').replace(/\D/g, '');
+  if (re.length < 4){ identMsg('err', 'Informe o RE.'); return; }
+  if (nome.length < 5 || !nome.includes(' ')){ identMsg('err', 'Informe o nome completo.'); return; }
+  if (cpf.length !== 11){ identMsg('err', 'Informe o CPF completo.'); return; }
+  IDENT = { re, manual:true, pol: {
+    re, nome, posto_grad: ($('m-posto').value || '').trim(),
+    opm: ($('m-opm').value || 'BPFRON').trim(), cpf
+  } };
+  render();
 }
 
 function render(){
@@ -197,7 +355,21 @@ function render(){
          '</div>' +
        '</div>';
 
-  if (!PESQ.anonima){
+  if (PESQ.publico === 'bpfron' && IDENT){
+    // Já identificado: só mostra quem é (nada para digitar de novo)
+    const p = IDENT.pol || {};
+    h += '<div class="card">' +
+           '<div class="sec-t">Identificação</div>' +
+           '<div class="msg ok" style="margin:0">' +
+             '<b>' + esc([p.posto_grad, p.guerra || p.nome].filter(Boolean).join(' ')) + '</b>' +
+             '<br>RE ' + esc(p.re || IDENT.re) + (p.opm ? ' · ' + esc(p.opm) : '') +
+             (IDENT.manual ? '<br><span style="font-size:12px">Dados informados por você (fora do cadastro).</span>'
+                           : '<br><span style="font-size:12px">Dados do cadastro do batalhão.</span>') +
+           '</div>' +
+           '<button class="btn sec" style="margin-top:10px;width:auto;padding:7px 14px;font-size:12px" ' +
+             'onclick="IDENT=null;renderIdent()">Não sou eu</button>' +
+         '</div>';
+  } else if (!PESQ.anonima){
     h += '<div class="card">' +
            '<div class="sec-t">Identificação</div>' +
            '<div class="ident">' +
@@ -322,7 +494,17 @@ async function enviar(){
   }
 
   const corpo = { id: PESQ.id, respostas: RESP };
-  if (!PESQ.anonima){
+  if (PESQ.publico === 'bpfron'){
+    if (!IDENT){ renderIdent(); return; }
+    corpo.re = IDENT.re;
+    corpo.confirma = IDENT.confirma || '';
+    if (IDENT.manual){
+      // fora do cadastro: os dados vão daqui; quem está no cadastro, o Worker
+      // preenche sozinho (e ignora o que o navegador mandar)
+      const p = IDENT.pol;
+      corpo.nome = p.nome; corpo.cpf = p.cpf; corpo.opm = p.opm; corpo.posto_grad = p.posto_grad;
+    }
+  } else if (!PESQ.anonima){
     const re = ($('f-re').value || '').replace(/\D/g, '');
     const nome = ($('f-nome').value || '').trim();
     if (re.length < 4){ aviso('err', 'Informe o seu RE.'); $('f-re').focus(); return; }
@@ -359,7 +541,8 @@ function telaFim(d){
       '<p>Obrigado por responder <b>' + esc(PESQ.titulo) + '</b>.</p>' +
       (PESQ.anonima
         ? '<p>Esta pesquisa é anônima: não guardamos quem respondeu.</p>'
-        : '<p>Sua resposta foi vinculada ao seu RE. Você não precisa responder de novo.</p>') +
+        : '<p>Sua resposta foi vinculada ao seu RE e já consta como <b>respondida</b>. ' +
+          'Você não precisa responder de novo.</p>') +
       '<div class="prot">' + esc(d.protocolo || '') + '</div>' +
       '<p style="font-size:12px;color:var(--muted);margin-top:8px">Protocolo · ' + esc(d.data || '') + '</p>' +
     '</div></div>';
