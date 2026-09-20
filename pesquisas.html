@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pesquisas e Formulários — BPFRON</title>
 <script src="conta.js"></script>
+<!-- pdf.js (UMD) — lê o texto do ofício/documento direto no navegador, para montar
+     o prompt da IA. O arquivo NÃO sai da máquina: não sobe pro Worker nem pro Drive. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -139,12 +142,27 @@ select option{background:#0a0f1c}
 /* ---------- modal ---------- */
 .ovl{position:fixed;inset:0;background:rgba(3,6,14,.82);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .ovl.on{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:480px;width:100%}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:480px;
+  width:100%;max-height:88vh;overflow:auto}
 .modal h3{font-family:Rajdhani,sans-serif;font-size:19px;color:var(--yellow);margin-bottom:10px}
 .modal p{font-size:13.5px;color:#c3ccdb;line-height:1.55;margin-bottom:13px}
 .modal .fim{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
 .link-box{display:flex;gap:7px;margin:10px 0}
 .link-box input{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.modal.grande{max-width:720px}
+.passo{border-left:3px solid var(--border);padding:0 0 0 13px;margin-bottom:16px}
+.passo.feito{border-left-color:var(--green2)}
+.passo .cab{font-family:Rajdhani,sans-serif;font-size:14px;letter-spacing:.5px;color:var(--gold);
+  text-transform:uppercase;margin-bottom:7px}
+.passo.feito .cab{color:#86efac}
+.passo p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.dropzone{border:1.5px dashed rgba(245,197,24,.4);border-radius:11px;padding:18px;text-align:center;
+  cursor:pointer;background:#0a0f1c;transition:.15s}
+.dropzone:hover,.dropzone.sobre{border-color:var(--yellow);background:rgba(245,197,24,.06)}
+.dropzone .ic{font-size:30px;display:block;margin-bottom:6px}
+.dropzone b{color:var(--text);font-size:13.5px}
+.dropzone small{display:block;color:var(--muted);font-size:11.5px;margin-top:4px}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.5}
 
 .load{text-align:center;padding:46px 20px;color:var(--muted)}
 .sp{width:32px;height:32px;border:3px solid rgba(245,197,24,.2);border-top-color:var(--yellow);
@@ -369,7 +387,10 @@ function renderLista(){
   const ativas = LISTA.filter((p) => p.status !== 'ARQUIVADA');
   let h = '<div class="card">' +
     '<div class="sec-t">Minhas pesquisas' +
-      '<span class="dir"><button class="btn" onclick="novaPesquisa()">+ Nova pesquisa</button></span>' +
+      '<span class="dir">' +
+        '<button class="btn sec" onclick="abrirDoc()">📄 Gerar por documento</button>' +
+        '<button class="btn" onclick="novaPesquisa()">+ Nova pesquisa</button>' +
+      '</span>' +
     '</div>';
 
   if (!ativas.length){
@@ -431,7 +452,13 @@ function linkDe(id){
   return base + '?id=' + id;
 }
 function fecharModal(){ $('ovl').classList.remove('on'); }
-function abrirModal(html){ $('modal').innerHTML = html; $('ovl').classList.add('on'); }
+function abrirModal(html, grande){
+  const m = $('modal');
+  m.className = grande ? 'modal grande' : 'modal';
+  m.innerHTML = html;
+  m.scrollTop = 0;
+  $('ovl').classList.add('on');
+}
 
 function mostrarLink(id){
   const p = LISTA.find((x) => x.id === id);
@@ -504,6 +531,261 @@ async function mudarStatus(id, status){
     if (!r.ok){ alert(d.detail || 'Não foi possível alterar.'); return; }
     await carregarLista();
   }catch(e){ alert('Sem conexão com o servidor.'); }
+}
+
+/* ==========================================================================
+   GERAR POR DOCUMENTO — a ponte com a IA que o usuário já usa
+   --------------------------------------------------------------------------
+   Chega um ofício do SEI pedindo levantamento e o trabalho bruto é virar
+   aquilo em perguntas. Aqui a página lê o PDF NO PRÓPRIO NAVEGADOR (pdf.js —
+   o arquivo não sobe pro Worker nem pro Drive), monta um prompt pronto com o
+   texto e o formato esperado, e recebe de volta o questionário em JSON.
+   Não há chamada de IA paga: quem "pensa" é o Claude/ChatGPT do usuário.
+   O resultado SEMPRE cai no construtor para revisão — a IA não publica nada.
+   ========================================================================== */
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const DOC_MAX = 60000;   // recorte de segurança: prompt gigante trava a conversa
+let DOC_TEXTO = '';
+let DOC_NOME = '';
+
+function abrirDoc(){
+  DOC_TEXTO = ''; DOC_NOME = '';
+  abrirModal(
+    '<h3>📄 Gerar questionário por documento</h3>' +
+    '<p style="font-size:13px;color:#c3ccdb;line-height:1.55;margin-bottom:15px">' +
+      'Para quando chega um ofício pedindo levantamento. A página lê o documento aqui mesmo ' +
+      '(<b>o arquivo não sai do seu computador</b>), monta o pedido pronto para a IA que você já usa, ' +
+      'e traz as perguntas de volta para você revisar antes de publicar.</p>' +
+
+    '<div class="passo" id="doc-p1"><div class="cab">① O documento</div>' +
+      '<div class="dropzone" id="doc-drop" onclick="document.getElementById(\'doc-file\').click()">' +
+        '<span class="ic">📎</span><b>Escolher o PDF (ou arrastar aqui)</b>' +
+        '<small>Ofício, memorando, nota — o texto é lido no navegador</small></div>' +
+      '<input type="file" id="doc-file" accept="application/pdf,.pdf,.txt" style="display:none" ' +
+        'onchange="docArquivo(this.files[0])">' +
+      '<div style="text-align:center;font-size:11.5px;color:var(--muted);margin:8px 0 6px">ou cole o texto</div>' +
+      '<textarea id="doc-txt" placeholder="Cole aqui o teor do documento…" oninput="docDigitou()"></textarea>' +
+      '<div id="doc-st" style="font-size:12px;color:var(--muted);margin-top:7px"></div>' +
+    '</div>' +
+
+    '<div class="passo" id="doc-p2"><div class="cab">② Levar para a IA</div>' +
+      '<p>Copie o pedido pronto e cole no seu Claude (ou ChatGPT). Ele devolve o questionário.</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button class="btn" id="doc-copiar" onclick="copiarPrompt(this)" disabled>📋 Copiar o pedido</button>' +
+        '<button class="btn sec pq" onclick="verPrompt()" id="doc-ver" disabled>Ver o que será copiado</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="passo" id="doc-p3"><div class="cab">③ Trazer a resposta de volta</div>' +
+      '<p>Cole aqui o que a IA respondeu. Pode colar com as crases e o texto em volta — eu acho o questionário.</p>' +
+      '<textarea id="doc-json" class="mono" placeholder=\'{ "titulo": "...", "perguntas": [ ... ] }\' ' +
+        'style="min-height:110px"></textarea>' +
+      '<div id="doc-erro" style="color:#fca5a5;font-size:12.5px;margin-top:8px;line-height:1.5"></div>' +
+    '</div>' +
+
+    '<div class="fim">' +
+      '<button class="btn sec pq" onclick="fecharModal()">Cancelar</button>' +
+      '<button class="btn pq" onclick="docImportar()">Montar questionário →</button>' +
+    '</div>', true);
+
+  const dz = $('doc-drop');
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('sobre'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('sobre'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault(); dz.classList.remove('sobre');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) docArquivo(e.dataTransfer.files[0]);
+  });
+}
+
+function docStatus(txt, cor){
+  const el = $('doc-st'); if (!el) return;
+  el.textContent = txt; el.style.color = cor || 'var(--muted)';
+}
+function docPronto(){
+  const tem = DOC_TEXTO.trim().length > 80;
+  ['doc-copiar','doc-ver'].forEach((id) => { const b = $(id); if (b) b.disabled = !tem; });
+  const p1 = $('doc-p1'); if (p1) p1.classList.toggle('feito', tem);
+}
+function docDigitou(){
+  DOC_TEXTO = $('doc-txt').value || '';
+  DOC_NOME = DOC_NOME || 'texto colado';
+  docStatus(DOC_TEXTO.trim().length > 80
+    ? '✅ ' + DOC_TEXTO.trim().length.toLocaleString('pt-BR') + ' caracteres — pode seguir para o passo ②'
+    : 'Cole pelo menos um parágrafo do documento.');
+  docPronto();
+}
+
+async function docArquivo(file){
+  if (!file) return;
+  DOC_NOME = file.name || 'documento';
+  if (/\.txt$/i.test(file.name) || file.type === 'text/plain'){
+    DOC_TEXTO = await file.text();
+    $('doc-txt').value = DOC_TEXTO.slice(0, DOC_MAX);
+    docDigitou();
+    return;
+  }
+  if (!window.pdfjsLib){
+    docStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página ou cole o texto.', '#fca5a5');
+    return;
+  }
+  docStatus('⏳ Lendo o PDF…');
+  try{
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+    let txt = '';
+    for (let i = 1; i <= pdf.numPages; i++){
+      const pg = await pdf.getPage(i);
+      const c = await pg.getTextContent();
+      txt += c.items.map((it) => it.str).join(' ') + '\n\n';
+    }
+    DOC_TEXTO = txt.replace(/[ \t]+/g, ' ').trim();
+    if (!DOC_TEXTO || DOC_TEXTO.length < 80){
+      // PDF escaneado (imagem): aqui não tem OCR — o caminho é colar o texto
+      docStatus('⚠️ Esse PDF parece ser digitalizado (imagem), não tem texto para ler. Cole o teor no campo abaixo.', '#fde68a');
+      docPronto(); return;
+    }
+    $('doc-txt').value = DOC_TEXTO.slice(0, DOC_MAX);
+    docStatus('✅ ' + DOC_NOME + ' · ' + pdf.numPages + ' página(s) · ' +
+              DOC_TEXTO.length.toLocaleString('pt-BR') + ' caracteres lidos', '#86efac');
+    docPronto();
+  }catch(e){
+    docStatus('⚠️ Não consegui ler esse PDF (' + (e.message || 'erro') + '). Cole o texto no campo abaixo.', '#fca5a5');
+  }
+}
+
+/* O pedido que vai para a IA. Traz o formato exato que o construtor aceita —
+   é isso que faz a resposta voltar pronta para importar, sem ajuste na mão. */
+function montarPrompt(){
+  const doc = (DOC_TEXTO || '').slice(0, DOC_MAX);
+  return (
+'Você vai transformar o documento oficial abaixo em um FORMULÁRIO DE PESQUISA que o BPFRON\n' +
+'(Batalhão de Polícia de Fronteira e Divisas, Polícia Militar de Rondônia) vai enviar ao efetivo\n' +
+'para conseguir responder ao que o documento pede.\n\n' +
+'COMO PENSAR:\n' +
+'1. Primeiro identifique O QUE o documento está pedindo e QUAL É O PRAZO.\n' +
+'2. Depois pergunte-se: que respostas eu preciso ter do efetivo para responder isso bem?\n' +
+'3. Escreva as perguntas para PRAÇAS E OFICIAIS que atendem ocorrência, não para gabinete:\n' +
+'   linguagem direta, sem jargão desnecessário, uma ideia por pergunta.\n' +
+'4. Entre 6 e 12 perguntas. Prefira poucas e boas — formulário longo o efetivo não responde.\n' +
+'5. Misture perguntas fechadas (dá para somar e virar gráfico) com 1 a 3 abertas\n' +
+'   (é de onde saem as contribuições que valem ouro no relatório).\n' +
+'6. NÃO invente fatos, números, nomes ou prazos que não estejam no documento.\n' +
+'7. Se o documento tiver prazo, use uma data ANTES dele em "encerra_em", para sobrar tempo de consolidar.\n\n' +
+'RESPONDA SOMENTE COM UM JSON no formato abaixo, sem nenhum texto antes ou depois:\n' +
+'{\n' +
+'  "titulo": "título curto da pesquisa",\n' +
+'  "descricao": "1 a 3 frases explicando a quem responde o porquê da pesquisa e o prazo",\n' +
+'  "anonima": false,\n' +
+'  "encerra_em": "AAAA-MM-DD",\n' +
+'  "perguntas": [\n' +
+'    { "texto": "enunciado", "tipo": "unica", "obrig": true, "opcoes": ["opção 1", "opção 2"] },\n' +
+'    { "texto": "enunciado", "tipo": "escala", "obrig": true, "max": 5, "rotulo_min": "Nunca", "rotulo_max": "Sempre" },\n' +
+'    { "texto": "enunciado", "tipo": "longa", "obrig": false }\n' +
+'  ]\n' +
+'}\n\n' +
+'TIPOS PERMITIDOS (não invente outros):\n' +
+'  "curta"    texto de uma linha        "longa"   parágrafo (resposta aberta)\n' +
+'  "unica"    escolher UMA opção        "multipla" marcar VÁRIAS opções\n' +
+'  "escala"   nota de 1 até "max" (3, 4, 5 ou 10)\n' +
+'  "simnao"   sim ou não                "numero"  número          "data"  uma data\n\n' +
+'REGRAS DO FORMATO:\n' +
+'- "unica" e "multipla" exigem "opcoes" com pelo menos 2 opções diferentes.\n' +
+'- "escala" aceita "max" só 3, 4, 5 ou 10, e os rótulos das pontas.\n' +
+'- "anonima": true só se o assunto for sensível (clima, denúncia, satisfação) — aí não se pede RE nem nome.\n' +
+'  Para levantamento técnico use false, que identifica quem respondeu.\n' +
+'- Toda pergunta aberta deve ter "obrig": false, para ninguém travar no formulário.\n\n' +
+'=== DOCUMENTO (' + (DOC_NOME || 'documento') + ') ===\n' + doc + '\n=== FIM DO DOCUMENTO ===');
+}
+
+function copiarPrompt(btn){
+  const t = montarPrompt();
+  const marcar = () => {
+    const x = btn.textContent; btn.textContent = '✅ Copiado! Cole na IA';
+    const p2 = $('doc-p2'); if (p2) p2.classList.add('feito');
+    setTimeout(() => { btn.textContent = x; }, 2500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(marcar).catch(() => verPrompt());
+  } else { verPrompt(); }
+}
+
+function verPrompt(){
+  const w = window.open('', '_blank');
+  if (!w){ alert('O navegador bloqueou a janela. Libere o pop-up para ver o texto.'); return; }
+  w.document.write('<title>Pedido para a IA</title><body style="font:13px/1.5 ui-monospace,Consolas,monospace;' +
+    'white-space:pre-wrap;padding:20px;max-width:900px;margin:auto">' +
+    montarPrompt().replace(/[&<>]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c])) + '</body>');
+  w.document.close();
+}
+
+/* Aceita a resposta da IA "suja": com crases, com frase antes/depois, ou só o
+   array de perguntas. Acha o JSON, valida, e só então abre o construtor. */
+function docImportar(){
+  const erro = $('doc-erro');
+  erro.textContent = '';
+  const bruto = ($('doc-json').value || '').trim();
+  if (!bruto){ erro.textContent = 'Cole a resposta da IA no passo ③.'; return; }
+
+  let obj = null;
+  const tentativas = [];
+  const cerca = bruto.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (cerca) tentativas.push(cerca[1]);
+  const chaves = bruto.slice(bruto.indexOf('{'), bruto.lastIndexOf('}') + 1);
+  if (chaves.length > 2) tentativas.push(chaves);
+  const colch = bruto.slice(bruto.indexOf('['), bruto.lastIndexOf(']') + 1);
+  if (colch.length > 2) tentativas.push(colch);
+  tentativas.push(bruto);
+  for (const t of tentativas){
+    try { obj = JSON.parse(t); break; } catch (e) { /* tenta o próximo recorte */ }
+  }
+  if (!obj){
+    erro.textContent = 'Não consegui entender o que foi colado. Peça à IA para responder SÓ o JSON, sem explicação.';
+    return;
+  }
+  if (Array.isArray(obj)) obj = { perguntas: obj };     // veio só a lista de perguntas
+
+  const perguntas = Array.isArray(obj.perguntas) ? obj.perguntas : [];
+  if (!perguntas.length){ erro.textContent = 'O JSON veio sem a lista "perguntas".'; return; }
+
+  const problemas = [];
+  const limpas = perguntas.map((q, i) => {
+    const tipo = TIPOS[q.tipo] ? q.tipo : null;
+    if (!tipo) problemas.push('pergunta ' + (i + 1) + ': tipo "' + (q.tipo || '') + '" não existe');
+    const opcoes = (Array.isArray(q.opcoes) ? q.opcoes : []).map((o) => String(o || '').trim()).filter(Boolean);
+    if ((tipo === 'unica' || tipo === 'multipla') && opcoes.length < 2){
+      problemas.push('pergunta ' + (i + 1) + ': faltam opções');
+    }
+    return {
+      texto: String(q.texto || '').trim(),
+      tipo: tipo || 'curta',
+      obrig: q.obrig !== false,
+      opcoes: opcoes.length ? opcoes : ['',''],
+      max: [3,4,5,10].includes(+q.max) ? +q.max : 5,
+      rotulo_min: String(q.rotulo_min || '').trim(),
+      rotulo_max: String(q.rotulo_max || '').trim()
+    };
+  });
+  if (problemas.length){
+    erro.innerHTML = 'Corrija antes de importar:<br>· ' + problemas.map(esc).join('<br>· ');
+    return;
+  }
+
+  EDIT = {
+    id: null,
+    titulo: String(obj.titulo || '').trim() || ('Pesquisa — ' + (DOC_NOME || 'documento')),
+    descricao: String(obj.descricao || '').trim(),
+    anonima: obj.anonima === true,
+    encerra_em: /^\d{4}-\d{2}-\d{2}$/.test(obj.encerra_em || '') ? obj.encerra_em : '',
+    perguntas: limpas,
+    travado: false
+  };
+  fecharModal();
+  renderEditor();
+  const m = $('e-msg');
+  if (m) m.innerHTML = '<div class="msg warn">Questionário montado pela IA a partir de <b>' +
+    esc(DOC_NOME || 'documento') + '</b>. <b>Revise pergunta por pergunta</b> antes de criar — ' +
+    'nada foi publicado ainda.</div>';
 }
 
 /* ==========================================================================
