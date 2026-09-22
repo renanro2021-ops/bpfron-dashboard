@@ -705,6 +705,10 @@ const EP_OPM_TXT = /\b(BPM|BPFRON|BPCHOQUE|CHOQUE|CANIL|CRP|BPTAR|BPTRAN|BPAMB|B
 function epClean(s){ return String(s||'').replace(/\s+/g,' ').trim(); }
 function epDigits(s){ return String(s||'').replace(/\D/g,''); }
 function epIsRE(s){ const t=epClean(s).replace(/[.\-\s]/g,''); return /^\d{5,9}$/.test(t); }
+/* O SEI publica algumas escalas com o RE tarjado: "******269". A linha do policial não pode
+   ser descartada por isso — guarda os dígitos que sobraram e o policial é identificado pelo
+   NOME no cadastro, conferindo a terminação. 86 linhas no SEI 0021.000131/2026-96. */
+function epREMasc(s){ const m = epClean(s).match(/^[*•#xX_.\-\s]{2,}(\d{2,5})$/); return m ? m[1] : ''; }
 function epIsPhone(s){
   const t=epClean(s); if(/[A-Za-zÀ-ú]/.test(t)) return false;
   const d=epDigits(t);
@@ -780,7 +784,18 @@ function epLines(items){
       } else cells.push({ x:it.x, w:it.w||0, h, s:it.s });
     }
     cells.forEach(c=>{ c.s=epClean(c.s); });
-    L.cells = cells.filter(c=>c.s);
+    /* Layout em que as colunas Matrícula e Nome ficam coladas e viram UMA célula
+       ("100096160 RENAN BRITO DE SOUSA", escala da Operação Aruanã, 22/09/2026): sem separar,
+       nenhuma célula é reconhecida como RE e a linha inteira do policial se perde. */
+    const part = [];
+    for(const c of cells){
+      const m = c.s.match(/^(\d{5,9})\s+([A-ZÀ-Ú][^\d]{3,})$/i);
+      if(m){
+        const wRe = c.w * (m[1].length / c.s.length);
+        part.push({ x:c.x, w:wRe, h:c.h, s:m[1] }, { x:c.x + wRe + 2, w:Math.max(1, c.w - wRe - 2), h:c.h, s:epClean(m[2]) });
+      } else part.push(c);
+    }
+    L.cells = part.filter(c=>c.s);
     L.text = epClean(L.cells.map(c=>c.s).join(' '));
   }
   return lines.filter(L=>L.cells.length);
@@ -832,7 +847,13 @@ function parseEscalaItems(items, opts){
       continue;
     }
     if(/^LOCAL DO PATRULHAMENTO\s*:/i.test(t)){ esc.local = epClean(t.replace(/^LOCAL DO PATRULHAMENTO\s*:/i,'')).replace(/\.$/,''); continue; }
-    if(/^PER[IÍ]ODO\s*:/i.test(t)){ esc.periodo = epPeriodo(t.replace(/^PER[IÍ]ODO\s*:/i,''), ano); continue; }
+    /* "PERÍODO:" aparece no cabeçalho da escala e, em algumas (APOIO A SEDAM), repetido
+       dentro de cada equipe no lugar de "DATA:" — ali vale como período da guarnição. */
+    if(/^PER[IÍ]ODO\s*:/i.test(t)){
+      const per = epPeriodo(t.replace(/^PER[IÍ]ODO\s*:/i,''), ano);
+      if(team && esc.periodo) team.periodo = per; else esc.periodo = per;
+      continue;
+    }
     /* "EFETIVO ESCALADO: 19 PPMM DO BPFRON/05 PPMM OPM EXTERNAS" — duas informações:
        o TOTAL (19+5=24; ler só o 1º número dava "declara 19, marcados 24" em 12 escalas,
        22/09/2026) e a OPM DA ÉPOCA. A tabela do SEI não tem coluna OPM: sem isto a unidade
@@ -841,10 +862,33 @@ function parseEscalaItems(items, opts){
     const efM = T.match(/EFETIVO ESCALADO\s*:?\s*(.+)$/i);
     if(efM){
       const trecho = epClean(efM[1]).split(/\s(?=[A-Z][a-z])/)[0];        // corta texto colado depois
-      const nums = [...trecho.matchAll(/(\d+)\s*PPMM/gi)].map(m=>+m[1]);
-      const total = nums.length ? nums.reduce((a,b)=>a+b, 0) : (parseInt(trecho, 10) || null);
-      if(total != null) esc.efetivo_declarado = (esc.efetivo_declarado||0) + total;
-      if(nums.length > 1) esc.externos = (esc.externos||0) + nums.slice(1).reduce((a,b)=>a+b, 0);
+      /* Cada parcela conta UMA vez na escala. Dois motivos: o cabeçalho se repete a cada
+         página das escalas longas, e o SEI escreve o texto em negrito duas vezes sobrepostas
+         ("EFETIVO ESCALADO: 52 PPMM OPM EXTERNAS EFETIVO ESCALADO: 52 PPMM OPM EXTERNAS").
+         Somando tudo, 101 policiais viravam 202 declarados. 22/09/2026. */
+      esc._ef = esc._ef || new Set();
+      const partes = [...trecho.matchAll(/(\d+)\s*PPMM\s*([A-ZÀ-Ú\/\s]{0,24})/gi)]   // sem dígitos:
+        .map(m=>({ n: +m[1],                                                          // senão o rótulo
+          chave: norm(m[1] + ' ' + m[2]).split(/[^A-Z0-9]+/).slice(0,3).join(' ') })); // engole a parcela seguinte
+      /* "N POLICIAIS MILITARES" é o total da escala; "N PPMM ..." são parcelas que se somam
+         (BPFRON + OPM externas). Algumas escalas trazem os dois e se contradizem ("08
+         POLICIAIS MILITARES DO BPFRON" com "04 PPMM BPFRON" e 4 nomes na lista): aí vale o
+         total declarado, e a diferença aparece como conferência para o gestor. */
+      const geralM = trecho.match(/(\d+)\s*POLICIAIS?\s*MILITARES?/i);
+      if(geralM){
+        const n = +geralM[1], k = 'GERAL ' + n;
+        if(!esc._ef.has(k)){ esc._ef.add(k); esc.efetivo_geral = Math.max(esc.efetivo_geral||0, n); }
+      } else if(partes.length){
+        for(const p of partes) if(!esc._ef.has(p.chave)){
+          esc._ef.add(p.chave);
+          esc.efetivo_partes = (esc.efetivo_partes||0) + p.n;
+          if(/EXTERNA/.test(p.chave)) esc.externos = (esc.externos||0) + p.n;
+        }
+      } else {
+        const n = parseInt(trecho, 10), k = 'N ' + n;
+        if(n && !esc._ef.has(k)){ esc._ef.add(k); esc.efetivo_geral = Math.max(esc.efetivo_geral||0, n); }
+      }
+      esc.efetivo_declarado = esc.efetivo_geral || esc.efetivo_partes || esc.efetivo_declarado;
       const opmM = trecho.match(/PPMM\s+D[EOA]\s+([A-ZÀ-Ú0-9º°ª\s]+?)\s*(?:\/|$)/);
       if(opmM && !esc.opm_doc) esc.opm_doc = epClean(opmM[1]).replace(/\s+(CMT|FRONTEIRA|PROTETOR).*$/, '');
       continue;
@@ -857,7 +901,10 @@ function parseEscalaItems(items, opts){
     if(rodM && !esc._seiOwn){ esc.sei_doc = rodM[1]; esc._seiOwn = true; }
     if(epIsNoise(t)) continue;
     // cabeçalho da equipe
-    if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)){
+    // "EQUIPE ALFA", "GUARNIÇÃO 2" e também "BPFRON - EQUIPE 01" / "NI - [FRONTEIRA] - BPFRON"
+    if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t) ||
+       (t.length < 60 && t.split(/\s+/).length <= 7 && /\b(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)
+        && !/\d{5}|[*•]{2,}\s*\d/.test(t) && !EP_RANK.test(t))){
       flushPend();
       team = { nome: epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'', periodo:null, _loc:[] };
       esc.equipes.push(team); lastArea='';
@@ -879,12 +926,17 @@ function parseEscalaItems(items, opts){
       });
       continue;
     }
-    const reCell = L.cells.find(c=>epIsRE(c.s));
+    const masc = L.cells.find(c=>epREMasc(c.s));              // RE tarjado pelo SEI
+    const reCell = L.cells.find(c=>epIsRE(c.s)) || masc;
     const temRank = L.cells.some(c=>epRankOnly(c.s) || EP_RANK.test(c.s));
     if(reCell && (cols || temRank)){
-      const pol = { posto:'', re_full:'', re:'', nome:'', opm:'', funcao:'', tel:'', localidade:'', equipe: team?team.nome:'', _team: team, _y:L.y, _p:L.p };
-      pol.re_full = epDigits(reCell.s);
-      pol.re = pol.re_full.length>5 ? pol.re_full.slice(-5) : pol.re_full;
+      const pol = { posto:'', re_full:'', re:'', re_masc:'', nome:'', opm:'', funcao:'', tel:'', localidade:'', equipe: team?team.nome:'', _team: team, _y:L.y, _p:L.p };
+      if(reCell === masc && !epIsRE(reCell.s)){
+        pol.re_masc = epREMasc(reCell.s);                     // só os dígitos que sobraram
+      } else {
+        pol.re_full = epDigits(reCell.s);
+        pol.re = pol.re_full.length>5 ? pol.re_full.slice(-5) : pol.re_full;
+      }
       const locX = cols && cols.loc!=null ? cols.loc - 25 : Infinity;
       for(const c of L.cells){
         if(c===reCell) continue;
@@ -1009,7 +1061,7 @@ function parseEscalaItems(items, opts){
       delete p._team; delete p._y; delete p._p;
     }
     (e.equipes||[]).forEach(q=>{ delete q._loc; });
-    delete e._seiOwn;
+    delete e._seiOwn; delete e._ef;
     const corr = e.policiais.filter(p=>p.fim_pdf);
     if(corr.length){
       const quais = [...new Set(corr.map(p=>`${isoToBR(p.fim_pdf)} → ${isoToBR(p.fim)}`))].join(', ');
@@ -1197,6 +1249,12 @@ function nomesBatem(a, b){
   return false;
 }
 function novaLinha(p){
+  /* RE tarjado no documento ("******269"): acha o policial pelo NOME no cadastro e só aceita
+     se o RE encontrado terminar com os dígitos que o SEI deixou à mostra. 22/09/2026. */
+  if (!p.re && p.re_masc){
+    const cand = acharPorNome(p.nome);
+    if (cand && shortRE(cand.re).endsWith(p.re_masc)){ p.re = shortRE(cand.re); p.re_full = String(cand.re); p.re_achado = true; }
+  }
   const reg = EFET[shortRE(p.re)] || null;
   /* Nome que não veio inteiro do PDF (célula alta quebrada em 2 linhas: sobra "APOIO" ou
      nada) é buscado PELO RE no cadastro — pedido do usuário, 22/09/2026. Só quando o
@@ -1212,6 +1270,7 @@ function novaLinha(p){
     opm: p.opm || (reg && reg.opm) || '', funcao: p.funcao || '', localidade: p.localidade || '', tel: p.tel || '',
     ini: p.ini || '', fim: p.fim || '', diarias: calcDiarias(p.ini, p.fim), diasManual: false,
     fimPdf: p.fim_pdf || '',   // término que estava escrito errado no PDF (só para avisar)
+    reMasc: p.re_masc || '', reAchado: !!p.re_achado,   // RE tarjado pelo SEI / descoberto pelo nome
   };
 }
 function regDe(r){ return EFET[shortRE(r.re)] || null; }
@@ -1390,7 +1449,9 @@ function atualizaStatus(i){
   const e = ESCALAS[CUR], r = e.rows[i], el = $('st-'+i); if (!el) return;
   const reg = regDe(r), tr = $('r-'+i);
   const partes = [];
-  if (!r.re) partes.push('<span class="warn">sem RE</span>');
+  if (!r.re && r.reMasc) partes.push(`<span class="err">⛔ o documento tarjou o RE (…${esc(r.reMasc)}) e não achei este nome no cadastro — digite o RE</span>`);
+  else if (!r.re) partes.push('<span class="warn">sem RE</span>');
+  else if (r.reAchado) partes.push(`<span class="warn">⚠️ RE tarjado no documento (…${esc(r.reMasc)}) — este veio do cadastro pelo nome, confira</span>`);
   // RE × NOME é erro de verdade (RE digitado errado) e continua sendo cobrado TAMBÉM na
   // edição. O que é histórico e não se cobra é posto/OPM, que mudam com o tempo.
   else if (reg && isDivergente(r)){
@@ -1602,6 +1663,10 @@ function loteCheck(e, cfg, idsAntes){
   if (!(cfg.valor > 0)) erros.push('informe o valor da diária');
   if (!on.length) erros.push('nenhum policial marcado');
   const semNome = on.filter(r=>!r.re && !r.guerra && !r.nome).length; if (semNome) erros.push(`${semNome} linha(s) sem RE e sem nome`);
+  const tarjado = on.filter(r=>!r.re && r.reMasc).length;
+  if (tarjado) erros.push(`${tarjado} com o RE tarjado no documento e fora do cadastro — digite o RE na escala`);
+  const achado = on.filter(r=>r.reAchado).length;
+  if (achado) avisos.push(`${achado} com RE tarjado, descoberto pelo nome no cadastro`);
   const semDt = on.filter(r=>!r.ini || !r.fim).length; if (semDt) erros.push(`${semDt} sem início/término`);
   const dtRuim = on.filter(r=>r.ini && r.fim && dpParse(r.fim) < dpParse(r.ini)).length;
   if (dtRuim) erros.push(`${dtRuim} com término antes do início — corrija na aba da escala`);
