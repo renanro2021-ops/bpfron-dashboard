@@ -466,10 +466,25 @@ async function carregar(){
   }
   EFET = {};
   (DATA.efetivo||[]).forEach(e=>{ const k=shortRE(e.re); if(k) EFET[k]=e; });
+  aplicarCadastro();
   preencherListas();
   renderLotes();
   renderLog();
   if (ESCALAS.length) renderEscala();   // recarregou com uma escala aberta: refaz os avisos
+}
+
+/* O cadastro (aba POLICIAIS) chega do Worker de forma assíncrona. Quem soltava o PDF antes
+   dele chegar via as linhas nascerem SEM nome de guerra — e o "✓ cadastro: FULANO" aparecia
+   mesmo assim, porque esse selo é recalculado a cada render (bug relatado em 22/09/2026).
+   Aqui o cadastro é aplicado de novo às linhas já lidas, sem tocar no que o gestor digitou. */
+function aplicarCadastro(){
+  ESCALAS.forEach(e=>(e.rows||[]).forEach(r=>{
+    const reg = EFET[shortRE(r.re)];
+    if (!reg) return;
+    if (!String(r.guerra||'').trim() && !isDivergente(r)) r.guerra = reg.guerra || '';
+    if (!String(r.posto||'').trim()) r.posto = reg.posto_grad || '';
+    if (!String(r.opm||'').trim()) r.opm = reg.opm || '';
+  }));
 }
 
 function preencherListas(){
@@ -1052,6 +1067,8 @@ async function lerArquivo(file){
   setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
   loadShow('Lendo o PDF', 'Abrindo ' + file.name + '…');
   try{
+    // sem o cadastro em mãos as linhas nasceriam sem nome de guerra (22/09/2026)
+    if (!Object.keys(EFET).length){ loadStep('Carregando o cadastro de policiais…'); await carregar(); }
     const buf = await file.arrayBuffer();
     PDF_META = { arquivo: file.name, hash: await sha16(buf.slice(0)) };
     pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
