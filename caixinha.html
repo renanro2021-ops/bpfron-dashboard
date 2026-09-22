@@ -440,8 +440,9 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
             <div class="campo"><label class="lbl" for="g-total">Total pago (manda sobre a soma)</label>
               <input type="text" id="g-total" inputmode="decimal" placeholder="deixe vazio p/ usar a soma"></div>
             <div class="campo"><label class="lbl" for="g-file">Comprovante (nota ou extrato)</label>
-              <input type="file" id="g-file" accept="image/*,application/pdf" capture="environment"></div>
+              <input type="file" id="g-file" accept="image/*,application/pdf" capture="environment" onchange="gstAnexou()"></div>
           </div>
+          <div class="msg hidden" id="g-ocr-st"></div>
           <div class="msg err hidden" id="g-erro"></div>
           <div class="msg warn hidden" id="g-aviso"></div>
           <button class="btn" id="g-btn" onclick="lancarGasto()">Lançar compra</button>
@@ -1599,6 +1600,153 @@ async function recusar(id){
   catch (e){ toast('⚠️ ' + e.message, true); }
   finally { ovl(''); }
 }
+
+
+/* ==== NOTA:INICIO ==== */
+/* ══════════════════ LEITURA DA NOTA DA COMPRA ══════════════════
+   Mesma ideia do comprovante, aplicada ao cupom do mercado, e o mesmo motor
+   de leitura do leitor de nota fiscal da Garagem: PDF sai exato, foto passa
+   pelo OCR. Tira data, estabelecimento, total e os ITENS — que é o trabalho
+   chato de digitar. Tudo em roxo pra conferir: cupom amassado engana o OCR. */
+
+const GST_LIXO   = /TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|DINHEIRO|CARTAO|CREDITO|DEBITO|PIX|SUBTOTAL|CUPOM|FISCAL|CONSUMIDOR|CPF|OPERADOR|CAIXA|VENDA|CHAVE|CONSULTE|EMISSAO|PROTOCOLO/;
+const GST_UNID   = /\s+(UN|UND|PC|PCT|LT|L|KG|G|CX|DZ|FD|BD|UNID|PT|PAO)\s*$/;
+const GST_LOJA   = /\b(SUPERMERCADO|MERCADO|MERCEARIA|COMERCIAL|COMERCIO|ATACAD|DISTRIBUIDORA|PADARIA|PANIFICADORA|ACOUGUE|HORTIFRUTI|POSTO|RESTAURANTE|LANCHONETE|CONVENIENCIA|LTDA|EIRELI|EPP|MEI|S\/?A)\b/;
+
+function gstNorm(s){
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+}
+/* valor no formato do Brasil: 1.234,56 — exige os centavos, senão "TOTAL DE
+   ITENS 12" (que é contagem) viraria dinheiro */
+const GST_V = '(\\d{1,3}(?:[.\\s]\\d{3})*,\\d{2})';
+
+function gstTotal(T){
+  const rotulos = ['VALOR TOTAL', 'TOTAL A PAGAR', 'TOTAL GERAL', 'V(?:ALOR|L)\\.? TOTAL',
+                   'TOTAL R\\$', 'VALOR PAGO', 'TOTAL'];
+  for (const r of rotulos){
+    const m = T.match(new RegExp(r + '[^0-9]{0,30}' + GST_V));
+    if (m) return num(m[1].replace(/\s/g, ''));
+  }
+  return 0;
+}
+function gstData(T){
+  const DT = '(\\d{2})[\\/.-](\\d{2})[\\/.-](20\\d{2})';
+  const m = T.match(new RegExp('(?:EMISS[AÃ]O|DATA)[^0-9]{0,30}' + DT)) || T.match(new RegExp(DT));
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+/* Nome da loja: linha do topo com cara de razão social. */
+function gstLoja(linhas){
+  const achou = linhas.slice(0, 12).find(l => GST_LOJA.test(gstNorm(l)) && l.length < 80 &&
+    !/DESTINAT|RECEBEMOS|CONSUMIDOR/.test(gstNorm(l)));
+  if (!achou) return '';
+  return achou.replace(/^\s*(RAZAO SOCIAL|NOME|EMITENTE)\s*[:]\s*/i, '').replace(/^\d{5,}\s*-\s*/, '').trim();
+}
+/* Itens: linha com texto e um valor no fim. Tira do fim as colunas numéricas
+   (código, quantidade, unidade, valor unitário) até sobrar o nome do produto. */
+function gstItens(linhas){
+  const out = [];
+  for (const l of linhas){
+    const L = gstNorm(l);
+    if (GST_LIXO.test(L)) continue;
+    const m = L.match(new RegExp('^(.*?[A-Z]{3,}.*?)\\s+' + GST_V + '\\s*$'));
+    if (!m) continue;
+    let desc = m[1].replace(/^\d{1,4}\s+/, ''), antes;
+    do {
+      antes = desc;
+      desc = desc.replace(/\s*[xX*]\s*$/, '').replace(GST_UNID, '').replace(/\s+\d+(?:[.,]\d+)*\s*$/, '');
+    } while (desc !== antes);
+    desc = desc.replace(/^\d{6,}\s*/, '').trim();          // código de barras na frente
+    if (desc.replace(/[^A-Z]/g, '').length < 3) continue;
+    /* A quantidade vem do "2 UN x 3,50", nunca de dentro do nome: em
+       "AGUA MINERAL 1,5L" o L de litro faria a qtd virar 1,5. Por isso o
+       x da multiplicação manda, e a unidade solta exige espaço antes. */
+    const q = m[1].match(/(\d+(?:[.,]\d+)?)\s*(?:UN|UND|PC|PCT|LT|KG|G|CX|DZ|UNID)?\s*[xX]\s*\d/) ||
+              m[1].match(/\s(\d+(?:[.,]\d+)?)\s+(?:UN|UND|PC|PCT|LT|KG|CX|DZ|UNID)\b/);
+    out.push({ nome: desc.slice(0, 60), qtd: q ? Number(String(q[1]).replace(',', '.')) : 1,
+               valor: num(m[2].replace(/\s/g, '')) });
+    if (out.length >= 40) break;
+  }
+  return out;
+}
+
+/* Função pura: texto do cupom entra, campos da compra saem. */
+function gstDoTexto(texto){
+  const linhas = String(texto || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const T = gstNorm(texto).replace(/[ \t]+/g, ' ');
+  const itens = gstItens(linhas);
+  return {
+    data: gstData(T),
+    local: gstLoja(linhas),
+    total: gstTotal(T),
+    itens,
+    soma: Math.round(itens.reduce((s, i) => s + i.valor, 0) * 100) / 100,
+  };
+}
+/* Anexou a nota: PDF sai exato, foto passa pelo OCR. Aqui roda automático —
+   quem está nesta tela é o gestor, uma pessoa só, lançando compra atrás de
+   compra; o cuidado com os 15 MB do OCR é com a turma no 4G, não com ele. */
+async function gstAnexou(){
+  const file = ($('g-file').files || [])[0];
+  const st = $('g-ocr-st');
+  if (!file){ st.className = 'msg hidden'; st.innerHTML = ''; return; }
+  if (file.size > 8*1024*1024){
+    st.className = 'msg err';
+    st.innerHTML = '⚠️ Arquivo acima de 8 MB. Tire uma foto menor ou envie o PDF.';
+    return;
+  }
+  st.className = 'msg info'; st.innerHTML = 'Lendo a nota…';
+  ovl('Lendo a nota…');
+  try {
+    let texto = '', origem = 'pdf';
+    if (cmpEhPDF(file)) texto = await cmpTextoDoPDF(file);
+    if (texto.replace(/\s/g, '').length <= 40){
+      const canvas = cmpEhPDF(file) ? await ltPaginaPDF(file) : cmpPreparar(await createImageBitmap(file));
+      texto = await cmpOCR([canvas]); origem = 'ocr';
+    }
+    gstAplicar(gstDoTexto(texto), origem);
+  } catch(e){
+    st.className = 'msg warn';
+    st.innerHTML = '⚠️ ' + esc(e.message || 'Não consegui ler a nota') + ' — preencha à mão, o lançamento funciona igual.';
+  } finally { ovl(''); }
+}
+
+/* Preenche só o que está vazio: o que o gestor digitou tem precedência. */
+function gstAplicar(d, origem){
+  const achou = [];
+  const por = (id, valor, texto) => {
+    if (!valor || $(id).value) return;
+    $(id).value = valor; $(id).classList.add('ocr'); achou.push(texto);
+  };
+  por('g-data', d.data, 'data <b>' + (d.data ? d.data.split('-').reverse().join('/') : '') + '</b>');
+  por('g-local', d.local, 'loja <b>' + esc(d.local) + '</b>');
+  por('g-total', d.total ? d.total.toFixed(2).replace('.', ',') : '', 'total <b>' + fR(d.total) + '</b>');
+
+  const jaTem = $('g-itens').querySelectorAll('.item-l').length;
+  if (d.itens.length && !jaTem){
+    d.itens.forEach(i => novoItem(i.nome, i.qtd || 1, i.valor.toFixed(2).replace('.', ',')));
+    $('g-itens').querySelectorAll('.item-l input').forEach(el => el.classList.add('ocr'));
+    achou.push('<b>' + d.itens.length + ' item(ns)</b>');
+    somarItens();
+  }
+
+  const st = $('g-ocr-st');
+  if (!achou.length){
+    st.className = 'msg warn';
+    st.innerHTML = '🔍 Li a nota mas não achei nada aproveitável (ou os campos já estavam preenchidos) — confira e preencha à mão.';
+    return;
+  }
+  /* Total impresso x soma dos itens: desconto, item ilegível ou linha que o
+     OCR comeu. Quem decide é o gestor — o campo Total manda sobre a soma. */
+  const dif = d.total > 0 && d.soma > 0 && Math.round(d.total * 100) !== Math.round(d.soma * 100);
+  st.className = dif ? 'msg warn' : 'msg ok';
+  st.innerHTML = (origem === 'pdf' ? '📄 <b>PDF lido</b> (texto exato): ' : '🔍 <b>Nota lida</b>: ') +
+    achou.join(' · ') + '.' +
+    (dif ? '<div style="margin-top:7px">⚠️ A nota diz <b>' + fR(d.total) + '</b> e a soma dos itens dá <b>' + fR(d.soma) +
+           '</b>. Pode ser desconto, ou item que o leitor não pegou — confira. O campo <i>Total pago</i> é o que vale.</div>'
+         : '<div style="margin-top:5px;opacity:.8">O que está em roxo veio da nota — confira antes de lançar.</div>');
+}
+
+/* ==== NOTA:FIM ==== */
 
 /* ---------- lançar gasto ---------- */
 function novoItem(nome, qtd, valor){
