@@ -1445,6 +1445,11 @@ function montarEnvio(e, cfg, idm){
    todas, mostra o que está pendente em cada uma e lança em sequência as que o gestor
    marcar. Nada é lançado sem a escala passar pela MESMA validação do botão "Lançar". */
 let LOTE_ON = false, LOTE_RODANDO = false;
+/* O quadro abre mostrando SÓ as escalas que precisam do gestor (pedido do usuário,
+   21/09/2026: "quero corrigir uma a uma e depois clicar em lançar tudo"). Conforme ele
+   corrige, a escala sai desta lista sozinha. */
+let LOTE_FILTRO = 'pend';   // 'pend' | 'ok' | 'todas'
+function loteFiltro(v){ if (!LOTE_RODANDO){ LOTE_FILTRO = v; renderLote(); } }
 
 function loteCfg(){
   return { op: $('m-op').value.trim(), orgao: $('m-orgao').value.trim().toUpperCase(), tipo: $('m-tipo').value,
@@ -1538,7 +1543,11 @@ function renderLote(){
   const aConferir = linhas.filter(x=>!x.e.lancado && !x.st.erros.length && x.st.avisos.length && !x.e.loteOk);
   const comErro = linhas.filter(x=>!x.e.lancado && x.st.erros.length);
   const nPol = prontas.reduce((a,x)=>a + x.st.n, 0), tot = prontas.reduce((a,x)=>a + x.st.total, 0);
-  const tr = linhas.map(({e,j,st})=>{
+  // o quadro abre só com o que depende do gestor; o resto fica a um clique
+  const pendentes = linhas.filter(x=>!x.e.lancado && (x.st.erros.length || (x.st.avisos.length && !x.e.loteOk)));
+  const emOrdem = linhas.filter(x=>!pendentes.includes(x));
+  const visiveis = LOTE_FILTRO === 'todas' ? linhas : LOTE_FILTRO === 'ok' ? emOrdem : pendentes;
+  const tr = visiveis.map(({e,j,st})=>{
     const res = e.loteRes;
     const marcada = !!e.loteOn && !e.lancado;
     const msg = e.lancado ? `<span class="ok">✅ ${esc((res && res.msg) || 'já lançada')}</span>`
@@ -1562,8 +1571,9 @@ function renderLote(){
     </tr>`;
   }).join('');
   box.innerHTML = `<h4>⚡ Lançar todas as escalas deste PDF</h4>
-    <div class="sub">Cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela.
-      <b>✅ pronta</b> entra no lote · <b>⚠️</b> só entra depois que você abrir, conferir e clicar em “conferi” · <b>⛔</b> não é lançada até o problema ser resolvido.</div>
+    <div class="sub">A lista começa mostrando <b>só o que precisa de você</b>: clique em <b>abrir</b>, corrija a escala e ela sai daqui sozinha.
+      Quando a lista zerar, clique em <b>Lançar</b> — cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela.
+      <b>⚠️</b> é conferência (o botão “conferi” resolve) e <b>⛔</b> é problema que trava o lançamento.</div>
     <div class="cfg">
       <span>Operação: <b>${esc(cfg.op || '— escolha acima —')}</b></span>
       <span>Órgão: <b>${esc(cfg.orgao || '—')}</b></span>
@@ -1572,7 +1582,12 @@ function renderLote(){
       <span>Processo: <b>${esc(cfg.proc || 'NÃO')}</b></span>
       <button class="btn sm" style="padding:5px 12px" onclick="loteAplicar()">🔄 Reaplicar o que está acima</button>
     </div>
-    <div class="tbl-wrap" style="border:none">
+    <div class="pills" style="margin:0 0 10px">
+      <span class="pill${LOTE_FILTRO==='pend'?' on':''}" onclick="loteFiltro('pend')">⚠️ Precisam de você (${pendentes.length})</span>
+      <span class="pill${LOTE_FILTRO==='ok'?' on':''}" onclick="loteFiltro('ok')">✅ Em ordem (${emOrdem.length})</span>
+      <span class="pill${LOTE_FILTRO==='todas'?' on':''}" onclick="loteFiltro('todas')">Todas (${linhas.length})</span>
+    </div>
+    ${visiveis.length ? `<div class="tbl-wrap" style="border:none">
       <table class="lote-tb">
         <thead><tr>
           <th><input type="checkbox" ${marcadas.length===ESCALAS.filter(e=>!e.lancado).length&&marcadas.length?'checked':''} onchange="loteTodas(this.checked)" style="width:auto"></th>
@@ -1581,7 +1596,8 @@ function renderLote(){
         </tr></thead>
         <tbody>${tr}</tbody>
       </table>
-    </div>
+    </div>`
+    : `<div class="aviso ok">✅ Nada pendente: as ${prontas.length} escala(s) marcadas estão prontas. Clique em <b>Lançar</b> aqui embaixo.</div>`}
     <div class="foot">
       <div style="flex:1;font-size:13.5px;color:#cbd5e1"><b>${prontas.length}</b> escala(s) prontas · <b>${nPol}</b> policial(is) · <b>${fR(tot)}</b>
         ${aConferir.length ? `<span class="warn"> · ⚠️ ${aConferir.length} esperando a sua conferência</span>
