@@ -222,9 +222,9 @@ table.lotes td:nth-child(2){min-width:320px}
            ondragover="event.preventDefault(); this.classList.add('over')"
            ondragleave="this.classList.remove('over')"
            ondrop="event.preventDefault(); this.classList.remove('over'); lerArquivo(event.dataTransfer.files[0])">
-        📄 <b>Arraste aqui o PDF da escala</b> ou clique para escolher<br>
-        <small>Escala gerada pelo SEI (a leitura é exata). PDF escaneado também funciona, mas é mais lento e pode errar — confira com atenção.</small>
-        <input type="file" id="f-pdf" accept="application/pdf" style="display:none" onchange="lerArquivo(this.files[0]); this.value=''">
+        📄 <b>Arraste aqui a escala</b> (PDF ou HTML do SEI) ou clique para escolher<br>
+        <small>O <b>HTML</b> que o SEI exporta é o melhor: as tabelas vêm exatas e o RE não sai tarjado. PDF também funciona; se for escaneado, a leitura é por OCR — mais lenta e sujeita a erro, confira com atenção.</small>
+        <input type="file" id="f-pdf" accept="application/pdf,text/html,.html,.htm" style="display:none" onchange="lerArquivo(this.files[0]); this.value=''">
       </div>
       <div id="read-status" class="muted"></div>
       <div class="prog" id="prog"><div></div></div>
@@ -293,7 +293,7 @@ table.lotes td:nth-child(2){min-width:320px}
         </div>
 
         <div class="extra">
-          <button class="btn gray sm" onclick="togglePdf()">👁️ Ver o PDF ao lado</button>
+          <button class="btn gray sm" id="btn-ver-pdf" onclick="togglePdf()">👁️ Ver o PDF ao lado</button>
           <button class="btn gray sm" onclick="toggleRaw()">📝 Texto lido do PDF</button>
         </div>
         <div id="pdf-view"></div>
@@ -901,12 +901,20 @@ function parseEscalaItems(items, opts){
     if(rodM && !esc._seiOwn){ esc.sei_doc = rodM[1]; esc._seiOwn = true; }
     if(epIsNoise(t)) continue;
     // cabeçalho da equipe
-    // "EQUIPE ALFA", "GUARNIÇÃO 2" e também "BPFRON - EQUIPE 01" / "NI - [FRONTEIRA] - BPFRON"
+    /* Cabeçalho de guarnição. Três formatos vistos até agora:
+         "EQUIPE ALFA (VIATURA - RPL-22-351) BPFRON03"
+         "BPFRON - EQUIPE 01"
+         "DIVISAS/MACHADINHO D'OESTE - BPFRON EQUIPE 01 (VIATURA - ...) DATA: 01 A 08/07"
+       O último (HTML do SEI) traz área, equipe e a data na mesma linha. Nunca é linha de
+       policial: aqui não há RE (inteiro ou tarjado) nem posto. */
     if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t) ||
-       (t.length < 60 && t.split(/\s+/).length <= 7 && /\b(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)
+       (t.length < 170 && /\b(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)
         && !/\d{5}|[*•]{2,}\s*\d/.test(t) && !EP_RANK.test(t))){
       flushPend();
-      team = { nome: epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'', periodo:null, _loc:[] };
+      const dataM = t.match(/DATA\s*:\s*([^()]+)$/i);
+      const semData = epClean(t.replace(/\s*DATA\s*:.*$/i, '').replace(/\(.*$/, ''));
+      team = { nome: semData || epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'',
+               periodo: dataM ? epPeriodo(dataM[1], ano) : null, _loc:[] };
       esc.equipes.push(team); lastArea='';
       continue;
     }
@@ -1145,23 +1153,77 @@ async function sha16(buf){
   catch(e){ return ''; }
 }
 
+/* ── Escala em HTML (o SEI exporta cada documento como .html além do PDF) ──
+   Vale mais que o PDF: as tabelas são de verdade, o RE vem inteiro (sem a tarja "******269")
+   e ainda traz contato e localidade. Em vez de um parser novo, o HTML vira a MESMA lista de
+   itens com coordenadas que o pdf.js entrega — cada <tr> é uma linha, cada <td> uma coluna —
+   e passa pelo parser já existente. Pedido do usuário em 22/09/2026. */
+function itensDoHTML(texto){
+  const doc = new DOMParser().parseFromString(texto, 'text/html');
+  doc.querySelectorAll('script,style,noscript').forEach(n=>n.remove());
+  const items = [];
+  let y = 0;
+  const txt = el => epClean(String(el.textContent || '').replace(/ /g, ' '));
+  const linha = cels => {
+    y += 20;
+    let x = 0;
+    for (const c of cels){
+      const s = txt(c.el != null ? c.el : c);
+      const span = c.el != null ? c.span : 1;
+      // a largura tem de caber FOLGADA na coluna: se encostar na coluna seguinte, o
+      // agrupamento por proximidade junta as duas (o nome saía com a OPM colada)
+      if (s) items.push({ p:1, x, y, w: Math.min(300, Math.max(12, s.length * 5)), h:10, s });
+      x += 400 * span;
+    }
+  };
+  const anda = no => {
+    for (const el of no.children){
+      const tag = el.tagName;
+      if (tag === 'TR'){
+        const tds = [...el.children].filter(c=>/^(TD|TH)$/.test(c.tagName))
+          .map(td=>({ el: td, span: Math.max(1, parseInt(td.getAttribute('colspan') || '1', 10) || 1) }));
+        if (tds.length) linha(tds);
+      } else if (el.querySelector('tr')) anda(el);        // container: desce até as linhas
+      else { const s = txt(el); if (s) linha([el]); }     // bloco de texto = uma linha
+    }
+  };
+  anda(doc.body || doc.documentElement);
+  return items;
+}
+// o SEI publica em ISO-8859-1; sem isto os acentos viram "Ã§" e o parser erra nomes e rótulos
+function textoDoArquivo(buf){
+  let t = new TextDecoder('utf-8').decode(buf);
+  const cs = (t.slice(0, 5000).match(/charset\s*=\s*["']?([\w-]+)/i) || [])[1];
+  if (cs && !/utf-?8/i.test(cs)){ try{ t = new TextDecoder(cs).decode(buf); }catch(e){} }
+  else if (/Ã[\u0080-¿]/.test(t.slice(0, 5000)) === false && /[À-ÿ]{2}/.test(t.slice(0,5000))) { /* já está bom */ }
+  return t;
+}
+
 async function lerArquivo(file){
   if (!file) return;
-  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf'){ setStatus('⚠️ Envie um arquivo PDF.', 'err'); return; }
-  if (!window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
-  EDIT = null;   // subir um PDF novo sai do modo edição
+  const ehHTML = /\.x?html?$/i.test(file.name) || /html/i.test(file.type || '');
+  const ehPDF = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+  if (!ehPDF && !ehHTML){ setStatus('⚠️ Envie a escala em PDF ou o HTML exportado pelo SEI.', 'err'); return; }
+  if (ehPDF && !window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
+  EDIT = null;   // subir um arquivo novo sai do modo edição
   LOTE_ON = false; $('lote-box').style.display='none'; $('lote-bar').style.display='none';
   $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
   setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
-  loadShow('Lendo o PDF', 'Abrindo ' + file.name + '…');
+  loadShow(ehHTML ? 'Lendo a escala (HTML do SEI)' : 'Lendo o PDF', 'Abrindo ' + file.name + '…');
   try{
     // sem o cadastro em mãos as linhas nasceriam sem nome de guerra (22/09/2026)
     if (!Object.keys(EFET).length){ loadStep('Carregando o cadastro de policiais…'); await carregar(); }
     const buf = await file.arrayBuffer();
     PDF_META = { arquivo: file.name, hash: await sha16(buf.slice(0)) };
+    let items = [];
+    if (ehHTML){
+      PDF_DOC = null;
+      loadStep('Lendo as tabelas do documento…');
+      items = itensDoHTML(textoDoArquivo(buf));
+      setProg(0.55); loadProg(0.55);
+    } else {
     pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
     PDF_DOC = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
-    let items = [];
     for (let p=1; p<=PDF_DOC.numPages; p++){
       const page = await PDF_DOC.getPage(p);
       const vp = page.getViewport({ scale:1 });
@@ -1174,9 +1236,10 @@ async function lerArquivo(file){
       loadStep(`Lendo a página ${p} de ${PDF_DOC.numPages}…`);
       loadProg(0.05 + 0.5 * p / PDF_DOC.numPages);
     }
+    }
     let viaOCR = false;
     const chars = items.reduce((a,o)=>a + String(o.s).trim().length, 0);
-    if (chars < 80){                 // PDF sem camada de texto = escaneado/foto -> OCR
+    if (!ehHTML && chars < 80){      // PDF sem camada de texto = escaneado/foto -> OCR
       viaOCR = true;
       items = await ocrPdf(PDF_DOC);
     }
@@ -1195,6 +1258,7 @@ async function lerArquivo(file){
     }
     CUR = 0; DUP_OK = false;
     loadStep('Montando a tabela de conferência…'); loadProg(1); await pausa();
+    $('btn-ver-pdf').style.display = PDF_DOC ? '' : 'none';   // não há página para mostrar no HTML
     renderEscala();
     $('rev').style.display = '';
     $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
@@ -1292,12 +1356,33 @@ function acharPorNome(nome){
   }
   return bs >= 0.5 ? best : null;
 }
+/* Corrige de uma vez todos os REs que dá para resolver pelo nome: os que o documento tarjou
+   e os que apontam para outra pessoa no cadastro. Pedido do usuário em 22/09/2026 — numa
+   escala de 100 policiais não dá para clicar linha a linha. */
+function candidatoRE(r){
+  const precisa = (!r.re && r.reMasc) || (regDe(r) && isDivergente(r));
+  if (!precisa) return null;
+  const alt = acharPorNome(r.nome);
+  if (!alt || shortRE(alt.re) === shortRE(r.re)) return null;
+  if (r.reMasc && !shortRE(alt.re).endsWith(r.reMasc)) return null;   // confere os dígitos à mostra
+  return alt;
+}
+function corrigirREsPeloNome(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  let n = 0;
+  e.rows.forEach((r,i)=>{ if (r.on && candidatoRE(r)){ usarRE(i, shortRE(candidatoRE(r).re), true); n++; } });
+  DUP_OK = false; resetSaveBtn(); renderTabela(); renderAvisos();
+  setStatus(n ? `✅ ${n} RE corrigido(s) pelo nome no cadastro. Confira as linhas antes de lançar.`
+              : '⚠️ Nenhum RE pôde ser resolvido pelo nome — os nomes que faltam não estão no cadastro.', n ? 'ok' : 'warn');
+}
 // troca o RE da linha pelo do cadastro e puxa o nome de guerra junto
-function usarRE(i, re){
+function usarRE(i, re, semRender){
   const r = ESCALAS[CUR].rows[i]; if (!r) return;
   r.re = shortRE(re); r.re_full = String(re);
   const reg = regDe(r);
   if (reg && !isDivergente(r)){ r.guerra = reg.guerra || r.guerra; if (!r.posto) r.posto = reg.posto_grad || ''; }
+  r.reAchado = true;   // veio do cadastro pelo nome: a linha avisa para o gestor conferir
+  if (semRender) return;
   DUP_OK = false; resetSaveBtn(); renderTabela(); renderAvisos();
 }
 function isDivergente(r){ const reg = regDe(r); return !!reg && !!r.nome && !nomesBatem(r.nome, (reg.nome||'')+' '+(reg.guerra||'')); }
@@ -1561,7 +1646,12 @@ function renderAvisos(){
   if (jaLote) av.unshift(`<div class="aviso err">⛔ Este documento (SEI ${esc(e.sei_doc)}) já foi lançado em ${esc(jaLote.lancado_em)} por ${esc(NOMES[jaLote.lancado_por]||jaLote.lancado_por)} — ${jaLote.policiais} policiais, ${fR(jaLote.valor_total)}. Não lance de novo; se precisar corrigir, exclua a escala em ③ e relance.</div>`);
   if (EDIT) av.unshift(`<div class="aviso">✏️ Editando a escala lançada em <b>${esc(EDIT.lancado_em||'')}</b>. <b>Posto e OPM</b> são os gravados na época e não são cobrados (o policial pode ter mudado de unidade ou sido promovido); o <b>RE × nome</b> continua conferido contra o cadastro.</div>`);
   const div = on.filter(isDivergente).length;
+  const corrigiveis = on.filter(candidatoRE).length;   // dá para achar pelo nome no cadastro
   if (div) av.push(`<div class="aviso err">⛔ ${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE${EDIT ? ' — dá para salvar assim, mas confira.' : ' antes de lançar.'}</div>`);
+  const tarj = on.filter(r=>!r.re && r.reMasc).length;
+  if (tarj) av.push(`<div class="aviso err">⛔ ${tarj} policial(is) com o RE tarjado no documento e sem correspondência no cadastro — digite o RE na linha.</div>`);
+  if (corrigiveis) av.push(`<div class="aviso">🔎 ${corrigiveis} RE(s) podem ser resolvidos pelo nome no cadastro (RE trocado ou tarjado). `
+    + `<button class="btn sm" style="padding:3px 10px;margin-left:4px" onclick="corrigirREsPeloNome()">Corrigir os ${corrigiveis} pelo nome</button></div>`);
   const fora = on.filter(r=>r.re && !regDe(r)).length;
   if (fora) av.push(`<div class="aviso">⚠️ ${fora} policial(is) fora do cadastro POLICIAIS. Digite o nome de guerra — com a caixa marcada lá embaixo, eles são cadastrados ao lançar.</div>`);
   const conf = on.filter(r=>conflitos(r).length).length;
