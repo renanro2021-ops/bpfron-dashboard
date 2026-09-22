@@ -394,6 +394,26 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
       </div>
 
       <div id="gz-app" class="hidden">
+        <!-- lançar comprovantes em lote (os que chegaram por fora: WhatsApp, e-mail) -->
+        <div class="card">
+          <div class="sec-t">📥 Lançar comprovantes em lote<span class="dirs"><span class="chip" id="lt-n"></span></span></div>
+          <div class="passo-d" style="margin-bottom:13px">
+            Para o comprovante que chegou por fora da página. Selecione vários de uma vez —
+            eu leio cada um e tento descobrir quem pagou pelo CPF do comprovante.
+            O lançamento fica marcado com o seu nome, e a turma vê isso.
+          </div>
+          <div class="campo"><label class="lbl" for="lt-file">Comprovantes (fotos ou PDFs, até 8 MB cada)</label>
+            <input type="file" id="lt-file" accept="image/*,application/pdf" multiple onchange="ltAnexou()"></div>
+          <div class="msg hidden" id="lt-st"></div>
+          <div id="lt-lista"></div>
+          <div class="btns hidden" id="lt-acoes">
+            <button class="btn" id="lt-b" onclick="ltLancar()">Lançar os pagamentos</button>
+            <button class="btn sec mini" type="button" onclick="ltLimpar()">Limpar</button>
+            <label class="lbl" style="display:flex;align-items:center;gap:7px;margin:0 0 0 6px;cursor:pointer">
+              <input type="checkbox" id="lt-conf" style="width:auto;margin:0"> já bati com o extrato (entra confirmado)</label>
+          </div>
+        </div>
+
         <!-- conferir -->
         <div class="card">
           <div class="sec-t">✅ Conferir pagamentos<span class="dirs"><span class="chip" id="gz-conf-n"></span></span></div>
@@ -679,7 +699,7 @@ function pintarPagamentos(){
       ${p.arquivo ? miniArquivo(p.arquivo) : `<div class="av">${esc(iniciais(p.nome))}</div>`}
       <div class="txt">
         <div class="n1">${esc(p.nome || 'Sem nome')} ${selo(p.status)}</div>
-        <div class="n2">${fD(p.data)}${p.cpf ? ' · ' + esc(p.cpf) : ''}${p.conferido_por ? ' · conferido por ' + esc(p.conferido_por) : ''}</div>
+        <div class="n2">${fD(p.data)}${p.cpf ? ' · ' + esc(p.cpf) : ''}${p.conferido_por ? ' · conferido por ' + esc(p.conferido_por) : ''}${p.lancado_por ? ' · lançado por ' + esc(p.lancado_por) : ''}</div>
       </div>
       <div class="vlr" style="color:${p.status === 'CONFIRMADO' ? 'var(--green2)' : 'var(--muted)'}">${fR(p.valor)}</div>
       ${p.obs ? `<div class="itens-min">${esc(p.obs)}</div>` : ''}
@@ -1053,6 +1073,32 @@ function cmpPessoas(texto){
   return { recebedor, pagador };
 }
 
+
+/* CPF no comprovante quase sempre vem mascarado: "***.525.332-**". Os 6
+   dígitos do meio bastam pra achar a pessoa na turma — e identificam MUITO
+   melhor que o nome, que o banco abrevia. Devolve padrões de 11 posições
+   com "?" onde o dígito está escondido. */
+function cmpCPFs(texto){
+  const out = [];
+  const re = /([\d*•xX#]{3})[.\s]?([\d*•xX#]{3})[.\s]?([\d*•xX#]{3})[-\s]?([\d*•xX#]{2})/g;
+  let m;
+  while ((m = re.exec(String(texto || ''))) !== null){
+    const padrao = (m[1] + m[2] + m[3] + m[4]).replace(/[^0-9]/g, '?');
+    if (padrao.length !== 11) continue;
+    if ((padrao.match(/[0-9]/g) || []).length < 4) continue; // mascarado demais: casaria com meio mundo
+    if (!out.includes(padrao)) out.push(padrao);
+  }
+  return out;
+}
+/* O padrão casa com um CPF de verdade? Compara só as posições conhecidas. */
+function cmpCasaCPF(padrao, cpf){
+  const c = String(cpf || '').replace(/[^0-9]/g, '');
+  if (c.length !== 11 || String(padrao || '').length !== 11) return false;
+  for (let i = 0; i < 11; i++){
+    if (padrao[i] !== '?' && padrao[i] !== c[i]) return false;
+  }
+  return true;
+}
 /* Tudo o que dá pra tirar de um comprovante de PIX. Função pura: o que
    entra é texto, o que sai são os campos — é ela que os testes cobrem. */
 function lerDadosPIX(texto){
@@ -1062,6 +1108,7 @@ function lerDadosPIX(texto){
     data: cmpData(texto),
     e2e: cmpE2E(texto),
     recebedor, pagador,
+    cpfs: cmpCPFs(texto),
   };
 }
 
@@ -1308,6 +1355,167 @@ async function fazerLogin(ev){
   return false;
 }
 function sair(){ AUTH.token = ''; AUTH.user = ''; carregar(); }
+
+/* ══════════════════ LANÇAR COMPROVANTES EM LOTE ══════════════════
+   O comprovante que chegou pelo WhatsApp. Lê cada arquivo (PDF exato ou OCR),
+   descobre quem pagou e monta uma lista pro gestor revisar ANTES de gravar.
+   Nada vai pro servidor enquanto ele não clica em lançar. */
+let LOTE = [];
+
+async function ltAnexou(){
+  const files = [...($('lt-file').files || [])];
+  if (!files.length) return;
+  const st = $('lt-st');
+  st.className = 'msg info'; st.innerHTML = 'Lendo os comprovantes…';
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    ovl(`Lendo comprovante ${i+1} de ${files.length}…`);
+    const item = { arquivo: f, nome_arquivo: f.name, cpf: '', valor: 0, data: '', e2e: '',
+                   recebedor: '', pagador: '', origem: '', como: '', avisos: [], estado: '' };
+    if (f.size > 8*1024*1024){
+      item.avisos.push('Arquivo acima de 8 MB — não dá pra enviar.');
+      item.estado = 'erro';
+    } else {
+      try {
+        let texto = '';
+        if (cmpEhPDF(f)) texto = await cmpTextoDoPDF(f);
+        if (texto.replace(/\s/g, '').length <= 40){
+          texto = await cmpOCR([cmpEhPDF(f) ? await ltPaginaPDF(f) : cmpPreparar(await createImageBitmap(f))]);
+          item.origem = 'ocr';
+        } else item.origem = 'pdf';
+        ltDoTexto(item, texto);
+      } catch(e){ item.avisos.push('Não consegui ler: ' + (e.message || 'erro')); }
+    }
+    LOTE.push(item);
+  }
+  ovl('');
+  $('lt-file').value = '';
+  ltPintar();
+}
+async function ltPaginaPDF(f){
+  const pdfjs = await cmpCarregarPDFJS();
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+  const pg = await pdf.getPage(1), vp = pg.getViewport({ scale: 2.5 });
+  const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+  await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+  return c;
+}
+
+/* Quem pagou? O CPF do comprovante (mesmo mascarado) é a chave boa; o nome
+   é o plano B, porque banco abrevia. O titular do PIX sai da disputa: o CPF
+   dele aparece em TODO comprovante, do lado de quem recebeu. */
+function ltDoTexto(item, texto){
+  const d = lerDadosPIX(texto);
+  item.valor = d.valor; item.data = d.data; item.e2e = d.e2e;
+  item.recebedor = d.recebedor; item.pagador = d.pagador;
+
+  const titular = (D.config && D.config.pix_titular) || '';
+  const gente = (D.turma || []).filter(t => !(titular && cmpMesmaPessoa(t.nome, titular)));
+  const porCPF = gente.filter(t => (d.cpfs || []).some(pad => cmpCasaCPF(pad, t.cpf)));
+  if (porCPF.length === 1){ item.cpf = porCPF[0].cpf; item.como = 'CPF do comprovante'; }
+  else if (d.pagador){
+    const porNome = gente.filter(t => cmpMesmaPessoa(t.nome, d.pagador));
+    if (porNome.length === 1){ item.cpf = porNome[0].cpf; item.como = 'nome do pagador'; }
+    else if (porNome.length > 1) item.avisos.push('Mais de uma pessoa da turma bate com "' + d.pagador + '".');
+  }
+  if (!item.cpf) item.avisos.push('Não descobri quem pagou — escolha na lista.');
+  if (!(item.valor > 0)) item.avisos.push('Não achei o valor — digite.');
+  if (!item.data) item.data = hojeISO();
+  if (!item.e2e) item.avisos.push('Sem o id da transação: não dá pra saber se esse comprovante já entrou antes.');
+  if (item.recebedor && titular && !cmpMesmaPessoa(item.recebedor, titular)){
+    item.avisos.push('Pago para ' + item.recebedor + ', que não é o titular do caixa.');
+  }
+  /* Mesmo comprovante duas vezes DENTRO da seleção: o Worker pega pelo E2E,
+     mas é melhor avisar antes de subir arquivo à toa. */
+  if (item.e2e && LOTE.some(x => x.e2e === item.e2e)) item.avisos.push('Esse comprovante está repetido na seleção.');
+}
+
+function ltPintar(){
+  const el = $('lt-lista'), st = $('lt-st');
+  $('lt-n').textContent = LOTE.length ? LOTE.length + ' na fila' : '';
+  $('lt-acoes').classList.toggle('hidden', !LOTE.length);
+  if (!LOTE.length){ el.innerHTML = ''; st.className = 'msg hidden'; return; }
+  const semDono = LOTE.filter(x => !x.cpf && x.estado !== 'ok').length;
+  st.className = semDono ? 'msg warn' : 'msg ok';
+  st.innerHTML = semDono
+    ? `Li ${LOTE.length} comprovante(s). <b>${semDono}</b> ainda sem dono — escolha quem pagou antes de lançar.`
+    : `Li ${LOTE.length} comprovante(s) e achei quem pagou em todos. Confira os valores e lance.`;
+
+  const pessoas = (D.turma || []).map(t => ({ cpf: t.cpf, nome: t.nome }))
+    .concat((D.fora_da_turma || []).map(f => ({ cpf: f.cpf, nome: f.nome + ' (fora da turma)' })));
+  el.innerHTML = LOTE.map((x, i) => `
+    <div class="linha${x.estado === 'ok' ? '' : ' pend'}">
+      <div class="txt">
+        <div class="n1">${esc(x.nome_arquivo)} ${x.origem === 'pdf' ? '<span class="n2">📄 PDF</span>' : x.origem === 'ocr' ? '<span class="n2">🔍 OCR</span>' : ''}</div>
+        ${x.estado === 'ok' ? `<div class="n2" style="color:#86efac">✅ lançado</div>` : ''}
+        ${x.estado === 'erro' ? `<div class="n2" style="color:#fca5a5">❌ ${esc(x.erro || 'não entrou')}</div>` : ''}
+        ${x.como ? `<div class="n2" style="opacity:.72">quem pagou: achei pelo ${esc(x.como)}</div>` : ''}
+        ${x.avisos.map(a => `<div class="n2" style="color:#fde68a">⚠️ ${esc(a)}</div>`).join('')}
+      </div>
+      ${x.estado === 'ok' ? '' : `
+      <div class="grade" style="width:100%">
+        <div class="campo full"><label class="lbl">Quem pagou</label>
+          <select onchange="ltCampo(${i},'cpf',this.value)">
+            <option value="">— escolha —</option>
+            ${pessoas.map(pp => `<option value="${esc(pp.cpf)}" ${pp.cpf === x.cpf ? 'selected' : ''}>${esc(pp.nome)}</option>`).join('')}
+          </select></div>
+        <div class="campo"><label class="lbl">Valor</label>
+          <input type="text" inputmode="decimal" value="${x.valor ? String(x.valor).replace('.', ',') : ''}" oninput="ltCampo(${i},'valor',this.value)"></div>
+        <div class="campo"><label class="lbl">Data do PIX</label>
+          <input type="date" value="${esc(x.data)}" onchange="ltCampo(${i},'data',this.value)"></div>
+      </div>
+      <div class="btns" style="width:100%"><button class="btn sec mini" type="button" onclick="ltTirar(${i})">🗑️ Tirar da fila</button></div>`}
+    </div>`).join('');
+}
+function ltCampo(i, campo, valor){
+  if (!LOTE[i]) return;
+  LOTE[i][campo] = campo === 'valor' ? num(valor) : valor;
+  if (campo === 'cpf'){ LOTE[i].como = 'você escolheu'; LOTE[i].avisos = LOTE[i].avisos.filter(a => !/quem pagou/.test(a)); }
+}
+function ltTirar(i){ LOTE.splice(i, 1); ltPintar(); }
+function ltLimpar(){ LOTE = []; $('lt-file').value = ''; ltPintar(); }
+
+async function ltLancar(){
+  const fila = LOTE.filter(x => x.estado !== 'ok');
+  const faltando = fila.filter(x => !x.cpf || !(x.valor > 0));
+  if (faltando.length){
+    toast(`${faltando.length} comprovante(s) sem quem pagou ou sem valor.`, true);
+    return;
+  }
+  if (!fila.length) return;
+  const conferido = $('lt-conf').checked ? '1' : '';
+  const b = $('lt-b'); b.disabled = true;
+  let ok = 0, erro = 0;
+  for (let i = 0; i < LOTE.length; i++){
+    const x = LOTE[i];
+    if (x.estado === 'ok') continue;
+    b.textContent = `Lançando ${ok + erro + 1} de ${fila.length}…`;
+    ovl(`Lançando ${ok + erro + 1} de ${fila.length}…`);
+    const fd = new FormData();
+    fd.append('cpf', x.cpf);
+    fd.append('valor', String(x.valor));
+    fd.append('data', x.data || hojeISO());
+    fd.append('obs', 'comprovante recebido fora da página');
+    fd.append('file', x.arquivo, x.arquivo.name);
+    fd.append('e2e', x.e2e || '');
+    fd.append('ocr_valor', x.valor ? String(x.valor) : '');
+    fd.append('ocr_data', x.data || '');
+    fd.append('ocr_recebedor', x.recebedor || '');
+    fd.append('ocr_origem', x.origem || '');
+    if (conferido) fd.append('conferido', conferido);
+    try {
+      const d = await apiForm('/api/caixa/pagamento-gestor', fd);
+      x.estado = 'ok'; x.avisos = d.repetido ? ['Já estava lançado — não dupliquei.'] : (d.alertas || []);
+      ok++;
+    } catch(e){ x.estado = 'erro'; x.erro = e.message; erro++; }
+    ltPintar();
+  }
+  ovl('');
+  b.disabled = false; b.textContent = 'Lançar os pagamentos';
+  toast(`${ok} lançado(s)` + (erro ? `, ${erro} com problema` : ''), !!erro);
+  await carregar(true);
+  ltPintar();
+}
 
 /* ---------- conferir pagamentos ---------- */
 function pintarConferir(){
