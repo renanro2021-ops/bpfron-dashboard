@@ -1609,7 +1609,7 @@ async function recusar(id){
    pelo OCR. Tira data, estabelecimento, total e os ITENS — que é o trabalho
    chato de digitar. Tudo em roxo pra conferir: cupom amassado engana o OCR. */
 
-const GST_LIXO   = /TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|DINHEIRO|CARTAO|CREDITO|DEBITO|PIX|SUBTOTAL|CUPOM|FISCAL|CONSUMIDOR|CPF|OPERADOR|CAIXA|VENDA|CHAVE|CONSULTE|EMISSAO|PROTOCOLO/;
+const GST_LIXO   = /TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|PAGO|DINHEIRO|CARTAO|CREDITO|DEBITO|PIX|SUBTOTAL|SUB TOTAL|SERVICO|ACRESCIMO|CUPOM|FISCAL|CONSUMIDOR|CPF|OPERADOR|CAIXA|VENDA|CHAVE|CONSULTE|EMISSAO|PROTOCOLO|QTD|UNIT|DANFE|NFC|AVENIDA|RUA |FONE|ENDERECO/;
 const GST_UNID   = /\s+(UN|UND|PC|PCT|LT|L|KG|G|CX|DZ|FD|BD|UNID|PT|PAO)\s*$/;
 const GST_LOJA   = /\b(SUPERMERCADO|MERCADO|MERCEARIA|COMERCIAL|COMERCIO|ATACAD|DISTRIBUIDORA|PADARIA|PANIFICADORA|ACOUGUE|HORTIFRUTI|POSTO|RESTAURANTE|LANCHONETE|CONVENIENCIA|LTDA|EIRELI|EPP|MEI|S\/?A)\b/;
 
@@ -1643,11 +1643,49 @@ function gstLoja(linhas){
 }
 /* Itens: linha com texto e um valor no fim. Tira do fim as colunas numéricas
    (código, quantidade, unidade, valor unitário) até sobrar o nome do produto. */
+/* NFC-e de mercado escreve o item em DUAS linhas — a descrição numa, os
+   números na seguinte:
+     001 BISCOITO LIANE CRE CRAC MANT 270 GR
+         7896080870113   2 PACOTE   4,50   9,00
+   Esta reconhece a linha de números; a descrição vem da linha de cima. */
+function gstLinhaNumeros(L){
+  const m = L.match(new RegExp(
+    '^(?:(\\d{8,14})\\s+)?(\\d+(?:[.,]\\d+)?)\\s*([A-Z]{1,8})?\\s+' + GST_V + '\\s+' + GST_V + '\\s*$'));
+  if (!m) return null;
+  return { qtd: Number(String(m[2]).replace(',', '.')) || 1, valor: num(m[5].replace(/\s/g, '')) };
+}
+/* A descrição do item, olhando pra cima. Tira o número de ordem (001) e o
+   código de barras, que não são nome de produto. */
+function gstDescAcima(linhas, i){
+  for (let j = i - 1; j >= 0 && j >= i - 2; j--){
+    let d = String(linhas[j] || '').trim();
+    const D = gstNorm(d);
+    if (!d || GST_LIXO.test(D)) continue;
+    if (/^(ITEM|CODIGO|DESCRICAO)\b/.test(D)) continue;   // cabeçalho da tabela
+    if (gstLinhaNumeros(D.replace(/\s+/g, ' ').trim())) continue;  // outra linha de números
+    // o cupom alinha em colunas: sobra espaço no meio do nome do produto
+    d = d.replace(/^\d{1,3}\s+/, '').replace(/^\d{8,14}\s*/, '').replace(/\s+/g, ' ').trim();
+    if (gstNorm(d).replace(/[^A-Z]/g, '').length < 3) continue;
+    return d.slice(0, 60);
+  }
+  return '';
+}
+
 function gstItens(linhas){
   const out = [];
-  for (const l of linhas){
-    const L = gstNorm(l);
-    if (GST_LIXO.test(L)) continue;
+  for (let i = 0; i < linhas.length; i++){
+    const L = gstNorm(linhas[i]).replace(/\s+/g, ' ').trim();
+    if (!L || GST_LIXO.test(L)) continue;
+
+    /* layout de duas linhas (NFC-e): esta linha só tem números */
+    const numeros = gstLinhaNumeros(L);
+    if (numeros){
+      const desc = gstDescAcima(linhas, i);
+      if (desc && numeros.valor > 0) out.push({ nome: desc, qtd: numeros.qtd, valor: numeros.valor });
+      continue;   // sem descrição acima, esta linha não vira item nenhum
+    }
+
+    /* layout de uma linha: descrição e valor juntos */
     const m = L.match(new RegExp('^(.*?[A-Z]{3,}.*?)\\s+' + GST_V + '\\s*$'));
     if (!m) continue;
     let desc = m[1].replace(/^\d{1,4}\s+/, ''), antes;
@@ -1657,16 +1695,18 @@ function gstItens(linhas){
     } while (desc !== antes);
     desc = desc.replace(/^\d{6,}\s*/, '').trim();          // código de barras na frente
     if (desc.replace(/[^A-Z]/g, '').length < 3) continue;
+    const valor = num(m[2].replace(/\s/g, ''));
+    if (!(valor > 0)) continue;
     /* A quantidade vem do "2 UN x 3,50", nunca de dentro do nome: em
        "AGUA MINERAL 1,5L" o L de litro faria a qtd virar 1,5. Por isso o
        x da multiplicação manda, e a unidade solta exige espaço antes. */
     const q = m[1].match(/(\d+(?:[.,]\d+)?)\s*(?:UN|UND|PC|PCT|LT|KG|G|CX|DZ|UNID)?\s*[xX]\s*\d/) ||
               m[1].match(/\s(\d+(?:[.,]\d+)?)\s+(?:UN|UND|PC|PCT|LT|KG|CX|DZ|UNID)\b/);
-    out.push({ nome: desc.slice(0, 60), qtd: q ? Number(String(q[1]).replace(',', '.')) : 1,
-               valor: num(m[2].replace(/\s/g, '')) });
+    out.push({ nome: desc.slice(0, 60), qtd: q ? Number(String(q[1]).replace(',', '.')) : 1, valor: valor });
     if (out.length >= 40) break;
   }
-  return out;
+  return out.slice(0, 40);
+
 }
 
 /* Função pura: texto do cupom entra, campos da compra saem. */
