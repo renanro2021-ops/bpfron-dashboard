@@ -1509,6 +1509,17 @@ function loteAplicar(semRender){
   if (!semRender) renderLote();
 }
 function loteToggleLinha(j){ const e = ESCALAS[j]; if (e && !LOTE_RODANDO){ e.loteOn = !e.loteOn; renderLote(); } }
+/* Escala com ⚠️ (efetivo diferente do declarado, RE de outra pessoa, período sobreposto,
+   término corrigido) NÃO entra no lote enquanto o gestor não abrir e conferir. É o mesmo
+   2º clique do "Lançar mesmo assim" da escala isolada, só que por linha. 21/09/2026. */
+function loteConferir(j){ const e = ESCALAS[j]; if (e && !LOTE_RODANDO){ e.loteOk = true; e.loteOn = true; renderLote(); } }
+function loteConferirTodas(){
+  if (LOTE_RODANDO) return;
+  const cfg = loteCfg(), ids = {};
+  ESCALAS.forEach((e,j)=>{ const st = loteCheck(e, cfg, ids); if (cfg.op && !e.lancado) ids[norm(st.id)] = ids[norm(st.id)] != null ? ids[norm(st.id)] : j;
+    if (!e.lancado && !st.erros.length && st.avisos.length) e.loteOk = true; });
+  renderLote();
+}
 function loteTodas(v){ if (!LOTE_RODANDO){ ESCALAS.forEach(e=>{ e.loteOn = v && !e.lancado; }); renderLote(); } }
 function loteSetEtapa(j, v){ const e = ESCALAS[j]; if (!e) return; e.form = { ...(e.form||{}), etapa: v }; if (j === CUR) $('m-etapa').value = v; renderLote(); }
 
@@ -1523,7 +1534,9 @@ function renderLote(){
     return { e, j, st };
   });
   const marcadas = linhas.filter(x=>x.e.loteOn && !x.e.lancado);
-  const prontas = marcadas.filter(x=>!x.st.erros.length);
+  const prontas = marcadas.filter(x=>!x.st.erros.length && (!x.st.avisos.length || x.e.loteOk));
+  const aConferir = linhas.filter(x=>!x.e.lancado && !x.st.erros.length && x.st.avisos.length && !x.e.loteOk);
+  const comErro = linhas.filter(x=>!x.e.lancado && x.st.erros.length);
   const nPol = prontas.reduce((a,x)=>a + x.st.n, 0), tot = prontas.reduce((a,x)=>a + x.st.total, 0);
   const tr = linhas.map(({e,j,st})=>{
     const res = e.loteRes;
@@ -1532,6 +1545,8 @@ function renderLote(){
       : res && !res.ok ? `<span class="err">❌ ${esc(res.msg)}</span>`
       : st.erros.length ? `<span class="err">⛔ ${esc(st.erros.join(' · '))}</span>`
       : st.avisos.length ? `<span class="warn">⚠️ ${esc(st.avisos.join(' · '))}</span>`
+        + (e.loteOk ? ' <span class="ok">— conferido, vai ser lançada</span>'
+          : ` <button class="btn sm" style="padding:3px 9px;margin-left:6px" onclick="loteConferir(${j})">✔️ conferi, pode lançar</button>`)
       : '<span class="ok">✅ pronta para lançar</span>';
     return `<tr class="${marcada || e.lancado ? '' : 'off'}">
       <td><input type="checkbox" ${marcada?'checked':''} ${e.lancado||LOTE_RODANDO?'disabled':''} onchange="loteToggleLinha(${j})" style="width:auto"></td>
@@ -1547,7 +1562,8 @@ function renderLote(){
     </tr>`;
   }).join('');
   box.innerHTML = `<h4>⚡ Lançar todas as escalas deste PDF</h4>
-    <div class="sub">Cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela. A conferência é a mesma do botão “Lançar”: quem estiver com ⛔ não é lançada.</div>
+    <div class="sub">Cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela.
+      <b>✅ pronta</b> entra no lote · <b>⚠️</b> só entra depois que você abrir, conferir e clicar em “conferi” · <b>⛔</b> não é lançada até o problema ser resolvido.</div>
     <div class="cfg">
       <span>Operação: <b>${esc(cfg.op || '— escolha acima —')}</b></span>
       <span>Órgão: <b>${esc(cfg.orgao || '—')}</b></span>
@@ -1568,7 +1584,9 @@ function renderLote(){
     </div>
     <div class="foot">
       <div style="flex:1;font-size:13.5px;color:#cbd5e1"><b>${prontas.length}</b> escala(s) prontas · <b>${nPol}</b> policial(is) · <b>${fR(tot)}</b>
-        ${marcadas.length - prontas.length ? `<span class="err"> · ${marcadas.length - prontas.length} marcada(s) com pendência não serão lançadas</span>` : ''}</div>
+        ${aConferir.length ? `<span class="warn"> · ⚠️ ${aConferir.length} esperando a sua conferência</span>
+          <button class="btn sm" style="padding:3px 10px;margin-left:8px" onclick="loteConferirTodas()">✔️ conferi todas</button>` : ''}
+        ${comErro.length ? `<span class="err"> · ⛔ ${comErro.length} com problema</span>` : ''}</div>
       <button class="btn-main" id="lote-btn" onclick="lancarLote()" ${prontas.length && !LOTE_RODANDO ? '' : 'disabled'}>🚀 Lançar ${prontas.length} escala(s)</button>
     </div>
     <div id="lote-err" style="margin-top:8px"></div>`;
@@ -1582,7 +1600,7 @@ async function lancarLote(){
   ESCALAS.forEach((e,j)=>{
     const st = loteCheck(e, cfg, idsAntes);
     if (cfg.op && !e.lancado) idsAntes[norm(st.id)] = idsAntes[norm(st.id)] != null ? idsAntes[norm(st.id)] : j;
-    if (e.loteOn && !e.lancado && !st.erros.length) fila.push({ e, j, st });
+    if (e.loteOn && !e.lancado && !st.erros.length && (!st.avisos.length || e.loteOk)) fila.push({ e, j, st });
   });
   if (!fila.length) return;
   LOTE_RODANDO = true; renderLote();
