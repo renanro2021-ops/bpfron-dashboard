@@ -1428,6 +1428,20 @@ function ltDoTexto(item, texto){
   /* Mesmo comprovante duas vezes DENTRO da seleção: o Worker pega pelo E2E,
      mas é melhor avisar antes de subir arquivo à toa. */
   if (item.e2e && LOTE.some(x => x.e2e === item.e2e)) item.avisos.push('Esse comprovante está repetido na seleção.');
+
+  /* E contra o que JÁ está lançado. Com E2E a resposta é exata; sem ele,
+     mesma pessoa + mesmo valor + mesma data é suspeita, não certeza — quem
+     decide é o gestor, olhando as duas imagens. */
+  const lancados = D.pagamentos || [];
+  if (item.e2e){
+    const igual = lancados.find(x => x.e2e === item.e2e && x.status !== 'RECUSADO');
+    // sem esc() aqui: quem pinta o aviso já escapa (ltPintar), e escapar duas vezes vira &amp; na tela
+    if (igual) item.avisos.push('Esse comprovante JÁ ESTÁ lançado (' + (igual.nome || '') + ', ' + fR(igual.valor) + ').');
+  } else if (item.cpf && item.valor > 0){
+    const parecido = lancados.find(x => x.cpf === item.cpf && x.status !== 'RECUSADO' &&
+      x.data === item.data && Math.round(x.valor * 100) === Math.round(item.valor * 100));
+    if (parecido) item.avisos.push('Pode ser repetido: já existe ' + fR(parecido.valor) + ' desta pessoa nesta data.');
+  }
 }
 
 function ltPintar(){
