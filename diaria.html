@@ -699,6 +699,8 @@ const EP_RANK = /\b(SD|CB|SGT|SUB\s*TEN|SUBTEN|ST|TEN\s*CEL|TC|TEN|CAP|MAJ|CEL|A
 const EP_RANK_G = /\b(SD|CB|SGT|SUB\s*TEN|SUBTEN|ST|TEN\s*CEL|TC|TEN|CAP|MAJ|CEL|ASP|AL|QPPM|QOPM|QOAPM|QOSPM|QPEPM)\b/gi;
 const EP_FUNC = /^(CMT|SUBCMT|MOT|AUX|PAT|OP|ENC|SEG|COMANDANTE|MOTORISTA|AUXILIAR|PATRULHEIRO|OPERADOR)$/i;
 const EP_OPM = /^(BPFRON|CPE|CRP\s*[IVX]+|BPTAR|BPCHOQUE|BOPE|ROTAM|GOE|COE|NI|P2|BPAMB|CIA\s*\S*|\d+\s*[ºª°]?\s*(BPM|CIA|BPTAR|BPTRAN|CPM|BBM)\S*|\S*BPM\S*)$/i;
+// unidade escrita no meio de um texto (usada no "(3º BPM)" que vem colado no nome)
+const EP_OPM_TXT = /\b(BPM|BPFRON|BPCHOQUE|CHOQUE|CANIL|CRP|BPTAR|BPTRAN|BPAMB|BOPE|ROTAM|GOE|COE|CPE|CIA|CERCAMENTO|BBM|CPM)\b/;
 
 function epClean(s){ return String(s||'').replace(/\s+/g,' ').trim(); }
 function epDigits(s){ return String(s||'').replace(/\D/g,''); }
@@ -976,6 +978,30 @@ function parseEscalaItems(items, opts){
         const novo = epFixFim(p.ini, p.fim, e.periodo);
         if (novo){ p.fim_pdf = p.fim; p.fim = novo; }
       }
+      /* Quem é de fora vem com a unidade DENTRO da coluna NOME, entre parênteses:
+         "LARISSA CASTRO MEDES MOREIRA DA SILVA (BPCHOQUE/CANIL)", "MAURICIO ALMEIDA
+         FERNANDES (3º BPM)". São 47 linhas no PDF de 2026 — exatamente os "PPMM OPM
+         EXTERNAS" do cabeçalho. Tira o parêntese do nome (senão suja a conferência com o
+         cadastro) e usa como OPM. 22/09/2026. */
+      const parM = p.nome.match(/\(([^)]{2,40})\)/);
+      if(parM && EP_OPM_TXT.test(norm(parM[1]))){
+        p.opm = epClean(parM[1]).toUpperCase();
+        p.nome = epClean(p.nome.slice(0, parM.index));
+      }
+      /* Sobra de célula vizinha colada no nome: quando a função/localidade é mesclada e a
+         coluna não é detectada, pedaços dela entram no nome ("CANIL JHONES DA SILVA LIMA",
+         "LARISSA ... APOIO FRONTEIRA"). Tira só das BORDAS e só o que já aparece na função,
+         na localidade ou no nome da equipe — nunca do meio, e nunca abaixo de 2 palavras. */
+      const lixo = new Set([p.funcao, p.localidade, tm.localidade]     // NUNCA o nome/área da
+        .filter(Boolean).flatMap(s=>norm(s).split(/[^A-ZÀ-Ú0-9]+/))    // equipe: trazem o nome
+        .filter(w=>w.length>2));                                       // do comandante junto
+      let tk = p.nome.split(/\s+/).filter(Boolean);
+      while(tk.length > 2 && lixo.has(norm(tk[0]))) tk.shift();
+      while(tk.length > 2 && lixo.has(norm(tk[tk.length-1]))) tk.pop();
+      // letra solta = inicial separada do resto pelo PDF ("J ÂNIO" -> "JÂNIO", "M AURÍCIO")
+      for(let k=tk.length-2; k>=0; k--)
+        if(/^[A-ZÀ-Ú]$/i.test(tk[k])){ tk[k] = tk[k] + tk[k+1]; tk.splice(k+1, 1); }
+      p.nome = tk.join(' ');
       // sem coluna OPM na tabela, vale a unidade que o documento declara (a da época)
       if(!p.opm && e.opm_doc) p.opm = e.opm_doc;
       p.posto = p.posto.replace(/\s+/g,' ').toUpperCase();
@@ -996,6 +1022,16 @@ function parseEscalaItems(items, opts){
     if(e.externos) e.avisos.push(`O documento diz que ${e.externos} policial(is) são de OPM externa. Como a tabela não traz a unidade de cada um, todos ficaram como ${e.opm_doc || 'a OPM do documento'} — corrija a coluna OPM de quem for de outra unidade.`);
     if(!e.periodo) e.avisos.push('Não achei a linha "PERÍODO:" — confira as datas.');
   }
+  /* O mesmo policial de fora aparece em várias escalas do PDF, mas o "(BPCHOQUE/CANIL)" se
+     perde nas linhas em que a célula do nome quebrou em duas. Se o documento disse a unidade
+     dele em ALGUMA escala, ela vale nas outras — só onde ficou a unidade padrão do cabeçalho. */
+  const opmPorRe = {};
+  escalas.forEach(e=>e.policiais.forEach(p=>{
+    if(p.re && p.opm && norm(p.opm) !== norm(e.opm_doc||'') && !opmPorRe[p.re]) opmPorRe[p.re] = p.opm;
+  }));
+  escalas.forEach(e=>e.policiais.forEach(p=>{
+    if(p.re && opmPorRe[p.re] && (!p.opm || norm(p.opm) === norm(e.opm_doc||''))) p.opm = opmPorRe[p.re];
+  }));
   return escalas.filter(e=>e.policiais.length || e.evento);
 }
 
@@ -1162,10 +1198,16 @@ function nomesBatem(a, b){
 }
 function novaLinha(p){
   const reg = EFET[shortRE(p.re)] || null;
-  const divergente = !!reg && !nomesBatem(p.nome, (reg.nome||'')+' '+(reg.guerra||''));
+  /* Nome que não veio inteiro do PDF (célula alta quebrada em 2 linhas: sobra "APOIO" ou
+     nada) é buscado PELO RE no cadastro — pedido do usuário, 22/09/2026. Só quando o
+     documento trouxe menos de duas palavras; o que está escrito no PDF sempre manda. */
+    const doPdf = String(p.nome || '').trim();
+  const doCadastro = doPdf.split(/\s+/).filter(Boolean).length < 2 && reg ? (reg.nome || reg.guerra || '') : '';
+  const nome = doCadastro || doPdf;
+  const divergente = !!reg && !doCadastro && !nomesBatem(nome, (reg.nome||'')+' '+(reg.guerra||''));
   return {
     on: true, equipe: p.equipe || '', posto: p.posto || (reg && reg.posto_grad) || '',
-    re: p.re || '', re_full: p.re_full || '', nome: p.nome || '',
+    re: p.re || '', re_full: p.re_full || '', nome, nomeDoCadastro: !!doCadastro,
     guerra: (reg && !divergente) ? (reg.guerra || '') : '',
     opm: p.opm || (reg && reg.opm) || '', funcao: p.funcao || '', localidade: p.localidade || '', tel: p.tel || '',
     ini: p.ini || '', fim: p.fim || '', diarias: calcDiarias(p.ini, p.fim), diasManual: false,
@@ -1173,6 +1215,32 @@ function novaLinha(p){
   };
 }
 function regDe(r){ return EFET[shortRE(r.re)] || null; }
+/* Busca no cadastro PELO NOME (pedido do usuário, 22/09/2026). Serve para quando o RE do
+   documento é de outra pessoa — caso real: a JULIANA está como 92531 em 10 escalas e como
+   92351 (dígitos trocados) na 04ª, e 92351 é de outro policial. Em vez de só acusar, a tela
+   passa a oferecer o RE certo. Exige 2 palavras em comum para não sugerir homônimo solto. */
+function acharPorNome(nome){
+  const alvo = [...new Set(norm(nome).split(/[^A-Z0-9]+/).filter(t=>t.length>=4 && !['JUNIOR','FILHO','NETO','SILVA','SANTOS','SOUZA','OLIVEIRA'].includes(t)))];
+  if (alvo.length < 2) return null;
+  let best = null, bs = 0;
+  for (const k in EFET){
+    const reg = EFET[k];
+    const toks = new Set(norm((reg.nome||'') + ' ' + (reg.guerra||'')).split(/[^A-Z0-9]+/).filter(t=>t.length>=4));
+    if (!toks.size) continue;
+    let inter = 0; alvo.forEach(t=>{ if (toks.has(t)) inter++; });
+    const s = inter / Math.max(alvo.length, toks.size);
+    if (inter >= 2 && s > bs){ bs = s; best = reg; }
+  }
+  return bs >= 0.5 ? best : null;
+}
+// troca o RE da linha pelo do cadastro e puxa o nome de guerra junto
+function usarRE(i, re){
+  const r = ESCALAS[CUR].rows[i]; if (!r) return;
+  r.re = shortRE(re); r.re_full = String(re);
+  const reg = regDe(r);
+  if (reg && !isDivergente(r)){ r.guerra = reg.guerra || r.guerra; if (!r.posto) r.posto = reg.posto_grad || ''; }
+  DUP_OK = false; resetSaveBtn(); renderTabela(); renderAvisos();
+}
 function isDivergente(r){ const reg = regDe(r); return !!reg && !!r.nome && !nomesBatem(r.nome, (reg.nome||'')+' '+(reg.guerra||'')); }
 function dpParse(s){
   s = String(s||'').trim(); let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
@@ -1325,8 +1393,16 @@ function atualizaStatus(i){
   if (!r.re) partes.push('<span class="warn">sem RE</span>');
   // RE × NOME é erro de verdade (RE digitado errado) e continua sendo cobrado TAMBÉM na
   // edição. O que é histórico e não se cobra é posto/OPM, que mudam com o tempo.
-  else if (reg && isDivergente(r)) partes.push(`<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`);
-  else if (reg) partes.push(`<span class="ok">✓ cadastro: ${esc(reg.guerra||reg.nome)}${reg.posto_grad?' · '+esc(reg.posto_grad):''}</span>`);
+  else if (reg && isDivergente(r)){
+    const alt = acharPorNome(r.nome);
+    partes.push(`<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`
+      + (alt && shortRE(alt.re) !== shortRE(r.re)
+         ? ` <span class="ok">no cadastro, ${esc(alt.nome||alt.guerra)} é o RE <b>${esc(shortRE(alt.re))}</b></span>`
+           + ` <button class="btn sm" style="padding:2px 8px" onclick="usarRE(${i},'${esc(shortRE(alt.re))}')">usar ${esc(shortRE(alt.re))}</button>`
+         : ''));
+  }
+  else if (reg) partes.push(`<span class="ok">✓ cadastro: ${esc(reg.guerra||reg.nome)}${reg.posto_grad?' · '+esc(reg.posto_grad):''}</span>`
+    + (r.nomeDoCadastro ? ' <span class="warn">⚠️ o documento não trouxe o nome inteiro — este veio do cadastro, pelo RE</span>' : ''));
   else partes.push('<span class="warn">⚠️ fora do cadastro — digite o nome de guerra</span>');
   const reps = r.re ? e.rows.filter(x=>x.on && shortRE(x.re)===shortRE(r.re)).length : 0;
   if (r.on && reps > 1) partes.push('<span class="err">RE repetido nesta escala</span>');
