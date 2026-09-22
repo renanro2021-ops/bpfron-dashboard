@@ -254,7 +254,7 @@ table.lotes td:nth-child(2){min-width:320px}
           <div class="fg"><label>Etapa</label><input id="m-etapa" oninput="onMissao()" placeholder="Ex.: 25ª"></div>
           <div class="fg"><label>ID da missão <span class="muted" style="text-transform:none">(automático)</span></label><input id="m-id" readonly></div>
           <div class="fg"><label>Órgão <span class="req">*</span></label><input id="m-orgao" list="dl-orgaos" oninput="onMissao()" placeholder="Ex.: SENASP, SESDEC"><datalist id="dl-orgaos"></datalist></div>
-          <div class="fg"><label>Tipo de diária <span class="req">*</span></label><select id="m-tipo" onchange="onTipo()"><option value="">— selecione —</option></select></div>
+          <div class="fg"><label>Tipo de diária <span class="req">*</span></label><select id="m-tipo" onchange="onTipo()"><option value="">— selecione —</option></select><div class="op-match" id="tipo-dica"></div></div>
           <div class="fg"><label>Valor da diária (R$)</label><input id="m-valor" type="number" step="0.01" min="0" oninput="recalcAll()"></div>
           <div class="fg"><label>Processo relacionado</label><input id="m-proc" placeholder="nº do processo SEI"></div>
         </div>
@@ -1186,7 +1186,8 @@ function renderEscala(){
   $('m-tipo').value = f.tipo || '';
   $('m-valor').value = f.valor != null ? f.valor : '';
   $('m-proc').value = f.proc != null ? f.proc : (e.processo || '');
-  if (!f.tipo) onTipo(true);
+  TIPO_AUTO = false; $('tipo-dica').innerHTML = '';
+  if (!f.tipo){ onTipo(true); sugerirTipoPeloOrgao(); }   // órgão do PDF já escolhe federal/estadual
   $('t-ini').value = e.periodo ? e.periodo.ini : ''; $('t-fim').value = e.periodo ? e.periodo.fim : '';
   $('nova-op-nome').value = e.operacao || ''; $('nova-op-st').textContent = '';
   onMissao();
@@ -1211,6 +1212,7 @@ function onMissao(){
     box.innerHTML = `<span class="warn">⚠️ A operação do PDF ("${esc(e.operacao)}") não está na lista. Escolha uma parecida ou cadastre:</span>`;
     nova.classList.add('open');
   } else { box.innerHTML = ''; nova.classList.remove('open'); }
+  sugerirTipoPeloOrgao();   // o gestor pode ter corrigido o órgão no campo
   DUP_OK = false; resetSaveBtn();
   renderAvisos();
 }
@@ -1218,7 +1220,35 @@ function onTipo(silencioso){
   const sel = $('m-tipo'), opt = sel.options[sel.selectedIndex];
   const v = opt && opt.getAttribute('data-valor');
   if (v) $('m-valor').value = v;
-  if (!silencioso) recalcAll();
+  if (!silencioso){ TIPO_AUTO = false; $('tipo-dica').innerHTML = ''; recalcAll(); }   // escolha do gestor manda
+}
+
+/* Tipo de diária sugerido pelo ÓRGÃO (pedido do usuário, 21/09/2026): o EVENTO da escala
+   termina com o órgão ("… - SENASP") e o tipo segue o órgão — operação de órgão federal
+   paga diária federal. Só preenche quando UM tipo da TABELA_DIARIAS casa; com dois
+   ("FEDERAL 335" e "FEDERAL 250") avisa e deixa o gestor escolher, e o que ele escolher
+   na mão nunca é sobrescrito. */
+const ORGAO_FEDERAL = /\b(SENASP|SENAD|SESGE|MJSP|MJ|FNSP|PF|PRF|DPF|FUNAI|IBAMA|ICMBIO|EXERCITO|FORCA NACIONAL|MINISTERIO DA JUSTICA|UNIAO)\b/;
+const ORGAO_ESTADUAL = /\b(SESDEC|SEJUS|SEFIN|SEAS|PMRO|CBMRO|POLICIA CIVIL|GOVERNO|ESTADO|RONDONIA|FUNDO ESTADUAL|FUNESP)\b/;
+let TIPO_AUTO = false;   // true = o tipo no campo foi sugerido daqui, não escolhido à mão
+
+function sugerirTipoPeloOrgao(){
+  const dica = $('tipo-dica'); if (!dica) return;
+  const sel = $('m-tipo');
+  if (sel.value && !TIPO_AUTO) return;                     // o gestor já escolheu: não mexe
+  const orgao = norm($('m-orgao').value);
+  const fed = ORGAO_FEDERAL.test(orgao), est = ORGAO_ESTADUAL.test(orgao);
+  if (!orgao || fed === est){ if (TIPO_AUTO){ sel.value=''; TIPO_AUTO=false; } dica.innerHTML=''; return; }
+  const alvo = fed ? 'FEDERAL' : 'ESTADUAL';
+  const cand = [...sel.options].filter(o=>o.value && norm(o.value).includes(alvo));
+  if (cand.length === 1){
+    sel.value = cand[0].value; TIPO_AUTO = true;
+    onTipo(true);                                          // puxa o valor da diária junto
+    dica.innerHTML = `<span class="muted">Sugerido pelo órgão <b>${esc($('m-orgao').value.trim())}</b> (${alvo.toLowerCase()}) — troque se não for.</span>`;
+  } else if (cand.length > 1){
+    if (TIPO_AUTO){ sel.value = ''; TIPO_AUTO = false; }
+    dica.innerHTML = `<span class="warn">⚠️ ${esc($('m-orgao').value.trim())} é ${alvo.toLowerCase()} — escolha qual das ${cand.length} diárias ${alvo.toLowerCase()}.</span>`;
+  } else dica.innerHTML = '';
 }
 
 function renderTabela(){
