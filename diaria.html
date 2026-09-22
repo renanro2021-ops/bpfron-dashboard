@@ -1562,6 +1562,29 @@ let LOTE_ON = false, LOTE_RODANDO = false;
 let LOTE_FILTRO = 'pend';   // 'pend' | 'ok' | 'todas'
 function loteFiltro(v){ if (!LOTE_RODANDO){ LOTE_FILTRO = v; renderLote(); } }
 
+/* O Google aceita 60 gravações por minuto por usuário e cada escala usa ~4 (LANCAMENTOS,
+   MISSOES, GUARNICOES, LOG). Num PDF com 25 escalas isso estoura e vem HTTP 429
+   RATE_LIMIT_EXCEEDED (aconteceu com o usuário em 22/09/2026). Aqui a chamada espera e
+   tenta de novo em vez de dar a escala como perdida. */
+function eCotaGoogle(msg){ return /RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|Quota exceeded|\b429\b/i.test(String(msg||'')); }
+async function postComEspera(path, body, aoEsperar){
+  for (let t = 1; ; t++){
+    try{ return await apiPostJSON(path, body); }
+    catch(err){
+      if (!eCotaGoogle(err.message) || t >= 4) throw err;
+      const seg = 20 * t;
+      if (aoEsperar) aoEsperar(seg, t);
+      await pausa(seg * 1000);
+    }
+  }
+}
+// o Google devolve um JSON enorme; na tela vale a frase que diz o que fazer
+function erroAmigavel(msg){
+  const m = String(msg || 'erro ao lançar');
+  if (eCotaGoogle(m)) return 'o Google limitou as gravações por minuto (60). Esperei e tentei de novo sem sucesso — aguarde 1 minuto e clique em Lançar outra vez; o que já entrou não é relançado.';
+  return m.length > 180 ? m.slice(0, 180) + '…' : m;
+}
+
 function loteCfg(){
   return { op: $('m-op').value.trim(), orgao: $('m-orgao').value.trim().toUpperCase(), tipo: $('m-tipo').value,
     valor: parseFloat(String($('m-valor').value).replace(',','.')) || 0, proc: $('m-proc').value.trim() };
@@ -1743,12 +1766,24 @@ async function lancarLote(){
     const { e, st } = x;
     loadStep(`Escala ${k+1} de ${fila.length}: ${st.id} — ${st.n} policial(is)…`);
     loadProg(k / fila.length);
+    if (k) await pausa(3000);   // o Google aceita 60 gravações por minuto e cada escala usa ~4
     try{
       const env = montarEnvio(e, { ...cfg, etapa: loteEtapa(e) }, st.id);
-      const out = await apiPostJSON('/api/diaria/save', { op:'add', ...env, forcar:true });
+      const out = await postComEspera('/api/diaria/save', { op:'add', ...env, forcar:true },
+        (seg,t)=>loadStep(`O Google limitou as gravações por minuto. Esperando ${seg}s para continuar (tentativa ${t})…`));
       e.lancado = true; e.loteRes = { ok:true, msg:`${out.inseridos} policial(is) lançado(s)` }; ok++; pol += out.inseridos;
     }catch(err){
-      e.loteRes = { ok:false, msg: err.message || 'erro ao lançar' }; falhou++;
+      /* Erro DEPOIS de gravar existe: os policiais entram na aba LANCAMENTOS e o estouro de
+         cota pode acontecer na gravação seguinte. Antes de dar a escala como falha, recarrega
+         e vê se ela está na planilha — senão o gestor relançaria e duplicaria. 22/09/2026. */
+      let gravou = null;
+      try{ await carregar(); gravou = loteJaLancado(e.sei_doc, st.id); }catch(x){}
+      if (gravou){
+        e.lancado = true; e.loteRes = { ok:true, msg:`${gravou.policiais} policial(is) — deu erro de limite do Google, mas a escala ficou gravada` };
+        ok++; pol += gravou.policiais || 0;
+      } else {
+        e.loteRes = { ok:false, msg: erroAmigavel(err.message) }; falhou++;
+      }
     }
     renderLote();
   }
