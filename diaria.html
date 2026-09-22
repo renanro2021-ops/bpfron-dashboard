@@ -103,6 +103,21 @@ td.pend .okb{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35
 .conf.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.45);color:#a7f3d0}
 .conf.bad{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);color:#fecaca}
 .conf.na{background:rgba(148,163,184,.08);border:1px solid #334155;color:#cbd5e1}
+/* ⚡ Lançar todas — painel do PDF com várias escalas (21/09/2026) */
+.lote-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.lote{border:1px solid rgba(96,165,250,.45);background:rgba(96,165,250,.06);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.lote h4{margin:0 0 4px;font:800 15px 'Inter',sans-serif;color:#bfdbfe}
+.lote .sub{font-size:12.5px;color:#94a3b8;margin-bottom:12px}
+.lote .cfg{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;font-size:13px;color:#cbd5e1;border-bottom:1px solid #1e293b;padding-bottom:12px;margin-bottom:12px}
+.lote .cfg b{color:#fff}
+table.lote-tb{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
+table.lote-tb th{background:#0d1322;color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.lote-tb td{padding:7px 6px;border-bottom:1px solid #131b2b;vertical-align:top}
+table.lote-tb tr.off td{opacity:.45}
+table.lote-tb input[type=text]{width:74px;padding:5px 7px;font-size:13px;border-radius:7px}
+table.lote-tb .msg{font-size:12px;margin-top:2px}
+table.lote-tb .msg .err{color:#fca5a5} table.lote-tb .msg .warn{color:#fcd34d} table.lote-tb .msg .ok{color:#a7f3d0}
+.lote .foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .op-match{font-size:12px;margin-top:4px}
 .nova-op{display:none;margin-top:8px;gap:8px;flex-wrap:wrap;align-items:center}
 .nova-op.open{display:flex}
@@ -219,6 +234,8 @@ table.lotes td:nth-child(2){min-width:320px}
       <div class="sec">② Conferir e completar</div>
       <div class="card">
         <div class="pills" id="pills"></div>
+        <div class="lote-bar" id="lote-bar" style="display:none"></div>
+        <div class="lote" id="lote-box" style="display:none"></div>
         <div class="doc-strip" id="doc-strip"></div>
         <div id="conf-box" class="conf na"></div>
         <div class="avisos" id="avisos"></div>
@@ -704,6 +721,19 @@ function epPeriodo(raw, anoPadrao){
   if(one){ const d=epISO(one[1], one[2], one[3]||anoPadrao); return { ini:d, fim:d }; }
   return null;
 }
+/* Término ANTES do início = erro de digitação no próprio documento (casos reais no SEI
+   0021.000110/2026-71: "02/01/2026 a 08/01/2024" e "01/06/2026 a 07/05/2026"). Tenta
+   consertar na ordem: ano do término = ano do início → mês do término = mês do início →
+   término do PERÍODO: do cabeçalho da escala. Só aceita se ficar >= início e dentro de
+   ~2 meses. Devolve null quando não dá para inferir — aí o gestor digita na mão. */
+function epFixFim(ini, fim, perEscala){
+  if(!ini || !fim || fim >= ini) return null;
+  const ok = d => d && d >= ini && (new Date(d+'T00:00:00') - new Date(ini+'T00:00:00')) <= 62*86400000;
+  const [yi, mi] = ini.split('-'), [, mf, df] = fim.split('-');
+  for (const c of [ `${yi}-${mf}-${df}`, `${yi}-${mi}-${df}`, (perEscala && perEscala.fim) || '' ])
+    if (ok(c)) return c;
+  return null;
+}
 
 // Agrupa itens em linhas (mesma página, y parecido) e junta palavras vizinhas em células.
 function epLines(items){
@@ -788,6 +818,11 @@ function parseEscalaItems(items, opts){
     if(/^PER[IÍ]ODO\s*:/i.test(t)){ esc.periodo = epPeriodo(t.replace(/^PER[IÍ]ODO\s*:/i,''), ano); continue; }
     const efM = T.match(/EFETIVO ESCALADO\s*:?\s*(\d+)/); if(efM){ esc.efetivo_declarado = (esc.efetivo_declarado||0) + (+efM[1]); continue; }
     if(/^OBS\b/i.test(t)){ flushPend(); cols=null; team=null; continue; }        // fim da tabela
+    /* Rodapé "Escala 01ª ... (67893775) SEI 0021.000110/2026-71 / pg. 1": num PDF com várias
+       escalas, cada uma tem o SEU nº de documento. Sem isto todas herdavam o da primeira e a
+       checagem de "já lançada" (documento + missão) comparava escalas diferentes. 21/09/2026. */
+    const rodM = t.match(/\((\d{7,10})\)\s*SEI/);
+    if(rodM && !esc._seiOwn){ esc.sei_doc = rodM[1]; esc._seiOwn = true; }
     if(epIsNoise(t)) continue;
     // cabeçalho da equipe
     if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)){
@@ -870,8 +905,23 @@ function parseEscalaItems(items, opts){
     const ev = e.evento.toUpperCase();
     const etM = ev.match(/(\d+)\s*([ªº°])\s*(ETAPA|OPERA)/) || ev.match(/(\d+)\s*([ªº°])/);
     if(etM) e.etapa = etM[1] + (etM[2]==='°'?'º':etM[2]);
-    const qM = e.evento.match(/["“”']([^"“”']{3,})["“”']/);
-    e.operacao = epClean(qM ? qM[1] : ev.replace(/^\s*\d+\s*[ªº°]\s*(ETAPA\s*(DA|DE)?\s*)?/,'').replace(/\s*-\s*[A-Z]{2,}\s*$/,'')).toUpperCase();
+    /* Nome da operação: o EVENTO vem escrito de jeitos diferentes a cada escala —
+         01ª "OPERAÇÃO PROTETOR DAS DIVISAS E FRONTEIRAS" - SENASP
+         02ª OPERAÇÃO "PROTETOR DAS DIVISAS" e "PROTETOR DAS FRONTEIRAS" - SENASP
+         03ª "OPERAÇÃO "PROTETOR DAS DIVISAS" e "PROTETOR DAS FRONTEIRAS" - SENASP   (aspa torta)
+       Pegar só o 1º trecho entre aspas devolvia "OPERAÇÃO" na 3ª (aspa aberta antes da palavra)
+       e metade do nome na 2ª. Agora junta os trechos que falam da mesma operação (têm palavra
+       em comum) e, se nenhum trecho servir, usa o evento inteiro sem o número/órgão/aspas. */
+    const pal = s => new Set(norm(s).replace(/\b(OPERACAO|OPERACOES|ETAPA|DAS|DOS|DA|DE|DO|E)\b/g,' ').split(/[^A-Z0-9]+/).filter(w=>w.length>2));
+    const asp = [...e.evento.matchAll(/["“”']([^"“”']{3,})["“”']/g)].map(m=>epClean(m[1])).filter(s=>pal(s).size);
+    let nomeOp = '';
+    if (asp.length){
+      const base = pal(asp[0]);
+      nomeOp = asp.filter((s,k)=>{ if(!k) return true; for(const w of pal(s)) if(base.has(w)) return true; return false; }).join(' E ');
+    } else {
+      nomeOp = ev.replace(/^\s*\d+\s*[ªº°]\s*(ETAPA\s*(DA|DE)?\s*)?/,'').replace(/\s*[-–]\s*[A-Z]{2,}\s*$/,'').replace(/["“”']/g,' ');
+    }
+    e.operacao = epClean(nomeOp).toUpperCase();
     const orgM = e.evento.match(/[-–]\s*([A-Za-z]{2,}(?:\s*\/\s*[A-Za-z]{2,})?)\s*$/);
     if(orgM) e.orgao_hint = orgM[1].toUpperCase();
     /* LOCALIDADE é célula mesclada POR GUARNIÇÃO e pode quebrar em 2 linhas
@@ -891,11 +941,22 @@ function parseEscalaItems(items, opts){
       else if(tl.length > p.localidade.length && norm(tl).includes(norm(p.localidade))) p.localidade = tl;
       const per = tm.periodo || e.periodo || {};
       p.ini = per.ini || ''; p.fim = per.fim || '';
+      // linha "DATA:" da guarnição com término antes do início (erro de digitação do documento)
+      if (p.ini && p.fim && p.fim < p.ini){
+        const novo = epFixFim(p.ini, p.fim, e.periodo);
+        if (novo){ p.fim_pdf = p.fim; p.fim = novo; }
+      }
       p.posto = p.posto.replace(/\s+/g,' ').toUpperCase();
       p.nome = p.nome.toUpperCase();
       delete p._team; delete p._y; delete p._p;
     }
     (e.equipes||[]).forEach(q=>{ delete q._loc; });
+    delete e._seiOwn;
+    const corr = e.policiais.filter(p=>p.fim_pdf);
+    if(corr.length){
+      const quais = [...new Set(corr.map(p=>`${isoToBR(p.fim_pdf)} → ${isoToBR(p.fim)}`))].join(', ');
+      e.avisos.push(`${corr.length} policial(is) com o término escrito errado no documento (${quais}) — o término foi ajustado pelo "PERÍODO:" da escala. Confira e corrija na tabela se não for isso.`);
+    }
     if(e.efetivo_declarado!=null && e.efetivo_declarado!==e.policiais.length)
       e.avisos.push(`O documento declara ${e.efetivo_declarado} policiais no efetivo escalado, mas a leitura encontrou ${e.policiais.length}. Confira se falta alguém.`);
     const semLoc = e.policiais.filter(p=>!p.localidade).length;
@@ -968,6 +1029,7 @@ async function lerArquivo(file){
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf'){ setStatus('⚠️ Envie um arquivo PDF.', 'err'); return; }
   if (!window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
   EDIT = null;   // subir um PDF novo sai do modo edição
+  LOTE_ON = false; $('lote-box').style.display='none'; $('lote-bar').style.display='none';
   $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
   setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
   loadShow('Lendo o PDF', 'Abrindo ' + file.name + '…');
@@ -1072,6 +1134,7 @@ function novaLinha(p){
     guerra: (reg && !divergente) ? (reg.guerra || '') : '',
     opm: p.opm || (reg && reg.opm) || '', funcao: p.funcao || '', localidade: p.localidade || '', tel: p.tel || '',
     ini: p.ini || '', fim: p.fim || '', diarias: calcDiarias(p.ini, p.fim), diasManual: false,
+    fimPdf: p.fim_pdf || '',   // término que estava escrito errado no PDF (só para avisar)
   };
 }
 function regDe(r){ return EFET[shortRE(r.re)] || null; }
@@ -1128,6 +1191,7 @@ function renderEscala(){
   $('nova-op-nome').value = e.operacao || ''; $('nova-op-st').textContent = '';
   onMissao();
   renderTabela();
+  renderLoteBar();
 }
 function salvarForm(){
   const e = ESCALAS[CUR]; if (!e) return;
@@ -1201,6 +1265,8 @@ function atualizaStatus(i){
   else partes.push('<span class="warn">⚠️ fora do cadastro — digite o nome de guerra</span>');
   const reps = r.re ? e.rows.filter(x=>x.on && shortRE(x.re)===shortRE(r.re)).length : 0;
   if (r.on && reps > 1) partes.push('<span class="err">RE repetido nesta escala</span>');
+  // término escrito errado no PDF e ajustado pela leitura — some assim que o gestor digita outra data
+  if (r.fimPdf && r.fim !== r.fimPdf) partes.push(`<span class="warn">⚠️ no documento o término é <b>${esc(isoToBR(r.fimPdf))}</b> (antes do início) — ajustado para ${esc(isoToBR(r.fim))}, confira</span>`);
   conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn">⚠️ já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
   el.innerHTML = partes.join('<br>');
   if (tr) tr.className = (r.on ? '' : 'off') + (isDivergente(r) ? ' div' : '');
@@ -1217,6 +1283,7 @@ function onCell(el){
     ESCALAS[CUR].rows.forEach((x,j)=>{ if (j!==i && shortRE(x.re)===shortRE(r.re)) atualizaStatus(j); });
   }
   if (k === 'ini' || k === 'fim'){
+    if (k === 'fim') r.fimPdf = '';          // gestor digitou a data: o aviso do PDF sai
     if (!r.diasManual){
       r.diarias = calcDiarias(r.ini, r.fim);
       const d = document.querySelector(`input[data-i="${i}"][data-k="diarias"]`); if (d) d.value = r.diarias;
@@ -1263,6 +1330,7 @@ function recalcAll(){
   if (e.lancado) btn.textContent = EDIT ? '✅ Alterações salvas' : '✅ Já lançada';
   renderAvisos();
   renderConf();
+  if (LOTE_ON && !LOTE_RODANDO) renderLote();   // mexeu na missão/valor: o lote acompanha
 }
 // Quadro de conferência: total que o DOCUMENTO declara ("EFETIVO ESCALADO: N") × quantos a
 // leitura achou × quantos estão marcados para lançar. É o que o gestor olha antes de lançar.
@@ -1299,10 +1367,234 @@ function renderAvisos(){
   if (!av.length && on.length) av.push('<div class="aviso ok">✅ Tudo conferido: todos no cadastro, sem período sobreposto.</div>');
   $('avisos').innerHTML = av.join('');
 }
-function jaLancado(e){
-  if (!e || !e.sei_doc || !DATA) return null;
-  const id = norm($('m-id').value);
-  return (DATA.lotes||[]).find(l=>String(l.sei_doc)===String(e.sei_doc) && (!id || norm(l.id_missao)===id)) || null;
+function jaLancado(e){ return e ? loteJaLancado(e.sei_doc, $('m-id').value) : null; }
+function loteJaLancado(sei, idMissao){
+  if (!sei || !DATA) return null;
+  const id = norm(idMissao);
+  return (DATA.lotes||[]).find(l=>String(l.sei_doc)===String(sei) && (!id || norm(l.id_missao)===id)) || null;
+}
+
+/* Monta o que vai para a planilha (missão + guarnições + policiais) a partir de uma escala
+   lida e da configuração da missão. Usado tanto pelo botão "Lançar" de uma escala quanto
+   pelo "Lançar todas" — a regra de montagem é uma só. */
+function montarEnvio(e, cfg, idm){
+  const on = e.rows.filter(r=>r.on);
+  const valor = cfg.valor;
+  const inis = on.map(r=>r.ini).sort(), fims = on.map(r=>r.fim).sort();
+  const missao = { operacao:cfg.op, id_missao:idm, orgao:cfg.orgao, tipo_diaria:cfg.tipo, valor_diaria:valor, processo:cfg.proc || 'NÃO',
+    municipio:'', data_inicio:inis[0], data_fim:fims[fims.length-1], sei_doc:e.sei_doc||'', arquivo:PDF_META.arquivo, hash:PDF_META.hash,
+    evento:e.evento||'', etapa:cfg.etapa||'', local:e.local||'', efetivo_declarado:e.efetivo_declarado };
+  // uma linha por guarnição (aba GUARNICOES da planilha de missões)
+  const eqMap = {};
+  on.forEach(r=>{
+    const k = r.equipe || 'SEM EQUIPE';
+    const g = eqMap[k] || (eqMap[k] = { equipe:k, area:'', localidade:'', inicio:r.ini, fim:r.fim, qtd:0, comandante:'', diarias:0 });
+    const eq = (e.equipes||[]).find(q=>q.nome===r.equipe);
+    if (eq && eq.area) g.area = eq.area;
+    if (!g.localidade && r.localidade) g.localidade = String(r.localidade).toUpperCase();
+    if (r.ini < g.inicio) g.inicio = r.ini;
+    if (r.fim > g.fim) g.fim = r.fim;
+    g.qtd++; g.diarias += parseFloat(r.diarias) || 0;
+    if (!g.comandante && /^CMT$/i.test(r.funcao)) g.comandante = `${r.posto} ${r.nome || r.guerra}`.trim();
+  });
+  const guarnicoes = Object.values(eqMap).map(g=>({ ...g, valor_total: g.diarias * valor }));
+  const policiais = on.map(r=>{
+    const reg = regDe(r);
+    return { re: shortRE(r.re), guerra: (r.guerra || (reg && !isDivergente(r) ? reg.guerra : '') || r.nome).toUpperCase(),
+      posto_grad: r.posto.toUpperCase(), opm: r.opm.toUpperCase(), municipio: String(r.localidade||'').toUpperCase(),
+      data_inicio: r.ini, data_fim: r.fim, diarias: parseFloat(r.diarias), funcao: r.funcao, nome_completo: r.nome, equipe: r.equipe,
+      contato: r.tel || '' };
+  });
+  return { missao, policiais, guarnicoes };
+}
+
+/* ─────────────── ⚡ Lançar todas as escalas do PDF (21/09/2026) ───────────────
+   Um PDF do SEI pode trazer o ano inteiro (o de 2026 tem 25 escalas, 406 policiais).
+   A operação, o órgão, o tipo e o valor da diária são os MESMOS para todas — o que muda é
+   a etapa, o período e a guarnição. O painel aplica a configuração da escala aberta em
+   todas, mostra o que está pendente em cada uma e lança em sequência as que o gestor
+   marcar. Nada é lançado sem a escala passar pela MESMA validação do botão "Lançar". */
+let LOTE_ON = false, LOTE_RODANDO = false;
+
+function loteCfg(){
+  return { op: $('m-op').value.trim(), orgao: $('m-orgao').value.trim().toUpperCase(), tipo: $('m-tipo').value,
+    valor: parseFloat(String($('m-valor').value).replace(',','.')) || 0, proc: $('m-proc').value.trim() };
+}
+function loteEtapa(e){ return String((e.form && e.form.etapa != null ? e.form.etapa : e.etapa) || '').trim(); }
+function loteId(e, cfg){ const et = loteEtapa(e); return (et ? et + ' ' : '') + cfg.op; }
+
+// Mesma régua do salvar(): "erros" impedem o lançamento, "avisos" só alertam.
+function loteCheck(e, cfg, idsAntes){
+  const erros = [], avisos = [], on = e.rows.filter(r=>r.on);
+  const id = loteId(e, cfg);
+  if (!cfg.op) erros.push('escolha a operação');
+  if (!cfg.orgao) erros.push('informe o órgão');
+  if (!cfg.tipo) erros.push('escolha o tipo de diária');
+  if (!(cfg.valor > 0)) erros.push('informe o valor da diária');
+  if (!on.length) erros.push('nenhum policial marcado');
+  const semNome = on.filter(r=>!r.re && !r.guerra && !r.nome).length; if (semNome) erros.push(`${semNome} linha(s) sem RE e sem nome`);
+  const semDt = on.filter(r=>!r.ini || !r.fim).length; if (semDt) erros.push(`${semDt} sem início/término`);
+  const dtRuim = on.filter(r=>r.ini && r.fim && dpParse(r.fim) < dpParse(r.ini)).length;
+  if (dtRuim) erros.push(`${dtRuim} com término antes do início — corrija na aba da escala`);
+  const ddRuim = on.filter(r=>!(parseFloat(r.diarias) > 0)).length; if (ddRuim) erros.push(`${ddRuim} sem nº de diárias`);
+  const res = on.map(r=>shortRE(r.re)).filter(Boolean);
+  const rep = [...new Set(res.filter((x,i)=>res.indexOf(x)!==i))];
+  if (rep.length) erros.push(`RE repetido: ${rep.join(', ')}`);
+  const ja = loteJaLancado(e.sei_doc, id);
+  if (ja) erros.push(`já lançada em ${ja.lancado_em} — para refazer, exclua em ③`);
+  if (cfg.op && idsAntes && idsAntes[norm(id)] != null) erros.push(`mesma etapa da escala #${idsAntes[norm(id)]+1} — mude a etapa aqui ao lado`);
+  const corr = on.filter(r=>r.fimPdf).length; if (corr) avisos.push(`${corr} término(s) corrigido(s) do documento`);
+  const div = on.filter(isDivergente).length; if (div) avisos.push(`${div} com RE de outra pessoa no cadastro`);
+  const fora = on.filter(r=>r.re && !regDe(r)).length; if (fora) avisos.push(`${fora} fora do cadastro`);
+  const cfl = on.filter(r=>conflitos(r).length).length; if (cfl) avisos.push(`${cfl} com missão em período sobreposto`);
+  if (e.efetivo_declarado != null && e.efetivo_declarado !== on.length)
+    avisos.push(`o documento declara ${e.efetivo_declarado} e estão marcados ${on.length}`);
+  const dd = on.reduce((a,r)=>a + (parseFloat(r.diarias)||0), 0);
+  return { id, erros, avisos, n: on.length, diarias: dd, total: dd * cfg.valor };
+}
+
+function renderLoteBar(){
+  const bar = $('lote-bar');
+  if (!bar) return;
+  const varias = ESCALAS.length > 1 && !EDIT;
+  bar.style.display = varias ? 'flex' : 'none';
+  if (!varias){ LOTE_ON = false; $('lote-box').style.display = 'none'; return; }
+  const falta = ESCALAS.filter(e=>!e.lancado).length;
+  bar.innerHTML = `<button class="btn sm" onclick="toggleLote()">${LOTE_ON ? '✕ Fechar o lançamento em lote' : `⚡ Lançar todas (${falta} escala(s))`}</button>`
+    + `<span class="hint">Este PDF tem <b>${ESCALAS.length}</b> escalas. Preencha a missão abaixo uma vez e lance todas de uma vez.</span>`;
+  if (LOTE_ON) renderLote(); else $('lote-box').style.display = 'none';
+}
+function toggleLote(){
+  if (LOTE_RODANDO) return;
+  salvarForm();
+  LOTE_ON = !LOTE_ON;
+  if (LOTE_ON) loteAplicar(true);
+  renderLoteBar();
+}
+// copia operação/órgão/tipo/valor/processo da tela para TODAS as escalas (a etapa é de cada uma)
+function loteAplicar(semRender){
+  if (LOTE_RODANDO) return;
+  const cfg = loteCfg();
+  ESCALAS.forEach(e=>{ e.form = { ...cfg, etapa: loteEtapa(e) }; if (e.loteOn == null) e.loteOn = !e.lancado; });
+  if (!semRender) renderLote();
+}
+function loteToggleLinha(j){ const e = ESCALAS[j]; if (e && !LOTE_RODANDO){ e.loteOn = !e.loteOn; renderLote(); } }
+function loteTodas(v){ if (!LOTE_RODANDO){ ESCALAS.forEach(e=>{ e.loteOn = v && !e.lancado; }); renderLote(); } }
+function loteSetEtapa(j, v){ const e = ESCALAS[j]; if (!e) return; e.form = { ...(e.form||{}), etapa: v }; if (j === CUR) $('m-etapa').value = v; renderLote(); }
+
+function renderLote(){
+  const box = $('lote-box'); if (!box) return;
+  box.style.display = '';
+  const cfg = loteCfg();
+  const idsAntes = {};
+  const linhas = ESCALAS.map((e,j)=>{
+    const st = loteCheck(e, cfg, idsAntes);
+    if (cfg.op && !e.lancado) idsAntes[norm(st.id)] = idsAntes[norm(st.id)] != null ? idsAntes[norm(st.id)] : j;
+    return { e, j, st };
+  });
+  const marcadas = linhas.filter(x=>x.e.loteOn && !x.e.lancado);
+  const prontas = marcadas.filter(x=>!x.st.erros.length);
+  const nPol = prontas.reduce((a,x)=>a + x.st.n, 0), tot = prontas.reduce((a,x)=>a + x.st.total, 0);
+  const tr = linhas.map(({e,j,st})=>{
+    const res = e.loteRes;
+    const marcada = !!e.loteOn && !e.lancado;
+    const msg = e.lancado ? `<span class="ok">✅ ${esc((res && res.msg) || 'já lançada')}</span>`
+      : res && !res.ok ? `<span class="err">❌ ${esc(res.msg)}</span>`
+      : st.erros.length ? `<span class="err">⛔ ${esc(st.erros.join(' · '))}</span>`
+      : st.avisos.length ? `<span class="warn">⚠️ ${esc(st.avisos.join(' · '))}</span>`
+      : '<span class="ok">✅ pronta para lançar</span>';
+    return `<tr class="${marcada || e.lancado ? '' : 'off'}">
+      <td><input type="checkbox" ${marcada?'checked':''} ${e.lancado||LOTE_RODANDO?'disabled':''} onchange="loteToggleLinha(${j})" style="width:auto"></td>
+      <td>${j+1}</td>
+      <td><input type="text" value="${esc(loteEtapa(e))}" ${LOTE_RODANDO?'disabled':''} oninput="loteSetEtapa(${j}, this.value)" placeholder="Ex.: 18ª"></td>
+      <td><b>${esc(st.id || '—')}</b><div class="muted" style="font-size:11.5px">${esc((e.evento||'').slice(0,70))}</div>
+          <div class="msg">${msg}</div></td>
+      <td class="muted">${e.periodo ? esc(isoToBR(e.periodo.ini)+' a '+isoToBR(e.periodo.fim)) : '—'}</td>
+      <td style="text-align:right">${st.n}</td>
+      <td style="text-align:right">${fN(st.diarias)}</td>
+      <td style="text-align:right">${cfg.valor ? fR(st.total) : '—'}</td>
+      <td><button class="btn sm" style="padding:4px 10px" onclick="trocarEscala(${j})">abrir</button></td>
+    </tr>`;
+  }).join('');
+  box.innerHTML = `<h4>⚡ Lançar todas as escalas deste PDF</h4>
+    <div class="sub">Cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela. A conferência é a mesma do botão “Lançar”: quem estiver com ⛔ não é lançada.</div>
+    <div class="cfg">
+      <span>Operação: <b>${esc(cfg.op || '— escolha acima —')}</b></span>
+      <span>Órgão: <b>${esc(cfg.orgao || '—')}</b></span>
+      <span>Tipo: <b>${esc(cfg.tipo || '—')}</b></span>
+      <span>Valor: <b>${cfg.valor ? fR(cfg.valor) : '—'}</b></span>
+      <span>Processo: <b>${esc(cfg.proc || 'NÃO')}</b></span>
+      <button class="btn sm" style="padding:5px 12px" onclick="loteAplicar()">🔄 Reaplicar o que está acima</button>
+    </div>
+    <div class="tbl-wrap" style="border:none">
+      <table class="lote-tb">
+        <thead><tr>
+          <th><input type="checkbox" ${marcadas.length===ESCALAS.filter(e=>!e.lancado).length&&marcadas.length?'checked':''} onchange="loteTodas(this.checked)" style="width:auto"></th>
+          <th>#</th><th>Etapa</th><th>Missão / situação</th><th>Período</th>
+          <th style="text-align:right">Policiais</th><th style="text-align:right">Diárias</th><th style="text-align:right">Valor</th><th></th>
+        </tr></thead>
+        <tbody>${tr}</tbody>
+      </table>
+    </div>
+    <div class="foot">
+      <div style="flex:1;font-size:13.5px;color:#cbd5e1"><b>${prontas.length}</b> escala(s) prontas · <b>${nPol}</b> policial(is) · <b>${fR(tot)}</b>
+        ${marcadas.length - prontas.length ? `<span class="err"> · ${marcadas.length - prontas.length} marcada(s) com pendência não serão lançadas</span>` : ''}</div>
+      <button class="btn-main" id="lote-btn" onclick="lancarLote()" ${prontas.length && !LOTE_RODANDO ? '' : 'disabled'}>🚀 Lançar ${prontas.length} escala(s)</button>
+    </div>
+    <div id="lote-err" style="margin-top:8px"></div>`;
+}
+
+async function lancarLote(){
+  if (LOTE_RODANDO) return;
+  const cfg = loteCfg();
+  const idsAntes = {};
+  const fila = [];
+  ESCALAS.forEach((e,j)=>{
+    const st = loteCheck(e, cfg, idsAntes);
+    if (cfg.op && !e.lancado) idsAntes[norm(st.id)] = idsAntes[norm(st.id)] != null ? idsAntes[norm(st.id)] : j;
+    if (e.loteOn && !e.lancado && !st.erros.length) fila.push({ e, j, st });
+  });
+  if (!fila.length) return;
+  LOTE_RODANDO = true; renderLote();
+  loadShow('Lançando as escalas do PDF', `0 de ${fila.length}…`);
+  let ok = 0, falhou = 0, pol = 0;
+  for (const [k, x] of fila.entries()){
+    const { e, st } = x;
+    loadStep(`Escala ${k+1} de ${fila.length}: ${st.id} — ${st.n} policial(is)…`);
+    loadProg(k / fila.length);
+    try{
+      const env = montarEnvio(e, { ...cfg, etapa: loteEtapa(e) }, st.id);
+      const out = await apiPostJSON('/api/diaria/save', { op:'add', ...env, forcar:true });
+      e.lancado = true; e.loteRes = { ok:true, msg:`${out.inseridos} policial(is) lançado(s)` }; ok++; pol += out.inseridos;
+    }catch(err){
+      e.loteRes = { ok:false, msg: err.message || 'erro ao lançar' }; falhou++;
+    }
+    renderLote();
+  }
+  // cadastro na aba POLICIAIS de quem ficou fora (uma vez por RE, valendo o PDF inteiro)
+  let cad = 0, cadErr = 0;
+  if ($('cad-faltantes').checked){
+    const vistos = {};
+    fila.filter(x=>x.e.lancado).forEach(({e})=>e.rows.forEach(r=>{
+      if (r.on && r.re && !regDe(r) && String(r.guerra||'').trim() && !vistos[shortRE(r.re)]) vistos[shortRE(r.re)] = r;
+    }));
+    const falt = Object.values(vistos);
+    for (const [k, r] of falt.entries()){
+      loadStep(`Cadastrando na aba POLICIAIS quem faltava: ${k+1} de ${falt.length}…`); loadProg((k+1)/falt.length);
+      try{ await apiPostJSON('/api/diaria/policial', { re: shortRE(r.re), criar:true,
+        dados:{ guerra:r.guerra, nome:r.nome, posto_grad:r.posto, opm:r.opm } }); cad++; }catch(x){ cadErr++; }
+    }
+  }
+  loadStep('Atualizando a lista de escalas lançadas…'); loadProg(null);
+  LOTE_RODANDO = false;
+  await carregar();
+  renderLote(); renderLoteBar(); renderEscala();
+  loadHide();
+  setStatus(`✅ Lote concluído: <b>${ok}</b> escala(s) e <b>${pol}</b> policial(is) lançados`
+    + `${falhou ? ` · <span class="err">${falhou} falharam (veja o motivo na lista)</span>` : ''}`
+    + `${cad ? ` · ${cad} cadastrado(s) na aba POLICIAIS` : ''}${cadErr ? ` <span class="err">(${cadErr} cadastro(s) falharam)</span>` : ''}.`
+    + `${ESCALAS.some(e=>!e.lancado) ? ' Ainda há escala(s) não lançadas neste PDF.' : ' Todas as escalas do PDF foram lançadas.'}`, ok ? 'ok' : 'err');
+  window.scrollTo({ top: 0, behavior:'smooth' });
 }
 
 /* ─────────────── gravar ─────────────── */
@@ -1347,31 +1639,7 @@ async function salvar(){
     }
   }
 
-  const inis = on.map(r=>r.ini).sort(), fims = on.map(r=>r.fim).sort();
-  const missao = { operacao:op, id_missao:idm, orgao, tipo_diaria:tipo, valor_diaria:valor, processo:$('m-proc').value.trim() || 'NÃO',
-    municipio:'', data_inicio:inis[0], data_fim:fims[fims.length-1], sei_doc:e.sei_doc||'', arquivo:PDF_META.arquivo, hash:PDF_META.hash,
-    evento:e.evento||'', etapa:$('m-etapa').value.trim(), local:e.local||'', efetivo_declarado:e.efetivo_declarado };
-  // uma linha por guarnição (aba GUARNICOES da planilha de missões)
-  const eqMap = {};
-  on.forEach(r=>{
-    const k = r.equipe || 'SEM EQUIPE';
-    const g = eqMap[k] || (eqMap[k] = { equipe:k, area:'', localidade:'', inicio:r.ini, fim:r.fim, qtd:0, comandante:'', diarias:0 });
-    const eq = (e.equipes||[]).find(q=>q.nome===r.equipe);
-    if (eq && eq.area) g.area = eq.area;
-    if (!g.localidade && r.localidade) g.localidade = String(r.localidade).toUpperCase();
-    if (r.ini < g.inicio) g.inicio = r.ini;
-    if (r.fim > g.fim) g.fim = r.fim;
-    g.qtd++; g.diarias += parseFloat(r.diarias) || 0;
-    if (!g.comandante && /^CMT$/i.test(r.funcao)) g.comandante = `${r.posto} ${r.nome || r.guerra}`.trim();
-  });
-  const guarnicoes = Object.values(eqMap).map(g=>({ ...g, valor_total: g.diarias * valor }));
-  const policiais = on.map(r=>{
-    const reg = regDe(r);
-    return { re: shortRE(r.re), guerra: (r.guerra || (reg && !isDivergente(r) ? reg.guerra : '') || r.nome).toUpperCase(),
-      posto_grad: r.posto.toUpperCase(), opm: r.opm.toUpperCase(), municipio: String(r.localidade||'').toUpperCase(),
-      data_inicio: r.ini, data_fim: r.fim, diarias: parseFloat(r.diarias), funcao: r.funcao, nome_completo: r.nome, equipe: r.equipe,
-      contato: r.tel || '' };
-  });
+  const { missao, policiais, guarnicoes } = montarEnvio(e, { op, orgao, tipo, valor, proc:$('m-proc').value.trim(), etapa:$('m-etapa').value.trim() }, idm);
   const btn = $('save-btn'); btn.disabled = true; btn.textContent = 'Lançando…';
   loadShow(EDIT ? 'Salvando as alterações' : 'Lançando a escala', `Enviando ${policiais.length} policial(is) para a planilha…`);
   try{
@@ -1423,7 +1691,7 @@ function descartar(){
     ? 'Sair da edição sem salvar? A escala continua na planilha do jeito que está.'
     : 'Descartar a leitura deste PDF? Nada foi lançado ainda.';
   if (ESCALAS.some(e=>!e.lancado && e.rows.length) && !window.confirm(msg)) return;
-  EDIT = null; ESCALAS = []; $('rev').style.display='none'; setStatus('');
+  EDIT = null; ESCALAS = []; LOTE_ON = false; $('rev').style.display='none'; setStatus('');
 }
 
 /* ─────────────── ver PDF / texto lido ─────────────── */
