@@ -541,28 +541,6 @@ function prepararMapaImpressao(){
     // senão os ladrilhos carregam pra um tamanho e o Chrome imprime em outro, deixando pedaço em branco
     folha.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:700px;background:#fff';
 
-    if(!mapaAroPrint){
-      mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false});
-      camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
-    }
-    const pos = marcadorAro.getLatLng();
-    mapaAroPrint.invalidateSize();
-
-    if(!marcadorAroPrint) marcadorAroPrint = L.marker(pos).addTo(mapaAroPrint);
-    else marcadorAroPrint.setLatLng(pos);
-
-    if(circuloAroPrint){ mapaAroPrint.removeLayer(circuloAroPrint); circuloAroPrint = null; }
-    const r = raioMetros();
-    const legenda = document.getElementById('o-mapa-legenda');
-    if(r){
-      circuloAroPrint = L.circle(pos, {radius:r, color:'#1b6b3d', weight:2, fillColor:'#1b6b3d', fillOpacity:.15}).addTo(mapaAroPrint);
-      mapaAroPrint.fitBounds(circuloAroPrint.getBounds(), {padding:[20,20]});
-      legenda.textContent = '📍 Ponto marcado · círculo = raio de operação de ' + r + ' metros';
-    } else {
-      mapaAroPrint.setView(pos, 16);
-      legenda.textContent = '📍 Ponto marcado no local da operação';
-    }
-
     let terminou = false;
     const finalizar = () => {
       if(terminou) return;
@@ -571,15 +549,50 @@ function prepararMapaImpressao(){
       folha.style.cssText = '';
       resolve();
     };
-    // Espera os ladrilhos do enquadramento FINAL (depois do fitBounds/setView acima) terminarem de
-    // carregar antes de liberar a impressão — antes resolvia no "load" do setView inicial e saía
-    // com metade do mapa em branco porque o fitBounds pediu ladrilhos novos que ainda não chegaram
-    const aguardarLadrilhos = () => {
-      if(!camadaAroPrint.isLoading || !camadaAroPrint.isLoading()){ setTimeout(finalizar, 500); return; }
-      camadaAroPrint.once('load', () => setTimeout(finalizar, 500));
-    };
-    setTimeout(aguardarLadrilhos, 60);
-    setTimeout(finalizar, 4000);
+
+    try {
+      const pos = marcadorAro.getLatLng();
+
+      if(!mapaAroPrint){
+        // setView ANTES de adicionar qualquer camada/marcador: mapa sem view ainda não tem
+        // "pixel origin", e L.marker(...).addTo() num mapa assim derruba com
+        // "Cannot read properties of undefined (reading 'layerPointToLatLng')" — a exceção
+        // acontecia dentro do executor da Promise, então nunca chamava resolve() e o botão
+        // ficava travado para sempre em "Preparando o mapa…"
+        mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false}).setView(pos, 16);
+        camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
+      }
+      mapaAroPrint.invalidateSize();
+
+      if(!marcadorAroPrint) marcadorAroPrint = L.marker(pos).addTo(mapaAroPrint);
+      else marcadorAroPrint.setLatLng(pos);
+
+      if(circuloAroPrint){ mapaAroPrint.removeLayer(circuloAroPrint); circuloAroPrint = null; }
+      const r = raioMetros();
+      const legenda = document.getElementById('o-mapa-legenda');
+      if(r){
+        circuloAroPrint = L.circle(pos, {radius:r, color:'#1b6b3d', weight:2, fillColor:'#1b6b3d', fillOpacity:.15}).addTo(mapaAroPrint);
+        mapaAroPrint.fitBounds(circuloAroPrint.getBounds(), {padding:[20,20]});
+        legenda.textContent = '📍 Ponto marcado · círculo = raio de operação de ' + r + ' metros';
+      } else {
+        mapaAroPrint.setView(pos, 16);
+        legenda.textContent = '📍 Ponto marcado no local da operação';
+      }
+
+      // Espera os ladrilhos do enquadramento FINAL (depois do fitBounds/setView acima) terminarem de
+      // carregar antes de liberar a impressão — antes resolvia no "load" do setView inicial e saía
+      // com metade do mapa em branco porque o fitBounds pediu ladrilhos novos que ainda não chegaram
+      const aguardarLadrilhos = () => {
+        if(!camadaAroPrint.isLoading || !camadaAroPrint.isLoading()){ setTimeout(finalizar, 500); return; }
+        camadaAroPrint.once('load', () => setTimeout(finalizar, 500));
+      };
+      setTimeout(aguardarLadrilhos, 60);
+      setTimeout(finalizar, 4000);
+    } catch(e) {
+      // Rede de segurança: qualquer erro aqui nunca pode deixar o botão travado pra sempre
+      console.error('Falha ao preparar o mapa da impressão:', e);
+      finalizar();
+    }
   });
 }
 window.addEventListener('beforeprint', () => {
