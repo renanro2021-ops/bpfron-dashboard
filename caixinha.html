@@ -735,6 +735,13 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
               </label></div>
           </div>
           <div class="msg hidden" id="g-ocr-st"></div>
+          <button type="button" class="btn sec mini" style="margin-top:8px" onclick="gstToggleColar()">✍️ Ou cole o texto lido por uma IA (ChatGPT, Claude...)</button>
+          <div id="g-colar-painel" class="hidden" style="margin-top:10px">
+            <div class="passo-d" style="margin-bottom:8px">Manda a foto da nota pra uma IA de chat e pede nesse formato — cole a resposta dela na caixa abaixo.</div>
+            <button type="button" class="btn sec mini" onclick="gstCopiarPrompt()">📋 Copiar o pedido pra colar na IA</button>
+            <textarea id="g-colar-texto" placeholder="Cole aqui a resposta da IA..." style="min-height:110px;margin-top:8px"></textarea>
+            <button type="button" class="btn mini" style="margin-top:8px" onclick="gstAplicarColado()">✅ Preencher com esse texto</button>
+          </div>
           <div class="msg err hidden" id="g-erro"></div>
           <div class="msg warn hidden" id="g-aviso"></div>
           <button class="btn" id="g-btn" onclick="lancarGasto()">Lançar compra</button>
@@ -2371,14 +2378,85 @@ function gstAplicar(d, origem){
      OCR comeu. Quem decide é o gestor — o campo Total manda sobre a soma. */
   const dif = d.total > 0 && d.soma > 0 && Math.round(d.total * 100) !== Math.round(d.soma * 100);
   st.className = dif ? 'msg warn' : 'msg ok';
-  st.innerHTML = (origem === 'pdf' ? '📄 <b>PDF lido</b> (texto exato): ' : '🔍 <b>Nota lida</b>: ') +
+  st.innerHTML = (origem === 'pdf' ? '📄 <b>PDF lido</b> (texto exato): ' :
+                   origem === 'colado' ? '✍️ <b>Texto colado</b>: ' : '🔍 <b>Nota lida</b>: ') +
     achou.join(' · ') + '.' +
     (dif ? '<div style="margin-top:7px">⚠️ A nota diz <b>' + fR(d.total) + '</b> e a soma dos itens dá <b>' + fR(d.soma) +
            '</b>. Pode ser desconto, ou item que o leitor não pegou — confira. O campo <i>Total pago</i> é o que vale.</div>'
          : '<div style="margin-top:5px;opacity:.8">O que está em roxo veio da nota — confira antes de lançar.</div>');
 }
 
+/* Pra quem já usa IA de chat (ChatGPT, Claude...) pra ler a nota fora daqui:
+   dá pra colar a resposta dela num formato fixo, mais confiável que o OCR
+   (a IA já entende a foto direito, aqui é só transcrever pro formulário). */
+const GST_PROMPT_IA = 'Leia a nota fiscal dessa foto e me devolva só isto, sem mais nada, sem explicação:\n\n' +
+  'LOJA: nome da loja\n' +
+  'DATA: dd/mm/aaaa\n' +
+  'TOTAL: valor total pago (já com desconto, se tiver)\n' +
+  'DESCONTO: valor do desconto (ou 0,00 se não tiver)\n' +
+  'ITENS:\n' +
+  'nome do item | quantidade | valor unitário | valor total\n' +
+  '(uma linha por item, repita pra cada item da nota)';
+
+/* Formato fixo (rótulo: valor, um item por linha com | separando as colunas).
+   Retorna null se o texto colado não bate com esse formato — aí quem chamou
+   cai de volta pro leitor livre (gstDoTexto), que tenta entender do jeito dele. */
+function gstDoTextoEstruturado(texto){
+  const linhas = String(texto || '').split(/\r?\n/).map(l => l.trim());
+  const pega = (rotulo) => {
+    const l = linhas.find(l => new RegExp('^' + rotulo + '\\s*:', 'i').test(l));
+    return l ? l.split(':').slice(1).join(':').trim() : '';
+  };
+  const loja = pega('LOJA');
+  const dataTxt = pega('DATA');
+  const totalTxt = pega('TOTAL');
+  const descTxt = pega('DESCONTO');
+
+  const iItens = linhas.findIndex(l => /^ITENS\s*:?\s*$/i.test(l));
+  const itens = [];
+  if (iItens >= 0){
+    for (let i = iItens + 1; i < linhas.length; i++){
+      const partes = linhas[i].split('|').map(p => p.trim());
+      if (partes.length < 2 || !partes[0]) continue;
+      const [nome, qtdTxt, unitTxt, totalItemTxt] = partes;
+      const qtd = num(qtdTxt) || 1;
+      const unit = num(unitTxt);
+      const valor = num(totalItemTxt) || Math.round(qtd * unit * 100) / 100;
+      if (valor > 0) itens.push({ nome: nome.slice(0, 60), qtd, unit, valor });
+    }
+  }
+  if (!loja && !totalTxt && !itens.length) return null;   // não é esse formato
+
+  const m = dataTxt.match(/(\d{2})[\/.-](\d{2})[\/.-](20\d{2})/);
+  return {
+    data: m ? `${m[3]}-${m[2]}-${m[1]}` : '',
+    local: loja,
+    total: num(totalTxt),
+    desconto: num(descTxt),
+    itens,
+    soma: Math.round(itens.reduce((s, i) => s + i.valor, 0) * 100) / 100,
+  };
+}
 /* ==== NOTA:FIM ==== */
+
+function gstToggleColar(){
+  const p = $('g-colar-painel');
+  p.classList.toggle('hidden');
+  if (!p.classList.contains('hidden')) $('g-colar-texto').focus();
+}
+function gstCopiarPrompt(){
+  navigator.clipboard.writeText(GST_PROMPT_IA).then(
+    () => toast('📋 Copiado — cole na conversa com a IA, junto com a foto da nota.'),
+    () => toast('⚠️ Não consegui copiar. Selecione o texto à mão.'));
+}
+function gstAplicarColado(){
+  const texto = $('g-colar-texto').value;
+  if (!texto.trim()) return;
+  const d = gstDoTextoEstruturado(texto) || gstDoTexto(texto);
+  gstAplicar(d, 'colado');
+  $('g-colar-painel').classList.add('hidden');
+  $('g-colar-texto').value = '';
+}
 
 /* ---------- lançar gasto ---------- */
 function novoItem(nome, qtd, valorUnit, valorTotal){
