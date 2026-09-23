@@ -9,9 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ===========================================================================
-   CAIXA DA TURMA — prestação de contas aberta de uma vaquinha de curso.
-   Quem paga NÃO tem login: se identifica pelo CPF. Quem gerencia entra com o
-   mesmo login do resto do site (permissão "caixa").
+   CAIXA DA TURMA — prestação de contas da turma de uma vaquinha de curso.
+   Quem paga entra SÓ COM O CPF (sessão de 12h, header X-Caixa); CPF fora da
+   relação pode pedir acesso e o gestor libera. Cada um vê só o PRÓPRIO
+   comprovante. Quem gerencia entra com o login do site (permissão "caixa").
    Tudo vem do Worker: /api/caixa*. Uma página só, três públicas + gestor.
    =========================================================================== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -42,14 +43,19 @@ a{color:var(--green2)}
 .wrap{max-width:1000px;margin:0 auto;padding:16px 14px}
 
 /* ---------- abas ---------- */
-.abas{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
-.abas::-webkit-scrollbar{display:none}
-.aba{background:#0d1620;border:1px solid var(--border2);color:var(--muted);border-radius:999px;
-  padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+/* abas grandes, do mesmo tamanho e centralizadas: é o que a turma toca no celular */
+.abas{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:4px 0 16px}
+.aba{flex:1 1 0;min-width:120px;max-width:210px;background:#0d1620;border:1px solid var(--border2);
+  color:var(--muted);border-radius:16px;padding:14px 10px 12px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:Rajdhani,sans-serif;letter-spacing:.5px;display:flex;flex-direction:column;align-items:center;
+  gap:5px;position:relative;transition:transform .12s,border-color .15s,background .15s}
+.aba .ai{font-size:26px;line-height:1}
 .aba:hover{border-color:var(--border);color:var(--text)}
-.aba.on{background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green2)}
-.aba .bolha{display:inline-block;background:var(--gold);color:#111;border-radius:999px;
-  font-size:10.5px;font-weight:800;padding:1px 6px;margin-left:5px;vertical-align:1px}
+.aba:active{transform:scale(.97)}
+.aba.on{background:linear-gradient(180deg,rgba(34,197,94,.2),rgba(34,197,94,.07));border-color:var(--green);
+  color:var(--green2);box-shadow:0 0 0 1px rgba(34,197,94,.25),0 6px 20px rgba(34,197,94,.12)}
+.aba .bolha{position:absolute;top:7px;right:9px;background:var(--gold);color:#111;border-radius:999px;
+  font-size:11px;font-weight:800;padding:1px 7px;font-family:Inter,sans-serif}
 
 /* ---------- cartões ---------- */
 .card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px}
@@ -111,8 +117,44 @@ input[type=text],input[type=number],input[type=date],input[type=password],input[
 textarea{min-height:70px;resize:vertical;line-height:1.5}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--green)}
 input::placeholder,textarea::placeholder{color:#4a5a68}
-input[type=file]{width:100%;background:#0a1219;border:1px dashed rgba(255,255,255,.18);border-radius:9px;
-  color:var(--muted);padding:13px 12px;font-size:13px;font-family:inherit;cursor:pointer}
+/* Botão de anexar. O <input type=file> fica escondido (mas vivo — o .files
+   continua sendo lido dele) e o <label> é o botão. SEM capture: com capture o
+   Android abre direto a câmera; sem ele, o celular oferece galeria, arquivos
+   (o PDF do banco) e câmera. */
+.arq-in{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.arq{display:flex;align-items:center;gap:14px;width:100%;min-height:78px;cursor:pointer;
+  background:linear-gradient(160deg,#0f1f18,#0b1620);border:2px dashed rgba(34,197,94,.45);
+  border-radius:14px;padding:14px 16px;transition:border-color .15s,background .15s}
+.arq:hover,.arq:focus-within{border-color:var(--green2);background:linear-gradient(160deg,#12281d,#0c1a24)}
+.arq:active{transform:scale(.99)}
+.arq .arq-ic{width:50px;height:50px;border-radius:12px;background:rgba(34,197,94,.15);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:25px;overflow:hidden}
+.arq .arq-ic img{width:100%;height:100%;object-fit:cover}
+.arq .arq-t{font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:var(--green2);line-height:1.15}
+.arq .arq-d{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;word-break:break-all}
+.arq.tem{border-style:solid;border-color:var(--green)}
+
+/* ---------- tela de entrada (CPF) ---------- */
+.entrar{max-width:440px;margin:18px auto 0}
+.entrar .topo{text-align:center;margin-bottom:18px}
+.entrar .topo .big{font-size:54px;line-height:1}
+.entrar .topo h1{font-family:Rajdhani,sans-serif;font-size:28px;color:#fff;margin-top:8px}
+.entrar .topo p{font-size:14px;color:var(--muted);margin-top:5px;line-height:1.5}
+input.cpf-grande{font-size:24px;text-align:center;letter-spacing:2px;padding:15px 12px;font-family:Rajdhani,sans-serif;font-weight:600}
+input.cpf-grande.ok{border-color:var(--green)}
+input.cpf-grande.no{border-color:var(--red)}
+.cpf-dica{font-size:12.5px;text-align:center;margin:7px 0 12px;min-height:18px;color:var(--muted)}
+.cpf-dica.ok{color:var(--green2)} .cpf-dica.no{color:#fca5a5}
+.btn.grande{padding:16px 24px;font-size:18px;border-radius:13px}
+.link-gestor{display:block;margin:18px auto 0;text-align:center}
+
+/* ---------- minha situação ---------- */
+.eu-box{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.eu-box .eu-av{width:52px;height:52px;border-radius:14px;background:rgba(34,197,94,.15);color:var(--green2);
+  display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;flex-shrink:0}
+.eu-box .eu-t{flex:1;min-width:170px}
+.eu-box .eu-n{font-family:Rajdhani,sans-serif;font-size:21px;font-weight:700;color:#fff;line-height:1.1}
+.eu-box .eu-s{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
 .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .grade .full{grid-column:1/-1}
 .campo{margin-bottom:12px}
@@ -191,6 +233,9 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
   .saldo-v{font-size:37px}
   .item-l,.item-cab{grid-template-columns:1fr 52px 84px 32px}
   .linha .vlr{font-size:16px}
+  .abas{gap:7px;flex-wrap:nowrap}
+  .aba{min-width:0;font-size:13.5px;padding:12px 4px 10px;border-radius:14px}
+  .aba .ai{font-size:23px}
 }
 </style>
 </head>
@@ -200,7 +245,7 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
   <span class="ic">💰</span>
   <div>
     <div class="ht" id="h-titulo">Caixa da Turma</div>
-    <div class="hs" id="h-sub">Prestação de contas aberta</div>
+    <div class="hs" id="h-sub">Prestação de contas da turma</div>
   </div>
   <div class="dir">
     <span class="chip hidden" id="h-chip"></span>
@@ -213,16 +258,120 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
   <div id="falha" class="hidden"><div class="msg err" id="falha-msg"></div>
     <button class="btn sec" onclick="carregar()">Tentar de novo</button></div>
 
+  <!-- ================= ENTRAR (só com o CPF) ================= -->
+  <div id="tela-entrar" class="entrar hidden">
+    <div class="topo">
+      <div class="big">💰</div>
+      <h1 id="en-titulo">Caixa da Turma</h1>
+      <p>Entre com o seu CPF para ver o caixa, pagar e enviar o seu comprovante.</p>
+    </div>
+
+    <!-- passo A: CPF -->
+    <div class="card" id="en-cpf">
+      <label class="lbl" for="e-cpf-in" style="text-align:center">Seu CPF</label>
+      <input type="text" id="e-cpf-in" class="cpf-grande" inputmode="numeric" autocomplete="off"
+             placeholder="000.000.000-00" maxlength="14"
+             oninput="mascaraCPF(this); dicaCPF()" onkeydown="if(event.key==='Enter')entrar()">
+      <div class="cpf-dica" id="e-cpf-dica">Só os números — o resto eu formato.</div>
+      <div class="msg err hidden" id="e-cpf-erro"></div>
+      <button class="btn grande" id="e-cpf-b" onclick="entrar()">Entrar</button>
+      <div class="passo-d" style="text-align:center;margin:12px 0 0;font-size:12px">
+        Sem senha: o CPF é o seu acesso. O login vale por 12 horas neste aparelho.</div>
+    </div>
+
+    <!-- passo B: CPF sem acesso — pedir -->
+    <div class="card hidden" id="en-sem">
+      <div class="passo-t">🙋 Esse CPF ainda não tem acesso</div>
+      <div class="passo-d" id="en-sem-d">Ele não está na relação da turma. Se você faz parte do curso,
+        peça o acesso — o financeiro confere e libera.</div>
+      <div class="msg warn hidden" id="en-recusado"></div>
+      <div class="btns">
+        <button class="btn" onclick="abrirPedido()">Pedir acesso</button>
+        <button class="btn sec mini" onclick="voltarEntrar()">Digitei errado</button>
+      </div>
+    </div>
+
+    <!-- passo C: formulário do pedido -->
+    <div class="card hidden" id="en-pedido">
+      <div class="passo-t">🙋 Pedido de acesso</div>
+      <div class="passo-d">Os mesmos dados da relação do curso. Assim que o financeiro liberar,
+        é só entrar com o CPF.</div>
+      <div class="grade">
+        <div class="campo full"><label class="lbl">CPF</label>
+          <input type="text" id="sp-cpf" disabled></div>
+        <div class="campo full"><label class="lbl" for="sp-nome">Nome completo</label>
+          <input type="text" id="sp-nome" placeholder="como está no seu documento" autocomplete="name"></div>
+        <div class="campo"><label class="lbl" for="sp-cargo">Posto / graduação / cargo</label>
+          <input type="text" id="sp-cargo" placeholder="ex.: 3º SGT QPPM, APC, DPC"></div>
+        <div class="campo"><label class="lbl" for="sp-re">RE / matrícula</label>
+          <input type="text" id="sp-re" placeholder="seu RE"></div>
+        <div class="campo"><label class="lbl" for="sp-cat">Instituição</label>
+          <select id="sp-cat">
+            <option value="PM">PM — Polícia Militar</option>
+            <option value="PC">PC — Polícia Civil</option>
+            <option value="BM">BM — Bombeiro Militar</option>
+            <option value="PP">PP — Polícia Penal</option>
+            <option value="OUTRO">Outra</option>
+          </select></div>
+        <div class="campo"><label class="lbl" for="sp-opm">OPM / unidade</label>
+          <input type="text" id="sp-opm" placeholder="ex.: PMRO - BPFRON"></div>
+        <div class="campo"><label class="lbl" for="sp-uf">UF</label>
+          <input type="text" id="sp-uf" maxlength="2" value="RO" style="text-transform:uppercase"></div>
+        <div class="campo"><label class="lbl" for="sp-tel">Telefone (WhatsApp)</label>
+          <input type="tel" id="sp-tel" placeholder="(69) 9 9999-9999" autocomplete="tel"></div>
+        <div class="campo full"><label class="lbl" for="sp-email">E-mail (opcional)</label>
+          <input type="text" id="sp-email" inputmode="email" autocomplete="email"></div>
+      </div>
+      <div class="msg err hidden" id="sp-erro"></div>
+      <div class="btns">
+        <button class="btn" id="sp-b" onclick="enviarPedido()">Enviar pedido</button>
+        <button class="btn sec mini" onclick="voltarEntrar()">Voltar</button>
+      </div>
+    </div>
+
+    <!-- passo D: pedido aguardando -->
+    <div class="card hidden" id="en-aguarda">
+      <div style="text-align:center;padding:18px 8px">
+        <div style="font-size:48px;margin-bottom:8px">⏳</div>
+        <div class="passo-t" style="font-size:22px">Pedido enviado</div>
+        <div class="passo-d" id="en-aguarda-d">O financeiro vai conferir e liberar o seu acesso.
+          Depois é só voltar aqui e entrar com o CPF.</div>
+        <button class="btn sec mini" onclick="voltarEntrar()">Tentar entrar de novo</button>
+      </div>
+    </div>
+
+    <button class="linkbtn link-gestor" id="en-gestor-link" onclick="abrirLoginGestor('en-gestor')">🔐 Sou o gestor do caixa</button>
+    <div id="en-gestor" style="margin-top:12px"></div>
+  </div>
+
   <div id="app" class="hidden">
     <div class="abas">
-      <button class="aba on" data-aba="caixa"   onclick="irAba('caixa')">💰 O caixa</button>
-      <button class="aba"    data-aba="turma"   onclick="irAba('turma')">👥 A turma</button>
-      <button class="aba"    data-aba="pagar"   onclick="irAba('pagar')">📲 Quero pagar</button>
-      <button class="aba"    data-aba="gestor"  onclick="irAba('gestor')">🔐 Gestor<span class="bolha hidden" id="bolha-conf"></span></button>
+      <button class="aba on" data-aba="caixa"   onclick="irAba('caixa')"><span class="ai">💰</span>O caixa</button>
+      <button class="aba"    data-aba="pagar"   onclick="irAba('pagar')" id="aba-pagar"><span class="ai">📲</span>Pagar</button>
+      <button class="aba"    data-aba="turma"   onclick="irAba('turma')"><span class="ai">👥</span>A turma</button>
+      <button class="aba hidden" data-aba="gestor" onclick="irAba('gestor')" id="aba-gestor"><span class="ai">🔐</span>Gestor<span class="bolha hidden" id="bolha-conf"></span></button>
     </div>
 
     <!-- ================= O CAIXA ================= -->
     <div id="ab-caixa">
+      <!-- minha situação (quem entrou pelo CPF) -->
+      <div class="card destaque hidden" id="card-eu">
+        <div class="eu-box">
+          <div class="eu-av" id="eu-av"></div>
+          <div class="eu-t">
+            <div class="eu-n" id="eu-nome"></div>
+            <div class="eu-s" id="eu-sit"></div>
+          </div>
+          <div id="eu-selo"></div>
+        </div>
+        <button class="btn grande" id="eu-pagar" style="margin-top:14px" onclick="irAba('pagar')">📲 Pagar agora</button>
+      </div>
+
+      <div class="card hidden" id="card-meus">
+        <div class="sec-t">🧾 Meus comprovantes<span class="dirs"><span class="chip">só você vê</span></span></div>
+        <div id="lista-meus"></div>
+      </div>
+
       <div class="card destaque">
         <div class="saldo-box">
           <div class="saldo-lbl">Saldo em caixa</div>
@@ -269,57 +418,28 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
       </div>
     </div>
 
-    <!-- ================= QUERO PAGAR ================= -->
+    <!-- ================= PAGAR ================= -->
+    <!-- Quem está aqui já entrou pelo CPF: não pergunta de novo quem é. -->
     <div id="ab-pagar" class="hidden">
+      <!-- logado só como gestor: pede o CPF aqui mesmo, sem sair do painel -->
+      <div class="card hidden" id="pg-cpf">
+        <div class="passo-t">📲 Para pagar, entre com o seu CPF</div>
+        <div class="passo-d">Você está como gestor. O pagamento fica no seu nome, então preciso do seu CPF —
+          <b>só desta vez</b>: ele fica ligado ao seu login e da próxima vez você já entra direto.</div>
+        <input type="text" id="pg-cpf-in" class="cpf-grande" inputmode="numeric" autocomplete="off"
+               placeholder="000.000.000-00" maxlength="14"
+               oninput="mascaraCPF(this)" onkeydown="if(event.key==='Enter')entrarPeloPagar()">
+        <div class="msg err hidden" id="pg-cpf-erro" style="margin-top:10px"></div>
+        <button class="btn grande" id="pg-cpf-b" style="margin-top:12px" onclick="entrarPeloPagar()">Entrar e pagar</button>
+      </div>
+      <div id="pg-fluxo">
       <div class="passos">
         <div class="passo on" id="ps1"></div><div class="passo" id="ps2"></div>
-        <div class="passo" id="ps3"></div><div class="passo" id="ps4"></div>
       </div>
 
-      <!-- passo 1: CPF -->
-      <div class="card" id="pg1">
-        <div class="passo-t">1. Quem é você?</div>
-        <div class="passo-d">Digite seu CPF. Se for a primeira vez, faço seu cadastro rapidinho.</div>
-        <div class="campo">
-          <label class="lbl" for="i-cpf">CPF</label>
-          <input type="text" id="i-cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14"
-                 oninput="mascaraCPF(this)" onkeydown="if(event.key==='Enter')identificar()">
-        </div>
-        <div class="msg err hidden" id="e-cpf"></div>
-        <button class="btn" id="b-cpf" onclick="identificar()">Continuar</button>
-      </div>
-
-      <!-- passo 2: cadastro -->
-      <div class="card hidden" id="pg2">
-        <div class="passo-t" id="pg2-t">2. Seu cadastro</div>
-        <div class="passo-d" id="pg2-d"></div>
-        <div class="msg ok hidden" id="pg2-turma"></div>
-        <div class="grade">
-          <div class="campo full"><label class="lbl" for="i-nome">Nome completo</label>
-            <input type="text" id="i-nome" placeholder="Nome completo"></div>
-          <div class="campo"><label class="lbl" for="i-inst">Instituição</label>
-            <select id="i-inst">
-              <option value="PM">PM — Polícia Militar</option>
-              <option value="PC">PC — Polícia Civil</option>
-              <option value="BM">BM — Bombeiro Militar</option>
-              <option value="PP">PP — Polícia Penal</option>
-              <option value="OUTRO">Outro</option>
-            </select></div>
-          <div class="campo"><label class="lbl" for="i-mat">Matrícula</label>
-            <input type="text" id="i-mat" placeholder="sua matrícula"></div>
-          <div class="campo full"><label class="lbl" for="i-contato">Telefone (opcional)</label>
-            <input type="tel" id="i-contato" placeholder="(69) 9 9999-9999"></div>
-        </div>
-        <div class="msg err hidden" id="e-cad"></div>
-        <div class="btns">
-          <button class="btn" id="b-cad" onclick="salvarCadastro()">Salvar e continuar</button>
-          <button class="btn sec mini" onclick="voltarPasso(1)">Voltar</button>
-        </div>
-      </div>
-
-      <!-- passo 3: pix -->
-      <div class="card hidden" id="pg3">
-        <div class="passo-t">3. Faça o PIX</div>
+      <!-- passo 1: pix -->
+      <div class="card" id="pg3">
+        <div class="passo-t">1. Faça o PIX</div>
         <div class="passo-d" id="pg3-d"></div>
         <div class="msg ok hidden" id="pg3-situacao"></div>
         <div class="pix-box">
@@ -333,16 +453,22 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
           </div>
         </div>
         <div class="msg warn hidden" id="pix-sem"></div>
-        <div class="btns">
-          <button class="btn" onclick="irPasso(4)">Já paguei — enviar comprovante →</button>
-          <button class="btn sec mini" onclick="voltarPasso(2)">Corrigir meus dados</button>
-        </div>
+        <button class="btn grande" onclick="irPasso(4)">Já paguei — enviar comprovante →</button>
       </div>
 
-      <!-- passo 4: comprovante -->
+      <!-- passo 2: comprovante -->
       <div class="card hidden" id="pg4">
-        <div class="passo-t">4. Envie o comprovante</div>
-        <div class="passo-d">Anexe o print ou o PDF do PIX. Ele entra na prestação de contas na hora.</div>
+        <div class="passo-t">2. Envie o comprovante</div>
+        <div class="passo-d">Anexe o print ou o PDF do PIX. Só você e o financeiro veem o seu comprovante.</div>
+        <div class="campo">
+          <input type="file" id="i-file" class="arq-in" accept="image/*,application/pdf" onchange="arqEscolheu(this); cmpAnexou()">
+          <label class="arq" for="i-file" id="i-file-lbl">
+            <span class="arq-ic">📎</span>
+            <span><span class="arq-t">Escolher comprovante</span>
+              <span class="arq-d" style="display:block">Print da galeria ou PDF do banco · até 8 MB</span></span>
+          </label>
+        </div>
+        <div class="msg hidden" id="cmp-st"></div>
         <div class="grade">
           <div class="campo"><label class="lbl" for="i-valor">Valor pago</label>
             <input type="text" id="i-valor" inputmode="decimal" placeholder="50,00"></div>
@@ -350,14 +476,11 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
             <input type="date" id="i-data"></div>
           <div class="campo full"><label class="lbl" for="i-obs">Observação (opcional)</label>
             <input type="text" id="i-obs" placeholder="ex.: paguei a minha e a do fulano"></div>
-          <div class="campo full"><label class="lbl" for="i-file">Comprovante (foto ou PDF, até 8 MB)</label>
-            <input type="file" id="i-file" accept="image/*,application/pdf" capture="environment" onchange="cmpAnexou()"></div>
         </div>
-        <div class="msg hidden" id="cmp-st"></div>
         <div class="msg err hidden" id="e-pag"></div>
         <div class="btns">
-          <button class="btn" id="b-pag" onclick="enviarComprovante()">Enviar comprovante</button>
-          <button class="btn sec mini" onclick="voltarPasso(3)">Voltar ao PIX</button>
+          <button class="btn grande" id="b-pag" onclick="enviarComprovante()">Enviar comprovante</button>
+          <button class="btn sec mini" onclick="irPasso(3)">← Voltar ao PIX</button>
         </div>
       </div>
 
@@ -373,12 +496,13 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
           </div>
         </div>
       </div>
+      </div><!-- /pg-fluxo -->
     </div>
 
     <!-- ================= GESTOR ================= -->
     <div id="ab-gestor" class="hidden">
-      <!-- login -->
-      <div class="card" id="gz-login">
+      <!-- login (movido pra tela de entrada quando ninguém entrou ainda) -->
+      <div class="card hidden" id="gz-login">
         <div class="sec-t">🔐 Área do gestor</div>
         <div class="passo-d">Só quem cuida do caixa entra aqui — é o mesmo login do painel.</div>
         <form onsubmit="return fazerLogin(event)">
@@ -394,6 +518,14 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
       </div>
 
       <div id="gz-app" class="hidden">
+        <!-- pedidos de acesso -->
+        <div class="card" id="gz-pedidos-card">
+          <div class="sec-t">🙋 Pedidos de acesso<span class="dirs"><span class="chip" id="gz-ped-n"></span></span></div>
+          <div class="passo-d" style="margin-bottom:13px">Quem não está na relação do curso e pediu para entrar.
+            Liberar coloca a pessoa na relação da turma (e ela passa a contar em "quem falta pagar").</div>
+          <div id="gz-pedidos"></div>
+        </div>
+
         <!-- lançar comprovantes em lote (os que chegaram por fora: WhatsApp, e-mail) -->
         <div class="card">
           <div class="sec-t">📥 Lançar comprovantes em lote<span class="dirs"><span class="chip" id="lt-n"></span></span></div>
@@ -402,8 +534,13 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
             eu leio cada um e tento descobrir quem pagou pelo CPF do comprovante.
             O lançamento fica marcado com o seu nome, e a turma vê isso.
           </div>
-          <div class="campo"><label class="lbl" for="lt-file">Comprovantes (fotos ou PDFs, até 8 MB cada)</label>
-            <input type="file" id="lt-file" accept="image/*,application/pdf" multiple onchange="ltAnexou()"></div>
+          <div class="campo">
+            <input type="file" id="lt-file" class="arq-in" accept="image/*,application/pdf" multiple onchange="arqEscolheu(this); ltAnexou()">
+            <label class="arq" for="lt-file" id="lt-file-lbl">
+              <span class="arq-ic">📥</span>
+              <span><span class="arq-t">Escolher comprovantes</span>
+                <span class="arq-d" style="display:block">Vários de uma vez · fotos ou PDFs, até 8 MB cada</span></span>
+            </label></div>
           <div class="msg hidden" id="lt-st"></div>
           <div id="lt-lista"></div>
           <div class="btns hidden" id="lt-acoes">
@@ -439,8 +576,13 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
           <div class="grade" style="margin-top:12px">
             <div class="campo"><label class="lbl" for="g-total">Total pago (manda sobre a soma)</label>
               <input type="text" id="g-total" inputmode="decimal" placeholder="deixe vazio p/ usar a soma"></div>
-            <div class="campo"><label class="lbl" for="g-file">Comprovante (nota ou extrato)</label>
-              <input type="file" id="g-file" accept="image/*,application/pdf" capture="environment" onchange="gstAnexou()"></div>
+            <div class="campo full">
+              <input type="file" id="g-file" class="arq-in" accept="image/*,application/pdf" onchange="arqEscolheu(this); gstAnexou()">
+              <label class="arq" for="g-file" id="g-file-lbl">
+                <span class="arq-ic">🧾</span>
+                <span><span class="arq-t">Escolher a nota da compra</span>
+                  <span class="arq-d" style="display:block">Foto do cupom ou PDF · até 8 MB</span></span>
+              </label></div>
           </div>
           <div class="msg hidden" id="g-ocr-st"></div>
           <div class="msg err hidden" id="g-erro"></div>
@@ -528,12 +670,40 @@ const AUTH = {
   get logged(){ return !!this.token; }
 };
 
+/* Sessão de quem entrou pelo CPF (o Worker assina; vale 12h). Separada do
+   login do gestor: a mesma pessoa pode ter as duas (o financeiro também é
+   da turma). Guardada no aparelho — some sozinha quando vence. */
+const CX = {
+  get sessao(){
+    try{
+      const exp = Number(localStorage.getItem('cx_exp') || 0);
+      if (exp && Date.now() > exp){ this.limpar(); return ''; }
+      return localStorage.getItem('cx_sessao') || '';
+    }catch(e){ return ''; }
+  },
+  salvar(t, horas){
+    try{
+      localStorage.setItem('cx_sessao', t);
+      localStorage.setItem('cx_exp', String(Date.now() + (horas || 12) * 3600e3));
+    }catch(e){}
+  },
+  limpar(){ try{ localStorage.removeItem('cx_sessao'); localStorage.removeItem('cx_exp'); }catch(e){} }
+};
+
 /* ---------- utilidades ---------- */
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fR(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function fD(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; }
-function fDH(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]} ${m[4]}:${m[5]}` : ''; }
+/* O Worker grava em UTC ("...Z"): mostra no horário de quem está vendo. */
+function fDH(iso){
+  const s = String(iso||'');
+  if (/(Z|[+-]\d{2}:?\d{2})$/.test(s)){
+    const d = new Date(s);
+    if (!isNaN(d)) return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }).replace(',', '');
+  }
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]} ${m[4]}:${m[5]}` : '';
+}
 function show(id, on){ const e = $(id); if (e) e.classList.toggle('hidden', !on); }
 function digitos(s){ return String(s||'').replace(/\D/g,''); }
 function hojeISO(){ return new Date(Date.now() - 4*3600e3).toISOString().slice(0,10); } // fuso RO
@@ -563,12 +733,13 @@ function erro(id, msg){ const e = $(id); if (!e) return; e.textContent = msg || 
 function cab(extra){
   const h = Object.assign({}, extra || {});
   if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token;
+  const cx = CX.sessao; if (cx) h['X-Caixa'] = cx;
   return h;
 }
 async function apiGet(path){
   const r = await fetch(API_BASE + path, { headers: cab() });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.dados = d; throw e; }
   return d;
 }
 async function apiPost(path, body){
@@ -576,34 +747,68 @@ async function apiPost(path, body){
     method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {})
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.dados = d; throw e; }
   return d;
 }
 async function apiForm(path, form){
   const r = await fetch(API_BASE + path, { method:'POST', headers: cab(), body: form });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.dados = d; throw e; }
   return d;
 }
 function urlArquivo(id){ return API_BASE + '/api/caixa/arquivo?id=' + encodeURIComponent(id); }
 
+/* Arquivos (comprovante/nota) exigem a sessão, que vai em HEADER — um <img
+   src> puro não manda header. Então a página baixa com fetch e usa um
+   blob: local. Cache por id pra não baixar de novo a cada repintura. */
+const _arq = new Map();
+function blobArquivo(id){
+  if (!_arq.has(id)){
+    _arq.set(id, fetch(urlArquivo(id), { headers: cab() }).then(r => {
+      if (!r.ok) throw new Error(r.status === 403 ? 'Esse comprovante é de outra pessoa.' : 'Não consegui abrir o arquivo.');
+      return r.blob();
+    }).then(b => URL.createObjectURL(b)).catch(e => { _arq.delete(id); throw e; }));
+  }
+  return _arq.get(id);
+}
+function carregarMiniaturas(){
+  document.querySelectorAll('img[data-arq]').forEach(img => {
+    const id = img.getAttribute('data-arq');
+    img.removeAttribute('data-arq');
+    blobArquivo(id).then(u => { img.src = u; }).catch(() => { img.alt = '⚠️'; });
+  });
+}
+
 /* ---------- estado ---------- */
 let D = null;                 // resposta do /api/caixa
-let EU = null;                // { cpf, aluno, na_turma, sugestao, minha_situacao }
+let EU = null;                // D.eu: quem entrou pelo CPF (null = só gestor)
 let FILTRO_TURMA = 'todos';
 let PASSO = 1;
 
 /* ===================== carregar e pintar ===================== */
 async function carregar(silencioso){
-  if (!silencioso){ show('carregando', true); show('falha', false); show('app', false); }
+  // ninguém entrou ainda: nem pergunta ao Worker, vai direto pro CPF
+  if (!CX.sessao && !AUTH.token){ mostrarEntrar(); return; }
+  if (!silencioso){ show('carregando', true); show('falha', false); show('app', false); show('tela-entrar', false); }
   try { D = await apiGet('/api/caixa'); }
   catch (e){
     show('carregando', false);
+    if (e.status === 401){
+      // sessão do CPF venceu (12h), a pessoa saiu da relação, ou o login do
+      // gestor venceu: limpa e volta pra tela do CPF
+      const tinhaCPF = !!CX.sessao;
+      CX.limpar(); AUTH.token = ''; AUTH.user = '';
+      mostrarEntrar(tinhaCPF ? 'Sua sessão terminou (vale 12 horas). Entre de novo com o CPF.' : '');
+      return;
+    }
     if (!silencioso){ show('falha', true); $('falha-msg').textContent = '⚠️ ' + e.message; }
     else toast('⚠️ ' + e.message, true);
     return;
   }
-  show('carregando', false); show('app', true);
+  // gestor com CPF vinculado ao login: o Worker já manda a sessão do CPF
+  if (D.sessao_cpf) CX.salvar(D.sessao_cpf, 12);
+  EU = D.eu || null;
+  show('carregando', false); show('tela-entrar', false); show('app', true);
   pintarTudo();
 }
 
@@ -612,7 +817,7 @@ function pintarTudo(){
 
   document.title = c.titulo || 'Caixa da Turma';
   $('h-titulo').textContent = c.titulo || 'Caixa da Turma';
-  $('h-sub').textContent = c.subtitulo || 'Prestação de contas aberta';
+  $('h-sub').textContent = c.subtitulo || 'Prestação de contas da turma';
 
   // saldo
   const saldo = r.saldo;
@@ -642,19 +847,60 @@ function pintarTudo(){
   if (c.aviso){ $('aviso-turma').textContent = '📢 ' + c.aviso; show('aviso-turma', true); }
   else show('aviso-turma', false);
 
-  pintarGastos(); pintarPagamentos(); pintarTurma(); pintarFora();
+  pintarEu(); pintarGastos(); pintarPagamentos(); pintarTurma(); pintarFora();
 
-  // bolha de pendências (só faz sentido pro gestor, mas a contagem é pública)
+  // bolha: pagamentos pra conferir + pedidos de acesso esperando
+  const nPed = (D.solicitacoes || []).filter(x => x.status === 'PENDENTE').length;
   const b = $('bolha-conf');
-  b.textContent = nAgu; b.classList.toggle('hidden', !nAgu || !D.gestor);
+  b.textContent = nAgu + nPed; b.classList.toggle('hidden', !(nAgu + nPed) || !D.gestor);
 
-  $('h-chip').textContent = D.gestor ? '👤 ' + AUTH.user : '';
-  show('h-chip', !!D.gestor); show('h-sair', !!D.gestor);
-  show('gz-login', !D.gestor); show('gz-app', !!D.gestor);
-  if (D.gestor){ pintarConferir(); pintarGastosGestor(); preencherConfig(); }
+  // "Pagar" sempre aparece: sem CPF (só gestor), a aba pede o CPF ali mesmo
+  show('aba-gestor', !!D.gestor);
+  show('pg-cpf', !EU); show('pg-fluxo', !!EU);
+  const primeiro = EU && EU.aluno ? String(EU.aluno.nome || '').split(/\s+/)[0] : '';
+  $('h-chip').textContent = [primeiro ? '👤 ' + primeiro : '', D.gestor ? '🔐 ' + AUTH.user : ''].filter(Boolean).join(' · ');
+  show('h-chip', !!(EU || D.gestor)); show('h-sair', true);
+  show('gz-app', !!D.gestor);
+  if (D.gestor){ show('gz-login', false); pintarPedidos(); pintarConferir(); pintarGastosGestor(); preencherConfig(); }
+  if (EU) prepararPix();
 
-  $('rodape').innerHTML = 'Prestação de contas aberta — qualquer pessoa com o link vê estes números.<br>' +
-    'Atualizado em ' + new Date().toLocaleString('pt-BR');
+  $('rodape').innerHTML = 'Prestação de contas da turma — só entra quem tem o CPF na relação do curso.<br>' +
+    'Atualizado em ' + new Date().toLocaleString('pt-BR') +
+    (D.gestor ? '' : '<br><button class="linkbtn" onclick="abrirLoginGestor(\'ab-gestor\')">🔐 Área do gestor</button>');
+  carregarMiniaturas();
+}
+
+/* ---------- minha situação ---------- */
+function pintarEu(){
+  show('card-eu', !!EU); show('card-meus', !!EU);
+  if (!EU) return;
+  const nome = (EU.aluno && EU.aluno.nome) || '';
+  const s = EU.minha_situacao || {};
+  $('eu-av').textContent = iniciais(nome);
+  $('eu-nome').textContent = 'Olá, ' + (nome.split(/\s+/)[0] || '') + '!';
+  let txt, st, pagar = true;
+  if (s.falta <= 0.001){ txt = `Você está em dia: ${fR(s.confirmado)} confirmado. Obrigado!`; st = 'ok'; pagar = false; }
+  else if (s.aguardando > 0){ txt = `Você enviou ${fR(s.aguardando)} — o financeiro ainda vai conferir.` +
+    (s.confirmado > 0 ? ` Já confirmado: ${fR(s.confirmado)}.` : ''); st = 'agu'; pagar = s.aguardando + 0.001 < s.falta; }
+  else { txt = s.confirmado > 0 ? `Já confirmado ${fR(s.confirmado)}. Falta ${fR(s.falta)}.` : `Falta a sua parte: ${fR(s.falta)}.`; st = 'pen'; }
+  $('eu-sit').textContent = txt;
+  $('eu-selo').innerHTML = st === 'ok' ? '<span class="st ok">EM DIA</span>'
+    : st === 'agu' ? '<span class="st agu">AGUARDANDO</span>' : '<span class="st pen">FALTA</span>';
+  $('eu-pagar').textContent = pagar ? '📲 Pagar agora' : '📲 Enviar outro comprovante';
+  $('eu-pagar').className = pagar ? 'btn grande' : 'btn sec';
+
+  const meus = (EU.meus_pagamentos || []).slice().sort((a,b) => (b.enviado_em||'').localeCompare(a.enviado_em||''));
+  $('lista-meus').innerHTML = meus.length ? meus.map(p => `
+    <div class="linha ${p.status !== 'CONFIRMADO' ? 'pend' : ''}">
+      ${p.arquivo ? miniArquivo(p.arquivo) : '<div class="av">🧾</div>'}
+      <div class="txt">
+        <div class="n1">${fR(p.valor)} ${selo(p.status)}</div>
+        <div class="n2">PIX de ${fD(p.data)} · enviado ${fDH(p.enviado_em)}${p.lancado_por ? ' · lançado por ' + esc(p.lancado_por) : ''}</div>
+      </div>
+      ${p.obs ? `<div class="itens-min">${esc(p.obs)}</div>` : ''}
+      ${p.motivo ? `<div class="itens-min">Recusado: ${esc(p.motivo)}</div>` : ''}
+    </div>`).join('')
+    : '<div class="vazio">Você ainda não enviou comprovante.</div>';
 }
 
 /* ---------- gastos (público) ---------- */
@@ -682,9 +928,8 @@ function pintarGastos(){
 
 function miniArquivo(a){
   if (!a || !a.id) return '<div class="av">—</div>';
-  const u = urlArquivo(a.id);
   if (/^image\//.test(a.mime || '')) {
-    return `<img class="thumb" src="${esc(u)}" alt="comprovante" loading="lazy" onclick="abrirVisor('${esc(a.id)}',1)">`;
+    return `<img class="thumb" data-arq="${esc(a.id)}" alt="comprovante" onclick="abrirVisor('${esc(a.id)}',1)">`;
   }
   return `<div class="doc" title="${esc(a.nome)}" onclick="abrirVisor('${esc(a.id)}',0)">📄</div>`;
 }
@@ -694,12 +939,12 @@ function pintarPagamentos(){
   const el = $('lista-pagamentos');
   const lista = D.pagamentos.slice().sort((a,b) => (b.enviado_em||'').localeCompare(a.enviado_em||''));
   $('p-cont').textContent = `${lista.length} envio(s)`;
-  if (!lista.length){ el.innerHTML = '<div class="vazio">Ninguém enviou comprovante ainda.<br>Seja o primeiro pela aba <b>Quero pagar</b>.</div>'; return; }
+  if (!lista.length){ el.innerHTML = '<div class="vazio">Ninguém enviou comprovante ainda.' + (EU ? '<br>Seja o primeiro pela aba <b>Pagar</b>.' : '') + '</div>'; return; }
   el.innerHTML = lista.map(p => `
     <div class="linha ${p.status !== 'CONFIRMADO' ? 'pend' : ''}">
       ${p.arquivo ? miniArquivo(p.arquivo) : `<div class="av">${esc(iniciais(p.nome))}</div>`}
       <div class="txt">
-        <div class="n1">${esc(p.nome || 'Sem nome')} ${selo(p.status)}</div>
+        <div class="n1">${esc(p.nome || 'Sem nome')}${p.meu ? ' <span class="chip" style="padding:2px 8px">você</span>' : ''} ${selo(p.status)}</div>
         <div class="n2">${fD(p.data)}${p.cpf ? ' · ' + esc(p.cpf) : ''}${p.conferido_por ? ' · conferido por ' + esc(p.conferido_por) : ''}${p.lancado_por ? ' · lançado por ' + esc(p.lancado_por) : ''}</div>
       </div>
       <div class="vlr" style="color:${p.status === 'CONFIRMADO' ? 'var(--green2)' : 'var(--muted)'}">${fR(p.valor)}</div>
@@ -755,6 +1000,8 @@ function pintarFora(){
 
 /* ===================== abas ===================== */
 function irAba(nome){
+  if (nome === 'pagar' && PASSO === 5) irPasso(3);
+  if (nome === 'gestor' && !(D && D.gestor)){ abrirLoginGestor('ab-gestor'); return; }
   ['caixa','turma','pagar','gestor'].forEach(a => show('ab-' + a, a === nome));
   document.querySelectorAll('.aba').forEach(b => b.classList.toggle('on', b.dataset.aba === nome));
   window.scrollTo({ top:0, behavior:'smooth' });
@@ -762,14 +1009,16 @@ function irAba(nome){
 
 /* ===================== visor de imagem ===================== */
 function abrirVisor(id, ehImagem){
-  const u = urlArquivo(id);
-  // PDF não tem o que ampliar na tela: abre direto no leitor do navegador.
-  if (!ehImagem){ window.open(u, '_blank', 'noopener'); return; }
-  $('visor-baixar').href = u;
-  $('visor-img').src = u;
-  $('visor').style.display = 'flex';
+  // PDF não tem o que ampliar na tela: abre no leitor do navegador. A janela
+  // abre JÁ no clique (depois do await o celular bloqueia o pop-up).
+  const w = ehImagem ? null : window.open('', '_blank');
+  if (ehImagem){ $('visor-img').removeAttribute('src'); $('visor').style.display = 'flex'; }
+  blobArquivo(id).then(u => {
+    if (w){ w.location.href = u; return; }
+    $('visor-baixar').href = u; $('visor-img').src = u;
+  }).catch(e => { if (w) w.close(); fecharVisor(); toast('⚠️ ' + e.message, true); });
 }
-function fecharVisor(){ $('visor').style.display = 'none'; $('visor-img').src = ''; }
+function fecharVisor(){ $('visor').style.display = 'none'; $('visor-img').removeAttribute('src'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharVisor(); });
 
 /* ===================== fluxo: quero pagar ===================== */
@@ -780,87 +1029,165 @@ function mascaraCPF(inp){
 }
 function irPasso(n){
   PASSO = n;
-  [1,2,3,4,5].forEach(i => show('pg' + i, i === n));
-  [1,2,3,4].forEach(i => $('ps' + i).classList.toggle('on', i <= Math.min(n,4)));
+  [3,4,5].forEach(i => show('pg' + i, i === n));
+  $('ps1').classList.add('on'); $('ps2').classList.toggle('on', n >= 4);
   window.scrollTo({ top:0, behavior:'smooth' });
 }
-function voltarPasso(n){ irPasso(n); }
 function recomecarPagamento(){
-  $('i-file').value = ''; $('i-obs').value = ''; erro('e-pag','');
+  arqLimpar('i-file'); $('i-obs').value = ''; erro('e-pag','');
   CMP = null; $('cmp-st').className = 'msg hidden'; $('cmp-st').innerHTML = '';
   $('i-valor').classList.remove('ocr'); $('i-data').classList.remove('ocr');
+  prepararPix(true);
   irPasso(3);
 }
 
-async function identificar(){
-  const cpf = digitos($('i-cpf').value);
-  erro('e-cpf','');
-  if (cpf.length !== 11){ erro('e-cpf','Digite os 11 números do CPF.'); return; }
-  const b = $('b-cpf'); b.disabled = true; b.textContent = 'Procurando…';
-  try {
-    EU = await apiPost('/api/caixa/identificar', { cpf });
-    if (EU.novo) abrirCadastro();
-    else { preencherCadastro(EU.aluno); mostrarPix(); }
-  } catch (e){
-    erro('e-cpf', e.message === 'CPF inválido. Confira os números.' ? e.message : '⚠️ ' + e.message);
-  } finally { b.disabled = false; b.textContent = 'Continuar'; }
-}
-
-function abrirCadastro(){
-  $('pg2-t').textContent = '2. Cadastro rápido';
-  if (EU.na_turma && EU.sugestao){
-    $('pg2-d').textContent = 'Achei você na relação do curso. Confira os dados e complete a matrícula.';
-    $('pg2-turma').innerHTML = `✅ <b>${esc(EU.sugestao.nome)}</b> — ${esc(EU.sugestao.cargo || '')} · ${esc(EU.sugestao.orgao || '')}`;
-    show('pg2-turma', true);
-    preencherCadastro(EU.sugestao);
-  } else {
-    $('pg2-d').textContent = 'Seu CPF não está na relação do curso — sem problema, só preencha os dados abaixo.';
-    show('pg2-turma', false);
-    preencherCadastro(null);
+/* ===================== entrar (CPF) ===================== */
+/* Dígito verificador: pega CPF digitado errado ANTES de ir ao servidor —
+   quem erra um número não cai no "você não tem acesso" à toa. */
+function cpfValidoJS(c){
+  c = digitos(c);
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  for (let t = 9; t < 11; t++){
+    let s = 0;
+    for (let i = 0; i < t; i++) s += Number(c[i]) * (t + 1 - i);
+    if (((s * 10) % 11) % 10 !== Number(c[t])) return false;
   }
-  irPasso(2);
+  return true;
 }
-function preencherCadastro(a){
-  $('i-nome').value = (a && a.nome) || '';
-  $('i-mat').value = (a && a.matricula) || '';
-  $('i-inst').value = (a && a.instituicao) || 'PM';
-  $('i-contato').value = (a && a.contato) || '';
+function dicaCPF(){
+  const inp = $('e-cpf-in'), d = digitos(inp.value), dica = $('e-cpf-dica');
+  erro('e-cpf-erro','');
+  inp.classList.remove('ok','no'); dica.className = 'cpf-dica';
+  if (d.length < 11){ dica.textContent = d.length ? `Faltam ${11 - d.length} número(s).` : 'Só os números — o resto eu formato.'; return; }
+  if (cpfValidoJS(d)){ inp.classList.add('ok'); dica.classList.add('ok'); dica.textContent = '✔ CPF válido'; }
+  else { inp.classList.add('no'); dica.classList.add('no'); dica.textContent = '✖ Esse CPF não existe — algum número está errado. Confira.'; }
 }
-
-async function salvarCadastro(){
-  erro('e-cad','');
-  const dados = {
-    cpf: EU.cpf,
-    nome: $('i-nome').value.trim(),
-    matricula: $('i-mat').value.trim(),
-    instituicao: $('i-inst').value,
-    contato: $('i-contato').value.trim(),
-  };
-  if (dados.nome.split(/\s+/).filter(Boolean).length < 2){ erro('e-cad','Escreva o nome completo.'); return; }
-  const b = $('b-cad'); b.disabled = true; b.textContent = 'Salvando…';
+function mostrarEntrar(aviso){
+  show('carregando', false); show('app', false); show('falha', false);
+  show('tela-entrar', true);
+  voltarEntrar();
+  if (aviso) erro('e-cpf-erro', aviso);
+}
+function voltarEntrar(){
+  ['en-sem','en-pedido','en-aguarda'].forEach(id => show(id, false));
+  show('en-cpf', true);
+  setTimeout(() => { try { $('e-cpf-in').focus(); } catch(e){} }, 50);
+}
+let CPF_TENTADO = '';
+async function entrar(){
+  const cpf = digitos($('e-cpf-in').value);
+  erro('e-cpf-erro','');
+  if (cpf.length !== 11){ erro('e-cpf-erro','Digite os 11 números do CPF.'); return; }
+  if (!cpfValidoJS(cpf)){ erro('e-cpf-erro','Esse CPF não existe — algum número está errado. Confira.'); return; }
+  const b = $('e-cpf-b'); b.disabled = true; b.textContent = 'Entrando…';
   try {
-    await apiPost('/api/caixa/cadastro', dados);
-    EU = await apiPost('/api/caixa/identificar', { cpf: EU.cpf });
-    toast('✅ Cadastro salvo.');
-    mostrarPix();
-    carregar(true);
-  } catch (e){ erro('e-cad', '⚠️ ' + e.message); }
-  finally { b.disabled = false; b.textContent = 'Salvar e continuar'; }
+    const d = await apiPost('/api/caixa/entrar', { cpf });
+    CX.salvar(d.sessao, d.expira_em_horas);
+    $('e-cpf-in').value = ''; dicaCPF();
+    await carregar();
+    if (EU && EU.aluno) toast('👋 Bem-vindo, ' + String(EU.aluno.nome).split(/\s+/)[0] + '!');
+  } catch (e){
+    if (e.status === 403 && e.dados && e.dados.error === 'cpf_nao_autorizado'){
+      CPF_TENTADO = cpf;
+      const ped = e.dados.pedido;
+      show('en-cpf', false);
+      if (ped && ped.status === 'PENDENTE'){
+        show('en-aguarda', true);
+        $('en-aguarda-d').innerHTML = `Seu pedido de acesso foi enviado em <b>${fDH(ped.pedido_em)}</b> e está esperando o financeiro liberar.`;
+      } else {
+        show('en-sem', true);
+        const rec = ped && ped.status === 'RECUSADO';
+        $('en-recusado').innerHTML = rec ? '⚠️ Seu pedido anterior não foi aceito' + (ped.motivo ? ': <b>' + esc(ped.motivo) + '</b>' : '.') + ' Você pode pedir de novo.' : '';
+        show('en-recusado', rec);
+      }
+    } else erro('e-cpf-erro', '⚠️ ' + e.message);
+  } finally { b.disabled = false; b.textContent = 'Entrar'; }
+}
+/* Gestor que também é da turma: entra com o CPF sem perder o login de gestor. */
+async function entrarPeloPagar(){
+  const cpf = digitos($('pg-cpf-in').value);
+  erro('pg-cpf-erro','');
+  if (!cpfValidoJS(cpf)){ erro('pg-cpf-erro','Esse CPF não existe — algum número está errado. Confira.'); return; }
+  const b = $('pg-cpf-b'); b.disabled = true; b.textContent = 'Entrando…';
+  try {
+    const d = await apiPost('/api/caixa/entrar', { cpf });
+    CX.salvar(d.sessao, d.expira_em_horas);
+    $('pg-cpf-in').value = '';
+    await carregar(true);
+    irPasso(3); irAba('pagar');
+  } catch (e){
+    erro('pg-cpf-erro', e.status === 403
+      ? 'Esse CPF não está na relação da turma. Saia e use "Pedir acesso" na tela de entrada.'
+      : '⚠️ ' + e.message);
+  } finally { b.disabled = false; b.textContent = 'Entrar e pagar'; }
+}
+function mascaraCPFtxt(c){
+  return digitos(c).replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+}
+function abrirPedido(){
+  show('en-sem', false); show('en-pedido', true);
+  $('sp-cpf').value = mascaraCPFtxt(CPF_TENTADO);
+  erro('sp-erro','');
+  setTimeout(() => $('sp-nome').focus(), 50);
+}
+async function enviarPedido(){
+  erro('sp-erro','');
+  const d = {
+    cpf: CPF_TENTADO,
+    nome: $('sp-nome').value.trim(), cargo: $('sp-cargo').value.trim(),
+    re: $('sp-re').value.trim(), categoria: $('sp-cat').value,
+    opm: $('sp-opm').value.trim(), uf: $('sp-uf').value.trim(),
+    telefone: $('sp-tel').value.trim(), email: $('sp-email').value.trim(),
+  };
+  if (d.nome.split(/\s+/).filter(Boolean).length < 2) return erro('sp-erro','Escreva o nome completo.');
+  if (!d.cargo) return erro('sp-erro','Informe o posto/graduação ou cargo.');
+  if (!d.re) return erro('sp-erro','Informe o RE / matrícula.');
+  if (!d.opm) return erro('sp-erro','Informe a OPM / unidade.');
+  if (digitos(d.telefone).length < 10) return erro('sp-erro','Informe o telefone com DDD.');
+  const b = $('sp-b'); b.disabled = true; b.textContent = 'Enviando…';
+  try {
+    const r = await apiPost('/api/caixa/solicitar', d);
+    if (r.ja_liberado){
+      toast('✅ Seu CPF já está liberado — entrando…');
+      voltarEntrar(); $('e-cpf-in').value = mascaraCPFtxt(CPF_TENTADO); entrar(); return;
+    }
+    show('en-pedido', false); show('en-aguarda', true);
+    $('en-aguarda-d').textContent = 'O financeiro vai conferir e liberar o seu acesso. Depois é só voltar aqui e entrar com o CPF.';
+  } catch (e){ erro('sp-erro','⚠️ ' + e.message); }
+  finally { b.disabled = false; b.textContent = 'Enviar pedido'; }
 }
 
-function mostrarPix(){
-  const c = D.config, s = EU.minha_situacao || {};
-  const nome = (EU.aluno && EU.aluno.nome) || (EU.sugestao && EU.sugestao.nome) || '';
-  $('pg3-d').textContent = nome ? `Tudo certo, ${nome.split(/\s+/)[0]}. Agora é só pagar.` : 'Agora é só pagar.';
+/* O login do gestor é um cartão só, movido pra onde for preciso: a tela de
+   entrada (ninguém entrou) ou a aba Gestor (entrou pelo CPF e é o financeiro). */
+function abrirLoginGestor(destino){
+  const box = $('gz-login');
+  const alvo = $(destino);
+  alvo.insertBefore(box, alvo.firstChild);
+  show('gz-login', true);
+  if (destino === 'ab-gestor'){
+    ['caixa','turma','pagar'].forEach(a => show('ab-' + a, false)); show('ab-gestor', true);
+    document.querySelectorAll('.aba').forEach(b => b.classList.remove('on'));
+    window.scrollTo({ top:0, behavior:'smooth' });
+  } else show('en-gestor-link', false);
+  setTimeout(() => $('l-user').focus(), 50);
+}
 
-  // o que ainda falta desta pessoa (se já pagou parte, o valor sugerido cai)
+/* ===================== pagar ===================== */
+/* Monta o PIX de quem está logado. Não mexe no que a pessoa já digitou,
+   a não ser que peça (recomeçar). */
+function prepararPix(forcar){
+  if (!EU || !D) return;
+  const c = D.config, s = EU.minha_situacao || {};
+  const nome = (EU.aluno && EU.aluno.nome) || '';
+  $('pg3-d').textContent = nome ? `${nome.split(/\s+/)[0]}, copie o código e pague no app do seu banco.` : 'Copie o código e pague no app do seu banco.';
+
   const falta = s.falta != null ? s.falta : c.valor_padrao;
   if (s.confirmado > 0 || s.aguardando > 0){
     let txt;
     if (s.falta <= 0) txt = `✅ Você já está em dia — ${fR(s.confirmado)} confirmado.`;
     else if (s.confirmado > 0) txt = `Você já tem ${fR(s.confirmado)} confirmado` +
       (s.aguardando > 0 ? ` e ${fR(s.aguardando)} aguardando conferência` : '') + `. Falta ${fR(s.falta)}.`;
-    else txt = `⏳ Você já enviou ${fR(s.aguardando)} — o gestor ainda não conferiu. ` +
+    else txt = `⏳ Você já enviou ${fR(s.aguardando)} — o financeiro ainda não conferiu. ` +
       `Só mande de novo se o comprovante anterior foi recusado.`;
     $('pg3-situacao').innerHTML = txt;
     show('pg3-situacao', true);
@@ -875,21 +1202,38 @@ function mostrarPix(){
 
   if (c.pix_copia_cola){
     show('pix-copia', true); show('pix-sem', false);
-    $('pix-code').textContent = c.pix_copia_cola;
-    desenharQR(c.pix_copia_cola);
+    if ($('pix-code').textContent !== c.pix_copia_cola){
+      $('pix-code').textContent = c.pix_copia_cola;
+      desenharQR(c.pix_copia_cola);
+    }
   } else {
     show('pix-copia', false);
     $('qr').style.display = 'none';
     $('pix-sem').textContent = c.pix_chave
-      ? '⚠️ O gestor ainda não cadastrou o código copia e cola. Use a chave acima no seu banco.'
-      : '⚠️ O gestor ainda não cadastrou a chave PIX. Fale com ele antes de pagar.';
+      ? '⚠️ O financeiro ainda não cadastrou o código copia e cola. Use a chave acima no seu banco.'
+      : '⚠️ O financeiro ainda não cadastrou a chave PIX. Fale com ele antes de pagar.';
     show('pix-sem', true);
   }
 
-  $('i-valor').value = String(falta > 0 ? falta : c.valor_padrao).replace('.', ',');
-  $('i-data').value = hojeISO();
-  irPasso(3);
+  if (forcar || !$('i-valor').value) $('i-valor').value = String(falta > 0 ? falta : c.valor_padrao).replace('.', ',');
+  if (forcar || !$('i-data').value) $('i-data').value = hojeISO();
 }
+
+/* Botão de arquivo: mostra o que foi escolhido (nome + miniatura da foto). */
+function arqEscolheu(inp){
+  const lbl = $(inp.id + '-lbl'); if (!lbl) return;
+  if (!lbl.dataset.orig) lbl.dataset.orig = lbl.innerHTML;
+  const fs = [...(inp.files || [])];
+  if (!fs.length){ lbl.innerHTML = lbl.dataset.orig; lbl.classList.remove('tem'); return; }
+  const f = fs[0];
+  const ic = /^image\//.test(f.type) ? `<img src="${URL.createObjectURL(f)}" alt="">` : (cmpEhPDF(f) ? '📄' : '📎');
+  const t = fs.length > 1 ? `${fs.length} arquivos escolhidos` : '✔ ' + f.name;
+  const tam = fs.reduce((s, x) => s + x.size, 0);
+  lbl.innerHTML = `<span class="arq-ic">${ic}</span><span><span class="arq-t">${esc(t)}</span>` +
+    `<span class="arq-d" style="display:block">${(tam / 1048576).toFixed(1).replace('.', ',')} MB · toque para trocar</span></span>`;
+  lbl.classList.add('tem');
+}
+function arqLimpar(id){ const i = $(id); if (!i) return; i.value = ''; arqEscolheu(i); }
 
 let _qrPronto = null;
 function carregarQR(){
@@ -1304,7 +1648,6 @@ async function enviarComprovante(){
   if (file.size > 8*1024*1024){ erro('e-pag','Arquivo acima de 8 MB. Tire um print menor.'); return; }
 
   const fd = new FormData();
-  fd.append('cpf', EU.cpf);
   fd.append('valor', String(valor));
   fd.append('data', $('i-data').value || hojeISO());
   fd.append('obs', $('i-obs').value.trim());
@@ -1326,13 +1669,16 @@ async function enviarComprovante(){
     $('pg5-d').innerHTML = d.repetido
       ? `Esse comprovante de <b>${fR(d.valor)}</b> já tinha entrado agora há pouco — não dupliquei.<br>` +
         'Ele está na lista aguardando a conferência do gestor.'
-      : `Recebi <b>${fR(d.valor)}</b> de ${esc((EU.aluno && EU.aluno.nome) || '')}.<br>` +
-        'O gestor vai bater com o extrato e confirmar. Ele já aparece na lista como <b>aguardando</b>.';
+      : `Recebi <b>${fR(d.valor)}</b> de ${esc((EU && EU.aluno && EU.aluno.nome) || '')}.<br>` +
+        'O financeiro vai bater com o extrato e confirmar. Ele já aparece em <b>Meus comprovantes</b> como aguardando.';
     irPasso(5);
-    $('i-file').value = ''; CMP = null;
+    arqLimpar('i-file'); CMP = null;
     $('cmp-st').className = 'msg hidden'; $('cmp-st').innerHTML = '';
     carregar(true);
-  } catch (e){ erro('e-pag','⚠️ ' + e.message); }
+  } catch (e){
+    if (e.status === 401){ CX.limpar(); mostrarEntrar('Sua sessão terminou. Entre de novo com o CPF e reenvie.'); return; }
+    erro('e-pag','⚠️ ' + e.message);
+  }
   finally { b.disabled = false; b.textContent = 'Enviar comprovante'; ovl(''); }
 }
 
@@ -1349,13 +1695,30 @@ async function fazerLogin(ev){
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
     AUTH.token = d.token; AUTH.user = d.user; $('l-pass').value = '';
-    await carregar(true);
-    if (!D.gestor) erro('l-erro','Seu usuário entrou, mas não tem a permissão "Caixa da Turma". Peça no painel de controle.');
+    D = null;
+    await carregar();
+    if (!D || !D.gestor){
+      AUTH.token = ''; AUTH.user = '';
+      toast('Seu usuário entrou, mas não tem a permissão "Caixa da Turma". Peça no painel de controle.', true);
+      if (!CX.sessao) mostrarEntrar(); else await carregar(true);
+    } else {
+      $('en-gestor').appendChild($('gz-login')); show('gz-login', false); show('en-gestor-link', true);
+      irAba('gestor');
+    }
   } catch (e){ erro('l-erro', e.message); }
   finally { b.disabled = false; b.textContent = 'Entrar'; }
   return false;
 }
-function sair(){ AUTH.token = ''; AUTH.user = ''; carregar(); }
+/* Sair encerra as duas sessões deste aparelho (CPF e gestor). */
+function sair(){
+  CX.limpar(); AUTH.token = ''; AUTH.user = '';
+  D = null; EU = null;
+  _arq.forEach(p => p.then(u => URL.revokeObjectURL(u)).catch(() => {})); _arq.clear();
+  $('en-gestor').appendChild($('gz-login')); show('gz-login', false); show('en-gestor-link', true);
+  ['turma','pagar','gestor'].forEach(a => show('ab-' + a, false)); show('ab-caixa', true);
+  document.querySelectorAll('.aba').forEach(b => b.classList.toggle('on', b.dataset.aba === 'caixa'));
+  mostrarEntrar();
+}
 
 /* ══════════════════ LANÇAR COMPROVANTES EM LOTE ══════════════════
    O comprovante que chegou pelo WhatsApp. Lê cada arquivo (PDF exato ou OCR),
@@ -1488,7 +1851,7 @@ function ltCampo(i, campo, valor){
   if (campo === 'cpf'){ LOTE[i].como = 'você escolheu'; LOTE[i].avisos = LOTE[i].avisos.filter(a => !/quem pagou/.test(a)); }
 }
 function ltTirar(i){ LOTE.splice(i, 1); ltPintar(); }
-function ltLimpar(){ LOTE = []; $('lt-file').value = ''; ltPintar(); }
+function ltLimpar(){ LOTE = []; arqLimpar('lt-file'); ltPintar(); }
 
 async function ltLancar(){
   const fila = LOTE.filter(x => x.estado !== 'ok');
@@ -1533,6 +1896,40 @@ async function ltLancar(){
 }
 
 /* ---------- conferir pagamentos ---------- */
+/* ---------- pedidos de acesso ---------- */
+function pintarPedidos(){
+  const todos = D.solicitacoes || [];
+  const pend = todos.filter(x => x.status === 'PENDENTE').sort((a,b) => (a.pedido_em||'').localeCompare(b.pedido_em||''));
+  $('gz-ped-n').textContent = pend.length ? `${pend.length} esperando` : 'nenhum esperando';
+  $('gz-pedidos').innerHTML = pend.length ? pend.map(x => `
+    <div class="linha">
+      <div class="av">${esc(iniciais(x.nome))}</div>
+      <div class="txt">
+        <div class="n1">${esc(x.nome)}</div>
+        <div class="n2">${esc(x.cargo)} · ${esc(x.opm)} (${esc(x.categoria)}/${esc(x.uf)}) · RE ${esc(x.re)}</div>
+        <div class="n2">CPF ${esc(mascaraCPFtxt(x.cpf))} · ${esc(x.telefone)}${x.email ? ' · ' + esc(x.email) : ''} · pediu ${fDH(x.pedido_em)}</div>
+      </div>
+      <div class="btns" style="width:100%">
+        <button class="btn mini" onclick="decidirPedido('${esc(x.id)}','APROVAR')">✅ Liberar acesso</button>
+        <button class="btn sec mini" onclick="decidirPedido('${esc(x.id)}','RECUSAR')">❌ Recusar</button>
+      </div>
+    </div>`).join('') : '<div class="vazio">Nenhum pedido esperando. 👌</div>';
+}
+async function decidirPedido(id, decisao){
+  let motivo = '';
+  if (decisao === 'RECUSAR'){
+    motivo = prompt('Por que está recusando? (a pessoa vê quando tentar entrar)');
+    if (motivo == null) return;
+    if (!motivo.trim()){ toast('Escreva o motivo.', true); return; }
+  }
+  ovl(decisao === 'APROVAR' ? 'Liberando o acesso…' : 'Recusando…');
+  try { await apiPost('/api/caixa/gestao', { op:'acesso', id, decisao, motivo: motivo.trim() });
+        toast(decisao === 'APROVAR' ? '✅ Acesso liberado — a pessoa já pode entrar com o CPF.' : 'Pedido recusado.');
+        await carregar(true); }
+  catch (e){ toast('⚠️ ' + e.message, true); }
+  finally { ovl(''); }
+}
+
 function pintarConferir(){
   const pend = D.pagamentos.filter(p => p.status === 'ENVIADO')
     .sort((a,b) => (a.enviado_em||'').localeCompare(b.enviado_em||''));
@@ -1927,7 +2324,6 @@ async function exportar(tipo){
 
 /* ===================== início ===================== */
 $('g-data').value = hojeISO();
-$('i-data').value = hojeISO();
 novoItem();
 carregar();
 </script>
