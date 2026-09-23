@@ -228,8 +228,32 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
 #toast.err{border-color:var(--red)}
 .rodape{text-align:center;color:#46566a;font-size:11.5px;margin-top:20px;line-height:1.7}
 
+/* ---------- loja ---------- */
+.vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.prod{background:var(--bg3);border:1px solid var(--border2);border-radius:13px;overflow:hidden;display:flex;flex-direction:column}
+.prod .pf{aspect-ratio:1/1;background:#0a1219;display:flex;align-items:center;justify-content:center;font-size:46px;cursor:pointer}
+.prod .pf img{width:100%;height:100%;object-fit:cover;display:block}
+.prod .pc{padding:11px 12px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
+.prod .pn{font-weight:700;font-size:15px;line-height:1.25}
+.prod .pd{font-size:12px;color:var(--muted);line-height:1.45}
+.prod .pp{font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:var(--green2);margin-top:auto}
+.prod.off{opacity:.55}
+.qtd{display:flex;align-items:center;gap:6px}
+.qtd button{width:36px;height:36px;border-radius:9px;background:#16232e;border:1px solid var(--border2);color:var(--text);font-size:18px;cursor:pointer}
+.qtd span{min-width:26px;text-align:center;font-weight:700;font-size:16px}
+.opc{display:flex;flex-wrap:wrap;gap:5px}
+.opc button{background:#16232e;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.opc button.on{border-color:var(--green);color:var(--green2);background:rgba(34,197,94,.12)}
+.carrinho{position:sticky;bottom:10px;z-index:20}
+.tabela{width:100%;border-collapse:collapse;font-size:13px}
+.tabela th,.tabela td{padding:7px 8px;border-bottom:1px solid var(--border2);text-align:left}
+.tabela th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.tabela td.n{text-align:right;font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px}
+
 @media(max-width:620px){
   .wrap{padding:12px 11px}
+  .vitrine{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .prod .pn{font-size:14px}
   .saldo-v{font-size:37px}
   .item-l,.item-cab{grid-template-columns:1fr 52px 84px 32px}
   .linha .vlr{font-size:16px}
@@ -349,6 +373,7 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
       <button class="aba on" data-aba="caixa"   onclick="irAba('caixa')"><span class="ai">💰</span>O caixa</button>
       <button class="aba"    data-aba="pagar"   onclick="irAba('pagar')" id="aba-pagar"><span class="ai">📲</span>Pagar</button>
       <button class="aba"    data-aba="turma"   onclick="irAba('turma')"><span class="ai">👥</span>A turma</button>
+      <button class="aba"    data-aba="loja"    onclick="irAba('loja')"><span class="ai">🛒</span>Loja<span class="bolha hidden" id="bolha-loja"></span></button>
       <button class="aba hidden" data-aba="gestor" onclick="irAba('gestor')" id="aba-gestor"><span class="ai">🔐</span>Gestor<span class="bolha hidden" id="bolha-conf"></span></button>
     </div>
 
@@ -415,6 +440,129 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
       <div class="card hidden" id="card-fora">
         <div class="sec-t">➕ Pagaram sem estar na relação</div>
         <div id="lista-fora"></div>
+      </div>
+    </div>
+
+    <!-- ================= LOJA ================= -->
+    <!-- Vitrine da turma: quem entrou pelo CPF faz o pedido; o gestor vê quem
+         comprou. Pagamento ainda não: o PIX do fornecedor entra depois. -->
+    <div id="ab-loja" class="hidden">
+      <div id="lj-carregando" class="load"><div class="sp"></div>Abrindo a loja…</div>
+      <div id="lj-app" class="hidden">
+        <div class="msg info hidden" id="lj-aviso"></div>
+        <div class="msg warn hidden" id="lj-fechada">🔒 Os pedidos estão encerrados.</div>
+
+        <!-- quem compra -->
+        <div id="lj-compra">
+          <div class="card">
+            <div class="sec-t">🛒 <span id="lj-titulo">Loja da Turma</span><span class="dirs"><span class="chip" id="lj-prazo-chip"></span></span></div>
+            <div id="lj-vitrine"></div>
+          </div>
+
+          <div class="card destaque carrinho hidden" id="lj-carrinho">
+            <div class="sec-t">🧺 Meu pedido</div>
+            <div id="lj-itens"></div>
+            <div class="soma" id="lj-total">Total: R$ 0,00</div>
+            <div class="campo" style="margin-top:10px"><input type="text" id="lj-obs" maxlength="200" placeholder="Observação (opcional) — ex.: nome pra bordar"></div>
+            <div class="msg err hidden" id="lj-erro"></div>
+            <div class="btns">
+              <button class="btn" id="lj-b" onclick="ljFazerPedido()">Fazer pedido</button>
+              <button class="btn sec mini" onclick="ljLimpar()">Limpar</button>
+            </div>
+            <div class="passo-d" style="margin:10px 0 0;font-size:12px" id="lj-pag-d"></div>
+          </div>
+
+          <div class="card" id="lj-meus-card">
+            <div class="sec-t">📦 Meus pedidos<span class="dirs"><span class="chip">só você e o financeiro veem</span></span></div>
+            <div id="lj-pix" class="hidden"></div>
+            <div id="lj-meus"></div>
+          </div>
+        </div>
+
+        <!-- gestor: quem comprou -->
+        <div id="lj-gestor" class="hidden">
+          <div class="card destaque">
+            <div class="sec-t">📋 Quem comprou<span class="dirs">
+              <button class="btn sec mini" onclick="ljRelatorio()">🖨️ Relatório</button>
+              <button class="btn sec mini" onclick="ljExportar('pedidos')">📤 Pedidos</button>
+              <button class="btn sec mini" onclick="ljExportar('itens')">📤 Itens</button>
+              <button class="btn sec mini" onclick="ljExportar('resumo')">📤 Resumo</button>
+            </span></div>
+            <div class="kpis" style="margin-top:0">
+              <div class="kpi inf"><div class="k">Pedidos</div><div class="v" id="lj-k-ped">0</div><div class="n" id="lj-k-pes"></div></div>
+              <div class="kpi ok"><div class="k">Itens</div><div class="v" id="lj-k-it">0</div><div class="n">sem os cancelados</div></div>
+              <div class="kpi esp"><div class="k">Total dos pedidos</div><div class="v" id="lj-k-tot">R$ 0</div><div class="n" id="lj-k-pago"></div></div>
+            </div>
+            <div id="lj-resumo" style="margin-top:14px"></div>
+          </div>
+
+          <div class="card">
+            <div class="sec-t">🧾 Pedidos<span class="dirs">
+              <select id="lj-f-st" onchange="ljPintarPedidos()" style="width:auto;padding:7px 10px;font-size:13px">
+                <option value="">Todos (menos cancelados)</option>
+                <option value="PEDIDO">Novos</option>
+                <option value="CONFIRMADO">Confirmados</option>
+                <option value="ENTREGUE">Entregues</option>
+                <option value="NAOPAGO">Não pagos</option>
+                <option value="CANCELADO">Cancelados</option>
+              </select></span></div>
+            <div class="campo"><input type="text" id="lj-busca" placeholder="🔎 Buscar por nome ou produto…" oninput="ljPintarPedidos()"></div>
+            <div id="lj-pedidos"></div>
+          </div>
+
+          <div class="card">
+            <div class="sec-t">➕ <span id="lp-titulo">Cadastrar produto</span></div>
+            <input type="hidden" id="lp-id">
+            <div class="grade">
+              <div class="campo full"><label class="lbl" for="lp-nome">Nome do produto</label>
+                <input type="text" id="lp-nome" maxlength="80" placeholder="ex.: Camiseta do curso"></div>
+              <div class="campo"><label class="lbl" for="lp-preco">Preço (R$)</label>
+                <input type="text" id="lp-preco" inputmode="decimal" placeholder="45,00"></div>
+              <div class="campo"><label class="lbl" for="lp-opcoes">Opções (separe por vírgula)</label>
+                <input type="text" id="lp-opcoes" placeholder="ex.: P, M, G, GG — vazio = sem opção"></div>
+              <div class="campo full"><label class="lbl" for="lp-desc">Descrição (opcional)</label>
+                <textarea id="lp-desc" maxlength="400" placeholder="material, cor, prazo de entrega…"></textarea></div>
+              <div class="campo full">
+                <input type="file" id="lp-file" class="arq-in" accept="image/*" onchange="arqEscolheu(this)">
+                <label class="arq" for="lp-file" id="lp-file-lbl">
+                  <span class="arq-ic">📷</span>
+                  <span><span class="arq-t">Foto do produto</span>
+                    <span class="arq-d" style="display:block">JPG ou PNG · até 8 MB</span></span>
+                </label></div>
+              <div class="campo full"><label class="lbl" style="display:flex;align-items:center;gap:7px;cursor:pointer;text-transform:none">
+                <input type="checkbox" id="lp-ativo" checked style="width:auto;margin:0"> À venda (aparece na vitrine da turma)</label></div>
+            </div>
+            <div class="msg err hidden" id="lp-erro"></div>
+            <div class="btns">
+              <button class="btn" id="lp-b" onclick="ljSalvarProduto()">Salvar produto</button>
+              <button class="btn sec mini hidden" id="lp-cancelar" onclick="ljEditarProduto('')">Cancelar edição</button>
+            </div>
+            <div id="lj-produtos-g" style="margin-top:14px"></div>
+          </div>
+
+          <div class="card">
+            <div class="sec-t">⚙️ Ajustes da loja</div>
+            <div class="grade">
+              <div class="campo"><label class="lbl" for="lc-aberta">Pedidos</label>
+                <select id="lc-aberta"><option value="SIM">Abertos</option><option value="NAO">Encerrados</option></select></div>
+              <div class="campo"><label class="lbl" for="lc-prazo">Prazo (aparece na vitrine)</label>
+                <input type="text" id="lc-prazo" placeholder="ex.: pedidos até sexta, 26/09"></div>
+              <div class="campo full"><label class="lbl" for="lc-titulo">Título</label>
+                <input type="text" id="lc-titulo" placeholder="Loja da Turma"></div>
+              <div class="campo full"><label class="lbl" for="lc-aviso">Recado (opcional)</label>
+                <textarea id="lc-aviso" placeholder="ex.: entrega no último dia do curso"></textarea></div>
+            </div>
+            <div class="passo-d" style="margin:4px 0 10px">💳 <b>PIX do fornecedor</b> — deixe em branco até ter. Quando preencher, cada pedido passa a mostrar os dados para pagar.</div>
+            <div class="grade">
+              <div class="campo"><label class="lbl" for="lc-chave">Chave PIX</label><input type="text" id="lc-chave"></div>
+              <div class="campo"><label class="lbl" for="lc-titular">Titular</label><input type="text" id="lc-titular"></div>
+              <div class="campo"><label class="lbl" for="lc-banco">Banco</label><input type="text" id="lc-banco"></div>
+              <div class="campo full"><label class="lbl" for="lc-copia">PIX copia e cola (opcional)</label><textarea id="lc-copia"></textarea></div>
+            </div>
+            <div class="msg err hidden" id="lc-erro"></div>
+            <button class="btn" id="lc-b" onclick="ljSalvarConfig()">Salvar ajustes da loja</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1002,8 +1150,9 @@ function pintarFora(){
 function irAba(nome){
   if (nome === 'pagar' && PASSO === 5) irPasso(3);
   if (nome === 'gestor' && !(D && D.gestor)){ abrirLoginGestor('ab-gestor'); return; }
-  ['caixa','turma','pagar','gestor'].forEach(a => show('ab-' + a, a === nome));
+  ['caixa','turma','loja','pagar','gestor'].forEach(a => show('ab-' + a, a === nome));
   document.querySelectorAll('.aba').forEach(b => b.classList.toggle('on', b.dataset.aba === nome));
+  if (nome === 'loja') ljCarregar();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
@@ -1715,7 +1864,8 @@ function sair(){
   D = null; EU = null;
   _arq.forEach(p => p.then(u => URL.revokeObjectURL(u)).catch(() => {})); _arq.clear();
   $('en-gestor').appendChild($('gz-login')); show('gz-login', false); show('en-gestor-link', true);
-  ['turma','pagar','gestor'].forEach(a => show('ab-' + a, false)); show('ab-caixa', true);
+  ['turma','loja','pagar','gestor'].forEach(a => show('ab-' + a, false)); show('ab-caixa', true);
+  LJ = null; LJ_CARRINHO = [];
   document.querySelectorAll('.aba').forEach(b => b.classList.toggle('on', b.dataset.aba === 'caixa'));
   mostrarEntrar();
 }
@@ -2320,6 +2470,369 @@ async function exportar(tipo){
     toast('📤 Arquivo baixado.');
   } catch (e){ toast('⚠️ ' + e.message, true); }
   finally { ovl(''); }
+}
+
+/* ══════════════════ LOJA DA TURMA ══════════════════
+   Vitrine: quem entrou pelo CPF escolhe e faz o pedido. O preço que vale é o
+   da planilha (o Worker recalcula tudo) — aqui é só a conta pra mostrar.
+   Gestor: quem comprou, resumo por produto/opção, relatório e cadastro dos
+   produtos. Pagamento vem depois: quando o PIX do fornecedor for preenchido
+   nos ajustes, os pedidos passam a mostrar os dados pra pagar. */
+let LJ = null;              // resposta do /api/loja
+let LJ_CARRINHO = [];       // [{ id, opcao, qtd }]
+const LJ_SEL = {};          // escolha em cada cartão: { id: { opcao, qtd } }
+const LJ_ST = { PEDIDO:['agu','NOVO'], CONFIRMADO:['ok','CONFIRMADO'], ENTREGUE:['ok','ENTREGUE'], CANCELADO:['no','CANCELADO'] };
+
+function ljFoto(id){ return API_BASE + '/api/loja/foto?id=' + encodeURIComponent(id); }
+function ljProd(id){ return ((LJ && LJ.produtos) || []).find(p => p.id === id); }
+function ljSelo(st){ const s = LJ_ST[st] || ['pen', st]; return `<span class="st ${s[0]}">${s[1]}</span>`; }
+function ljItensTxt(itens){
+  return (itens || []).map(i => `${i.qtd}× ${esc(i.nome)}${i.opcao ? ' (' + esc(i.opcao) + ')' : ''}`).join(' · ');
+}
+
+async function ljCarregar(silencioso){
+  if (!silencioso && !LJ){ show('lj-carregando', true); show('lj-app', false); }
+  try { LJ = await apiGet('/api/loja'); }
+  catch (e){
+    show('lj-carregando', false);
+    if (e.status === 401){ carregar(); return; }
+    toast('⚠️ Loja: ' + e.message, true); return;
+  }
+  show('lj-carregando', false); show('lj-app', true);
+  ljPintar();
+}
+
+function ljPintar(){
+  const c = LJ.config;
+  $('lj-titulo').textContent = c.titulo || 'Loja da Turma';
+  $('lj-prazo-chip').textContent = c.prazo || '';
+  show('lj-prazo-chip', !!c.prazo);
+  if (c.aviso){ $('lj-aviso').textContent = '📢 ' + c.aviso; show('lj-aviso', true); } else show('lj-aviso', false);
+  show('lj-fechada', !c.aberta);
+  show('lj-compra', !!LJ.eu);
+  show('lj-gestor', !!LJ.gestor);
+  if (LJ.eu){ ljPintarVitrine(); ljPintarCarrinho(); ljPintarMeus(); }
+  if (LJ.gestor){ ljPintarGestor(); }
+  const nNovos = (LJ.pedidos || []).filter(p => p.status === 'PEDIDO').length;
+  $('bolha-loja').textContent = nNovos; show('bolha-loja', !!(LJ.gestor && nNovos));
+}
+
+/* ---------- vitrine ---------- */
+function ljPintarVitrine(){
+  const lista = LJ.produtos.filter(p => p.ativo);
+  const el = $('lj-vitrine');
+  if (!lista.length){
+    el.innerHTML = '<div class="vazio">Nenhum produto à venda ainda.' + (LJ.gestor ? '<br>Cadastre o primeiro logo abaixo, em <b>Cadastrar produto</b>.' : '') + '</div>';
+    return;
+  }
+  el.innerHTML = '<div class="vitrine">' + lista.map(p => {
+    const s = LJ_SEL[p.id] || (LJ_SEL[p.id] = { opcao: p.opcoes.length === 1 ? p.opcoes[0] : '', qtd: 1 });
+    return `<div class="prod">
+      <div class="pf" ${p.foto ? `onclick="ljVerFoto('${esc(p.foto)}')"` : ''}>${p.foto ? `<img src="${ljFoto(p.foto)}" alt="${esc(p.nome)}" loading="lazy">` : '🛍️'}</div>
+      <div class="pc">
+        <div class="pn">${esc(p.nome)}</div>
+        ${p.descricao ? `<div class="pd">${esc(p.descricao)}</div>` : ''}
+        ${p.opcoes.length ? `<div class="opc">${p.opcoes.map(o =>
+          `<button type="button" class="${s.opcao === o ? 'on' : ''}" onclick="ljOpcao('${esc(p.id)}',this.textContent)">${esc(o)}</button>`).join('')}</div>` : ''}
+        <div class="pp">${fR(p.preco)}</div>
+        <div class="qtd">
+          <button type="button" onclick="ljQtd('${esc(p.id)}',-1)">−</button><span>${s.qtd}</span>
+          <button type="button" onclick="ljQtd('${esc(p.id)}',1)">+</button>
+        </div>
+        <button class="btn mini" style="width:100%" ${LJ.config.aberta ? '' : 'disabled'} onclick="ljAdicionar('${esc(p.id)}')">➕ Adicionar</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+function ljVerFoto(id){ $('visor-img').src = ljFoto(id); $('visor-baixar').href = ljFoto(id); $('visor').style.display = 'flex'; }
+function ljOpcao(id, o){ LJ_SEL[id].opcao = o; ljPintarVitrine(); }
+function ljQtd(id, d){ const s = LJ_SEL[id]; s.qtd = Math.max(1, Math.min(50, s.qtd + d)); ljPintarVitrine(); }
+function ljAdicionar(id){
+  const p = ljProd(id), s = LJ_SEL[id];
+  if (p.opcoes.length && !s.opcao){ toast(`Escolha ${p.opcoes.join(' / ')} antes de adicionar.`, true); return; }
+  const ja = LJ_CARRINHO.find(x => x.id === id && x.opcao === s.opcao);
+  if (ja) ja.qtd = Math.min(50, ja.qtd + s.qtd); else LJ_CARRINHO.push({ id, opcao: s.opcao, qtd: s.qtd });
+  s.qtd = 1; ljPintarVitrine(); ljPintarCarrinho();
+  toast(`🧺 ${p.nome}${s.opcao ? ' (' + s.opcao + ')' : ''} no pedido.`);
+}
+
+/* ---------- carrinho ---------- */
+function ljPintarCarrinho(){
+  LJ_CARRINHO = LJ_CARRINHO.filter(x => { const p = ljProd(x.id); return p && p.ativo; });
+  show('lj-carrinho', LJ_CARRINHO.length > 0);
+  if (!LJ_CARRINHO.length) return;
+  let total = 0;
+  $('lj-itens').innerHTML = LJ_CARRINHO.map((x, i) => {
+    const p = ljProd(x.id), sub = Math.round(p.preco * x.qtd * 100) / 100; total += sub;
+    return `<div class="linha" style="margin-bottom:6px">
+      <div class="txt"><div class="n1">${x.qtd}× ${esc(p.nome)}${x.opcao ? ' <span class="chip" style="padding:2px 8px">' + esc(x.opcao) + '</span>' : ''}</div>
+        <div class="n2">${fR(p.preco)} cada</div></div>
+      <div class="vlr">${fR(sub)}</div>
+      <button class="item-x" style="width:34px" onclick="ljTirar(${i})">✕</button>
+    </div>`;
+  }).join('');
+  $('lj-total').textContent = 'Total: ' + fR(total);
+  const c = LJ.config;
+  $('lj-pag-d').textContent = (c.pix_chave || c.pix_copia_cola)
+    ? 'Depois de fazer o pedido, os dados do PIX aparecem em "Meus pedidos".'
+    : 'O pagamento é combinado depois: o financeiro avisa quando o PIX do fornecedor estiver pronto.';
+}
+function ljTirar(i){ LJ_CARRINHO.splice(i, 1); ljPintarCarrinho(); }
+function ljLimpar(){ LJ_CARRINHO = []; $('lj-obs').value = ''; erro('lj-erro', ''); ljPintarCarrinho(); }
+
+async function ljFazerPedido(){
+  erro('lj-erro', '');
+  if (!LJ_CARRINHO.length) return;
+  const b = $('lj-b'); b.disabled = true; b.textContent = 'Enviando…';
+  try {
+    const r = await apiPost('/api/loja/pedido', { itens: LJ_CARRINHO, obs: $('lj-obs').value.trim() });
+    LJ_CARRINHO = []; $('lj-obs').value = '';
+    toast(`✅ Pedido feito: ${fR(r.pedido.total)}.`);
+    await ljCarregar(true);
+    $('lj-meus-card').scrollIntoView({ behavior:'smooth', block:'start' });
+  } catch (e){ erro('lj-erro', '⚠️ ' + e.message); if (e.status === 409) ljCarregar(true); }
+  finally { b.disabled = false; b.textContent = 'Fazer pedido'; }
+}
+
+/* ---------- meus pedidos ---------- */
+function ljPintarMeus(){
+  const c = LJ.config;
+  const meus = LJ.meus_pedidos.slice().sort((a,b) => (b.pedido_em||'').localeCompare(a.pedido_em||''));
+  const aPagar = meus.filter(p => p.status !== 'CANCELADO' && !p.pago).reduce((s, p) => s + p.total, 0);
+  const temPix = !!(c.pix_chave || c.pix_copia_cola);
+  show('lj-pix', temPix && aPagar > 0);
+  if (temPix && aPagar > 0){
+    $('lj-pix').innerHTML = `<div class="pix-box">
+      <div class="pix-lbl">Total a pagar</div><div class="pix-valor">${fR(aPagar)}</div>
+      <div class="pix-dado">${c.pix_chave ? 'Chave: <b>' + esc(c.pix_chave) + '</b><br>' : ''}${c.pix_titular ? 'Titular: <b>' + esc(c.pix_titular) + '</b><br>' : ''}${c.pix_banco ? 'Banco: ' + esc(c.pix_banco) : ''}</div>
+      ${c.pix_copia_cola ? '<div class="copia"><button class="btn" onclick="ljCopiarPix()">📋 Copiar código PIX</button></div>' : ''}
+      <div class="passo-d" style="margin:10px 0 0;font-size:12px">Pagou? Mande o comprovante ao financeiro — ele dá baixa no seu pedido.</div>
+    </div>`;
+  }
+  $('lj-meus').innerHTML = meus.length ? meus.map(p => `
+    <div class="linha ${p.status === 'CANCELADO' ? 'pend' : ''}">
+      <div class="av">📦</div>
+      <div class="txt">
+        <div class="n1">${fR(p.total)} ${ljSelo(p.status)} ${p.pago ? '<span class="st ok">PAGO</span>' : ''}</div>
+        <div class="n2">Pedido ${esc(p.id)} · ${fDH(p.pedido_em)}</div>
+      </div>
+      ${p.status === 'PEDIDO' && !p.pago ? `<button class="btn sec mini" onclick="ljCancelarMeu('${esc(p.id)}')">Cancelar</button>` : ''}
+      <div class="itens-min">${ljItensTxt(p.itens)}${p.obs ? '<br>Obs.: ' + esc(p.obs) : ''}${p.motivo ? '<br>' + esc(p.motivo) : ''}</div>
+    </div>`).join('')
+    : '<div class="vazio">Você ainda não fez pedido.</div>';
+}
+function ljCopiarPix(){
+  const t = LJ.config.pix_copia_cola || ''; if (!t) return;
+  const feito = () => toast('📋 Código PIX copiado! Cole no seu banco.');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(feito).catch(() => copiarNaMarra(t, feito));
+  else copiarNaMarra(t, feito);
+}
+async function ljCancelarMeu(id){
+  if (!confirm('Cancelar este pedido?')) return;
+  ovl('Cancelando…');
+  try { await apiPost('/api/loja/pedido', { op:'cancelar', id }); toast('Pedido cancelado.'); await ljCarregar(true); }
+  catch (e){ toast('⚠️ ' + e.message, true); }
+  finally { ovl(''); }
+}
+
+/* ---------- gestor: quem comprou ---------- */
+function ljPintarGestor(){
+  const r = LJ.resumo;
+  $('lj-k-ped').textContent = r.pedidos;
+  $('lj-k-pes').textContent = `${r.pessoas} pessoa(s)`;
+  $('lj-k-it').textContent = r.itens;
+  $('lj-k-tot').textContent = fR(r.total);
+  $('lj-k-pago').textContent = `${fR(r.pago)} pago · ${fR(r.a_receber)} a receber`;
+  $('lj-resumo').innerHTML = r.produtos.length ? `<table class="tabela">
+    <tr><th>Produto</th><th>Por opção</th><th style="text-align:right">Qtd</th><th style="text-align:right">Total</th></tr>
+    ${r.produtos.map(x => `<tr><td>${esc(x.nome)}</td>
+      <td style="color:var(--muted)">${Object.entries(x.opcoes).map(([o, n]) => `${esc(o)}: <b style="color:var(--text)">${n}</b>`).join(' · ')}</td>
+      <td class="n">${x.qtd}</td><td class="n">${fR(x.total)}</td></tr>`).join('')}
+  </table>` : '<div class="vazio" style="padding:10px">Ninguém pediu ainda.</div>';
+  ljPintarPedidos(); ljPintarProdutosG(); ljPreencherConfig();
+}
+
+function ljPintarPedidos(){
+  const f = $('lj-f-st').value, busca = $('lj-busca').value.trim().toLowerCase();
+  let lista = (LJ.pedidos || []).slice().sort((a,b) => (b.pedido_em||'').localeCompare(a.pedido_em||''));
+  if (f === 'NAOPAGO') lista = lista.filter(p => p.status !== 'CANCELADO' && !p.pago);
+  else if (f) lista = lista.filter(p => p.status === f);
+  else lista = lista.filter(p => p.status !== 'CANCELADO');
+  if (busca) lista = lista.filter(p => (p.nome + ' ' + p.itens.map(i => i.nome + ' ' + (i.opcao||'')).join(' ')).toLowerCase().includes(busca));
+  const el = $('lj-pedidos');
+  if (!lista.length){ el.innerHTML = '<div class="vazio">Nenhum pedido nesse filtro.</div>'; return; }
+  el.innerHTML = lista.map(p => {
+    const tel = digitos(p.telefone);
+    const zap = tel.length >= 10 ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener">${esc(p.telefone)}</a>` : esc(p.telefone || '');
+    const bt = [];
+    if (p.status === 'PEDIDO') bt.push(`<button class="btn mini" onclick="ljStatus('${p.id}','CONFIRMADO')">✔ Confirmar</button>`);
+    if (p.status === 'PEDIDO' || p.status === 'CONFIRMADO') bt.push(`<button class="btn sec mini" onclick="ljStatus('${p.id}','ENTREGUE')">📦 Entregue</button>`);
+    if (p.status !== 'CANCELADO') bt.push(`<button class="btn sec mini" onclick="ljPago('${p.id}',${!p.pago})">${p.pago ? '↩ Desfazer pago' : '💲 Pago'}</button>`);
+    if (p.status !== 'CANCELADO') bt.push(`<button class="btn perigo mini" onclick="ljStatus('${p.id}','CANCELADO')">Cancelar</button>`);
+    else bt.push(`<button class="btn sec mini" onclick="ljStatus('${p.id}','PEDIDO')">↩ Reabrir</button>`);
+    return `<div class="linha ${p.status === 'CANCELADO' ? 'pend' : ''}">
+      <div class="av">${esc(iniciais(p.nome))}</div>
+      <div class="txt">
+        <div class="n1">${esc(p.nome || 'Sem nome')} ${ljSelo(p.status)} ${p.pago ? '<span class="st ok">PAGO</span>' : ''}</div>
+        <div class="n2">${fDH(p.pedido_em)} · ${zap}${p.atualizado_por ? ' · por ' + esc(p.atualizado_por) : ''}</div>
+      </div>
+      <div class="vlr">${fR(p.total)}</div>
+      <div class="itens-min">${ljItensTxt(p.itens)}${p.obs ? '<br>Obs.: ' + esc(p.obs) : ''}${p.motivo ? '<br>Motivo: ' + esc(p.motivo) : ''}
+        <div class="btns" style="margin-top:8px">${bt.join('')}</div></div>
+    </div>`;
+  }).join('');
+}
+
+async function ljStatus(id, status){
+  let motivo = '';
+  if (status === 'CANCELADO'){
+    motivo = prompt('Cancelar este pedido.\n\nPor quê? (a pessoa vê o motivo)');
+    if (motivo == null) return;
+    if (motivo.trim().length < 3){ toast('Escreva o motivo.', true); return; }
+  }
+  ovl('Salvando…');
+  try { await apiPost('/api/loja/gestao', { op:'status', id, status, motivo: motivo.trim() }); await ljCarregar(true); }
+  catch (e){ toast('⚠️ ' + e.message, true); }
+  finally { ovl(''); }
+}
+async function ljPago(id, pago){
+  ovl('Salvando…');
+  try { await apiPost('/api/loja/gestao', { op:'pago', id, pago }); await ljCarregar(true); }
+  catch (e){ toast('⚠️ ' + e.message, true); }
+  finally { ovl(''); }
+}
+
+/* ---------- gestor: produtos ---------- */
+function ljPintarProdutosG(){
+  const el = $('lj-produtos-g');
+  if (!LJ.produtos.length){ el.innerHTML = ''; return; }
+  el.innerHTML = '<label class="lbl">Produtos cadastrados</label>' + LJ.produtos.map(p => `
+    <div class="linha ${p.ativo ? '' : 'pend'}">
+      ${p.foto ? `<img class="thumb" src="${ljFoto(p.foto)}" alt="" onclick="ljVerFoto('${esc(p.foto)}')">` : '<div class="av">🛍️</div>'}
+      <div class="txt"><div class="n1">${esc(p.nome)} ${p.ativo ? '' : '<span class="st pen">FORA DA VITRINE</span>'}</div>
+        <div class="n2">${p.opcoes.length ? 'Opções: ' + esc(p.opcoes.join(', ')) : 'sem opção'}</div></div>
+      <div class="vlr">${fR(p.preco)}</div>
+      <button class="btn sec mini" onclick="ljEditarProduto('${esc(p.id)}')">✏️ Editar</button>
+    </div>`).join('');
+}
+function ljEditarProduto(id){
+  const p = id ? ljProd(id) : null;
+  $('lp-id').value = p ? p.id : '';
+  $('lp-nome').value = p ? p.nome : '';
+  $('lp-preco').value = p ? String(p.preco.toFixed(2)).replace('.', ',') : '';
+  $('lp-opcoes').value = p ? p.opcoes.join(', ') : '';
+  $('lp-desc').value = p ? p.descricao : '';
+  $('lp-ativo').checked = p ? p.ativo : true;
+  arqLimpar('lp-file'); erro('lp-erro', '');
+  $('lp-titulo').textContent = p ? 'Editar produto' : 'Cadastrar produto';
+  show('lp-cancelar', !!p);
+  if (p) $('lp-titulo').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+/* Foto de celular tem 3–6 MB: reduz pra 1200 px antes de subir — a turma
+   abre a vitrine no 4G. */
+function ljReduzir(file){
+  return new Promise(res => {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)){ res(file); return; }
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1200 / Math.max(img.width, img.height));
+      if (k === 1 && file.size < 900e3){ res(file); return; }
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      cv.toBlob(b => res(b ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type:'image/jpeg' }) : file), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => res(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function ljSalvarProduto(){
+  erro('lp-erro', '');
+  const nome = $('lp-nome').value.trim(), preco = num($('lp-preco').value);
+  if (nome.length < 2){ erro('lp-erro', 'Dê um nome ao produto.'); return; }
+  if (!(preco > 0)){ erro('lp-erro', 'Informe o preço.'); return; }
+  const fd = new FormData();
+  fd.append('id', $('lp-id').value);
+  fd.append('nome', nome); fd.append('preco', String(preco));
+  fd.append('opcoes', $('lp-opcoes').value); fd.append('descricao', $('lp-desc').value.trim());
+  fd.append('ativo', $('lp-ativo').checked ? 'SIM' : 'NAO');
+  const f = ($('lp-file').files || [])[0];
+  const b = $('lp-b'); b.disabled = true; b.textContent = 'Salvando…';
+  try {
+    if (f) fd.append('file', await ljReduzir(f));
+    await apiForm('/api/loja/produto', fd);
+    toast('✅ Produto salvo.');
+    ljEditarProduto('');
+    await ljCarregar(true);
+  } catch (e){ erro('lp-erro', '⚠️ ' + e.message); }
+  finally { b.disabled = false; b.textContent = 'Salvar produto'; }
+}
+
+/* ---------- gestor: ajustes ---------- */
+function ljPreencherConfig(){
+  const c = LJ.config;
+  if (document.activeElement && document.activeElement.id && document.activeElement.id.startsWith('lc-')) return; // não atropela quem está digitando
+  $('lc-aberta').value = c.aberta ? 'SIM' : 'NAO';
+  $('lc-prazo').value = c.prazo || ''; $('lc-titulo').value = c.titulo || ''; $('lc-aviso').value = c.aviso || '';
+  $('lc-chave').value = c.pix_chave || ''; $('lc-titular').value = c.pix_titular || '';
+  $('lc-banco').value = c.pix_banco || ''; $('lc-copia').value = c.pix_copia_cola || '';
+}
+async function ljSalvarConfig(){
+  erro('lc-erro', '');
+  const valores = {
+    ABERTA: $('lc-aberta').value, PRAZO: $('lc-prazo').value.trim(),
+    TITULO: $('lc-titulo').value.trim() || 'Loja da Turma', AVISO: $('lc-aviso').value.trim(),
+    PIX_CHAVE: $('lc-chave').value.trim(), PIX_TITULAR: $('lc-titular').value.trim(),
+    PIX_BANCO: $('lc-banco').value.trim(), PIX_COPIA_COLA: $('lc-copia').value.trim(),
+  };
+  const b = $('lc-b'); b.disabled = true; b.textContent = 'Salvando…';
+  try { await apiPost('/api/loja/gestao', { op:'config', valores }); toast('✅ Ajustes da loja salvos.'); await ljCarregar(true); }
+  catch (e){ erro('lc-erro', '⚠️ ' + e.message); }
+  finally { b.disabled = false; b.textContent = 'Salvar ajustes da loja'; }
+}
+
+/* ---------- gestor: relatório e Excel ---------- */
+async function ljExportar(tipo){
+  ovl('Montando o arquivo…');
+  try {
+    const r = await fetch(API_BASE + '/api/loja/export?tipo=' + tipo, { headers: cab() });
+    if (!r.ok){ const d = await r.json().catch(() => ({})); throw new Error(d.detail || d.error || ('Erro ' + r.status)); }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(await r.blob());
+    a.download = `loja-${tipo}-${hojeISO()}.csv`;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    toast('📤 Arquivo baixado.');
+  } catch (e){ toast('⚠️ ' + e.message, true); }
+  finally { ovl(''); }
+}
+/* Relatório pra imprimir/salvar em PDF: resumo por produto (o que pedir ao
+   fornecedor) + quem comprou o quê. Sem CPF — vai circular em papel. */
+function ljRelatorio(){
+  const r = LJ.resumo, c = LJ.config;
+  const peds = (LJ.pedidos || []).filter(p => p.status !== 'CANCELADO').sort((a,b) => a.nome.localeCompare(b.nome));
+  const w = window.open('', '_blank');
+  if (!w){ toast('Libere pop-up para abrir o relatório.', true); return; }
+  const td = 'style="border:1px solid #bbb;padding:5px 7px"';
+  const tdn = 'style="border:1px solid #bbb;padding:5px 7px;text-align:right"';
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${esc(c.titulo || 'Loja da Turma')} — relatório</title>
+  <style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:22px}h1{font-size:18px;margin:0}h2{font-size:14px;margin:18px 0 6px}
+  table{border-collapse:collapse;width:100%}th{background:#eee;text-align:left}.sub{color:#555;margin:3px 0 12px}
+  @media print{button{display:none}}</style></head><body>
+  <button onclick="print()" style="float:right;padding:8px 14px">🖨️ Imprimir / salvar PDF</button>
+  <h1>${esc(c.titulo || 'Loja da Turma')} — relatório de pedidos</h1>
+  <div class="sub">${esc((D && D.config && D.config.subtitulo) || '')} · gerado em ${new Date().toLocaleString('pt-BR')} ·
+    ${r.pedidos} pedido(s) de ${r.pessoas} pessoa(s) · ${r.itens} item(ns) · total ${fR(r.total)} (${fR(r.pago)} pago, ${fR(r.a_receber)} a receber)</div>
+  <h2>Resumo por produto (o que encomendar)</h2>
+  <table><tr><th ${td}>Produto</th><th ${td}>Por opção</th><th ${td}>Qtd</th><th ${td}>Total</th></tr>
+  ${r.produtos.map(x => `<tr><td ${td}>${esc(x.nome)}</td><td ${td}>${Object.entries(x.opcoes).map(([o, n]) => esc(o) + ': ' + n).join(' · ')}</td><td ${tdn}>${x.qtd}</td><td ${tdn}>${fR(x.total)}</td></tr>`).join('')}
+  </table>
+  <h2>Quem comprou</h2>
+  <table><tr><th ${td}>#</th><th ${td}>Nome</th><th ${td}>Telefone</th><th ${td}>Itens</th><th ${td}>Total</th><th ${td}>Situação</th><th ${td}>Pago</th><th ${td}>Entregue ✓</th></tr>
+  ${peds.map((p, i) => `<tr><td ${td}>${i + 1}</td><td ${td}>${esc(p.nome)}</td><td ${td}>${esc(p.telefone || '')}</td><td ${td}>${ljItensTxt(p.itens)}${p.obs ? '<br><i>' + esc(p.obs) + '</i>' : ''}</td>
+    <td ${tdn}>${fR(p.total)}</td><td ${td}>${(LJ_ST[p.status] || [0, p.status])[1]}</td><td ${td}>${p.pago ? 'SIM' : ''}</td><td ${td}></td></tr>`).join('')}
+  </table></body></html>`);
+  w.document.close();
 }
 
 /* ===================== início ===================== */
