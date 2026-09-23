@@ -96,7 +96,7 @@ button,input,select{font-family:inherit}
 .busca-resultados .msg{padding:9px 12px;font-size:13px;color:var(--muted)}
 
 .folha{display:none}
-#map-aro-print{width:100%;height:280px}
+#map-aro-print{width:480px;max-width:100%;height:260px;margin:0 auto}
 
 @media (max-width:640px){
   .hdr{position:static}
@@ -113,7 +113,7 @@ button,input,select{font-family:inherit}
   .f-logo-centro{height:72px;width:72px;object-fit:contain;display:block;margin:0 auto 6px}
   .f-titulo{text-align:center;font-size:18px;font-weight:700;margin-bottom:2px}
   .f-sub{text-align:center;font-size:11px;font-weight:700;margin-bottom:0}
-  #map-aro-print{border:1px solid #999;margin:6px 0 12px;break-inside:avoid;page-break-inside:avoid}
+  #map-aro-print{border:1px solid #999;margin:6px auto 12px;break-inside:avoid;page-break-inside:avoid}
   .f-mapa-legenda{font-size:10.5px;color:#555;margin:-6px 0 12px}
   .f-sec{font-size:13px;font-weight:700;color:#14532d;margin:14px 0 6px;border-bottom:1px solid #14532d;padding-bottom:2px}
   .f-linha{font-size:12px;margin-bottom:5px;display:flex;gap:6px}
@@ -476,8 +476,13 @@ function atualizarCirculo(){
 
 function initMapaAro(){
   mapaAro = L.map('map-aro').setView(CENTRO_RO, 6);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Esri'}).addTo(mapaAro);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, opacity:.85}).addTo(mapaAro);
+  const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'OpenStreetMap'});
+  const satelite = L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Esri'}),
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, opacity:.85})
+  ]);
+  ruas.addTo(mapaAro);
+  L.control.layers({'🗺️ Ruas e nomes': ruas, '🛰️ Satélite': satelite}, null, {position:'topright'}).addTo(mapaAro);
   mapaAro.on('click', e => definirPonto(e.latlng.lat, e.latlng.lng, true));
 
   const gpsSalvo = txt('f-gps');
@@ -525,22 +530,22 @@ document.getElementById('busca-endereco').addEventListener('keydown', e => {
 });
 
 // ---- Mapa igual, só para sair na folha impressa ----
-let mapaAroPrint, marcadorAroPrint, circuloAroPrint;
+let mapaAroPrint, marcadorAroPrint, circuloAroPrint, camadaAroPrint;
 function prepararMapaImpressao(){
   return new Promise(resolve => {
     const secMapa = document.getElementById('mapa-sec-print');
     if(!marcadorAro){ secMapa.style.display = 'none'; resolve(); return; }
     secMapa.style.display = '';
     const folha = document.getElementById('folha');
-    folha.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:750px;background:#fff';
+    // Mesma largura do box do mapa (#map-aro-print) tanto aqui (fora da tela) quanto na impressão real,
+    // senão os ladrilhos carregam pra um tamanho e o Chrome imprime em outro, deixando pedaço em branco
+    folha.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:700px;background:#fff';
 
     if(!mapaAroPrint){
       mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false});
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19}).addTo(mapaAroPrint);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, opacity:.85}).addTo(mapaAroPrint);
+      camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
     }
     const pos = marcadorAro.getLatLng();
-    mapaAroPrint.setView(pos, 15);
     mapaAroPrint.invalidateSize();
 
     if(!marcadorAroPrint) marcadorAroPrint = L.marker(pos).addTo(mapaAroPrint);
@@ -551,10 +556,10 @@ function prepararMapaImpressao(){
     const legenda = document.getElementById('o-mapa-legenda');
     if(r){
       circuloAroPrint = L.circle(pos, {radius:r, color:'#1b6b3d', weight:2, fillColor:'#1b6b3d', fillOpacity:.15}).addTo(mapaAroPrint);
-      mapaAroPrint.fitBounds(circuloAroPrint.getBounds(), {padding:[26,26]});
+      mapaAroPrint.fitBounds(circuloAroPrint.getBounds(), {padding:[20,20]});
       legenda.textContent = '📍 Ponto marcado · círculo = raio de operação de ' + r + ' metros';
     } else {
-      mapaAroPrint.setView(pos, 15);
+      mapaAroPrint.setView(pos, 16);
       legenda.textContent = '📍 Ponto marcado no local da operação';
     }
 
@@ -566,8 +571,15 @@ function prepararMapaImpressao(){
       folha.style.cssText = '';
       resolve();
     };
-    mapaAroPrint.whenReady(() => setTimeout(finalizar, 1300));
-    setTimeout(finalizar, 2800);
+    // Espera os ladrilhos do enquadramento FINAL (depois do fitBounds/setView acima) terminarem de
+    // carregar antes de liberar a impressão — antes resolvia no "load" do setView inicial e saía
+    // com metade do mapa em branco porque o fitBounds pediu ladrilhos novos que ainda não chegaram
+    const aguardarLadrilhos = () => {
+      if(!camadaAroPrint.isLoading || !camadaAroPrint.isLoading()){ setTimeout(finalizar, 500); return; }
+      camadaAroPrint.once('load', () => setTimeout(finalizar, 500));
+    };
+    setTimeout(aguardarLadrilhos, 60);
+    setTimeout(finalizar, 4000);
   });
 }
 window.addEventListener('beforeprint', () => {
