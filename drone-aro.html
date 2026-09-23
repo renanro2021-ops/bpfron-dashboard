@@ -85,6 +85,15 @@ button,input,select{font-family:inherit}
 .mapa-dica{font-size:12px;color:var(--muted);margin:8px 0 6px}
 #map-aro{height:320px;border-radius:12px;border:1px solid var(--line);overflow:hidden;margin-top:4px}
 .leaflet-container{background:#0b0f1a}
+.busca-mapa{display:flex;gap:8px;margin-top:4px}
+.busca-mapa input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-family:inherit;font-size:14.5px;outline:none;min-height:42px}
+.busca-mapa input:focus{border-color:rgba(245,197,24,.6)}
+.busca-resultados{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-top:6px;overflow:hidden;max-height:220px;overflow-y:auto}
+.busca-resultados.hidden{display:none}
+.busca-resultados .item{padding:9px 12px;font-size:13px;color:#dde3f0;cursor:pointer;border-top:1px solid rgba(148,163,184,.08)}
+.busca-resultados .item:first-child{border-top:none}
+.busca-resultados .item:hover{background:rgba(245,197,24,.12)}
+.busca-resultados .msg{padding:9px 12px;font-size:13px;color:var(--muted)}
 
 .folha{display:none}
 #map-aro-print{width:100%;height:280px}
@@ -196,7 +205,12 @@ button,input,select{font-family:inherit}
         <div class="campo"><label for="f-raio">Raio de Operação (metros)</label><input type="text" id="f-raio" name="raio" placeholder="ex.: 500"></div>
       </div>
       <div class="campo">
-        <label>Mapa do local — clique para marcar o ponto (arraste para ajustar)</label>
+        <label>Mapa do local — busque um endereço ou clique para marcar o ponto (arraste para ajustar)</label>
+        <div class="busca-mapa">
+          <input type="text" id="busca-endereco" placeholder="Buscar endereço, cidade, rio, ponto de referência…" autocomplete="off">
+          <button type="button" class="btn secund" id="btn-buscar-endereco">🔎 Buscar</button>
+        </div>
+        <div id="busca-resultados" class="busca-resultados hidden"></div>
         <div id="map-aro"></div>
         <div class="mapa-dica">O círculo aparece sozinho quando você preenche o raio acima. Esse mapa sai na impressão do PDF.</div>
       </div>
@@ -359,6 +373,11 @@ function carregar(){
   });
 }
 carregar();
+if(!form.elements['decldata'].value){
+  const hoje = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  form.elements['decldata'].value = pad(hoje.getDate()) + '/' + pad(hoje.getMonth()+1) + '/' + hoje.getFullYear();
+}
 form.addEventListener('input', salvar);
 form.addEventListener('change', salvar);
 
@@ -473,6 +492,38 @@ document.getElementById('f-gps').addEventListener('change', () => {
   if(m) definirPonto(parseFloat(m[1]), parseFloat(m[2]), false);
 });
 
+// Busca de endereço no mapa (Nominatim/OpenStreetMap)
+async function buscarEndereco(){
+  const q = txt('busca-endereco');
+  const lista = document.getElementById('busca-resultados');
+  if(!q){ lista.classList.add('hidden'); return; }
+  lista.innerHTML = '<div class="msg">Buscando…</div>';
+  lista.classList.remove('hidden');
+  try{
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=pt-BR&countrycodes=br&q=' + encodeURIComponent(q));
+    const d = await r.json();
+    if(!d.length){ lista.innerHTML = '<div class="msg">Nada encontrado. Tente outro termo ou clique direto no mapa.</div>'; return; }
+    lista.innerHTML = '';
+    d.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.textContent = item.display_name;
+      div.addEventListener('click', () => {
+        definirPonto(parseFloat(item.lat), parseFloat(item.lon), true, false);
+        lista.classList.add('hidden');
+        document.getElementById('busca-endereco').value = item.display_name;
+      });
+      lista.appendChild(div);
+    });
+  } catch(e){
+    lista.innerHTML = '<div class="msg">Falha na busca (sem internet?). Tente clicar direto no mapa.</div>';
+  }
+}
+document.getElementById('btn-buscar-endereco').addEventListener('click', buscarEndereco);
+document.getElementById('busca-endereco').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); buscarEndereco(); }
+});
+
 // ---- Mapa igual, só para sair na folha impressa ----
 let mapaAroPrint, marcadorAroPrint, circuloAroPrint;
 function prepararMapaImpressao(){
@@ -508,11 +559,20 @@ function prepararMapaImpressao(){
     }
 
     let terminou = false;
-    const finalizar = () => { if(terminou) return; terminou = true; resolve(); };
+    const finalizar = () => {
+      if(terminou) return;
+      terminou = true;
+      // Tira o posicionamento fora da tela: senão a folha imprime em branco (fora da página)
+      folha.style.cssText = '';
+      resolve();
+    };
     mapaAroPrint.whenReady(() => setTimeout(finalizar, 1300));
     setTimeout(finalizar, 2800);
   });
 }
+window.addEventListener('beforeprint', () => {
+  if(mapaAroPrint) mapaAroPrint.invalidateSize();
+});
 window.addEventListener('afterprint', () => {
   document.getElementById('folha').style.cssText = '';
 });
