@@ -171,7 +171,15 @@ button,input,select{font-family:inherit}
 
     <div class="sec">3. Escopo e cenário operacional</div>
     <div class="painel">
-      <div class="campo"><label for="f-local">Local da Operação</label><input type="text" id="f-local" name="local" required></div>
+      <div class="campo"><label for="f-local">Local da Operação</label><input type="text" id="f-local" name="local" required placeholder="ex.: Sede do BPFRON, margem do rio, bairro…"></div>
+      <div class="linha3">
+        <div class="campo"><label for="f-municipio">Município</label><input type="text" id="f-municipio" name="municipio"></div>
+        <div class="campo"><label for="f-uf">UF</label><input type="text" id="f-uf" name="uf" maxlength="2" style="text-transform:uppercase"></div>
+        <div class="campo" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn secund" id="btn-geo" style="width:100%;white-space:nowrap">📍 Usar minha localização</button>
+        </div>
+      </div>
+      <div class="campo" id="geo-wrap" style="display:none"><span id="geo-status" style="font-size:12px;color:var(--muted)"></span></div>
       <div class="linha2">
         <div class="campo"><label for="f-gps">Coordenadas GPS</label><input type="text" id="f-gps" name="gps" placeholder="lat, long"></div>
         <div class="campo"><label for="f-raio">Raio de Operação</label><input type="text" id="f-raio" name="raio"></div>
@@ -234,7 +242,7 @@ button,input,select{font-family:inherit}
       <p style="font-size:13px;color:#cbd5e1;line-height:1.65;margin-bottom:14px">Declaro que a operação acima descrita será conduzida em total conformidade com os regulamentos vigentes da ANAC (RBAC nº 100), DECEA (ICA 100-40) e ANATEL. Asseguro que todas as medidas mitigadoras descritas nestes quadros de risco serão rigorosamente checadas e aplicadas em campo.</p>
       <div class="linha2">
         <div class="campo"><label for="f-decllocal">Local</label><input type="text" id="f-decllocal" name="decllocal"></div>
-        <div class="campo"><label for="f-decldata">Data</label><input type="text" id="f-decldata" name="decldata" placeholder="dd/mm/aaaa"></div>
+        <div class="campo"><label for="f-decldata">Data</label><input type="text" id="f-decldata" name="decldata" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10"></div>
       </div>
     </div>
 
@@ -273,6 +281,10 @@ button,input,select{font-family:inherit}
 
   <div class="f-sec">3. Escopo e cenário operacional</div>
   <div class="f-linha"><b>Local da Operação:</b><span id="o-local"></span></div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Município:</b><span id="o-municipio"></span></div>
+    <div class="f-linha"><b>UF:</b><span id="o-uf"></span></div>
+  </div>
   <div class="f-3col">
     <div class="f-linha"><b>Coordenadas GPS:</b><span id="o-gps"></span></div>
     <div class="f-linha"><b>Raio de Operação:</b><span id="o-raio"></span></div>
@@ -332,6 +344,51 @@ document.getElementById('btn-limpar').addEventListener('click', () => {
   form.reset();
 });
 
+// Máscara de data: digita só números e as barras entram sozinhas (dd/mm/aaaa)
+document.getElementById('f-decldata').addEventListener('input', e => {
+  let v = e.target.value.replace(/\D/g,'').slice(0,8);
+  if(v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+  else if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+  e.target.value = v;
+});
+
+// Preenche Município/UF/GPS automaticamente pela localização do navegador
+document.getElementById('btn-geo').addEventListener('click', () => {
+  const btn = document.getElementById('btn-geo');
+  const wrap = document.getElementById('geo-wrap');
+  const status = document.getElementById('geo-status');
+  wrap.style.display = 'block';
+  if(!navigator.geolocation){
+    status.textContent = '❌ Este navegador não suporta localização automática. Preencha na mão.';
+    return;
+  }
+  btn.disabled = true;
+  status.textContent = '📡 Obtendo sua localização…';
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    document.getElementById('f-gps').value = lat.toFixed(6) + ', ' + lon.toFixed(6);
+    try {
+      const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&accept-language=pt-BR&lat=' + lat + '&lon=' + lon);
+      const d = await r.json();
+      const a = d.address || {};
+      const municipio = a.city || a.town || a.village || a.municipality || a.county || '';
+      const estado = a.state || '';
+      const ufs = {'Rondônia':'RO','Acre':'AC','Amazonas':'AM','Roraima':'RR','Pará':'PA','Amapá':'AP','Tocantins':'TO','Mato Grosso':'MT'};
+      document.getElementById('f-municipio').value = municipio;
+      document.getElementById('f-uf').value = ufs[estado] || estado;
+      if(!txt('f-decllocal')) document.getElementById('f-decllocal').value = municipio;
+      status.textContent = municipio ? ('✅ Localização preenchida: ' + municipio + (estado ? ' - ' + (ufs[estado]||estado) : '')) : '⚠️ Coordenadas preenchidas, mas não encontrei o município. Preencha na mão.';
+    } catch(e) {
+      status.textContent = '⚠️ Coordenadas preenchidas, mas não deu para buscar o nome do município (sem internet?). Preencha na mão.';
+    }
+    salvar();
+    btn.disabled = false;
+  }, err => {
+    status.textContent = '❌ Não consegui acessar sua localização (' + (err.code === 1 ? 'permissão negada' : 'sinal indisponível') + '). Preencha na mão.';
+    btn.disabled = false;
+  }, { enableHighAccuracy:true, timeout:12000 });
+});
+
 function txt(id){ return (document.getElementById(id).value || '').trim(); }
 
 function montarFolha(){
@@ -348,6 +405,8 @@ function montarFolha(){
   set('o-peso', peso ? peso + ' kg' : '');
   set('o-seguro', txt('f-seguro'));
   set('o-local', txt('f-local'));
+  set('o-municipio', txt('f-municipio'));
+  set('o-uf', txt('f-uf').toUpperCase());
   set('o-gps', txt('f-gps'));
   set('o-raio', txt('f-raio'));
   const alt = txt('f-alt');
