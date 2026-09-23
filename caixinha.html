@@ -2346,8 +2346,13 @@ function gstAplicar(d, origem){
   por('g-total', d.total ? d.total.toFixed(2).replace('.', ',') : '', 'total <b>' + fR(d.total) + '</b>');
   por('g-desconto', d.desconto ? d.desconto.toFixed(2).replace('.', ',') : '', 'desconto <b>' + fR(d.desconto) + '</b>');
 
-  const jaTem = $('g-itens').querySelectorAll('.item-l').length;
+  /* A tela sempre nasce com 1 linha de item vazia (placeholder pra digitar à
+     mão) — isso não pode contar como "já tem item" e travar o preenchimento
+     automático. Só conta quem já tem nome digitado de verdade. */
+  const jaTem = [...$('g-itens').querySelectorAll('.item-l')]
+    .some(l => l.querySelector('input').value.trim());
   if (d.itens.length && !jaTem){
+    $('g-itens').innerHTML = '';
     d.itens.forEach(i => novoItem(i.nome, i.qtd || 1,
       i.unit > 0 ? i.unit.toFixed(2).replace('.', ',') : '',
       i.valor.toFixed(2).replace('.', ',')));
