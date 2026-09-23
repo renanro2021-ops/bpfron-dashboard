@@ -96,7 +96,8 @@ button,input,select{font-family:inherit}
 .busca-resultados .msg{padding:9px 12px;font-size:13px;color:var(--muted)}
 
 .folha{display:none}
-#map-aro-print{width:480px;max-width:100%;height:260px;margin:0 auto}
+#map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box}
+#map-aro-print{width:100%;height:100%}
 
 @media (max-width:640px){
   .hdr{position:static}
@@ -113,7 +114,7 @@ button,input,select{font-family:inherit}
   .f-logo-centro{height:72px;width:72px;object-fit:contain;display:block;margin:0 auto 6px}
   .f-titulo{text-align:center;font-size:18px;font-weight:700;margin-bottom:2px}
   .f-sub{text-align:center;font-size:11px;font-weight:700;margin-bottom:0}
-  #map-aro-print{border:1px solid #999;margin:6px auto 12px;break-inside:avoid;page-break-inside:avoid}
+  #map-aro-print-wrap{border:1px solid #999;margin:6px auto 12px;break-inside:avoid;page-break-inside:avoid}
   .f-mapa-legenda{font-size:10.5px;color:#555;margin:-6px 0 12px}
   .f-sec{font-size:13px;font-weight:700;color:#14532d;margin:14px 0 6px;border-bottom:1px solid #14532d;padding-bottom:2px}
   .f-linha{font-size:12px;margin-bottom:5px;display:flex;gap:6px}
@@ -329,7 +330,7 @@ button,input,select{font-family:inherit}
   <div class="f-linha"><b>Pessoas não Anuentes:</b><span id="o-anuentes"></span></div>
 
   <div id="mapa-sec-print">
-    <div id="map-aro-print"></div>
+    <div id="map-aro-print-wrap"><div id="map-aro-print"></div></div>
     <div class="f-mapa-legenda" id="o-mapa-legenda"></div>
   </div>
 
@@ -530,7 +531,7 @@ document.getElementById('busca-endereco').addEventListener('keydown', e => {
 });
 
 // ---- Mapa igual, só para sair na folha impressa ----
-let mapaAroPrint, marcadorAroPrint, circuloAroPrint, camadaAroPrint;
+let mapaAroPrint, marcadorAroPrintEl, circuloAroPrintEl, camadaAroPrint;
 function prepararMapaImpressao(){
   return new Promise(resolve => {
     const secMapa = document.getElementById('mapa-sec-print');
@@ -559,24 +560,58 @@ function prepararMapaImpressao(){
         // "Cannot read properties of undefined (reading 'layerPointToLatLng')" — a exceção
         // acontecia dentro do executor da Promise, então nunca chamava resolve() e o botão
         // ficava travado para sempre em "Preparando o mapa…"
-        mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false}).setView(pos, 16);
+        mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false, zoomAnimation:false}).setView(pos, 16);
         camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
       }
       mapaAroPrint.invalidateSize();
 
-      if(!marcadorAroPrint) marcadorAroPrint = L.marker(pos).addTo(mapaAroPrint);
-      else marcadorAroPrint.setLatLng(pos);
-
-      if(circuloAroPrint){ mapaAroPrint.removeLayer(circuloAroPrint); circuloAroPrint = null; }
       const r = raioMetros();
       const legenda = document.getElementById('o-mapa-legenda');
       if(r){
-        circuloAroPrint = L.circle(pos, {radius:r, color:'#1b6b3d', weight:2, fillColor:'#1b6b3d', fillOpacity:.15}).addTo(mapaAroPrint);
-        mapaAroPrint.fitBounds(circuloAroPrint.getBounds(), {padding:[20,20]});
+        // toBounds() não depende do renderer SVG/Canvas do Leaflet pra existir — só matemática.
+        // animate:false: sem isso o zoom muda com animação e o getZoom() logo abaixo ainda
+        // pegava o zoom ANTIGO, calculando o diâmetro do círculo pro enquadramento errado (saía enorme)
+        mapaAroPrint.fitBounds(pos.toBounds(r * 2), {padding:[20,20], animate:false});
         legenda.textContent = '📍 Ponto marcado · círculo = raio de operação de ' + r + ' metros';
       } else {
-        mapaAroPrint.setView(pos, 16);
+        mapaAroPrint.setView(pos, 16, {animate:false});
         legenda.textContent = '📍 Ponto marcado no local da operação';
+      }
+      // Pino e círculo saem como <div> comuns sobrepostos ao container, SEMPRE centrados via
+      // CSS (top:50%/left:50%) — não como camada do Leaflet (L.marker/L.circle) nem via
+      // latLngToLayerPoint. Dois motivos: (1) o renderer vetorial do Leaflet (SVG/Canvas/<img>
+      // do marcador padrão) desenha via requestAnimationFrame, e o pipeline de impressão do
+      // Chrome tira o retrato antes desse repaint acontecer — o mapa saía só com os ladrilhos,
+      // sem pino nem círculo; (2) mesmo trocando pra <div>+L.divIcon (uma camada Leaflet comum),
+      // a posição em pixel calculada por latLngToLayerPoint fica presa ao layout da TELA — o
+      // page.pdf()/"Salvar como PDF" do Chrome pagina o conteúdo pra impressão com outro layout
+      // (regra @page) e o pino saía no canto do mapa em vez do centro. Como o mapa de impressão
+      // SEMPRE fica centrado no ponto marcado (setView/fitBounds acima), plain CSS 50%/50% (que
+      // qualquer motor de layout recalcula sozinho, tela ou página impressa) resolve as duas
+      // coisas de uma vez. Comprovado tirando PDF de verdade (page.pdf) e comparando pixel a
+      // pixel, não só olhando a tela — ver [[drone-aro-mapa-impressao]].
+      if(!circuloAroPrintEl){
+        circuloAroPrintEl = document.createElement('div');
+        circuloAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;border-radius:50%;border:2px solid #1b6b3d;background:rgba(27,107,61,.15);box-sizing:border-box;pointer-events:none;z-index:600';
+        mapaAroPrint.getContainer().appendChild(circuloAroPrintEl);
+      }
+      if(r){
+        const zoom = mapaAroPrint.getZoom();
+        const metrosPorPixel = 156543.03392 * Math.cos(pos.lat * Math.PI / 180) / Math.pow(2, zoom);
+        const diametroPx = Math.max(10, Math.round((r * 2) / metrosPorPixel));
+        circuloAroPrintEl.style.width = diametroPx + 'px';
+        circuloAroPrintEl.style.height = diametroPx + 'px';
+        circuloAroPrintEl.style.marginLeft = (-diametroPx / 2) + 'px';
+        circuloAroPrintEl.style.marginTop = (-diametroPx / 2) + 'px';
+        circuloAroPrintEl.style.display = '';
+      } else {
+        circuloAroPrintEl.style.display = 'none';
+      }
+
+      if(!marcadorAroPrintEl){
+        marcadorAroPrintEl = document.createElement('div');
+        marcadorAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none;z-index:1000';
+        mapaAroPrint.getContainer().appendChild(marcadorAroPrintEl);
       }
 
       // Espera os ladrilhos do enquadramento FINAL (depois do fitBounds/setView acima) terminarem de
