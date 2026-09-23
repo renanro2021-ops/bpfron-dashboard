@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Formulário ARO · Piloto de Drones · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
+  --green:#34d399; --blue:#60a5fa; --red:#f87171;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+button,input,select{font-family:inherit}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:900px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+
+.subnav{max-width:900px;margin:0 auto;padding:10px clamp(16px,4vw,28px) 0;display:flex;gap:8px;flex-wrap:wrap}
+.subnav a{font-size:13px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:7px 14px;text-decoration:none;transition:.12s}
+.subnav a:hover{background:rgba(148,163,184,.16)}
+.subnav a.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.55);color:var(--yellow)}
+
+.wrap{max-width:900px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(16px,4vw,28px) 100px}
+.intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,4vw,32px);color:#fff;line-height:1.15}
+.intro p{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
+.intro p b{color:#e2e8f0}
+
+.alerta{margin:18px 0 4px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.3);border-left:4px solid var(--blue);border-radius:12px;padding:14px 16px}
+.alerta p{font-size:13.5px;color:#cbd5e1;line-height:1.65}
+.alerta b{color:#fff}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:1.5px;text-transform:uppercase;margin:28px 0 12px}
+.painel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+
+.campo{margin-bottom:14px}
+.campo:last-child{margin-bottom:0}
+.campo label{display:block;font-size:12.5px;font-weight:700;color:#cbd5e1;margin-bottom:5px}
+.campo input[type=text],.campo input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-size:14.5px;outline:none;min-height:42px}
+.campo input:focus{border-color:rgba(245,197,24,.6)}
+.linha2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.linha3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media (max-width:600px){.linha2,.linha3{grid-template-columns:1fr}}
+
+.radios{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+.radios label{display:flex;align-items:center;gap:7px;font-size:13.5px;color:#cbd5e1;font-weight:500;cursor:pointer}
+.radios input{width:17px;height:17px;accent-color:var(--yellow);cursor:pointer}
+
+.perigo{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.perigo:last-child{margin-bottom:0}
+.perigo-hd{background:rgba(245,197,24,.1);border-bottom:1px solid var(--line);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--yellow)}
+.perigo-bd{padding:12px 14px}
+.perigo-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.perigo-meta b{color:#e2e8f0}
+.chk{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:13.5px;color:#dde3f0;line-height:1.5;border-top:1px solid rgba(148,163,184,.08)}
+.chk:first-of-type{border-top:none}
+.chk input{width:17px;height:17px;margin-top:2px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+.residual{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.residual b{color:#e2e8f0}
+.status-tol{color:var(--green);font-weight:700}
+
+.acoes{position:sticky;bottom:0;margin-top:26px;padding:16px;background:linear-gradient(180deg,transparent,rgba(6,9,18,.96) 30%);display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.btn{font-size:14px;font-weight:700;border-radius:10px;padding:12px 20px;border:1px solid var(--line);cursor:pointer;min-height:46px}
+.btn.primario{color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border:none}
+.btn.secund{color:#cbd5e1;background:rgba(148,163,184,.08)}
+.btn.secund:hover{background:rgba(148,163,184,.16)}
+.aviso-campo{font-size:12px;color:var(--red);margin-top:6px;display:none}
+.aviso-campo.on{display:block}
+
+.folha{display:none}
+
+@media (max-width:640px){
+  .hdr{position:static}
+  .hdr-logo{height:34px}
+  .acoes{position:static}
+}
+
+@media print{
+  body *{visibility:hidden}
+  .folha,.folha *{visibility:visible}
+  .folha{display:block;position:absolute;top:0;left:0;width:100%;padding:0;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif}
+  @page{margin:14mm}
+  .f-titulo{text-align:center;font-size:18px;font-weight:700;margin-bottom:2px}
+  .f-sub{text-align:center;font-size:11px;font-weight:700;margin-bottom:14px}
+  .f-sec{font-size:13px;font-weight:700;color:#1d4ed8;margin:14px 0 6px;border-bottom:1px solid #1d4ed8;padding-bottom:2px}
+  .f-linha{font-size:12px;margin-bottom:5px;display:flex;gap:6px}
+  .f-linha b{font-weight:700;white-space:nowrap}
+  .f-linha span{border-bottom:1px solid #000;flex:1;min-height:14px;padding-left:4px}
+  .f-3col{display:flex;gap:18px}
+  .f-3col > div{flex:1}
+  table.f-tab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+  table.f-tab td,table.f-tab th{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}
+  table.f-tab .hd{background:#1d4ed8;color:#fff;font-weight:700}
+  table.f-tab .sub{background:#eef2f7;font-weight:700;width:150px}
+  .f-decl{font-size:11px;line-height:1.6;margin:10px 0}
+  .f-assin{margin-top:34px;font-size:12px}
+  .f-assin-linha{border-top:1px solid #000;width:70%;margin-top:34px;padding-top:4px}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Piloto de <em>Drones</em></div>
+        <div class="hdr-sub">Avaliação de Risco Operacional (ARO) · BPFRON/RO</div>
+      </div>
+    </div>
+    <a class="hdr-back" href="drone.html">⬅ Piloto de Drones</a>
+  </div>
+</div>
+<div class="subnav">
+  <a href="drone-material.html">📚 Material de Estudo</a>
+  <a class="on" href="drone-aro.html">📝 Formulário ARO</a>
+</div>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>Formulário ARO</h1>
+    <p>Preencha os dados do voo abaixo. Em conformidade com o <b>RBAC nº 100</b> e a <b>IS nº E94-003 da ANAC</b>. Ao final, clique em <b>Baixar PDF</b> para gerar o documento e enviar para assinatura no <b>gov.br</b> (assinador.iti.gov.br).</p>
+  </div>
+
+  <div class="alerta">
+    <p>Os dados ficam salvos automaticamente <b>só neste navegador</b> (rascunho local), para você não perder o preenchimento. Nada é enviado para nenhum servidor.</p>
+  </div>
+
+  <form id="aro-form" novalidate>
+
+    <div class="sec">1. Identificação do operador e dos pilotos</div>
+    <div class="painel">
+      <div class="campo"><label for="f-nome">Nome / Razão Social</label><input type="text" id="f-nome" name="nome" required></div>
+      <div class="linha2">
+        <div class="campo"><label for="f-cpf">CPF / CNPJ</label><input type="text" id="f-cpf" name="cpf" required></div>
+        <div class="campo"><label for="f-anac">Cód. ANAC</label><input type="text" id="f-anac" name="anac"></div>
+      </div>
+      <div class="campo"><label for="f-piloto">Piloto em Comando</label><input type="text" id="f-piloto" name="piloto" required></div>
+      <div class="campo"><label for="f-tel">Telefone / Contato</label><input type="text" id="f-tel" name="tel"></div>
+    </div>
+
+    <div class="sec">2. Identificação da aeronave (UAS/RPA)</div>
+    <div class="painel">
+      <div class="campo"><label for="f-modelo">Fabricante e Modelo</label><input type="text" id="f-modelo" name="modelo" required></div>
+      <div class="linha2">
+        <div class="campo"><label for="f-sisant">Nº Registro SISANT</label><input type="text" id="f-sisant" name="sisant"></div>
+        <div class="campo"><label for="f-anatel">Homologação ANATEL</label><input type="text" id="f-anatel" name="anatel"></div>
+      </div>
+      <div class="linha2">
+        <div class="campo"><label for="f-peso">Peso Máx. Decolagem (kg)</label><input type="number" step="0.01" id="f-peso" name="peso"></div>
+        <div class="campo"><label for="f-seguro">Apólice Seguro RETA</label><input type="text" id="f-seguro" name="seguro"></div>
+      </div>
+    </div>
+
+    <div class="sec">3. Escopo e cenário operacional</div>
+    <div class="painel">
+      <div class="campo"><label for="f-local">Local da Operação</label><input type="text" id="f-local" name="local" required></div>
+      <div class="linha2">
+        <div class="campo"><label for="f-gps">Coordenadas GPS</label><input type="text" id="f-gps" name="gps" placeholder="lat, long"></div>
+        <div class="campo"><label for="f-raio">Raio de Operação</label><input type="text" id="f-raio" name="raio"></div>
+      </div>
+      <div class="campo"><label for="f-alt">Altitude Máxima (metros)</label><input type="number" id="f-alt" name="alt"></div>
+      <div class="campo"><label>Tipo de Voo</label>
+        <div class="radios">
+          <label><input type="radio" name="tipovoo" value="VLOS" checked> VLOS</label>
+          <label><input type="radio" name="tipovoo" value="EVLOS"> EVLOS</label>
+        </div>
+      </div>
+      <div class="campo"><label>Pessoas não Anuentes</label>
+        <div class="radios">
+          <label><input type="radio" name="anuentes" value="Afastado (+30m)" checked> Afastado (+30m)</label>
+          <label><input type="radio" name="anuentes" value="Próximo (com anuência/barreiras)"> Próximo (com anuência/barreiras)</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">4. Quadros de risco e medidas mitigadoras (obrigatórios ANAC)</div>
+    <div class="painel">
+
+      <div class="perigo">
+        <div class="perigo-hd">Perigo 1: Perda do Enlace de Comando e Controle (Loss of C2 Link / Flyaway)</div>
+        <div class="perigo-bd">
+          <div class="perigo-meta">Avaliação Inicial — <b>Probabilidade: Média</b></div>
+          <label class="chk"><input type="checkbox" name="p1m1" checked>Configuração prévia obrigatória do sistema de FailSafe (Return-to-Home - RTH).</label>
+          <label class="chk"><input type="checkbox" name="p1m2" checked>Ajuste da altitude do RTH acima do obstáculo ou vetor físico mais alto da região de voo.</label>
+          <label class="chk"><input type="checkbox" name="p1m3" checked>Verificação pré-voo dos níveis de bateria da aeronave e do rádio controle, e calibração de bússola/IMU.</label>
+          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Moderada</span><span class="status-tol">Status: Tolerável</span></div>
+        </div>
+      </div>
+
+      <div class="perigo">
+        <div class="perigo-hd">Perigo 2: Conflito com Tráfego Aéreo Local (Aeródromos, Helipontos ou Outros UAS)</div>
+        <div class="perigo-bd">
+          <div class="perigo-meta">Avaliação Inicial — <b>Probabilidade: Baixa</b></div>
+          <label class="chk"><input type="checkbox" name="p2m1" checked>Consulta obrigatória e envio de solicitação de acesso ao espaço aéreo através do sistema SARPAS (DECEA).</label>
+          <label class="chk"><input type="checkbox" name="p2m2" checked>Manutenção de vigilância visual contínua (VLOS) para identificação de outras aeronaves na área.</label>
+          <label class="chk"><input type="checkbox" name="p2m3" checked>Prioridade absoluta de passagem a qualquer tipo de aeronave tripulada (pouso ou desvio imediato).</label>
+          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Catastrófica</span><span class="status-tol">Status: Tolerável</span></div>
+        </div>
+      </div>
+
+      <div class="perigo">
+        <div class="perigo-hd">Perigo 3: Presença de Pessoas Não Envolvidas e Não Anuentes (Terceiros)</div>
+        <div class="perigo-bd">
+          <div class="perigo-meta">Avaliação Inicial — <b>Probabilidade: Média</b></div>
+          <label class="chk"><input type="checkbox" name="p3m1" checked>Garantia de distância horizontal mínima de segurança de 30 metros de pessoas não anuentes.</label>
+          <label class="chk"><input type="checkbox" name="p3m2" checked>Sinalização terrestre visível da área delimitada para decolagem, pouso e operação do piloto.</label>
+          <label class="chk"><input type="checkbox" name="p3m3" checked>Suspensão ou desvio imediato do voo caso terceiros invadam o perímetro de segurança planejado.</label>
+          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Moderada</span><span class="status-tol">Status: Tolerável</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sec">5. Declaração de responsabilidade</div>
+    <div class="painel">
+      <p style="font-size:13px;color:#cbd5e1;line-height:1.65;margin-bottom:14px">Declaro que a operação acima descrita será conduzida em total conformidade com os regulamentos vigentes da ANAC (RBAC nº 100), DECEA (ICA 100-40) e ANATEL. Asseguro que todas as medidas mitigadoras descritas nestes quadros de risco serão rigorosamente checadas e aplicadas em campo.</p>
+      <div class="linha2">
+        <div class="campo"><label for="f-decllocal">Local</label><input type="text" id="f-decllocal" name="decllocal"></div>
+        <div class="campo"><label for="f-decldata">Data</label><input type="text" id="f-decldata" name="decldata" placeholder="dd/mm/aaaa"></div>
+      </div>
+    </div>
+
+    <div class="acoes">
+      <div style="flex:1"><span id="aviso" class="aviso-campo">Preencha os campos obrigatórios antes de baixar o PDF (nome, CPF/CNPJ, piloto em comando, modelo da aeronave e local da operação).</span></div>
+      <button type="button" class="btn secund" id="btn-limpar">🗑️ Limpar rascunho</button>
+      <button type="submit" class="btn primario" id="btn-baixar">📄 Baixar PDF para assinar</button>
+    </div>
+  </form>
+</main>
+
+<!-- Folha usada só na impressão/PDF -->
+<div class="folha" id="folha">
+  <div class="f-titulo">AVALIAÇÃO DE RISCO OPERACIONAL (ARO)</div>
+  <div class="f-sub">Em conformidade com o RBAC nº 100 e a IS nº E94-003 da ANAC</div>
+
+  <div class="f-sec">1. Identificação do operador e dos pilotos</div>
+  <div class="f-linha"><b>Nome / Razão Social:</b><span id="o-nome"></span></div>
+  <div class="f-3col">
+    <div class="f-linha"><b>CPF / CNPJ:</b><span id="o-cpf"></span></div>
+    <div class="f-linha"><b>Cód. ANAC:</b><span id="o-anac"></span></div>
+  </div>
+  <div class="f-linha"><b>Piloto em Comando:</b><span id="o-piloto"></span></div>
+  <div class="f-linha"><b>Telefone / Contato:</b><span id="o-tel"></span></div>
+
+  <div class="f-sec">2. Identificação da aeronave (UAS/RPA)</div>
+  <div class="f-linha"><b>Fabricante e Modelo:</b><span id="o-modelo"></span></div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Nº Registro SISANT:</b><span id="o-sisant"></span></div>
+    <div class="f-linha"><b>Homologação ANATEL:</b><span id="o-anatel"></span></div>
+  </div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Peso Máx. Decolagem:</b><span id="o-peso"></span></div>
+    <div class="f-linha"><b>Apólice Seguro RETA:</b><span id="o-seguro"></span></div>
+  </div>
+
+  <div class="f-sec">3. Escopo e cenário operacional</div>
+  <div class="f-linha"><b>Local da Operação:</b><span id="o-local"></span></div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Coordenadas GPS:</b><span id="o-gps"></span></div>
+    <div class="f-linha"><b>Raio de Operação:</b><span id="o-raio"></span></div>
+  </div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Altitude Máxima:</b><span id="o-alt"></span></div>
+    <div class="f-linha"><b>Tipo de Voo:</b><span id="o-tipovoo"></span></div>
+  </div>
+  <div class="f-linha"><b>Pessoas não Anuentes:</b><span id="o-anuentes"></span></div>
+
+  <div class="f-sec">4. Quadros de risco e medidas mitigadoras (obrigatórios ANAC)</div>
+  <div id="o-perigos"></div>
+
+  <div class="f-sec">5. Declaração de responsabilidade e assinatura</div>
+  <div class="f-decl">Declaro que a operação acima descrita será conduzida em total conformidade com os regulamentos vigentes da ANAC (RBAC nº 100), DECEA (ICA 100-40) e ANATEL. Asseguro que todas as medidas mitigadoras descritas nestes quadros de risco serão rigorosamente checadas e aplicadas em campo.</div>
+  <div class="f-3col">
+    <div class="f-linha"><b>Local:</b><span id="o-decllocal"></span></div>
+    <div class="f-linha"><b>Data:</b><span id="o-decldata"></span></div>
+  </div>
+  <div class="f-assin">
+    <div class="f-assin-linha">Assinatura do Piloto em Comando / Operador</div>
+  </div>
+</div>
+
+<script>
+const LS_KEY = 'bp_aro_rascunho';
+const form = document.getElementById('aro-form');
+
+function coletar(){
+  const d = {};
+  new FormData(form).forEach((v,k) => d[k]=v);
+  document.querySelectorAll('#aro-form input[type=checkbox]').forEach(c => d[c.name]=c.checked);
+  return d;
+}
+function salvar(){ localStorage.setItem(LS_KEY, JSON.stringify(coletar())); }
+function carregar(){
+  let d; try{ d = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ d = {}; }
+  Object.keys(d).forEach(k => {
+    const els = form.elements[k];
+    if(!els) return;
+    if(els instanceof RadioNodeList){
+      [...els].forEach(el => el.checked = (el.value === d[k]));
+    } else if(els.type === 'checkbox'){
+      els.checked = !!d[k];
+    } else {
+      els.value = d[k];
+    }
+  });
+}
+carregar();
+form.addEventListener('input', salvar);
+form.addEventListener('change', salvar);
+
+document.getElementById('btn-limpar').addEventListener('click', () => {
+  if(!confirm('Apagar tudo que foi preenchido neste navegador?')) return;
+  localStorage.removeItem(LS_KEY);
+  form.reset();
+});
+
+function txt(id){ return (document.getElementById(id).value || '').trim(); }
+
+function montarFolha(){
+  const set = (id,val) => document.getElementById(id).textContent = val || '';
+  set('o-nome', txt('f-nome'));
+  set('o-cpf', txt('f-cpf'));
+  set('o-anac', txt('f-anac'));
+  set('o-piloto', txt('f-piloto'));
+  set('o-tel', txt('f-tel'));
+  set('o-modelo', txt('f-modelo'));
+  set('o-sisant', txt('f-sisant'));
+  set('o-anatel', txt('f-anatel'));
+  const peso = txt('f-peso');
+  set('o-peso', peso ? peso + ' kg' : '');
+  set('o-seguro', txt('f-seguro'));
+  set('o-local', txt('f-local'));
+  set('o-gps', txt('f-gps'));
+  set('o-raio', txt('f-raio'));
+  const alt = txt('f-alt');
+  set('o-alt', alt ? alt + ' metros' : '');
+  set('o-tipovoo', form.tipovoo.value);
+  set('o-anuentes', form.anuentes.value);
+  set('o-decllocal', txt('f-decllocal'));
+  set('o-decldata', txt('f-decldata'));
+
+  const PERIGOS = [
+    { titulo:'Perigo 1: Perda do Enlace de Comando e Controle (Loss of C2 Link / Flyaway)',
+      prob:'Média', medidas:['p1m1','p1m2','p1m3'],
+      textos:['Configuração prévia obrigatória do sistema de FailSafe (Return-to-Home - RTH).',
+              'Ajuste da altitude do RTH acima do obstáculo ou vetor físico mais alto da região de voo.',
+              'Verificação pré-voo dos níveis de bateria da aeronave e do rádio controle, e calibração de bússola/IMU.'],
+      resProb:'Baixa', resSev:'Moderada' },
+    { titulo:'Perigo 2: Conflito com Tráfego Aéreo Local (Aeródromos, Helipontos ou Outros UAS)',
+      prob:'Baixa', medidas:['p2m1','p2m2','p2m3'],
+      textos:['Consulta obrigatória e envio de solicitação de acesso ao espaço aéreo através do sistema SARPAS (DECEA).',
+              'Manutenção de vigilância visual contínua (VLOS) para identificação de outras aeronaves na área.',
+              'Prioridade absoluta de passagem a qualquer tipo de aeronave tripulada (pouso ou desvio imediato).'],
+      resProb:'Baixa', resSev:'Catastrófica' },
+    { titulo:'Perigo 3: Presença de Pessoas Não Envolvidas e Não Anuentes (Terceiros)',
+      prob:'Média', medidas:['p3m1','p3m2','p3m3'],
+      textos:['Garantia de distância horizontal mínima de segurança de 30 metros de pessoas não anuentes.',
+              'Sinalização terrestre visível da área delimitada para decolagem, pouso e operação do piloto.',
+              'Suspensão ou desvio imediato do voo caso terceiros invadam o perímetro de segurança planejado.'],
+      resProb:'Baixa', resSev:'Moderada' }
+  ];
+
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let html = '';
+  PERIGOS.forEach(p => {
+    html += '<table class="f-tab"><tr><td class="hd" colspan="2">' + esc(p.titulo) + '</td></tr>';
+    html += '<tr><td class="sub">Avaliação Inicial</td><td>Probabilidade: ' + p.prob + '</td></tr>';
+    html += '<tr><td class="sub">Medidas Mitigadoras</td><td>';
+    p.medidas.forEach((nome,i) => {
+      const marcado = form.elements[nome] && form.elements[nome].checked;
+      html += (marcado ? '☑' : '☐') + ' ' + esc(p.textos[i]) + '<br>';
+    });
+    html += '</td></tr>';
+    html += '<tr><td class="sub">Risco Residual</td><td>Probabilidade: ' + p.resProb + ' &nbsp;·&nbsp; Severidade: ' + p.resSev + ' &nbsp;·&nbsp; Status: Tolerável</td></tr>';
+    html += '</table>';
+  });
+  document.getElementById('o-perigos').innerHTML = html;
+}
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const obrig = ['f-nome','f-cpf','f-piloto','f-modelo','f-local'];
+  const faltando = obrig.some(id => !txt(id));
+  const aviso = document.getElementById('aviso');
+  if(faltando){
+    aviso.classList.add('on');
+    document.getElementById(obrig.find(id => !txt(id))).focus();
+    return;
+  }
+  aviso.classList.remove('on');
+  montarFolha();
+  setTimeout(() => window.print(), 50);
+});
+</script>
+</body>
+</html>
