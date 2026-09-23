@@ -11,7 +11,7 @@
 :root{
   --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
   --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
-  --green:#34d399; --blue:#60a5fa;
+  --green:#34d399; --verde-esc:#1b6b3d;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
@@ -20,7 +20,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
 .hdr-inner{max-width:1000px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-badges{display:flex;align-items:center;gap:8px}
 .hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-badge{height:44px;width:44px;border-radius:50%;object-fit:cover}
 .hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
 .hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
 .hdr-sub{font-size:12px;color:var(--muted)}
@@ -35,11 +37,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,34px);color:#fff;line-height:1.15}
 .intro p{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
 
-.card-vazio{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(28px,6vw,54px) clamp(20px,5vw,40px);text-align:center}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:22px 0 4px}
+.card-vazio{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(28px,6vw,54px) clamp(20px,5vw,40px);text-align:center}
 .card-vazio .ic{font-size:44px;margin-bottom:14px}
 .card-vazio h2{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;margin-bottom:8px}
 .card-vazio p{color:var(--muted);font-size:14px;max-width:52ch;margin:0 auto;line-height:1.65}
 .chip{display:inline-block;margin-top:16px;border-radius:999px;padding:5px 14px;font-size:12px;font-weight:700;border:1px solid rgba(245,197,24,.45);background:rgba(245,197,24,.12);color:var(--yellow)}
+
+.grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
+.card:hover,.card:focus-visible{border-color:rgba(27,107,61,.6);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
+.card-top{display:flex;align-items:center;gap:12px}
+.ic-card{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:rgba(27,107,61,.14);border:1px solid rgba(27,107,61,.4);flex-shrink:0}
+.card h2{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.2}
+.card p.d{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.chip.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
+.go{font-size:13px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:7px 14px;white-space:nowrap}
 
 .topicos{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .top-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;opacity:.55}
@@ -57,7 +71,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 <div class="hdr">
   <div class="hdr-inner">
     <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-badges">
+        <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+        <img class="hdr-badge" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
+      </div>
       <div>
         <div class="hdr-title">Piloto de <em>Drones</em></div>
         <div class="hdr-sub">Material de estudo · BPFRON/RO</div>
@@ -77,13 +94,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
     <p>Conteúdo de apoio para o piloto de drone do batalhão: legislação da ANAC/DECEA/ANATEL, procedimentos operacionais e boas práticas de segurança de voo.</p>
   </div>
 
+  <div class="sec">Apostilas</div>
+  <div class="grid">
+    <a class="card" href="drone-apostila-historia-sarp.html">
+      <div class="card-top"><span class="ic-card">📖</span><h2>A História e Evolução dos SARP</h2></div>
+      <p class="d">Das origens militares ao uso policial atual: terminologia, marcos históricos, siglas, jammers e sistemas anti-drone, e o drone na Segurança Pública.</p>
+      <div class="card-foot"><span class="chip ok">Disponível</span><span class="go">Abrir →</span></div>
+    </a>
+  </div>
+
   <div class="card-vazio">
     <div class="ic">🚧</div>
-    <h2>Em construção</h2>
-    <p>Esta página ainda não tem conteúdo publicado. O material de estudo (apostilas, resumos da regulação e checklists) vai entrar aqui nas próximas atualizações.</p>
+    <h2>Mais apostilas em construção</h2>
+    <p>O restante do material de estudo (regulação da ANAC/DECEA/ANATEL, resumos e checklists) vai entrar aqui nas próximas atualizações.</p>
     <span class="chip">Em breve</span>
   </div>
 
+  <div class="sec" style="margin-top:30px">Assuntos previstos</div>
   <div class="topicos">
     <div class="top-card"><h3>RBAC nº 100</h3><p>Regras gerais de operação de aeronaves não tripuladas (ANAC).</p></div>
     <div class="top-card"><h3>ICA 100-40 (DECEA)</h3><p>Acesso ao espaço aéreo e uso do SARPAS.</p></div>

@@ -11,7 +11,7 @@
 :root{
   --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
   --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
-  --green:#34d399; --blue:#60a5fa; --red:#f87171;
+  --green:#34d399; --verde-esc:#1b6b3d; --red:#f87171;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
@@ -21,7 +21,9 @@ button,input,select{font-family:inherit}
 .hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
 .hdr-inner{max-width:900px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-badges{display:flex;align-items:center;gap:8px}
 .hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-badge{height:44px;width:44px;border-radius:50%;object-fit:cover}
 .hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
 .hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
 .hdr-sub{font-size:12px;color:var(--muted)}
@@ -37,7 +39,7 @@ button,input,select{font-family:inherit}
 .intro p{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
 .intro p b{color:#e2e8f0}
 
-.alerta{margin:18px 0 4px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.3);border-left:4px solid var(--blue);border-radius:12px;padding:14px 16px}
+.alerta{margin:18px 0 4px;background:rgba(27,107,61,.1);border:1px solid rgba(27,107,61,.4);border-left:4px solid var(--verde-esc);border-radius:12px;padding:14px 16px}
 .alerta p{font-size:13.5px;color:#cbd5e1;line-height:1.65}
 .alerta b{color:#fff}
 
@@ -87,21 +89,21 @@ button,input,select{font-family:inherit}
 }
 
 @media print{
-  body *{visibility:hidden}
-  .folha,.folha *{visibility:visible}
-  .folha{display:block;position:absolute;top:0;left:0;width:100%;padding:0;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif}
+  html,body{height:auto!important;margin:0!important;padding:0!important;background:#fff!important}
+  .hdr,.subnav,main.wrap{display:none!important}
+  .folha{display:block!important;position:static;width:100%;padding:0;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif}
   @page{margin:14mm}
   .f-titulo{text-align:center;font-size:18px;font-weight:700;margin-bottom:2px}
   .f-sub{text-align:center;font-size:11px;font-weight:700;margin-bottom:14px}
-  .f-sec{font-size:13px;font-weight:700;color:#1d4ed8;margin:14px 0 6px;border-bottom:1px solid #1d4ed8;padding-bottom:2px}
+  .f-sec{font-size:13px;font-weight:700;color:#14532d;margin:14px 0 6px;border-bottom:1px solid #14532d;padding-bottom:2px}
   .f-linha{font-size:12px;margin-bottom:5px;display:flex;gap:6px}
   .f-linha b{font-weight:700;white-space:nowrap}
   .f-linha span{border-bottom:1px solid #000;flex:1;min-height:14px;padding-left:4px}
   .f-3col{display:flex;gap:18px}
   .f-3col > div{flex:1}
-  table.f-tab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+  table.f-tab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
   table.f-tab td,table.f-tab th{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}
-  table.f-tab .hd{background:#1d4ed8;color:#fff;font-weight:700}
+  table.f-tab .hd{background:#14532d;color:#fff;font-weight:700}
   table.f-tab .sub{background:#eef2f7;font-weight:700;width:150px}
   .f-decl{font-size:11px;line-height:1.6;margin:10px 0}
   .f-assin{margin-top:34px;font-size:12px}
@@ -114,7 +116,10 @@ button,input,select{font-family:inherit}
 <div class="hdr">
   <div class="hdr-inner">
     <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-badges">
+        <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+        <img class="hdr-badge" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
+      </div>
       <div>
         <div class="hdr-title">Piloto de <em>Drones</em></div>
         <div class="hdr-sub">Avaliação de Risco Operacional (ARO) · BPFRON/RO</div>
