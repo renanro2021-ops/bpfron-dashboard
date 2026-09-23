@@ -197,12 +197,12 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
   font-family:ui-monospace,Consolas,monospace;text-align:left;line-height:1.5}
 
 /* ---------- itens da compra ---------- */
-.item-l{display:grid;grid-template-columns:1fr 62px 96px 34px;gap:7px;margin-bottom:7px;align-items:center}
+.item-l{display:grid;grid-template-columns:1fr 54px 82px 82px 34px;gap:7px;margin-bottom:7px;align-items:center}
 .item-l input{padding:9px 10px;font-size:14px}
 .item-x{background:#16232e;border:1px solid var(--border2);color:var(--muted);border-radius:8px;
   height:38px;cursor:pointer;font-size:15px;font-family:inherit}
 .item-x:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
-.item-cab{display:grid;grid-template-columns:1fr 62px 96px 34px;gap:7px;margin-bottom:5px}
+.item-cab{display:grid;grid-template-columns:1fr 54px 82px 82px 34px;gap:7px;margin-bottom:5px}
 .item-cab span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .soma{text-align:right;font-family:Rajdhani,sans-serif;font-size:17px;font-weight:700;
   color:var(--gold);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border2)}
@@ -717,11 +717,13 @@ input.ocr{border-color:rgba(167,139,250,.75)!important;background:rgba(167,139,2
               <input type="text" id="g-desc" placeholder="ex.: Lanche do primeiro dia"></div>
           </div>
           <label class="lbl" style="margin-top:6px">Itens da compra</label>
-          <div class="item-cab"><span>Item</span><span>Qtd</span><span>Valor R$</span><span></span></div>
+          <div class="item-cab"><span>Item</span><span>Qtd</span><span>Unit. R$</span><span>Total R$</span><span></span></div>
           <div id="g-itens"></div>
           <button class="btn sec mini" onclick="novoItem()">➕ Item</button>
           <div class="soma" id="g-soma">Soma dos itens: R$ 0,00</div>
           <div class="grade" style="margin-top:12px">
+            <div class="campo"><label class="lbl" for="g-desconto">Desconto R$ (opcional)</label>
+              <input type="text" id="g-desconto" inputmode="decimal" placeholder="0,00" oninput="descontoRecalc()"></div>
             <div class="campo"><label class="lbl" for="g-total">Total pago (manda sobre a soma)</label>
               <input type="text" id="g-total" inputmode="decimal" placeholder="deixe vazio p/ usar a soma"></div>
             <div class="campo full">
@@ -2156,7 +2158,7 @@ async function recusar(id){
    pelo OCR. Tira data, estabelecimento, total e os ITENS — que é o trabalho
    chato de digitar. Tudo em roxo pra conferir: cupom amassado engana o OCR. */
 
-const GST_LIXO   = /TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|PAGO|DINHEIRO|CARTAO|CREDITO|DEBITO|PIX|SUBTOTAL|SUB TOTAL|SERVICO|ACRESCIMO|CUPOM|FISCAL|CONSUMIDOR|CPF|OPERADOR|CAIXA|VENDA|CHAVE|CONSULTE|EMISSAO|PROTOCOLO|QTD|UNIT|DANFE|NFC|AVENIDA|RUA |FONE|ENDERECO/;
+const GST_LIXO   = /TOTAL|ICMS|BASE DE CALC|DESCONTO|FRETE|IPI|TRIBUT|CNPJ|INSCRI|VALOR APROX|TROCO|PAGAMENTO|PAGO|PAGAR|DINHEIRO|CARTAO|CREDITO|DEBITO|PIX|SUBTOTAL|SUB TOTAL|SERVICO|ACRESCIMO|CUPOM|FISCAL|CONSUMIDOR|CPF|OPERADOR|CAIXA|VENDA|CHAVE|CONSULTE|EMISSAO|PROTOCOLO|QTD|UNIT|DANFE|NFC|AVENIDA|RUA |FONE|ENDERECO/;
 const GST_UNID   = /\s+(UN|UND|PC|PCT|LT|L|KG|G|CX|DZ|FD|BD|UNID|PT|PAO)\s*$/;
 const GST_LOJA   = /\b(SUPERMERCADO|MERCADO|MERCEARIA|COMERCIAL|COMERCIO|ATACAD|DISTRIBUIDORA|PADARIA|PANIFICADORA|ACOUGUE|HORTIFRUTI|POSTO|RESTAURANTE|LANCHONETE|CONVENIENCIA|LTDA|EIRELI|EPP|MEI|S\/?A)\b/;
 
@@ -2168,13 +2170,19 @@ function gstNorm(s){
 const GST_V = '(\\d{1,3}(?:[.\\s]\\d{3})*,\\d{2})';
 
 function gstTotal(T){
-  const rotulos = ['VALOR TOTAL', 'TOTAL A PAGAR', 'TOTAL GERAL', 'V(?:ALOR|L)\\.? TOTAL',
-                   'TOTAL R\\$', 'VALOR PAGO', 'TOTAL'];
+  /* "Valor a pagar/pago" primeiro: é o que sai do bolso de verdade quando tem
+     desconto (o cupom também imprime um "Valor total" maior, antes do desconto). */
+  const rotulos = ['VALOR A PAGAR', 'TOTAL A PAGAR', 'VALOR PAGO', 'TOTAL GERAL',
+                   'VALOR TOTAL', 'V(?:ALOR|L)\\.? TOTAL', 'TOTAL R\\$', 'TOTAL'];
   for (const r of rotulos){
     const m = T.match(new RegExp(r + '[^0-9]{0,30}' + GST_V));
     if (m) return num(m[1].replace(/\s/g, ''));
   }
   return 0;
+}
+function gstDesconto(T){
+  const m = T.match(new RegExp('DESCONTO[^0-9]{0,20}' + GST_V));
+  return m ? num(m[1].replace(/\s/g, '')) : 0;
 }
 function gstData(T){
   const DT = '(\\d{2})[\\/.-](\\d{2})[\\/.-](20\\d{2})';
@@ -2196,10 +2204,17 @@ function gstLoja(linhas){
          7896080870113   2 PACOTE   4,50   9,00
    Esta reconhece a linha de números; a descrição vem da linha de cima. */
 function gstLinhaNumeros(L){
+  /* Nota de material de construção quebra a descrição em 2 linhas e o resto da
+     marca (KRONA, TIGRE...) vaza pra linha dos números — não é código de barras
+     nem parte do nome (que já veio inteiro na linha de cima), é só descartado. */
   const m = L.match(new RegExp(
-    '^(?:(\\d{8,14})\\s+)?(\\d+(?:[.,]\\d+)?)\\s*([A-Z]{1,8})?\\s+' + GST_V + '\\s+' + GST_V + '\\s*$'));
+    '^(?:[A-Z]{2,15}\\.?\\s+)?(?:(\\d{8,14})\\s+)?(\\d+(?:[.,]\\d+)?)\\s*([A-Z]{1,8})?\\s+' + GST_V + '\\s+' + GST_V + '\\s*$'));
   if (!m) return null;
-  return { qtd: Number(String(m[2]).replace(',', '.')) || 1, valor: num(m[5].replace(/\s/g, '')) };
+  return {
+    qtd: Number(String(m[2]).replace(',', '.')) || 1,
+    unit: num(m[4].replace(/\s/g, '')),
+    valor: num(m[5].replace(/\s/g, '')),
+  };
 }
 /* A descrição do item, olhando pra cima. Tira o número de ordem (001) e o
    código de barras, que não são nome de produto. */
@@ -2211,7 +2226,7 @@ function gstDescAcima(linhas, i){
     if (/^(ITEM|CODIGO|DESCRICAO)\b/.test(D)) continue;   // cabeçalho da tabela
     if (gstLinhaNumeros(D.replace(/\s+/g, ' ').trim())) continue;  // outra linha de números
     // o cupom alinha em colunas: sobra espaço no meio do nome do produto
-    d = d.replace(/^\d{1,3}\s+/, '').replace(/^\d{8,14}\s*/, '').replace(/\s+/g, ' ').trim();
+    d = d.replace(/^\d{1,6}(?:\.\d{1,4})?\s+/, '').replace(/^\d{1,3}\s+/, '').replace(/^\d{8,14}\s*/, '').replace(/\s+/g, ' ').trim();
     if (gstNorm(d).replace(/[^A-Z]/g, '').length < 3) continue;
     return d.slice(0, 60);
   }
@@ -2228,8 +2243,29 @@ function gstItens(linhas){
     const numeros = gstLinhaNumeros(L);
     if (numeros){
       const desc = gstDescAcima(linhas, i);
-      if (desc && numeros.valor > 0) out.push({ nome: desc, qtd: numeros.qtd, valor: numeros.valor });
+      if (desc && numeros.valor > 0) out.push({ nome: desc, qtd: numeros.qtd, unit: numeros.unit, valor: numeros.valor });
       continue;   // sem descrição acima, esta linha não vira item nenhum
+    }
+
+    /* layout de uma linha só, com as 4 colunas (código, descrição, qtd, un,
+       vlr.unit e vlr.total todos na mesma linha — sem quebrar em 2 como o
+       NFC-e de mercado). Ex.: "451 FITA ISOLANTE COLOR 13MM 1 UN 4,00 4,00" */
+    const mCompleta = L.match(new RegExp(
+      '^(?:\\d{1,6}(?:\\.\\d{1,4})?\\s+)?(.*?[A-Z]{3,}.*?)\\s+(\\d+(?:[.,]\\d+)?)\\s*([A-Z]{1,8})?\\s+' +
+      GST_V + '\\s+' + GST_V + '\\s*$'));
+    if (mCompleta){
+      const desc = mCompleta[1].replace(/^\d{1,6}(?:\.\d{1,4})?\s+/, '').trim();
+      const unit = num(mCompleta[4].replace(/\s/g, ''));
+      const valorTot = num(mCompleta[5].replace(/\s/g, ''));
+      if (desc.replace(/[^A-Z]/g, '').length >= 3 && valorTot > 0){
+        out.push({
+          nome: desc.slice(0, 60),
+          qtd: Number(String(mCompleta[2]).replace(',', '.')) || 1,
+          unit, valor: valorTot,
+        });
+        if (out.length >= 40) break;
+        continue;
+      }
     }
 
     /* layout de uma linha: descrição e valor juntos */
@@ -2265,6 +2301,7 @@ function gstDoTexto(texto){
     data: gstData(T),
     local: gstLoja(linhas),
     total: gstTotal(T),
+    desconto: gstDesconto(T),
     itens,
     soma: Math.round(itens.reduce((s, i) => s + i.valor, 0) * 100) / 100,
   };
@@ -2307,10 +2344,13 @@ function gstAplicar(d, origem){
   por('g-data', d.data, 'data <b>' + (d.data ? d.data.split('-').reverse().join('/') : '') + '</b>');
   por('g-local', d.local, 'loja <b>' + esc(d.local) + '</b>');
   por('g-total', d.total ? d.total.toFixed(2).replace('.', ',') : '', 'total <b>' + fR(d.total) + '</b>');
+  por('g-desconto', d.desconto ? d.desconto.toFixed(2).replace('.', ',') : '', 'desconto <b>' + fR(d.desconto) + '</b>');
 
   const jaTem = $('g-itens').querySelectorAll('.item-l').length;
   if (d.itens.length && !jaTem){
-    d.itens.forEach(i => novoItem(i.nome, i.qtd || 1, i.valor.toFixed(2).replace('.', ',')));
+    d.itens.forEach(i => novoItem(i.nome, i.qtd || 1,
+      i.unit > 0 ? i.unit.toFixed(2).replace('.', ',') : '',
+      i.valor.toFixed(2).replace('.', ',')));
     $('g-itens').querySelectorAll('.item-l input').forEach(el => el.classList.add('ocr'));
     achou.push('<b>' + d.itens.length + ' item(ns)</b>');
     somarItens();
@@ -2336,26 +2376,50 @@ function gstAplicar(d, origem){
 /* ==== NOTA:FIM ==== */
 
 /* ---------- lançar gasto ---------- */
-function novoItem(nome, qtd, valor){
+function novoItem(nome, qtd, valorUnit, valorTotal){
   const d = document.createElement('div');
   d.className = 'item-l';
   d.innerHTML = `<input type="text" placeholder="ex.: Água 1,5L" value="${esc(nome||'')}">
-    <input type="text" inputmode="numeric" placeholder="1" value="${esc(qtd||'')}">
-    <input type="text" inputmode="decimal" placeholder="0,00" value="${esc(valor||'')}" oninput="somarItens()">
+    <input type="text" inputmode="numeric" placeholder="1" value="${esc(qtd||'')}" oninput="itemRecalc(this)">
+    <input type="text" inputmode="decimal" placeholder="Unit." value="${esc(valorUnit||'')}" oninput="itemRecalc(this)">
+    <input type="text" inputmode="decimal" placeholder="0,00" value="${esc(valorTotal||'')}" oninput="somarItens()">
     <button class="item-x" onclick="this.parentNode.remove();somarItens()" title="Tirar">✕</button>`;
   $('g-itens').appendChild(d);
+  somarItens();
+}
+/* Qtd × Valor Unitário calcula sozinho o Valor Total da linha — o gestor não
+   precisa fazer conta na mão. Se ele digitar o total direto (sem unitário),
+   esse cálculo automático simplesmente não mexe no que ele escreveu. */
+function itemRecalc(el){
+  const i = el.parentNode.querySelectorAll('input');
+  const qtd = num(i[1].value) || 0, unit = num(i[2].value) || 0;
+  if (qtd > 0 && unit > 0) i[3].value = (Math.round(qtd*unit*100)/100).toFixed(2).replace('.', ',');
   somarItens();
 }
 function lerItens(){
   return [...$('g-itens').querySelectorAll('.item-l')].map(l => {
     const i = l.querySelectorAll('input');
-    return { nome: i[0].value.trim(), qtd: num(i[1].value) || 1, valor: num(i[2].value) };
+    const qtd = num(i[1].value) || 1, unit = num(i[2].value);
+    let valor = num(i[3].value);
+    if (!(valor > 0) && unit > 0) valor = Math.round(qtd*unit*100)/100;
+    return { nome: i[0].value.trim(), qtd, valor };
   }).filter(i => i.nome);
 }
 function somarItens(){
   const s = lerItens().reduce((a,i) => a + i.valor, 0);
   $('g-soma').textContent = 'Soma dos itens: ' + fR(s);
+  descontoRecalc();
   return Math.round(s*100)/100;
+}
+/* Total pago = soma dos itens − desconto, só enquanto o gestor não digitar o
+   total à mão (o campo "Total pago" continua mandando sobre a conta). */
+function descontoRecalc(){
+  const camp = $('g-total');
+  if (camp.classList.contains('ocr') || camp.value) return;
+  const desc = num($('g-desconto').value) || 0;
+  if (!desc) return;
+  const s = lerItens().reduce((a,i) => a + i.valor, 0);
+  if (s > 0) camp.value = (Math.round((s-desc)*100)/100).toFixed(2).replace('.', ',');
 }
 async function lancarGasto(){
   erro('g-erro',''); show('g-aviso', false);
@@ -2387,7 +2451,7 @@ async function lancarGasto(){
       show('g-aviso', true);
     }
     toast('✅ Compra lançada.');
-    $('g-desc').value = ''; $('g-local').value = ''; $('g-total').value = '';
+    $('g-desc').value = ''; $('g-local').value = ''; $('g-total').value = ''; $('g-desconto').value = '';
     $('g-file').value = ''; $('g-itens').innerHTML = ''; novoItem();
     await carregar(true);
   } catch (e){ erro('g-erro','⚠️ ' + e.message); }
