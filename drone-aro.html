@@ -70,8 +70,11 @@ button,input,select{font-family:inherit}
 .chk{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:13.5px;color:#dde3f0;line-height:1.5;border-top:1px solid rgba(148,163,184,.08)}
 .chk:first-of-type{border-top:none}
 .chk input{width:17px;height:17px;margin-top:2px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
-.residual{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.residual{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .residual b{color:#e2e8f0}
+.residual label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.residual select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12.5px}
+.risco-badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;color:#1a1a1a}
 .status-tol{color:var(--green);font-weight:700}
 
 .acoes{position:sticky;bottom:0;margin-top:26px;padding:16px;background:linear-gradient(180deg,transparent,rgba(6,9,18,.96) 30%);display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
@@ -180,11 +183,18 @@ button,input,select{font-family:inherit}
       </div>
       <div class="campo"><label for="f-piloto">Piloto em Comando</label><input type="text" id="f-piloto" name="piloto" required></div>
       <div class="campo"><label for="f-tel">Telefone / Contato</label><input type="text" id="f-tel" name="tel"></div>
-      <div class="campo">
-        <label for="f-instituicao">Instituição (cabeçalho do PDF)</label>
-        <select id="f-instituicao" name="instituicao">
-          <option value="">Genérico (padrão BPFRON)</option>
-        </select>
+      <div class="campo" style="position:relative">
+        <label for="inst-picker-btn">Instituição (cabeçalho do PDF)</label>
+        <input type="hidden" id="f-instituicao" name="instituicao" value="">
+        <button type="button" class="btn secund" id="inst-picker-btn" style="width:100%;text-align:left;display:flex;align-items:center;gap:8px">
+          <span id="inst-picker-swatch" style="width:14px;height:14px;border-radius:4px;background:#14532d;flex-shrink:0"></span>
+          <span id="inst-picker-label" style="flex:1">Genérico (padrão do curso)</span>
+          <span style="color:var(--muted)">▾</span>
+        </button>
+        <div id="inst-picker-panel" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50;margin-top:4px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.5);max-height:320px;flex-direction:column">
+          <input type="text" id="inst-picker-busca" placeholder="🔎 Buscar instituição…" style="margin:8px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-size:14px;outline:none">
+          <div id="inst-picker-lista" style="overflow-y:auto;padding:0 6px 8px"></div>
+        </div>
       </div>
       <div class="campo" id="inst-gestao-wrap" style="display:none">
         <button type="button" class="btn secund" id="btn-gerir-instituicoes">⚙️ Gerenciar instituições</button>
@@ -254,7 +264,11 @@ button,input,select{font-family:inherit}
           <label class="chk"><input type="checkbox" name="p1m1" checked>Configuração prévia obrigatória do sistema de FailSafe (Return-to-Home - RTH).</label>
           <label class="chk"><input type="checkbox" name="p1m2" checked>Ajuste da altitude do RTH acima do obstáculo ou vetor físico mais alto da região de voo.</label>
           <label class="chk"><input type="checkbox" name="p1m3" checked>Verificação pré-voo dos níveis de bateria da aeronave e do rádio controle, e calibração de bússola/IMU.</label>
-          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Moderada</span><span class="status-tol">Status: Tolerável</span></div>
+          <div class="residual" id="p1-residual"><b>Risco Residual</b>
+            <label>Probabilidade <select name="p1_prob_res" class="risco-prob" data-perigo="p1"></select></label>
+            <label>Severidade <select name="p1_sev_res" class="risco-sev" data-perigo="p1"></select></label>
+            <span class="risco-badge" id="p1-risco-badge"></span>
+          </div>
         </div>
       </div>
 
@@ -265,7 +279,11 @@ button,input,select{font-family:inherit}
           <label class="chk"><input type="checkbox" name="p2m1" checked>Consulta obrigatória e envio de solicitação de acesso ao espaço aéreo através do sistema SARPAS (DECEA).</label>
           <label class="chk"><input type="checkbox" name="p2m2" checked>Manutenção de vigilância visual contínua (VLOS) para identificação de outras aeronaves na área.</label>
           <label class="chk"><input type="checkbox" name="p2m3" checked>Prioridade absoluta de passagem a qualquer tipo de aeronave tripulada (pouso ou desvio imediato).</label>
-          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Catastrófica</span><span class="status-tol">Status: Tolerável</span></div>
+          <div class="residual" id="p2-residual"><b>Risco Residual</b>
+            <label>Probabilidade <select name="p2_prob_res" class="risco-prob" data-perigo="p2"></select></label>
+            <label>Severidade <select name="p2_sev_res" class="risco-sev" data-perigo="p2"></select></label>
+            <span class="risco-badge" id="p2-risco-badge"></span>
+          </div>
         </div>
       </div>
 
@@ -276,7 +294,11 @@ button,input,select{font-family:inherit}
           <label class="chk"><input type="checkbox" name="p3m1" checked>Garantia de distância horizontal mínima de segurança de 30 metros de pessoas não anuentes.</label>
           <label class="chk"><input type="checkbox" name="p3m2" checked>Sinalização terrestre visível da área delimitada para decolagem, pouso e operação do piloto.</label>
           <label class="chk"><input type="checkbox" name="p3m3" checked>Suspensão ou desvio imediato do voo caso terceiros invadam o perímetro de segurança planejado.</label>
-          <div class="residual"><span><b>Risco Residual</b> — Probabilidade: Baixa</span><span>Severidade: Moderada</span><span class="status-tol">Status: Tolerável</span></div>
+          <div class="residual" id="p3-residual"><b>Risco Residual</b>
+            <label>Probabilidade <select name="p3_prob_res" class="risco-prob" data-perigo="p3"></select></label>
+            <label>Severidade <select name="p3_sev_res" class="risco-sev" data-perigo="p3"></select></label>
+            <span class="risco-badge" id="p3-risco-badge"></span>
+          </div>
         </div>
       </div>
 
@@ -394,6 +416,70 @@ button,input,select{font-family:inherit}
 const LS_KEY = 'bp_aro_rascunho';
 const form = document.getElementById('aro-form');
 
+/* ---------- Matriz de risco (probabilidade × severidade, apostila CPPSARP 35ª ed.) ----------
+   Linhas = probabilidade 1(improvável)..5(frequente); colunas = severidade E(insignificante)..A(catastrófico).
+   Linha 5 é extrapolação (a apostila corta a tabela antes dela): cada linha empurra o
+   "extremo" uma coluna a mais pra esquerda em relação à linha anterior.
+   Precisa ficar ANTES de coletar()/carregar() no arquivo: popularSelectsRisco() é chamado
+   antes de carregar() restaurar o rascunho, e as consts abaixo não podem estar em TDZ nesse
+   momento (senão o script inteiro quebra no meio, travando também o resto da inicialização). */
+const RISCO_SEVERIDADES = [
+  { v:'E', t:'E - Insignificante' }, { v:'D', t:'D - Menor' }, { v:'C', t:'C - Moderada' },
+  { v:'B', t:'B - Maior' }, { v:'A', t:'A - Catastrófica' },
+];
+const RISCO_PROBABILIDADES = [
+  { v:'1', t:'1 - Improvável' }, { v:'2', t:'2 - Remota' }, { v:'3', t:'3 - Ocasional' },
+  { v:'4', t:'4 - Provável' }, { v:'5', t:'5 - Frequente' },
+];
+const RISCO_MATRIZ = {
+  1: ['baixo','baixo','baixo','moderado','moderado'],
+  2: ['baixo','baixo','moderado','moderado','alto'],
+  3: ['baixo','moderado','moderado','alto','extremo'],
+  4: ['moderado','alto','extremo','extremo','extremo'],
+  5: ['alto','extremo','extremo','extremo','extremo'],
+};
+const RISCO_NIVEL = {
+  baixo:    { cor:'#bfe3c0', texto:'#14532d', status:'Tolerável',                                  autoriza:'Piloto autoriza' },
+  moderado: { cor:'#f0dfa3', texto:'#6b4f0a', status:'Tolerável com controles',                     autoriza:'Chefia/comandante da operação autoriza' },
+  alto:     { cor:'#eab3a4', texto:'#7a1f10', status:'Não recomendado sem aprovação superior',      autoriza:'Diretor/comandante do batalhão autoriza' },
+  extremo:  { cor:'#c0392b', texto:'#fff',    status:'Intolerável — operação deve cessar',          autoriza:'Só o comandante geral autoriza' },
+};
+function calcularRisco(prob, sev){
+  const col = RISCO_SEVERIDADES.findIndex(s => s.v === sev);
+  const chave = (RISCO_MATRIZ[prob] || RISCO_MATRIZ[1])[col < 0 ? 0 : col];
+  return { nivel: chave, ...RISCO_NIVEL[chave] };
+}
+function popularSelectsRisco(){
+  document.querySelectorAll('select.risco-prob').forEach(sel => {
+    sel.innerHTML = RISCO_PROBABILIDADES.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+  });
+  document.querySelectorAll('select.risco-sev').forEach(sel => {
+    sel.innerHTML = RISCO_SEVERIDADES.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+  });
+}
+function atualizarBadgeRisco(perigo){
+  const prob = form.elements[perigo + '_prob_res'].value;
+  const sev = form.elements[perigo + '_sev_res'].value;
+  const r = calcularRisco(prob, sev);
+  const badge = document.getElementById(perigo + '-risco-badge');
+  badge.textContent = 'Status: ' + r.status;
+  badge.style.background = r.cor;
+  badge.style.color = r.texto;
+  badge.title = r.autoriza;
+}
+function inicializarRiscoResidual(){
+  // valores que já vinham fixos no texto antigo, agora como ponto de partida editável
+  const padroes = { p1:['1','C'], p2:['1','A'], p3:['1','C'] };
+  Object.keys(padroes).forEach(p => {
+    if(!form.elements[p + '_prob_res'].value) form.elements[p + '_prob_res'].value = padroes[p][0];
+    if(!form.elements[p + '_sev_res'].value) form.elements[p + '_sev_res'].value = padroes[p][1];
+    atualizarBadgeRisco(p);
+  });
+  document.querySelectorAll('.risco-prob, .risco-sev').forEach(sel => {
+    sel.addEventListener('change', () => atualizarBadgeRisco(sel.dataset.perigo));
+  });
+}
+
 function coletar(){
   const d = {};
   new FormData(form).forEach((v,k) => d[k]=v);
@@ -415,7 +501,9 @@ function carregar(){
     }
   });
 }
+popularSelectsRisco(); // opções têm que existir ANTES de carregar() tentar restaurar o valor salvo
 carregar();
+inicializarRiscoResidual();
 if(!form.elements['decldata'].value){
   const hoje = new Date();
   const pad = n => String(n).padStart(2,'0');
@@ -443,13 +531,74 @@ async function carregarInstituicoes(){
     const d = await r.json().catch(() => ({}));
     INSTITUICOES = (d && d.instituicoes) || [];
   } catch(e) { INSTITUICOES = []; }
-  const sel = document.getElementById('f-instituicao');
-  const atual = sel.value;
-  sel.innerHTML = '<option value="">Genérico (padrão BPFRON)</option>' +
-    INSTITUICOES.map(i => `<option value="${escHtml(i.id)}">${escHtml(i.nome)}</option>`).join('');
-  if(atual && [...sel.options].some(o => o.value === atual)) sel.value = atual;
+  atualizarBotaoInstituicao();
+  renderPickerInstituicao();
   if(document.getElementById('inst-modal-ovl').style.display !== 'none') renderListaInstituicoes();
 }
+
+/* ---------- seletor de instituição (balão com busca) ----------
+   #f-instituicao continua um input hidden (mesmo name="instituicao" de sempre)
+   pra reaproveitar o coletar()/carregar() genérico do rascunho — o aluno reabrindo
+   a página no mesmo navegador já acha a última instituição escolhida selecionada. */
+function atualizarBotaoInstituicao(){
+  const id = document.getElementById('f-instituicao').value;
+  const inst = id ? INSTITUICOES.find(i => i.id === id) : null;
+  document.getElementById('inst-picker-label').textContent = inst ? inst.nome : 'Genérico (padrão do curso)';
+  document.getElementById('inst-picker-swatch').style.background = inst ? inst.cor : '#14532d';
+}
+
+function selecionarInstituicao(id){
+  document.getElementById('f-instituicao').value = id;
+  atualizarBotaoInstituicao();
+  fecharPickerInstituicao();
+  document.getElementById('f-instituicao').dispatchEvent(new Event('change', { bubbles:true }));
+}
+
+function renderPickerInstituicao(){
+  const termo = document.getElementById('inst-picker-busca').value.trim().toLowerCase();
+  const atual = document.getElementById('f-instituicao').value;
+  const itens = [{ id:'', nome:'Genérico (padrão do curso)', cor:'#14532d' }, ...INSTITUICOES]
+    .filter(i => !termo || i.nome.toLowerCase().includes(termo));
+  const lista = document.getElementById('inst-picker-lista');
+  if(!itens.length){
+    lista.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--muted)">Nenhuma instituição encontrada.</div>';
+    return;
+  }
+  lista.innerHTML = itens.map(i => `
+    <div data-id="${escHtml(i.id)}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;${i.id === atual ? 'background:rgba(245,197,24,.12)' : ''}">
+      <span style="width:13px;height:13px;border-radius:4px;background:${escHtml(i.cor)};flex-shrink:0;border:1px solid rgba(255,255,255,.15)"></span>
+      <span style="flex:1">${escHtml(i.nome)}</span>
+      ${i.id === atual ? '<span style="color:var(--yellow)">✓</span>' : ''}
+    </div>`).join('');
+  lista.querySelectorAll('[data-id]').forEach(el => {
+    el.addEventListener('mouseenter', () => el.style.background = 'rgba(148,163,184,.12)');
+    el.addEventListener('mouseleave', () => el.style.background = el.dataset.id === atual ? 'rgba(245,197,24,.12)' : '');
+    el.addEventListener('click', () => selecionarInstituicao(el.dataset.id));
+  });
+}
+
+function abrirPickerInstituicao(){
+  document.getElementById('inst-picker-busca').value = '';
+  renderPickerInstituicao();
+  document.getElementById('inst-picker-panel').style.display = 'flex';
+  setTimeout(() => document.getElementById('inst-picker-busca').focus(), 30);
+}
+function fecharPickerInstituicao(){
+  document.getElementById('inst-picker-panel').style.display = 'none';
+}
+
+document.getElementById('inst-picker-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const panel = document.getElementById('inst-picker-panel');
+  panel.style.display === 'none' ? abrirPickerInstituicao() : fecharPickerInstituicao();
+});
+document.getElementById('inst-picker-busca').addEventListener('input', renderPickerInstituicao);
+document.getElementById('inst-picker-busca').addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', e => {
+  const panel = document.getElementById('inst-picker-panel');
+  if(panel.style.display !== 'none' && !panel.contains(e.target) && e.target.id !== 'inst-picker-btn') fecharPickerInstituicao();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') fecharPickerInstituicao(); });
 
 function renderListaInstituicoes(){
   const wrap = document.getElementById('inst-lista');
@@ -879,29 +1028,31 @@ function montarFolha(){
   set('o-decldata', txt('f-decldata'));
 
   const PERIGOS = [
-    { titulo:'Perigo 1: Perda do Enlace de Comando e Controle (Loss of C2 Link / Flyaway)',
+    { id:'p1', titulo:'Perigo 1: Perda do Enlace de Comando e Controle (Loss of C2 Link / Flyaway)',
       prob:'Média', medidas:['p1m1','p1m2','p1m3'],
       textos:['Configuração prévia obrigatória do sistema de FailSafe (Return-to-Home - RTH).',
               'Ajuste da altitude do RTH acima do obstáculo ou vetor físico mais alto da região de voo.',
-              'Verificação pré-voo dos níveis de bateria da aeronave e do rádio controle, e calibração de bússola/IMU.'],
-      resProb:'Baixa', resSev:'Moderada' },
-    { titulo:'Perigo 2: Conflito com Tráfego Aéreo Local (Aeródromos, Helipontos ou Outros UAS)',
+              'Verificação pré-voo dos níveis de bateria da aeronave e do rádio controle, e calibração de bússola/IMU.'] },
+    { id:'p2', titulo:'Perigo 2: Conflito com Tráfego Aéreo Local (Aeródromos, Helipontos ou Outros UAS)',
       prob:'Baixa', medidas:['p2m1','p2m2','p2m3'],
       textos:['Consulta obrigatória e envio de solicitação de acesso ao espaço aéreo através do sistema SARPAS (DECEA).',
               'Manutenção de vigilância visual contínua (VLOS) para identificação de outras aeronaves na área.',
-              'Prioridade absoluta de passagem a qualquer tipo de aeronave tripulada (pouso ou desvio imediato).'],
-      resProb:'Baixa', resSev:'Catastrófica' },
-    { titulo:'Perigo 3: Presença de Pessoas Não Envolvidas e Não Anuentes (Terceiros)',
+              'Prioridade absoluta de passagem a qualquer tipo de aeronave tripulada (pouso ou desvio imediato).'] },
+    { id:'p3', titulo:'Perigo 3: Presença de Pessoas Não Envolvidas e Não Anuentes (Terceiros)',
       prob:'Média', medidas:['p3m1','p3m2','p3m3'],
       textos:['Garantia de distância horizontal mínima de segurança de 30 metros de pessoas não anuentes.',
               'Sinalização terrestre visível da área delimitada para decolagem, pouso e operação do piloto.',
-              'Suspensão ou desvio imediato do voo caso terceiros invadam o perímetro de segurança planejado.'],
-      resProb:'Baixa', resSev:'Moderada' }
+              'Suspensão ou desvio imediato do voo caso terceiros invadam o perímetro de segurança planejado.'] }
   ];
 
   const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   let html = '';
   PERIGOS.forEach(p => {
+    const prob = form.elements[p.id + '_prob_res'].value;
+    const sev = form.elements[p.id + '_sev_res'].value;
+    const r = calcularRisco(prob, sev);
+    const probTxt = RISCO_PROBABILIDADES.find(o => o.v === prob).t;
+    const sevTxt = RISCO_SEVERIDADES.find(o => o.v === sev).t;
     html += '<table class="f-tab"><tr><td class="hd" colspan="2">' + esc(p.titulo) + '</td></tr>';
     html += '<tr><td class="sub">Avaliação Inicial</td><td>Probabilidade: ' + p.prob + '</td></tr>';
     html += '<tr><td class="sub">Medidas Mitigadoras</td><td>';
@@ -910,7 +1061,9 @@ function montarFolha(){
       html += (marcado ? '☑' : '☐') + ' ' + esc(p.textos[i]) + '<br>';
     });
     html += '</td></tr>';
-    html += '<tr><td class="sub">Risco Residual</td><td>Probabilidade: ' + p.resProb + ' &nbsp;·&nbsp; Severidade: ' + p.resSev + ' &nbsp;·&nbsp; Status: Tolerável</td></tr>';
+    html += '<tr><td class="sub">Risco Residual</td><td>Probabilidade: ' + esc(probTxt) + ' &nbsp;·&nbsp; Severidade: ' + esc(sevTxt) +
+      ' &nbsp;·&nbsp; <span style="background:' + r.cor + ';color:' + r.texto + ';padding:1px 6px;border-radius:4px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact">Status: ' + esc(r.status) + '</span>' +
+      ' &nbsp;·&nbsp; ' + esc(r.autoriza) + '</td></tr>';
     html += '</table>';
   });
   document.getElementById('o-perigos').innerHTML = html;
