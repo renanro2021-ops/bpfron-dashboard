@@ -98,6 +98,7 @@ button,input,select{font-family:inherit}
 .folha{display:none}
 #map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box}
 #map-aro-print{width:100%;height:100%}
+#map-aro-print-wrap,#map-aro-print-wrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 
 @media (max-width:640px){
   .hdr{position:static}
@@ -592,7 +593,7 @@ function prepararMapaImpressao(){
       // pixel, não só olhando a tela — ver [[drone-aro-mapa-impressao]].
       if(!circuloAroPrintEl){
         circuloAroPrintEl = document.createElement('div');
-        circuloAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;border-radius:50%;border:2px solid #1b6b3d;background:rgba(27,107,61,.15);box-sizing:border-box;pointer-events:none;z-index:600';
+        circuloAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;border-radius:50%;border:2px solid #1b6b3d;background:rgba(27,107,61,.15);box-sizing:border-box;pointer-events:none;z-index:600;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact';
         mapaAroPrint.getContainer().appendChild(circuloAroPrintEl);
       }
       if(r){
@@ -610,7 +611,7 @@ function prepararMapaImpressao(){
 
       if(!marcadorAroPrintEl){
         marcadorAroPrintEl = document.createElement('div');
-        marcadorAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none;z-index:1000';
+        marcadorAroPrintEl.style.cssText = 'position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none;z-index:1000;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact';
         mapaAroPrint.getContainer().appendChild(marcadorAroPrintEl);
       }
 
