@@ -889,15 +889,29 @@ function prepararMapaImpressao(){
     try {
       const pos = marcadorAro.getLatLng();
 
-      if(!mapaAroPrint){
-        // setView ANTES de adicionar qualquer camada/marcador: mapa sem view ainda não tem
-        // "pixel origin", e L.marker(...).addTo() num mapa assim derruba com
-        // "Cannot read properties of undefined (reading 'layerPointToLatLng')" — a exceção
-        // acontecia dentro do executor da Promise, então nunca chamava resolve() e o botão
-        // ficava travado para sempre em "Preparando o mapa…"
-        mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false, zoomAnimation:false}).setView(pos, 16);
-        camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
+      // Recria o mapa de impressão TODA VEZ (não reaproveita a instância entre gerações de
+      // PDF). Motivo: o container (#map-aro-print) sai/volta de position:fixed;left:-10000px
+      // a cada impressão (ver comentário mais abaixo), e o Leaflet guarda internamente a
+      // "pixel origin" ligada à posição do container na página — invalidateSize() só reage a
+      // mudança de TAMANHO, não de posição, então reaproveitar a instância deixava esse cache
+      // interno desatualizado: o pino/círculo (divs de CSS puro, sempre centrados) pareciam
+      // certos, mas os LADRILHOS por baixo saíam com um desvio de várias centenas de metros do
+      // ponto real (achado só num teste de verdade, no celular do usuário — nunca reproduziu
+      // isolado). Recriar do zero garante que a pixel origin nasce correta pra posição atual.
+      if(mapaAroPrint){
+        mapaAroPrint.remove();
+        // .remove() não garante limpar essas <div> que a gente mesmo anexou (não são camada
+        // Leaflet) — zera as referências pra recriarem já dentro do container novo.
+        circuloAroPrintEl = null;
+        marcadorAroPrintEl = null;
       }
+      // setView ANTES de adicionar qualquer camada/marcador: mapa sem view ainda não tem
+      // "pixel origin", e L.marker(...).addTo() num mapa assim derruba com
+      // "Cannot read properties of undefined (reading 'layerPointToLatLng')" — a exceção
+      // acontecia dentro do executor da Promise, então nunca chamava resolve() e o botão
+      // ficava travado para sempre em "Preparando o mapa…"
+      mapaAroPrint = L.map('map-aro-print', {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, keyboard:false, zoomAnimation:false}).setView(pos, 16);
+      camadaAroPrint = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapaAroPrint);
       mapaAroPrint.invalidateSize();
 
       const r = raioMetros();
