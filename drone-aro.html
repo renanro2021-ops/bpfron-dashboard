@@ -731,6 +731,13 @@ document.getElementById('btn-geo').addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition(async pos => {
     const lat = pos.coords.latitude, lon = pos.coords.longitude;
     definirPonto(lat, lon, true);
+    // Sem chip de GPS (notebook/desktop), o navegador estima por Wi-Fi/rede — pode vir com
+    // vários km de erro, ou até a cidade de uma VPN/rede corporativa em vez de onde você está
+    // de verdade. accuracy vem em metros; acima de ~2km já vale avisar pra conferir no mapa.
+    const impreciso = pos.coords.accuracy && pos.coords.accuracy > 2000;
+    const avisoPrecisao = impreciso
+      ? ' ⚠️ Precisão baixa (~' + Math.round(pos.coords.accuracy / 1000) + ' km) — confira no mapa e arraste o pino ou busque o endereço certo se estiver errado.'
+      : '';
     try {
       const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&accept-language=pt-BR&lat=' + lat + '&lon=' + lon);
       const d = await r.json();
@@ -741,9 +748,11 @@ document.getElementById('btn-geo').addEventListener('click', () => {
       document.getElementById('f-municipio').value = municipio;
       document.getElementById('f-uf').value = ufs[estado] || estado;
       if(!txt('f-decllocal')) document.getElementById('f-decllocal').value = municipio;
-      status.textContent = municipio ? ('✅ Localização preenchida: ' + municipio + (estado ? ' - ' + (ufs[estado]||estado) : '')) : '⚠️ Coordenadas preenchidas, mas não encontrei o município. Preencha na mão.';
+      status.textContent = (municipio ? ('✅ Localização preenchida: ' + municipio + (estado ? ' - ' + (ufs[estado]||estado) : '')) : '⚠️ Coordenadas preenchidas, mas não encontrei o município. Preencha na mão.') + avisoPrecisao;
+      status.style.color = impreciso ? 'var(--yellow)' : 'var(--muted)';
     } catch(e) {
-      status.textContent = '⚠️ Coordenadas preenchidas, mas não deu para buscar o nome do município (sem internet?). Preencha na mão.';
+      status.textContent = '⚠️ Coordenadas preenchidas, mas não deu para buscar o nome do município (sem internet?). Preencha na mão.' + avisoPrecisao;
+      status.style.color = impreciso ? 'var(--yellow)' : 'var(--muted)';
     }
     salvar();
     btn.disabled = false;
