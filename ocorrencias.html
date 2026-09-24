@@ -146,6 +146,9 @@ a{color:var(--yellow)}
 .btn-print:hover{background:#ffd633}
 .btn-print:disabled{opacity:.45;cursor:not-allowed}
 .btn-print-topo{padding:7px 15px;font-size:12.5px}   /* o mesmo botão, na barra de cima */
+/* resumido = contorno amarelo; completo = cheio (é o relatório "de verdade") */
+.btn-print-res{background:transparent;color:var(--yellow);border:1.5px solid var(--yellow)}
+.btn-print-res:hover{background:rgba(255,204,0,.12)}
 
 /* ── cartões de ocorrência ── */
 .lista{display:flex;flex-direction:column;gap:12px}
@@ -252,6 +255,16 @@ a{color:var(--yellow)}
   .pr-sem{font-size:8.5pt;color:#555;font-style:italic;margin-top:2pt}
   /* grifo que sobrevive em preto e branco (o sublinhado sai mesmo sem fundo) */
   #print-area mark{background:#e8e8e8;color:#000;font-weight:700;padding:0 1pt;border-bottom:.8pt solid #777}
+  /* relatório RESUMIDO: tabela corrida, uma linha por ocorrência, sem quebra de página */
+  .pr-tab{width:100%;border-collapse:collapse;font-size:8pt}
+  .pr-tab thead{display:table-header-group}   /* cabeçalho se repete em cada folha */
+  .pr-tab th{text-align:left;border:.7pt solid #999;padding:3pt 4pt;font-size:7pt;
+             text-transform:uppercase;letter-spacing:.3pt;background:#f2f2f2}
+  .pr-tab td{border:.7pt solid #bbb;padding:3pt 4pt;vertical-align:top}
+  .pr-tab tr{break-inside:avoid;page-break-inside:avoid}
+  .pr-tab .pr-c{text-align:center;white-space:nowrap}
+  .pr-tab .pr-bo{font-weight:700;white-space:nowrap}
+  .pr-tab .pr-pq{font-size:7.5pt;color:#333}
   .pr-fim{margin-top:10pt;padding-top:5pt;border-top:.7pt solid #999;font-size:8pt;color:#444;text-align:center}
 }
 </style>
@@ -371,7 +384,8 @@ a{color:var(--yellow)}
     <button class="mini" onclick="expandirTodos()" id="btn-exp">⤢ Abrir todas</button>
     <button class="mini" onclick="exportarCSV()">⬇ Exportar CSV</button>
     <button class="mini" onclick="copiarLink()">🔗 Copiar link</button>
-    <button class="btn-print btn-print-topo" onclick="imprimir()" id="btn-print-topo">🖨 Imprimir</button>
+    <button class="btn-print btn-print-topo btn-print-res" onclick="imprimir('resumido')" id="btn-print-topo-res">🖨 Resumido</button>
+    <button class="btn-print btn-print-topo" onclick="imprimir('completo')" id="btn-print-topo">🖨 Completo</button>
   </div>
 
   <div class="sel-bar" id="sel-bar">
@@ -390,7 +404,8 @@ a{color:var(--yellow)}
     <div class="rp-btns">
       <button class="mini" onclick="selTodos(true)">✔ Selecionar todas</button>
       <button class="mini" onclick="selLimpar()">✕ Limpar</button>
-      <button class="btn-print" onclick="imprimir()" id="btn-print">🖨 Imprimir relatório</button>
+      <button class="btn-print btn-print-res" onclick="imprimir('resumido')" id="btn-print-res">🖨 Relatório resumido</button>
+      <button class="btn-print" onclick="imprimir('completo')" id="btn-print">🖨 Relatório completo</button>
     </div>
   </div>
 
@@ -1608,14 +1623,19 @@ function atualizarSelecao(){
   document.getElementById('rp-txt').innerHTML = total
     ? 'Vai imprimir as <b>' + total + '</b> ocorrência' + (total > 1 ? 's' : '') + ' que você marcou.'
     : 'Nada marcado — vai imprimir as <b>' + resultado.length + '</b> do resultado. Marque no quadradinho de cada uma para escolher.';
-  const btn = document.getElementById('btn-print');
-  btn.textContent = '🖨 Imprimir ' + quantas + (quantas === 1 ? ' ocorrência' : ' ocorrências');
-  btn.disabled = quantas === 0;
-  // o mesmo botão na barra de cima, mais curto
-  const topo = document.getElementById('btn-print-topo');
-  topo.textContent = '🖨 Imprimir ' + quantas;
-  topo.disabled = quantas === 0;
-  topo.title = total ? quantas + ' ocorrência(s) marcada(s)' : 'todas as ' + quantas + ' do resultado';
+  // Dois modelos: resumido (uma linha por BO) e completo (uma folha por BO).
+  const qual = total ? quantas + ' ocorrência(s) marcada(s)' : 'todas as ' + quantas + ' do resultado';
+  const DICA_RES = 'resumido: uma linha por ocorrência, numa tabela, sem a descrição';
+  const DICA_COMP = 'completo: uma ocorrência por página, com a descrição inteira e os envolvidos';
+  [['btn-print-res',      '🖨 Resumido (' + quantas + ')', DICA_RES],
+   ['btn-print',          '🖨 Completo (' + quantas + ')', DICA_COMP],
+   // os mesmos botões na barra de cima, mais curtos
+   ['btn-print-topo-res', '🖨 Resumido', DICA_RES],
+   ['btn-print-topo',     '🖨 Completo', DICA_COMP]
+  ].forEach(([id, txt, dica]) => {
+    const b = document.getElementById(id);
+    b.textContent = txt; b.disabled = quantas === 0; b.title = dica + ' — ' + qual;
+  });
 }
 
 // O que vai pro papel: o marcado; sem nada marcado, o resultado inteiro.
@@ -1782,7 +1802,35 @@ function fDataBR(s){
   return d ? d.toLocaleDateString('pt-BR') : (String(s || '').trim() || '—');
 }
 
-function montarRelatorio(lista){
+/* Resumido: uma linha por ocorrência numa tabela corrida (várias por folha),
+   sem descrição — serve para visão de conjunto/despacho. Os nomes dos
+   envolvidos entram, só o nome e o papel. */
+function tabelaResumida(lista){
+  const nomes = o => {
+    const g = envolvidosDe(o);
+    if (!g) return '<span class="pr-pq">—</span>';
+    if (!g.length) return '<span class="pr-pq">nenhum qualificado</span>';
+    return g.map(p => grifar(p.nome || '—') + (p.papel ? ' <span class="pr-pq">(' + esc(p.papel) + ')</span>' : '')).join('<br>');
+  };
+  return '<table class="pr-tab"><thead><tr>' +
+      '<th>Nº</th><th>BO</th><th>Data</th><th>Município</th><th>Natureza / Operação</th>' +
+      '<th>Apreensões</th><th>Presos</th><th>Envolvidos</th></tr></thead><tbody>' +
+    lista.map((o, i) => '<tr>' +
+      '<td class="pr-c">' + (i+1) + '</td>' +
+      '<td class="pr-bo">' + esc(o.bo) + '</td>' +
+      '<td class="pr-c">' + fDt(o._data) + (o.hora ? '<br><span class="pr-pq">' + esc(String(o.hora).slice(0,5)) + '</span>' : '') + '</td>' +
+      '<td>' + grifar(o.municipio || '—') + (o.uf ? '/' + esc(o.uf) : '') + '</td>' +
+      '<td>' + grifar(o.natureza || '—') + (o.operacao ? '<br><span class="pr-pq">Op. ' + esc(o.operacao) + '</span>' : '') + '</td>' +
+      '<td class="pr-pq">' + (esc(etiquetas(o).filter(([k]) => k !== 'pr').map(([,t]) => t).join(' · ')) || '—') + '</td>' +
+      '<td class="pr-c">' + fN(o.n_presos || 0) + '</td>' +
+      '<td>' + nomes(o) + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
+}
+
+let REL_MODO = 'completo';   // último modelo pedido (o Ctrl+P usa o mesmo)
+
+function montarRelatorio(lista, modo){
+  modo = modo || REL_MODO;
   const soma = f => lista.reduce((a,o) => a + (o['n_'+f]||0), 0);
   const resumo = [
     [fN(lista.length), 'ocorrências'], [fN(soma('presos')), 'presos'],
@@ -1792,7 +1840,7 @@ function montarRelatorio(lista){
   const agora = new Date().toLocaleString('pt-BR');
   const marcadas = SELECIONADOS.size > 0;
 
-  const fichas = lista.map((o, i) => {
+  const fichas = modo === 'resumido' ? tabelaResumida(lista) : lista.map((o, i) => {
     const ap = etiquetas(o).map(([,t]) => t).join(' · ');
     const lin = (rot, v) => v ? '<div class="pr-lin"><b>' + rot + ':</b> ' + grifar(v) + '</div>' : '';
     return '<div class="pr-oc">' +
@@ -1820,7 +1868,7 @@ function montarRelatorio(lista){
       '<img class="pr-logo" src="LOGOS/bpfron_transp.avif" alt="" onerror="this.style.display=\'none\'">' +
       '<div>' +
         '<div class="pr-org">Polícia Militar do Estado de Rondônia</div>' +
-        '<h1>Relatório de Ocorrências</h1>' +
+        '<h1>Relatório de Ocorrências — ' + (modo === 'resumido' ? 'Resumido' : 'Completo') + '</h1>' +
         '<div class="pr-sub">BPFRON — Batalhão de Polícia de Fronteira e Divisas · Uso restrito</div>' +
       '</div>' +
     '</div>' +
@@ -1838,7 +1886,8 @@ function montarRelatorio(lista){
       ' · contém dados pessoais de envolvidos — trate como documento de uso restrito.</div>';
 }
 
-async function imprimir(){
+async function imprimir(modo){
+  REL_MODO = modo === 'resumido' ? 'resumido' : 'completo';
   const lista = paraImprimir();
   if (!lista.length) return aviso('Não há ocorrência para imprimir.');
   // Se os envolvidos ainda não vieram (ou falharam), tenta agora: o relatório
@@ -1848,7 +1897,7 @@ async function imprimir(){
     try { await carregarEnvolvidos(); }
     catch(e){ ENV_FALHOU = true; aviso('Sem a lista de envolvidos: ' + e.message); }
   }
-  montarRelatorio(lista);
+  montarRelatorio(lista, REL_MODO);
   window.print();
 }
 
