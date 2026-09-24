@@ -951,12 +951,30 @@ function prepararMapaImpressao(){
 
       // Espera os ladrilhos do enquadramento FINAL (depois do fitBounds/setView acima) terminarem de
       // carregar antes de liberar a impressão — antes resolvia no "load" do setView inicial e saía
-      // com metade do mapa em branco porque o fitBounds pediu ladrilhos novos que ainda não chegaram
-      const aguardarLadrilhos = () => {
-        if(!camadaAroPrint.isLoading || !camadaAroPrint.isLoading()){ setTimeout(finalizar, 500); return; }
-        camadaAroPrint.once('load', () => setTimeout(finalizar, 500));
-      };
-      setTimeout(aguardarLadrilhos, 60);
+      // com metade do mapa em branco porque o fitBounds pediu ladrilhos novos que ainda não chegaram.
+      //
+      // Gotcha (achado reimprimindo depois de corrigir um local errado pra um bem longe, tipo
+      // Porto Velho -> Manaus, SEM recarregar a página): o listener de 'load' tinha um
+      // setTimeout(..., 60) ANTES de ser registrado. Leaflet só enfileira os pedidos de tile
+      // depois de recalcular a "pixel origin" — em saltos grandes isso pode não ter acontecido
+      // ainda nesses 60ms, `isLoading()` ainda dá falso (nada pedido ainda, não "já carregado"),
+      // e o código concluía cedo demais — imprimia com o ladrilho da posição ANTERIOR ainda na
+      // tela (Leaflet só troca o tile velho pelo novo depois que o novo chega, pra não piscar).
+      // Fix: registra os listeners de 'loading'/'load' NA HORA (antes de qualquer delay), pra
+      // nunca perder o evento de início de carregamento por causa do timing do setTimeout.
+      let iniciouCarregamento = false;
+      const onLoading = () => { iniciouCarregamento = true; };
+      const onLoad = () => { camadaAroPrint.off('loading', onLoading); setTimeout(finalizar, 400); };
+      camadaAroPrint.once('loading', onLoading);
+      camadaAroPrint.once('load', onLoad);
+      setTimeout(() => {
+        // Nada começou a carregar (nem 'loading' disparou, nem isLoading() é true): a view não
+        // mudou de verdade (ex.: reimpressão no mesmo lugar) — não tem ladrilho novo pra esperar.
+        if(!iniciouCarregamento && !(camadaAroPrint.isLoading && camadaAroPrint.isLoading())){
+          camadaAroPrint.off('load', onLoad);
+          finalizar();
+        }
+      }, 250);
       setTimeout(finalizar, 4000);
     } catch(e) {
       // Rede de segurança: qualquer erro aqui nunca pode deixar o botão travado pra sempre
