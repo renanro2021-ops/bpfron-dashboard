@@ -99,9 +99,13 @@ button,input,select{font-family:inherit}
 .busca-resultados .msg{padding:9px 12px;font-size:13px;color:var(--muted)}
 
 .folha{display:none}
-#map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box}
+#map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box;background:#fff}
 #map-aro-print{width:100%;height:100%}
 #map-aro-print-wrap,#map-aro-print-wrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+/* .leaflet-container é escuro (#0b0f1a) pro mapa INTERATIVO (tema escuro da página) — no
+   mapa de impressão isso sobra como mancha preta em qualquer pedaço sem ladrilho (borda de
+   zoom, tile ainda não cobrindo o container todo). Aqui tem que ser branco, igual à folha. */
+#map-aro-print-wrap .leaflet-container{background:#fff}
 
 @media (max-width:640px){
   .hdr{position:static}
