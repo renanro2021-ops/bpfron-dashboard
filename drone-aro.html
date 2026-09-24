@@ -113,11 +113,14 @@ button,input,select{font-family:inherit}
   @page{margin:14mm}
   .f-cabecalho{text-align:center;margin-bottom:14px}
   .f-logo-centro{height:72px;width:72px;object-fit:contain;display:block;margin:0 auto 6px}
+  .f-cabecalho-inst{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .f-cabecalho-inst .f-brasao-esq,.f-cabecalho-inst .f-bandeira-dir{height:64px;width:64px;object-fit:contain;flex-shrink:0}
+  .f-cabecalho-inst .f-cabecalho-meio{flex:1;text-align:center}
   .f-titulo{text-align:center;font-size:18px;font-weight:700;margin-bottom:2px}
   .f-sub{text-align:center;font-size:11px;font-weight:700;margin-bottom:0}
   #map-aro-print-wrap{border:1px solid #999;margin:6px auto 12px;break-inside:avoid;page-break-inside:avoid}
   .f-mapa-legenda{font-size:10.5px;color:#555;margin:-6px 0 12px}
-  .f-sec{font-size:13px;font-weight:700;color:#14532d;margin:14px 0 6px;border-bottom:1px solid #14532d;padding-bottom:2px}
+  .f-sec{font-size:13px;font-weight:700;color:var(--f-cor,#14532d);margin:14px 0 6px;border-bottom:1px solid var(--f-cor,#14532d);padding-bottom:2px}
   .f-linha{font-size:12px;margin-bottom:5px;display:flex;gap:6px}
   .f-linha b{font-weight:700;white-space:nowrap}
   .f-linha span{border-bottom:1px solid #000;flex:1;min-height:14px;padding-left:4px}
@@ -125,7 +128,7 @@ button,input,select{font-family:inherit}
   .f-3col > div{flex:1}
   table.f-tab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
   table.f-tab td,table.f-tab th{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}
-  table.f-tab .hd{background:#14532d;color:#fff;font-weight:700}
+  table.f-tab .hd{background:var(--f-cor,#14532d);color:#fff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
   table.f-tab .sub{background:#eef2f7;font-weight:700;width:150px}
   .f-decl{font-size:11px;line-height:1.6;margin:10px 0}
   .f-assin{margin-top:34px;font-size:12px}
@@ -134,6 +137,7 @@ button,input,select{font-family:inherit}
 </style>
 </head>
 <body>
+<script src="drone-cpf.js"></script>
 
 <div class="hdr">
   <div class="hdr-inner">
@@ -176,6 +180,15 @@ button,input,select{font-family:inherit}
       </div>
       <div class="campo"><label for="f-piloto">Piloto em Comando</label><input type="text" id="f-piloto" name="piloto" required></div>
       <div class="campo"><label for="f-tel">Telefone / Contato</label><input type="text" id="f-tel" name="tel"></div>
+      <div class="campo">
+        <label for="f-instituicao">Instituição (cabeçalho do PDF)</label>
+        <select id="f-instituicao" name="instituicao">
+          <option value="">Genérico (padrão BPFRON)</option>
+        </select>
+      </div>
+      <div class="campo" id="inst-gestao-wrap" style="display:none">
+        <button type="button" class="btn secund" id="btn-gerir-instituicoes">⚙️ Gerenciar instituições</button>
+      </div>
     </div>
 
     <div class="sec">2. Identificação da aeronave (UAS/RPA)</div>
@@ -286,9 +299,37 @@ button,input,select{font-family:inherit}
   </form>
 </main>
 
+<!-- Modal de gestão de instituições (só aparece pro gestor logado) -->
+<div id="inst-modal-ovl" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(2,6,23,.86);align-items:center;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;background:#0f172a;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="font-family:Rajdhani,sans-serif;font-size:19px;color:#fff">⚙️ Instituições do ARO</h2>
+      <button type="button" class="btn secund" id="inst-modal-fechar">✕ Fechar</button>
+    </div>
+    <div id="inst-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+    <div style="border-top:1px solid var(--line);padding-top:14px">
+      <div class="sec" style="margin:0 0 10px;font-size:12px" id="inst-form-titulo">Nova instituição</div>
+      <input type="hidden" id="inst-f-id">
+      <div class="campo"><label for="inst-f-nome">Nome</label><input type="text" id="inst-f-nome" placeholder="ex.: GAVE/RO - S.A.R.P."></div>
+      <div class="linha2">
+        <div class="campo"><label for="inst-f-cor">Cor das linhas de título</label><input type="color" id="inst-f-cor" value="#14532d" style="width:100%;height:42px;border:1px solid var(--line);border-radius:9px;background:var(--bg);cursor:pointer"></div>
+        <div class="campo" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn secund" id="inst-f-cancelar" style="width:100%;display:none">Cancelar edição</button>
+        </div>
+      </div>
+      <div class="linha2">
+        <div class="campo"><label for="inst-f-brasao">Brasão (PNG, obrigatório ao criar)</label><input type="file" id="inst-f-brasao" accept="image/*"></div>
+        <div class="campo"><label for="inst-f-bandeira">Bandeira do estado (PNG, opcional)</label><input type="file" id="inst-f-bandeira" accept="image/*"></div>
+      </div>
+      <div id="inst-msg" style="font-size:12.5px;color:var(--red);min-height:16px;margin-bottom:6px"></div>
+      <button type="button" class="btn primario" id="inst-f-salvar" style="width:100%">💾 Salvar instituição</button>
+    </div>
+  </div>
+</div>
+
 <!-- Folha usada só na impressão/PDF -->
 <div class="folha" id="folha">
-  <div class="f-cabecalho">
+  <div class="f-cabecalho" id="f-cabecalho">
     <img class="f-logo-centro" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
     <div class="f-titulo">AVALIAÇÃO DE RISCO OPERACIONAL (ARO)</div>
     <div class="f-sub">Em conformidade com o RBAC nº 100 e a IS nº E94-003 da ANAC</div>
@@ -381,6 +422,131 @@ if(!form.elements['decldata'].value){
   form.elements['decldata'].value = pad(hoje.getDate()) + '/' + pad(hoje.getMonth()+1) + '/' + hoje.getFullYear();
 }
 form.addEventListener('input', salvar);
+
+/* ---------- Instituições (brasão + bandeira do cabeçalho do PDF) ---------- */
+const API_ARO = (() => {
+  try { const q = new URLSearchParams(location.search).get('api'); if(q) return q.replace(/\/+$/,''); } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+let INSTITUICOES = [];
+const escHtml = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function quandoDronePronto(cb){
+  if(window.droneCpf && window.droneCpf.pronto) cb();
+  else document.addEventListener('drone-cpf-pronto', cb, { once:true });
+}
+
+async function carregarInstituicoes(){
+  try {
+    const headers = (window.droneCpf && window.droneCpf.headers()) || {};
+    const r = await fetch(API_ARO + '/api/aro/instituicoes', { headers });
+    const d = await r.json().catch(() => ({}));
+    INSTITUICOES = (d && d.instituicoes) || [];
+  } catch(e) { INSTITUICOES = []; }
+  const sel = document.getElementById('f-instituicao');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Genérico (padrão BPFRON)</option>' +
+    INSTITUICOES.map(i => `<option value="${escHtml(i.id)}">${escHtml(i.nome)}</option>`).join('');
+  if(atual && [...sel.options].some(o => o.value === atual)) sel.value = atual;
+  if(document.getElementById('inst-modal-ovl').style.display !== 'none') renderListaInstituicoes();
+}
+
+function renderListaInstituicoes(){
+  const wrap = document.getElementById('inst-lista');
+  if(!INSTITUICOES.length){ wrap.innerHTML = '<div style="font-size:13px;color:var(--muted)">Nenhuma instituição cadastrada ainda.</div>'; return; }
+  wrap.innerHTML = INSTITUICOES.map(i => `
+    <div style="display:flex;align-items:center;gap:10px;background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:10px;padding:8px 10px">
+      <span style="width:18px;height:18px;border-radius:5px;background:${escHtml(i.cor)};border:1px solid rgba(255,255,255,.2);flex-shrink:0"></span>
+      <span style="flex:1;font-size:13.5px">${escHtml(i.nome)}</span>
+      <button type="button" class="btn secund" data-editar="${escHtml(i.id)}" style="padding:6px 10px;font-size:12px">✏️ Editar</button>
+      <button type="button" class="btn secund" data-excluir="${escHtml(i.id)}" style="padding:6px 10px;font-size:12px;color:var(--red)">🗑️</button>
+    </div>`).join('');
+  wrap.querySelectorAll('[data-editar]').forEach(b => b.onclick = () => abrirEdicaoInstituicao(b.dataset.editar));
+  wrap.querySelectorAll('[data-excluir]').forEach(b => b.onclick = () => excluirInstituicao(b.dataset.excluir));
+}
+
+function abrirEdicaoInstituicao(id){
+  const i = INSTITUICOES.find(x => x.id === id);
+  if(!i) return;
+  document.getElementById('inst-form-titulo').textContent = 'Editando: ' + i.nome;
+  document.getElementById('inst-f-id').value = i.id;
+  document.getElementById('inst-f-nome').value = i.nome;
+  document.getElementById('inst-f-cor').value = i.cor;
+  document.getElementById('inst-f-brasao').value = '';
+  document.getElementById('inst-f-bandeira').value = '';
+  document.getElementById('inst-f-cancelar').style.display = 'block';
+  document.getElementById('inst-msg').textContent = '';
+}
+
+function cancelarEdicaoInstituicao(){
+  document.getElementById('inst-form-titulo').textContent = 'Nova instituição';
+  document.getElementById('inst-f-id').value = '';
+  document.getElementById('inst-f-nome').value = '';
+  document.getElementById('inst-f-cor').value = '#14532d';
+  document.getElementById('inst-f-brasao').value = '';
+  document.getElementById('inst-f-bandeira').value = '';
+  document.getElementById('inst-f-cancelar').style.display = 'none';
+  document.getElementById('inst-msg').textContent = '';
+}
+
+async function excluirInstituicao(id){
+  const i = INSTITUICOES.find(x => x.id === id);
+  if(!i || !confirm('Excluir "' + i.nome + '"? Quem já tiver escolhido ela num PDF não é afetado, mas ela some da lista.')) return;
+  try {
+    const r = await fetch(API_ARO + '/api/aro/instituicoes/excluir', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...window.droneCpf.headers() },
+      body: JSON.stringify({ id }),
+    });
+    if(!r.ok){ const d = await r.json().catch(()=>({})); alert(d.detail || 'Não foi possível excluir.'); return; }
+    await carregarInstituicoes();
+  } catch(e) { alert('Sem conexão com o servidor.'); }
+}
+
+document.getElementById('btn-gerir-instituicoes').addEventListener('click', () => {
+  cancelarEdicaoInstituicao();
+  renderListaInstituicoes();
+  document.getElementById('inst-modal-ovl').style.display = 'flex';
+});
+document.getElementById('inst-modal-fechar').addEventListener('click', () => {
+  document.getElementById('inst-modal-ovl').style.display = 'none';
+});
+document.getElementById('inst-f-cancelar').addEventListener('click', cancelarEdicaoInstituicao);
+
+document.getElementById('inst-f-salvar').addEventListener('click', async () => {
+  const id = document.getElementById('inst-f-id').value.trim();
+  const nome = document.getElementById('inst-f-nome').value.trim();
+  const cor = document.getElementById('inst-f-cor').value;
+  const brasaoFile = document.getElementById('inst-f-brasao').files[0];
+  const bandeiraFile = document.getElementById('inst-f-bandeira').files[0];
+  const msg = document.getElementById('inst-msg');
+  if(!id && !nome){ msg.textContent = 'Dê um nome à instituição.'; return; }
+  if(!id && !brasaoFile){ msg.textContent = 'Envie a imagem do brasão.'; return; }
+
+  const fd = new FormData();
+  if(id) fd.append('id', id);
+  if(nome) fd.append('nome', nome);
+  fd.append('cor', cor);
+  if(brasaoFile) fd.append('brasao', brasaoFile);
+  if(bandeiraFile) fd.append('bandeira', bandeiraFile);
+
+  msg.style.color = 'var(--muted)'; msg.textContent = 'Salvando…';
+  try {
+    const r = await fetch(API_ARO + (id ? '/api/aro/instituicoes/editar' : '/api/aro/instituicoes/criar'), {
+      method: 'POST', headers: window.droneCpf.headers(), body: fd,
+    });
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok){ msg.style.color = 'var(--red)'; msg.textContent = d.detail || 'Não foi possível salvar.'; return; }
+    msg.style.color = 'var(--green)'; msg.textContent = '✅ Salvo!';
+    await carregarInstituicoes();
+    cancelarEdicaoInstituicao();
+  } catch(e) { msg.style.color = 'var(--red)'; msg.textContent = 'Sem conexão com o servidor.'; }
+});
+
+quandoDronePronto(() => {
+  if(window.droneCpf.souGestor) document.getElementById('inst-gestao-wrap').style.display = 'block';
+  carregarInstituicoes();
+});
 form.addEventListener('change', salvar);
 
 document.getElementById('btn-limpar').addEventListener('click', () => {
@@ -638,7 +804,37 @@ window.addEventListener('afterprint', () => {
   document.getElementById('folha').style.cssText = '';
 });
 
+const CABECALHO_GENERICO = `<img class="f-logo-centro" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
+    <div class="f-titulo">AVALIAÇÃO DE RISCO OPERACIONAL (ARO)</div>
+    <div class="f-sub">Em conformidade com o RBAC nº 100 e a IS nº E94-003 da ANAC</div>`;
+
+function montarCabecalho(){
+  const folha = document.getElementById('folha');
+  const cab = document.getElementById('f-cabecalho');
+  const instId = document.getElementById('f-instituicao').value;
+  const inst = instId ? INSTITUICOES.find(i => i.id === instId) : null;
+
+  if(!inst){
+    folha.style.removeProperty('--f-cor');
+    cab.className = 'f-cabecalho';
+    cab.innerHTML = CABECALHO_GENERICO;
+    return;
+  }
+
+  folha.style.setProperty('--f-cor', inst.cor);
+  cab.className = 'f-cabecalho f-cabecalho-inst';
+  const brasao = inst.brasaoUrl ? `<img class="f-brasao-esq" src="${API_ARO}${inst.brasaoUrl}" alt="Brasão">` : '<span class="f-brasao-esq"></span>';
+  const bandeira = inst.bandeiraUrl ? `<img class="f-bandeira-dir" src="${API_ARO}${inst.bandeiraUrl}" alt="Bandeira">` : '<span class="f-bandeira-dir"></span>';
+  cab.innerHTML = brasao +
+    '<div class="f-cabecalho-meio"><div class="f-titulo">AVALIAÇÃO DE RISCO OPERACIONAL (ARO)</div>' +
+    '<div class="f-sub">Em conformidade com o RBAC nº 100 e a IS nº E94-003 da ANAC</div></div>' +
+    bandeira;
+  // se a imagem falhar (rede/id inválido), volta pro cabeçalho genérico em vez de sair quebrado
+  cab.querySelectorAll('img').forEach(img => img.onerror = () => { folha.style.removeProperty('--f-cor'); cab.className = 'f-cabecalho'; cab.innerHTML = CABECALHO_GENERICO; });
+}
+
 function montarFolha(){
+  montarCabecalho();
   const set = (id,val) => document.getElementById(id).textContent = val || '';
   set('o-nome', txt('f-nome'));
   set('o-cpf', txt('f-cpf'));
