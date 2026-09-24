@@ -255,6 +255,19 @@ a{color:var(--yellow)}
   .pr-sem{font-size:8.5pt;color:#555;font-style:italic;margin-top:2pt}
   /* grifo que sobrevive em preto e branco (o sublinhado sai mesmo sem fundo) */
   #print-area mark{background:#e8e8e8;color:#000;font-weight:700;padding:0 1pt;border-bottom:.8pt solid #777}
+  /* quadro "o que consta neste relatório" (1ª página, nos dois modelos) */
+  .pr-cont-t{font-size:8pt;text-transform:uppercase;letter-spacing:.6pt;font-weight:700;
+             border-bottom:1pt solid #000;padding-bottom:2pt;margin:2pt 0 5pt}
+  .pr-cont{column-count:2;column-gap:10pt;margin-bottom:11pt}
+  .pr-cx{break-inside:avoid;page-break-inside:avoid;border:.7pt solid #999;border-left:2.5pt solid #000;
+         padding:4pt 6pt;margin-bottom:6pt;display:inline-block;width:100%;box-sizing:border-box}
+  .pr-cx-t{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.4pt;margin-bottom:2pt}
+  .pr-cx table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .pr-cx td{padding:1pt 0;border-bottom:.4pt dotted #bbb;vertical-align:top}
+  .pr-cx tr:last-child td{border-bottom:0}
+  .pr-cx .pr-q{text-align:right;white-space:nowrap;font-weight:700;padding-left:6pt}
+  .pr-cx .pr-tot td{border-top:.8pt solid #000;font-weight:700}
+  .pr-cx .pr-sem{margin:0}
   /* relatório RESUMIDO: tabela corrida, uma linha por ocorrência, sem quebra de página */
   .pr-tab{width:100%;border-collapse:collapse;font-size:8pt}
   .pr-tab thead{display:table-header-group}   /* cabeçalho se repete em cada folha */
@@ -1827,15 +1840,121 @@ function tabelaResumida(lista){
     '</tr>').join('') + '</tbody></table>';
 }
 
+/* Quadro da 1ª página ("o que consta neste relatório"), nos dois modelos:
+   pessoas, drogas por tipo, armas por tipo, veículos e demais apreensões,
+   naturezas e municípios — tudo somado só sobre as ocorrências do relatório.
+   Droga/arma segue a mesma regra das etiquetas: ocorrência que já está no
+   banco de apreensões conta pelo item (skunk, revólver…); a que não está,
+   pelas colunas da BASE. */
+function quadroConteudo(lista){
+  const soma = new Map();   // grupo → Map(rótulo → {q, un})
+  const add = (grupo, rot, q, un) => {
+    if (!(q > 0)) return;
+    if (!soma.has(grupo)) soma.set(grupo, new Map());
+    const g = soma.get(grupo), k = rot + '|' + (un || '');
+    g.set(k, { rot, un: un || '', q: (g.get(k)?.q || 0) + q });
+  };
+  const pessoas = new Map(), papeis = new Map(), situacoes = new Map();
+  let semEnv = 0, kgRel = 0;   // kgRel: droga total, BO a BO (banco novo ou coluna "Drogas TOTAL")
+  const nats = new Map(), muns = new Map();
+  const conta = (m, k) => { if (k) m.set(k, (m.get(k) || 0) + 1); };
+
+  for (const o of lista){
+    ((o._crimes && o._crimes.length) ? o._crimes : [o.natureza || 'não informada']).forEach(c => conta(nats, c));
+    conta(muns, o.municipio);
+    add('Pessoas', 'Presos', o.n_presos);
+    add('Pessoas', 'Apreensões sem prisão', o.n_apreensoes);
+
+    const gente = envolvidosDe(o);
+    if (gente && !gente.length) semEnv++;
+    (gente || []).forEach(p => {
+      const k = (p.nome || '').trim().toUpperCase() + '|' + String(p.cpf || '').replace(/\D/g,'');
+      if (k !== '|') pessoas.set(k, 1);
+      conta(papeis, (p.papel || 'sem papel informado').trim());
+      if (p.status) conta(situacoes, p.status.trim());
+    });
+
+    const kgApre = o._apre ? o._apre.filter(it => it.categoria === 'Droga' && it.unidade === 'kg').reduce((a,it) => a + (+it.qtd || 0), 0) : 0;
+    kgRel += o._apre ? kgApre : (o.n_drogas || 0);
+    if (o._apre){
+      o._apre.forEach(it => {
+        const rot = String(it.item || it.codigo).replace(/\s*\(R\$\)\s*$/,'');
+        if (it.categoria === 'Droga') add('Drogas', rot, it.qtd, it.unidade);
+        else if (it.categoria === 'Arma' && it.codigo !== 'MUNICAO') add('Armas e munições', rot, it.qtd, it.unidade === 'un' ? '' : it.unidade);
+      });
+    } else {
+      [['maconha','Maconha','kg'],['cocaina','Cocaína / cloridrato','kg'],['pastabase','Pasta base','kg'],
+       ['crack','Crack','kg'],['oxi','Óxi','kg'],['meta','Metanfetamina','kg'],['folhacoca','Folha de coca','kg'],
+       ['ecstasy','Ecstasy','comprimidos']].forEach(([f, rot, un]) => add('Drogas', rot, o['n_'+f], un));
+      add('Armas e munições', 'Armas (tipo não informado)', o.n_armas);
+    }
+    add('Armas e munições', 'Munições', o.n_municoes);
+    [['veiculos','Veículos'],['embarcacoes','Embarcações'],['motorpopa','Motores de popa']]
+      .forEach(([f, rot]) => add('Veículos e embarcações', rot, o['n_'+f]));
+    [['madeira','Madeira','m³'],['cigarros','Cigarros','maços'],['gasolina','Gasolina','L'],['diesel','Diesel','L'],
+     ['glp','GLP','botijas'],['celulares','Celulares',''],['eletronicos','Eletrônicos',''],['roupas','Roupas',''],
+     ['ouro','Ouro','g'],['dinheiro','Dinheiro em espécie','R$'],['merc','Mercadorias de descaminho','R$'],
+     ['animais','Animais / pescado','R$']].forEach(([f, rot, un]) => add('Outras apreensões', rot, o['n_'+f], un));
+  }
+
+  const fq = (q, un) => un === 'R$' ? fR(q)
+    : (un === 'kg' || un === 'm³' || un === 'g' || un === 'L' || un === 'litro')
+      ? fD(q, 3).replace(/,?0+$/,'') + ' ' + (un === 'litro' ? 'L' : un)
+      : fN(q) + (un && un !== 'un' ? ' ' + un : '');
+  const linhas = pares => pares.map(([r, v, cls]) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(r) + '</td><td class="pr-q">' + v + '</td></tr>').join('');
+  const caixa = (tit, corpo, extra) => '<div class="pr-cx"><div class="pr-cx-t">' + tit + '</div>' +
+    (corpo ? '<table>' + corpo + '</table>' : '<div class="pr-sem">— nada consta —</div>') + (extra || '') + '</div>';
+  const doGrupo = g => soma.has(g) ? [...soma.get(g).values()].sort((a,b) => b.q - a.q).map(x => [x.rot, fq(x.q, x.un)]) : [];
+  const ranking = (m, max) => {
+    const arr = [...m.entries()].sort((a,b) => b[1] - a[1]);
+    const top = arr.slice(0, max).map(([k, n]) => [k, fN(n)]);
+    if (arr.length > max) top.push(['outros (' + (arr.length - max) + ')', fN(arr.slice(max).reduce((a,[,n]) => a + n, 0))]);
+    return top;
+  };
+
+  // Pessoas: presos/apreensões da BASE + envolvidos qualificados
+  let pes = doGrupo('Pessoas');
+  let extraPes = '';
+  if (ENV_FALHOU || !ENV_POR_BO) extraPes = '<div class="pr-sem">lista de envolvidos não carregada</div>';
+  else {
+    pes.unshift(['Envolvidos qualificados (pessoas distintas)', fN(pessoas.size)]);
+    pes = pes.concat(ranking(papeis, 6).map(([r, v]) => ['— ' + r, v]));
+    if (situacoes.size) pes = pes.concat(ranking(situacoes, 4).map(([r, v]) => ['— situação: ' + r, v]));
+    if (semEnv) pes.push(['Ocorrências sem envolvido qualificado', fN(semEnv)]);
+  }
+  const drogas = doGrupo('Drogas');
+  const kgTipos = soma.has('Drogas') ? [...soma.get('Drogas').values()].filter(x => x.un === 'kg').reduce((a,x) => a + x.q, 0) : 0;
+  // a coluna "Drogas TOTAL" às vezes tem mais do que a soma dos tipos (BO sem o tipo
+  // preenchido): a diferença aparece, em vez de o total não bater com as linhas
+  if (kgRel - kgTipos > 0.0005) drogas.push(['Tipo não informado', fq(kgRel - kgTipos, 'kg')]);
+  const kgTot = Math.max(kgRel, kgTipos);
+  if (drogas.length > 1 && kgTot > 0) drogas.push(['Total em kg', fq(kgTot, 'kg'), 'pr-tot']);
+
+  // armas "de verdade" (sem munição), para a faixa de números de cima bater com o quadro
+  const armas = soma.has('Armas e munições')
+    ? [...soma.get('Armas e munições').values()].filter(x => x.rot !== 'Munições').reduce((a,x) => a + x.q, 0) : 0;
+  const html = '<div class="pr-cont-t">O que consta neste relatório</div><div class="pr-cont">' +
+    caixa('Pessoas', linhas(pes), extraPes) +
+    caixa('Drogas', linhas(drogas)) +
+    caixa('Armas e munições', linhas(doGrupo('Armas e munições'))) +
+    caixa('Veículos e embarcações', linhas(doGrupo('Veículos e embarcações'))) +
+    caixa('Outras apreensões', linhas(doGrupo('Outras apreensões'))) +
+    caixa('Naturezas (ocorrências)', linhas(ranking(nats, 8))) +
+    caixa('Municípios (ocorrências)', linhas(ranking(muns, 8))) +
+  '</div>';
+  return { html, kgDroga: kgTot, armas };
+}
+
 let REL_MODO = 'completo';   // último modelo pedido (o Ctrl+P usa o mesmo)
 
 function montarRelatorio(lista, modo){
   modo = modo || REL_MODO;
   const soma = f => lista.reduce((a,o) => a + (o['n_'+f]||0), 0);
+  const quadro = quadroConteudo(lista);
   const resumo = [
     [fN(lista.length), 'ocorrências'], [fN(soma('presos')), 'presos'],
-    [fD(soma('drogas'),1), 'kg de droga'], [fN(soma('veiculos')), 'veículos'],
-    [fN(soma('armas')), 'armas'], [fR(soma('prejuizo')), 'prejuízo estimado'],
+    [fD(quadro.kgDroga,1), 'kg de droga'], [fN(soma('veiculos')), 'veículos'],
+    [fN(quadro.armas), 'armas'], [fR(soma('prejuizo')), 'prejuízo estimado'],
   ];
   const agora = new Date().toLocaleString('pt-BR');
   const marcadas = SELECIONADOS.size > 0;
@@ -1881,6 +2000,7 @@ function montarRelatorio(lista, modo){
     '<table class="pr-resumo"><tr>' +
       resumo.map(([v,l]) => '<td><span class="pr-v">' + v + '</span><span class="pr-l">' + l + '</span></td>').join('') +
     '</tr></table>' +
+    quadro.html +
     fichas +
     '<div class="pr-fim">Documento gerado pelo sistema BPFRON · ' + esc(agora) +
       ' · contém dados pessoais de envolvidos — trate como documento de uso restrito.</div>';
