@@ -318,8 +318,8 @@ button,input,select{font-family:inherit}
         </div>
       </div>
       <div class="linha2">
-        <div class="campo"><label for="inst-f-brasao">Brasão (PNG, obrigatório ao criar)</label><input type="file" id="inst-f-brasao" accept="image/*"></div>
-        <div class="campo"><label for="inst-f-bandeira">Bandeira do estado (PNG, opcional)</label><input type="file" id="inst-f-bandeira" accept="image/*"></div>
+        <div class="campo"><label for="inst-f-brasao">Brasão (PNG, fundo transparente, até 800 KB)</label><input type="file" id="inst-f-brasao" accept="image/*"></div>
+        <div class="campo"><label for="inst-f-bandeira">Bandeira do estado (PNG, até 800 KB, opcional)</label><input type="file" id="inst-f-bandeira" accept="image/*"></div>
       </div>
       <div id="inst-msg" style="font-size:12.5px;color:var(--red);min-height:16px;margin-bottom:6px"></div>
       <button type="button" class="btn primario" id="inst-f-salvar" style="width:100%">💾 Salvar instituição</button>
@@ -705,9 +705,14 @@ function prepararMapaImpressao(){
     if(!marcadorAro){ secMapa.style.display = 'none'; resolve(); return; }
     secMapa.style.display = '';
     const folha = document.getElementById('folha');
+    // --f-cor (instituição escolhida) é custom property no MESMO elemento #folha —
+    // "style.cssText =" abaixo troca o atributo style inteiro e apagaria ela, então
+    // salva/reaplica em volta das duas trocas (montarCabecalho() já rodou antes desta função).
+    const corInst = folha.style.getPropertyValue('--f-cor');
     // Mesma largura do box do mapa (#map-aro-print) tanto aqui (fora da tela) quanto na impressão real,
     // senão os ladrilhos carregam pra um tamanho e o Chrome imprime em outro, deixando pedaço em branco
     folha.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:700px;background:#fff';
+    if(corInst) folha.style.setProperty('--f-cor', corInst);
 
     let terminou = false;
     const finalizar = () => {
@@ -715,6 +720,7 @@ function prepararMapaImpressao(){
       terminou = true;
       // Tira o posicionamento fora da tela: senão a folha imprime em branco (fora da página)
       folha.style.cssText = '';
+      if(corInst) folha.style.setProperty('--f-cor', corInst);
       resolve();
     };
 
@@ -833,6 +839,18 @@ function montarCabecalho(){
   cab.querySelectorAll('img').forEach(img => img.onerror = () => { folha.style.removeProperty('--f-cor'); cab.className = 'f-cabecalho'; cab.innerHTML = CABECALHO_GENERICO; });
 }
 
+// Espera o(s) brasão/bandeira da instituição carregarem antes do window.print() — mesma
+// lição do mapa (ver [[drone-aro-mapa-impressao]]): sem isso, imagem de rede que ainda não
+// chegou sai em branco/quebrada no PDF porque o print acontece rápido demais.
+function aguardarCabecalhoInst(){
+  const imgs = [...document.querySelectorAll('#f-cabecalho img')].filter(img => !img.complete);
+  if(!imgs.length) return Promise.resolve();
+  return Promise.race([
+    Promise.all(imgs.map(img => new Promise(res => { img.addEventListener('load', res, {once:true}); img.addEventListener('error', res, {once:true}); }))),
+    new Promise(res => setTimeout(res, 6000)),
+  ]);
+}
+
 function montarFolha(){
   montarCabecalho();
   const set = (id,val) => document.getElementById(id).textContent = val || '';
@@ -912,6 +930,8 @@ form.addEventListener('submit', async e => {
   montarFolha();
   const btnBaixar = document.getElementById('btn-baixar');
   btnBaixar.disabled = true;
+  btnBaixar.textContent = '⏳ Preparando o cabeçalho…';
+  await aguardarCabecalhoInst();
   btnBaixar.textContent = '⏳ Preparando o mapa…';
   await prepararMapaImpressao();
   btnBaixar.disabled = false;
