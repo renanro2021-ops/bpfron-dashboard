@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loja BPFRON · BPFRON/RO</title>
+<script src="conta.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --gold:     #c9a030;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+  --red:      #ef4444;
+  --redsoft:  rgba(239,68,68,.12);
+  --green:    #34d399;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15.5px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif}
+.hdr-link:hover{color:var(--yellow)}
+
+.wrap{max-width:1080px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,4vw,24px) 70px}
+
+.tabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
+.tab{flex:1;min-width:150px;background:rgba(148,163,184,.07);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--muted);font-family:'Inter',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;transition:.13s}
+.tab:hover{background:rgba(148,163,184,.13);color:#cbd5e1}
+.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.tab .bdg{display:inline-block;margin-left:6px;background:var(--redsoft);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:700}
+.pane{display:none}
+.pane.on{display:block}
+
+.hero{text-align:center;padding:6px 6px 26px}
+.hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,5vw,32px);font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:8px}
+.hero p{color:var(--muted);font-size:15px;max-width:620px;margin:0 auto;line-height:1.7}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:30px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px)}
+.hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+.aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 18px;font-size:14.5px;color:#fcd34d;line-height:1.6;margin-bottom:18px}
+.aviso b{color:#fde68a}
+.fechada{background:var(--redsoft);border:1px solid rgba(239,68,68,.4);border-radius:12px;padding:16px 18px;font-size:15px;color:#fca5a5;text-align:center;margin-bottom:18px;font-weight:700}
+
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg input,.fg textarea,.fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px;width:100%}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:rgba(245,197,24,.6)}
+.fg textarea{min-height:70px;resize:vertical}
+
+.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;min-height:46px;transition:.12s}
+.btn:hover{background:rgba(245,197,24,.22)}
+.btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
+.btn.ghost:hover{background:rgba(148,163,184,.18)}
+.btn.danger{background:var(--redsoft);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.btn.danger:hover{background:rgba(239,68,68,.2)}
+.btn.small{padding:8px 14px;font-size:13px;min-height:36px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.msg{font-size:14px;min-height:19px;margin-top:12px}
+.msg.err{color:#fca5a5}
+.msg.ok{color:#6ee7b7}
+
+/* ---------- vitrine ---------- */
+.produtos{display:flex;flex-direction:column;gap:26px}
+.produto-nome{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:.3px}
+.grid-itens{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.item-card{background:var(--card);border:2px solid rgba(148,163,184,.16);border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;display:flex;flex-direction:column}
+.item-card:hover{border-color:rgba(245,197,24,.4)}
+.item-card.on{border-color:var(--yellow);box-shadow:0 0 0 1px rgba(245,197,24,.4)}
+.item-foto{width:100%;aspect-ratio:1/1;background:#0b0f1a;object-fit:cover;display:block}
+.item-body{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.item-preco{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--yellow)}
+.item-preco.zero{color:var(--muted);font-size:13px;font-weight:600}
+.item-qtd{display:flex;align-items:center;gap:8px}
+.item-qtd button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:rgba(148,163,184,.1);color:#e2e8f0;font-size:16px;cursor:pointer;font-weight:700}
+.item-qtd span{min-width:22px;text-align:center;font-weight:700}
+.item-tam{font-size:12.5px;padding:8px 10px;min-height:36px}
+
+.vazio{text-align:center;color:var(--muted);padding:34px 12px;font-size:14.5px}
+
+/* ---------- carrinho ---------- */
+.carrinho{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#05070d 30%);padding:14px 0 0;margin-top:20px}
+.carrinho-box{background:var(--card);border:2px solid rgba(245,197,24,.35);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.carrinho-info{font-size:14.5px;color:#cbd5e1}
+.carrinho-info b{color:var(--yellow);font-family:'Rajdhani',sans-serif;font-size:19px}
+
+/* ---------- pedidos ---------- */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid rgba(148,163,184,.1);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+.pill.pedido{background:rgba(148,163,184,.14);border:1px solid rgba(148,163,184,.35);color:#cbd5e1}
+.pill.confirmado{background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+.pill.entregue{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
+.pill.cancelado{background:var(--redsoft);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+.pill.pago{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
+.pill.naopago{background:rgba(148,163,184,.1);border:1px solid var(--border);color:var(--muted)}
+.pill.indef{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:#fcd34d}
+
+.card-pedido{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.card-pedido-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.card-pedido-itens{font-size:14px;color:#cbd5e1;line-height:1.7}
+.card-pedido-total{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--yellow)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.kpi .n{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:#fff}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+.trava{max-width:430px;margin:20px auto}
+
+@media(max-width:640px){
+  .grid-itens{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">Loja <em>BPFRON</em></div>
+        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="userchip"></span>
+      <button class="hdr-link" id="btn-sair" style="display:none">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============================== LOGIN ============================== -->
+  <div class="trava" id="login-box">
+    <div class="sec" style="justify-content:center">🔐 Entrar</div>
+    <div class="box">
+      <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
+        Loja aberta para todo o efetivo do BPFRON. Use o mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard.
+      </p>
+      <div class="fg"><label>Usuário</label><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="fg" style="margin-top:12px"><label>Senha</label><input id="f-pass" type="password" autocomplete="current-password"></div>
+      <button class="btn" id="btn-entrar" style="width:100%;margin-top:16px">Entrar</button>
+      <div class="msg" id="msg-login"></div>
+    </div>
+  </div>
+
+  <!-- ============================== APP ============================== -->
+  <div id="app" style="display:none">
+
+    <div class="tabs">
+      <button class="tab on" data-pane="vitrine">🛍️ Vitrine</button>
+      <button class="tab" data-pane="meus">📦 Meus pedidos<span class="bdg" id="bdg-meus" style="display:none"></span></button>
+      <button class="tab" id="tab-gestor" style="display:none" data-pane="gestor">📋 Gestão</button>
+    </div>
+
+    <!-- ---------------- VITRINE ---------------- -->
+    <div class="pane on" id="pane-vitrine">
+      <div class="hero">
+        <h1 id="loja-titulo">Loja BPFRON</h1>
+        <p id="loja-aviso"></p>
+      </div>
+      <div id="loja-fechada" class="fechada" style="display:none">🔒 Os pedidos estão encerrados no momento.</div>
+      <div id="vitrine-lista" class="produtos"></div>
+      <div class="vazio" id="vitrine-vazio" style="display:none">Carregando a vitrine…</div>
+
+      <div class="carrinho" id="carrinho" style="display:none">
+        <div class="carrinho-box">
+          <div class="carrinho-info"><b id="carrinho-n">0</b> item(ns) no carrinho</div>
+          <div class="btnrow" style="margin-top:0">
+            <div class="fg" style="min-width:220px"><input id="carrinho-obs" placeholder="Observação (opcional)"></div>
+            <button class="btn" id="btn-pedir">Fazer pedido</button>
+          </div>
+        </div>
+      </div>
+      <div class="msg" id="msg-vitrine"></div>
+    </div>
+
+    <!-- ---------------- MEUS PEDIDOS ---------------- -->
+    <div class="pane" id="pane-meus">
+      <div class="sec">Meus pedidos <button class="btn ghost small" id="btn-atualizar-meus" style="margin-left:auto">↻ Atualizar</button></div>
+      <div id="meus-lista"></div>
+      <div class="vazio" id="meus-vazio" style="display:none">Você ainda não fez nenhum pedido.</div>
+    </div>
+
+    <!-- ---------------- GESTOR ---------------- -->
+    <div class="pane" id="pane-gestor">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="sec">Ajustes da loja</div>
+      <div class="box">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="fg"><label>Loja aberta</label>
+            <select id="cfg-aberta"><option value="SIM">Sim — recebendo pedidos</option><option value="NAO">Não — pedidos encerrados</option></select>
+          </div>
+          <div class="fg"><label>Título</label><input id="cfg-titulo"></div>
+        </div>
+        <div class="fg" style="margin-top:12px"><label>Aviso (aparece no topo da vitrine)</label><textarea id="cfg-aviso"></textarea></div>
+        <div class="btnrow"><button class="btn" id="btn-salvar-cfg">Salvar ajustes</button></div>
+        <div class="msg" id="msg-cfg"></div>
+        <div class="hint">O catálogo (produtos, fotos e preços) não é editado aqui — é direto na pasta do Google Drive: cada subpasta de <b>Itens/</b> é um produto, e o nome do arquivo (sem a extensão) é o preço. Renomeie a foto para mudar o preço — os pedidos já feitos atualizam sozinhos.</div>
+      </div>
+
+      <div class="sec">Pedidos <small id="cont-pedidos"></small>
+        <button class="btn ghost small" id="btn-atualizar-gestor" style="margin-left:auto">↻ Atualizar</button>
+      </div>
+      <div id="gestor-lista"></div>
+      <div class="vazio" id="gestor-vazio" style="display:none">Nenhum pedido ainda.</div>
+
+      <div class="btnrow">
+        <button class="btn ghost" id="btn-csv-pedidos">⬇ CSV pedidos</button>
+        <button class="btn ghost" id="btn-csv-itens">⬇ CSV itens</button>
+        <button class="btn ghost" id="btn-csv-resumo">⬇ CSV resumo (o que encomendar)</button>
+      </div>
+      <div class="msg" id="msg-gestor"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   Loja BPFRON — loja.html
+   Catálogo lido direto de uma pasta do Google Drive (worker.js, bloco
+   VITRINE): cada subpasta de Itens/ é um produto, e o nome do arquivo
+   (sem extensão) é o preço — "0" = ainda não definido. Preço é sempre
+   lido AO VIVO pelo Worker, nunca gravado no pedido.
+   ===================================================================== */
+
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+
+const $ = (id) => document.getElementById(id);
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fR(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fDH(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : ''; }
+function show(id, on){ $(id).style.display = on ? '' : 'none'; }
+
+async function apiGet(path){
+  const r = await fetch(API_BASE + path, { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+  if (r.status === 401){ sair(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+async function apiPost(path, body){
+  const r = await fetch(API_BASE + path, { method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token, 'Content-Type':'application/json' }, body: JSON.stringify(body||{}) });
+  if (r.status === 401){ sair(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  return d;
+}
+
+/* ---------------------------- login ---------------------------- */
+async function entrar(){
+  const btn = $('btn-entrar'), m = $('msg-login');
+  const user = $('f-user').value.trim(), pass = $('f-pass').value;
+  if (!user || !pass){ m.className='msg err'; m.textContent='Informe usuário e senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; m.className='msg'; m.textContent='';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('f-pass').value = '';
+    boot();
+  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+function sair(){ AUTH.token=''; AUTH.user=''; D = null; boot(); }
+$('btn-entrar').addEventListener('click', entrar);
+$('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+$('f-user').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-pass').focus(); });
+$('btn-sair').addEventListener('click', sair);
+
+function boot(){
+  const logged = AUTH.logged, ps = permsSessao();
+  $('userchip').textContent = logged ? ('👤 ' + ((ps && ps.nome) || AUTH.user)) : '';
+  $('btn-sair').style.display = logged ? '' : 'none';
+  show('login-box', !logged);
+  show('app', logged);
+  if (logged) carregar();
+}
+
+/* ---------------------------- abas ---------------------------- */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.pane').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    $('pane-' + t.dataset.pane).classList.add('on');
+    window.scrollTo(0,0);
+  });
+});
+
+/* ---------------------------- dados ---------------------------- */
+let D = null;
+let CARRINHO = {}; // arquivo_id|tamanho -> {arquivo_id,tamanho,qtd,preco,produto}
+
+async function carregar(){
+  show('vitrine-vazio', true); $('vitrine-vazio').textContent = 'Carregando a vitrine…';
+  try { D = await apiGet('/api/vitrine'); }
+  catch(e){ $('vitrine-vazio').textContent = '⚠️ ' + e.message; return; }
+  $('tab-gestor').style.display = D.gestor ? '' : 'none';
+  renderVitrine();
+  renderMeus();
+  if (D.gestor){ renderGestor(); preencherCfg(); }
+}
+
+/* ---------------------------- vitrine ---------------------------- */
+function renderVitrine(){
+  $('loja-titulo').textContent = D.config.titulo || 'Loja BPFRON';
+  $('loja-aviso').textContent = D.config.aviso || 'Escolha os itens e monte seu pedido.';
+  show('loja-fechada', !D.config.aberta);
+
+  const produtos = D.catalogo || [];
+  show('vitrine-vazio', produtos.length === 0);
+  if (!produtos.length){ $('vitrine-vazio').textContent = 'Nenhum item na vitrine no momento.'; $('vitrine-lista').innerHTML=''; return; }
+
+  let html = '';
+  produtos.forEach(p => {
+    html += `<div><div class="produto-nome">${esc(p.produto)}</div><div class="grid-itens">`;
+    p.itens.forEach(it => {
+      const key = it.id;
+      const precoOk = it.preco > 0;
+      html += `<div class="item-card" data-id="${esc(it.id)}">
+        <img class="item-foto" loading="lazy" src="${API_BASE}/api/vitrine/foto?id=${encodeURIComponent(it.id)}" alt="${esc(p.produto)}"
+             onerror="this.style.opacity=.15">
+        <div class="item-body">
+          <div class="item-preco${precoOk?'':' zero'}">${precoOk ? fR(it.preco) : 'preço a definir'}</div>
+          <input class="item-tam" placeholder="Tamanho / obs (opcional)" data-tam="${esc(it.id)}">
+          <div class="item-qtd">
+            <button type="button" data-menos="${esc(it.id)}">−</button>
+            <span id="qtd-${esc(it.id)}">0</span>
+            <button type="button" data-mais="${esc(it.id)}">+</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  $('vitrine-lista').innerHTML = html;
+
+  document.querySelectorAll('[data-mais]').forEach(b => b.addEventListener('click', () => mudarQtd(b.dataset.mais, produtos, 1)));
+  document.querySelectorAll('[data-menos]').forEach(b => b.addEventListener('click', () => mudarQtd(b.dataset.menos, produtos, -1)));
+  atualizarCarrinhoUI();
+}
+
+function achaItem(produtos, id){
+  for (const p of produtos) { const it = p.itens.find(x => x.id === id); if (it) return { it, produto: p.produto }; }
+  return null;
+}
+function mudarQtd(id, produtos, delta){
+  if (!D.config.aberta) return;
+  const info = achaItem(produtos, id); if (!info) return;
+  const tamEl = document.querySelector(`[data-tam="${CSS.escape(id)}"]`);
+  const tam = tamEl ? tamEl.value.trim() : '';
+  const key = id + '|' + tam;
+  const atual = CARRINHO[key] || { arquivo_id: id, tamanho: tam, qtd: 0, preco: info.it.preco, produto: info.produto };
+  atual.qtd = Math.max(0, Math.min(50, atual.qtd + delta));
+  if (atual.qtd === 0) delete CARRINHO[key]; else CARRINHO[key] = atual;
+  const totalItem = Object.values(CARRINHO).filter(c => c.arquivo_id === id).reduce((s,c)=>s+c.qtd,0);
+  const span = $('qtd-' + id); if (span) span.textContent = totalItem;
+  const card = document.querySelector(`.item-card[data-id="${CSS.escape(id)}"]`); if (card) card.classList.toggle('on', totalItem > 0);
+  atualizarCarrinhoUI();
+}
+function atualizarCarrinhoUI(){
+  const itens = Object.values(CARRINHO);
+  const n = itens.reduce((s,c)=>s+c.qtd,0);
+  show('carrinho', n > 0);
+  $('carrinho-n').textContent = n;
+}
+
+$('btn-pedir').addEventListener('click', async () => {
+  const m = $('msg-vitrine'), btn = $('btn-pedir');
+  const itens = Object.values(CARRINHO).map(c => ({ arquivo_id: c.arquivo_id, tamanho: c.tamanho, qtd: c.qtd }));
+  if (!itens.length){ m.className='msg err'; m.textContent='Escolha pelo menos um item.'; return; }
+  btn.disabled = true; btn.textContent = 'Enviando…'; m.className='msg'; m.textContent='';
+  try {
+    await apiPost('/api/vitrine/pedido', { itens, obs: $('carrinho-obs').value.trim() });
+    CARRINHO = {};
+    $('carrinho-obs').value = '';
+    m.className='msg ok'; m.textContent = '✅ Pedido enviado! Veja em "Meus pedidos".';
+    await carregar();
+    document.querySelector('[data-pane="meus"]').click();
+  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Não foi possível enviar o pedido.'; }
+  finally { btn.disabled = false; btn.textContent = 'Fazer pedido'; }
+});
+
+/* ---------------------------- meus pedidos ---------------------------- */
+function statusPill(st){ return `<span class="pill ${st.toLowerCase()}">${esc(st)}</span>`; }
+
+function pedidoHTML(p, gestor){
+  const itensTxt = p.itens.map(i => `${i.qtd}x ${esc(i.produto)}${i.tamanho ? ' ('+esc(i.tamanho)+')' : ''} ${i.disponivel===false?'⚠️ removido do catálogo':''}`).join('<br>');
+  return `<div class="card-pedido">
+    <div class="card-pedido-topo">
+      <div>
+        ${gestor ? `<b>${esc(p.nome)}</b> <span style="color:var(--muted);font-size:12.5px">(${esc(p.login)})</span><br>` : ''}
+        ${statusPill(p.status)} ${p.pago ? '<span class="pill pago">PAGO</span>' : '<span class="pill naopago">não pago</span>'}
+        ${!p.preco_definido ? '<span class="pill indef">preço a definir</span>' : ''}
+        <div style="font-size:12.5px;color:var(--muted);margin-top:6px">Pedido ${esc(p.id)} · ${fDH(p.pedido_em)}</div>
+      </div>
+      <div class="card-pedido-total">${fR(p.total)}</div>
+    </div>
+    <div class="card-pedido-itens">${itensTxt}</div>
+    ${p.obs ? `<div style="font-size:13px;color:var(--muted);margin-top:6px">Obs.: ${esc(p.obs)}</div>` : ''}
+    ${p.motivo ? `<div style="font-size:13px;color:#fca5a5;margin-top:6px">Motivo: ${esc(p.motivo)}</div>` : ''}
+    <div class="btnrow" id="acoes-${esc(p.id)}" style="margin-top:10px"></div>
+  </div>`;
+}
+
+function renderMeus(){
+  const lista = (D.meus_pedidos || []).slice().reverse();
+  $('bdg-meus').style.display = lista.length ? '' : 'none';
+  $('bdg-meus').textContent = lista.length || '';
+  show('meus-vazio', lista.length === 0);
+  $('meus-lista').innerHTML = lista.map(p => pedidoHTML(p, false)).join('');
+  lista.forEach(p => {
+    if (p.status !== 'PEDIDO' || p.pago) return;
+    const div = $('acoes-' + p.id); if (!div) return;
+    div.innerHTML = `<button class="btn danger small" data-cancelar="${esc(p.id)}">Cancelar pedido</button>`;
+  });
+  document.querySelectorAll('[data-cancelar]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Cancelar este pedido?')) return;
+    try { await apiPost('/api/vitrine/pedido', { op:'cancelar', id: b.dataset.cancelar }); await carregar(); }
+    catch(e){ alert(e.message || 'Não foi possível cancelar.'); }
+  }));
+}
+$('btn-atualizar-meus').addEventListener('click', carregar);
+
+/* ---------------------------- gestor ---------------------------- */
+function preencherCfg(){
+  $('cfg-aberta').value = D.config.aberta ? 'SIM' : 'NAO';
+  $('cfg-titulo').value = D.config.titulo || '';
+  $('cfg-aviso').value = D.config.aviso || '';
+}
+$('btn-salvar-cfg').addEventListener('click', async () => {
+  const m = $('msg-cfg');
+  m.className='msg'; m.textContent='Salvando…';
+  try {
+    await apiPost('/api/vitrine/gestao', { op:'config', valores: {
+      ABERTA: $('cfg-aberta').value, TITULO: $('cfg-titulo').value, AVISO: $('cfg-aviso').value,
+    } });
+    m.className='msg ok'; m.textContent='✅ Salvo.';
+    await carregar();
+  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Erro ao salvar.'; }
+});
+
+function renderGestor(){
+  const pedidos = (D.pedidos || []).slice().reverse();
+  const r = D.resumo || {};
+  $('kpis').innerHTML = `
+    <div class="kpi"><div class="n">${r.pedidos||0}</div><div class="l">Pedidos</div></div>
+    <div class="kpi"><div class="n">${r.pessoas||0}</div><div class="l">Pessoas</div></div>
+    <div class="kpi"><div class="n">${r.itens||0}</div><div class="l">Itens</div></div>
+    <div class="kpi"><div class="n">${fR(r.total||0)}</div><div class="l">Total</div></div>
+    <div class="kpi"><div class="n">${fR(r.a_receber||0)}</div><div class="l">A receber</div></div>
+    <div class="kpi"><div class="n">${r.pendentes_de_preco||0}</div><div class="l">Com preço a definir</div></div>
+  `;
+  $('cont-pedidos').textContent = pedidos.length ? pedidos.length + ' pedido(s)' : '';
+  show('gestor-vazio', pedidos.length === 0);
+  $('gestor-lista').innerHTML = pedidos.map(p => pedidoHTML(p, true)).join('');
+  pedidos.forEach(p => {
+    const div = $('acoes-' + p.id); if (!div) return;
+    let html = '';
+    if (p.status !== 'CANCELADO'){
+      html += `<button class="btn small" data-st="CONFIRMADO" data-id="${esc(p.id)}">Confirmar</button>`;
+      html += `<button class="btn small" data-st="ENTREGUE" data-id="${esc(p.id)}">Entregue</button>`;
+      html += `<button class="btn ghost small" data-pago="${p.pago?0:1}" data-id="${esc(p.id)}">${p.pago?'Desmarcar pago':'Marcar pago'}</button>`;
+      html += `<button class="btn danger small" data-cancelarg="${esc(p.id)}">Cancelar</button>`;
+    }
+    div.innerHTML = html;
+  });
+  document.querySelectorAll('[data-st]').forEach(b => b.addEventListener('click', async () => {
+    try { await apiPost('/api/vitrine/gestao', { op:'status', id:b.dataset.id, status:b.dataset.st }); await carregar(); }
+    catch(e){ alert(e.message); }
+  }));
+  document.querySelectorAll('[data-pago]').forEach(b => b.addEventListener('click', async () => {
+    try { await apiPost('/api/vitrine/gestao', { op:'pago', id:b.dataset.id, pago: b.dataset.pago === '1' }); await carregar(); }
+    catch(e){ alert(e.message); }
+  }));
+  document.querySelectorAll('[data-cancelarg]').forEach(b => b.addEventListener('click', async () => {
+    const motivo = prompt('Motivo do cancelamento (a pessoa vê):'); if (!motivo) return;
+    try { await apiPost('/api/vitrine/gestao', { op:'status', id:b.dataset.cancelarg, status:'CANCELADO', motivo }); await carregar(); }
+    catch(e){ alert(e.message); }
+  }));
+}
+$('btn-atualizar-gestor').addEventListener('click', carregar);
+
+function baixarCSV(tipo){
+  const a = document.createElement('a');
+  a.href = API_BASE + '/api/vitrine/export?tipo=' + tipo;
+  a.target = '_blank';
+  fetch(a.href, { headers:{ 'Authorization':'Bearer ' + AUTH.token } })
+    .then(r => r.blob())
+    .then(b => {
+      const url = URL.createObjectURL(b);
+      const l = document.createElement('a');
+      l.href = url; l.download = 'vitrine-' + tipo + '.csv';
+      document.body.appendChild(l); l.click(); document.body.removeChild(l);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    })
+    .catch(() => alert('Não foi possível baixar o CSV.'));
+}
+$('btn-csv-pedidos').addEventListener('click', () => baixarCSV('pedidos'));
+$('btn-csv-itens').addEventListener('click', () => baixarCSV('itens'));
+$('btn-csv-resumo').addEventListener('click', () => baixarCSV('resumo'));
+
+/* ---------------------------- início ---------------------------- */
+boot();
+</script>
+
+</body>
+</html>
