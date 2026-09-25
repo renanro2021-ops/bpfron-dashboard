@@ -99,8 +99,14 @@ button,input,select{font-family:inherit}
 .busca-resultados .msg{padding:9px 12px;font-size:13px;color:var(--muted)}
 
 .folha{display:none}
-#map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box;background:#fff}
-#map-aro-print{width:100%;height:100%}
+#map-aro-print-wrap{width:480px;max-width:100%;height:260px;margin:0 auto;box-sizing:border-box;background:#fff;position:relative;overflow:hidden}
+/* O MAPA tem largura FIXA e fica centrado na moldura — a moldura pode encolher, o mapa não.
+   Antes era width:100%: o Leaflet montava os ladrilhos com 478px e, no celular (tela de
+   412px), a moldura encolhia pra 410px na impressão; os ladrilhos ficam presos pela
+   esquerda, então o local desenhado escorregava (478-410)/2 = 34px — de 80m a 650m
+   conforme o zoom, enquanto o pino (CSS 50%/50%) continuava no meio. Com o mapa sempre do
+   mesmo tamanho e centrado, a moldura estreita só corta as bordas por igual. */
+#map-aro-print{position:absolute;top:0;left:50%;width:478px;margin-left:-239px;height:100%}
 #map-aro-print-wrap,#map-aro-print-wrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 /* .leaflet-container é escuro (#0b0f1a) pro mapa INTERATIVO (tema escuro da página) — no
    mapa de impressão isso sobra como mancha preta em qualquer pedaço sem ladrilho (borda de
@@ -900,8 +906,12 @@ function prepararMapaImpressao(){
       // isolado). Recriar do zero garante que a pixel origin nasce correta pra posição atual.
       if(mapaAroPrint){
         mapaAroPrint.remove();
-        // .remove() não garante limpar essas <div> que a gente mesmo anexou (não são camada
-        // Leaflet) — zera as referências pra recriarem já dentro do container novo.
+        // .remove() NÃO apaga essas <div> que a gente mesmo anexou (não são camada Leaflet):
+        // só zerar a referência deixava o pino/círculo antigos no container, e a cada nova
+        // impressão sem F5 acumulava mais um círculo visível (5 sobrepostos na 6ª impressão,
+        // cada um com o raio de uma impressão anterior). Tira do DOM antes de zerar.
+        if(circuloAroPrintEl) circuloAroPrintEl.remove();
+        if(marcadorAroPrintEl) marcadorAroPrintEl.remove();
         circuloAroPrintEl = null;
         marcadorAroPrintEl = null;
       }
@@ -916,16 +926,22 @@ function prepararMapaImpressao(){
 
       const r = raioMetros();
       const legenda = document.getElementById('o-mapa-legenda');
+      // Zoom calculado NA MÃO a partir do raio + setView(pos, zoom), e o MESMO zoom vai pro
+      // círculo (sem reconsultar getZoom() depois). Obs.: o desvio de centro visto no celular
+      // (~1km no "Salvar como PDF" do Android) NÃO era do fitBounds — medido pelos ladrilhos
+      // numa tela de 412px, fitBounds e setView davam o mesmo desvio. A causa era a moldura
+      // encolhendo na impressão (ver o CSS de #map-aro-print). Fica o setView por ser direto.
+      let zoomEscolhido = 16;
       if(r){
-        // toBounds() não depende do renderer SVG/Canvas do Leaflet pra existir — só matemática.
-        // animate:false: sem isso o zoom muda com animação e o getZoom() logo abaixo ainda
-        // pegava o zoom ANTIGO, calculando o diâmetro do círculo pro enquadramento errado (saía enorme)
-        mapaAroPrint.fitBounds(pos.toBounds(r * 2), {padding:[20,20], animate:false});
+        const metrosPorPixelAlvo = (r * 2) / 180; // 180px ≈ 70% da altura do quadro (260px)
+        zoomEscolhido = Math.max(3, Math.min(18, Math.round(
+          Math.log2(156543.03392 * Math.cos(pos.lat * Math.PI / 180) / metrosPorPixelAlvo)
+        )));
         legenda.textContent = '📍 Ponto marcado · círculo = raio de operação de ' + r + ' metros';
       } else {
-        mapaAroPrint.setView(pos, 16, {animate:false});
         legenda.textContent = '📍 Ponto marcado no local da operação';
       }
+      mapaAroPrint.setView(pos, zoomEscolhido, {animate:false});
       // Pino e círculo saem como <div> comuns sobrepostos ao container, SEMPRE centrados via
       // CSS (top:50%/left:50%) — não como camada do Leaflet (L.marker/L.circle) nem via
       // latLngToLayerPoint. Dois motivos: (1) o renderer vetorial do Leaflet (SVG/Canvas/<img>
@@ -945,8 +961,7 @@ function prepararMapaImpressao(){
         mapaAroPrint.getContainer().appendChild(circuloAroPrintEl);
       }
       if(r){
-        const zoom = mapaAroPrint.getZoom();
-        const metrosPorPixel = 156543.03392 * Math.cos(pos.lat * Math.PI / 180) / Math.pow(2, zoom);
+        const metrosPorPixel = 156543.03392 * Math.cos(pos.lat * Math.PI / 180) / Math.pow(2, zoomEscolhido);
         const diametroPx = Math.max(10, Math.round((r * 2) / metrosPorPixel));
         circuloAroPrintEl.style.width = diametroPx + 'px';
         circuloAroPrintEl.style.height = diametroPx + 'px';
