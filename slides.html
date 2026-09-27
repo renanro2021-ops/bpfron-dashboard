@@ -134,6 +134,17 @@ body{
 
 .vazio{text-align:center;color:var(--muted);padding:40px 12px;font-size:14.5px;line-height:1.7}
 
+/* ---------------- visualizador ---------------- */
+.visor{position:fixed;inset:0;background:#000;z-index:300;display:none;flex-direction:column}
+.visor.on{display:flex}
+.visor-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#070b14;border-bottom:1px solid var(--border);flex-shrink:0}
+.visor-bar .vt{flex:1;min-width:0;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.visor-frame{flex:1;width:100%;border:0;background:#000}
+/* Em tela cheia a barra flutua por cima e some sozinha; volta ao mexer o mouse. */
+.visor:fullscreen .visor-bar{position:fixed;top:0;left:0;right:0;z-index:2;background:rgba(7,11,20,.92);border-bottom:none;transition:opacity .25s;backdrop-filter:blur(6px)}
+.visor:fullscreen.quieto .visor-bar{opacity:0;pointer-events:none}
+.visor:-webkit-full-screen .visor-bar{position:fixed;top:0;left:0;right:0;z-index:2;background:rgba(7,11,20,.92)}
+
 .modal{position:fixed;inset:0;background:rgba(3,6,12,.82);backdrop-filter:blur(3px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto}
 .modal.on{display:flex}
 .modal-box{background:#0b111e;border:1px solid rgba(245,197,24,.28);border-radius:16px;padding:22px;max-width:640px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7)}
@@ -166,8 +177,9 @@ body{
     <div class="sec" style="justify-content:center">🔐 Entrar</div>
     <div class="box">
       <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
-        Mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard. Todo login vê as apresentações;
-        para <b style="color:#cbd5e1">enviar</b> é preciso a permissão <b style="color:#cbd5e1">“Banco de Slides”</b>.
+        Mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard, mas o acesso é <b style="color:#cbd5e1">liberado login por login</b>:
+        para assistir é preciso a permissão <b style="color:#cbd5e1">“Banco de Slides (ver)”</b> e, para enviar,
+        <b style="color:#cbd5e1">“Banco de Slides (gestor)”</b>.
       </p>
       <div class="fg"><label>Usuário</label><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
       <div class="fg" style="margin-top:12px"><label>Senha</label><input id="f-pass" type="password" autocomplete="current-password"></div>
@@ -283,6 +295,17 @@ body{
     </div>
 
   </div>
+</div>
+
+<!-- ============================== visualizador ============================== -->
+<div class="visor" id="visor">
+  <div class="visor-bar">
+    <span class="vt" id="visor-tit"></span>
+    <button class="btn small" id="btn-full">⛶ Tela cheia</button>
+    <a class="btn ghost small" id="visor-aba" target="_blank" rel="noopener">↗ Nova aba</a>
+    <button class="btn ghost small" id="visor-fechar">✕ Fechar</button>
+  </div>
+  <iframe class="visor-frame" id="visor-frame" title="Apresentação" allow="fullscreen"></iframe>
 </div>
 
 <!-- ============================== modal de edição ============================== -->
@@ -425,6 +448,14 @@ async function carregar(){
   try { D = await apiGet('/api/slides'); }
   catch(e){
     if (e.status === 401){ AUTH.token=''; AUTH.user=''; boot(); return; }
+    if (e.status === 403){
+      // Banco fechado: a permissão é dada login por login no admin.html.
+      $('tt-ges').style.display = 'none';
+      $('grade').innerHTML = '';
+      $('vazio-cat').innerHTML = '🔒 <b>Acesso restrito</b><br>' + esc(e.message) +
+        '<br><br>O Banco de Slides não é aberto a todo o efetivo: cada login é liberado individualmente.';
+      return;
+    }
     $('vazio-cat').textContent = '⚠️ ' + e.message;
     return;
   }
@@ -474,12 +505,14 @@ function renderCatalogo(){
           <div class="deck-meta">${s.categoria ? `<span class="deck-cat">${esc(s.categoria)}</span>` : ''}<span>${meta}</span></div>
           ${s.resumo ? `<div class="deck-res">${esc(s.resumo)}</div>` : '<div class="deck-res"></div>'}
           <div class="deck-acoes">
-            <a class="btn small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">▶️ Abrir</a>
+            <button class="btn small" data-abrir="${esc(s.id)}">▶️ Abrir</button>
+            <a class="btn ghost small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">↗ Nova aba</a>
             ${extras.join('')}
           </div>
         </div>
       </div>`;
   }).join('');
+  $('grade').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.abrir)));
 }
 $('f-busca').addEventListener('input', () => { if (D) renderCatalogo(); });
 
@@ -613,6 +646,20 @@ async function empacotar(arquivos, cfg, onProg){
     .sort((a,b) => b.antes - a.antes);
   if (maiores.length){
     try { capaBlob = await encolher(maiores[0].file, 800, 0.8); } catch(e){ capaBlob = null; }
+  }
+  if (!capaBlob){
+    // Arquivo que já chegou com tudo embutido (não tinha pasta assets para
+    // percorrer): a capa sai da maior foto que está dentro do próprio HTML.
+    const re = /data:image\/(?:png|jpe?g|webp|avif);base64,[A-Za-z0-9+/=]+/g;
+    let m, maior = '';
+    while ((m = re.exec(texto))){ if (m[0].length > maior.length) maior = m[0]; }
+    if (maior){
+      try {
+        const b = await (await fetch(maior)).blob();
+        const ext = (b.type.split('/')[1] || 'png').replace('jpeg','jpg');
+        capaBlob = await encolher(new File([b], 'capa.' + ext, { type: b.type }), 800, 0.8);
+      } catch(e){ capaBlob = null; }
+    }
   }
 
   return {
@@ -762,6 +809,62 @@ $('btn-enviar').addEventListener('click', async () => {
   } finally { btn.disabled = false; btn.textContent = '⬆️ Enviar para o banco'; }
 });
 
+/* ============================== visualizador ==============================
+   A apresentação é arquivo do gestor e roda isolada (CSP sandbox), então não
+   dá para pôr botão dentro dela. O botão de tela cheia fica aqui, na moldura:
+   quem chama o fullscreen é ESTA página, no elemento #visor, e o iframe vai
+   junto. Serve no celular e no tablet, onde não existe a tecla F. */
+function abrirVisor(id){
+  const s = (D.slides || []).find(x => x.id === id);
+  if (!s) return;
+  $('visor-tit').textContent = s.titulo;
+  $('visor-aba').href = API_BASE + s.url;
+  $('visor-frame').src = API_BASE + s.url;
+  $('visor').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { try { $('visor-frame').focus(); } catch(e){} }, 300);
+}
+function fecharVisor(){
+  if (document.fullscreenElement) sairTelaCheia();
+  $('visor').classList.remove('on');
+  $('visor-frame').src = 'about:blank';
+  document.body.style.overflow = '';
+}
+function emTelaCheia(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function sairTelaCheia(){
+  const f = document.exitFullscreen || document.webkitExitFullscreen;
+  if (f) { try { f.call(document); } catch(e){} }
+}
+function alternarTelaCheia(){
+  const el = $('visor');
+  if (emTelaCheia()){ sairTelaCheia(); return; }
+  const f = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!f){ $('btn-full').textContent = '⛶ Tela cheia não disponível'; return; }
+  try { const p = f.call(el); if (p && p.catch) p.catch(() => {}); } catch(e){}
+}
+function pintarBotaoFull(){
+  const cheio = emTelaCheia();
+  $('btn-full').textContent = cheio ? '⤢ Sair da tela cheia' : '⛶ Tela cheia';
+  $('btn-full').classList.toggle('ghost', cheio);
+  if (!cheio) $('visor').classList.remove('quieto');
+}
+$('btn-full').addEventListener('click', alternarTelaCheia);
+$('visor-fechar').addEventListener('click', fecharVisor);
+['fullscreenchange','webkitfullscreenchange'].forEach(e => document.addEventListener(e, pintarBotaoFull));
+document.addEventListener('keydown', e => {
+  if (!$('visor').classList.contains('on')) return;
+  // Esc fora da tela cheia fecha o visor (dentro dela, o próprio navegador sai)
+  if (e.key === 'Escape' && !emTelaCheia()) fecharVisor();
+  if (e.key === 'f' || e.key === 'F') alternarTelaCheia();
+});
+// some com a barra depois de 3s parado em tela cheia; volta ao mexer o mouse
+let tQuieto = null;
+$('visor').addEventListener('mousemove', () => {
+  $('visor').classList.remove('quieto');
+  clearTimeout(tQuieto);
+  if (emTelaCheia()) tQuieto = setTimeout(() => $('visor').classList.add('quieto'), 3000);
+});
+
 /* ============================== gestão: lista ============================== */
 function renderGestao(){
   const lista = D.slides || [];
@@ -777,11 +880,12 @@ function renderGestao(){
         <div class="ld-sub">Enviada por ${esc(s.enviado_por||'—')}${s.atualizado_em ? ` · alterada por ${esc(s.atualizado_por)} em ${fData(s.atualizado_em)}` : ''}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a class="btn ghost small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">▶️ Ver</a>
+        <button class="btn ghost small" data-abrir="${esc(s.id)}">▶️ Ver</button>
         <button class="btn ghost small" data-ed="${esc(s.id)}">✏️ Editar</button>
         <button class="btn danger small" data-ex="${esc(s.id)}">🗑️</button>
       </div>
     </div>`).join('');
+  $('lista-ges').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.abrir)));
   $('lista-ges').querySelectorAll('[data-ed]').forEach(b => b.addEventListener('click', () => abrirEdicao(b.dataset.ed)));
   $('lista-ges').querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => abrirExclusao(b.dataset.ex)));
 }
