@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Material de Estudo · Piloto de Drones · BPFRON/RO</title>
+<meta name="description" content="Série de apostilas do CPPSARP e envio de apostilas novas pelo próprio site.">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
   --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
-  --green:#34d399; --verde-esc:#1b6b3d;
+  --green:#34d399; --verde-esc:#1b6b3d; --red:#f87171; --blue:#60a5fa;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
@@ -26,7 +27,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
 .hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
 .hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-dir{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+.chip-user{font-size:12.5px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.1);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
 
 .subnav{max-width:1000px;margin:0 auto;padding:10px clamp(16px,4vw,28px) 0;display:flex;gap:8px;flex-wrap:wrap}
 .subnav a{font-size:13px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:7px 14px;text-decoration:none;transition:.12s}
@@ -37,29 +40,63 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,34px);color:#fff;line-height:1.15}
 .intro p{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
 
-.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:22px 0 4px}
-.card-vazio{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(28px,6vw,54px) clamp(20px,5vw,40px);text-align:center}
-.card-vazio .ic{font-size:44px;margin-bottom:14px}
-.card-vazio h2{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;margin-bottom:8px}
-.card-vazio p{color:var(--muted);font-size:14px;max-width:52ch;margin:0 auto;line-height:1.65}
-.chip{display:inline-block;margin-top:16px;border-radius:999px;padding:5px 14px;font-size:12px;font-weight:700;border:1px solid rgba(245,197,24,.45);background:rgba(245,197,24,.12);color:var(--yellow)}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:26px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec span.n{font-size:11px;color:var(--muted);letter-spacing:0;text-transform:none;font-weight:600}
 
-.grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
 .card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
-.card:hover,.card:focus-visible{border-color:rgba(27,107,61,.6);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
+.card:hover,.card:focus-visible{border-color:rgba(245,197,24,.5);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
 .card-top{display:flex;align-items:center;gap:12px}
-.ic-card{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:rgba(27,107,61,.14);border:1px solid rgba(27,107,61,.4);flex-shrink:0}
-.card h2{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.2}
+.num{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:17px;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);color:var(--yellow);flex-shrink:0}
+.card h2{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#fff;line-height:1.2}
 .card p.d{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
 .card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700;border:1px solid}
 .chip.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
+.chip.nova{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.35);color:#bfdbfe}
 .go{font-size:13px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:7px 14px;white-space:nowrap}
 
-.topicos{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.top-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;opacity:.55}
-.top-card h3{font-family:'Rajdhani',sans-serif;font-size:16px;color:#fff;margin-bottom:4px}
-.top-card p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.destaque{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.dcard{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:.15s}
+.dcard:hover{border-color:rgba(52,211,153,.5);transform:translateY(-2px)}
+.dcard .ic{font-size:26px}
+.dcard h3{font-family:'Rajdhani',sans-serif;font-size:18px;color:#fff}
+.dcard p{font-size:13px;color:var(--muted);line-height:1.5}
 
+/* ---------- área do gestor ---------- */
+.gestor{margin-top:16px;background:var(--card);border:1px solid rgba(96,165,250,.3);border-radius:16px;padding:20px}
+.gestor h3{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;margin-bottom:4px}
+.gestor .aj{font-size:13px;color:var(--muted);line-height:1.6}
+.solta{margin-top:16px;border:2px dashed rgba(148,163,184,.35);border-radius:14px;padding:clamp(22px,5vw,38px) 20px;text-align:center;transition:.15s;cursor:pointer;background:rgba(148,163,184,.04)}
+.solta.sobre{border-color:var(--yellow);background:rgba(245,197,24,.08)}
+.solta .ic{font-size:36px}
+.solta b{display:block;margin-top:8px;font-size:15px;color:#fff}
+.solta small{display:block;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.fila{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.fitem{display:flex;align-items:center;gap:10px;background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+.fitem .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e2e8f0}
+.fitem .st{font-size:12px;font-weight:700}
+.fitem .st.ok{color:#6ee7b7}.fitem .st.erro{color:#fca5a5}.fitem .st.indo{color:var(--yellow)}
+.campos{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+label.tit{display:block;font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:5px}
+input[type=text],input[type=number],textarea,select{width:100%;background:#060912;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-size:14.5px;font-family:inherit;outline:none}
+input:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
+textarea{min-height:66px;resize:vertical}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s}
+.btn-p{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn-p:disabled{opacity:.45;cursor:not-allowed}
+.btn-s{background:rgba(148,163,184,.1);border:1px solid var(--line);color:#cbd5e1}
+.btn-s:hover{background:rgba(148,163,184,.2)}
+.btn-d{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#fca5a5}
+.btn-linha{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.msg{margin-top:12px;font-size:13.5px;min-height:20px}
+.msg.erro{color:#fca5a5}.msg.ok{color:#6ee7b7}
+.lista-env{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.env{display:flex;gap:12px;align-items:center;background:rgba(148,163,184,.05);border:1px solid var(--line);border-radius:12px;padding:12px 14px;flex-wrap:wrap}
+.env .info{flex:1;min-width:180px}
+.env .info b{color:#fff;font-size:14.5px}
+.env .info small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.vazio{padding:20px;text-align:center;color:var(--muted);font-size:13.5px}
 @media (max-width:640px){
   .hdr{position:static}
   .hdr-logo{height:34px}
@@ -67,6 +104,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 </style>
 </head>
 <body>
+<script src="conta.js"></script>
 <script src="drone-cpf.js"></script>
 
 <div class="hdr">
@@ -81,46 +119,355 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
         <div class="hdr-sub">Material de estudo · BPFRON/RO</div>
       </div>
     </div>
-    <a class="hdr-back" href="drone.html">⬅ Piloto de Drones</a>
+    <div class="hdr-dir">
+      <span class="chip-user" id="chip-user"></span>
+      <a class="hdr-back" href="drone.html">⬅ Piloto de Drones</a>
+    </div>
   </div>
 </div>
 <div class="subnav">
   <a class="on" href="drone-material.html">📚 Material de Estudo</a>
+  <a href="drone-simulado.html">🎯 Simulado</a>
   <a href="drone-aro.html">📝 Formulário ARO</a>
+  <a href="drone-alunos.html" id="lk-alunos" style="display:none">👥 Alunos</a>
 </div>
 
 <main class="wrap">
   <div class="intro">
     <h1>Material de estudo</h1>
-    <p>Conteúdo de apoio para o piloto de drone do batalhão: legislação da ANAC/DECEA/ANATEL, procedimentos operacionais e boas práticas de segurança de voo.</p>
+    <p>Série de apostilas do CPPSARP (35ª edição), compilada a partir dos slides das aulas, das aulas ditadas em sala e da legislação de 2026 — ICA 100-40 (DECEA) e RBAC 100 (ANAC). Cada assunto aparece em uma só apostila.</p>
   </div>
 
-  <div class="sec">Apostilas</div>
-  <div class="grid">
-    <a class="card" href="drone-apostila-historia-sarp.html">
-      <div class="card-top"><span class="ic-card">📖</span><h2>A História e Evolução dos SARP</h2></div>
-      <p class="d">Das origens militares ao uso policial atual: terminologia, marcos históricos, siglas, jammers e sistemas anti-drone, e o drone na Segurança Pública.</p>
-      <div class="card-foot"><span class="chip ok">Disponível</span><span class="go">Abrir →</span></div>
+  <div class="destaque">
+    <a class="dcard" href="apostilas/index.html">
+      <span class="ic">🗂️</span>
+      <div><h3>Índice da série</h3><p>As 9 apostilas numa página, com a legenda dos quadros (regra, atenção, verificação, bizu).</p></div>
+    </a>
+    <a class="dcard" href="drone-simulado.html">
+      <span class="ic">🎯</span>
+      <div><h3>Simulado de questões</h3><p>Banco da ANAC e banco das apostilas, com dificuldade, nº de questões e ranking da turma.</p></div>
     </a>
   </div>
 
-  <div class="card-vazio">
-    <div class="ic">🚧</div>
-    <h2>Mais apostilas em construção</h2>
-    <p>O restante do material de estudo (regulação da ANAC/DECEA/ANATEL, resumos e checklists) vai entrar aqui nas próximas atualizações.</p>
-    <span class="chip">Em breve</span>
+  <div class="sec">Apostilas da série <span class="n">CPPSARP · 35ª edição · compilação CB QPPM De Sousa</span></div>
+  <div class="grid" id="grid-serie"></div>
+
+  <div id="bloco-enviadas" style="display:none">
+    <div class="sec">Apostilas acrescentadas depois <span class="n" id="n-enviadas"></span></div>
+    <div class="grid" id="grid-enviadas"></div>
   </div>
 
-  <div class="sec" style="margin-top:30px">Assuntos previstos</div>
-  <div class="topicos">
-    <div class="top-card"><h3>RBAC nº 100</h3><p>Regras gerais de operação de aeronaves não tripuladas (ANAC).</p></div>
-    <div class="top-card"><h3>ICA 100-40 (DECEA)</h3><p>Acesso ao espaço aéreo e uso do SARPAS.</p></div>
-    <div class="top-card"><h3>Homologação ANATEL</h3><p>Certificação do equipamento e enlace de rádio.</p></div>
-    <div class="top-card"><h3>Cadastro SISANT</h3><p>Registro da aeronave junto à ANAC.</p></div>
-    <div class="top-card"><h3>Gestão de risco</h3><p>Como preencher a Avaliação de Risco Operacional (ARO).</p></div>
-    <div class="top-card"><h3>Procedimentos de emergência</h3><p>Perda de enlace, flyaway e falha de bateria.</p></div>
+  <!-- ---------- gestor: enviar apostila ---------- -->
+  <div id="bloco-gestor" style="display:none">
+    <div class="sec">Área do gestor · enviar apostila</div>
+    <div class="gestor">
+      <h3>📥 Arraste o .html da apostila aqui</h3>
+      <p class="aj">Você escreve a apostila em HTML (com as imagens embutidas em base64, para funcionar sem internet) e solta o arquivo aqui. Ele vai para a pasta do Drive do curso e aparece na lista acima para todo mundo — sem precisar de git nem de publicação. Dá para soltar vários arquivos de uma vez: o título e o resumo saem do <code>&lt;title&gt;</code> e da <code>&lt;meta name="description"&gt;</code> de cada um.</p>
+
+      <div class="solta" id="solta">
+        <div class="ic">📄</div>
+        <b>Solte o arquivo aqui ou clique para escolher</b>
+        <small>Só .html · até 12 MB por apostila</small>
+        <input type="file" id="f-arq" accept=".html,.htm,text/html" multiple style="display:none">
+      </div>
+
+      <div class="fila" id="fila"></div>
+
+      <div class="campos">
+        <div>
+          <label class="tit" for="f-cod">Código (opcional)</label>
+          <input type="text" id="f-cod" maxlength="10" placeholder="09">
+        </div>
+        <div>
+          <label class="tit" for="f-ordem">Ordem na lista (opcional)</label>
+          <input type="number" id="f-ordem" min="1" max="999" placeholder="20">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="tit" for="f-titulo">Título (opcional — se vazio, usa o do arquivo)</label>
+          <input type="text" id="f-titulo" maxlength="160" placeholder="Meteorologia para o piloto de drone">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="tit" for="f-resumo">Resumo (opcional)</label>
+          <textarea id="f-resumo" maxlength="400" placeholder="Do que a apostila trata, em duas linhas."></textarea>
+        </div>
+      </div>
+      <p class="aj" style="margin-top:8px">Título, código e resumo valem para <b>o primeiro arquivo da fila</b>. Soltando vários de uma vez, deixe em branco e ajuste depois em cada um.</p>
+
+      <div class="btn-linha">
+        <button class="btn btn-p" id="bt-enviar" disabled>Enviar para o catálogo</button>
+        <button class="btn btn-s" id="bt-limpar">Limpar</button>
+      </div>
+      <div class="msg" id="msg-env"></div>
+
+      <div class="sec" style="margin-top:22px">Apostilas enviadas pelo site</div>
+      <div class="lista-env" id="lista-env"><div class="vazio">Carregando…</div></div>
+    </div>
   </div>
 </main>
 
+<script>
+'use strict';
+var API_BASE = "https://bpfron-api.bpfron.workers.dev";
+try { var _q = new URLSearchParams(location.search).get('api'); if (_q) API_BASE = _q.replace(/\/+$/, ''); } catch (e) {}
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+};
+
+/* As 9 apostilas da série moram na pasta apostilas/ do próprio site: abrem
+   rápido, funcionam offline e sobem no GitHub Pages junto com as páginas. O
+   que o gestor envia depois vem do Worker (Drive) e aparece no bloco de baixo. */
+var SERIE = [
+  { n: '00', arq: 'apostilas/00-glossario-siglas.html', t: 'Glossário de Siglas',
+    d: 'Consulta rápida com busca: todas as siglas da série, por extenso em inglês e traduzidas.' },
+  { n: '01', arq: 'apostilas/01-introducao-uas.html', t: 'Introdução ao UAS',
+    d: 'UA, RPA e UAS; Convenção de Chicago e OACI; quem regula o drone no Brasil; DECEA/SISCEAB; SARPAS; UTM.' },
+  { n: '02', arq: 'apostilas/02-historia-evolucao-sarp.html', t: 'História e Evolução dos SARP',
+    d: 'Dos balões sobre Veneza aos drones de fibra óptica, com as imagens dos slides e as datas conferidas.' },
+  { n: '03', arq: 'apostilas/03-componentes-sarp.html', t: 'Componentes, Recursos e Aplicações',
+    d: 'Mavic 2 Enterprise, Mavic 3 Enterprise/3T, Neo 2 + Goggles N3 e Matrice 350 RTK, peça por peça.' },
+  { n: '04', arq: 'apostilas/04-legislacao-ica-100-40.html', t: 'Legislação — ICA 100-40',
+    d: 'Norma do DECEA de 2026: FRZ, categorias, operação especial, SISANT/SARPAS, prazos, altitude × AGL.' },
+  { n: '05', arq: 'apostilas/05-rbac-100-visada-distanciamento.html', t: 'RBAC 100 — Visada e Distanciamento',
+    d: 'ART 100.3: os 30 m, PMD, categorias da ANAC, responsabilidade, RTH, derrubada de drone, fronteira.' },
+  { n: '06', arq: 'apostilas/06-aro-avaliacao-risco.html', t: 'ARO — Avaliação de Risco Operacional',
+    d: 'Matriz severidade × probabilidade, quem autoriza, os 3 riscos obrigatórios e o formulário para preencher.' },
+  { n: '07', arq: 'apostilas/07-transmissao-de-imagem.html', t: 'Transmissão de Imagem',
+    d: 'Os 4 passos: cabeamento, app de transmissão (Jitsi), espelhamento e envio do link.' },
+  { n: '08', arq: 'apostilas/08-aplicativos-sites-ferramentas.html', t: 'Aplicativos, Sites e Ferramentas',
+    d: 'gov.br, SISANT, SARPAS NG, ANATEL, prova da ANAC, AISWEB, apps DJI, transmissão e ARO digital.' },
+];
+
+function pintarSerie() {
+  $('grid-serie').innerHTML = SERIE.map(function (a) {
+    return '<a class="card" href="' + a.arq + '">' +
+      '<div class="card-top"><span class="num">' + a.n + '</span><h2>' + esc(a.t) + '</h2></div>' +
+      '<p class="d">' + esc(a.d) + '</p>' +
+      '<div class="card-foot"><span class="chip ok">Disponível</span><span class="go">Abrir →</span></div></a>';
+  }).join('');
+}
+
+/* ---------------- catálogo do Worker ---------------- */
+var souGestor = false;
+
+function carregarEnviadas() {
+  fetch(API_BASE + '/api/drone/apostilas', { headers: window.droneCpf ? window.droneCpf.headers() : {} })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      if (!d || !d.ok) { if (souGestor) $('lista-env').innerHTML = '<div class="vazio">' + esc((d && d.detail) || 'Não deu para carregar.') + '</div>'; return; }
+      var lista = d.apostilas || [];
+      if (lista.length) {
+        $('bloco-enviadas').style.display = '';
+        $('n-enviadas').textContent = lista.length + (lista.length === 1 ? ' apostila' : ' apostilas');
+        $('grid-enviadas').innerHTML = lista.map(function (a) {
+          return '<a class="card" href="' + API_BASE + esc(a.url) + '" target="_blank" rel="noopener">' +
+            '<div class="card-top"><span class="num">' + esc(a.codigo || '+') + '</span><h2>' + esc(a.titulo) + '</h2></div>' +
+            '<p class="d">' + esc(a.resumo || 'Apostila enviada pelo gestor do curso.') + '</p>' +
+            '<div class="card-foot"><span class="chip nova">' + tamanho(a.tamanho) + '</span><span class="go">Abrir →</span></div></a>';
+        }).join('');
+      } else {
+        $('bloco-enviadas').style.display = 'none';
+      }
+      if (souGestor) pintarListaGestor(lista);
+    })
+    .catch(function () { if (souGestor) $('lista-env').innerHTML = '<div class="vazio">Sem conexão com o servidor.</div>'; });
+}
+
+function tamanho(b) {
+  b = Number(b) || 0;
+  return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+}
+
+function pintarListaGestor(lista) {
+  if (!lista.length) { $('lista-env').innerHTML = '<div class="vazio">Nenhuma apostila enviada pelo site ainda.</div>'; return; }
+  $('lista-env').innerHTML = lista.map(function (a) {
+    return '<div class="env" data-id="' + esc(a.id) + '">' +
+      '<div class="info"><b>' + esc(a.codigo ? a.codigo + ' · ' : '') + esc(a.titulo) + '</b>' +
+      '<small>' + tamanho(a.tamanho) + ' · enviada por ' + esc(a.enviado_por || '—') + ' em ' +
+      esc(String(a.enviado_em || '').slice(0, 10)) + ' · ordem ' + esc(a.ordem) + '</small></div>' +
+      '<a class="btn btn-s" href="' + API_BASE + esc(a.url) + '" target="_blank" rel="noopener">Abrir</a>' +
+      '<button class="btn btn-s" data-ed="' + esc(a.id) + '">Renomear</button>' +
+      '<button class="btn btn-d" data-ex="' + esc(a.id) + '">Excluir</button></div>';
+  }).join('');
+  Array.prototype.forEach.call($('lista-env').querySelectorAll('[data-ed]'), function (bt) {
+    bt.onclick = function () { renomear(bt.dataset.ed, lista); };
+  });
+  Array.prototype.forEach.call($('lista-env').querySelectorAll('[data-ex]'), function (bt) {
+    bt.onclick = function () { excluir(bt.dataset.ex, lista); };
+  });
+}
+
+/* ---------------- envio (arrasta e solta) ---------------- */
+var fila = [];
+
+function ligarSolta() {
+  var zona = $('solta'), input = $('f-arq');
+  zona.onclick = function () { input.click(); };
+  input.onchange = function () { addArquivos(input.files); input.value = ''; };
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.add('sobre'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.remove('sobre'); });
+  });
+  // stopPropagation é obrigatório: sem ele o drop da caixa sobe até o
+  // document (que também escuta, para aceitar arquivo solto em qualquer canto
+  // da página) e o mesmo arquivo entrava DUAS vezes na fila — e subia duas
+  // vezes pro Drive. Bug pego pelo teste de navegador em 26/09/2026.
+  zona.addEventListener('drop', function (e) { e.stopPropagation(); addArquivos(e.dataTransfer.files); });
+  // solta em qualquer lugar da página também funciona
+  ['dragover', 'drop'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { if (souGestor) e.preventDefault(); });
+  });
+  document.addEventListener('drop', function (e) {
+    if (souGestor && e.dataTransfer && e.dataTransfer.files.length) addArquivos(e.dataTransfer.files);
+  });
+  $('bt-enviar').onclick = enviarFila;
+  $('bt-limpar').onclick = function () {
+    fila = []; pintarFila();
+    ['f-cod', 'f-ordem', 'f-titulo', 'f-resumo'].forEach(function (id) { $(id).value = ''; });
+    $('msg-env').textContent = '';
+  };
+}
+
+function addArquivos(fs) {
+  Array.prototype.forEach.call(fs, function (f) {
+    if (!/\.html?$/i.test(f.name)) {
+      $('msg-env').className = 'msg erro';
+      $('msg-env').textContent = 'O arquivo "' + f.name + '" não é .html — só entra a apostila em HTML.';
+      return;
+    }
+    if (f.size > 12 * 1024 * 1024) {
+      $('msg-env').className = 'msg erro';
+      $('msg-env').textContent = '"' + f.name + '" tem ' + tamanho(f.size) + ' — o limite é 12 MB.';
+      return;
+    }
+    fila.push({ file: f, estado: '' });
+  });
+  pintarFila();
+}
+
+function pintarFila() {
+  $('fila').innerHTML = fila.map(function (it, i) {
+    var st = it.estado === 'ok' ? '<span class="st ok">enviada ✓</span>'
+      : it.estado === 'indo' ? '<span class="st indo">enviando…</span>'
+      : it.estado ? '<span class="st erro">' + esc(it.estado) + '</span>'
+      : '<button class="btn btn-s" data-rm="' + i + '" style="padding:5px 10px;font-size:12px">remover</button>';
+    return '<div class="fitem"><span>📄</span><span class="nm">' + esc(it.file.name) + '</span>' +
+      '<span style="color:#94a3b8">' + tamanho(it.file.size) + '</span>' + st + '</div>';
+  }).join('');
+  Array.prototype.forEach.call($('fila').querySelectorAll('[data-rm]'), function (bt) {
+    bt.onclick = function () { fila.splice(Number(bt.dataset.rm), 1); pintarFila(); };
+  });
+  $('bt-enviar').disabled = !fila.filter(function (i) { return i.estado !== 'ok'; }).length;
+}
+
+function enviarFila() {
+  var pendentes = fila.filter(function (i) { return i.estado !== 'ok' && i.estado !== 'indo'; });
+  if (!pendentes.length) return;
+  $('bt-enviar').disabled = true;
+  $('msg-env').className = 'msg';
+  $('msg-env').textContent = 'Enviando ' + pendentes.length + ' arquivo(s)… apostila grande pode levar um minuto.';
+
+  var primeiro = true;
+  var seq = pendentes.reduce(function (p, it) {
+    return p.then(function () {
+      it.estado = 'indo'; pintarFila();
+      var fd = new FormData();
+      fd.append('arquivo', it.file, it.file.name);
+      if (primeiro) {
+        if ($('f-titulo').value.trim()) fd.append('titulo', $('f-titulo').value.trim());
+        if ($('f-resumo').value.trim()) fd.append('resumo', $('f-resumo').value.trim());
+        if ($('f-cod').value.trim()) fd.append('codigo', $('f-cod').value.trim());
+        if ($('f-ordem').value) fd.append('ordem', $('f-ordem').value);
+        primeiro = false;
+      }
+      return fetch(API_BASE + '/api/drone/apostilas/enviar', {
+        method: 'POST', headers: window.droneCpf ? window.droneCpf.headers() : {}, body: fd,
+      }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { r: r, d: d }; }); })
+        .then(function (x) {
+          it.estado = x.r.ok && x.d.ok ? 'ok' : (x.d.detail || 'erro ' + x.r.status);
+          pintarFila();
+        }).catch(function () { it.estado = 'sem conexão'; pintarFila(); });
+    });
+  }, Promise.resolve());
+
+  seq.then(function () {
+    var ok = fila.filter(function (i) { return i.estado === 'ok'; }).length;
+    var ruim = fila.filter(function (i) { return i.estado && i.estado !== 'ok'; }).length;
+    $('msg-env').className = 'msg ' + (ruim ? 'erro' : 'ok');
+    $('msg-env').textContent = ok + ' apostila(s) no catálogo' + (ruim ? ' · ' + ruim + ' com problema (veja a lista)' : '') + '.';
+    ['f-cod', 'f-ordem', 'f-titulo', 'f-resumo'].forEach(function (id) { $(id).value = ''; });
+    carregarEnviadas();
+    pintarFila();
+  });
+}
+
+function renomear(id, lista) {
+  var a = lista.filter(function (x) { return x.id === id; })[0];
+  if (!a) return;
+  var t = prompt('Título da apostila:', a.titulo);
+  if (t === null) return;
+  var res = prompt('Resumo (aparece no cartão):', a.resumo || '');
+  if (res === null) return;
+  var cod = prompt('Código (aparece no quadradinho):', a.codigo || '');
+  if (cod === null) return;
+  var ord = prompt('Ordem na lista (número):', a.ordem);
+  if (ord === null) return;
+
+  var fd = new FormData();
+  fd.append('id', id);
+  fd.append('titulo', t.trim());
+  fd.append('resumo', res.trim());
+  fd.append('codigo', cod.trim());
+  if (ord) fd.append('ordem', ord);
+  $('msg-env').className = 'msg';
+  $('msg-env').textContent = 'Salvando…';
+  fetch(API_BASE + '/api/drone/apostilas/editar', {
+    method: 'POST', headers: window.droneCpf ? window.droneCpf.headers() : {}, body: fd,
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      $('msg-env').className = 'msg ' + (d && d.ok ? 'ok' : 'erro');
+      $('msg-env').textContent = d && d.ok ? 'Salvo.' : ((d && d.detail) || 'Não deu para salvar.');
+      carregarEnviadas();
+    }).catch(function () { $('msg-env').className = 'msg erro'; $('msg-env').textContent = 'Sem conexão.'; });
+}
+
+function excluir(id, lista) {
+  var a = lista.filter(function (x) { return x.id === id; })[0];
+  if (!a) return;
+  if (!confirm('Excluir a apostila "' + a.titulo + '" do catálogo?\n\nEla sai da lista dos alunos e o arquivo vai para a lixeira do Drive (dá para restaurar lá por 30 dias).')) return;
+  var senha = prompt('Digite a SUA senha do dashboard para confirmar a exclusão:');
+  if (!senha) return;
+  var motivo = prompt('Motivo (opcional, fica registrado):', '') || '';
+  fetch(API_BASE + '/api/drone/apostilas/excluir', {
+    method: 'POST',
+    headers: Object.assign({ 'content-type': 'application/json' }, window.droneCpf ? window.droneCpf.headers() : {}),
+    body: JSON.stringify({ id: id, senha: senha, motivo: motivo }),
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      $('msg-env').className = 'msg ' + (d && d.ok ? 'ok' : 'erro');
+      $('msg-env').textContent = d && d.ok ? 'Apostila excluída.' : ((d && d.detail) || 'Não deu para excluir.');
+      carregarEnviadas();
+    }).catch(function () { $('msg-env').className = 'msg erro'; $('msg-env').textContent = 'Sem conexão.'; });
+}
+
+/* ---------------- início ---------------- */
+function iniciar() {
+  $('chip-user').textContent = (window.droneCpf && window.droneCpf.nome) || '';
+  souGestor = !!(window.droneCpf && window.droneCpf.souGestor);
+  pintarSerie();
+  if (souGestor) {
+    $('bloco-gestor').style.display = '';
+    $('lk-alunos').style.display = '';
+    ligarSolta();
+  }
+  carregarEnviadas();
+}
+if (window.droneCpf && window.droneCpf.pronto) iniciar();
+else document.addEventListener('drone-cpf-pronto', iniciar);
+</script>
 </body>
 </html>

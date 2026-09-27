@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Simulado · Piloto de Drones · BPFRON/RO</title>
+<meta name="description" content="Simulado de múltipla escolha do Curso de Piloto Policial de SARP: banco ANAC e banco das apostilas, com sorteio diferente a cada prova.">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --line:rgba(148,163,184,.14); --card:rgba(12,17,30,.85);
+  --green:#34d399; --red:#f87171; --blue:#60a5fa; --orange:#fb923c;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+/* ---------- proteção: nada de seleção/copiar ---------- */
+body.prova-aberta, body.prova-aberta *{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* ---------- proteção: nada de imprimir ---------- */
+@media print{
+  body{display:none !important}
+  html::after{content:"A prova do simulado não pode ser impressa.";display:block;padding:40px;font:700 18px Arial,sans-serif;color:#000}
+}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1000px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-badges{display:flex;align-items:center;gap:8px}
+.hdr-logo{height:42px;width:auto;mix-blend-mode:screen}
+.hdr-badge{height:42px;width:42px;border-radius:50%;object-fit:cover}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(17px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-dir{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+.chip-user{font-size:12.5px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.1);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+
+.subnav{max-width:1000px;margin:0 auto;padding:10px clamp(16px,4vw,28px) 0;display:flex;gap:8px;flex-wrap:wrap}
+.subnav a{font-size:13px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:7px 14px;text-decoration:none;transition:.12s}
+.subnav a:hover{background:rgba(148,163,184,.16)}
+.subnav a.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.55);color:var(--yellow)}
+
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(18px,3vw,28px) clamp(16px,4vw,28px) 80px}
+h1{font-family:'Rajdhani',sans-serif;font-size:clamp(25px,4vw,33px);color:#fff;line-height:1.15}
+.lead{color:var(--muted);font-size:14px;margin-top:4px;max-width:78ch}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:26px 0 10px}
+
+/* ---------- cards de banco ---------- */
+.bancos{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.banco{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;text-align:left;color:inherit;font:inherit;transition:.15s}
+.banco:hover{border-color:rgba(245,197,24,.4);transform:translateY(-2px)}
+.banco.on{border-color:var(--yellow);background:rgba(245,197,24,.07);box-shadow:0 0 0 1px rgba(245,197,24,.35)}
+.banco .ic{font-size:30px}
+.banco h2{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff}
+.banco p{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
+.banco .qtd{font-size:12px;font-weight:700;color:var(--green)}
+
+/* ---------- painel de configuração ---------- */
+.painel{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.campo{margin-bottom:18px}
+.campo:last-child{margin-bottom:0}
+.campo label.tit{display:block;font-size:12.5px;font-weight:700;color:#cbd5e1;margin-bottom:8px}
+.campo .aj{font-size:12px;color:var(--muted);margin-top:6px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:13px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:8px 15px;cursor:pointer;transition:.12s}
+.pill:hover{background:rgba(148,163,184,.16)}
+.pill.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.6);color:var(--yellow)}
+.pill.on.f{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.5);color:#6ee7b7}
+.pill.on.d{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.5);color:#fca5a5}
+.pill small{display:block;font-weight:500;font-size:10.5px;opacity:.8}
+select,input[type=number]{background:#060912;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-size:15px;font-family:inherit;outline:none}
+select:focus,input:focus{border-color:rgba(245,197,24,.6)}
+.range-linha{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--yellow)}
+.range-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--yellow);min-width:52px;text-align:center}
+
+/* ---------- aviso de integridade ---------- */
+.aviso{margin-top:18px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.07);border-radius:14px;padding:18px}
+.aviso h3{font-family:'Rajdhani',sans-serif;font-size:18px;color:#fca5a5;margin-bottom:8px}
+.aviso ul{margin:8px 0 0 18px;font-size:13px;color:#e2e8f0;line-height:1.7}
+.termo{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13.5px;color:#e2e8f0;cursor:pointer}
+.termo input{width:19px;height:19px;accent-color:var(--yellow);margin-top:1px;flex-shrink:0}
+
+.btn{border:0;border-radius:11px;padding:13px 22px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s}
+.btn-p{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn-p:disabled{opacity:.45;cursor:not-allowed}
+.btn-s{background:rgba(148,163,184,.1);border:1px solid var(--line);color:#cbd5e1}
+.btn-s:hover{background:rgba(148,163,184,.2)}
+.btn-linha{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
+
+/* ---------- prova ---------- */
+.barra{position:sticky;top:0;z-index:90;background:rgba(6,9,18,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);margin:-18px calc(-1*clamp(16px,4vw,28px)) 18px;padding:12px clamp(16px,4vw,28px)}
+.barra-in{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.prog{flex:1;min-width:140px;height:8px;border-radius:8px;background:rgba(148,163,184,.14);overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#F5C518,#34d399);width:0;transition:width .25s}
+.barra b{font-family:'Rajdhani',sans-serif;font-size:17px;color:#fff}
+.timer{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--yellow);min-width:66px;text-align:right}
+.alerta-chip{font-size:11.5px;font-weight:700;color:#fca5a5;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);border-radius:999px;padding:4px 10px}
+
+.qbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:clamp(18px,3vw,26px)}
+.qmeta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--muted);background:rgba(148,163,184,.07)}
+.tag.f{color:#6ee7b7;border-color:rgba(52,211,153,.4)}
+.tag.m{color:var(--yellow);border-color:rgba(245,197,24,.4)}
+.tag.d{color:#fca5a5;border-color:rgba(248,113,113,.4)}
+.enun{font-size:clamp(16px,2.2vw,18px);line-height:1.55;color:#fff;font-weight:500}
+.alts{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.alt{display:flex;gap:12px;align-items:flex-start;text-align:left;background:rgba(148,163,184,.05);border:1px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;color:var(--text);font:inherit;font-size:14.5px;line-height:1.5;transition:.12s}
+.alt:hover{background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.3)}
+.alt .letra{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;background:rgba(148,163,184,.14);color:#cbd5e1}
+.alt.on{border-color:var(--yellow);background:rgba(245,197,24,.1)}
+.alt.on .letra{background:var(--yellow);color:#1a1a1a}
+.alt.certa{border-color:rgba(52,211,153,.6);background:rgba(52,211,153,.1)}
+.alt.certa .letra{background:var(--green);color:#052e16}
+.alt.errada{border-color:rgba(248,113,113,.6);background:rgba(248,113,113,.1)}
+.alt.errada .letra{background:var(--red);color:#450a0a}
+.nav-q{display:flex;justify-content:space-between;gap:10px;margin-top:20px;flex-wrap:wrap}
+.mapa{margin-top:18px;display:flex;gap:6px;flex-wrap:wrap}
+.mapa button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:rgba(148,163,184,.07);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.mapa button.resp{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.5);color:#bfdbfe}
+.mapa button.atual{border-color:var(--yellow);color:var(--yellow)}
+
+/* ---------- pausa / bloqueio ---------- */
+#pausa{position:fixed;inset:0;z-index:2147482000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(6,9,18,.98);backdrop-filter:blur(10px)}
+#pausa.on{display:flex}
+#pausa .cx{max-width:460px;text-align:center;background:rgba(12,17,30,.95);border:1px solid rgba(248,113,113,.45);border-radius:18px;padding:28px 24px}
+#pausa .ic{font-size:44px}
+#pausa h2{font-family:'Rajdhani',sans-serif;font-size:23px;color:#fff;margin:10px 0 8px}
+#pausa p{font-size:14px;color:var(--muted);line-height:1.6}
+#pausa .cont{font-family:'Rajdhani',sans-serif;font-size:15px;color:#fca5a5;margin-top:12px;font-weight:700}
+
+/* ---------- resultado ---------- */
+.nota-cx{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,32px);text-align:center}
+.nota{font-family:'Rajdhani',sans-serif;font-size:clamp(46px,10vw,72px);font-weight:700;line-height:1;color:#fff}
+.nota.ok{color:var(--green)}.nota.nok{color:var(--red)}
+.nota-sub{font-size:14px;color:var(--muted);margin-top:6px}
+.selo{display:inline-block;margin-top:14px;border-radius:999px;padding:7px 18px;font-size:13px;font-weight:700;border:1px solid}
+.selo.ok{color:#6ee7b7;border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.12)}
+.selo.nok{color:#fca5a5;border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.12)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:18px}
+.kpi{background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff}
+.kpi span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.barras{margin-top:10px}
+.barra-item{margin-bottom:10px}
+.barra-item .l{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:4px}
+.barra-item .b{height:8px;border-radius:8px;background:rgba(148,163,184,.14);overflow:hidden}
+.barra-item .b i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#34d399)}
+.rev{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.rev-q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.rev-q.errou{border-color:rgba(248,113,113,.35)}
+.rev-q.acertou{border-color:rgba(52,211,153,.3)}
+.rev-q .pe{font-size:14.5px;color:#fff;font-weight:500;margin-bottom:10px}
+.rev-alts{display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.rev-alts div{padding:8px 11px;border-radius:9px;border:1px solid transparent;color:#cbd5e1}
+.rev-alts div.c{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.4);color:#d1fae5}
+.rev-alts div.x{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fee2e2}
+.exp{margin-top:10px;font-size:13px;color:#cbd5e1;background:rgba(96,165,250,.07);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:10px 12px;line-height:1.6}
+.exp b{color:#bfdbfe}
+.fonte{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
+
+/* ---------- ranking ---------- */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700}
+tr.eu td{background:rgba(245,197,24,.07)}
+td.num{text-align:right;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff}
+.tbl-cx{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px;overflow-x:auto}
+.medal{font-size:15px}
+.vazio{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
+.msg{margin-top:12px;font-size:13.5px;min-height:20px}
+.msg.erro{color:#fca5a5}.msg.ok{color:#6ee7b7}
+.tela{display:none}.tela.on{display:block}
+
+@media (max-width:640px){
+  .hdr{position:static}
+  .hdr-logo{height:32px}
+  .bancos{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<script src="conta.js"></script>
+<script src="drone-cpf.js"></script>
+<script src="drone-questoes.js"></script>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <div class="hdr-badges">
+        <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+        <img class="hdr-badge" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
+      </div>
+      <div>
+        <div class="hdr-title">Simulado de <em>Piloto de Drone</em></div>
+        <div class="hdr-sub">CPPSARP · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-dir">
+      <span class="chip-user" id="chip-user"></span>
+      <a class="hdr-back" href="drone.html">⬅ Piloto de Drones</a>
+    </div>
+  </div>
+</div>
+<div class="subnav" id="subnav">
+  <a href="drone-material.html">📚 Material de Estudo</a>
+  <a class="on" href="drone-simulado.html">🎯 Simulado</a>
+  <a href="drone-aro.html">📝 Formulário ARO</a>
+</div>
+
+<main class="wrap">
+
+<!-- ====================== 1) CONFIGURAÇÃO ====================== -->
+<section class="tela on" id="tela-config">
+  <h1>Simulado de múltipla escolha</h1>
+  <p class="lead">Escolha o banco, a dificuldade, quantas questões e quantas alternativas. Cada simulado sorteia questões diferentes e embaralha as alternativas — não existe "a resposta é a letra C".</p>
+
+  <div class="sec">1 · Qual simulado?</div>
+  <div class="bancos">
+    <button type="button" class="banco on" id="banco-anac" data-banco="anac">
+      <span class="ic">🛩️</span>
+      <h2>Prova da ANAC</h2>
+      <p>Conteúdo do exame teórico de piloto remoto: RBAC 100, ICA 100-40, meteorologia, teoria de voo, fatores humanos, emergências, cadastro e radiofrequência.</p>
+      <span class="qtd" id="qtd-anac"></span>
+    </button>
+    <button type="button" class="banco" id="banco-apostilas" data-banco="apostilas">
+      <span class="ic">📚</span>
+      <h2>Só as apostilas do curso</h2>
+      <p>Somente o que está escrito nas 9 apostilas da série CPPSARP — inclusive os quadros de verificação e os casos contados em aula.</p>
+      <span class="qtd" id="qtd-apostilas"></span>
+    </button>
+  </div>
+
+  <div class="sec">2 · Como você quer a prova?</div>
+  <div class="painel">
+    <div class="campo">
+      <label class="tit">Dificuldade</label>
+      <div class="pills" id="pills-dif">
+        <button type="button" class="pill f" data-dif="facil">Fácil<small id="c-facil"></small></button>
+        <button type="button" class="pill" data-dif="medio">Médio<small id="c-medio"></small></button>
+        <button type="button" class="pill d" data-dif="dificil">Difícil<small id="c-dificil"></small></button>
+        <button type="button" class="pill on" data-dif="mista">Mista<small>como na prova real</small></button>
+      </div>
+      <div class="aj">Fácil cobra conceito e definição; médio, aplicação; difícil, caso concreto, número e pegadinha. Mista mistura os três.</div>
+    </div>
+
+    <div class="campo">
+      <label class="tit" for="f-qtd">Quantas questões</label>
+      <div class="range-linha">
+        <input type="range" id="f-qtd" min="5" max="60" step="5" value="20">
+        <span class="range-val" id="v-qtd">20</span>
+      </div>
+      <div class="aj">A prova da ANAC tem 20 questões e exige 70% de acerto (14).</div>
+    </div>
+
+    <div class="campo">
+      <label class="tit">Quantas alternativas por questão</label>
+      <div class="pills" id="pills-alt">
+        <button type="button" class="pill" data-alt="2">2</button>
+        <button type="button" class="pill" data-alt="3">3</button>
+        <button type="button" class="pill on" data-alt="4">4</button>
+        <button type="button" class="pill" data-alt="5">5</button>
+      </div>
+      <div class="aj">Menos alternativas = chute mais fácil. Para treinar de verdade, 4 ou 5.</div>
+    </div>
+
+    <div class="campo" id="campo-apostila" style="display:none">
+      <label class="tit" for="f-ap">Apostila (opcional)</label>
+      <select id="f-ap"><option value="">Todas as apostilas</option></select>
+      <div class="aj">Dá para treinar só o assunto de uma apostila — útil depois de estudar um capítulo.</div>
+    </div>
+
+    <div class="campo">
+      <label class="tit" for="f-tema">Tema (opcional)</label>
+      <select id="f-tema"><option value="">Todos os temas</option></select>
+    </div>
+  </div>
+
+  <div class="aviso">
+    <h3>⚠️ Compromisso de honestidade — leia antes de começar</h3>
+    <p style="font-size:13.5px;color:#e2e8f0;line-height:1.6">Este simulado é para <b>você</b> descobrir o que ainda não sabe. Usar ChatGPT, Gemini, Copilot ou qualquer outra IA — ou consultar a apostila durante a prova — só serve para esconder de você mesmo o que vai faltar no dia do exame da ANAC e, pior, na operação real.</p>
+    <ul>
+      <li>Copiar, selecionar e imprimir a prova estão <b>bloqueados</b>.</li>
+      <li>Sair da aba, mudar de janela, colar texto ou tentar atalho de cópia <b>pausa a prova e fica registrado</b>.</li>
+      <li>O registro de integridade vai junto com o seu resultado, e o instrutor vê.</li>
+    </ul>
+    <label class="termo"><input type="checkbox" id="f-termo">
+      <span>Declaro que vou responder sozinho, <b>sem usar inteligência artificial</b> e sem consultar material durante a prova.</span></label>
+  </div>
+
+  <div class="btn-linha">
+    <button class="btn btn-p" id="bt-comecar" disabled>Começar o simulado →</button>
+    <button class="btn btn-s" id="bt-ver-ranking">🏆 Ranking da turma</button>
+  </div>
+  <div class="msg" id="msg-config"></div>
+</section>
+
+<!-- ====================== 2) PROVA ====================== -->
+<section class="tela" id="tela-prova">
+  <div class="barra">
+    <div class="barra-in">
+      <b id="p-pos">1/20</b>
+      <div class="prog"><i id="p-prog"></i></div>
+      <span class="alerta-chip" id="p-alertas" style="display:none"></span>
+      <span class="timer" id="p-timer">00:00</span>
+    </div>
+  </div>
+
+  <div class="qbox">
+    <div class="qmeta" id="q-meta"></div>
+    <div class="enun" id="q-enun"></div>
+    <div class="alts" id="q-alts"></div>
+    <div class="nav-q">
+      <button class="btn btn-s" id="bt-ant">⬅ Anterior</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-s" id="bt-prox">Próxima ➡</button>
+        <button class="btn btn-p" id="bt-entregar">Entregar prova</button>
+      </div>
+    </div>
+  </div>
+  <div class="mapa" id="q-mapa"></div>
+</section>
+
+<!-- ====================== 3) RESULTADO ====================== -->
+<section class="tela" id="tela-resultado">
+  <div class="nota-cx">
+    <div class="nota" id="r-nota">—</div>
+    <div class="nota-sub" id="r-sub"></div>
+    <div id="r-selo"></div>
+    <div class="kpis" id="r-kpis"></div>
+  </div>
+
+  <div id="r-integridade"></div>
+
+  <div class="sec">Desempenho por tema</div>
+  <div class="painel barras" id="r-temas"></div>
+
+  <div class="sec">Revisão questão por questão</div>
+  <div class="rev" id="r-rev"></div>
+
+  <div class="btn-linha">
+    <button class="btn btn-p" id="bt-novo">Fazer outro simulado</button>
+    <button class="btn btn-s" id="bt-ranking2">🏆 Ver o ranking</button>
+  </div>
+  <div class="msg" id="msg-result"></div>
+</section>
+
+<!-- ====================== 4) RANKING ====================== -->
+<section class="tela" id="tela-ranking">
+  <h1>🏆 Ranking de acerto</h1>
+  <p class="lead">Ordenado pela <b>média de acerto</b> de todas as tentativas — não pelo melhor resultado. Fazer 20 simulados e guardar só o melhor não é estudo.</p>
+
+  <div class="pills" style="margin-top:16px" id="pills-rk">
+    <button type="button" class="pill on" data-rk="">Os dois bancos</button>
+    <button type="button" class="pill" data-rk="anac">Só ANAC</button>
+    <button type="button" class="pill" data-rk="apostilas">Só apostilas</button>
+  </div>
+
+  <div class="sec">Turma</div>
+  <div class="tbl-cx" id="rk-tabela"><div class="vazio">Carregando…</div></div>
+
+  <div class="sec">Meus simulados</div>
+  <div class="tbl-cx" id="rk-meus"><div class="vazio">Carregando…</div></div>
+
+  <div class="btn-linha">
+    <button class="btn btn-p" id="bt-voltar-config">⬅ Voltar ao simulado</button>
+  </div>
+  <div class="msg" id="msg-rk"></div>
+</section>
+
+</main>
+
+<div id="pausa">
+  <div class="cx">
+    <div class="ic">⏸️</div>
+    <h2>Prova pausada</h2>
+    <p id="pausa-txt">Você saiu da prova. Isso ficou registrado no seu resultado, junto com o tempo que passou fora da tela.</p>
+    <div class="cont" id="pausa-cont"></div>
+    <button class="btn btn-p" id="bt-retomar" style="margin-top:18px">Voltar para a prova</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+var API_BASE = "https://bpfron-api.bpfron.workers.dev";
+try { var _q = new URLSearchParams(location.search).get('api'); if (_q) API_BASE = _q.replace(/\/+$/, ''); } catch (e) {}
+
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+};
+var Q = window.droneQuestoes;
+
+/* ============================ estado ============================ */
+var cfg = { banco: 'anac', dif: 'mista', qtd: 20, alt: 4, ap: '', tema: '' };
+var prova = [], respostas = [], atual = 0;
+var t0 = 0, tTick = null, segundos = 0, tempoQuestao = 0;
+var corrigido = null;
+
+/* registro de integridade: cada evento suspeito entra aqui */
+var integridade = { eventos: [], foraMs: 0, saiuEm: 0, pausada: false };
+
+function regEvento(tipo, detalhe) {
+  var ja = integridade.eventos.filter(function (e) { return e.tipo === tipo; })[0];
+  if (ja) { ja.n++; if (detalhe) ja.detalhe = detalhe; }
+  else integridade.eventos.push({ tipo: tipo, n: 1, detalhe: detalhe || '', quando: new Date().toISOString() });
+  pintarAlertas();
+}
+function totalAlertas() {
+  return integridade.eventos.reduce(function (s, e) { return s + e.n; }, 0);
+}
+function pintarAlertas() {
+  var n = totalAlertas(), el = $('p-alertas');
+  if (!el) return;
+  if (!n) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.textContent = '⚠️ ' + n + (n === 1 ? ' alerta' : ' alertas') + ' de integridade';
+}
+var ROTULO = {
+  saiu: 'Saiu da prova (trocou de aba ou de janela)',
+  copiar: 'Tentou copiar/recortar o texto da questão',
+  colar: 'Colou conteúdo de fora na página',
+  menu: 'Abriu o menu do botão direito',
+  imprimir: 'Tentou imprimir ou salvar a prova',
+  atalho: 'Usou atalho de cópia/salvar/impressão',
+  printscreen: 'Apertou PrintScreen',
+  devtools: 'Ferramentas de desenvolvedor abertas',
+  telaDividida: 'Reduziu a janela (tela dividida com outro aplicativo)',
+  rapida: 'Respondeu rápido demais para ter lido a questão',
+  selecao: 'Tentou selecionar o texto da questão',
+};
+
+/* ============================ proteções ============================ */
+/* Nada aqui "prova" uso de IA — são indícios. O que o sistema faz é medir o
+   que é mensurável (saiu da tela, colou, copiou, respondeu em 2 s) e mostrar
+   isso junto do resultado, para o aluno e para o instrutor. A honestidade
+   continua sendo do aluno; o registro só tira o anonimato do atalho. */
+function protegerEventos() {
+  ['copy', 'cut'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      if (!provaAberta()) return;
+      e.preventDefault(); regEvento('copiar');
+      flashMsg('Copiar está bloqueado durante a prova.');
+    });
+  });
+  document.addEventListener('paste', function (e) {
+    if (!provaAberta()) return;
+    e.preventDefault(); regEvento('colar');
+    flashMsg('Colar está bloqueado durante a prova.');
+  });
+  document.addEventListener('contextmenu', function (e) {
+    if (!provaAberta()) return;
+    e.preventDefault(); regEvento('menu');
+  });
+  document.addEventListener('selectstart', function (e) {
+    if (!provaAberta()) return;
+    e.preventDefault();
+  });
+  document.addEventListener('dragstart', function (e) { if (provaAberta()) e.preventDefault(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (!provaAberta()) return;
+    var k = (e.key || '').toLowerCase();
+    if (k === 'printscreen') { regEvento('printscreen'); flashMsg('Captura de tela registrada.'); return; }
+    if (e.ctrlKey || e.metaKey) {
+      if (['c', 'x', 'v', 'p', 's', 'a', 'u'].indexOf(k) >= 0) {
+        e.preventDefault(); regEvento('atalho', 'Ctrl+' + k.toUpperCase());
+        flashMsg('Atalho bloqueado durante a prova.');
+        return;
+      }
+      if (e.shiftKey && ['i', 'j', 'c'].indexOf(k) >= 0) { regEvento('devtools', 'Ctrl+Shift+' + k.toUpperCase()); return; }
+    }
+    if (k === 'f12') { regEvento('devtools', 'F12'); return; }
+    // atalhos úteis da prova
+    if (k === 'arrowright') { irPara(atual + 1); }
+    if (k === 'arrowleft') { irPara(atual - 1); }
+    var n = parseInt(k, 10);
+    if (n >= 1 && n <= 6) marcar(n - 1);
+  });
+
+  window.addEventListener('beforeprint', function () {
+    if (provaAberta()) { regEvento('imprimir'); flashMsg('A prova não pode ser impressa.'); }
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!provaAberta()) return;
+    if (document.hidden) saiuDaProva();
+    else voltouParaProva();
+  });
+  window.addEventListener('blur', function () { if (provaAberta()) saiuDaProva(); });
+  window.addEventListener('focus', function () { if (provaAberta()) voltouParaProva(); });
+
+  // Tela dividida com outro app (o jeito mais comum de consultar IA no
+  // celular e no PC): a janela encolhe para menos de 62% da tela.
+  var larguraInicial = window.innerWidth;
+  window.addEventListener('resize', function () {
+    if (!provaAberta()) return;
+    var tela = window.screen && window.screen.width ? window.screen.width : larguraInicial;
+    if (window.innerWidth < tela * 0.62 && window.innerWidth < larguraInicial * 0.85) {
+      regEvento('telaDividida', window.innerWidth + 'px de ' + tela + 'px');
+    }
+  });
+
+  // DevTools aberto: a diferença entre a janela e a viewport salta. Só conta
+  // quando MUDA durante a prova (senão zoom e barra de ferramentas do
+  // navegador viram falso positivo).
+  var baseDif = Math.abs(window.outerWidth - window.innerWidth);
+  var baseDifH = Math.abs(window.outerHeight - window.innerHeight);
+  setInterval(function () {
+    if (!provaAberta()) return;
+    var dW = Math.abs(window.outerWidth - window.innerWidth);
+    var dH = Math.abs(window.outerHeight - window.innerHeight);
+    if (dW - baseDif > 180 || dH - baseDifH > 220) {
+      regEvento('devtools', 'janela mudou ' + (dW - baseDif) + 'x' + (dH - baseDifH) + 'px');
+      baseDif = dW; baseDifH = dH;
+    }
+  }, 2000);
+}
+
+function provaAberta() { return document.body.classList.contains('prova-aberta'); }
+
+function saiuDaProva() {
+  if (integridade.pausada) return;
+  integridade.pausada = true;
+  integridade.saiuEm = Date.now();
+  regEvento('saiu');
+  pararTimer();
+  $('pausa').classList.add('on');
+  var n = integridade.eventos.filter(function (e) { return e.tipo === 'saiu'; })[0];
+  $('pausa-cont').textContent = 'Saídas registradas nesta prova: ' + (n ? n.n : 1);
+}
+function voltouParaProva() {
+  if (!integridade.pausada) return;
+  if (integridade.saiuEm) integridade.foraMs += Date.now() - integridade.saiuEm;
+  integridade.saiuEm = 0;
+  // a prova só volta a contar quando a pessoa clicar em "voltar": o overlay
+  // fica na frente para deixar claro que o tempo fora foi medido.
+}
+$('bt-retomar').onclick = function () {
+  integridade.pausada = false;
+  $('pausa').classList.remove('on');
+  tempoQuestao = Date.now();
+  iniciarTimer();
+};
+
+var msgTimer = null;
+function flashMsg(txt) {
+  var el = $('p-alertas');
+  if (!el) return;
+  el.style.display = ''; el.textContent = '⚠️ ' + txt;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(pintarAlertas, 2600);
+}
+
+/* ============================ configuração ============================ */
+function preencherEstatisticas() {
+  var st = Q.estatisticas();
+  $('qtd-anac').textContent = st.anac.total + ' questões no banco';
+  $('qtd-apostilas').textContent = st.apostilas.total + ' questões no banco';
+  atualizarContadores();
+  var ap = $('f-ap');
+  var nomes = {
+    '00': '00 · Glossário de Siglas', '01': '01 · Introdução ao UAS',
+    '02': '02 · História e Evolução dos SARP', '03': '03 · Componentes e Aplicações',
+    '04': '04 · Legislação ICA 100-40', '05': '05 · RBAC 100 — Visada e Distanciamento',
+    '06': '06 · ARO', '07': '07 · Transmissão de Imagem', '08': '08 · Aplicativos e Ferramentas',
+  };
+  var porAp = {};
+  Q.APOSTILAS.forEach(function (q) { porAp[q.ap] = (porAp[q.ap] || 0) + 1; });
+  Object.keys(porAp).sort().forEach(function (k) {
+    var o = document.createElement('option');
+    o.value = k; o.textContent = (nomes[k] || 'Apostila ' + k) + ' (' + porAp[k] + ')';
+    ap.appendChild(o);
+  });
+}
+
+function atualizarContadores() {
+  var st = Q.estatisticas()[cfg.banco];
+  ['facil', 'medio', 'dificil'].forEach(function (d) {
+    $('c-' + d).textContent = st.dif[d] + ' questões';
+  });
+  var sel = $('f-tema'), antes = sel.value;
+  sel.innerHTML = '<option value="">Todos os temas</option>';
+  Object.keys(st.temas).sort().forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t; o.textContent = t + ' (' + st.temas[t] + ')';
+    sel.appendChild(o);
+  });
+  sel.value = st.temas[antes] ? antes : '';
+  cfg.tema = sel.value;
+  $('campo-apostila').style.display = cfg.banco === 'apostilas' ? '' : 'none';
+  var max = cfg.banco === 'anac' ? 60 : 60;
+  $('f-qtd').max = Math.min(max, st.total);
+}
+
+function ligarConfig() {
+  ['anac', 'apostilas'].forEach(function (b) {
+    $('banco-' + b).onclick = function () {
+      cfg.banco = b;
+      $('banco-anac').classList.toggle('on', b === 'anac');
+      $('banco-apostilas').classList.toggle('on', b === 'apostilas');
+      cfg.ap = ''; $('f-ap').value = '';
+      atualizarContadores();
+    };
+  });
+  Array.prototype.forEach.call($('pills-dif').children, function (bt) {
+    bt.onclick = function () {
+      cfg.dif = bt.dataset.dif;
+      Array.prototype.forEach.call($('pills-dif').children, function (o) { o.classList.toggle('on', o === bt); });
+    };
+  });
+  Array.prototype.forEach.call($('pills-alt').children, function (bt) {
+    bt.onclick = function () {
+      cfg.alt = Number(bt.dataset.alt);
+      Array.prototype.forEach.call($('pills-alt').children, function (o) { o.classList.toggle('on', o === bt); });
+    };
+  });
+  $('f-qtd').oninput = function () { cfg.qtd = Number(this.value); $('v-qtd').textContent = this.value; };
+  $('f-ap').onchange = function () { cfg.ap = this.value; };
+  $('f-tema').onchange = function () { cfg.tema = this.value; };
+  $('f-termo').onchange = function () { $('bt-comecar').disabled = !this.checked; };
+  $('bt-comecar').onclick = comecar;
+  $('bt-ver-ranking').onclick = function () { mostrar('ranking'); carregarRanking(); };
+  $('bt-ranking2').onclick = function () { mostrar('ranking'); carregarRanking(); };
+  $('bt-voltar-config').onclick = function () { mostrar('config'); };
+  $('bt-novo').onclick = function () { mostrar('config'); window.scrollTo(0, 0); };
+  Array.prototype.forEach.call($('pills-rk').children, function (bt) {
+    bt.onclick = function () {
+      Array.prototype.forEach.call($('pills-rk').children, function (o) { o.classList.toggle('on', o === bt); });
+      carregarRanking(bt.dataset.rk);
+    };
+  });
+  $('bt-ant').onclick = function () { irPara(atual - 1); };
+  $('bt-prox').onclick = function () { irPara(atual + 1); };
+  $('bt-entregar').onclick = entregar;
+}
+
+function mostrar(tela) {
+  ['config', 'prova', 'resultado', 'ranking'].forEach(function (t) {
+    $('tela-' + t).classList.toggle('on', t === tela);
+  });
+  document.body.classList.toggle('prova-aberta', tela === 'prova');
+  $('subnav').style.display = tela === 'prova' ? 'none' : '';
+}
+
+/* ============================ prova ============================ */
+function comecar() {
+  var r = Q.sortear({
+    banco: cfg.banco, dificuldade: cfg.dif, qtd: cfg.qtd, alternativas: cfg.alt,
+    temas: cfg.tema ? [cfg.tema] : null,
+    apostilas: cfg.banco === 'apostilas' && cfg.ap ? [cfg.ap] : null,
+  });
+  if (!r.prova.length) {
+    $('msg-config').className = 'msg erro';
+    $('msg-config').textContent = r.avisos.join(' ') || 'Não deu para montar a prova com esses filtros.';
+    return;
+  }
+  prova = r.prova;
+  respostas = prova.map(function () { return null; });
+  atual = 0; segundos = 0; corrigido = null;
+  integridade = { eventos: [], foraMs: 0, saiuEm: 0, pausada: false };
+  $('msg-config').textContent = '';
+  if (r.avisos.length) {
+    $('msg-result').className = 'msg';
+    $('msg-result').textContent = r.avisos.join(' ');
+  }
+  mostrar('prova');
+  window.scrollTo(0, 0);
+  pintarAlertas();
+  desenharQuestao();
+  t0 = Date.now(); tempoQuestao = Date.now();
+  iniciarTimer();
+}
+
+function iniciarTimer() {
+  pararTimer();
+  tTick = setInterval(function () {
+    segundos++;
+    var m = Math.floor(segundos / 60), s = segundos % 60;
+    $('p-timer').textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+function pararTimer() { if (tTick) { clearInterval(tTick); tTick = null; } }
+
+function desenharQuestao() {
+  var q = prova[atual];
+  var dif = { facil: ['f', 'Fácil'], medio: ['m', 'Médio'], dificil: ['d', 'Difícil'] }[q.dif] || ['m', q.dif];
+  $('q-meta').innerHTML =
+    '<span class="tag ' + dif[0] + '">' + dif[1] + '</span>' +
+    '<span class="tag">' + esc(q.tema) + '</span>' +
+    (q.ap ? '<span class="tag">Apostila ' + esc(q.ap) + '</span>' : '');
+  $('q-enun').textContent = q.p;
+  var alts = q.alts.map(function (a, i) {
+    var on = respostas[atual] === i ? ' on' : '';
+    return '<button type="button" class="alt' + on + '" data-i="' + i + '">' +
+      '<span class="letra">' + String.fromCharCode(65 + i) + '</span><span>' + esc(a.t) + '</span></button>';
+  }).join('');
+  $('q-alts').innerHTML = alts;
+  Array.prototype.forEach.call($('q-alts').children, function (bt) {
+    bt.onclick = function () { marcar(Number(bt.dataset.i)); };
+  });
+  $('p-pos').textContent = (atual + 1) + '/' + prova.length;
+  var feitas = respostas.filter(function (r) { return r !== null; }).length;
+  $('p-prog').style.width = Math.round((feitas / prova.length) * 100) + '%';
+  $('bt-ant').disabled = atual === 0;
+  $('bt-prox').disabled = atual === prova.length - 1;
+  desenharMapa();
+  tempoQuestao = Date.now();
+}
+
+function desenharMapa() {
+  $('q-mapa').innerHTML = prova.map(function (q, i) {
+    var cls = (respostas[i] !== null ? 'resp' : '') + (i === atual ? ' atual' : '');
+    return '<button type="button" class="' + cls + '" data-i="' + i + '">' + (i + 1) + '</button>';
+  }).join('');
+  Array.prototype.forEach.call($('q-mapa').children, function (bt) {
+    bt.onclick = function () { irPara(Number(bt.dataset.i)); };
+  });
+}
+
+function marcar(i) {
+  var q = prova[atual];
+  if (!q || i >= q.alts.length) return;
+  // Resposta em menos de 3,5 s numa questão média/difícil: a pessoa não teve
+  // tempo de ler o enunciado. Conta como indício, não como acusação.
+  var gasto = Date.now() - tempoQuestao;
+  if (respostas[atual] === null && gasto < 3500 && q.dif !== 'facil') {
+    regEvento('rapida', 'questão ' + (atual + 1) + ' em ' + (gasto / 1000).toFixed(1) + 's');
+  }
+  respostas[atual] = i;
+  Array.prototype.forEach.call($('q-alts').children, function (bt, idx) {
+    bt.classList.toggle('on', idx === i);
+  });
+  var feitas = respostas.filter(function (r) { return r !== null; }).length;
+  $('p-prog').style.width = Math.round((feitas / prova.length) * 100) + '%';
+  desenharMapa();
+  if (atual < prova.length - 1) setTimeout(function () { irPara(atual + 1); }, 220);
+}
+
+function irPara(i) {
+  if (i < 0 || i >= prova.length) return;
+  atual = i;
+  desenharQuestao();
+  window.scrollTo(0, 0);
+}
+
+function entregar() {
+  var branco = respostas.filter(function (r) { return r === null; }).length;
+  if (branco && !confirm('Faltam ' + branco + ' questão(ões) sem resposta. Entregar assim?')) return;
+  pararTimer();
+  document.body.classList.remove('prova-aberta');
+  corrigido = Q.corrigir(prova, respostas);
+  desenharResultado();
+  mostrar('resultado');
+  window.scrollTo(0, 0);
+  enviarResultado();
+}
+
+/* ============================ resultado ============================ */
+function desenharResultado() {
+  var c = corrigido;
+  $('r-nota').textContent = c.acertos + '/' + c.total;
+  $('r-nota').className = 'nota ' + (c.aprovado ? 'ok' : 'nok');
+  $('r-sub').textContent = c.pct.toString().replace('.', ',') + '% de acerto · ' +
+    (cfg.banco === 'anac' ? 'banco ANAC' : 'banco das apostilas') + ' · ' +
+    (Q.DIF_NOME[cfg.dif] || cfg.dif).toLowerCase() + ' · ' + cfg.alt + ' alternativas';
+  $('r-selo').innerHTML = c.aprovado
+    ? '<span class="selo ok">✅ Acima de 70% — na prova da ANAC isso é aprovação</span>'
+    : '<span class="selo nok">Abaixo de 70% — na prova da ANAC isso reprova</span>';
+
+  var m = Math.floor(segundos / 60), s = segundos % 60;
+  var porQ = c.total ? Math.round(segundos / c.total) : 0;
+  $('r-kpis').innerHTML =
+    kpi(c.acertos, 'acertos') + kpi(c.erros, 'erros') + kpi(c.embranco, 'em branco') +
+    kpi(m + 'm' + (s < 10 ? '0' : '') + s + 's', 'tempo total') + kpi(porQ + 's', 'por questão');
+
+  // integridade
+  var n = totalAlertas();
+  var fora = Math.round(integridade.foraMs / 1000);
+  if (n) {
+    var lista = integridade.eventos.map(function (e) {
+      return '<li><b>' + esc(ROTULO[e.tipo] || e.tipo) + '</b>' + (e.n > 1 ? ' — ' + e.n + 'x' : '') +
+        (e.detalhe ? ' <span style="color:#94a3b8">(' + esc(e.detalhe) + ')</span>' : '') + '</li>';
+    }).join('');
+    $('r-integridade').innerHTML =
+      '<div class="aviso" style="margin-top:18px"><h3>⚠️ Registro de integridade desta prova</h3>' +
+      '<p style="font-size:13.5px;color:#e2e8f0">' + n + ' evento(s) registrado(s)' +
+      (fora ? ', com ' + fora + ' segundo(s) fora da tela' : '') +
+      '. Isto é o que o sistema conseguiu medir — não é acusação de uso de IA, mas vai junto do seu resultado e o instrutor vê.</p>' +
+      '<ul>' + lista + '</ul>' +
+      '<p style="font-size:13px;color:#94a3b8;margin-top:10px">Se foi ligação, notificação ou bateria, tudo bem: o que conta é o padrão ao longo dos simulados.</p></div>';
+  } else {
+    $('r-integridade').innerHTML =
+      '<div class="painel" style="margin-top:18px;border-color:rgba(52,211,153,.35)">' +
+      '<b style="color:#6ee7b7">✅ Nenhum alerta de integridade.</b> ' +
+      '<span style="color:#94a3b8;font-size:13.5px">Prova feita sem sair da tela, sem colar nada e sem tentar copiar. É assim que o resultado vale.</span></div>';
+  }
+
+  // por tema
+  var temas = Object.keys(c.porTema).sort(function (a, b) {
+    return (c.porTema[a].acertos / c.porTema[a].total) - (c.porTema[b].acertos / c.porTema[b].total);
+  });
+  $('r-temas').innerHTML = temas.map(function (t) {
+    var d = c.porTema[t], p = Math.round((d.acertos / d.total) * 100);
+    return '<div class="barra-item"><div class="l"><span>' + esc(t) + '</span><span>' + d.acertos + '/' + d.total + ' · ' + p + '%</span></div>' +
+      '<div class="b"><i style="width:' + p + '%"></i></div></div>';
+  }).join('') || '<div class="vazio">Sem dados.</div>';
+
+  // revisão
+  $('r-rev').innerHTML = c.detalhe.map(function (d, i) {
+    var alts = d.alts.map(function (a, idx) {
+      var cls = a.ok ? 'c' : (idx === d.marcada ? 'x' : '');
+      var marca = a.ok ? ' ✓' : (idx === d.marcada ? ' ✗ (sua resposta)' : '');
+      return '<div class="' + cls + '">' + String.fromCharCode(65 + idx) + ') ' + esc(a.t) + marca + '</div>';
+    }).join('');
+    return '<div class="rev-q ' + (d.acertou ? 'acertou' : 'errou') + '">' +
+      '<div class="pe">' + (i + 1) + '. ' + esc(d.p) + '</div>' +
+      '<div class="rev-alts">' + alts + '</div>' +
+      '<div class="exp"><b>Por quê:</b> ' + esc(d.exp) +
+      '<span class="fonte">📘 ' + esc(d.fonte) + (d.embranco ? ' · você deixou em branco' : '') + '</span></div></div>';
+  }).join('');
+}
+
+function kpi(v, r) {
+  return '<div class="kpi"><b>' + esc(v) + '</b><span>' + esc(r) + '</span></div>';
+}
+
+function enviarResultado() {
+  var c = corrigido;
+  var detalhe = integridade.eventos.map(function (e) {
+    return (ROTULO[e.tipo] || e.tipo) + (e.n > 1 ? ' (' + e.n + 'x)' : '');
+  });
+  if (integridade.foraMs > 1000) detalhe.push(Math.round(integridade.foraMs / 1000) + 's fora da tela');
+  fetch(API_BASE + '/api/drone/simulado', {
+    method: 'POST',
+    headers: Object.assign({ 'content-type': 'application/json' }, window.droneCpf ? window.droneCpf.headers() : {}),
+    body: JSON.stringify({
+      banco: cfg.banco, dificuldade: cfg.dif, qtd: c.total, alternativas: cfg.alt,
+      acertos: c.acertos, segundos: segundos, alertas: totalAlertas(), detalhe: detalhe,
+      questoes: prova.map(function (q) { return q.id; }),
+    }),
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      $('msg-result').className = 'msg ' + (d && d.ok ? 'ok' : 'erro');
+      $('msg-result').textContent = d && d.ok
+        ? 'Resultado gravado no ranking da turma.'
+        : ((d && d.detail) || 'Não deu para gravar o resultado no ranking (o desempenho acima continua valendo).');
+    })
+    .catch(function () {
+      $('msg-result').className = 'msg erro';
+      $('msg-result').textContent = 'Sem conexão para gravar no ranking — o resultado acima continua valendo.';
+    });
+}
+
+/* ============================ ranking ============================ */
+function carregarRanking(banco) {
+  var qs = banco ? '?banco=' + encodeURIComponent(banco) : '';
+  $('rk-tabela').innerHTML = '<div class="vazio">Carregando…</div>';
+  fetch(API_BASE + '/api/drone/simulado/ranking' + qs, {
+    headers: window.droneCpf ? window.droneCpf.headers() : {},
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      if (!d || !d.ok) {
+        $('rk-tabela').innerHTML = '<div class="vazio">' + esc((d && d.detail) || 'Não deu para carregar o ranking.') + '</div>';
+        $('rk-meus').innerHTML = '<div class="vazio">—</div>';
+        return;
+      }
+      var medal = ['🥇', '🥈', '🥉'];
+      $('rk-tabela').innerHTML = d.ranking.length ? (
+        '<table><thead><tr><th>#</th><th>Nome</th><th style="text-align:right">Média</th>' +
+        '<th style="text-align:right">Melhor</th><th style="text-align:right">Simulados</th>' +
+        '<th style="text-align:right">Questões</th>' + (d.gestor ? '<th style="text-align:right">Alertas</th>' : '') +
+        '</tr></thead><tbody>' +
+        d.ranking.map(function (p, i) {
+          return '<tr class="' + (p.eu ? 'eu' : '') + '"><td>' + (medal[i] ? '<span class="medal">' + medal[i] + '</span>' : (i + 1)) + '</td>' +
+            '<td>' + esc(p.nome) + (p.eu ? ' <b style="color:var(--yellow)">· você</b>' : '') + '</td>' +
+            '<td class="num">' + String(p.media).replace('.', ',') + '%</td>' +
+            '<td class="num">' + String(p.melhor).replace('.', ',') + '%</td>' +
+            '<td class="num">' + p.simulados + '</td>' +
+            '<td class="num">' + p.questoes + '</td>' +
+            (d.gestor ? '<td class="num" style="color:' + (p.alertas ? '#fca5a5' : '#6ee7b7') + '">' + p.alertas + '</td>' : '') +
+            '</tr>';
+        }).join('') + '</tbody></table>'
+      ) : '<div class="vazio">Ninguém fez simulado ainda. Seja o primeiro.</div>';
+
+      $('rk-meus').innerHTML = d.meus && d.meus.length ? (
+        '<table><thead><tr><th>Quando</th><th>Banco</th><th>Nível</th>' +
+        '<th style="text-align:right">Acertos</th><th style="text-align:right">%</th>' +
+        '<th style="text-align:right">Tempo</th><th style="text-align:right">Alertas</th></tr></thead><tbody>' +
+        d.meus.map(function (t) {
+          var m = Math.floor(t.segundos / 60), s = t.segundos % 60;
+          return '<tr><td>' + esc(String(t.quando).slice(0, 16).replace('T', ' ')) + '</td>' +
+            '<td>' + (t.banco === 'anac' ? 'ANAC' : 'Apostilas') + '</td>' +
+            '<td>' + esc(Q.DIF_NOME[t.dificuldade] || t.dificuldade) + '</td>' +
+            '<td class="num">' + t.acertos + '/' + t.qtd + '</td>' +
+            '<td class="num">' + String(t.pct).replace('.', ',') + '%</td>' +
+            '<td class="num">' + m + 'm' + (s < 10 ? '0' : '') + s + 's</td>' +
+            '<td class="num" style="color:' + (t.alertas ? '#fca5a5' : '#6ee7b7') + '">' + t.alertas + '</td></tr>';
+        }).join('') + '</tbody></table>'
+      ) : '<div class="vazio">Você ainda não fez simulado.</div>';
+    })
+    .catch(function () {
+      $('rk-tabela').innerHTML = '<div class="vazio">Sem conexão com o servidor.</div>';
+    });
+}
+
+/* ============================ início ============================ */
+function iniciar() {
+  $('chip-user').textContent = (window.droneCpf && window.droneCpf.nome) || '';
+  preencherEstatisticas();
+  ligarConfig();
+  protegerEventos();
+  // Sair no meio da prova perde a prova: avisa antes.
+  window.addEventListener('beforeunload', function (e) {
+    if (!provaAberta()) return;
+    e.preventDefault(); e.returnValue = '';
+    return '';
+  });
+}
+
+if (window.droneCpf && window.droneCpf.pronto) iniciar();
+else document.addEventListener('drone-cpf-pronto', iniciar);
+</script>
+</body>
+</html>

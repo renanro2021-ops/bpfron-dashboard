@@ -52,6 +52,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 </style>
 </head>
 <body>
+<script src="conta.js"></script>
 <script src="drone-cpf.js"></script>
 
 <div class="hdr">
@@ -80,7 +81,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
     <a class="card" href="drone-material.html">
       <div class="ic">📚</div>
       <h2>Material de Estudo</h2>
-      <p>1ª apostila já disponível: história e evolução dos SARP. Mais conteúdo (regulação, SARPAS, SISANT, gestão de risco) chegando aos poucos.</p>
+      <p>Série completa de 9 apostilas do CPPSARP: siglas, introdução ao UAS, história, componentes, ICA 100-40, RBAC 100, ARO, transmissão de imagem e ferramentas.</p>
+      <div class="card-foot"><span class="chip pronto">9 apostilas</span><span class="go">Acessar →</span></div>
+    </a>
+    <a class="card" href="drone-simulado.html">
+      <div class="ic">🎯</div>
+      <h2>Simulado de Questões</h2>
+      <p>Múltipla escolha com dois bancos — prova da ANAC e conteúdo das apostilas. Você escolhe dificuldade, quantas questões e quantas alternativas; cada prova sai diferente e tem ranking de acerto.</p>
       <div class="card-foot"><span class="chip pronto">Disponível</span><span class="go">Acessar →</span></div>
     </a>
     <a class="card" href="drone-aro.html">
@@ -89,8 +96,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
       <p>Avaliação de Risco Operacional preenchível na tela, com download do PDF pronto para assinar via gov.br.</p>
       <div class="card-foot"><span class="chip pronto">Disponível</span><span class="go">Acessar →</span></div>
     </a>
+    <a class="card" href="drone-alunos.html" id="card-alunos" style="display:none">
+      <div class="ic">👥</div>
+      <h2>Alunos do Curso</h2>
+      <p>Área do gestor: cadastrar quem entra pelo CPF, acompanhar quantos simulados cada um fez e exportar a relação em planilha ou PDF.</p>
+      <div class="card-foot"><span class="chip constr">Só gestor</span><span class="go">Acessar →</span></div>
+    </a>
   </div>
 </main>
+
+<script>
+/* O cartão de alunos só aparece para quem entrou como gestor do curso
+   (login do dashboard com a permissão "aro"); o aluno que entra pelo CPF
+   nem vê o link. O Worker barra de novo do outro lado. */
+(function () {
+  function mostrarSeGestor() {
+    if (window.droneCpf && window.droneCpf.souGestor) {
+      document.getElementById('card-alunos').style.display = '';
+    }
+  }
+  if (window.droneCpf && window.droneCpf.pronto) mostrarSeGestor();
+  else document.addEventListener('drone-cpf-pronto', mostrarSeGestor);
+})();
+</script>
 
 </body>
 </html>

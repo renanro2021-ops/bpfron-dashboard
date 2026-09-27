@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Alunos do Curso · Piloto de Drones · BPFRON/RO</title>
+<meta name="description" content="Cadastro dos alunos do CPPSARP: quem entra com o CPF, com exportação em planilha e em PDF.">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --line:rgba(148,163,184,.14); --card:rgba(12,17,30,.85);
+  --green:#34d399; --red:#f87171; --blue:#60a5fa;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%);background-attachment:fixed}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1100px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-badges{display:flex;align-items:center;gap:8px}
+.hdr-logo{height:42px;width:auto;mix-blend-mode:screen}
+.hdr-badge{height:42px;width:42px;border-radius:50%;object-fit:cover}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(17px,2.4vw,21px);font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-dir{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+.chip-user{font-size:12.5px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.1);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+
+.subnav{max-width:1100px;margin:0 auto;padding:10px clamp(16px,4vw,28px) 0;display:flex;gap:8px;flex-wrap:wrap}
+.subnav a{font-size:13px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:7px 14px;text-decoration:none}
+.subnav a:hover{background:rgba(148,163,184,.16)}
+.subnav a.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.55);color:var(--yellow)}
+
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(18px,3vw,28px) clamp(16px,4vw,28px) 80px}
+h1{font-family:'Rajdhani',sans-serif;font-size:clamp(25px,4vw,33px);color:#fff;line-height:1.15}
+.lead{color:var(--muted);font-size:14px;margin-top:4px;max-width:80ch}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi b{display:block;font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff}
+.kpi span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+.painel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label.tit{display:block;font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:5px}
+input,select{width:100%;background:#060912;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#e2e8f0;font-size:14.5px;font-family:inherit;outline:none}
+input:focus,select:focus{border-color:rgba(245,197,24,.6)}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s}
+.btn-p{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn-p:disabled{opacity:.45;cursor:not-allowed}
+.btn-s{background:rgba(148,163,184,.1);border:1px solid var(--line);color:#cbd5e1}
+.btn-s:hover{background:rgba(148,163,184,.2)}
+.btn-d{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#fca5a5}
+.btn-mini{padding:6px 11px;font-size:12px}
+.btn-linha{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.msg{margin-top:12px;font-size:13.5px;min-height:20px}
+.msg.erro{color:#fca5a5}.msg.ok{color:#6ee7b7}
+
+.busca-linha{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.busca-linha input{max-width:320px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:12.5px;font-weight:700;color:#cbd5e1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer}
+.pill.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.6);color:var(--yellow)}
+
+.tbl-cx{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px;overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;white-space:nowrap}
+td.acoes{white-space:nowrap}
+tr.inativo td{opacity:.5}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;border:1px solid}
+.tag.on{color:#6ee7b7;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+.tag.off{color:#fca5a5;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.1)}
+.vazio{padding:24px;text-align:center;color:var(--muted);font-size:13.5px}
+.aviso-pii{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.6;border-left:3px solid rgba(96,165,250,.5);padding-left:12px}
+
+/* ---------- relatório de impressão ---------- */
+#relatorio{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  .hdr,.subnav,.wrap{display:none !important}
+  #relatorio{display:block;padding:0}
+  #relatorio .cab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}
+  #relatorio .cab img{height:64px}
+  #relatorio h2{font-family:'Rajdhani',sans-serif;font-size:19px;margin:0}
+  #relatorio .cab small{display:block;font-size:11px;color:#333}
+  #relatorio table{width:100%;border-collapse:collapse;font-size:10.5pt}
+  #relatorio th,#relatorio td{border:1px solid #999;padding:4px 6px;color:#000}
+  #relatorio th{background:#eee;text-transform:none;letter-spacing:0;font-size:10pt}
+  #relatorio .pe{margin-top:14px;font-size:9.5pt;color:#333}
+  @page{size:A4 landscape;margin:12mm}
+}
+@media (max-width:640px){ .hdr{position:static} .hdr-logo{height:32px} }
+</style>
+</head>
+<body>
+<script src="conta.js"></script>
+<script src="drone-cpf.js"></script>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <div class="hdr-badges">
+        <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+        <img class="hdr-badge" src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone PPSARP">
+      </div>
+      <div>
+        <div class="hdr-title">Alunos do <em>Curso de Drone</em></div>
+        <div class="hdr-sub">CPPSARP · cadastro e relação da turma</div>
+      </div>
+    </div>
+    <div class="hdr-dir">
+      <span class="chip-user" id="chip-user"></span>
+      <a class="hdr-back" href="drone.html">⬅ Piloto de Drones</a>
+    </div>
+  </div>
+</div>
+<div class="subnav">
+  <a href="drone-material.html">📚 Material de Estudo</a>
+  <a href="drone-simulado.html">🎯 Simulado</a>
+  <a href="drone-aro.html">📝 Formulário ARO</a>
+  <a class="on" href="drone-alunos.html">👥 Alunos</a>
+</div>
+
+<main class="wrap">
+  <h1>Cadastro de alunos</h1>
+  <p class="lead">Quem está aqui como <b>ativo</b> entra no material, no simulado e no formulário ARO digitando só o CPF — cadastrar aluno é dar acesso. Desativar tira o acesso na hora, mas o histórico de simulados dele continua guardado.</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sec">Incluir ou editar aluno</div>
+  <div class="painel">
+    <div class="campos">
+      <div><label class="tit" for="f-cpf">CPF *</label><input id="f-cpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off"></div>
+      <div style="grid-column:span 2"><label class="tit" for="f-nome">Nome completo *</label><input id="f-nome" maxlength="120" placeholder="ALAN DA SILVA SAMPAIO"></div>
+      <div><label class="tit" for="f-cargo">Posto / graduação / cargo</label><input id="f-cargo" maxlength="60" placeholder="3º SGT QPPM"></div>
+      <div><label class="tit" for="f-inst">Instituição</label><input id="f-inst" maxlength="60" placeholder="PMRO"></div>
+      <div><label class="tit" for="f-cat">Categoria</label>
+        <select id="f-cat">
+          <option value="">—</option><option value="PM">PM</option><option value="BM">BM</option>
+          <option value="PC">PC</option><option value="PF">PF</option><option value="GM">GM</option>
+          <option value="OUTRO">Outro</option>
+        </select></div>
+      <div><label class="tit" for="f-uf">UF</label><input id="f-uf" maxlength="2" placeholder="RO" style="text-transform:uppercase"></div>
+      <div><label class="tit" for="f-email">E-mail</label><input id="f-email" maxlength="120" placeholder="nome@pm.ro.gov.br" autocomplete="off"></div>
+      <div><label class="tit" for="f-tel">Telefone</label><input id="f-tel" maxlength="40" placeholder="69 9 9999 9999"></div>
+      <div><label class="tit" for="f-ord">Nº na relação</label><input id="f-ord" type="number" min="1" max="999" placeholder="32"></div>
+      <div><label class="tit" for="f-ativo">Situação</label>
+        <select id="f-ativo"><option value="1">Ativo (pode entrar)</option><option value="0">Inativo (sem acesso)</option></select></div>
+    </div>
+    <div class="btn-linha">
+      <button class="btn btn-p" id="bt-salvar">Salvar aluno</button>
+      <button class="btn btn-s" id="bt-novo">Limpar o formulário</button>
+      <span id="editando" style="font-size:13px;color:var(--blue)"></span>
+    </div>
+    <div class="msg" id="msg-form"></div>
+    <div class="aviso-pii">CPF, e-mail e telefone são dados pessoais de terceiros: o aluno que entra pelo CPF vê a relação com o <b>CPF mascarado e sem contato</b> — os dados completos aparecem só aqui, para o gestor, e no que você exportar.</div>
+  </div>
+
+  <div class="sec">Relação da turma</div>
+  <div class="busca-linha">
+    <input id="f-busca" placeholder="🔎 buscar por nome, CPF, instituição…">
+    <div class="pills" id="pills-sit">
+      <button type="button" class="pill on" data-sit="ativos">Ativos</button>
+      <button type="button" class="pill" data-sit="todos">Todos</button>
+      <button type="button" class="pill" data-sit="inativos">Inativos</button>
+    </div>
+    <button class="btn btn-s btn-mini" id="bt-csv">⬇️ Planilha (CSV)</button>
+    <button class="btn btn-s btn-mini" id="bt-pdf">🖨️ PDF / imprimir</button>
+  </div>
+  <div class="tbl-cx" id="tabela"><div class="vazio">Carregando…</div></div>
+  <div class="msg" id="msg-lista"></div>
+</main>
+
+<!-- relatório que sai na impressão / PDF -->
+<div id="relatorio">
+  <div class="cab">
+    <img src="LOGOS/brasao-curso-drone-ppsarp.png" alt="">
+    <div>
+      <h2>Relação de alunos — Curso de Piloto Policial de SARP (CPPSARP)</h2>
+      <small id="rel-sub"></small>
+    </div>
+  </div>
+  <div id="rel-corpo"></div>
+  <div class="pe" id="rel-pe"></div>
+</div>
+
+<script>
+'use strict';
+var API_BASE = "https://bpfron-api.bpfron.workers.dev";
+try { var _q = new URLSearchParams(location.search).get('api'); if (_q) API_BASE = _q.replace(/\/+$/, ''); } catch (e) {}
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+};
+var so = function (s) { return String(s || '').replace(/\D+/g, ''); };
+function cpfFmt(c) {
+  c = so(c);
+  return c.length === 11 ? c.slice(0, 3) + '.' + c.slice(3, 6) + '.' + c.slice(6, 9) + '-' + c.slice(9) : c;
+}
+function cpfValido(cpf) {
+  var d = so(cpf);
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  for (var corte = 9; corte <= 10; corte++) {
+    var soma = 0;
+    for (var i = 0; i < corte; i++) soma += Number(d[i]) * (corte + 1 - i);
+    var dig = (soma * 10) % 11; if (dig === 10) dig = 0;
+    if (dig !== Number(d[corte])) return false;
+  }
+  return true;
+}
+
+var alunos = [], desempenho = {}, situacao = 'ativos', busca = '';
+
+function iniciar() {
+  $('chip-user').textContent = (window.droneCpf && window.droneCpf.nome) || '';
+  if (!(window.droneCpf && window.droneCpf.souGestor)) {
+    document.querySelector('.wrap').innerHTML =
+      '<h1>Área do gestor</h1><p class="lead">Esta página é do gestor do curso. Entre pelo botão <b>"Sou gestor do curso"</b> com o seu usuário e senha do dashboard (permissão "Curso de Drone").</p>' +
+      '<div class="btn-linha"><a class="btn btn-p" href="drone.html">⬅ Voltar</a></div>';
+    return;
+  }
+  ligar();
+  carregar();
+}
+
+function ligar() {
+  $('f-cpf').addEventListener('input', function () { this.value = cpfFmt(this.value); });
+  $('bt-salvar').onclick = salvar;
+  $('bt-novo').onclick = limpar;
+  $('f-busca').oninput = function () { busca = this.value.trim().toLowerCase(); pintar(); };
+  Array.prototype.forEach.call($('pills-sit').children, function (bt) {
+    bt.onclick = function () {
+      situacao = bt.dataset.sit;
+      Array.prototype.forEach.call($('pills-sit').children, function (o) { o.classList.toggle('on', o === bt); });
+      pintar();
+    };
+  });
+  $('bt-csv').onclick = baixarCsv;
+  $('bt-pdf').onclick = imprimir;
+}
+
+function carregar() {
+  fetch(API_BASE + '/api/drone/turma', { headers: window.droneCpf.headers() })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      if (!d || !d.ok) {
+        $('tabela').innerHTML = '<div class="vazio">' + esc((d && d.detail) || 'Não deu para carregar a relação.') + '</div>';
+        return;
+      }
+      alunos = d.alunos || [];
+      pintarKpis();
+      pintar();
+    })
+    .catch(function () { $('tabela').innerHTML = '<div class="vazio">Sem conexão com o servidor.</div>'; });
+
+  // desempenho no simulado, para mostrar junto do aluno
+  fetch(API_BASE + '/api/drone/simulado/ranking', { headers: window.droneCpf.headers() })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      if (!d || !d.ok) return;
+      desempenho = {};
+      (d.ranking || []).forEach(function (p) { if (p.cpf) desempenho[so(p.cpf)] = p; });
+      pintar();
+    }).catch(function () {});
+}
+
+function pintarKpis() {
+  var ativos = alunos.filter(function (a) { return a.ativo; }).length;
+  var insts = {}; alunos.forEach(function (a) { if (a.instituicao) insts[a.instituicao] = 1; });
+  $('kpis').innerHTML =
+    '<div class="kpi"><b>' + alunos.length + '</b><span>cadastrados</span></div>' +
+    '<div class="kpi"><b>' + ativos + '</b><span>com acesso</span></div>' +
+    '<div class="kpi"><b>' + (alunos.length - ativos) + '</b><span>sem acesso</span></div>' +
+    '<div class="kpi"><b>' + Object.keys(insts).length + '</b><span>instituições</span></div>';
+}
+
+function filtrados() {
+  return alunos.filter(function (a) {
+    if (situacao === 'ativos' && !a.ativo) return false;
+    if (situacao === 'inativos' && a.ativo) return false;
+    if (!busca) return true;
+    var alvo = [a.nome, a.cpf, a.cargo, a.instituicao, a.categoria, a.uf, a.email, a.telefone].join(' ').toLowerCase();
+    return alvo.indexOf(busca) >= 0;
+  });
+}
+
+function pintar() {
+  var lista = filtrados();
+  if (!lista.length) { $('tabela').innerHTML = '<div class="vazio">Nenhum aluno com esse filtro.</div>'; return; }
+  $('tabela').innerHTML =
+    '<table><thead><tr><th>Nº</th><th>Nome</th><th>CPF</th><th>Cargo</th><th>Instituição</th>' +
+    '<th>Contato</th><th>Simulados</th><th>Média</th><th>Situação</th><th></th></tr></thead><tbody>' +
+    lista.map(function (a) {
+      var d = desempenho[so(a.cpf)] || null;
+      return '<tr class="' + (a.ativo ? '' : 'inativo') + '">' +
+        '<td>' + esc(a.ord || '') + '</td>' +
+        '<td><b>' + esc(a.nome) + '</b></td>' +
+        '<td>' + esc(cpfFmt(a.cpf)) + '</td>' +
+        '<td>' + esc(a.cargo || '') + '</td>' +
+        '<td>' + esc([a.instituicao, a.uf].filter(Boolean).join('/')) + '</td>' +
+        '<td style="font-size:12px">' + esc(a.email || '') + (a.telefone ? '<br>' + esc(a.telefone) : '') + '</td>' +
+        '<td>' + (d ? d.simulados : '—') + '</td>' +
+        '<td>' + (d ? String(d.media).replace('.', ',') + '%' : '—') + '</td>' +
+        '<td><span class="tag ' + (a.ativo ? 'on' : 'off') + '">' + (a.ativo ? 'ativo' : 'inativo') + '</span></td>' +
+        '<td class="acoes"><button class="btn btn-s btn-mini" data-ed="' + esc(a.cpf) + '">editar</button> ' +
+        (a.ativo ? '<button class="btn btn-d btn-mini" data-ex="' + esc(a.cpf) + '">desativar</button>' : '') +
+        '</td></tr>';
+    }).join('') + '</tbody></table>';
+
+  Array.prototype.forEach.call($('tabela').querySelectorAll('[data-ed]'), function (bt) {
+    bt.onclick = function () { editar(bt.dataset.ed); };
+  });
+  Array.prototype.forEach.call($('tabela').querySelectorAll('[data-ex]'), function (bt) {
+    bt.onclick = function () { desativar(bt.dataset.ex); };
+  });
+}
+
+function editar(cpf) {
+  var a = alunos.filter(function (x) { return so(x.cpf) === so(cpf); })[0];
+  if (!a) return;
+  $('f-cpf').value = cpfFmt(a.cpf);
+  $('f-nome').value = a.nome || '';
+  $('f-cargo').value = a.cargo || '';
+  $('f-inst').value = a.instituicao || '';
+  $('f-cat').value = a.categoria || '';
+  $('f-uf').value = a.uf || '';
+  $('f-email').value = a.email || '';
+  $('f-tel').value = a.telefone || '';
+  $('f-ord').value = a.ord || '';
+  $('f-ativo').value = a.ativo ? '1' : '0';
+  $('editando').textContent = '✏️ editando ' + a.nome;
+  window.scrollTo(0, 120);
+}
+
+function limpar() {
+  ['f-cpf', 'f-nome', 'f-cargo', 'f-inst', 'f-uf', 'f-email', 'f-tel', 'f-ord'].forEach(function (id) { $(id).value = ''; });
+  $('f-cat').value = ''; $('f-ativo').value = '1';
+  $('editando').textContent = '';
+  $('msg-form').textContent = '';
+}
+
+function salvar() {
+  var cpf = so($('f-cpf').value);
+  if (!cpfValido(cpf)) { erro('CPF inválido — confira os números.'); return; }
+  var nome = $('f-nome').value.trim();
+  if (nome.length < 3) { erro('Digite o nome completo do aluno.'); return; }
+
+  $('bt-salvar').disabled = true;
+  $('msg-form').className = 'msg';
+  $('msg-form').textContent = 'Salvando…';
+  fetch(API_BASE + '/api/drone/turma/salvar', {
+    method: 'POST',
+    headers: Object.assign({ 'content-type': 'application/json' }, window.droneCpf.headers()),
+    body: JSON.stringify({
+      cpf: cpf, nome: nome, cargo: $('f-cargo').value.trim(), instituicao: $('f-inst').value.trim(),
+      categoria: $('f-cat').value, uf: $('f-uf').value.trim().toUpperCase(),
+      email: $('f-email').value.trim(), telefone: $('f-tel').value.trim(),
+      ord: $('f-ord').value || undefined, ativo: $('f-ativo').value === '1',
+    }),
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      $('bt-salvar').disabled = false;
+      if (!d || !d.ok) { erro((d && d.detail) || 'Não deu para salvar.'); return; }
+      $('msg-form').className = 'msg ok';
+      $('msg-form').textContent = d.novo ? 'Aluno incluído — já pode entrar com o CPF.' : 'Cadastro atualizado.';
+      limparDepois();
+      carregar();
+    }).catch(function () { $('bt-salvar').disabled = false; erro('Sem conexão com o servidor.'); });
+}
+function limparDepois() {
+  ['f-cpf', 'f-nome', 'f-cargo', 'f-email', 'f-tel', 'f-ord'].forEach(function (id) { $(id).value = ''; });
+  $('editando').textContent = '';
+}
+function erro(t) { $('msg-form').className = 'msg erro'; $('msg-form').textContent = t; }
+
+function desativar(cpf) {
+  var a = alunos.filter(function (x) { return so(x.cpf) === so(cpf); })[0];
+  if (!a) return;
+  if (!confirm('Desativar ' + a.nome + '?\n\nEle perde o acesso pelo CPF na hora. O cadastro e o histórico de simulados continuam guardados.')) return;
+  var senha = prompt('Digite a SUA senha do dashboard para confirmar:');
+  if (!senha) return;
+  fetch(API_BASE + '/api/drone/turma/excluir', {
+    method: 'POST',
+    headers: Object.assign({ 'content-type': 'application/json' }, window.droneCpf.headers()),
+    body: JSON.stringify({ cpf: so(cpf), senha: senha }),
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) {
+      $('msg-lista').className = 'msg ' + (d && d.ok ? 'ok' : 'erro');
+      $('msg-lista').textContent = d && d.ok ? 'Aluno desativado.' : ((d && d.detail) || 'Não deu para desativar.');
+      carregar();
+    }).catch(function () { $('msg-lista').className = 'msg erro'; $('msg-lista').textContent = 'Sem conexão.'; });
+}
+
+/* ---------- exportar ---------- */
+function baixarCsv() {
+  // O CSV vem do Worker (mesma formatação do resto do site: ; e BOM, que o
+  // Excel em português abre sem perguntar nada). Como <a download> não manda
+  // header de sessão, busca por fetch e salva o blob.
+  var so_ = situacao === 'ativos' ? '?so=ativos' : '';
+  $('msg-lista').className = 'msg';
+  $('msg-lista').textContent = 'Gerando a planilha…';
+  fetch(API_BASE + '/api/drone/turma/export' + so_, { headers: window.droneCpf.headers() })
+    .then(function (r) {
+      if (!r.ok) throw new Error('status ' + r.status);
+      return r.blob();
+    })
+    .then(function (b) {
+      var url = URL.createObjectURL(b);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'curso-drone-alunos-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      $('msg-lista').className = 'msg ok';
+      $('msg-lista').textContent = 'Planilha baixada.';
+    })
+    .catch(function () { $('msg-lista').className = 'msg erro'; $('msg-lista').textContent = 'Não deu para gerar a planilha.'; });
+}
+
+function imprimir() {
+  var lista = filtrados();
+  var rotulo = situacao === 'ativos' ? 'alunos com acesso' : (situacao === 'inativos' ? 'alunos sem acesso' : 'todos os cadastrados');
+  $('rel-sub').textContent = 'CPPSARP · 35ª edição · ' + lista.length + ' ' + rotulo +
+    (busca ? ' · filtro "' + busca + '"' : '');
+  $('rel-corpo').innerHTML =
+    '<table><thead><tr><th>Nº</th><th>Nome</th><th>CPF</th><th>Cargo</th><th>Instituição</th><th>UF</th>' +
+    '<th>E-mail</th><th>Telefone</th><th>Simulados</th><th>Média</th><th>Situação</th></tr></thead><tbody>' +
+    lista.map(function (a) {
+      var d = desempenho[so(a.cpf)] || null;
+      return '<tr><td>' + esc(a.ord || '') + '</td><td>' + esc(a.nome) + '</td><td>' + esc(cpfFmt(a.cpf)) + '</td>' +
+        '<td>' + esc(a.cargo || '') + '</td><td>' + esc(a.instituicao || '') + '</td><td>' + esc(a.uf || '') + '</td>' +
+        '<td>' + esc(a.email || '') + '</td><td>' + esc(a.telefone || '') + '</td>' +
+        '<td>' + (d ? d.simulados : '—') + '</td><td>' + (d ? String(d.media).replace('.', ',') + '%' : '—') + '</td>' +
+        '<td>' + (a.ativo ? 'ativo' : 'inativo') + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  $('rel-pe').textContent = 'Emitido em ' + new Date().toLocaleString('pt-BR') +
+    ' por ' + ((window.droneCpf && window.droneCpf.nome) || 'gestor do curso') +
+    ' · BPFRON/RO · documento com dados pessoais: uso interno.';
+  window.print();
+}
+
+if (window.droneCpf && window.droneCpf.pronto) iniciar();
+else document.addEventListener('drone-cpf-pronto', iniciar);
+</script>
+</body>
+</html>
