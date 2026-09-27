@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco de Slides · BPFRON/RO</title>
+<script src="conta.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+  --red:      #ef4444;
+  --redsoft:  rgba(239,68,68,.12);
+  --green:    #34d399;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  font-size:15.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1180px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif}
+.hdr-link:hover{color:var(--yellow)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,4vw,24px) 70px}
+
+.tabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
+.tab{flex:1;min-width:150px;background:rgba(148,163,184,.07);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--muted);font-family:'Inter',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;transition:.13s}
+.tab:hover{background:rgba(148,163,184,.13);color:#cbd5e1}
+.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.pane{display:none}
+.pane.on{display:block}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:30px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec:first-child{margin-top:0}
+.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px)}
+.hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+.aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 18px;font-size:14.5px;color:#fcd34d;line-height:1.6;margin-bottom:18px}
+.aviso b{color:#fde68a}
+
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg input,.fg textarea,.fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px;width:100%}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:rgba(245,197,24,.6)}
+.fg textarea{min-height:70px;resize:vertical}
+.fg small{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;min-height:46px;transition:.12s}
+.btn:hover{background:rgba(245,197,24,.22)}
+.btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
+.btn.ghost:hover{background:rgba(148,163,184,.18)}
+.btn.danger{background:var(--redsoft);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.btn.danger:hover{background:rgba(239,68,68,.2)}
+.btn.small{padding:8px 14px;font-size:13px;min-height:36px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.msg{font-size:14px;min-height:19px;margin-top:12px;line-height:1.6}
+.msg.err{color:#fca5a5}
+.msg.ok{color:#6ee7b7}
+
+/* ---------------- catálogo ---------------- */
+.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filtros input{flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15px;outline:none;min-height:46px}
+.filtros input:focus{border-color:rgba(245,197,24,.6)}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.pill-f{background:rgba(148,163,184,.08);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.12s}
+.pill-f:hover{background:rgba(148,163,184,.16);color:#cbd5e1}
+.pill-f.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.deck{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:.14s}
+.deck:hover{border-color:rgba(245,197,24,.38);transform:translateY(-2px)}
+.deck-capa{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0a1220,#111a2b);object-fit:cover;display:block;border-bottom:1px solid var(--border)}
+.deck-capa-vazia{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#072a1a,#0a3b25);display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid var(--border)}
+.deck-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.deck-tit{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.25}
+.deck-meta{font-size:12.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.deck-cat{display:inline-block;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);color:var(--yellow);border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700}
+.deck-res{font-size:13.5px;color:#a9b4c6;line-height:1.55;flex:1}
+.deck-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.deck-acoes a,.deck-acoes button{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+
+/* ---------------- envio ---------------- */
+.drop{border:2px dashed rgba(245,197,24,.3);border-radius:16px;padding:30px 20px;text-align:center;cursor:pointer;transition:.14s;background:rgba(245,197,24,.02)}
+.drop:hover,.drop.over{border-color:rgba(245,197,24,.7);background:rgba(245,197,24,.07)}
+.drop .ic{font-size:38px;display:block;margin-bottom:10px}
+.drop b{color:#e2e8f0;font-size:16px}
+.drop p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.6}
+.prog{height:8px;background:rgba(148,163,184,.12);border-radius:999px;overflow:hidden;margin-top:14px;display:none}
+.prog.on{display:block}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a030,var(--yellow));transition:width .2s}
+.relatorio{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:14px;font-size:13.5px;line-height:1.7;display:none}
+.relatorio.on{display:block}
+.relatorio b{color:var(--yellow)}
+.relatorio .ruim{color:#fca5a5}
+
+.linha-deck{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(148,163,184,.1);flex-wrap:wrap}
+.linha-deck:last-child{border-bottom:none}
+.linha-deck img{width:74px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#0b0f1a;flex-shrink:0}
+.linha-deck .ld-txt{flex:1;min-width:180px}
+.linha-deck .ld-tit{font-weight:700;color:#e2e8f0;font-size:14.5px}
+.linha-deck .ld-sub{font-size:12.5px;color:var(--muted)}
+
+.vazio{text-align:center;color:var(--muted);padding:40px 12px;font-size:14.5px;line-height:1.7}
+
+.modal{position:fixed;inset:0;background:rgba(3,6,12,.82);backdrop-filter:blur(3px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto}
+.modal.on{display:flex}
+.modal-box{background:#0b111e;border:1px solid rgba(245,197,24,.28);border-radius:16px;padding:22px;max-width:640px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7)}
+.modal-tit{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">Banco de <em>Slides</em></div>
+        <div class="hdr-sub">Apresentações institucionais · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="sistemas.html">⬅ Sistemas</a>
+      <span id="userchip"></span>
+      <button class="hdr-link" id="btn-sair" style="display:none">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============================== LOGIN ============================== -->
+  <div id="login-box" style="max-width:460px;margin:30px auto 0">
+    <div class="sec" style="justify-content:center">🔐 Entrar</div>
+    <div class="box">
+      <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
+        Mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard. Todo login vê as apresentações;
+        para <b style="color:#cbd5e1">enviar</b> é preciso a permissão <b style="color:#cbd5e1">“Banco de Slides”</b>.
+      </p>
+      <div class="fg"><label>Usuário</label><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="fg" style="margin-top:12px"><label>Senha</label><input id="f-pass" type="password" autocomplete="current-password"></div>
+      <button class="btn" id="btn-entrar" style="width:100%;margin-top:16px">Entrar</button>
+      <div class="msg" id="msg-login"></div>
+    </div>
+  </div>
+
+  <!-- ============================== APP ============================== -->
+  <div id="app" style="display:none">
+
+    <div class="tabs">
+      <button class="tab on" id="tt-cat">🎞️ Apresentações</button>
+      <button class="tab" id="tt-ges" style="display:none">⚙️ Gestão do banco</button>
+    </div>
+
+    <!-- ---------------- catálogo ---------------- -->
+    <div class="pane on" id="pane-cat">
+      <div class="filtros">
+        <input id="f-busca" placeholder="Buscar por título, resumo, seção ou palavra-chave…">
+      </div>
+      <div class="pills" id="pills-cat"></div>
+      <div class="grade" id="grade"></div>
+      <div class="vazio" id="vazio-cat" style="display:none"></div>
+    </div>
+
+    <!-- ---------------- gestão ---------------- -->
+    <div class="pane" id="pane-ges">
+
+      <div class="sec">① Arquivo da apresentação <small>o .html e, se tiver, a pasta de imagens</small></div>
+      <div class="box">
+        <div class="aviso">
+          A apresentação precisa virar <b>um arquivo .html só</b>. Solte aqui o <b>.html</b> junto com a
+          <b>pasta de imagens</b> (assets) que esta página embute as fotos no arquivo, já reduzidas, antes de enviar.
+          Se o seu .html já tem tudo embutido, é só soltar ele sozinho.
+        </div>
+
+        <div class="drop" id="drop">
+          <span class="ic">🎞️</span>
+          <b>Arraste aqui a pasta da apresentação</b>
+          <p>ou clique para escolher os arquivos · aceita a pasta inteira (.html + assets)</p>
+          <input type="file" id="f-arquivos" multiple accept=".html,.htm,image/*,.svg" style="display:none">
+          <input type="file" id="f-pasta" webkitdirectory directory multiple style="display:none">
+        </div>
+        <div class="btnrow">
+          <button class="btn ghost small" id="btn-esc-arq">📄 Escolher arquivos</button>
+          <button class="btn ghost small" id="btn-esc-pasta">📁 Escolher pasta</button>
+          <button class="btn ghost small" id="btn-baixar-pac" style="display:none">⬇️ Baixar o arquivo empacotado</button>
+        </div>
+
+        <div class="grid3" style="margin-top:16px">
+          <div class="fg"><label>Largura máxima das fotos</label>
+            <select id="cfg-larg">
+              <option value="1920">1920 px — projetor/TV</option>
+              <option value="1600" selected>1600 px — recomendado</option>
+              <option value="1280">1280 px — arquivo leve</option>
+              <option value="0">Não mexer nas fotos</option>
+            </select>
+          </div>
+          <div class="fg"><label>Qualidade</label>
+            <select id="cfg-qual">
+              <option value="0.9">Alta (90%)</option>
+              <option value="0.82" selected>Boa (82%) — recomendado</option>
+              <option value="0.7">Leve (70%)</option>
+            </select>
+          </div>
+          <div class="fg"><label>Capa do cartão</label>
+            <input type="file" id="f-capa" accept="image/png,image/jpeg,image/webp">
+            <small>Opcional — sem capa, uso a 1ª imagem da apresentação.</small>
+          </div>
+        </div>
+
+        <div class="prog" id="prog"><i id="prog-i"></i></div>
+        <div class="relatorio" id="relatorio"></div>
+      </div>
+
+      <div class="sec">② Como ela aparece no banco</div>
+      <div class="box">
+        <div class="grid2">
+          <div class="fg"><label>Título</label><input id="f-titulo" placeholder="Apresentação Institucional 2026"></div>
+          <div class="fg"><label>Categoria</label>
+            <input id="f-categoria" list="lista-cat" placeholder="Institucional, Operações, Instrução…">
+            <datalist id="lista-cat"></datalist>
+          </div>
+        </div>
+        <div class="fg" style="margin-top:14px"><label>Resumo</label><textarea id="f-resumo" placeholder="Do que trata a apresentação, para quem foi feita, onde foi usada."></textarea></div>
+        <div class="grid3" style="margin-top:14px">
+          <div class="fg"><label>Seção / autor</label><input id="f-secao" placeholder="P3, P2, Comando…"></div>
+          <div class="fg"><label>Data</label><input id="f-data" type="date"></div>
+          <div class="fg"><label>Ordem na lista</label><input id="f-ordem" type="number" min="1" placeholder="automático"></div>
+        </div>
+        <div class="fg" style="margin-top:14px"><label>Palavras-chave</label><input id="f-tags" placeholder="fronteira, reunião de frações, 2026"></div>
+      </div>
+
+      <div class="sec">③ Anexos <small>opcionais — para baixar e levar</small></div>
+      <div class="box">
+        <div class="grid3">
+          <div class="fg"><label>PDF para impressão</label><input type="file" id="f-pdf" accept="application/pdf"></div>
+          <div class="fg"><label>Arquivo original (.pptx)</label><input type="file" id="f-fonte" accept=".ppt,.pptx,.odp,.key,.zip"></div>
+          <div class="fg"><label>Link do arquivo original</label><input id="f-link" placeholder="https://drive.google.com/…">
+            <small>Use quando o .pptx passar de 30 MB.</small>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="btn-enviar">⬆️ Enviar para o banco</button>
+          <button class="btn ghost" id="btn-limpar">Limpar</button>
+        </div>
+        <div class="msg" id="msg-envio"></div>
+      </div>
+
+      <div class="sec">④ O que já está no banco <small id="ges-cont"></small></div>
+      <div class="box" id="lista-ges"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================== modal de edição ============================== -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-tit" id="md-tit">Editar apresentação</div>
+    <div id="md-corpo"></div>
+    <div class="btnrow">
+      <button class="btn" id="md-ok">Salvar</button>
+      <button class="btn ghost" id="md-cancelar">Cancelar</button>
+    </div>
+    <div class="msg" id="md-msg"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Banco de Slides — slides.html  (27/09/2026)
+
+   Sistema próprio: planilha própria (SHEET_ID_SLIDES), pasta própria no
+   Drive (DRIVE_FOLDER_SLIDES) e permissão própria ("slides"). Esta página
+   é só a casca — ela vai pro GitHub Pages, que é público, então NENHUMA
+   apresentação mora aqui: o catálogo e os arquivos vêm do Worker, e só
+   com login.
+
+   O empacotador (bloco "empacotar") resolve o problema de sempre: uma
+   apresentação exportada vem como .html + pasta assets/, e caminho
+   relativo não existe depois que o arquivo sai do computador. Aqui as
+   imagens entram no próprio .html em base64, já redimensionadas.
+   ===================================================================== */
+
+/* ?api= existe só para os testes locais e SÓ aceita localhost: esta página
+   manda o token (e recebe a senha) — um link com ?api=site-de-fora entregaria
+   o login de quem clicasse. */
+const API_BASE = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+
+const $ = (id) => document.getElementById(id);
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function show(id, on){ $(id).style.display = on ? '' : 'none'; }
+function fTam(b){ b = Number(b)||0; if (b < 1024) return b + ' B'; if (b < 1048576) return (b/1024).toFixed(0) + ' KB'; return (b/1048576).toFixed(1) + ' MB'; }
+function fData(s){
+  const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+
+function cab(extra){
+  const h = Object.assign({}, extra || {});
+  if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token;
+  return h;
+}
+async function apiGet(path){
+  const r = await fetch(API_BASE + path, { headers: cab() });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  return d;
+}
+async function apiPost(path, body){
+  const r = await fetch(API_BASE + path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body||{}) });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  return d;
+}
+async function apiPostForm(path, form){
+  const r = await fetch(API_BASE + path, { method:'POST', headers: cab(), body: form });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  return d;
+}
+
+/* ============================== login ============================== */
+async function entrar(){
+  const btn = $('btn-entrar'), m = $('msg-login');
+  const user = $('f-user').value.trim(), pass = $('f-pass').value;
+  if (!user || !pass){ m.className='msg err'; m.textContent='Informe usuário e senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; m.className='msg'; m.textContent='';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('f-pass').value = '';
+    boot();
+  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+function sair(){ AUTH.token=''; AUTH.user=''; D=null; boot(); }
+$('btn-entrar').addEventListener('click', entrar);
+$('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+$('f-user').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-pass').focus(); });
+$('btn-sair').addEventListener('click', sair);
+
+function renderUserChip(){
+  const ps = permsSessao();
+  $('userchip').textContent = AUTH.logged ? ('👤 ' + ((ps && ps.nome) || AUTH.user)) : '';
+  $('btn-sair').style.display = AUTH.logged ? '' : 'none';
+}
+
+function boot(){
+  show('login-box', !AUTH.logged);
+  show('app', AUTH.logged);
+  renderUserChip();
+  if (AUTH.logged) carregar();
+}
+
+/* ============================== abas ============================== */
+function trocar(qual){
+  $('tt-cat').classList.toggle('on', qual === 'cat');
+  $('tt-ges').classList.toggle('on', qual === 'ges');
+  $('pane-cat').classList.toggle('on', qual === 'cat');
+  $('pane-ges').classList.toggle('on', qual === 'ges');
+  window.scrollTo(0,0);
+}
+$('tt-cat').addEventListener('click', () => trocar('cat'));
+$('tt-ges').addEventListener('click', () => trocar('ges'));
+
+/* ============================== dados ============================== */
+let D = null;       // resposta do /api/slides
+let CAT = '';       // categoria filtrada
+
+async function carregar(){
+  $('grade').innerHTML = '';
+  $('vazio-cat').style.display = '';
+  $('vazio-cat').textContent = 'Carregando o banco de slides…';
+  try { D = await apiGet('/api/slides'); }
+  catch(e){
+    if (e.status === 401){ AUTH.token=''; AUTH.user=''; boot(); return; }
+    $('vazio-cat').textContent = '⚠️ ' + e.message;
+    return;
+  }
+  $('tt-ges').style.display = D.gestor ? '' : 'none';
+  renderCatalogo();
+  if (D.gestor) renderGestao();
+}
+
+function renderCatalogo(){
+  const termo = $('f-busca').value.trim().toLowerCase();
+  const cats = D.categorias || [];
+  $('pills-cat').innerHTML = [`<button class="pill-f ${CAT ? '' : 'on'}" data-c="">Todas</button>`]
+    .concat(cats.map(c => `<button class="pill-f ${CAT === c ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`)).join('');
+  $('pills-cat').querySelectorAll('.pill-f').forEach(b => b.addEventListener('click', () => {
+    CAT = b.dataset.c; renderCatalogo();
+  }));
+
+  const lista = (D.slides || []).filter(s => {
+    if (CAT && s.categoria !== CAT) return false;
+    if (!termo) return true;
+    return [s.titulo, s.resumo, s.secao, s.tags, s.categoria].join(' ').toLowerCase().includes(termo);
+  });
+
+  if (!lista.length){
+    $('grade').innerHTML = '';
+    $('vazio-cat').style.display = '';
+    $('vazio-cat').innerHTML = (D.slides || []).length
+      ? 'Nenhuma apresentação com esse filtro.'
+      : 'O banco ainda está vazio.' + (D.gestor ? '<br>Use a aba <b>Gestão do banco</b> para enviar a primeira.' : '');
+    return;
+  }
+  $('vazio-cat').style.display = 'none';
+  $('grade').innerHTML = lista.map(s => {
+    const capa = s.capa
+      ? `<img class="deck-capa" loading="lazy" src="${API_BASE}${s.capa}" alt="" onerror="this.outerHTML='<div class=&quot;deck-capa-vazia&quot;>🎞️</div>'">`
+      : `<div class="deck-capa-vazia">🎞️</div>`;
+    const meta = [s.secao, fData(s.data), fTam(s.tamanho)].filter(Boolean).map(esc).join(' · ');
+    const extras = [];
+    if (s.pdf) extras.push(`<a class="btn ghost small" href="${API_BASE}${s.pdf}">📄 PDF</a>`);
+    if (s.fonte) extras.push(`<a class="btn ghost small" href="${API_BASE}${s.fonte}">📎 Original</a>`);
+    if (s.link) extras.push(`<a class="btn ghost small" href="${esc(s.link)}" target="_blank" rel="noopener">🔗 Arquivo</a>`);
+    return `
+      <div class="deck">
+        ${capa}
+        <div class="deck-body">
+          <div class="deck-tit">${esc(s.titulo)}</div>
+          <div class="deck-meta">${s.categoria ? `<span class="deck-cat">${esc(s.categoria)}</span>` : ''}<span>${meta}</span></div>
+          ${s.resumo ? `<div class="deck-res">${esc(s.resumo)}</div>` : '<div class="deck-res"></div>'}
+          <div class="deck-acoes">
+            <a class="btn small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">▶️ Abrir</a>
+            ${extras.join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+$('f-busca').addEventListener('input', () => { if (D) renderCatalogo(); });
+
+/* ============================== empacotador ==============================
+   Recebe os arquivos que o gestor soltou, acha o .html, troca cada
+   referência a arquivo local por data URI e devolve um .html só.
+   As imagens são redimensionadas no canvas antes de virar base64 —
+   sem isso, 48 fotos de 200 KB viram um arquivo de 11 MB. */
+
+const IMG_EXT = /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i;
+let PACOTE = null;   // { blob, nome, titulo, resumo, capaBlob, stats }
+
+function caminhoDo(file){
+  return (file.webkitRelativePath || file._path || file.name || '').replace(/\\/g, '/');
+}
+function normaliza(p){
+  p = String(p || '').split('#')[0].split('?')[0];
+  try { p = decodeURIComponent(p); } catch(e){}
+  return p.replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\//, '');
+}
+
+/* Redimensiona e recomprime. PNG/WebP viram WebP (mantém transparência);
+   o resto vira JPEG. SVG e GIF passam intactos — redesenhar um GIF no
+   canvas mataria a animação, e SVG já é texto leve. */
+async function encolher(file, maxLarg, qual){
+  const nome = file.name || '';
+  if (/\.(svg|gif)$/i.test(nome)) return file;
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch(e){ return file; }
+  const escala = maxLarg && bmp.width > maxLarg ? maxLarg / bmp.width : 1;
+  const w = Math.max(1, Math.round(bmp.width * escala));
+  const h = Math.max(1, Math.round(bmp.height * escala));
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  cv.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  bmp.close && bmp.close();
+  const alvo = /\.(png|webp|avif)$/i.test(nome) ? 'image/webp' : 'image/jpeg';
+  const blob = await new Promise(res => cv.toBlob(res, alvo, qual));
+  if (!blob) return file;
+  // Recomprimir nem sempre compensa (foto já otimizada, ícone minúsculo).
+  return blob.size < file.size ? blob : file;
+}
+
+function paraDataURI(blob){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = () => rej(new Error('Falha ao ler ' + (blob.name || 'arquivo')));
+    fr.readAsDataURL(blob);
+  });
+}
+
+async function empacotar(arquivos, cfg, onProg){
+  const htmls = arquivos.filter(f => /\.html?$/i.test(f.name));
+  if (!htmls.length) throw new Error('Não achei nenhum arquivo .html no que você soltou.');
+  // O .html da apresentação é o que está mais "na raiz"; empatou, o maior.
+  htmls.sort((a,b) => caminhoDo(a).split('/').length - caminhoDo(b).split('/').length || b.size - a.size);
+  const htmlFile = htmls[0];
+
+  let texto = await htmlFile.text();
+  const outros = arquivos.filter(f => f !== htmlFile);
+
+  // Mapa de busca: pelo caminho inteiro e por sufixos, para casar
+  // "assets/foo.jpg" com "minha-pasta/assets/foo.jpg".
+  const mapa = new Map();
+  outros.forEach(f => {
+    const p = normaliza(caminhoDo(f));
+    const partes = p.split('/');
+    for (let i = 0; i < partes.length; i++){
+      const chave = partes.slice(i).join('/').toLowerCase();
+      if (!mapa.has(chave)) mapa.set(chave, f);
+    }
+  });
+
+  // 1) junta todas as referências locais do HTML
+  const refs = new Set();
+  const guarda = (v) => {
+    const p = normaliza(v);
+    if (!p || /^(data:|https?:|blob:|mailto:|tel:|#)/i.test(v.trim())) return;
+    refs.add(v);
+  };
+  texto.replace(/\b(?:src|href|poster|data-src)\s*=\s*"([^"]+)"/gi, (m, v) => (guarda(v), m));
+  texto.replace(/\b(?:src|href|poster|data-src)\s*=\s*'([^']+)'/gi, (m, v) => (guarda(v), m));
+  texto.replace(/url\(\s*["']?([^"')]+)["']?\s*\)/gi, (m, v) => (guarda(v), m));
+
+  // 2) converte cada arquivo usado (uma vez só, mesmo se aparecer 10 vezes)
+  const usados = [];
+  const faltando = [];
+  const conv = new Map();   // ref original -> data URI
+  const cache = new Map();  // arquivo -> data URI
+  let i = 0;
+  for (const ref of refs){
+    i++;
+    if (onProg) onProg(i / refs.size, 'Lendo ' + ref.split('/').pop());
+    const f = mapa.get(normaliza(ref).toLowerCase());
+    if (!f){
+      // Referência que não é arquivo local (âncora, .css de CDN etc.) só
+      // vira problema se apontar para imagem — aí avisa o gestor.
+      if (IMG_EXT.test(normaliza(ref))) faltando.push(ref);
+      continue;
+    }
+    if (cache.has(f)){ conv.set(ref, cache.get(f)); continue; }
+    let blob = f;
+    if (IMG_EXT.test(f.name) && cfg.maxLarg >= 0){
+      try { blob = await encolher(f, cfg.maxLarg, cfg.qual); } catch(e){ blob = f; }
+    }
+    const uri = await paraDataURI(blob);
+    cache.set(f, uri);
+    conv.set(ref, uri);
+    usados.push({ nome: f.name, antes: f.size, depois: blob.size, file: f, blob });
+  }
+
+  // 3) troca no texto
+  const trocar = (v) => conv.get(v) || v;
+  texto = texto
+    .replace(/(\b(?:src|href|poster|data-src)\s*=\s*)"([^"]+)"/gi, (m, pre, v) => conv.has(v) ? `${pre}"${trocar(v)}"` : m)
+    .replace(/(\b(?:src|href|poster|data-src)\s*=\s*)'([^']+)'/gi, (m, pre, v) => conv.has(v) ? `${pre}'${trocar(v)}'` : m)
+    .replace(/url\(\s*["']?([^"')]+)["']?\s*\)/gi, (m, v) => conv.has(v) ? `url("${trocar(v)}")` : m);
+
+  const blobFinal = new Blob([texto], { type: 'text/html;charset=utf-8' });
+
+  // título/resumo do próprio arquivo, para o gestor não digitar à toa
+  const mTit = texto.slice(0, 60000).match(/<title[^>]*>([\s\S]{0,300}?)<\/title>/i);
+  const mDesc = texto.slice(0, 60000).match(/<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]{0,600}?)["']/i);
+  const limpa = (s) => String(s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+
+  // capa sugerida: a maior imagem usada, reduzida para 800 px
+  let capaBlob = null;
+  const maiores = usados.filter(u => IMG_EXT.test(u.nome) && !/\.svg$/i.test(u.nome))
+    .sort((a,b) => b.antes - a.antes);
+  if (maiores.length){
+    try { capaBlob = await encolher(maiores[0].file, 800, 0.8); } catch(e){ capaBlob = null; }
+  }
+
+  return {
+    blob: blobFinal,
+    nome: (htmlFile.name || 'apresentacao.html').replace(/\.html?$/i, '') + '.html',
+    titulo: limpa(mTit && mTit[1]).slice(0,160),
+    resumo: limpa(mDesc && mDesc[1]).slice(0,600),
+    capaBlob,
+    stats: {
+      htmlAntes: htmlFile.size,
+      total: blobFinal.size,
+      imagens: usados.length,
+      somaAntes: usados.reduce((s,u) => s + u.antes, 0),
+      somaDepois: usados.reduce((s,u) => s + u.depois, 0),
+      faltando,
+    }
+  };
+}
+
+/* ---------------- entrada de arquivos (clique, drop de pasta) ---------------- */
+async function lerEntry(entry, prefixo, saida){
+  if (entry.isFile){
+    const file = await new Promise((res, rej) => entry.file(res, rej));
+    file._path = prefixo + file.name;
+    saida.push(file);
+    return;
+  }
+  const reader = entry.createReader();
+  // readEntries devolve no máximo 100 por chamada — tem que insistir.
+  for(;;){
+    const lote = await new Promise((res, rej) => reader.readEntries(res, rej));
+    if (!lote.length) break;
+    for (const e of lote) await lerEntry(e, prefixo + entry.name + '/', saida);
+  }
+}
+
+async function receber(arquivos){
+  const m = $('msg-envio');
+  if (!arquivos.length) return;
+  m.className = 'msg'; m.textContent = '';
+  $('prog').classList.add('on');
+  $('relatorio').classList.remove('on');
+  $('btn-baixar-pac').style.display = 'none';
+  const cfg = { maxLarg: Number($('cfg-larg').value), qual: Number($('cfg-qual').value) };
+  try {
+    PACOTE = await empacotar(arquivos, cfg, (p, txt) => {
+      $('prog-i').style.width = Math.round(p * 100) + '%';
+      m.className = 'msg'; m.textContent = txt || '';
+    });
+  } catch(e){
+    $('prog').classList.remove('on');
+    m.className = 'msg err'; m.textContent = '⚠️ ' + e.message;
+    return;
+  }
+  $('prog-i').style.width = '100%';
+  setTimeout(() => { $('prog').classList.remove('on'); $('prog-i').style.width = '0'; }, 400);
+  m.textContent = '';
+
+  const s = PACOTE.stats;
+  const linhas = [
+    `<b>${esc(PACOTE.nome)}</b> — pronto para enviar.`,
+    `Arquivo final: <b>${fTam(s.total)}</b>${s.imagens ? ` (${s.imagens} imagens embutidas, ${fTam(s.somaAntes)} → ${fTam(s.somaDepois)})` : ' (sem imagens para embutir)'}.`,
+  ];
+  if (s.faltando.length) linhas.push(`<span class="ruim">⚠️ ${s.faltando.length} imagem(ns) não vieram junto e vão aparecer quebradas: ${esc(s.faltando.slice(0,6).join(', '))}${s.faltando.length>6?'…':''}. Solte a pasta inteira.</span>`);
+  if (s.total > 25*1024*1024) linhas.push(`<span class="ruim">⚠️ Passou do limite de 25 MB. Escolha uma largura menor e solte os arquivos de novo.</span>`);
+  else if (s.total > 8*1024*1024) linhas.push(`Fica pesado para abrir no 4G. Se quiser mais leve, escolha <b>1280 px</b> e solte os arquivos de novo.`);
+  $('relatorio').innerHTML = linhas.join('<br>');
+  $('relatorio').classList.add('on');
+  $('btn-baixar-pac').style.display = '';
+
+  if (!$('f-titulo').value && PACOTE.titulo) $('f-titulo').value = PACOTE.titulo;
+  if (!$('f-resumo').value && PACOTE.resumo) $('f-resumo').value = PACOTE.resumo;
+  if (!$('f-data').value) $('f-data').value = new Date().toISOString().slice(0,10);
+}
+
+const drop = $('drop');
+drop.addEventListener('click', () => $('f-arquivos').click());
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', async e => {
+  e.preventDefault();
+  const itens = [...(e.dataTransfer.items || [])];
+  const saida = [];
+  const entries = itens.map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length){
+    for (const en of entries) await lerEntry(en, '', saida);
+  } else {
+    [...(e.dataTransfer.files || [])].forEach(f => saida.push(f));
+  }
+  receber(saida);
+});
+$('btn-esc-arq').addEventListener('click', () => $('f-arquivos').click());
+$('btn-esc-pasta').addEventListener('click', () => $('f-pasta').click());
+$('f-arquivos').addEventListener('change', e => receber([...e.target.files]));
+$('f-pasta').addEventListener('change', e => receber([...e.target.files]));
+$('btn-baixar-pac').addEventListener('click', () => {
+  if (!PACOTE) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(PACOTE.blob);
+  a.download = PACOTE.nome;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+
+/* ============================== enviar ============================== */
+function limparForm(){
+  PACOTE = null;
+  ['f-titulo','f-resumo','f-categoria','f-secao','f-data','f-ordem','f-tags','f-link'].forEach(id => $(id).value = '');
+  ['f-capa','f-pdf','f-fonte','f-arquivos','f-pasta'].forEach(id => $(id).value = '');
+  $('relatorio').classList.remove('on');
+  $('btn-baixar-pac').style.display = 'none';
+  $('msg-envio').textContent = '';
+}
+$('btn-limpar').addEventListener('click', limparForm);
+
+$('btn-enviar').addEventListener('click', async () => {
+  const m = $('msg-envio'), btn = $('btn-enviar');
+  if (!PACOTE){ m.className='msg err'; m.textContent='Solte primeiro o arquivo da apresentação.'; return; }
+  if (!$('f-titulo').value.trim()){ m.className='msg err'; m.textContent='Dê um título para a apresentação.'; return; }
+
+  const form = new FormData();
+  form.append('arquivo', new File([PACOTE.blob], PACOTE.nome, { type:'text/html' }));
+  form.append('titulo', $('f-titulo').value.trim());
+  form.append('resumo', $('f-resumo').value.trim());
+  form.append('categoria', $('f-categoria').value.trim());
+  form.append('secao', $('f-secao').value.trim());
+  form.append('data', $('f-data').value.trim());
+  form.append('tags', $('f-tags').value.trim());
+  form.append('link', $('f-link').value.trim());
+  if ($('f-ordem').value.trim()) form.append('ordem', $('f-ordem').value.trim());
+
+  const capa = $('f-capa').files[0];
+  if (capa) form.append('capa', capa);
+  else if (PACOTE.capaBlob) form.append('capa', new File([PACOTE.capaBlob], 'capa.webp', { type: PACOTE.capaBlob.type || 'image/webp' }));
+  if ($('f-pdf').files[0]) form.append('pdf', $('f-pdf').files[0]);
+  if ($('f-fonte').files[0]) form.append('fonte', $('f-fonte').files[0]);
+
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  m.className='msg'; m.textContent = 'Enviando ' + fTam(PACOTE.blob.size) + '… não feche a página.';
+  try {
+    await apiPostForm('/api/slides/enviar', form);
+    limparForm();                       // limparForm zera a mensagem — o aviso vem depois dele
+    await carregar();
+    m.className='msg ok'; m.textContent = '✅ Apresentação publicada no banco.';
+  } catch(e){
+    m.className='msg err'; m.textContent = '⚠️ ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = '⬆️ Enviar para o banco'; }
+});
+
+/* ============================== gestão: lista ============================== */
+function renderGestao(){
+  const lista = D.slides || [];
+  $('ges-cont').textContent = lista.length ? `${lista.length} apresentaç${lista.length===1?'ão':'ões'}` : '';
+  $('lista-cat').innerHTML = (D.categorias || []).map(c => `<option value="${esc(c)}">`).join('');
+  if (!lista.length){ $('lista-ges').innerHTML = '<div class="vazio">Nada enviado ainda.</div>'; return; }
+  $('lista-ges').innerHTML = lista.map(s => `
+    <div class="linha-deck">
+      ${s.capa ? `<img src="${API_BASE}${s.capa}" alt="" loading="lazy">` : '<div style="width:74px;aspect-ratio:16/9;border-radius:8px;background:#0b0f1a;display:flex;align-items:center;justify-content:center">🎞️</div>'}
+      <div class="ld-txt">
+        <div class="ld-tit">${esc(s.titulo)}</div>
+        <div class="ld-sub">${[s.categoria, s.secao, fData(s.data), fTam(s.tamanho)].filter(Boolean).map(esc).join(' · ')}</div>
+        <div class="ld-sub">Enviada por ${esc(s.enviado_por||'—')}${s.atualizado_em ? ` · alterada por ${esc(s.atualizado_por)} em ${fData(s.atualizado_em)}` : ''}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn ghost small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">▶️ Ver</a>
+        <button class="btn ghost small" data-ed="${esc(s.id)}">✏️ Editar</button>
+        <button class="btn danger small" data-ex="${esc(s.id)}">🗑️</button>
+      </div>
+    </div>`).join('');
+  $('lista-ges').querySelectorAll('[data-ed]').forEach(b => b.addEventListener('click', () => abrirEdicao(b.dataset.ed)));
+  $('lista-ges').querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => abrirExclusao(b.dataset.ex)));
+}
+
+/* ============================== modal ============================== */
+let MD_OK = null;
+function fecharModal(){ $('modal').classList.remove('on'); MD_OK = null; $('md-msg').textContent=''; }
+$('md-cancelar').addEventListener('click', fecharModal);
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) fecharModal(); });
+$('md-ok').addEventListener('click', () => { if (MD_OK) MD_OK(); });
+
+function abrirEdicao(id){
+  const s = (D.slides || []).find(x => x.id === id);
+  if (!s) return;
+  $('md-tit').textContent = 'Editar apresentação';
+  $('md-corpo').innerHTML = `
+    <div class="grid2">
+      <div class="fg"><label>Título</label><input id="e-titulo" value="${esc(s.titulo)}"></div>
+      <div class="fg"><label>Categoria</label><input id="e-categoria" value="${esc(s.categoria)}"></div>
+    </div>
+    <div class="fg" style="margin-top:12px"><label>Resumo</label><textarea id="e-resumo">${esc(s.resumo)}</textarea></div>
+    <div class="grid3" style="margin-top:12px">
+      <div class="fg"><label>Seção / autor</label><input id="e-secao" value="${esc(s.secao)}"></div>
+      <div class="fg"><label>Data</label><input id="e-data" type="date" value="${esc((s.data||'').slice(0,10))}"></div>
+      <div class="fg"><label>Ordem</label><input id="e-ordem" type="number" min="1" value="${esc(s.ordem)}"></div>
+    </div>
+    <div class="fg" style="margin-top:12px"><label>Palavras-chave</label><input id="e-tags" value="${esc(s.tags)}"></div>
+    <div class="fg" style="margin-top:12px"><label>Link do arquivo original</label><input id="e-link" value="${esc(s.link)}"></div>
+    <div class="grid3" style="margin-top:12px">
+      <div class="fg"><label>Trocar a capa</label><input type="file" id="e-capa" accept="image/png,image/jpeg,image/webp"></div>
+      <div class="fg"><label>Trocar o PDF</label><input type="file" id="e-pdf" accept="application/pdf"></div>
+      <div class="fg"><label>Trocar o original</label><input type="file" id="e-fonte" accept=".ppt,.pptx,.odp,.key,.zip"></div>
+    </div>
+    <p class="hint">Para trocar a <b>apresentação inteira</b>, empacote o arquivo novo lá em cima (①) e marque abaixo.</p>
+    <label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <input type="checkbox" id="e-trocar-html" ${PACOTE ? '' : 'disabled'}>
+      <span>Substituir o arquivo desta apresentação pelo que está empacotado agora${PACOTE ? ` (${esc(PACOTE.nome)}, ${fTam(PACOTE.blob.size)})` : ' — nenhum empacotado'}</span>
+    </label>`;
+  $('md-msg').textContent = '';
+  $('modal').classList.add('on');
+  MD_OK = async () => {
+    const form = new FormData();
+    form.append('id', id);
+    ['titulo','resumo','categoria','secao','data','tags','link','ordem'].forEach(c => form.append(c, $('e-'+c).value.trim()));
+    if ($('e-capa').files[0]) form.append('capa', $('e-capa').files[0]);
+    if ($('e-pdf').files[0]) form.append('pdf', $('e-pdf').files[0]);
+    if ($('e-fonte').files[0]) form.append('fonte', $('e-fonte').files[0]);
+    if ($('e-trocar-html').checked && PACOTE) form.append('arquivo', new File([PACOTE.blob], PACOTE.nome, { type:'text/html' }));
+    $('md-ok').disabled = true; $('md-msg').className='msg'; $('md-msg').textContent = 'Salvando…';
+    try {
+      await apiPostForm('/api/slides/editar', form);
+      fecharModal();
+      await carregar();
+    } catch(e){ $('md-msg').className='msg err'; $('md-msg').textContent = '⚠️ ' + e.message; }
+    finally { $('md-ok').disabled = false; }
+  };
+}
+
+/* Exclusão com senha — mesma regra do resto do site. */
+function abrirExclusao(id){
+  const s = (D.slides || []).find(x => x.id === id);
+  if (!s) return;
+  $('md-tit').textContent = 'Excluir apresentação';
+  $('md-corpo').innerHTML = `
+    <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px">
+      Vai sair do banco: <b style="color:#fff">${esc(s.titulo)}</b>.<br>
+      A linha da planilha não é apagada (fica marcada como excluída) e os arquivos vão para a lixeira do Drive,
+      onde dá para restaurar por 30 dias.
+    </p>
+    <div class="fg"><label>Sua senha</label><input type="password" id="x-senha" autocomplete="current-password"></div>
+    <div class="fg" style="margin-top:12px"><label>Motivo (opcional)</label><input id="x-motivo" placeholder="Versão substituída, apresentação antiga…"></div>`;
+  $('md-msg').textContent = '';
+  $('modal').classList.add('on');
+  setTimeout(() => $('x-senha').focus(), 60);
+  MD_OK = async () => {
+    const senha = $('x-senha').value;
+    if (!senha){ $('md-msg').className='msg err'; $('md-msg').textContent='Digite a sua senha.'; return; }
+    $('md-ok').disabled = true; $('md-msg').className='msg'; $('md-msg').textContent = 'Excluindo…';
+    try {
+      await apiPost('/api/slides/excluir', { id, senha, motivo: $('x-motivo').value.trim() });
+      fecharModal();
+      await carregar();
+    } catch(e){ $('md-msg').className='msg err'; $('md-msg').textContent = '⚠️ ' + e.message; }
+    finally { $('md-ok').disabled = false; }
+  };
+}
+
+/* ============================== início ============================== */
+boot();
+</script>
+</body>
+</html>
