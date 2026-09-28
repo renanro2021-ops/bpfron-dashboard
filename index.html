@@ -1783,6 +1783,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-p1 .p1d-empty{color:var(--muted);text-align:center;padding:22px}
       #page-p1 .p1d-tag{display:inline-block;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:#F5C518;border-radius:999px;padding:4px 12px;font-size:12px;margin:3px 6px 3px 0}
       #page-p1 .p1d-tag.gray{background:rgba(148,163,184,.12);border-color:var(--border,#334155);color:#cbd5e1}
+      #page-p1 .p1d-tag .nome{color:#e2e8f0;opacity:.9;font-weight:400}
+      #page-p1 .p1d-tag.gray .nome{color:#cbd5e1}
       #page-p1 .p1d-tag.red{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
       #page-p1 .p1d-freq{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
       #page-p1 .p1d-freq-item{background:#0b1220;border:1px solid var(--border,#334155);border-radius:999px;padding:6px 13px;font-size:12.5px;color:#cbd5e1}
@@ -1824,6 +1826,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-p1 .p1d-agg-card:hover{border-color:rgba(245,197,24,.6)}
       #page-p1 .p1d-agg-card.sel{border-color:#F5C518;background:rgba(245,197,24,.08)}
       #page-p1 .p1d-agg-card b{color:#e2e8f0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #page-p1 .p1d-agg-card .txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+      #page-p1 .p1d-agg-card .txt small{color:var(--muted);font-size:11.5px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       #page-p1 .p1d-agg-card .qtd{flex:0 0 auto;background:rgba(245,197,24,.14);color:#F5C518;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
       #page-p1 #p1-item-detail{margin-top:6px}
       @media(max-width:1100px){#page-p1 .p1d-kpis{grid-template-columns:repeat(3,1fr)}#page-p1 .p1d-grid{grid-template-columns:1fr}}
@@ -7765,8 +7769,18 @@ function renderP1Detail(){
   const p = p1dPessoaAtual();
   if (!p){ document.getElementById('p1d-detail').innerHTML = '<div class="p1d-empty">Clique num nome na lista ao lado.</div>'; return; }
 
+  // Tag do curso: sigla + nome completo (a sigla sozinha não diz que curso é).
+  // Cai pra só um dos dois quando o outro está vazio ou é a mesma coisa.
+  const tagCurso = (c) => {
+    const sigla = String(c.sigla || '').trim();
+    const nome = String(c.curso || '').trim();
+    const titulo = (sigla && nome && nome.toUpperCase() !== sigla.toUpperCase())
+      ? p1dEsc(sigla) + ' <span class="nome">' + p1dEsc(nome) + '</span>'
+      : p1dEsc(sigla || nome);
+    return `<div class="p1d-tag${c.concluiu==='NÃO' ? ' gray' : ''}">${titulo}${c.edicao ? ' · ' + p1dEsc(c.edicao) : ''}${c.ano ? ' · ' + p1dEsc(c.ano) : ''}${c.estado && c.estado!=='RO' ? ' · ' + p1dEsc(c.estado) : ''}${c.concluiu==='NÃO' ? ' · em andamento' : ''}</div>`;
+  };
   const cursosHtml = p.cursos.length
-    ? p.cursos.map(c => `<div class="p1d-tag${c.concluiu==='NÃO' ? ' gray' : ''}">${p1dEsc(c.sigla || c.curso)}${c.edicao ? ' · ' + p1dEsc(c.edicao) : ''}${c.ano ? ' · ' + p1dEsc(c.ano) : ''}${c.estado && c.estado!=='RO' ? ' · ' + p1dEsc(c.estado) : ''}${c.concluiu==='NÃO' ? ' · em andamento' : ''}</div>`).join('')
+    ? p.cursos.map(tagCurso).join('')
     : '<span style="color:var(--muted)">Nenhum curso informado.</span>';
   const acessosHtml = p.acessos.length
     ? p.acessos.map(s => `<div class="p1d-tag">${p1dEsc(s)}</div>`).join('')
@@ -7841,9 +7855,29 @@ function p1AggCursos(){
   const map = {};
   (P1_DATA.efetivo || []).forEach(p => (p.cursos || []).forEach(c => {
     const key = (c.sigla || c.curso || '').toUpperCase().trim(); if (!key) return;
-    (map[key] = map[key] || { label: c.sigla || c.curso, itens: [] }).itens.push({ ...c, re: p.re, nome: p.nome });
+    const g = (map[key] = map[key] || { label: c.sigla || c.curso, nomes: {}, itens: [] });
+    g.itens.push({ ...c, re: p.re, nome: p.nome });
+    // Guarda o nome completo que cada um escreveu pra esse curso — a sigla
+    // sozinha não diz o que o curso é (o card e o detalhe mostravam só "CUED").
+    const nc = String(c.curso || '').trim();
+    if (nc && nc.toUpperCase() !== key) g.nomes[nc] = (g.nomes[nc] || 0) + 1;
   }));
+  // Nome do grupo = o mais citado; empate vai pro mais longo (que costuma ser
+  // o nome completo, não a versão abreviada).
+  Object.values(map).forEach(g => {
+    const ord = Object.entries(g.nomes).sort((a, b) => b[1] - a[1] || b[0].length - a[0].length);
+    g.nome = ord.length ? ord[0][0] : '';
+    delete g.nomes;
+  });
   return map;
+}
+
+// Nome completo do curso pra mostrar junto da sigla — vazio quando é sistema
+// (não tem sigla) ou quando o nome cadastrado é a própria sigla.
+function p1AggNomeCurso(tipo, g){
+  if (tipo !== 'curso') return '';
+  const n = String(g.nome || '').trim();
+  return (n && n.toUpperCase() !== String(g.label || '').toUpperCase()) ? n : '';
 }
 function p1AggSistemas(){
   const map = {};
@@ -7857,10 +7891,13 @@ function p1AggSistemas(){
 function renderP1Agregados(){
   P1_AGG_CURSOS = p1AggCursos();
   P1_AGG_SISTEMAS = p1AggSistemas();
-  const cardHtml = (tipo, key, g) => `
+  const cardHtml = (tipo, key, g) => {
+    const nome = p1AggNomeCurso(tipo, g);
+    return `
     <div class="p1d-agg-card${P1_AGG_SEL && P1_AGG_SEL.tipo===tipo && P1_AGG_SEL.key===key ? ' sel' : ''}" onclick='p1AbrirAgregado("${tipo}",${p1JsStr(key)})'>
-      <b title="${p1dEsc(g.label)}">${p1dEsc(g.label)}</b><span class="qtd">${g.itens.length}</span>
+      <div class="txt"><b title="${p1dEsc(nome || g.label)}">${p1dEsc(g.label)}</b>${nome ? `<small>${p1dEsc(nome)}</small>` : ''}</div><span class="qtd">${g.itens.length}</span>
     </div>`;
+  };
   const cbEl = document.getElementById('p1-cursos-busca');
   const cq = ((cbEl && cbEl.value) || '').toLowerCase().trim();
   const totalCursos = Object.keys(P1_AGG_CURSOS).length;
@@ -7888,6 +7925,7 @@ function p1RenderAggDetail(){
   const map = tipo === 'curso' ? P1_AGG_CURSOS : P1_AGG_SISTEMAS;
   const g = map[key];
   if (!g){ P1_AGG_SEL = null; wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const nomeCurso = p1AggNomeCurso(tipo, g);
   const rowHtml = (it, i) => `
     <div class="p1d-item-card${tipo === 'curso' && it.concluiu === 'NÃO' ? ' pend' : ''}">
       <button class="p1d-item-del" title="Excluir este item" onclick='p1AggExcluir("${tipo}",${p1JsStr(key)},${i})'>✕</button>
@@ -7897,7 +7935,7 @@ function p1RenderAggDetail(){
   wrap.style.display = '';
   wrap.innerHTML = `
     <div class="p1d-card">
-      <div class="p1d-card-ttl">${tipo === 'curso' ? '📚' : '🔐'} ${p1dEsc(g.label)}
+      <div class="p1d-card-ttl">${tipo === 'curso' ? '📚' : '🔐'} ${p1dEsc(g.label)}${nomeCurso ? ' — ' + p1dEsc(nomeCurso) : ''}
         <small style="color:var(--muted);font-weight:400">— ${g.itens.length} ${g.itens.length === 1 ? 'pessoa' : 'pessoas'}, clique no ✕ pra excluir um item específico</small>
         <button style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px" onclick="p1FecharAgregado()">✕ Fechar</button>
       </div>

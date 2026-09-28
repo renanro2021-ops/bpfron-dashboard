@@ -683,7 +683,9 @@ function renderCursos(){
       <button type="button" class="p1-curso-x" onclick="p1RemoverCurso(${i})" title="Remover">✕</button>
     </div>`;
   }).join('')
-    + `<datalist id="p1-siglas-dl">${lista.map((c) => `<option value="${esc(c.sigla)}">`).join('')}</datalist>`;
+    // O label faz o navegador mostrar o nome do curso ao lado da sigla na lista
+    // de sugestões do campo "Sigla" (antes aparecia só a sigla solta).
+    + `<datalist id="p1-siglas-dl">${lista.map((c) => `<option value="${esc(c.sigla)}" label="${esc(c.nome)}">`).join('')}</datalist>`;
 }
 
 /* ----------------------------- Sistemas ------------------------------ */
