@@ -3497,6 +3497,245 @@
       exp: "Na aviação chama-se cabine estéril: enquanto a fase é crítica, só se fala do voo. Decolagem, aproximação de obstáculo e pouso pedem o mesmo silêncio.",
       fonte: "Apostila 05 (fatores humanos)",
     },
+
+    /* ---- Casos e cenários (28/09/2026). Padrão pedido pelo usuário: o
+     * enunciado CONTA a situação inteira — quem não estava na aula entende do
+     * mesmo jeito — e a explicação lista os riscos daquele cenário e como
+     * mitigá-los. ---- */
+    {
+      id: "AN-350", tema: "Segurança operacional", dif: "medio",
+      p: "Caso real (aeroporto de Gatwick, Londres, dezembro de 2018): relatos de drones perto da pista fizeram o aeroporto suspender as operações por cerca de 33 horas, no auge do movimento de fim de ano, atingindo mais de mil voos e cerca de 140 mil passageiros. O que esse caso demonstra?",
+      c: "Que a simples suspeita de drone perto da pista basta para parar um aeroporto: o prejuízo não depende de haver colisão",
+      e: [
+        "Que drones só são perigosos se colidirem com a aeronave",
+        "Que o aeroporto errou ao suspender os voos sem confirmar a presença do drone",
+        "Que o risco só existe para aeronaves de pequeno porte",
+        "Que o problema se resolve com o aplicativo do fabricante bloqueando a área",
+      ],
+      exp: "Riscos do cenário: parada de operações, prejuízo econômico enorme, mobilização policial e militar e, no limite, colisão com aeronave tripulada. Para quem opera perto de aeródromo, a lição é direta — voo não coordenado ali vira ocorrência de segurança, mesmo sem ninguém se machucar.",
+      fonte: "Caso público amplamente documentado; ICA 100-40 (zonas de aeródromo)",
+    },
+    {
+      id: "AN-351", tema: "Segurança operacional", dif: "medio",
+      p: "Caso real (Nova York, 2017): um drone civil colidiu em voo com um helicóptero militar em patrulha; a aeronave conseguiu pousar, mas ficou com dano no rotor e peças do drone foram encontradas dentro da estrutura. O que esse caso ensina ao piloto remoto?",
+      c: "Que a aeronave tripulada não consegue ver nem desviar do drone a tempo — manter-se abaixo do limite de altura e fora das rotas é responsabilidade de quem opera o drone",
+      e: [
+        "Que helicópteros deveriam ter radar próprio para detectar drones",
+        "Que o risco só existe em voo noturno",
+        "Que drones pequenos não causam dano estrutural",
+        "Que a colisão só acontece quando o drone está acima de 400 pés",
+      ],
+      exp: "Riscos do cenário: perda de rotor, queda da aeronave tripulada e morte da tripulação. O drone tem sensores para obstáculo parado e próximo, não para aeronave a 200 km/h. A separação é garantida por altura e por coordenação, nunca por sensor.",
+      fonte: "Caso público documentado; RBAC 100; ICA 100-40",
+    },
+    {
+      id: "AN-352", tema: "Segurança operacional", dif: "facil",
+      p: "Situação: durante um incêndio em área de vegetação, uma equipe leva o drone para registrar a extensão do fogo. No local já atua um helicóptero lançando água em voo baixo e com muita fumaça. Qual é a conduta correta?",
+      c: "Não decolar enquanto a aeronave tripulada estiver operando, salvo coordenação expressa com quem conduz o combate aéreo",
+      e: [
+        "Decolar mantendo-se acima do helicóptero, para não atrapalhar",
+        "Decolar e voar apenas nas bordas da área de fumaça",
+        "Decolar, porque a operação é de segurança pública e tem prioridade",
+        "Decolar em baixa altura e avisar depois pelo rádio",
+      ],
+      exp: "Riscos do cenário: colisão com a aeronave de combate (que voa baixo e manobra com pouca visibilidade), suspensão do combate aéreo por causa do drone — o que faz o fogo avançar — e perda da própria aeronave na fumaça e na turbulência térmica.",
+      fonte: "ICA 100-40 (prioridade da aviação tripulada); Apostila 05",
+    },
+    {
+      id: "AN-353", tema: "Segurança operacional", dif: "medio",
+      p: "Situação: a equipe é chamada para filmar de cima um evento com palco, torre de iluminação e público concentrado. O solicitante pede imagens 'por cima da galera'. Qual é a resposta tecnicamente correta?",
+      c: "Fazer as imagens pela lateral e de fora da vertical do público, porque sobrevoar pessoas não envolvidas não é permitido e qualquer falha cairia em cima delas",
+      e: [
+        "Atender, mantendo a aeronave acima de 50 metros sobre o público",
+        "Atender, desde que o público tenha sido avisado pelo som do evento",
+        "Atender, desde que a aeronave tenha sensor de obstáculo ativado",
+        "Recusar a operação inteira e recolher o material",
+      ],
+      exp: "Riscos do cenário: queda sobre a multidão, pânico e tumulto por causa do barulho, colisão com torre de luz, fios de bandeirinha e fogos, e saturação de rádio dos transmissores do evento. Mitigação: enquadramento lateral, altura planejada acima das torres e pouso alternativo fora da área do público.",
+      fonte: "RBAC 100 (pessoas não envolvidas); Apostila 05",
+    },
+    {
+      id: "AN-354", tema: "Técnico", dif: "medio",
+      p: "Situação: o piloto decola de cima de uma ponte metálica para filmar o rio. Logo após subir, a aeronave gira sozinha, hesita e a bússola acusa erro. O que aconteceu, com maior probabilidade?",
+      c: "A estrutura metálica da ponte perturbou a bússola na decolagem, e a aeronave ficou sem referência confiável de direção",
+      e: [
+        "A bateria estava fria e perdeu potência",
+        "O vento sobre o rio inverteu os comandos da aeronave",
+        "A umidade do rio afetou os motores",
+        "O cartão de memória cheio travou a navegação",
+      ],
+      exp: "Riscos do cenário: fuga da aeronave, queda no rio (com perda do equipamento e da prova gravada) e colisão com a estrutura da ponte. Mitigação: decolar de área aberta, longe de ferragem e cabos, e conferir se o ponto de retorno foi gravado com sinal firme.",
+      fonte: "Apostila 03; Apostila 05; manual do fabricante",
+    },
+    {
+      id: "AN-355", tema: "Emergências", dif: "medio",
+      p: "Situação: numa busca em área de chácaras, o piloto configurou a altura de retorno em 30 metros. A aeronave perdeu o enlace a 600 metros de distância e acionou o retorno automático. Entre ela e o ponto de decolagem há uma linha de eucaliptos de 35 metros. O que tende a acontecer?",
+      c: "A aeronave sobe até 30 metros, volta em linha reta e colide com as árvores, porque a altura de retorno ficou abaixo do obstáculo",
+      e: [
+        "A aeronave detecta as árvores e sobe automaticamente acima delas",
+        "A aeronave contorna as árvores lateralmente até achar caminho livre",
+        "A aeronave pousa imediatamente onde estiver ao perder o enlace",
+        "A aeronave mantém a altura em que estava e volta por cima de tudo",
+      ],
+      exp: "Riscos do cenário: perda da aeronave, queda em propriedade de terceiro e início de incêndio pela bateria danificada. Mitigação: ajustar a altura de retorno acima do obstáculo mais alto da rota, sempre com margem, antes de decolar.",
+      fonte: "Apostila 05 (emergências); manual do fabricante",
+    },
+    {
+      id: "AN-356", tema: "Técnico", dif: "medio",
+      p: "Situação: a equipe vai inspecionar o interior de um galpão metálico abandonado numa ocorrência. Assim que a aeronave entra, o sinal cai e a imagem trava. Por quê?",
+      c: "A estrutura metálica fechada bloqueia o sinal de rádio e também o posicionamento por satélite, deixando a aeronave sem enlace e sem referência de posição",
+      e: [
+        "A poeira em suspensão bloqueia a antena do controle",
+        "A falta de luz desliga os sensores de navegação",
+        "A temperatura interna reduz o alcance do rádio",
+        "O eco do som dos motores confunde os sensores",
+      ],
+      exp: "Riscos do cenário: perda total de controle dentro da edificação, colisão com estrutura e queda sobre a equipe que entrou junto. Mitigação: piloto posicionado na entrada com visada direta, voo curto e baixo, hélices protegidas e aceitação prévia de que o retorno automático não vai funcionar ali dentro.",
+      fonte: "Apostila 03; Apostila 05",
+    },
+    {
+      id: "AN-357", tema: "Meteorologia", dif: "medio",
+      p: "Situação: operação de madrugada, com 12 °C e umidade alta. As baterias ficaram a noite toda dentro da viatura. A primeira decolagem acusa queda brusca de carga logo nos primeiros minutos. O que explica isso?",
+      c: "Bateria fria entrega menos energia e indica tensão baixa sob carga: a autonomia real cai bem abaixo da prevista",
+      e: [
+        "O frio aumenta a densidade do ar e exige mais dos motores",
+        "A umidade condensa nos contatos e drena a bateria",
+        "O indicador de carga sempre erra em voo noturno",
+        "A baixa temperatura desativa parte das células por segurança",
+      ],
+      exp: "Riscos do cenário: pouso forçado antes do previsto, perda da aeronave no escuro e busca a pé numa área que ainda não foi varrida. Mitigação: aquecer as baterias antes do uso, manter em local protegido, pairar alguns instantes perto do ponto antes de se afastar e reduzir a distância planejada.",
+      fonte: "Apostila 03 (equipamentos); Apostila 05",
+    },
+    {
+      id: "AN-358", tema: "Segurança operacional", dif: "medio",
+      p: "Situação: a denúncia é de arremesso de material por drone dentro de um presídio. A guarnição chega e vê o drone pairando sobre o pátio interno. Qual é a conduta correta do policial?",
+      c: "Preservar o local, tentar localizar o piloto na área externa, registrar tudo e acionar a coordenação prevista — sem lançar outro drone nem tentar abater a aeronave por conta própria",
+      e: [
+        "Lançar o próprio drone para interceptar e derrubar o suspeito",
+        "Efetuar disparos de arma de fogo contra a aeronave suspeita",
+        "Aguardar a aeronave pousar sozinha por falta de bateria",
+        "Entrar no pátio para recolher o material arremessado, sem registro",
+      ],
+      exp: "Riscos do cenário: disparo para cima em área urbana (o projétil cai em algum lugar), colisão entre os dois drones, fuga do piloto enquanto todos olham para o céu e perda da prova. O que resolve o caso quase sempre é achar o operador — ele está a poucas centenas de metros.",
+      fonte: "ICA 100-40; Apostila 05; procedimento institucional",
+    },
+    {
+      id: "AN-359", tema: "Técnico", dif: "medio",
+      p: "Situação: numa busca noturna com câmera térmica, aparece uma mancha quente no meio do mato. A equipe se desloca e encontra um bovino. O que esse episódio mostra sobre o uso do sensor?",
+      c: "A térmica mostra diferença de temperatura, não identifica quem é: toda marcação precisa ser confirmada antes de mobilizar a equipe",
+      e: [
+        "Que a câmera térmica estava descalibrada e precisa de manutenção",
+        "Que a térmica não serve para busca de pessoas em área rural",
+        "Que o voo estava alto demais para distinguir pessoas de animais",
+        "Que a busca deveria ter sido feita apenas com câmera comum",
+      ],
+      exp: "Riscos do cenário: cansar e dispersar a equipe atrás de falsos positivos, gastar bateria e tempo da janela útil e, no pior caso, abandonar a área certa por excesso de marcações. Mitigação: aproximar e confirmar com zoom antes de deslocar gente, e registrar cada ponto já checado.",
+      fonte: "Apostila 03 (sensores); Apostila 05",
+    },
+    {
+      id: "AN-360", tema: "Segurança operacional", dif: "medio",
+      p: "Situação: acompanhamento de manifestação com o drone. Uma pessoa do público começa a apontar um aparelho para a aeronave e ela passa a responder mal aos comandos. O que deve ser feito primeiro?",
+      c: "Trazer a aeronave para perto e pousar em local seguro, registrando o ocorrido e informando a equipe sobre a possível interferência",
+      e: [
+        "Subir ao máximo para escapar do alcance do aparelho",
+        "Manter a posição e filmar a pessoa que está apontando o aparelho",
+        "Acionar o retorno automático e desligar o controle",
+        "Continuar a operação: equipamentos assim não funcionam de verdade",
+      ],
+      exp: "Riscos do cenário: perda de enlace com a aeronave sobre a multidão, queda em cima de pessoas e fuga descontrolada. Subir não resolve — amplia a área de deriva. Pousar cedo, perto e em local isolado é o que limita o dano; a identificação de quem interferiu é tarefa da equipe de solo.",
+      fonte: "Apostila 05 (emergências e interferência)",
+    },
+    {
+      id: "AN-361", tema: "Emergências", dif: "medio",
+      p: "Situação: o piloto está com a aeronave a 500 metros, sobre uma área de mata, quando o aviso de bateria crítica aparece antes do esperado por causa do vento contra. No caminho de volta há uma estrada e um pasto aberto. Qual é a melhor decisão?",
+      c: "Ir para a estrada ou o pasto e pousar ali, avisando a equipe da coordenada, em vez de tentar chegar ao ponto de decolagem",
+      e: [
+        "Insistir no retorno ao ponto de decolagem, que é o procedimento padrão",
+        "Pousar imediatamente no meio da mata, para não gastar mais bateria",
+        "Subir para ganhar altura e planar até o ponto de decolagem",
+        "Desligar o vídeo e os sensores para economizar energia e seguir",
+      ],
+      exp: "Riscos do cenário: queda na mata (onde a aeronave dificilmente é achada e a prova se perde), pouso em cima de copa de árvore e início de foco de incêndio. Área aberta a caminho vale mais que o ponto de decolagem inalcançável.",
+      fonte: "Apostila 05 (emergências)",
+    },
+    {
+      id: "AN-362", tema: "Segurança operacional", dif: "facil",
+      p: "Situação: apoio a um acidente em rodovia. O piloto decola do acostamento, com caminhões passando a poucos metros, e sobe para documentar a cena. Qual é o principal problema dessa decisão?",
+      c: "Decolar e pousar junto à faixa de rolamento expõe a equipe e cria risco de a aeronave cair sobre veículos em movimento",
+      e: [
+        "A poeira levantada pelos caminhões prejudica a qualidade da imagem",
+        "O acostamento não é local autorizado para decolagem pela ANAC (Agência Nacional de Aviação Civil)",
+        "O ruído dos caminhões impede o piloto de ouvir a aeronave",
+        "A vibração do tráfego descalibra a bússola da aeronave",
+      ],
+      exp: "Riscos do cenário: atropelamento de quem está operando, queda sobre veículo em movimento (um acidente vira dois) e deslocamento de ar dos caminhões desestabilizando a aeronave na decolagem. Mitigação: ponto de decolagem fora da pista e do acostamento, com a área isolada pela equipe.",
+      fonte: "Apostila 05 (avaliação de risco)",
+    },
+    {
+      id: "AN-363", tema: "Meteorologia", dif: "medio",
+      p: "Situação: voo de reconhecimento à beira do rio no fim da tarde. Com o sol se pondo, o vento muda de direção e ganha força de repente, e a aeronave passa a exigir potência só para se manter parada. O que está acontecendo?",
+      c: "A mudança térmica do entardecer alterou o regime de vento local, e a aeronave está gastando bateria apenas para vencer o vento",
+      e: [
+        "A aeronave entrou em modo de economia de energia",
+        "O pôr do sol reduziu o sinal de posicionamento por satélite",
+        "O ar frio aumentou a sustentação e desestabilizou a aeronave",
+        "A umidade da tarde travou os motores parcialmente",
+      ],
+      exp: "Riscos do cenário: autonomia real bem menor que a prevista, volta contra o vento sem reserva e queda na água. Mitigação: encurtar a perna do voo, manter opção de pouso em terra firme e encerrar antes do escurecer, quando o vento tende a mudar de novo.",
+      fonte: "Apostila 05 (meteorologia aplicada)",
+    },
+    {
+      id: "AN-364", tema: "Fatores humanos", dif: "medio",
+      p: "Situação: durante o acompanhamento de um veículo em fuga, o piloto fica com a atenção presa na imagem da câmera por vários minutos. Quando olha o controle, a bateria está em 18% e a aeronave a 900 metros de distância. O que ocorreu?",
+      c: "Fixação de atenção: concentrado na missão, o piloto parou de acompanhar bateria, distância e entorno, e perdeu a consciência situacional",
+      e: [
+        "Falha do indicador de bateria, que não avisou antes",
+        "Consumo anormal causado pelo uso do zoom da câmera",
+        "Perda de enlace momentânea que zerou os avisos",
+        "Erro de configuração do retorno automático",
+      ],
+      exp: "Riscos do cenário: não sobrar bateria para a volta, perder a aeronave em área urbana desconhecida e ainda sobrevoar terceiros sem perceber. Mitigação: outro integrante acompanha a imagem, o piloto varre os indicadores em intervalos fixos e a distância máxima é combinada antes da decolagem.",
+      fonte: "Apostila 05 (fatores humanos)",
+    },
+    {
+      id: "AN-365", tema: "Segurança operacional", dif: "medio",
+      p: "Situação: duas equipes de órgãos diferentes chegam à mesma ocorrência, cada uma com seu drone, e as duas querem imagens aéreas ao mesmo tempo. Qual é o procedimento correto?",
+      c: "Coordenar antes de decolar: definir qual aeronave voa, em que altura e área, com comunicação direta entre os pilotos — nunca duas aeronaves no mesmo volume sem acordo",
+      e: [
+        "Cada equipe decola e mantém a própria aeronave de olho na outra",
+        "A equipe que chegou primeiro voa e a outra fica proibida de atuar",
+        "As duas decolam em alturas diferentes, sem precisar conversar",
+        "As duas decolam e usam canais de rádio distintos para não interferir",
+      ],
+      exp: "Riscos do cenário: colisão entre as duas aeronaves sobre a ocorrência, interferência de rádio entre os enlaces e confusão de quem está vendo o quê no solo. Separar por altura só funciona se as duas equipes combinaram isso e conseguem falar entre si.",
+      fonte: "ICA 100-40 (coordenação); Apostila 05",
+    },
+    {
+      id: "AN-366", tema: "Direito aeronáutico", dif: "medio",
+      p: "Situação: a imagem gravada pelo drone flagra um crime. Na audiência, a defesa questiona a operação e descobre que não havia autorização de acesso ao espaço aéreo para aquele voo. Qual é o problema?",
+      c: "A irregularidade do voo abre discussão sobre a licitude da prova e desloca o debate do crime para a conduta da equipe",
+      e: [
+        "Nenhum: a prova vale porque o crime realmente aconteceu",
+        "Nenhum: autorização de voo é assunto administrativo e não afeta o processo",
+        "A prova é automaticamente válida por se tratar de operação policial",
+        "O problema se resolve pedindo a autorização depois da audiência",
+      ],
+      exp: "Riscos do cenário: enfraquecer a prova principal do processo, responsabilização administrativa da equipe e desgaste institucional. Mitigação barata: registrar a autorização, o horário e o equipamento — dois minutos antes do voo evitam meses de discussão.",
+      fonte: "ICA 100-40; Apostila 05 (registro da operação)",
+    },
+    {
+      id: "AN-367", tema: "Segurança operacional", dif: "medio",
+      p: "Situação: numa operação em área urbana, o piloto planeja voar entre dois prédios altos para acompanhar um deslocamento. O que precisa ser considerado antes?",
+      c: "Entre prédios há perda de visada e de sinal, vento canalizado mais forte e pouca saída em caso de emergência — o caminho deve ser contornado, não atravessado",
+      e: [
+        "Apenas a altura dos prédios, para não ultrapassar o limite de 120 metros",
+        "Apenas a qualidade da imagem, que piora na sombra dos prédios",
+        "Apenas a autorização de sobrevoo dos moradores dos dois prédios",
+        "Nada: o sensor de obstáculo resolve a passagem entre os prédios",
+      ],
+      exp: "Riscos do cenário: perda simultânea de contato visual e de enlace, retorno automático que volta batendo na fachada, vento canalizado empurrando a aeronave contra a parede e queda em via movimentada. Mitigação: rota por cima ou por fora do corredor entre prédios, com o piloto reposicionado.",
+      fonte: "Apostila 05 (planejamento e emergências)",
+    },
   ];
   /* ======================================================================
    * (o banco 'apostilas' é acrescentado logo abaixo, no mesmo arquivo)
@@ -3593,7 +3832,7 @@
     },
     {
       id: "AP-011", ap: "01", tema: "Conceitos", dif: "medio",
-      p: "Qual é a diferença entre aeromodelo e RPA (aeronave remotamente pilotada), segundo a apostila?",
+      p: "Qual é a diferença entre aeromodelo e RPA (aeronave remotamente pilotada)?",
       c: "A finalidade: o aeromodelo é para lazer, mesmo tendo muitas semelhanças operacionais com a RPA",
       e: [
         "O peso: aeromodelo é sempre abaixo de 250 g",
@@ -3699,7 +3938,7 @@
     },
     {
       id: "AP-029", ap: "02", tema: "Técnico", dif: "medio",
-      p: "Segundo a apostila, como funciona um jammer usado como arma antidrone?",
+      p: "Como funciona um jammer, equipamento usado como arma antidrone?",
       c: "Detecta e classifica o sinal, localiza drone e piloto e interrompe o vínculo de rádio, fazendo a aeronave parar, pousar ou retornar",
       e: [
         "Emite pulso eletromagnético que queima a eletrônica da aeronave",
@@ -3725,7 +3964,7 @@
     },
     {
       id: "AP-031", ap: "02", tema: "Segurança operacional", dif: "medio",
-      p: "Qual uso do alto-falante acoplado ao drone a apostila destaca como um dos mais eficazes?",
+      p: "Qual é um dos usos mais eficazes do alto-falante acoplado ao drone em ocorrência policial?",
       c: "Conduzir negociação e levar à rendição sem expor o negociador ao risco",
       e: [
         "Afastar animais da área de pouso",
@@ -3751,7 +3990,7 @@
     },
     {
       id: "AP-034", ap: "02", tema: "História", dif: "facil",
-      p: "Qual foi o impacto da pandemia de COVID-19 no uso de drones, segundo a apostila?",
+      p: "Qual foi o impacto da pandemia de COVID-19 no uso de drones?",
       c: "Impulsionou entregas de suprimentos médicos, medição de temperatura, orientação por alto-falante e desinfecção de áreas públicas",
       e: [
         "Suspendeu todas as operações civis com drone no Brasil",
@@ -3916,7 +4155,7 @@
     },
     {
       id: "AP-066", ap: "04", tema: "Cadastro", dif: "medio",
-      p: "Segundo a aula, qual dos sistemas NÃO é sincronizado com os demais, embora o cumprimento continue obrigatório?",
+      p: "Entre os sistemas que o piloto precisa atender, qual NÃO é sincronizado com os demais, embora o cumprimento continue obrigatório?",
       c: "A homologação na ANATEL (Mosaico)",
       e: [
         "O cadastro no SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)",
@@ -4098,7 +4337,7 @@
     },
     {
       id: "AP-081", ap: "04", tema: "Documentação", dif: "dificil",
-      p: "Por que a aula recomenda pedir no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) a janela inteira do serviço, em vez de vários intervalos?",
+      p: "Por que é recomendável pedir no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) a janela inteira do serviço, em vez de vários intervalos?",
       c: "Para não precisar especificar cada intervalo de voo e evitar ficar fora do horário autorizado",
       e: [
         "Porque o sistema cobra taxa por solicitação",
@@ -4111,7 +4350,7 @@
     },
     {
       id: "AP-082", ap: "04", tema: "Regulamentação", dif: "medio",
-      p: "Segundo a apostila, qual é a diferença entre a atuação da JJAER (Junta de Julgamento da Aeronáutica) e a do CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)?",
+      p: "Qual é a diferença entre a atuação da JJAER (Junta de Julgamento da Aeronáutica) e a do CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)?",
       c: "A JJAER julga e pune administrativamente; o CENIPA investiga acidentes com finalidade exclusiva de prevenção, e suas conclusões não servem para atribuir culpa",
       e: [
         "A JJAER investiga e o CENIPA julga",
@@ -4176,8 +4415,8 @@
       fonte: "Apostila 05, seção 4",
     },
     {
-      id: "AP-094", ap: "05", tema: "Segurança operacional", dif: "dificil",
-      p: "No caso do Carnaval de Manaus, o que provocou a colisão do drone com o sino da igreja?",
+      id: "AP-094", ap: "05", tema: "Segurança operacional", dif: "medio",
+      p: "Caso real (Carnaval de Manaus): um drone filmava a festa no centro da cidade, com multidão, carros de som, transmissão de rádio e equipes de TV operando ao mesmo tempo. Em pleno voo a aeronave começou a derivar sozinha e acabou colidindo com o sino de uma igreja. O que explica esse comportamento?",
       c: "A saturação de sinais de rádio e TV no local: a aeronave entrou em modo ATT (modo atitude, sem travar posição por satélite), derivou e recebeu um comando espúrio",
       e: [
         "Uma rajada de vento repentina durante a filmagem",
@@ -4185,12 +4424,12 @@
         "Erro do piloto, que perdeu a referência visual na multidão",
         "Um jammer acionado pela organização do evento",
       ],
-      exp: "A lição: em ambiente saturado, o drone pode não só perder o contato — pode receber comando indevido. É o mesmo princípio dos antidrone mais avançados.",
-      fonte: "Apostila 05, seção 7",
+      exp: "A lição vale para qualquer evento grande: em ambiente saturado de rádio, o drone pode não só perder o contato — pode perder a referência de posição e até obedecer a comando indevido. Riscos a prever num cenário desses: derivar sobre a multidão, colidir com torre, poste, fio de bandeirinha ou campanário, e ficar sem enlace justamente onde há mais gente embaixo. Mitigação: manter a aeronave longe da vertical do público, reduzir a distância do piloto, escolher ponto de decolagem afastado dos transmissores e ter pouso alternativo definido.",
+      fonte: "Apostila 05, seção 7 (caso real relatado em aula)",
     },
     {
       id: "AP-095", ap: "05", tema: "Regulamentação", dif: "medio",
-      p: "Qual é a única exceção em que o voo 'autônomo' é admitido, segundo a apostila?",
+      p: "Qual é a única exceção em que o voo 'autônomo' é admitido?",
       c: "Quando há perda de sinal e a aeronave executa o que foi pré-definido (RTH, pouso) — porque aí a intervenção já não é possível",
       e: [
         "Quando a rota é programada para aerolevantamento",
@@ -4203,7 +4442,7 @@
     },
     {
       id: "AP-096", ap: "05", tema: "Regulamentação", dif: "facil",
-      p: "Quantas tentativas e qual nota mínima a apostila informa para a prova teórica da ANAC (Agência Nacional de Aviação Civil)?",
+      p: "Quantas tentativas e qual nota mínima são informadas para a prova teórica da ANAC (Agência Nacional de Aviação Civil)?",
       c: "Até 3 tentativas, com nota mínima 7 (70%, ou 14 de 20 questões)",
       e: [
         "Tentativa única, com nota mínima 6",
@@ -4216,7 +4455,7 @@
     },
     {
       id: "AP-097", ap: "05", tema: "Segurança operacional", dif: "medio",
-      p: "Numa operação perto de aeroclube, quais mitigações a apostila descreve para derrubar a probabilidade de conflito com tráfego aéreo?",
+      p: "Numa operação perto de aeroclube, quais mitigações derrubam a probabilidade de conflito com tráfego aéreo?",
       c: "Checklist rigoroso, emprego de spotters (um para a aeronave e um ou dois para o entorno) e verificação ativa com o SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)/contato com o DECEA (Departamento de Controle do Espaço Aéreo)",
       e: [
         "Reduzir a altura para 30 metros e voar somente de manhã",
@@ -4229,7 +4468,7 @@
     },
     {
       id: "AP-098", ap: "05", tema: "Regulamentação", dif: "medio",
-      p: "Segundo a apostila, o que a ANAC (Agência Nacional de Aviação Civil) pode fazer mesmo quando tecnicamente tudo está conforme?",
+      p: "O que a ANAC (Agência Nacional de Aviação Civil) pode fazer mesmo quando tecnicamente tudo está conforme?",
       c: "Proibir operações em áreas específicas, se houver perturbação à ordem pública, além de fazer inspeções, auditorias e vistorias sem aviso prévio",
       e: [
         "Cassar a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) emitida pelo DECEA (Departamento de Controle do Espaço Aéreo)",
@@ -4255,7 +4494,7 @@
     },
     {
       id: "AP-100", ap: "05", tema: "Segurança operacional", dif: "facil",
-      p: "Para atuar perto de um aeródromo, o que a apostila aponta como necessário além da coordenação com o DECEA (Departamento de Controle do Espaço Aéreo)?",
+      p: "Para atuar perto de um aeródromo, o que é necessário além da coordenação com o DECEA (Departamento de Controle do Espaço Aéreo)?",
       c: "Autorização expressa do administrador do aeródromo, com definição de altura, horário e distância, e contato mantido durante toda a operação",
       e: [
         "Apenas a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) aprovada automaticamente",
@@ -4423,7 +4662,7 @@
     },
     {
       id: "AP-131", ap: "07", tema: "Técnico", dif: "medio",
-      p: "Qual é o erro mais comum no cabeamento, segundo a aula?",
+      p: "Qual é o erro mais comum no cabeamento da transmissão de imagem?",
       c: "Inverter a direção da placa de captura: o HDMI (cabo/conector de vídeo) vem do controle e a saída USB tem de ficar voltada para o receptor",
       e: [
         "Usar cabo HDMI longo demais, que perde sinal",
@@ -4470,7 +4709,7 @@
     },
     {
       id: "AP-135", ap: "07", tema: "Técnico", dif: "medio",
-      p: "O celular não reconhece a placa de captura. O que verificar, segundo a apostila?",
+      p: "O celular não reconhece a placa de captura de vídeo. O que verificar?",
       c: "Se há adaptador OTG (USB-C) e se a função OTG está ativada nas configurações do Android",
       e: [
         "Se o celular tem 5G habilitado",
@@ -4483,7 +4722,7 @@
     },
     {
       id: "AP-136", ap: "07", tema: "Segurança operacional", dif: "medio",
-      p: "Quais cuidados de segurança da informação a apostila recomenda para a sala de transmissão?",
+      p: "Quais cuidados de segurança da informação a sala de transmissão exige?",
       c: "Enviar o link só ao grupo autorizado, preferir sala com senha, usar nome de sala não óbvio e encerrar a sala ao final",
       e: [
         "Transmitir publicamente, para dar transparência à operação",
@@ -4532,7 +4771,7 @@
     },
     {
       id: "AP-144", ap: "08", tema: "Cadastro", dif: "medio",
-      p: "Segundo a apostila 08, qual é a ordem que 'não pode inverter'?",
+      p: "Na regularização para voar, qual é a ordem de etapas que não pode ser invertida?",
       c: "gov.br → ANATEL (homologação) → SISANT (nº de cadastro) → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) NG (aeronave, equipe, solicitação) → autorização com QR Code",
       e: [
         "gov.br → SARPAS → SISANT → ANATEL → autorização",
@@ -4558,7 +4797,7 @@
     },
     {
       id: "AP-146", ap: "08", tema: "Técnico", dif: "medio",
-      p: "O que a apostila registra sobre o 'Novo SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)' lançado pela ANAC (Agência Nacional de Aviação Civil) em 2026?",
+      p: "O que mudou com o 'Novo SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)' lançado pela ANAC (Agência Nacional de Aviação Civil) em 2026?",
       c: "Que ele tem endereço novo, e por isso o acesso deve ser feito sempre pela página oficial da ANAC",
       e: [
         "Que ele passou a exigir certificado digital A3",
