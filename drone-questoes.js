@@ -49,26 +49,26 @@
     /* ---------------- FÁCIL ---------------- */
     {
       id: "AN-001", tema: "Conceitos", dif: "facil",
-      p: "No vocabulário da legislação brasileira, o que a sigla UAS (o sistema completo: aeronave, estação de pilotagem e enlace) designa?",
+      p: "No vocabulário da legislação brasileira, o que a sigla UAS designa?",
       c: "O sistema completo: a aeronave, a estação de pilotagem remota, o enlace de comando e controle e os demais equipamentos",
       e: [
         "Apenas a aeronave não tripulada que voa",
         "Apenas a estação de pilotagem remota, de onde o piloto comanda",
         "Somente aeronaves não tripuladas de uso militar",
-        "O conjunto de normas da ANAC (Agência Nacional de Aviação Civil) aplicável a drones",
+        "O conjunto de normas da ANAC aplicável a drones",
       ],
       exp: "UA (aeronave não tripulada) é a aeronave; RPA (aeronave remotamente pilotada) é a aeronave remotamente pilotada; UAS (Unmanned Aircraft System) é o sistema todo — aeronave + RPS + enlace C2 + demais equipamentos.",
       fonte: "ICA 100-40, art. 7º, LVIII",
     },
     {
       id: "AN-002", tema: "Conceitos", dif: "facil",
-      p: "Qual é o significado da sigla VLOS (voo dentro do alcance visual do piloto)?",
+      p: "Qual é o significado da sigla VLOS?",
       c: "Linha de visada visual: o piloto ou o observador mantém contato visual direto com a aeronave",
       e: [
         "Voo em linha reta sobre obstáculos",
         "Voo além da linha de visada, guiado só pela tela",
         "Velocidade limite de operação segura",
-        "Voo em local sem cobertura de GPS (navegação por satélite)",
+        "Voo em local sem cobertura de GPS",
       ],
       exp: "VLOS (Visual Line of Sight) é o contato visual direto, sem lentes — só as corretivas são admitidas. Sem contato visual é BVLOS (voo além do alcance visual do piloto).",
       fonte: "ICA 100-40, art. 7º, XXXV",
@@ -97,10 +97,10 @@
     {
       id: "AN-005", tema: "Espaço aéreo", dif: "facil",
       p: "Qual órgão autoriza o acesso de uma aeronave não tripulada ao espaço aéreo brasileiro?",
-      c: "O DECEA (Departamento de Controle do Espaço Aéreo), por meio do SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+      c: "O DECEA, por meio do SARPAS",
       e: [
-        "A ANAC (Agência Nacional de Aviação Civil), por meio do SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)",
-        "A ANATEL (Agência Nacional de Telecomunicações), ao homologar o equipamento",
+        "A ANAC, por meio do SISANT",
+        "A ANATEL, ao homologar o equipamento",
         "A Polícia Federal, nas áreas de fronteira",
         "O comandante da unidade policial, por ordem de serviço",
       ],
@@ -110,16 +110,16 @@
     {
       id: "AN-006", tema: "Cadastro", dif: "facil",
       p: "Em qual sistema a aeronave não tripulada é cadastrada junto à ANAC (Agência Nacional de Aviação Civil)?",
-      c: "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)",
-      e: ["SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)", "RAB (Registro Aeronáutico Brasileiro)", "Mosaico", "AISWEB (portal de informações aeronáuticas do DECEA)"],
-      exp: "SISANT é o cadastro da aeronave na ANAC; SARPAS é a solicitação de voo no DECEA (Departamento de Controle do Espaço Aéreo); Mosaico é a homologação na ANATEL (Agência Nacional de Telecomunicações); AISWEB é informação aeronáutica.",
+      c: "SISANT",
+      e: ["SARPAS", "RAB", "Mosaico", "AISWEB"],
+      exp: "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) é o cadastro da aeronave na ANAC; SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) é a solicitação de voo no DECEA (Departamento de Controle do Espaço Aéreo); Mosaico é a homologação na ANATEL (Agência Nacional de Telecomunicações); AISWEB (portal de informações aeronáuticas do DECEA) é informação aeronáutica.",
       fonte: "Apostila 04, seção 9",
     },
     {
       id: "AN-007", tema: "Regulamentação", dif: "facil",
       p: "Qual é a altura máxima, em regra, da categoria aberta de operação?",
       c: "120 metros (400 pés) AGL (altura acima do solo)",
-      e: ["60 metros (200 pés) AGL", "150 metros (500 pés) AGL", "300 metros (1.000 pés) AGL", "A altura do obstáculo mais alto da área"],
+      e: ["60 metros (200 pés) AGL (altura acima do solo)", "150 metros (500 pés) AGL (altura acima do solo)", "300 metros (1.000 pés) AGL (altura acima do solo)", "A altura do obstáculo mais alto da área"],
       exp: "Categoria aberta: até 400 ft (120 m) AGL. Na operação recreativa o limite cai para 200 ft (60 m).",
       fonte: "ICA 100-40, art. 38; RBAC 100, 100.5(a)(1)",
     },
@@ -143,7 +143,7 @@
       e: [
         "Sim, desde que a dose tenha sido prescrita por médico",
         "Sim, se houver um observador acompanhando o voo",
-        "Sim, desde que o voo seja em VLOS (voo dentro do alcance visual do piloto) e abaixo de 30 metros",
+        "Sim, desde que o voo seja em VLOS e abaixo de 30 metros",
         "Sim, desde que o comandante da operação autorize por escrito",
       ],
       exp: "A regra é tolerância zero, e não é só sobre álcool e drogas: medicamento e falta de sono entram na mesma conta. O operador responde por colocar o piloto em condições de voar.",
@@ -152,14 +152,14 @@
     {
       id: "AN-010", tema: "Regulamentação", dif: "facil",
       p: "Quantas aeronaves um piloto remoto pode operar ao mesmo tempo?",
-      c: "Uma só, salvo autorização específica da ANAC (Agência Nacional de Aviação Civil)",
+      c: "Uma só, salvo autorização específica da ANAC",
       e: [
         "Até duas, se estiverem na mesma área de operação",
         "Até três, se houver um observador para cada aeronave",
-        "Quantas quiser, desde que em VLOS (voo dentro do alcance visual do piloto)",
+        "Quantas quiser, desde que em VLOS",
         "Duas, sendo uma delas obrigatoriamente automatizada",
       ],
-      exp: "A regra da proporção é 1 piloto : 1 aeronave. Show de enxame (swarm) sem autorização da ANAC é irregular no Brasil.",
+      exp: "A regra da proporção é 1 piloto : 1 aeronave. Show de enxame (swarm) sem autorização da ANAC (Agência Nacional de Aviação Civil) é irregular no Brasil.",
       fonte: "RBAC 100 (Apostila 05, seção 6)",
     },
     {
@@ -177,7 +177,7 @@
     },
     {
       id: "AN-012", tema: "Conceitos", dif: "facil",
-      p: "O que significa PMD (Peso Máximo de Decolagem)?",
+      p: "O que significa PMD?",
       c: "Peso máximo de decolagem: o peso máximo com que a aeronave pode decolar e voar com segurança",
       e: [
         "O peso da aeronave vazia, informado pelo fabricante",
@@ -190,7 +190,7 @@
     },
     {
       id: "AN-013", tema: "Espaço aéreo", dif: "facil",
-      p: "O que é uma FRZ (zona restrita de voo ao redor do aeródromo)?",
+      p: "O que é uma FRZ?",
       c: "Zona de Restrição de Voo: espaço aéreo em que o voo de aeronave não tripulada é restringido conforme certas condições",
       e: [
         "Zona de recarga rápida de baterias em operações longas",
@@ -208,7 +208,7 @@
       e: [
         "Pilotar a aeronave quando o piloto estiver cansado",
         "Registrar as imagens e operar a câmera durante o voo",
-        "Cuidar da documentação e do preenchimento do SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+        "Cuidar da documentação e do preenchimento do SARPAS",
         "Isolar o perímetro e afastar curiosos da área de decolagem",
       ],
       exp: "O piloto costuma estar olhando a tela; o observador olha o drone e o céu. Isolar o perímetro é do policial de segurança da equipe.",
@@ -217,9 +217,9 @@
     {
       id: "AN-015", tema: "Radiofrequência", dif: "facil",
       p: "Qual órgão é responsável por homologar (certificar) o equipamento de radiofrequência do drone no Brasil?",
-      c: "ANATEL (Agência Nacional de Telecomunicações)",
-      e: ["ANAC (Agência Nacional de Aviação Civil)", "DECEA (Departamento de Controle do Espaço Aéreo)", "Ministério da Defesa", "INMETRO"],
-      exp: "ANATEL cuida do espectro e da homologação do transmissor; ANAC, da aeronave e do piloto; DECEA, do espaço aéreo.",
+      c: "ANATEL",
+      e: ["ANAC", "DECEA", "Ministério da Defesa", "INMETRO"],
+      exp: "ANATEL (Agência Nacional de Telecomunicações) cuida do espectro e da homologação do transmissor; ANAC (Agência Nacional de Aviação Civil), da aeronave e do piloto; DECEA (Departamento de Controle do Espaço Aéreo), do espaço aéreo.",
       fonte: "ICA 100-40, art. 3º; Lei 9.472/1997",
     },
     {
@@ -264,7 +264,7 @@
     {
       id: "AN-019", tema: "Cadastro", dif: "facil",
       p: "Uma aeronave com PMD (Peso Máximo de Decolagem) de até 250 g precisa de autorização de acesso ao espaço aéreo?",
-      c: "Sim: o DECEA (Departamento de Controle do Espaço Aéreo) exige autorização inclusive para UA (aeronave não tripulada) com PMD de até 250 g",
+      c: "Sim: o DECEA exige autorização inclusive para UA com PMD de até 250 g",
       e: [
         "Não: até 250 g é dispensada de tudo",
         "Não, desde que voe abaixo de 30 metros",
@@ -308,7 +308,7 @@
         "Permitido para animais de pequeno porte",
         "Permitido em operações de resgate",
         "Permitido com autorização do operador da aeronave",
-        "Permitido desde que o PMD (Peso Máximo de Decolagem) não passe de 25 kg",
+        "Permitido desde que o PMD não passe de 25 kg",
       ],
       exp: "O RBAC 100 proíbe transportar pessoas, animais e artigos perigosos, com exceções (agricultura/pecuária, baterias de lítio do próprio equipamento, operações estatais, equipamentos de bordo e o que a ANAC autorizar).",
       fonte: "RBAC 100 (Apostila 05, seção 10)",
@@ -318,9 +318,9 @@
       p: "Qual é o limite de altura da operação recreativa?",
       c: "200 pés (60 metros) AGL (altura acima do solo), com até 300 metros de distância horizontal",
       e: [
-        "400 pés (120 metros) AGL, como na categoria aberta",
-        "100 pés (30 metros) AGL, com até 100 metros de distância",
-        "500 pés (150 metros) AGL, em área desabitada",
+        "400 pés (120 metros) AGL (altura acima do solo), como na categoria aberta",
+        "100 pés (30 metros) AGL (altura acima do solo), com até 100 metros de distância",
+        "500 pés (150 metros) AGL (altura acima do solo), em área desabitada",
         "Não há limite: o voo recreativo é dispensado de regra de altura",
       ],
       exp: "Recreativo é mais restrito que a categoria aberta: 60 m de altura e 300 m de distância horizontal.",
@@ -352,12 +352,12 @@
     {
       id: "AN-030", tema: "Regulamentação", dif: "medio",
       p: "Quais são os requisitos que, TODOS juntos, caracterizam a categoria aberta de operação?",
-      c: "PMD (Peso Máximo de Decolagem) até 25 kg, VLOS (ou EVLOS), até 120 m AGL (altura acima do solo) e sem interseção com EAC (Espaço Aéreo Condicionado) ou FRZ (zona restrita de voo ao redor do aeródromo)",
+      c: "PMD (Peso Máximo de Decolagem) até 25 kg, VLOS (ou EVLOS), até 120 m AGL (altura acima do solo) e sem interseção com EAC ou FRZ (zona restrita de voo ao redor do aeródromo)",
       e: [
-        "PMD até 25 kg, BVLOS (voo além do alcance visual do piloto) permitido e até 120 m AGL",
-        "PMD até 250 g, VLOS e qualquer altura",
-        "PMD até 25 kg, VLOS e até 150 m AGL, mesmo dentro de FRZ",
-        "Qualquer PMD, desde que em VLOS e abaixo de 120 m AGL",
+        "PMD (Peso Máximo de Decolagem) até 25 kg, BVLOS permitido e até 120 m AGL (altura acima do solo)",
+        "PMD (Peso Máximo de Decolagem) até 250 g, VLOS (voo dentro do alcance visual do piloto) e qualquer altura",
+        "PMD (Peso Máximo de Decolagem) até 25 kg, VLOS (voo dentro do alcance visual do piloto) e até 150 m AGL (altura acima do solo), mesmo dentro de FRZ (zona restrita de voo ao redor do aeródromo)",
+        "Qualquer PMD (Peso Máximo de Decolagem), desde que em VLOS (voo dentro do alcance visual do piloto) e abaixo de 120 m AGL (altura acima do solo)",
       ],
       exp: "A aberta é taxativa: não pode faltar nenhum requisito. Basta um alterado (401 ft, 26 kg, BVLOS ou FRZ) e a operação cai na categoria específica.",
       fonte: "ICA 100-40, art. 38; RBAC 100, 100.5(a)(1)",
@@ -391,7 +391,7 @@
         "Altura de voo solicitada menos a altitude do ponto de decolagem",
         "Sempre 120 metros acima do nível médio do mar",
         "Altitude do obstáculo mais alto da área mais 30 metros",
-        "Altura programada no RTH (retorno automático ao ponto de decolagem) somada à altura de voo solicitada",
+        "Altura programada no RTH somada à altura de voo solicitada",
       ],
       exp: "Altitude limite de voo = altitude do solo no ponto de referência + altura solicitada. O piloto não pode extrapolar esse teto, mesmo que o RC mostre pouco.",
       fonte: "ICA 100-40, art. 7º, XII; art. 63, §2º",
@@ -399,14 +399,14 @@
     {
       id: "AN-034", tema: "Espaço aéreo", dif: "medio",
       p: "O que caracteriza uma operação como BVLOS (voo além do alcance visual do piloto), mesmo que o piloto esteja no local do voo?",
-      c: "Pilotar com óculos FPV (pilotagem pela imagem, em óculos ou tela) sem um observador mantendo contato visual com a aeronave",
+      c: "Pilotar com óculos FPV sem um observador mantendo contato visual com a aeronave",
       e: [
         "Voar a mais de 500 metros do ponto de decolagem",
         "Perder momentaneamente o sinal de vídeo da câmera",
-        "Voar acima de 120 metros AGL (altura acima do solo)",
-        "Operar em área confinada, sem GPS (navegação por satélite)",
+        "Voar acima de 120 metros AGL",
+        "Operar em área confinada, sem GPS",
       ],
-      exp: "Com óculos FPV, ou em VLOS (voo dentro do alcance visual do piloto) estendido, o observador é obrigatório; sem ele, a operação passa a ser BVLOS — com todas as exigências que vêm com isso.",
+      exp: "Com óculos FPV (pilotagem pela imagem, em óculos ou tela), ou em VLOS (voo dentro do alcance visual do piloto) estendido, o observador é obrigatório; sem ele, a operação passa a ser BVLOS — com todas as exigências que vêm com isso.",
       fonte: "ICA 100-40, art. 24, §1º",
     },
     {
@@ -414,10 +414,10 @@
       p: "Qual é a ordem correta para regularizar uma aeronave e voar legalmente?",
       c: "Conta gov.br → homologação ANATEL (Agência Nacional de Telecomunicações) do equipamento → cadastro no SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → cadastro/solicitação no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
       e: [
-        "SARPAS → SISANT → ANATEL → gov.br",
-        "SISANT → SARPAS → gov.br → ANATEL",
-        "ANATEL → SARPAS → SISANT, sem necessidade de conta gov.br",
-        "gov.br → SARPAS → SISANT → ANATEL",
+        "SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → ANATEL (Agência Nacional de Telecomunicações) → gov.br",
+        "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → gov.br → ANATEL (Agência Nacional de Telecomunicações)",
+        "ANATEL (Agência Nacional de Telecomunicações) → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC), sem necessidade de conta gov.br",
+        "gov.br → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → ANATEL (Agência Nacional de Telecomunicações)",
       ],
       exp: "Uma etapa obriga a anterior: o SARPAS só aceita aeronave que tenha número do SISANT, e o acesso a tudo isso começa na conta gov.br.",
       fonte: "Apostila 04, seção 9; Apostila 08, seção 2",
@@ -441,9 +441,9 @@
       c: "Perda do enlace C2, tráfego aéreo no local e presença de pessoas não anuentes",
       e: [
         "Chuva, vento forte e interferência eletromagnética",
-        "Falha de bateria, falha de GPS (navegação por satélite) e falha do gimbal",
+        "Falha de bateria, falha de GPS e falha do gimbal",
         "Invasão de fronteira, artigo perigoso e falta de seguro",
-        "Perda do enlace, falha do RTH (retorno automático ao ponto de decolagem) e queda por colisão com ave",
+        "Perda do enlace, falha do RTH e queda por colisão com ave",
       ],
       exp: "Riscos são infinitos; estes três são obrigatórios. Os demais (vento, chuva, interferência) entram conforme o cenário.",
       fonte: "Apostila 06, seção 5",
@@ -476,8 +476,8 @@
       e: [
         "Houver interseção com área perigosa",
         "A operação for noturna",
-        "A aeronave tiver menos de 250 g de PMD (Peso Máximo de Decolagem)",
-        "O piloto ainda não tiver feito a prova teórica da ANAC (Agência Nacional de Aviação Civil)",
+        "A aeronave tiver menos de 250 g de PMD",
+        "O piloto ainda não tiver feito a prova teórica da ANAC",
       ],
       exp: "Área proibida e REH (Rota Especial de Helicóptero) nem entram para análise. Já a área perigosa é permitida sem Termo de Coordenação — cabe ao piloto decidir se aceita o risco.",
       fonte: "ICA 100-40, art. 56, V e VI; art. 29, III",
@@ -485,14 +485,14 @@
     {
       id: "AN-041", tema: "Emergências", dif: "medio",
       p: "Ocorreu um fly-away durante a operação. Qual é a providência imediata do piloto em comando?",
-      c: "Notificar o Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), informando última posição conhecida, altitude, velocidade e autonomia",
+      c: "Notificar o Tático SARPAS, informando última posição conhecida, altitude, velocidade e autonomia",
       e: [
         "Registrar o fato no relatório e comunicar no dia seguinte",
-        "Avisar a ANAC (Agência Nacional de Aviação Civil), que administra o registro da aeronave",
-        "Acionar o CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) para abrir a investigação do incidente",
+        "Avisar a ANAC, que administra o registro da aeronave",
+        "Acionar o CENIPA para abrir a investigação do incidente",
         "Desligar o controle para forçar o retorno automático",
       ],
-      exp: "O Tático SARPAS, no CGNA (Centro de Gerenciamento da Navegação Aérea), é quem recebe o fly-away e difunde alerta aos órgãos ATS (serviços de tráfego aéreo) locais. O piloto em comando tem de saber esse contato antes de voar.",
+      exp: "O Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), no CGNA (Centro de Gerenciamento da Navegação Aérea), é quem recebe o fly-away e difunde alerta aos órgãos ATS (serviços de tráfego aéreo) locais. O piloto em comando tem de saber esse contato antes de voar.",
       fonte: "ICA 100-40, arts. 26 e 76",
     },
     {
@@ -514,7 +514,7 @@
       c: "O piloto remoto em comando",
       e: [
         "O comandante da operação, que determina o horário do serviço",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) da instituição",
+        "O Administrador SARPAS da instituição",
         "O órgão de controle de tráfego aéreo da região",
         "O operador, que é o responsável legal pela aeronave",
       ],
@@ -528,7 +528,7 @@
       e: [
         "A entrega da aeronave ao setor de manutenção após o voo",
         "A passagem do vídeo ao vivo para a sala de situação",
-        "A transferência da autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) para outra equipe",
+        "A transferência da autorização SARPAS para outra equipe",
         "A troca de baterias com a aeronave pairando",
       ],
       exp: "A presença do piloto é obrigatória em todas as fases do voo; se ele precisa se ausentar, a troca de comando só vale com procedimento claro e escrito.",
@@ -540,7 +540,7 @@
       c: "É a pessoa física que gerencia, no SARPAS, as aeronaves, os pilotos e as equipes da instituição, respondendo por elas",
       e: [
         "É o oficial que autoriza o voo de risco extremo",
-        "É o servidor da ANAC (Agência Nacional de Aviação Civil) que aprova o cadastro das aeronaves",
+        "É o servidor da ANAC que aprova o cadastro das aeronaves",
         "É o piloto mais antigo, que fiscaliza os demais em campo",
         "É o responsável técnico pela manutenção das aeronaves",
       ],
@@ -553,7 +553,7 @@
       c: "Porque a aeronave deixa de manter a posição sozinha e passa a derivar com o vento",
       e: [
         "Porque os motores perdem potência e a aeronave desce",
-        "Porque o RTH (retorno automático ao ponto de decolagem) fica mais preciso e pode voltar em linha reta contra obstáculos",
+        "Porque o RTH fica mais preciso e pode voltar em linha reta contra obstáculos",
         "Porque a câmera para de gravar e o piloto perde a referência",
         "Porque a aeronave acelera automaticamente até o limite de velocidade",
       ],
@@ -566,9 +566,9 @@
       c: "Todas as operações devem ter seguro de danos a terceiros, exceto as de entidades estatais e a aplicação agrícola em áreas desabitadas",
       e: [
         "Nenhuma operação com UAS precisa de seguro",
-        "Todas as operações precisam do seguro RETA (seguro obrigatório de responsabilidade perante terceiros), sem exceção",
-        "O seguro é exigido apenas acima de 25 kg de PMD (Peso Máximo de Decolagem)",
-        "O seguro é exigido apenas em voo BVLOS (voo além do alcance visual do piloto)",
+        "Todas as operações precisam do seguro RETA, sem exceção",
+        "O seguro é exigido apenas acima de 25 kg de PMD",
+        "O seguro é exigido apenas em voo BVLOS",
       ],
       exp: "A isenção da polícia decorre de ser operação do Estado — não de o drone ser pequeno.",
       fonte: "RBAC 100 (Apostila 05, seção 13)",
@@ -580,7 +580,7 @@
       e: [
         "A ZAD é a área do pátio de estacionamento e a ZEA é a pista",
         "A ZAD vale para helicópteros e a ZEA para aviões",
-        "A ZAD é definida pelo fabricante do drone e a ZEA pelo DECEA (Departamento de Controle do Espaço Aéreo)",
+        "A ZAD é definida pelo fabricante do drone e a ZEA pelo DECEA",
         "A ZAD é diurna e a ZEA é noturna",
       ],
       exp: "Bizu da aula: 'ZAD tem o D do meio — Aproximação e Decolagem'. A ZEH (Zona de Entorno do Heliponto) é o círculo do heliponto, sem cones, porque o helicóptero opera na vertical.",
@@ -592,8 +592,8 @@
       c: "Pelo operador da aeronave, antes da solicitação de acesso ao espaço aéreo",
       e: [
         "Pelo piloto, no momento em que a emergência acontece",
-        "Pelo órgão ATS (serviços de tráfego aéreo) local, ao emitir o Termo de Coordenação",
-        "Pela ANAC (Agência Nacional de Aviação Civil), ao aprovar o cenário padrão da operação",
+        "Pelo órgão ATS local, ao emitir o Termo de Coordenação",
+        "Pela ANAC, ao aprovar o cenário padrão da operação",
         "Pelo observador, durante o briefing da equipe",
       ],
       exp: "O plano vem antes do pedido, com procedimentos de terminação, rotas/EAC (Espaço Aéreo Condicionado) envolvidos e os crash sites. O piloto tem de conhecer e aplicar.",
@@ -607,7 +607,7 @@
         "A hora de voo registrada no log da aeronave",
         "O tempo mínimo de descanso entre dois voos",
         "A vistoria do compartimento da bateria antes da decolagem",
-        "O tempo de voo em simulador exigido pela ANAC (Agência Nacional de Aviação Civil)",
+        "O tempo de voo em simulador exigido pela ANAC",
       ],
       exp: "Situações críticas exigem resposta imediata; repetir mentalmente (e com as mãos) a reação a perda de link, bateria crítica e invasão dos 30 m é o que dá essa resposta.",
       fonte: "IS nº E94-003 (Apostila 06, seção 2)",
@@ -649,7 +649,7 @@
     {
       id: "AN-055", tema: "Espaço aéreo", dif: "medio",
       p: "Numa Zona UTM (gerenciamento de tráfego de aeronaves não tripuladas), quais são os limites de duração e de área da solicitação?",
-      c: "Até 1 hora de voo, em área circular de no máximo 15 km² em VLOS (voo dentro do alcance visual do piloto) ou 30 km² em BVLOS (voo além do alcance visual do piloto)",
+      c: "Até 1 hora de voo, em área circular de no máximo 15 km² em VLOS ou 30 km² em BVLOS",
       e: [
         "Até 4 horas de voo, em área de no máximo 100 km²",
         "Até 1 hora de voo, em área de no máximo 100 km²",
@@ -679,18 +679,18 @@
       p: "Quais requisitos a operação aérea especial de órgão de segurança pública tem de cumprir, além de ser em circunstância incomum que não permita planejamento prévio?",
       c: "PMD (Peso Máximo de Decolagem) até 25 kg, VLOS (voo dentro do alcance visual do piloto) e até 400 pés (120 m) AGL (altura acima do solo)",
       e: [
-        "PMD até 25 kg, BVLOS (voo além do alcance visual do piloto) permitido e até 400 pés AGL",
-        "Qualquer PMD, VLOS e até 400 pés AGL",
-        "PMD até 25 kg, VLOS e sem limite de altura",
-        "PMD até 250 g, VLOS e até 200 pés AGL",
+        "PMD (Peso Máximo de Decolagem) até 25 kg, BVLOS permitido e até 400 pés AGL (altura acima do solo)",
+        "Qualquer PMD (Peso Máximo de Decolagem), VLOS (voo dentro do alcance visual do piloto) e até 400 pés AGL (altura acima do solo)",
+        "PMD (Peso Máximo de Decolagem) até 25 kg, VLOS (voo dentro do alcance visual do piloto) e sem limite de altura",
+        "PMD (Peso Máximo de Decolagem) até 250 g, VLOS (voo dentro do alcance visual do piloto) e até 200 pés AGL (altura acima do solo)",
       ],
-      exp: "O privilégio é no prazo (30 minutos) e na prioridade, não nos limites: acima de 400 ft ou BVLOS só com órgão acreditado, espaço aéreo segregado e Acordo Operacional prévio.",
+      exp: "O privilégio é no prazo (30 minutos) e na prioridade, não nos limites: acima de 400 ft ou BVLOS (voo além do alcance visual do piloto) só com órgão acreditado, espaço aéreo segregado e Acordo Operacional prévio.",
       fonte: "ICA 100-40, arts. 44 a 46",
     },
     {
       id: "AN-072", tema: "Regulamentação", dif: "dificil",
       p: "Em que condições um órgão especial com necessidade de resposta imediata pode registrar a solicitação DEPOIS do voo?",
-      c: "Se estiver acreditado pelo DECEA (Departamento de Controle do Espaço Aéreo), houver impossibilidade de solicitação prévia, o registro ocorrer em até 24 h e o voo tiver sido com UA (aeronave não tripulada) até 25 kg, VLOS (voo dentro do alcance visual do piloto), até 400 ft e sem interseção com FRZ (zona restrita de voo ao redor do aeródromo), TRA (Área Temporariamente Reservada), TSA (Área Temporariamente Segregada), área restrita ou proibida",
+      c: "Se estiver acreditado pelo DECEA, houver impossibilidade de solicitação prévia, o registro ocorrer em até 24 h e o voo tiver sido com UA até 25 kg, VLOS, até 400 ft e sem interseção com FRZ, TRA, TSA, área restrita ou proibida",
       e: [
         "Sempre que a operação for policial, em até 72 horas",
         "Se o voo tiver ocorrido em área urbana, em até 24 horas",
@@ -706,8 +706,8 @@
       c: "Quando a operação ocorre a mais de 150 metros horizontais de pessoas não envolvidas e não anuentes, ou quando há barreira mecânica suficientemente forte para protegê-las",
       e: [
         "Quando a operação é de órgão de segurança pública",
-        "Quando a aeronave tem PMD (Peso Máximo de Decolagem) de até 250 g",
-        "Quando o voo é em VLOS (voo dentro do alcance visual do piloto) e abaixo de 30 metros",
+        "Quando a aeronave tem PMD de até 250 g",
+        "Quando o voo é em VLOS e abaixo de 30 metros",
         "Quando já existe uma ARO de outro voo na mesma cidade",
       ],
       exp: "É a única dispensa prevista. Fora dela, toda operação tem ARO, com no mínimo os três riscos obrigatórios.",
@@ -716,14 +716,14 @@
     {
       id: "AN-075", tema: "Espaço aéreo", dif: "medio",
       p: "Qual é a consequência de uma operação com UA (aeronave não tripulada) próxima a aeródromo ou a auxílio à navegação SEM a devida autorização, segundo a ICA 100-40?",
-      c: "É considerada Ato de Interferência Ilícita contra a Aviação Civil, no âmbito do Programa AVSEC do SISCEAB (Sistema de Controle do Espaço Aéreo Brasileiro)",
+      c: "É considerada Ato de Interferência Ilícita contra a Aviação Civil, no âmbito do Programa AVSEC do SISCEAB",
       e: [
-        "É infração leve, punida com advertência pela ANAC (Agência Nacional de Aviação Civil)",
+        "É infração leve, punida com advertência pela ANAC",
         "É crime de dano ao patrimônio público, apurado pela Polícia Federal",
         "É irregularidade administrativa resolvida com o registro posterior em 24 h",
-        "É infração de trânsito aéreo julgada pelo CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)",
+        "É infração de trânsito aéreo julgada pelo CENIPA",
       ],
-      exp: "O §3º do art. 19 é expresso. E quem julga a infração de tráfego aéreo é a JJAER (Junta de Julgamento da Aeronáutica); o CENIPA investiga acidentes com finalidade só de prevenção, sem atribuir culpa.",
+      exp: "O §3º do art. 19 é expresso. E quem julga a infração de tráfego aéreo é a JJAER (Junta de Julgamento da Aeronáutica); o CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) investiga acidentes com finalidade só de prevenção, sem atribuir culpa.",
       fonte: "ICA 100-40, art. 19, §3º; art. 66",
     },
     {
@@ -732,7 +732,7 @@
       c: "RBAC nº 100, aprovado pela Resolução ANAC nº 805, de 15/06/2026",
       e: [
         "RBAC nº 90, aprovado em 2024",
-        "ICA 100-40, publicada pelo DECEA (Departamento de Controle do Espaço Aéreo) em 2026",
+        "ICA 100-40, publicada pelo DECEA em 2026",
         "IS nº E94-003, Revisão A, de 2017",
         "RBAC-E nº 94, Emenda 03, de 2023",
       ],
@@ -742,14 +742,14 @@
     {
       id: "AN-077", tema: "Espaço aéreo", dif: "medio",
       p: "Em quais tipos de Espaço Aéreo Condicionado a operação exige a apresentação de Termo de Coordenação (TCo)?",
-      c: "Área restrita, TRA (Área Temporariamente Reservada) e TSA (Área Temporariamente Segregada)",
+      c: "Área restrita, TRA (Área Temporariamente Reservada) e TSA",
       e: [
-        "Área proibida e REH (Rota Especial de Helicóptero)",
+        "Área proibida e REH",
         "Área perigosa e área proibida",
-        "Somente TRA",
-        "Qualquer EAC (Espaço Aéreo Condicionado), inclusive área perigosa",
+        "Somente TRA (Área Temporariamente Reservada)",
+        "Qualquer EAC, inclusive área perigosa",
       ],
-      exp: "Área proibida veda a operação (a solicitação nem é aceita) e REH também impede. Área perigosa dispensa TCo — o piloto decide se aceita o risco. Em Área Adequada o TCo é dispensado.",
+      exp: "Área proibida veda a operação (a solicitação nem é aceita) e REH (Rota Especial de Helicóptero) também impede. Área perigosa dispensa TCo — o piloto decide se aceita o risco. Em Área Adequada o TCo é dispensado.",
       fonte: "ICA 100-40, art. 29 e art. 28, parágrafo único",
     },
     {
@@ -758,7 +758,7 @@
       c: "Não há transferência automática: a conduta do piloto será apurada pelo log do voo e pelas medidas que ele adotou",
       e: [
         "A responsabilidade passa integralmente a quem autorizou o voo",
-        "O piloto responde apenas se não houver ARO (Avaliação de Risco Operacional) assinada",
+        "O piloto responde apenas se não houver ARO assinada",
         "A responsabilidade é do observador, que deveria ter avisado",
         "Não há responsabilidade quando a ordem é de autoridade superior",
       ],
@@ -781,7 +781,7 @@
     {
       id: "AN-080", tema: "Espaço aéreo", dif: "medio",
       p: "Qual é o prazo máximo de duração de uma autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) e em que condição ela pode ser estendida?",
-      c: "Até 90 dias; a autorização de 90 dias com NOTAM (aviso aos aeronavegantes) pode ser estendida por 60 dias, se pedida com 8 dias de antecedência do término e com parecer favorável",
+      c: "Até 90 dias; a autorização de 90 dias com NOTAM pode ser estendida por 60 dias, se pedida com 8 dias de antecedência do término e com parecer favorável",
       e: [
         "Até 30 dias, prorrogáveis por mais 30 a qualquer momento",
         "Até 12 meses, renováveis automaticamente",
@@ -797,8 +797,8 @@
       c: "Que o local continue seguro no dia e no horário da operação — uma área de feira, por exemplo, não serve no dia em que a feira funciona",
       e: [
         "Que o local esteja a menos de 30 metros do ponto de decolagem",
-        "Que o local tenha cobertura de GPS (navegação por satélite) e sinal de telefonia",
-        "Que o local seja o mesmo home point programado no RTH (retorno automático ao ponto de decolagem)",
+        "Que o local tenha cobertura de GPS e sinal de telefonia",
+        "Que o local seja o mesmo home point programado no RTH",
         "Que o local seja pavimentado, para reduzir dano à aeronave",
       ],
       exp: "O crash site segue os mesmos rigores de segurança da operação. Nem toda missão vai ter um — às vezes não existe local melhor para a aeronave cair.",
@@ -807,12 +807,12 @@
     {
       id: "AN-083", tema: "Regulamentação", dif: "medio",
       p: "Uma operação de aerolevantamento cruzando a fronteira com outro país, feita por órgão estadual de segurança pública, depende de quê?",
-      c: "Autorização expressa da ANAC (Agência Nacional de Aviação Civil), regulamentação do DECEA (Departamento de Controle do Espaço Aéreo) e integração com o outro país — sem isso, vira incidente internacional",
+      c: "Autorização expressa da ANAC, regulamentação do DECEA e integração com o outro país — sem isso, vira incidente internacional",
       e: [
-        "Apenas da autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), porque é operação de Estado",
-        "Apenas do Acordo Operacional com o órgão ATS (serviços de tráfego aéreo) local",
+        "Apenas da autorização SARPAS, porque é operação de Estado",
+        "Apenas do Acordo Operacional com o órgão ATS local",
         "Apenas da autorização do Ministério da Defesa",
-        "De nada além do cadastro SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC), já que a aeronave é a mesma",
+        "De nada além do cadastro SISANT, já que a aeronave é a mesma",
       ],
       exp: "Ponto crítico para o BPFRON (Batalhão de Polícia de Fronteira e Divisas): nenhum agente de Estado voa por cima da fronteira sem esse conjunto de autorizações.",
       fonte: "Apostila 05, seção 13",
@@ -820,12 +820,12 @@
     {
       id: "AN-085", tema: "Espaço aéreo", dif: "dificil",
       p: "Ao atender ocorrência de drone irregular sobrevoando estabelecimento penal, qual é o procedimento correto do policial?",
-      c: "Coletar materialidade e autoria (imagens da aeronave, identificação do operador, horário e local) e encaminhar cópia do procedimento à Organização Regional do DECEA (Departamento de Controle do Espaço Aéreo) da área",
+      c: "Coletar materialidade e autoria (imagens da aeronave, identificação do operador, horário e local) e encaminhar cópia do procedimento à Organização Regional do DECEA da área",
       e: [
         "Derrubar a aeronave com o meio disponível e apreendê-la",
-        "Encaminhar o caso ao CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos), que julga as infrações de tráfego aéreo",
-        "Registrar boletim e aguardar o pedido formal da ANAC (Agência Nacional de Aviação Civil)",
-        "Acionar o Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), que aplica a multa ao operador",
+        "Encaminhar o caso ao CENIPA, que julga as infrações de tráfego aéreo",
+        "Registrar boletim e aguardar o pedido formal da ANAC",
+        "Acionar o Tático SARPAS, que aplica a multa ao operador",
       ],
       exp: "Estabelecimento penal é área de segurança, logo FRZ (zona restrita de voo ao redor do aeródromo). A apuração criminal é da polícia; a administrativa é do COMAER, e quem julga a infração de tráfego aéreo é a JJAER — por isso o procedimento vai à Organização Regional (em Rondônia, o CINDACTA IV).",
       fonte: "ICA 100-40, arts. 13, 67 a 71",
@@ -836,7 +836,7 @@
       c: "O responsável legal pela operação — o comandante da unidade e, em último nível, o comandante-geral — que designa o piloto remoto como seu preposto",
       e: [
         "O policial que está com o controle na mão durante o voo",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) da instituição",
+        "O Administrador SARPAS da instituição",
         "O órgão de controle de tráfego aéreo que autoriza o voo",
         "O setor de patrimônio, que detém a carga da aeronave",
       ],
@@ -862,11 +862,11 @@
       c: "Não: pelo peso já é categoria específica — o que existe é prazo facilitado de 30 minutos em condições determinadas",
       e: [
         "Sim, porque a atividade agrícola tem isenção prevista no RBAC 100",
-        "Sim, desde que em VLOS (voo dentro do alcance visual do piloto) e abaixo de 30 metros",
+        "Sim, desde que em VLOS e abaixo de 30 metros",
         "Sim, porque o defensivo agrícola não é artigo perigoso",
         "Não: é sempre categoria certificada, por causa dos produtos químicos",
       ],
-      exp: "A facilitação é no prazo: operação aeroagrícola específica com PMD > 25 kg, VLOS, até 100 ft (30 m), sem FRZ (zona restrita de voo ao redor do aeródromo)/EAC (Espaço Aéreo Condicionado) e sobre área desabitada pode ser solicitada com 30 minutos.",
+      exp: "A facilitação é no prazo: operação aeroagrícola específica com PMD > 25 kg, VLOS (voo dentro do alcance visual do piloto), até 100 ft (30 m), sem FRZ (zona restrita de voo ao redor do aeródromo)/EAC (Espaço Aéreo Condicionado) e sobre área desabitada pode ser solicitada com 30 minutos.",
       fonte: "ICA 100-40, art. 57, §1º, II",
     },
     /* ------- METEOROLOGIA ------- */
@@ -898,7 +898,7 @@
       e: [
         "Porque o ar quente aumenta a densidade e trava as hélices",
         "Porque o calor melhora a sustentação, mas derruba o sinal de rádio",
-        "Porque o GPS (navegação por satélite) perde precisão acima de 30 °C",
+        "Porque o GPS perde precisão acima de 30 °C",
         "Porque o gimbal se desregula com a temperatura",
       ],
       exp: "Menos densidade do ar = menos sustentação para a mesma rotação, então o motor trabalha mais e a bateria esquenta e rende menos. Em Rondônia, isso é rotina.",
@@ -912,7 +912,7 @@
         "Continuar até a chuva chegar ao ponto de decolagem",
         "Descer para 30 metros e continuar a filmagem",
         "Pousar a aeronave no local mais próximo e buscá-la depois da chuva",
-        "Programar o RTH (retorno automático ao ponto de decolagem) e desligar o controle para economizar bateria",
+        "Programar o RTH e desligar o controle para economizar bateria",
       ],
       exp: "A própria ARO (Avaliação de Risco Operacional) modelo manda suspender quando a condição climática muda durante a operação. Chuva vem junto com rajada — o problema raramente é só a água.",
       fonte: "ICA 100-40, art. 27; Apostila 06, situação 5",
@@ -923,7 +923,7 @@
       c: "As rajadas, que podem passar bem do valor médio, e o consumo extra de bateria no retorno contra o vento",
       e: [
         "Nada: com margem de 4 m/s a operação é segura em qualquer situação",
-        "Apenas a precisão do GPS (navegação por satélite), que cai com vento lateral",
+        "Apenas a precisão do GPS, que cai com vento lateral",
         "Apenas o alcance do enlace de rádio, reduzido pelo vento",
         "Apenas a estabilidade da imagem, corrigida pelo gimbal",
       ],
@@ -951,8 +951,8 @@
       c: "Pode entrar em anel de vórtice, perdendo sustentação e ficando instável até sair do fluxo com deslocamento lateral",
       e: [
         "Ganha sustentação extra e desce mais devagar do que o comandado",
-        "Perde o sinal de GPS (navegação por satélite) por causa da turbulência das hélices",
-        "Entra automaticamente em RTH (retorno automático ao ponto de decolagem) por segurança",
+        "Perde o sinal de GPS por causa da turbulência das hélices",
+        "Entra automaticamente em RTH por segurança",
         "Nada: a descida vertical é sempre o modo mais seguro de pousar",
       ],
       exp: "O anel de vórtice (VRS) aparece na descida vertical rápida: a hélice recircula o próprio ar sujo. A saída é dar deslocamento lateral/para frente e reduzir a taxa de descida.",
@@ -961,20 +961,20 @@
     {
       id: "AN-112", tema: "Teoria de voo", dif: "medio",
       p: "Por que a calibração da bússola/IMU faz parte do checklist antes do voo?",
-      c: "Porque bússola desalinhada ou influenciada por metal faz a aeronave derivar e pode comprometer o RTH (retorno automático ao ponto de decolagem)",
+      c: "Porque bússola desalinhada ou influenciada por metal faz a aeronave derivar e pode comprometer o RTH",
       e: [
         "Porque sem calibrar a câmera não grava em alta resolução",
         "Porque a calibração aumenta a autonomia da bateria",
-        "Porque a ANAC (Agência Nacional de Aviação Civil) exige registro da calibração em cada voo",
+        "Porque a ANAC exige registro da calibração em cada voo",
         "Porque a calibração amplia o alcance do enlace de rádio",
       ],
-      exp: "A bússola dá a referência de direção. Decolar em cima de estrutura metálica ou sem calibrar é receita de deriva — e o RTH depende dessa referência.",
+      exp: "A bússola dá a referência de direção. Decolar em cima de estrutura metálica ou sem calibrar é receita de deriva — e o RTH (retorno automático ao ponto de decolagem) depende dessa referência.",
       fonte: "Modelo de ARO — perigo 1 (Apostila 06)",
     },
     {
       id: "AN-113", tema: "Teoria de voo", dif: "facil",
       p: "O que o sistema GNSS/GPS (navegação por satélite) faz pelo multirrotor em voo normal?",
-      c: "Mantém a posição no ar e registra o home point usado pelo RTH (retorno automático ao ponto de decolagem)",
+      c: "Mantém a posição no ar e registra o home point usado pelo RTH",
       e: [
         "Aumenta a potência dos motores em altitude elevada",
         "Corrige a exposição da câmera conforme a luz",
@@ -1000,14 +1000,14 @@
     {
       id: "AN-115", tema: "Técnico", dif: "facil",
       p: "O que o recurso AirSense, presente em drones DJI, faz?",
-      c: "Alerta o piloto sobre aeronaves tripuladas próximas que transmitem ADS-B (vigilância automática que transmite a posição da aeronave)",
+      c: "Alerta o piloto sobre aeronaves tripuladas próximas que transmitem ADS-B",
       e: [
         "Detecta qualquer aeronave próxima, com ou sem transponder",
         "Mede a qualidade do ar para operações de defesa civil",
         "Bloqueia a decolagem em zonas proibidas pelo fabricante",
         "Aumenta o alcance do enlace de rádio em área urbana",
       ],
-      exp: "AirSense é receptor ADS-B: só vê quem transmite. Aeronave sem transponder não aparece — por isso o observador continua indispensável.",
+      exp: "AirSense é receptor ADS-B (vigilância automática que transmite a posição da aeronave): só vê quem transmite. Aeronave sem transponder não aparece — por isso o observador continua indispensável.",
       fonte: "Apostila 03, seção 1",
     },
     {
@@ -1017,7 +1017,7 @@
       e: [
         "Aumentar o alcance da transmissão de vídeo para 20 km",
         "Permitir o voo autônomo sem intervenção do piloto",
-        "Substituir o GPS (navegação por satélite) em ambientes confinados, sem sinal de satélite",
+        "Substituir o GPS em ambientes confinados, sem sinal de satélite",
         "Detectar obstáculos por laser em todas as direções",
       ],
       exp: "RTK (Real-Time Kinematic) é correção de GNSS — essencial em mapeamento e inspeção. Quem resolve a falta de satélite é LiDAR/sensor visual.",
@@ -1041,8 +1041,8 @@
       p: "Numa operação noturna, qual exigência da norma incide sobre o equipamento mesmo que a operação seja dispensada de CNS?",
       c: "As luzes de navegação, cuja dispensa não se aplica ao voo noturno",
       e: [
-        "O transponder ADS-B (vigilância automática que transmite a posição da aeronave) embarcado",
-        "O rádio VHF (faixa de rádio da aviação) de aviação a bordo da aeronave",
+        "O transponder ADS-B embarcado",
+        "O rádio VHF de aviação a bordo da aeronave",
         "O paraquedas de emergência homologado",
         "O sistema anticolisão automático (DAA)",
       ],
@@ -1070,7 +1070,7 @@
       c: "Deixar de perceber o que acontece em volta — tráfego, pessoas, bateria, vento — por excesso de foco na tela",
       e: [
         "Perder o sinal de vídeo e continuar comandando às cegas",
-        "Esquecer de registrar o voo no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) depois da operação",
+        "Esquecer de registrar o voo no SARPAS depois da operação",
         "Confundir a aeronave com outra na mesma área",
         "Operar sem ter dormido o suficiente na noite anterior",
       ],
@@ -1084,7 +1084,7 @@
       e: [
         "Somente o piloto, porque a responsabilidade é individual",
         "Somente o comandante da operação, que fez a escala",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), que cadastra os pilotos",
+        "O Administrador SARPAS, que cadastra os pilotos",
         "Ninguém: falta de sono não é impedimento previsto em norma",
       ],
       exp: "Cabe ao operador garantir treinamento e condição psicofísica compatíveis com a missão — e a norma cita expressamente a falta de sono, junto de droga e medicamento.",
@@ -1123,10 +1123,10 @@
       p: "O que o planejamento do voo deve incluir, no mínimo, segundo a ICA 100-40?",
       c: "Restrições do espaço aéreo, necessidade de coordenação, meteorologia atualizada, autonomia da bateria, plano alternativo e consulta aos produtos AIS",
       e: [
-        "Apenas a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) impressa e a bateria carregada",
+        "Apenas a autorização SARPAS impressa e a bateria carregada",
         "Apenas a ordem de serviço e o contato do comandante",
-        "Apenas a ARO (Avaliação de Risco Operacional) assinada e o seguro da aeronave",
-        "Apenas o número do SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) e a homologação ANATEL (Agência Nacional de Telecomunicações)",
+        "Apenas a ARO assinada e o seguro da aeronave",
+        "Apenas o número do SISANT e a homologação ANATEL",
       ],
       exp: "É a lista do art. 73. Autonomia da bateria e plano alternativo estão lá — não são 'zelo extra', são requisito.",
       fonte: "ICA 100-40, art. 73",
@@ -1150,7 +1150,7 @@
       c: "O piloto remoto em comando, antes de cada decolagem",
       e: [
         "O observador, enquanto o piloto monta a estação",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), no cadastro da missão",
+        "O Administrador SARPAS, no cadastro da missão",
         "O setor de manutenção, uma vez por semana",
         "O comandante da operação, ao autorizar o serviço",
       ],
@@ -1164,7 +1164,7 @@
       e: [
         "Dois pilotos alternando o comando a cada 10 minutos",
         "Um segundo drone acompanhando a aeronave principal",
-        "Autorização verbal do órgão ATS (serviços de tráfego aéreo) mais próximo",
+        "Autorização verbal do órgão ATS mais próximo",
         "Apenas o registro no log de que o voo foi em FPV",
       ],
       exp: "Óculos FPV sem observador = BVLOS (voo além do alcance visual do piloto), com todas as exigências que isso traz (8 dias, segregação, acordo operacional para órgão especial).",
@@ -1188,9 +1188,9 @@
     {
       id: "AN-140", tema: "Espaço aéreo", dif: "facil",
       p: "Qual órgão do COMAER é o Órgão Central do SISCEAB (Sistema de Controle do Espaço Aéreo Brasileiro), responsável pelo controle do espaço aéreo brasileiro?",
-      c: "DECEA (Departamento de Controle do Espaço Aéreo)",
-      e: ["CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)", "JJAER (Junta de Julgamento da Aeronáutica)", "CGNA (Centro de Gerenciamento da Navegação Aérea)", "ANAC (Agência Nacional de Aviação Civil)"],
-      exp: "DECEA é o Órgão Central. O CGNA abriga a Seção e o Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA); a JJAER julga infrações; o CENIPA investiga acidentes para prevenir.",
+      c: "DECEA",
+      e: ["CENIPA", "JJAER", "CGNA", "ANAC"],
+      exp: "DECEA (Departamento de Controle do Espaço Aéreo) é o Órgão Central. O CGNA (Centro de Gerenciamento da Navegação Aérea) abriga a Seção e o Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA); a JJAER (Junta de Julgamento da Aeronáutica) julga infrações; o CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) investiga acidentes para prevenir.",
       fonte: "ICA 100-40, art. 5º; Apostila 01, seção 8",
     },
     {
@@ -1198,10 +1198,10 @@
       p: "Uma operação em Rondônia é analisada por qual Organização Regional do DECEA (Departamento de Controle do Espaço Aéreo)?",
       c: "CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) IV, em Manaus (FIR Amazônica)",
       e: [
-        "CINDACTA I, em Brasília",
-        "CINDACTA II, em Curitiba",
-        "CINDACTA III, em Recife",
-        "CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste), em São Paulo",
+        "CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I, em Brasília",
+        "CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) II, em Curitiba",
+        "CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) III, em Recife",
+        "CRCEA-SE, em São Paulo",
       ],
       exp: "Rondônia está na FIR (região de informação de voo) Amazônica, sob o CINDACTA IV — inclusive para encaminhar procedimento de drone irregular.",
       fonte: "ICA 100-40, Anexo II; Apostila 01, seção 8",
@@ -1210,21 +1210,21 @@
       id: "AN-142", tema: "Regulamentação", dif: "facil",
       p: "Qual órgão julga administrativamente as infrações de tráfego aéreo e aplica as penalidades do Código Brasileiro de Aeronáutica?",
       c: "JJAER — Junta de Julgamento da Aeronáutica",
-      e: ["CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)", "ANAC (Agência Nacional de Aviação Civil)", "DECEA (Departamento de Controle do Espaço Aéreo)", "Polícia Federal"],
-      exp: "JJAER pune; CENIPA investiga acidentes só para prevenir, e suas conclusões não servem para atribuir culpa.",
+      e: ["CENIPA", "ANAC", "DECEA", "Polícia Federal"],
+      exp: "JJAER (Junta de Julgamento da Aeronáutica) pune; CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) investiga acidentes só para prevenir, e suas conclusões não servem para atribuir culpa.",
       fonte: "ICA 100-40, arts. 4º, §1º e 66",
     },
     {
       id: "AN-143", tema: "Espaço aéreo", dif: "medio",
       p: "Estabelecimento penal, refinaria, usina hidrelétrica e área militar são exemplos de:",
-      c: "Áreas de segurança e locais de interesse estratégico, em torno das quais existem FRZ (zona restrita de voo ao redor do aeródromo)",
+      c: "Áreas de segurança e locais de interesse estratégico, em torno das quais existem FRZ",
       e: [
         "Áreas proibidas, onde a solicitação de voo nem é aceita",
         "Espaço aéreo segregado de uso exclusivo das Forças Armadas",
-        "Zonas UTM (gerenciamento de tráfego de aeronaves não tripuladas), com solicitação simplificada de 30 minutos",
+        "Zonas UTM, com solicitação simplificada de 30 minutos",
         "Áreas adequadas, com parâmetros flexibilizados",
       ],
-      exp: "A lista do art. 13 (ICA 100-36) cria FRZ. É por isso que drone sobre presídio é ocorrência — e o policial coleta materialidade e autoria.",
+      exp: "A lista do art. 13 (ICA 100-36) cria FRZ (zona restrita de voo ao redor do aeródromo). É por isso que drone sobre presídio é ocorrência — e o policial coleta materialidade e autoria.",
       fonte: "ICA 100-40, art. 13",
     },
     {
@@ -1232,10 +1232,10 @@
       p: "Operação em área confinada (dentro de uma edificação) é atividade em espaço aéreo, de responsabilidade do DECEA (Departamento de Controle do Espaço Aéreo)?",
       c: "Não, mas as regras de segurança, de equipe e de responsabilidade continuam valendo",
       e: [
-        "Sim, e exige solicitação no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) com 4 dias de antecedência",
+        "Sim, e exige solicitação no SARPAS com 4 dias de antecedência",
         "Sim, e é sempre categoria específica",
         "Não, e por isso nenhuma regra se aplica a esse voo",
-        "Não, mas exige autorização da ANATEL (Agência Nacional de Telecomunicações) para o enlace",
+        "Não, mas exige autorização da ANATEL para o enlace",
       ],
       exp: "O art. 31 tira a área confinada do escopo do DECEA. Não tira a responsabilidade do operador nem do piloto.",
       fonte: "ICA 100-40, art. 31",
@@ -1258,9 +1258,9 @@
       p: "Uma denúncia de atividade irregular de drone deve conter, entre outros elementos:",
       c: "Descrição sucinta, data e hora, e documentos/fotos/vídeos que identifiquem a aeronave e o responsável pela operação",
       e: [
-        "Apenas o número do SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) da aeronave envolvida",
+        "Apenas o número do SISANT da aeronave envolvida",
         "Apenas o nome e o endereço do denunciante",
-        "Laudo técnico da ANATEL (Agência Nacional de Telecomunicações) sobre a frequência usada",
+        "Laudo técnico da ANATEL sobre a frequência usada",
         "Autorização judicial para uso das imagens",
       ],
       exp: "Materialidade (a aeronave) e autoria (quem operava) são o que permite a Organização Regional e a JJAER (Junta de Julgamento da Aeronáutica) seguirem com o processo.",
@@ -1269,12 +1269,12 @@
     {
       id: "AN-147", tema: "Regulamentação", dif: "dificil",
       p: "Um órgão de segurança pública quer voar BVLOS (voo além do alcance visual do piloto) em operação aérea especial. O que a norma exige?",
-      c: "Que o órgão esteja acreditado pelo DECEA (Departamento de Controle do Espaço Aéreo) como de resposta imediata, com espaço aéreo segregado e Acordo Operacional prévio",
+      c: "Que o órgão esteja acreditado pelo DECEA como de resposta imediata, com espaço aéreo segregado e Acordo Operacional prévio",
       e: [
         "Nada além da solicitação com 30 minutos de antecedência",
         "Apenas a presença de observador no local do voo",
         "Apenas o registro do voo em até 24 horas depois",
-        "Apenas a ARO (Avaliação de Risco Operacional) assinada pelo comandante-geral",
+        "Apenas a ARO assinada pelo comandante-geral",
       ],
       exp: "Operação aérea especial 'normal' é limitada a 25 kg, VLOS (voo dentro do alcance visual do piloto) e 400 ft. Ultrapassar isso exige acreditação, segregação e AOp — arts. 45 e 46.",
       fonte: "ICA 100-40, arts. 44 a 46",
@@ -1286,7 +1286,7 @@
       e: [
         "Horário local de cada estado",
         "Horário UTC (Zulu), como nos planos de voo",
-        "Horário de Manaus, sede do CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) IV",
+        "Horário de Manaus, sede do CINDACTA IV",
         "Horário do fuso do aeródromo mais próximo",
       ],
       exp: "Erro clássico: pedir '16h50' pensando no horário local quando em Brasília já são 17h50 — o sistema não retrocede e o pedido é negado.",
@@ -1298,7 +1298,7 @@
       c: "Rubricada em todas as folhas, digital ou impressa, dentro da maleta do drone ou na pasta da equipe",
       e: [
         "Arquivada na seção administrativa da unidade",
-        "Anexada ao processo no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), apenas em meio digital",
+        "Anexada ao processo no SARPAS, apenas em meio digital",
         "Com o comandante da operação, na viatura",
         "Publicada em boletim interno antes do voo",
       ],
@@ -1312,8 +1312,8 @@
       e: [
         "Porque sem ela as imagens não podem ser anexadas ao inquérito",
         "Porque a autorização transfere à Aeronáutica a responsabilidade pela prova",
-        "Porque a ANAC (Agência Nacional de Aviação Civil) precisa validar as imagens antes do uso judicial",
-        "Porque a prova só vale se o drone estiver homologado pela ANATEL (Agência Nacional de Telecomunicações)",
+        "Porque a ANAC precisa validar as imagens antes do uso judicial",
+        "Porque a prova só vale se o drone estiver homologado pela ANATEL",
       ],
       exp: "A tese dos 'frutos da árvore envenenada' (CPP, art. 157, §1º) é discutível no caso do drone e ainda não tem jurisprudência firme — mas operação autorizada e documentada evita o debate. Para o voo feito em urgência, o caminho é o registro em 24 h, não a omissão.",
       fonte: "Apostila 04, seção 11",
@@ -1324,9 +1324,9 @@
       c: "A autorização com as condicionantes, o polígono da área e um QR Code para fiscalização",
       e: [
         "O certificado de aeronavegabilidade da aeronave",
-        "O número de cadastro SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) da aeronave",
-        "O comprovante de homologação ANATEL (Agência Nacional de Telecomunicações) do equipamento",
-        "A apólice do seguro RETA (seguro obrigatório de responsabilidade perante terceiros) da operação",
+        "O número de cadastro SISANT da aeronave",
+        "O comprovante de homologação ANATEL do equipamento",
+        "A apólice do seguro RETA da operação",
       ],
       exp: "A autorização fica guardada no sistema e é o documento que legitima o piloto em campo.",
       fonte: "Apostila 04, seção 10",
@@ -1337,9 +1337,9 @@
       c: "O solicitante, integralmente",
       e: [
         "A Organização Regional que analisou o pedido",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) da instituição",
+        "O Administrador SARPAS da instituição",
         "O comandante da operação que assinou a ordem de serviço",
-        "O DECEA (Departamento de Controle do Espaço Aéreo), que emitiu a autorização",
+        "O DECEA, que emitiu a autorização",
       ],
       exp: "É o art. 58. Informar área ou altura diferente da real não é detalhe: é responsabilidade do solicitante.",
       fonte: "ICA 100-40, art. 58",
@@ -1359,7 +1359,7 @@
     },
     {
       id: "AN-154", tema: "Conceitos", dif: "facil",
-      p: "O que significa EVLOS (alcance visual estendido, com observador auxiliando o piloto)?",
+      p: "O que significa EVLOS?",
       c: "Operação em que o contato visual com a aeronave é mantido por observador(es) em comunicação direta com o piloto",
       e: [
         "Operação sem qualquer contato visual, só pela tela",
@@ -1505,7 +1505,7 @@
       id: "AN-174", tema: "Regulamentação", dif: "medio",
       p: "Qual órgão regulamenta as atividades de aerolevantamento no Brasil?",
       c: "Ministério da Defesa",
-      e: ["ANAC (Agência Nacional de Aviação Civil)", "DECEA (Departamento de Controle do Espaço Aéreo)", "ANATEL (Agência Nacional de Telecomunicações)", "IBGE"],
+      e: ["ANAC", "DECEA", "ANATEL", "IBGE"],
       exp: "Base: Decreto-lei nº 1.177/1971. Já a operação de aerolevantamento com UA (aeronave não tripulada) também precisa de SARPAS (DECEA) e cadastro (ANAC).",
       fonte: "ICA 100-40, art. 3º; Apostila 01, seção 7",
     },
@@ -1514,12 +1514,12 @@
     {
       id: "AN-175", tema: "Regulamentação", dif: "medio",
       p: "O que caracteriza a categoria certificada de operação?",
-      c: "Ser realizada por UA (aeronave não tripulada) com Certificado de Tipo, sobretudo quando envolve artigos perigosos de alto risco a terceiros",
+      c: "Ser realizada por UA com Certificado de Tipo, sobretudo quando envolve artigos perigosos de alto risco a terceiros",
       e: [
-        "Ser realizada por piloto com curso de formação reconhecido pela ANAC (Agência Nacional de Aviação Civil)",
-        "Ser realizada por órgão público com acreditação do DECEA (Departamento de Controle do Espaço Aéreo)",
-        "Ser realizada acima de 400 pés AGL (altura acima do solo)",
-        "Ser realizada com aeronave acima de 25 kg de PMD (Peso Máximo de Decolagem)",
+        "Ser realizada por piloto com curso de formação reconhecido pela ANAC",
+        "Ser realizada por órgão público com acreditação do DECEA",
+        "Ser realizada acima de 400 pés AGL",
+        "Ser realizada com aeronave acima de 25 kg de PMD",
       ],
       exp: "Certificada é 'por essência': o risco é inerente à operação (explosivo, agente químico) e só a certificação de tipo o mitiga. Peso ou altura levam à específica, não à certificada.",
       fonte: "ICA 100-40, arts. 7º, XXIII e 41; Apostila 05, seção 3",
@@ -1530,8 +1530,8 @@
       c: "Tipo de operação da categoria específica para a qual a ANAC (Agência Nacional de Aviação Civil) já definiu critérios individualizados, garantindo enquadramento previsível",
       e: [
         "A operação padrão prevista na ICA 100-40, sem procedimentos especiais",
-        "O modelo de ARO (Avaliação de Risco Operacional) distribuído pela ANAC aos operadores",
-        "A autorização automática do SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) para operações de rotina",
+        "O modelo de ARO distribuído pela ANAC (Agência Nacional de Aviação Civil) aos operadores",
+        "A autorização automática do SARPAS para operações de rotina",
         "O conjunto de checklists obrigatórios antes de cada voo",
       ],
       exp: "Exemplo dado em aula: um festival que acontece todo ano no mesmo lugar poderia ter cenário padrão definido pela ANAC, com autorização previsível. 'Operação padrão' é outro conceito, da ICA.",
@@ -1567,12 +1567,12 @@
     /* ------- INFORMAÇÃO AERONÁUTICA / NAVEGAÇÃO ------- */
     {
       id: "AN-180", tema: "Espaço aéreo", dif: "facil",
-      p: "O que é um NOTAM (aviso aos aeronavegantes)?",
+      p: "O que é um NOTAM?",
       c: "Aviso aos aeronavegantes com informação sobre estabelecimento, condição ou modificação de instalação, serviço, procedimento ou perigo",
       e: [
         "O plano de voo apresentado ao órgão de controle",
-        "A autorização de acesso ao espaço aéreo emitida pelo SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
-        "O relatório de acidente aeronáutico publicado pelo CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)",
+        "A autorização de acesso ao espaço aéreo emitida pelo SARPAS",
+        "O relatório de acidente aeronáutico publicado pelo CENIPA",
         "O boletim meteorológico de aeródromo",
       ],
       exp: "NOTAM é aviso; consulta no AISWEB (portal de informações aeronáuticas do DECEA) faz parte do planejamento do voo (art. 73, VI).",
@@ -1581,9 +1581,9 @@
     {
       id: "AN-181", tema: "Espaço aéreo", dif: "medio",
       p: "Qual portal do DECEA (Departamento de Controle do Espaço Aéreo) se consulta para ver NOTAM (aviso aos aeronavegantes), cartas, aeródromos, helipontos e espaços aéreos condicionados?",
-      c: "AISWEB (portal de informações aeronáuticas do DECEA)",
-      e: ["SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) NG (sistema de Solicitação de Acesso ao Espaço Aéreo, versão nova)", "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)", "Mosaico", "Contas DECEA"],
-      exp: "AISWEB é informação aeronáutica. SARPAS é solicitação de voo; SISANT é cadastro da aeronave na ANAC (Agência Nacional de Aviação Civil); Mosaico é homologação na ANATEL (Agência Nacional de Telecomunicações).",
+      c: "AISWEB",
+      e: ["SARPAS NG (sistema de Solicitação de Acesso ao Espaço Aéreo, versão nova)", "SISANT", "Mosaico", "Contas DECEA"],
+      exp: "AISWEB (portal de informações aeronáuticas do DECEA) é informação aeronáutica. SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) é solicitação de voo; SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) é cadastro da aeronave na ANAC (Agência Nacional de Aviação Civil); Mosaico é homologação na ANATEL (Agência Nacional de Telecomunicações).",
       fonte: "Apostila 08, seção 2",
     },
     {
@@ -1591,7 +1591,7 @@
       p: "O que é uma Área Adequada, criada pelo DECEA (Departamento de Controle do Espaço Aéreo)?",
       c: "Espaço aéreo em que os parâmetros de solicitação são flexibilizados mediante condicionantes, com dispensa de Termo de Coordenação e prazo de 30 minutos",
       e: [
-        "Área em que o voo de UA (aeronave não tripulada) é proibido a qualquer tempo",
+        "Área em que o voo de UA é proibido a qualquer tempo",
         "Área reservada exclusivamente a operações militares",
         "Área de uso recreativo cadastrada por clube de aeromodelismo",
         "Área em que o drone pode voar sem qualquer autorização",
@@ -1606,7 +1606,7 @@
       e: [
         "Porque a operação aérea especial voa sempre abaixo de 30 metros",
         "Porque a segurança pública está isenta de respeitar a FRZ",
-        "Porque a operação especial é sempre BVLOS (voo além do alcance visual do piloto)",
+        "Porque a operação especial é sempre BVLOS",
         "Porque a tabela considera apenas aeródromos sem tráfego IFR",
       ],
       exp: "São as colunas das Figuras 2 e 3: a mesma altura é liberada mais perto da pista na operação aérea especial e na operação no entorno de estrutura. Isenção não existe — a coordenação continua obrigatória.",
@@ -1634,8 +1634,8 @@
       e: [
         "Porque o dispositivo interfere no enlace dos drones policiais",
         "Porque o dispositivo é proibido de ser vendido no Brasil",
-        "Porque o dispositivo impede o RTH (retorno automático ao ponto de decolagem) da aeronave",
-        "Porque o dispositivo exige certificação da ANATEL (Agência Nacional de Telecomunicações)",
+        "Porque o dispositivo impede o RTH da aeronave",
+        "Porque o dispositivo exige certificação da ANATEL",
       ],
       exp: "São vendidos como acessório de 'entrega de presente', custam em torno de R$ 50 e funcionam com acionamento próprio ou pelo sensor de luz do drone. Já foram usados contra rivais e contra viaturas.",
       fonte: "Apostila 05, seção 10",
@@ -1656,9 +1656,9 @@
     {
       id: "AN-188", tema: "Segurança operacional", dif: "medio",
       p: "Por que órgãos estaduais que já compraram canhões antidrone ainda não podem usá-los livremente?",
-      c: "Porque o uso depende de convênio com a Aeronáutica e de regularização junto a ANATEL (Agência Nacional de Telecomunicações), ANAC (Agência Nacional de Aviação Civil) e DECEA (Departamento de Controle do Espaço Aéreo)",
+      c: "Porque o uso depende de convênio com a Aeronáutica e de regularização junto a ANATEL, ANAC e DECEA",
       e: [
-        "Porque o equipamento precisa de laudo do CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)",
+        "Porque o equipamento precisa de laudo do CENIPA",
         "Porque só a Polícia Federal pode operar esse tipo de equipamento",
         "Porque falta decisão judicial autorizando o uso",
         "Porque o equipamento ainda não tem fornecedor no Brasil",
@@ -1668,11 +1668,11 @@
     },
     {
       id: "AN-189", tema: "Técnico", dif: "medio",
-      p: "O que é uma NFZ (No Fly Zone) e qual a diferença em relação à FRZ (zona restrita de voo ao redor do aeródromo)?",
+      p: "O que é uma NFZ (No Fly Zone) e qual a diferença em relação à FRZ?",
       c: "NFZ é a área bloqueada tecnicamente pelo fabricante no software do drone; FRZ é a restrição criada pela norma do DECEA (Departamento de Controle do Espaço Aéreo)",
       e: [
         "NFZ e FRZ são sinônimos, em inglês e português",
-        "NFZ é criada pela ANAC (Agência Nacional de Aviação Civil) e FRZ pelo DECEA",
+        "NFZ é criada pela ANAC e FRZ pelo DECEA (Departamento de Controle do Espaço Aéreo)",
         "NFZ vale para drones civis e FRZ para drones militares",
         "NFZ é temporária e FRZ é permanente",
       ],
@@ -1682,14 +1682,14 @@
     {
       id: "AN-190", tema: "Técnico", dif: "facil",
       p: "Numa transmissão ao vivo da imagem do drone, para que serve a placa de captura de vídeo?",
-      c: "Transformar o sinal HDMI (cabo/conector de vídeo) que sai do controle em vídeo que o celular ou o PC reconhece como webcam",
+      c: "Transformar o sinal HDMI que sai do controle em vídeo que o celular ou o PC reconhece como webcam",
       e: [
         "Aumentar o alcance do enlace de vídeo entre drone e controle",
         "Gravar o vídeo em cartão de memória em alta resolução",
         "Converter o vídeo para transmissão via satélite",
         "Reduzir o atraso da imagem no aplicativo de voo",
       ],
-      exp: "E a direção importa: o HDMI vem do controle e a saída USB vai para o receptor. Invertido, não funciona — foi o erro mais comum da aula.",
+      exp: "E a direção importa: o HDMI (cabo/conector de vídeo) vem do controle e a saída USB vai para o receptor. Invertido, não funciona — foi o erro mais comum da aula.",
       fonte: "Apostila 07, seção 1",
     },
     {
@@ -1723,11 +1723,11 @@
     {
       id: "AN-195", tema: "Regulamentação", dif: "facil",
       p: "Onde é feita a avaliação teórica de piloto remoto exigida pelo RBAC 100?",
-      c: "No Portal de Capacitação da ANAC (Agência Nacional de Aviação Civil), on-line e gratuita, com 20 questões objetivas",
+      c: "No Portal de Capacitação da ANAC, on-line e gratuita, com 20 questões objetivas",
       e: [
         "Numa banca presencial em aeroclube credenciado",
-        "No SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) NG (sistema de Solicitação de Acesso ao Espaço Aéreo, versão nova), junto com o cadastro do piloto",
-        "No portal do DECEA (Departamento de Controle do Espaço Aéreo), com prova aplicada pelo CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo)",
+        "No SARPAS NG (sistema de Solicitação de Acesso ao Espaço Aéreo, versão nova), junto com o cadastro do piloto",
+        "No portal do DECEA, com prova aplicada pelo CINDACTA",
         "Em curso pago obrigatório de 40 horas",
       ],
       exp: "Nota mínima 7 (14 de 20) e até 3 tentativas. Confira sempre o próprio portal: prazos e regra de aproveitamento de nota já mudaram.",
@@ -1749,14 +1749,14 @@
     {
       id: "AN-197", tema: "Cadastro", dif: "medio",
       p: "O número gerado pelo cadastro da aeronave na ANAC (ex.: PP-212101663) é usado para quê?",
-      c: "Para vincular a aeronave no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) e nas equipes da instituição",
+      c: "Para vincular a aeronave no SARPAS e nas equipes da instituição",
       e: [
-        "Para comprovar a homologação do equipamento na ANATEL (Agência Nacional de Telecomunicações)",
+        "Para comprovar a homologação do equipamento na ANATEL",
         "Para identificar o piloto remoto nas solicitações",
         "Para emitir o certificado de aeronavegabilidade",
-        "Para contratar o seguro RETA (seguro obrigatório de responsabilidade perante terceiros) da operação",
+        "Para contratar o seguro RETA da operação",
       ],
-      exp: "O SARPAS só 'enxerga' a aeronave que tem número do SISANT — inclusive o drone de até 250 g. A equipe só usa a aeronave que foi vinculada a ela.",
+      exp: "O SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) só 'enxerga' a aeronave que tem número do SISANT — inclusive o drone de até 250 g. A equipe só usa a aeronave que foi vinculada a ela.",
       fonte: "Apostila 04, seção 9",
     },
     {
@@ -1777,7 +1777,7 @@
     {
       id: "AN-200", tema: "Emergências", dif: "medio",
       p: "O que o plano de terminação de voo deve prever, além dos procedimentos em cada ponto de terminação?",
-      c: "As aerovias, EAC (Espaço Aéreo Condicionado), procedimentos de chegada e saída, rotas visuais, circuitos de tráfego e os crash sites",
+      c: "As aerovias, EAC, procedimentos de chegada e saída, rotas visuais, circuitos de tráfego e os crash sites",
       e: [
         "A lista de baterias e o número de ciclos de cada uma",
         "O contato do fabricante para acionamento de garantia",
@@ -1794,7 +1794,7 @@
       e: [
         "A bateria descarrega instantaneamente por interferência",
         "O gimbal trava e a aeronave perde estabilidade",
-        "O GPS (navegação por satélite) passa a indicar posição de outro país",
+        "O GPS passa a indicar posição de outro país",
         "A hélice desbalanceia por vibração eletromagnética",
       ],
       exp: "Foi o caso do Carnaval de Manaus: o drone entrou em modo ATT (modo atitude, sem travar posição por satélite), recebeu comando indevido da 'miríade de sinais' e foi no sino da igreja. É o mesmo princípio dos antidrone mais avançados.",
@@ -1806,7 +1806,7 @@
       c: "O direto sobe até a altura programada e volta em linha reta; o adaptativo volta com os sensores ligados, desviando dos obstáculos que 'vê'",
       e: [
         "O direto pousa no local e o adaptativo retorna ao ponto de decolagem",
-        "O direto funciona sem GPS (navegação por satélite) e o adaptativo depende de satélite",
+        "O direto funciona sem GPS e o adaptativo depende de satélite",
         "O direto é automático e o adaptativo é comandado pelo piloto",
         "O direto só existe em drones acima de 25 kg",
       ],
@@ -1818,8 +1818,8 @@
       p: "Quem é responsável pela salvaguarda física da aeronave e dos equipamentos no solo, embarcados e no ar?",
       c: "O operador da aeronave",
       e: [
-        "O órgão ATS (serviços de tráfego aéreo) da região da operação",
-        "O Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) da instituição",
+        "O órgão ATS da região da operação",
+        "O Administrador SARPAS da instituição",
         "O observador designado para o voo",
         "O setor de patrimônio da unidade",
       ],
@@ -1833,7 +1833,7 @@
       e: [
         "Não: a proibição do RBAC 100 é absoluta para qualquer operador",
         "Sim, sem qualquer condição, por serem operações de Estado",
-        "Somente com aeronave de PMD (Peso Máximo de Decolagem) acima de 25 kg",
+        "Somente com aeronave de PMD acima de 25 kg",
         "Somente mediante autorização judicial",
       ],
       exp: "É uma das exceções do RBAC 100, ao lado de agricultura/pecuária, baterias de lítio dos equipamentos, equipamentos de bordo e o que a ANAC (Agência Nacional de Aviação Civil) autorizar. Projeto experimental (granada de gás, por exemplo) exige projeto aprovado.",
@@ -1847,7 +1847,7 @@
         "O receptor de posicionamento por satélite da aeronave",
         "O rádio portátil de aviação usado pelo piloto",
         "O sistema de prevenção de colisão em rota",
-        "O registro de proprietário do sistema na ANAC (Agência Nacional de Aviação Civil)",
+        "O registro de proprietário do sistema na ANAC",
       ],
       exp: "UAS (o sistema completo: aeronave, estação de pilotagem e enlace) = UA (aeronave não tripulada) + RPS + enlace C2 + demais equipamentos. A RPS pode ser um controle de mão ou um computador dentro de um contêiner.",
       fonte: "ICA 100-40, art. 7º, XXXI",
@@ -1857,7 +1857,7 @@
       p: "Qual é a diferença entre altitude e altura, na definição da norma?",
       c: "Altitude é a distância vertical até o nível médio do mar; altura é a distância vertical até uma determinada referência",
       e: [
-        "Altitude é medida pelo controle remoto e altura pelo GPS (navegação por satélite)",
+        "Altitude é medida pelo controle remoto e altura pelo GPS",
         "Altitude vale para aeronave tripulada e altura para drone",
         "Altitude é a altura máxima autorizada na solicitação",
         "São sinônimos, desde que se informe a unidade em pés",
@@ -1868,18 +1868,18 @@
     {
       id: "AN-207", tema: "Espaço aéreo", dif: "facil",
       p: "Qual é o nome do sistema brasileiro pelo qual se solicita acesso ao espaço aéreo para aeronave não tripulada?",
-      c: "SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
-      e: ["SISCEAB (Sistema de Controle do Espaço Aéreo Brasileiro)", "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)", "AISWEB (portal de informações aeronáuticas do DECEA)", "SIPAER"],
-      exp: "SARPAS foi criado em 2016 e significa Sistema para Solicitação de Acesso ao Espaço Aéreo Brasileiro por Aeronaves Não Tripuladas. SISCEAB é o sistema de controle do espaço aéreo como um todo.",
+      c: "SARPAS",
+      e: ["SISCEAB", "SISANT", "AISWEB", "SIPAER"],
+      exp: "SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) foi criado em 2016 e significa Sistema para Solicitação de Acesso ao Espaço Aéreo Brasileiro por Aeronaves Não Tripuladas. SISCEAB (Sistema de Controle do Espaço Aéreo Brasileiro) é o sistema de controle do espaço aéreo como um todo.",
       fonte: "ICA 100-40, art. 7º, LIX",
     },
     {
       id: "AN-208", tema: "Espaço aéreo", dif: "medio",
-      p: "O que é a Zona UTM (gerenciamento de tráfego de aeronaves não tripuladas) criada pela ICA 100-40 de 2026?",
-      c: "Volume de espaço aéreo em que o acesso de UAS (o sistema completo: aeronave, estação de pilotagem e enlace) é garantido por serviços, regras e procedimentos específicos, com elevado nível de digitalização",
+      p: "O que é a Zona UTM criada pela ICA 100-40 de 2026?",
+      c: "Volume de espaço aéreo em que o acesso de UAS é garantido por serviços, regras e procedimentos específicos, com elevado nível de digitalização",
       e: [
-        "A faixa de espaço aéreo entre 0 e 120 metros AGL (altura acima do solo) em todo o país",
-        "A área de responsabilidade de cada CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo)",
+        "A faixa de espaço aéreo entre 0 e 120 metros AGL em todo o país",
+        "A área de responsabilidade de cada CINDACTA",
         "O espaço aéreo reservado a drones de entrega comercial",
         "A zona de restrição de voo em torno de aeródromos",
       ],
@@ -1894,7 +1894,7 @@
         "Operar a câmera e registrar as imagens da ocorrência",
         "Manter contato visual com a aeronave durante todo o voo",
         "Conduzir a viatura e a logística de baterias",
-        "Fiscalizar o cumprimento da autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+        "Fiscalizar o cumprimento da autorização SARPAS",
       ],
       exp: "Piloto pilota, observador observa a aeronave e o entorno aéreo, segurança protege a equipe. Doutrina do GRAER: três policiais.",
       fonte: "Apostila 04, seção 13",
@@ -1943,7 +1943,7 @@
     {
       id: "AN-223", tema: "Meteorologia", dif: "facil",
       p: "Numa operação à beira do rio, a névoa começou a se formar e a visibilidade caiu. Qual é a conduta?",
-      c: "Trazer a aeronave e encerrar: sem contato visual com ela, a operação deixa de ser VLOS (voo dentro do alcance visual do piloto)",
+      c: "Trazer a aeronave e encerrar: sem contato visual com ela, a operação deixa de ser VLOS",
       e: [
         "Continuar voando pela imagem da câmera, que ainda está nítida",
         "Subir acima da névoa e seguir a busca",
@@ -2705,7 +2705,7 @@
       p: "O que caracteriza um voo na condição VLOS (voo dentro do alcance visual do piloto)?",
       c: "O piloto mantém contato visual direto e constante com a aeronave, sem auxílio de lentes ou instrumentos, para gerenciar o voo e evitar colisões",
       e: [
-        "O piloto usa exclusivamente câmeras FPV (pilotagem pela imagem, em óculos ou tela) para guiar a aeronave",
+        "O piloto usa exclusivamente câmeras FPV para guiar a aeronave",
         "A operação é além do alcance visual, monitorada por telemetria e posicionamento por satélite",
         "A operação é auxiliada por observadores externos que repassam as informações por rádio",
         "O piloto acompanha a aeronave apenas pela tela do controle, em alta definição",
@@ -2729,14 +2729,14 @@
     {
       id: "AN-283", tema: "Espaço aéreo", dif: "facil",
       p: "Qual órgão é responsável por autorizar o acesso ao espaço aéreo brasileiro pelo sistema SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)?",
-      c: "DECEA (Departamento de Controle do Espaço Aéreo)",
+      c: "DECEA",
       e: [
-        "ANAC (Agência Nacional de Aviação Civil)",
-        "ANATEL (Agência Nacional de Telecomunicações)",
+        "ANAC",
+        "ANATEL",
         "Ministério da Defesa, diretamente",
         "A prefeitura do município onde ocorre o voo",
       ],
-      exp: "Divisão clássica: a ANAC cuida da aeronave e do piloto; o DECEA cuida do espaço aéreo; a ANATEL cuida do rádio.",
+      exp: "Divisão clássica: a ANAC (Agência Nacional de Aviação Civil) cuida da aeronave e do piloto; o DECEA cuida do espaço aéreo; a ANATEL (Agência Nacional de Telecomunicações) cuida do rádio.",
       fonte: "ICA 100-40 (DECEA)",
     },
     {
@@ -2810,7 +2810,7 @@
       c: "O piloto remoto em comando",
       e: [
         "O proprietário da aeronave, mesmo sem estar operando",
-        "A ANAC (Agência Nacional de Aviação Civil), ao editar as normas de uso",
+        "A ANAC, ao editar as normas de uso",
         "O fabricante do drone",
         "O contratante do serviço",
       ],
@@ -2833,12 +2833,12 @@
     {
       id: "AN-291", tema: "Radiofrequência", dif: "facil",
       p: "Além do cadastro na ANAC (Agência Nacional de Aviação Civil) e da autorização do DECEA (Departamento de Controle do Espaço Aéreo), qual agência precisa ter homologado o sistema de radiofrequência da aeronave?",
-      c: "ANATEL (Agência Nacional de Telecomunicações)",
+      c: "ANATEL",
       e: [
         "Ministério das Comunicações",
         "INMETRO",
         "Receita Federal",
-        "CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)",
+        "CENIPA",
       ],
       exp: "São três portas diferentes: ANAC (aeronave e piloto), DECEA (espaço aéreo) e ANATEL (o rádio). Equipamento sem homologação é irregular mesmo com tudo o mais em ordem.",
       fonte: "Resolução ANATEL de homologação; RBAC 100",
@@ -2846,14 +2846,14 @@
     {
       id: "AN-292", tema: "Conceitos", dif: "medio",
       p: "A operação vai além do campo de visão natural do piloto, mas há observadores visuais mantendo contato visual com a aeronave e informando o piloto. Como se chama essa operação?",
-      c: "EVLOS (alcance visual estendido, com observador auxiliando o piloto)",
+      c: "EVLOS",
       e: [
-        "VLOS (voo dentro do alcance visual do piloto)",
-        "BVLOS (voo além do alcance visual do piloto)",
-        "FPV (pilotagem pela imagem, em óculos ou tela)",
+        "VLOS",
+        "BVLOS",
+        "FPV",
         "Operação autônoma",
       ],
-      exp: "EVLOS é o alcance visual estendido: alguém continua enxergando a aeronave a olho nu, em cadeia de comunicação com o piloto. Sem esse alguém, a operação é BVLOS.",
+      exp: "EVLOS (alcance visual estendido, com observador auxiliando o piloto) é o alcance visual estendido: alguém continua enxergando a aeronave a olho nu, em cadeia de comunicação com o piloto. Sem esse alguém, a operação é BVLOS (voo além do alcance visual do piloto).",
       fonte: "ICA 100-40, art. 7º; RBAC 100",
     },
     {
@@ -2872,9 +2872,9 @@
     {
       id: "AN-294", tema: "Regulamentação", dif: "medio",
       p: "Operar apenas com óculos de visão em primeira pessoa (FPV), sem observador visual:",
-      c: "Não substitui a linha de visada visual: a operação passa a exigir enquadramento como EVLOS (alcance visual estendido, com observador auxiliando o piloto) ou BVLOS (voo além do alcance visual do piloto) devidamente aprovado",
+      c: "Não substitui a linha de visada visual: a operação passa a exigir enquadramento como EVLOS ou BVLOS devidamente aprovado",
       e: [
-        "É considerado VLOS (voo dentro do alcance visual do piloto), porque a câmera substitui os olhos do piloto",
+        "É considerado VLOS, porque a câmera substitui os olhos do piloto",
         "É permitido em qualquer local com aeronave de menos de 250 g",
         "Só é permitido em voo noturno",
         "É permitido desde que a aeronave fique a menos de 100 metros",
@@ -2885,7 +2885,7 @@
     {
       id: "AN-295", tema: "Espaço aéreo", dif: "facil",
       p: "Qual é a regra geral do DECEA (Departamento de Controle do Espaço Aéreo) para operações próximas a aeródromos e helipontos?",
-      c: "Respeitar as distâncias de afastamento das zonas de aproximação e entorno, com a devida solicitação e coordenação pelo SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+      c: "Respeitar as distâncias de afastamento das zonas de aproximação e entorno, com a devida solicitação e coordenação pelo SARPAS",
       e: [
         "Pode voar a qualquer distância, desde que abaixo de 30 metros",
         "É proibido voar em todo o município onde há aeroporto",
@@ -2928,7 +2928,7 @@
       e: [
         "Certificado Médico Aeronáutico para todo e qualquer piloto remoto",
         "Certificado Médico Aeronáutico apenas para quem voa além do alcance visual",
-        "Exame médico anual em clínica credenciada pela ANATEL (Agência Nacional de Telecomunicações)",
+        "Exame médico anual em clínica credenciada pela ANATEL",
         "Nada: a norma não trata da condição de saúde do piloto",
       ],
       exp: "Outra pegadinha de material antigo: a exigência de Certificado Médico por classe de aeronave é do RBAC-E nº 94, revogado. O que se cobra hoje é a condição psicofísica — e quem responde por ela é o próprio piloto.",
@@ -2937,19 +2937,19 @@
     {
       id: "AN-299", tema: "Emergências", dif: "facil",
       p: "Ocorreu acidente grave com a aeronave, com lesão a terceiro. Além do socorro e da autoridade policial, qual sistema deve ser notificado?",
-      c: "CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos), do Sistema de Investigação e Prevenção de Acidentes Aeronáuticos",
+      c: "CENIPA, do Sistema de Investigação e Prevenção de Acidentes Aeronáuticos",
       e: [
         "IBAMA",
         "Exército Brasileiro",
         "Prefeitura Municipal",
-        "ANATEL (Agência Nacional de Telecomunicações)",
+        "ANATEL",
       ],
-      exp: "A investigação do CENIPA busca a causa para evitar a repetição, e não a punição do piloto. Por isso a aeronave e os registros de voo devem ser preservados.",
+      exp: "A investigação do CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) busca a causa para evitar a repetição, e não a punição do piloto. Por isso a aeronave e os registros de voo devem ser preservados.",
       fonte: "CENIPA/SIPAER; RBAC 100",
     },
     {
       id: "AN-300", tema: "Conceitos", dif: "facil",
-      p: "O que a sigla UAS (o sistema completo: aeronave, estação de pilotagem e enlace) designa nos normativos brasileiros e internacionais?",
+      p: "O que a sigla UAS designa nos normativos brasileiros e internacionais?",
       c: "O sistema de aeronave não tripulada como um todo: a aeronave, o enlace de comunicação e a estação de pilotagem remota",
       e: [
         "Apenas a aeronave que voa",
@@ -3004,7 +3004,7 @@
       p: "Qual é a diferença entre operação autônoma e operação automatizada, e o que a norma admite?",
       c: "Na automatizada o piloto pode assumir o controle a qualquer momento e ela é admitida; na autônoma o piloto não consegue intervir depois da decolagem, e ela não é admitida em regra",
       e: [
-        "São a mesma coisa para a ANAC (Agência Nacional de Aviação Civil)",
+        "São a mesma coisa para a ANAC",
         "As duas são livres na categoria Aberta",
         "As duas exigem licença de piloto comercial de helicóptero",
         "A autônoma é admitida e a automatizada é proibida",
@@ -3032,7 +3032,7 @@
       e: [
         "Pela tecnologia embarcada e pelos sensores anticolisão da aeronave",
         "Porque o seguro cobre todos os prejuízos possíveis",
-        "Pelo treinamento obrigatório em simulador exigido pela ANAC (Agência Nacional de Aviação Civil)",
+        "Pelo treinamento obrigatório em simulador exigido pela ANAC",
         "Porque a aeronave é cadastrada e rastreável",
       ],
       exp: "A Aberta é simples porque é pequena: os limites é que seguram o risco. Passou de qualquer um deles, some a mitigação e a operação cai na Específica.",
@@ -3072,7 +3072,7 @@
         "Permitido se houver compartimento fechado na aeronave",
         "Permitido para resgate de animais de pequeno porte",
         "Permitido desde que os animais estejam sedados",
-        "Permitido mediante simples comunicação à ANAC (Agência Nacional de Aviação Civil)",
+        "Permitido mediante simples comunicação à ANAC",
       ],
       exp: "Artigo perigoso é assunto da categoria Certificada, com exigências pesadas. Transporte de pessoas e de animais não entra em nenhuma hipótese da Aberta.",
       fonte: "RBAC 100 (limites da categoria Aberta)",
@@ -3205,7 +3205,7 @@
       e: [
         "Sim, as luzes de navegação substituem integralmente o contato visual",
         "Sim, desde que a aeronave esteja a menos de 500 metros",
-        "Não, porque voo noturno é sempre BVLOS (voo além do alcance visual do piloto)",
+        "Não, porque voo noturno é sempre BVLOS",
         "Sim, desde que a câmera esteja gravando o voo",
       ],
       exp: "À noite a distância útil cai muito. Por isso a operação noturna é planejada com área menor e com a aeronave mais perto do piloto.",
@@ -3216,9 +3216,9 @@
       p: "O piloto usa binóculo para continuar enxergando a aeronave distante. Como fica o enquadramento da operação?",
       c: "Deixa de ser VLOS (voo dentro do alcance visual do piloto): o contato visual precisa ser direto, sem auxílio de instrumento — lentes corretivas de uso pessoal são a exceção",
       e: [
-        "Continua VLOS, porque o piloto está enxergando a aeronave",
-        "Continua VLOS, desde que o binóculo seja de baixa ampliação",
-        "Passa a ser EVLOS (alcance visual estendido, com observador auxiliando o piloto), porque o binóculo faz o papel do observador",
+        "Continua VLOS (voo dentro do alcance visual do piloto), porque o piloto está enxergando a aeronave",
+        "Continua VLOS (voo dentro do alcance visual do piloto), desde que o binóculo seja de baixa ampliação",
+        "Passa a ser EVLOS, porque o binóculo faz o papel do observador",
         "Passa a ser operação autônoma",
       ],
       exp: "Instrumento amplia a visão, mas atrapalha a percepção do entorno — quem está no binóculo não vê o tráfego que se aproxima nem as pessoas no solo.",
@@ -3226,7 +3226,7 @@
     },
     {
       id: "AN-321", tema: "Conceitos", dif: "medio",
-      p: "O que é indispensável para uma operação EVLOS (alcance visual estendido, com observador auxiliando o piloto) ser válida?",
+      p: "O que é indispensável para uma operação EVLOS ser válida?",
       c: "Observadores mantendo contato visual direto com a aeronave e comunicação contínua e confiável com o piloto, todos com o mesmo entendimento do voo",
       e: [
         "Apenas a presença de mais de uma pessoa no local da operação",
@@ -3240,10 +3240,10 @@
     {
       id: "AN-322", tema: "Espaço aéreo", dif: "facil",
       p: "Durante um voo urbano, a aeronave passou atrás de um prédio e sumiu da vista por alguns segundos. O que aconteceu?",
-      c: "Houve perda momentânea do contato visual: a operação saiu da condição VLOS (voo dentro do alcance visual do piloto) e o piloto deve trazer a aeronave para uma trajetória em que volte a enxergá-la",
+      c: "Houve perda momentânea do contato visual: a operação saiu da condição VLOS e o piloto deve trazer a aeronave para uma trajetória em que volte a enxergá-la",
       e: [
         "Nada: a perda momentânea de visão é prevista e tolerada sem providência",
-        "A operação passou automaticamente a EVLOS (alcance visual estendido, com observador auxiliando o piloto)",
+        "A operação passou automaticamente a EVLOS",
         "A operação passou a ser autônoma enquanto durou a perda",
         "Nada, desde que o enlace de rádio tenha se mantido",
       ],
@@ -3664,7 +3664,7 @@
       c: "Decolar e pousar junto à faixa de rolamento expõe a equipe e cria risco de a aeronave cair sobre veículos em movimento",
       e: [
         "A poeira levantada pelos caminhões prejudica a qualidade da imagem",
-        "O acostamento não é local autorizado para decolagem pela ANAC (Agência Nacional de Aviação Civil)",
+        "O acostamento não é local autorizado para decolagem pela ANAC",
         "O ruído dos caminhões impede o piloto de ouvir a aeronave",
         "A vibração do tráfego descalibra a bússola da aeronave",
       ],
@@ -3745,7 +3745,7 @@
     {
       id: "AP-000", ap: "00", tema: "Siglas", dif: "facil",
       p: "O que significa a sigla SARP, usada no nome do curso?",
-      c: "Sistema de Aeronave Remotamente Pilotada — a tradução de RPAS (sistema de aeronave remotamente pilotada)",
+      c: "Sistema de Aeronave Remotamente Pilotada — a tradução de RPAS",
       e: [
         "Sistema de Autorização de Radiofrequência para Pilotos",
         "Serviço Aéreo de Resposta Policial",
@@ -3757,7 +3757,7 @@
     },
     {
       id: "AP-001", ap: "00", tema: "Siglas", dif: "facil",
-      p: "O que significa BVLOS (voo além do alcance visual do piloto)?",
+      p: "O que significa BVLOS?",
       c: "Beyond Visual Line of Sight — além da linha de visada visual",
       e: [
         "Basic Visual Line of Sight — linha de visada básica",
@@ -3770,7 +3770,7 @@
     },
     {
       id: "AP-002", ap: "00", tema: "Siglas", dif: "medio",
-      p: "O que significa ADS-B (vigilância automática que transmite a posição da aeronave), sigla do sistema que alimenta o recurso AirSense?",
+      p: "O que significa ADS-B, sigla do sistema que alimenta o recurso AirSense?",
       c: "Automatic Dependent Surveillance–Broadcast: vigilância automática em que a aeronave transmite a própria posição",
       e: [
         "Aircraft Detection System – Basic: detecção por radar embarcado",
@@ -3783,7 +3783,7 @@
     },
     {
       id: "AP-003", ap: "00", tema: "Siglas", dif: "medio",
-      p: "O que significa a sigla PMD (Peso Máximo de Decolagem), tão cobrada na legislação?",
+      p: "O que significa a sigla PMD, tão cobrada na legislação?",
       c: "Peso Máximo de Decolagem",
       e: [
         "Peso Médio Declarado",
@@ -3797,15 +3797,15 @@
     {
       id: "AP-004", ap: "00", tema: "Siglas", dif: "medio",
       p: "Qual sigla designa o órgão que julga administrativamente as infrações de tráfego aéreo?",
-      c: "JJAER (Junta de Julgamento da Aeronáutica)",
-      e: ["CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos)", "CGNA (Centro de Gerenciamento da Navegação Aérea)", "SIPAER", "CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste)"],
-      exp: "JJAER (Junta de Julgamento da Aeronáutica) pune; CENIPA investiga para prevenir; CGNA abriga a Seção/Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA); CRCEA-SE é Organização Regional.",
+      c: "JJAER",
+      e: ["CENIPA", "CGNA", "SIPAER", "CRCEA-SE"],
+      exp: "JJAER (Junta de Julgamento da Aeronáutica) pune; CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) investiga para prevenir; CGNA (Centro de Gerenciamento da Navegação Aérea) abriga a Seção/Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA); CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste) é Organização Regional.",
       fonte: "Apostila 00; ICA 100-40, art. 4º, §1º",
     },
     {
       id: "AP-005", ap: "00", tema: "Siglas", dif: "medio",
-      p: "O que quer dizer VANT (Veículo Aéreo Não Tripulado) e por que o termo é considerado obsoleto?",
-      c: "Veículo Aéreo Não Tripulado — caiu em desuso porque a norma atual trabalha com UA (aeronave não tripulada), RPA (aeronave remotamente pilotada) e UAS (o sistema completo: aeronave, estação de pilotagem e enlace)",
+      p: "O que quer dizer VANT e por que o termo é considerado obsoleto?",
+      c: "Veículo Aéreo Não Tripulado — caiu em desuso porque a norma atual trabalha com UA, RPA e UAS",
       e: [
         "Veículo Autônomo Não Tripulado — proibido no Brasil",
         "Vigilância Aérea Não Tripulada — uso exclusivo militar",
@@ -3836,7 +3836,7 @@
       c: "A finalidade: o aeromodelo é para lazer, mesmo tendo muitas semelhanças operacionais com a RPA",
       e: [
         "O peso: aeromodelo é sempre abaixo de 250 g",
-        "A tecnologia: aeromodelo não usa GPS (navegação por satélite)",
+        "A tecnologia: aeromodelo não usa GPS",
         "A altura: aeromodelo voa somente abaixo de 30 metros",
         "O piloto: aeromodelo não é pilotado remotamente",
       ],
@@ -3848,10 +3848,10 @@
       p: "Quantas Organizações Regionais do DECEA (Departamento de Controle do Espaço Aéreo) gerenciam o espaço aéreo brasileiro?",
       c: "Cinco: CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I, II, III, IV e CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste)",
       e: [
-        "Quatro: CINDACTA I, II, III e IV",
-        "Três: CINDACTA I, II e III",
-        "Seis: cinco CINDACTA e o CGNA (Centro de Gerenciamento da Navegação Aérea)",
-        "Duas: CINDACTA I e CRCEA-SE",
+        "Quatro: CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I, II, III e IV",
+        "Três: CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I, II e III",
+        "Seis: cinco CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) e o CGNA",
+        "Duas: CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I e CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste)",
       ],
       exp: "São 4 CINDACTA e 1 CRCEA (Sudeste), que controla a região de maior fluxo do país (RJ–SP). O Brasil responde por cerca de 22 milhões de km² de espaço aéreo.",
       fonte: "Apostila 01, seção 8",
@@ -3861,20 +3861,20 @@
       p: "Em qual FIR (região de informação de voo) está Rondônia?",
       c: "FIR Amazônica, sob o CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) IV (Manaus)",
       e: [
-        "FIR Brasília, sob o CINDACTA I",
-        "FIR Curitiba, sob o CINDACTA II",
-        "FIR Recife, sob o CINDACTA III",
-        "FIR Atlântico, sob o CRCEA-SE (Centro Regional de Controle do Espaço Aéreo Sudeste)",
+        "FIR Brasília, sob o CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) I",
+        "FIR Curitiba, sob o CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) II",
+        "FIR Recife, sob o CINDACTA (Centro Integrado de Defesa Aérea e Controle de Tráfego Aéreo) III",
+        "FIR Atlântico, sob o CRCEA-SE",
       ],
       exp: "As solicitações de Rondônia são analisadas pelo CINDACTA IV, em Manaus — inclusive as denúncias de drone irregular.",
       fonte: "Apostila 01, seção 8",
     },
     {
       id: "AP-014", ap: "01", tema: "Conceitos", dif: "medio",
-      p: "O que é o SISCEAB (Sistema de Controle do Espaço Aéreo Brasileiro)?",
+      p: "O que é o SISCEAB?",
       c: "Sistema de Controle do Espaço Aéreo Brasileiro: órgãos, radares, centros e torres de controle, telecomunicações e pessoal que garantem a segurança do fluxo aéreo",
       e: [
-        "O sistema da ANAC (Agência Nacional de Aviação Civil) que cadastra aeronaves não tripuladas",
+        "O sistema da ANAC que cadastra aeronaves não tripuladas",
         "O programa de segurança da aviação civil contra atos ilícitos",
         "A rede de aeroportos administrada pela Infraero",
         "O sistema de investigação de acidentes aeronáuticos",
@@ -3885,7 +3885,7 @@
     {
       id: "AP-015", ap: "01", tema: "Técnico", dif: "medio",
       p: "Qual é a diferença entre TCAS (sistema anticolisão da aviação tripulada) e DAA (detectar e evitar)?",
-      c: "TCAS é o sistema anticolisão já usado na aviação tripulada; DAA (detectar e evitar) é o projeto equivalente em desenvolvimento para aeronaves não tripuladas",
+      c: "TCAS é o sistema anticolisão já usado na aviação tripulada; DAA é o projeto equivalente em desenvolvimento para aeronaves não tripuladas",
       e: [
         "TCAS é para drones e DAA para aviões",
         "TCAS usa radar e DAA usa câmeras térmicas",
@@ -3897,7 +3897,7 @@
     },
     {
       id: "AP-018", ap: "01", tema: "Conceitos", dif: "medio",
-      p: "O que significa a sigla UTM (gerenciamento de tráfego de aeronaves não tripuladas) no contexto de aeronaves não tripuladas?",
+      p: "O que significa a sigla UTM no contexto de aeronaves não tripuladas?",
       c: "Unmanned aircraft Traffic Management — gerenciamento de tráfego de aeronaves não tripuladas",
       e: [
         "Universal Transverse Mercator — sistema de coordenadas do mapa",
@@ -3944,7 +3944,7 @@
         "Emite pulso eletromagnético que queima a eletrônica da aeronave",
         "Dispara projétil que envolve as hélices numa rede",
         "Assume o controle da câmera para identificar o operador",
-        "Bloqueia apenas o sinal de GPS (navegação por satélite), sem afetar o enlace de comando",
+        "Bloqueia apenas o sinal de GPS, sem afetar o enlace de comando",
       ],
       exp: "Os sistemas mais avançados vão além: quebram o enlace e assumem o comando, trazendo a aeronave até o operador do antidrone.",
       fonte: "Apostila 02, seção 9",
@@ -3952,14 +3952,14 @@
     {
       id: "AP-030", ap: "02", tema: "Segurança operacional", dif: "medio",
       p: "Por que o drone FPV (pilotagem pela imagem, em óculos ou tela) é o indicado para ação tática ou busca em ambiente colapsado?",
-      c: "Porque se localiza por sensores visuais ou LiDAR embarcados, sem depender de GPS (navegação por satélite), ao contrário das linhas Mavic, Enterprise e Matrice",
+      c: "Porque se localiza por sensores visuais ou LiDAR embarcados, sem depender de GPS, ao contrário das linhas Mavic, Enterprise e Matrice",
       e: [
         "Porque tem a maior autonomia de bateria entre os modelos",
-        "Porque é o único que pode voar sem autorização do DECEA (Departamento de Controle do Espaço Aéreo)",
+        "Porque é o único que pode voar sem autorização do DECEA",
         "Porque transmite imagem em 4K sem atraso",
-        "Porque tem RTH (retorno automático ao ponto de decolagem) mais preciso que os demais modelos",
+        "Porque tem RTH mais preciso que os demais modelos",
       ],
-      exp: "Drones comuns precisam de GPS para se posicionar e por isso não atuam bem dentro de ambiente confinado.",
+      exp: "Drones comuns precisam de GPS (navegação por satélite) para se posicionar e por isso não atuam bem dentro de ambiente confinado.",
       fonte: "Apostila 05, seção 1; Apostila 02, seção 10",
     },
     {
@@ -3994,7 +3994,7 @@
       c: "Impulsionou entregas de suprimentos médicos, medição de temperatura, orientação por alto-falante e desinfecção de áreas públicas",
       e: [
         "Suspendeu todas as operações civis com drone no Brasil",
-        "Levou a ANAC (Agência Nacional de Aviação Civil) a criar as categorias por risco",
+        "Levou a ANAC a criar as categorias por risco",
         "Provocou a proibição de drones em áreas urbanas",
         "Deu origem ao uso de drones com câmera térmica",
       ],
@@ -4027,7 +4027,7 @@
       id: "AP-045", ap: "03", tema: "Técnico", dif: "medio",
       p: "Qual equipamento da lista do curso tem LiDAR frontal?",
       c: "DJI Neo 2 (FPV, usado com os Goggles N3)",
-      e: ["Mavic 2 Enterprise", "Mavic 3 Enterprise", "Matrice 350 RTK (posicionamento por satélite de alta precisão)", "Mavic 2 Enterprise Dual"],
+      e: ["Mavic 2 Enterprise", "Mavic 3 Enterprise", "Matrice 350 RTK", "Mavic 2 Enterprise Dual"],
       exp: "LiDAR mede distância por laser e melhora a detecção de obstáculo com baixa luminosidade — daí o uso em FPV (pilotagem pela imagem, em óculos ou tela) e ambiente confinado.",
       fonte: "Apostila 03, seção 1",
     },
@@ -4039,7 +4039,7 @@
         "Autorizar a decolagem depois do checklist",
         "Liberar o voo em zona restrita pelo fabricante",
         "Ativar o modo de voo esportivo",
-        "Confirmar a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) no aplicativo",
+        "Confirmar a autorização SARPAS no aplicativo",
       ],
       exp: "É o recurso que materializa o handover exigido pelo RBAC 100: a troca só acontece por procedimento claro, sem duplicidade de comando.",
       fonte: "Apostila 03, seção 7; Apostila 05, seção 6",
@@ -4080,7 +4080,7 @@
         "A entrada de downlink de vídeo",
         "O orifício de parafuso M4 do suporte",
       ],
-      exp: "Mavic 2 Enterprise tem HDMI comum; Mavic 3, mini HDMI; Matrice 350, HDMI no topo. É daí que sai o sinal para a placa de captura.",
+      exp: "Mavic 2 Enterprise tem HDMI (cabo/conector de vídeo) comum; Mavic 3, mini HDMI; Matrice 350, HDMI no topo. É daí que sai o sinal para a placa de captura.",
       fonte: "Apostila 03, seções 2 e 7; Apostila 07, seção 1",
     },
 
@@ -4088,9 +4088,9 @@
     {
       id: "AP-060", ap: "04", tema: "Regulamentação", dif: "facil",
       p: "Qual portaria aprovou a ICA 100-40 em vigor e desde quando ela vale?",
-      c: "Portaria DECEA (Departamento de Controle do Espaço Aéreo) nº 2.094/DNOR8, de 18/03/2026, em vigor desde 1º/07/2026",
+      c: "Portaria DECEA nº 2.094/DNOR8, de 18/03/2026, em vigor desde 1º/07/2026",
       e: [
-        "Resolução ANAC (Agência Nacional de Aviação Civil) nº 805, de 15/06/2026",
+        "Resolução ANAC nº 805, de 15/06/2026",
         "Portaria nº 1.474/SPO, de 02/05/2017",
         "Decreto nº 11.237/2022",
         "Lei nº 7.565, de 19/12/1986",
@@ -4111,10 +4111,10 @@
       p: "Numa área perigosa, o que a ICA 100-40 exige do operador de UA (aeronave não tripulada)?",
       c: "Nada além da decisão do próprio piloto sobre aceitar os riscos — o Termo de Coordenação é dispensado",
       e: [
-        "Termo de Coordenação com o administrador do EAC (Espaço Aéreo Condicionado)",
-        "Acordo Operacional prévio com o órgão ATS (serviços de tráfego aéreo)",
+        "Termo de Coordenação com o administrador do EAC",
+        "Acordo Operacional prévio com o órgão ATS",
         "Plano de Voo apresentado com 8 dias de antecedência",
-        "Autorização expressa do Diretor-Geral do DECEA (Departamento de Controle do Espaço Aéreo)",
+        "Autorização expressa do Diretor-Geral do DECEA",
       ],
       exp: "Área proibida veda a operação; área restrita, TRA (Área Temporariamente Reservada) e TSA (Área Temporariamente Segregada) exigem TCo; área perigosa dispensa o TCo e transfere a decisão ao piloto.",
       fonte: "ICA 100-40, art. 29, III e parágrafo único",
@@ -4158,25 +4158,25 @@
       p: "Entre os sistemas que o piloto precisa atender, qual NÃO é sincronizado com os demais, embora o cumprimento continue obrigatório?",
       c: "A homologação na ANATEL (Mosaico)",
       e: [
-        "O cadastro no SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)",
-        "O cadastro no SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+        "O cadastro no SISANT",
+        "O cadastro no SARPAS",
         "A conta gov.br",
-        "O AISWEB (portal de informações aeronáuticas do DECEA)",
+        "O AISWEB",
       ],
-      exp: "SISANT e SARPAS não pedem o comprovante de homologação, mas a homologação do equipamento continua obrigatória.",
+      exp: "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) e SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) não pedem o comprovante de homologação, mas a homologação do equipamento continua obrigatória.",
       fonte: "Apostila 04, seção 9",
     },
     {
       id: "AP-067", ap: "04", tema: "Cadastro", dif: "medio",
       p: "Qual é o efeito prático do 'conflito do subdrone' (UA de até 250 g) descrito na apostila?",
-      c: "Como o DECEA (Departamento de Controle do Espaço Aéreo) exige autorização para toda UA (aeronave não tripulada) e o SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) só aceita aeronave com número do SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC), o subdrone também precisa ser cadastrado no SISANT para voar legalmente",
+      c: "Como o DECEA exige autorização para toda UA e o SARPAS só aceita aeronave com número do SISANT, o subdrone também precisa ser cadastrado no SISANT para voar legalmente",
       e: [
         "O subdrone está totalmente dispensado de cadastro e de autorização",
-        "O subdrone precisa de certificação de tipo pela ANAC (Agência Nacional de Aviação Civil)",
+        "O subdrone precisa de certificação de tipo pela ANAC",
         "O subdrone só pode voar em área confinada",
-        "O subdrone precisa de seguro RETA (seguro obrigatório de responsabilidade perante terceiros), por não ter cadastro",
+        "O subdrone precisa de seguro RETA, por não ter cadastro",
       ],
-      exp: "Pela ANAC, o drone de até 250 g em VLOS (voo dentro do alcance visual do piloto) até 120 m fica fora do RBAC 100 e dispensa cadastro. Pelo DECEA, não há dispensa de autorização — e a porta de entrada é o SISANT.",
+      exp: "Pela ANAC (Agência Nacional de Aviação Civil), o drone de até 250 g em VLOS (voo dentro do alcance visual do piloto) até 120 m fica fora do RBAC 100 e dispensa cadastro. Pelo DECEA (Departamento de Controle do Espaço Aéreo), não há dispensa de autorização — e a porta de entrada é o SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC).",
       fonte: "Apostila 04, seção 9; ICA 100-40, art. 19, §4º",
     },
     {
@@ -4186,7 +4186,7 @@
       e: [
         "É o piloto mais experiente, que supervisiona os voos da unidade",
         "É o oficial que assina a Avaliação de Risco Operacional",
-        "É o servidor do DECEA (Departamento de Controle do Espaço Aéreo) que analisa cada solicitação",
+        "É o servidor do DECEA que analisa cada solicitação",
         "É o setor de patrimônio, que controla a carga das aeronaves",
       ],
       exp: "Por isso ele precisa garantir que os pilotos foram capacitados e conhecem as regras. Sem administrador, 'todo mundo está ilegal'.",
@@ -4210,10 +4210,10 @@
       p: "Qual é a regra-mãe do art. 19 da ICA 100-40?",
       c: "Nenhuma UA (aeronave não tripulada) pode acessar o espaço aéreo brasileiro sem autorização do Estado brasileiro",
       e: [
-        "Nenhuma UA pode voar acima de 120 metros AGL (altura acima do solo)",
-        "Nenhuma UA pode operar sem seguro de danos a terceiros",
-        "Nenhuma UA pode ser operada por menor de 18 anos",
-        "Nenhuma UA pode transportar carga externa",
+        "Nenhuma UA (aeronave não tripulada) pode voar acima de 120 metros AGL",
+        "Nenhuma UA (aeronave não tripulada) pode operar sem seguro de danos a terceiros",
+        "Nenhuma UA (aeronave não tripulada) pode ser operada por menor de 18 anos",
+        "Nenhuma UA (aeronave não tripulada) pode transportar carga externa",
       ],
       exp: "A autorização é concedida por integração/acomodação (condicionantes) ou por segregação de espaço aéreo. E vale inclusive para UA de até 250 g.",
       fonte: "ICA 100-40, art. 19",
@@ -4221,7 +4221,7 @@
     {
       id: "AP-071", ap: "04", tema: "Regulamentação", dif: "medio",
       p: "Quais operações exigem segregação do espaço aéreo, com divulgação por produto AIS?",
-      c: "BVLOS (voo além do alcance visual do piloto), voo acima de 400 pés (120 m) AGL (altura acima do solo) e PMD (Peso Máximo de Decolagem) maior que 25 kg",
+      c: "BVLOS, voo acima de 400 pés (120 m) AGL e PMD maior que 25 kg",
       e: [
         "Qualquer operação de órgão de segurança pública",
         "Operações noturnas e operações sobre água",
@@ -4234,12 +4234,12 @@
     {
       id: "AP-073", ap: "04", tema: "Regulamentação", dif: "medio",
       p: "O que a ICA 100-40 exige quando a operação aérea especial tem interseção com EAC (Espaço Aéreo Condicionado) ou FRZ (zona restrita de voo ao redor do aeródromo)?",
-      c: "Estreita coordenação prévia com o órgão ATS (serviços de tráfego aéreo), o operador do aeródromo ou o responsável pelo EAC",
+      c: "Estreita coordenação prévia com o órgão ATS, o operador do aeródromo ou o responsável pelo EAC",
       e: [
         "Nada: a operação especial é isenta de coordenação",
         "Termo de Coordenação assinado com 8 dias de antecedência",
-        "Plano de Voo apresentado ao CGNA (Centro de Gerenciamento da Navegação Aérea)",
-        "Acordo Operacional com a ANAC (Agência Nacional de Aviação Civil)",
+        "Plano de Voo apresentado ao CGNA",
+        "Acordo Operacional com a ANAC",
       ],
       exp: "O privilégio não dispensa a coordenação — dispensa o prazo longo.",
       fonte: "ICA 100-40, art. 44, §2º",
@@ -4260,11 +4260,11 @@
     {
       id: "AP-075", ap: "04", tema: "Regulamentação", dif: "dificil",
       p: "O que acontece com registros, cadastros e certificados emitidos com base no antigo RBAC-E nº 94?",
-      c: "Continuam válidos até que a ANAC (Agência Nacional de Aviação Civil) os cancele",
+      c: "Continuam válidos até que a ANAC os cancele",
       e: [
         "Perderam validade em 15/06/2026, com a revogação",
         "Valem por 90 dias após a entrada em vigor da nova norma",
-        "Precisam ser revalidados no SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) em até 12 meses",
+        "Precisam ser revalidados no SISANT em até 12 meses",
         "Valem só para operações recreativas",
       ],
       exp: "É o art. 78 (disposições transitórias). E as operações autorizadas até 30/06/2026 permanecem válidas por até 90 dias nos parâmetros da autorização (art. 79).",
@@ -4275,10 +4275,10 @@
       p: "Quais documentos a Organização Regional pode exigir na análise de uma solicitação?",
       c: "Carta de Acordo Operacional (CAOp), Acordo Operacional (AOp) e Termo de Coordenação (TCo), podendo ainda exigir comunicação bilateral e Plano de Voo",
       e: [
-        "Apenas a ARO (Avaliação de Risco Operacional) assinada pelo comandante",
-        "Apenas o comprovante de homologação ANATEL (Agência Nacional de Telecomunicações)",
+        "Apenas a ARO assinada pelo comandante",
+        "Apenas o comprovante de homologação ANATEL",
         "Apenas o certificado de aeronavegabilidade",
-        "Apenas a apólice do seguro RETA (seguro obrigatório de responsabilidade perante terceiros)",
+        "Apenas a apólice do seguro RETA",
       ],
       exp: "Enquanto isso o status fica 'pendente'. O parecer desfavorável sempre informa o motivo (art. 62).",
       fonte: "ICA 100-40, arts. 61 e 62",
@@ -4286,14 +4286,14 @@
     {
       id: "AP-077", ap: "04", tema: "Espaço aéreo", dif: "medio",
       p: "O que o piloto precisa conhecer antes de voar, quanto ao fly-away?",
-      c: "O meio de contato do Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+      c: "O meio de contato do Tático SARPAS",
       e: [
         "O telefone da torre de controle do aeroporto mais próximo",
-        "O e-mail da JJAER (Junta de Julgamento da Aeronáutica) para registrar a ocorrência",
-        "O número do CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) para abrir investigação",
+        "O e-mail da JJAER para registrar a ocorrência",
+        "O número do CENIPA para abrir investigação",
         "O contato da assistência técnica do fabricante",
       ],
-      exp: "Art. 26. O Tático SARPAS, no CGNA (Centro de Gerenciamento da Navegação Aérea), recebe o fly-away e difunde alerta de perigo aos órgãos ATS (serviços de tráfego aéreo) locais.",
+      exp: "Art. 26. O Tático SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), no CGNA (Centro de Gerenciamento da Navegação Aérea), recebe o fly-away e difunde alerta de perigo aos órgãos ATS (serviços de tráfego aéreo) locais.",
       fonte: "ICA 100-40, arts. 26 e 76",
     },
     {
@@ -4302,7 +4302,7 @@
       c: "A ICA 100-13, em lugar da ICA 100-40",
       e: [
         "A ICA 100-40, sem qualquer alteração",
-        "O RBAC 100 da ANAC (Agência Nacional de Aviação Civil)",
+        "O RBAC 100 da ANAC",
         "A MCA 56-5, do Manual de SARP",
         "A ICA 100-12, Regras do Ar",
       ],
@@ -4312,9 +4312,9 @@
     {
       id: "AP-079", ap: "04", tema: "Regulamentação", dif: "facil",
       p: "Além do DECEA (Departamento de Controle do Espaço Aéreo), quais normas o explorador, o operador e o piloto em comando também devem observar?",
-      c: "As da ANAC (Agência Nacional de Aviação Civil), da ANATEL (Agência Nacional de Telecomunicações), do MAPA e do Ministério da Defesa",
+      c: "As da ANAC (Agência Nacional de Aviação Civil), da ANATEL, do MAPA e do Ministério da Defesa",
       e: [
-        "Somente as da ANAC",
+        "Somente as da ANAC (Agência Nacional de Aviação Civil)",
         "Somente as do município onde o voo ocorre",
         "Somente as do Código de Trânsito Brasileiro",
         "Somente as normas internas da própria instituição",
@@ -4342,7 +4342,7 @@
       e: [
         "Porque o sistema cobra taxa por solicitação",
         "Porque a autorização vale no máximo 1 hora por pedido",
-        "Porque o DECEA (Departamento de Controle do Espaço Aéreo) nega pedidos com menos de 4 horas",
+        "Porque o DECEA nega pedidos com menos de 4 horas",
         "Porque cada intervalo exige um Termo de Coordenação",
       ],
       exp: "Pedir a janela com folga também protege contra atraso na operação — a autorização é de período, não de um instante.",
@@ -4356,7 +4356,7 @@
         "A JJAER investiga e o CENIPA julga",
         "A JJAER cuida de aeronave tripulada e o CENIPA de drone",
         "Os dois julgam, em instâncias diferentes",
-        "A JJAER é da ANAC (Agência Nacional de Aviação Civil) e o CENIPA é do DECEA (Departamento de Controle do Espaço Aéreo)",
+        "A JJAER é da ANAC e o CENIPA é do DECEA",
       ],
       exp: "Confundir os dois é erro comum: um pune, o outro previne.",
       fonte: "Apostila 04, seção 2",
@@ -4383,7 +4383,7 @@
         "Peso, marca da aeronave, altura, horário e local",
         "Peso, autonomia, alcance, altura e clima",
         "Piloto, observador, segurança, aeronave e bateria",
-        "Peso, seguro, cadastro, homologação e ARO (Avaliação de Risco Operacional)",
+        "Peso, seguro, cadastro, homologação e ARO",
       ],
       exp: "No RBAC-E 94 a categoria vinha do peso; hoje vem da análise do risco criado pela situação do voo.",
       fonte: "Apostila 05, seção 3",
@@ -4407,7 +4407,7 @@
       c: "Preposto do operador, que é o responsável legal pela operação",
       e: [
         "Responsável legal exclusivo pela operação",
-        "Auxiliar do Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
+        "Auxiliar do Administrador SARPAS",
         "Encarregado da manutenção da aeronave",
         "Fiscal da autoridade aeronáutica em campo",
       ],
@@ -4417,7 +4417,7 @@
     {
       id: "AP-094", ap: "05", tema: "Segurança operacional", dif: "medio",
       p: "Caso real (Carnaval de Manaus): um drone filmava a festa no centro da cidade, com multidão, carros de som, transmissão de rádio e equipes de TV operando ao mesmo tempo. Em pleno voo a aeronave começou a derivar sozinha e acabou colidindo com o sino de uma igreja. O que explica esse comportamento?",
-      c: "A saturação de sinais de rádio e TV no local: a aeronave entrou em modo ATT (modo atitude, sem travar posição por satélite), derivou e recebeu um comando espúrio",
+      c: "A saturação de sinais de rádio e TV no local: a aeronave entrou em modo ATT, derivou e recebeu um comando espúrio",
       e: [
         "Uma rajada de vento repentina durante a filmagem",
         "Falha da bateria, que descarregou antes do previsto",
@@ -4456,12 +4456,12 @@
     {
       id: "AP-097", ap: "05", tema: "Segurança operacional", dif: "medio",
       p: "Numa operação perto de aeroclube, quais mitigações derrubam a probabilidade de conflito com tráfego aéreo?",
-      c: "Checklist rigoroso, emprego de spotters (um para a aeronave e um ou dois para o entorno) e verificação ativa com o SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)/contato com o DECEA (Departamento de Controle do Espaço Aéreo)",
+      c: "Checklist rigoroso, emprego de spotters (um para a aeronave e um ou dois para o entorno) e verificação ativa com o SARPAS/contato com o DECEA",
       e: [
         "Reduzir a altura para 30 metros e voar somente de manhã",
         "Usar drone de menos de 250 g",
         "Transmitir a imagem ao vivo para a torre de controle",
-        "Programar o RTH (retorno automático ao ponto de decolagem) direto na altura máxima",
+        "Programar o RTH direto na altura máxima",
       ],
       exp: "Com observadores e controle pela rede, a probabilidade cai de 4 (ocasional) para 1 (muito improvável). A severidade continua A — mitigar não muda a consequência possível.",
       fonte: "Apostila 05 / Apostila 06, seção 7",
@@ -4471,10 +4471,10 @@
       p: "O que a ANAC (Agência Nacional de Aviação Civil) pode fazer mesmo quando tecnicamente tudo está conforme?",
       c: "Proibir operações em áreas específicas, se houver perturbação à ordem pública, além de fazer inspeções, auditorias e vistorias sem aviso prévio",
       e: [
-        "Cassar a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) emitida pelo DECEA (Departamento de Controle do Espaço Aéreo)",
+        "Cassar a autorização SARPAS emitida pelo DECEA",
         "Aplicar multa de trânsito aéreo ao piloto",
         "Apreender a aeronave em campo",
-        "Exigir seguro RETA (seguro obrigatório de responsabilidade perante terceiros) de operações estatais",
+        "Exigir seguro RETA de operações estatais",
       ],
       exp: "E o UAS (o sistema completo: aeronave, estação de pilotagem e enlace) deve ser disponibilizado sempre que requerido pela ANAC. Já revogar autorização de espaço aéreo é do DECEA (arts. 64 e 81 da ICA).",
       fonte: "Apostila 05, seção 13",
@@ -4497,7 +4497,7 @@
       p: "Para atuar perto de um aeródromo, o que é necessário além da coordenação com o DECEA (Departamento de Controle do Espaço Aéreo)?",
       c: "Autorização expressa do administrador do aeródromo, com definição de altura, horário e distância, e contato mantido durante toda a operação",
       e: [
-        "Apenas a autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) aprovada automaticamente",
+        "Apenas a autorização SARPAS aprovada automaticamente",
         "Apenas o aviso ao piloto da aeronave que estiver pousando",
         "Apenas o registro do voo em até 24 horas",
         "Apenas a presença de observador no local",
@@ -4509,12 +4509,12 @@
     /* ================= APOSTILA 06 — ARO ================= */
     {
       id: "AP-110", ap: "06", tema: "Documentação", dif: "facil",
-      p: "O que é a ARO (Avaliação de Risco Operacional)?",
+      p: "O que é a ARO?",
       c: "A Avaliação de Risco Operacional: o documento que cruza probabilidade e severidade de cada perigo, define a tolerabilidade e diz quem autoriza o voo",
       e: [
-        "A autorização de acesso ao espaço aéreo emitida pelo DECEA (Departamento de Controle do Espaço Aéreo)",
+        "A autorização de acesso ao espaço aéreo emitida pelo DECEA",
         "O relatório do voo entregue após a operação",
-        "O cadastro da aeronave e do operador na ANAC (Agência Nacional de Aviação Civil)",
+        "O cadastro da aeronave e do operador na ANAC",
         "O checklist de itens verificados antes da decolagem",
       ],
       exp: "Ela transforma 'acho que dá para voar' numa decisão fundamentada, assinada no nível certo da hierarquia.",
@@ -4528,7 +4528,7 @@
         "IS nº 100-001, de 2026",
         "ICA 100-40, de 2026",
         "RBAC nº 100, Emenda 00",
-        "MCA 56-5, do DECEA (Departamento de Controle do Espaço Aéreo)",
+        "MCA 56-5, do DECEA",
       ],
       exp: "Ela nasceu para o RBAC-E 94, e a exigência de ARO (Avaliação de Risco Operacional) foi mantida no RBAC 100 de 2026.",
       fonte: "Apostila 06, seção 1",
@@ -4588,7 +4588,7 @@
         "Não: cada voo exige uma ARO nova",
         "Sim, mas somente para operações de segurança pública",
         "Sim, com validade de até 24 meses",
-        "Não, salvo autorização expressa da ANAC (Agência Nacional de Aviação Civil)",
+        "Não, salvo autorização expressa da ANAC",
       ],
       exp: "Os 12 meses são o máximo, não uma obrigação. Evento singular pede ARO específica daquele evento.",
       fonte: "Apostila 06, seção 8",
@@ -4599,7 +4599,7 @@
       c: "Cabeçalho, base legal, declaração de procedimentos em caso de lesão, tabela de avaliação e assinatura",
       e: [
         "Capa, sumário, desenvolvimento, conclusão e anexos",
-        "Identificação, autorização SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), log de voo e relatório",
+        "Identificação, autorização SARPAS, log de voo e relatório",
         "Objetivo, efetivo empregado, viaturas e prazo",
         "Perigo, causa, efeito e responsável",
       ],
@@ -4624,10 +4624,10 @@
       p: "Onde ficam salvos os dados preenchidos na versão embutida do Formulário ARO (Avaliação de Risco Operacional) da apostila?",
       c: "Só no próprio aparelho, como rascunho local — nada é enviado a servidor",
       e: [
-        "Na planilha da Seção Operacional do BPFRON (Batalhão de Polícia de Fronteira e Divisas)",
-        "No SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA), junto com a solicitação de voo",
+        "Na planilha da Seção Operacional do BPFRON",
+        "No SARPAS, junto com a solicitação de voo",
         "No Drive institucional da unidade",
-        "No servidor da ANAC (Agência Nacional de Aviação Civil), para auditoria",
+        "No servidor da ANAC, para auditoria",
       ],
       exp: "Em aparelho compartilhado, a recomendação é usar 'Limpar rascunho' ao terminar.",
       fonte: "Apostila 06, seção 10",
@@ -4639,8 +4639,8 @@
       e: [
         "Deixar o campo de autorização em branco",
         "Anotar apenas no log de voo da aeronave",
-        "Comunicar verbalmente ao Administrador SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
-        "Cancelar a ARO (Avaliação de Risco Operacional) e refazer depois da operação",
+        "Comunicar verbalmente ao Administrador SARPAS",
+        "Cancelar a ARO e refazer depois da operação",
       ],
       exp: "Exemplo dado na apostila: 'o comandante de unidade informou risco alto e que não deveria haver o voo; a operação ocorreu por ordem direta do comandante-geral'.",
       fonte: "Apostila 06, seção 7",
@@ -4665,7 +4665,7 @@
       p: "Qual é o erro mais comum no cabeamento da transmissão de imagem?",
       c: "Inverter a direção da placa de captura: o HDMI (cabo/conector de vídeo) vem do controle e a saída USB tem de ficar voltada para o receptor",
       e: [
-        "Usar cabo HDMI longo demais, que perde sinal",
+        "Usar cabo HDMI (cabo/conector de vídeo) longo demais, que perde sinal",
         "Ligar a placa de captura na tomada antes do controle",
         "Usar cartão de memória de classe baixa",
         "Conectar dois receptores na mesma placa",
@@ -4697,14 +4697,14 @@
     {
       id: "AP-134", ap: "07", tema: "Técnico", dif: "medio",
       p: "A tela do app de espelhamento ficou preta. Qual é a causa mais provável e o que checar?",
-      c: "Placa de captura invertida, cabo HDMI (cabo/conector de vídeo) frouxo ou saída HDMI do controle desabilitada",
+      c: "Placa de captura invertida, cabo HDMI frouxo ou saída HDMI do controle desabilitada",
       e: [
         "Internet lenta no local da operação",
         "Bateria da aeronave abaixo de 30%",
         "Cartão de memória cheio",
         "Sala de transmissão com lobby ativado",
       ],
-      exp: "Conferir a direção (USB para o receptor), reencaixar o cabo e verificar no app do drone se a saída HDMI está habilitada.",
+      exp: "Conferir a direção (USB para o receptor), reencaixar o cabo e verificar no app do drone se a saída HDMI (cabo/conector de vídeo) está habilitada.",
       fonte: "Apostila 07, seção 6",
     },
     {
@@ -4738,11 +4738,11 @@
     {
       id: "AP-140", ap: "08", tema: "Cadastro", dif: "facil",
       p: "Para que serve a conta gov.br no fluxo do piloto de drone?",
-      c: "É a conta única que dá acesso ao SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC), ao SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) NG (ID Operacional) e ao assinador digital",
+      c: "É a conta única que dá acesso ao SISANT, ao SARPAS NG (ID Operacional) e ao assinador digital",
       e: [
-        "Serve apenas para consultar a homologação na ANATEL (Agência Nacional de Telecomunicações)",
-        "Serve apenas para fazer a prova teórica da ANAC (Agência Nacional de Aviação Civil)",
-        "Serve apenas para assinar a ARO (Avaliação de Risco Operacional)",
+        "Serve apenas para consultar a homologação na ANATEL",
+        "Serve apenas para fazer a prova teórica da ANAC",
+        "Serve apenas para assinar a ARO",
         "Serve apenas para denunciar drone irregular",
       ],
       exp: "Recomenda-se conta de nível prata ou ouro. É o primeiro passo de todo o fluxo.",
@@ -4761,12 +4761,12 @@
       p: "Para que serve o Portal Drone do DECEA (decea.mil.br/drone)?",
       c: "Para a acreditação de Órgão Especial com resposta imediata, modelos de documentos e orientações de notificação de fly-away",
       e: [
-        "Para solicitar autorização de voo, substituindo o SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA)",
-        "Para cadastrar a aeronave, substituindo o SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC)",
-        "Para consultar NOTAM (aviso aos aeronavegantes) e cartas aeronáuticas",
+        "Para solicitar autorização de voo, substituindo o SARPAS",
+        "Para cadastrar a aeronave, substituindo o SISANT",
+        "Para consultar NOTAM e cartas aeronáuticas",
         "Para fazer a prova teórica de piloto remoto",
       ],
-      exp: "A acreditação é o que libera o privilégio da operação aérea especial. NOTAM e cartas ficam no AISWEB (portal de informações aeronáuticas do DECEA); a prova, no Portal de Capacitação da ANAC (Agência Nacional de Aviação Civil).",
+      exp: "A acreditação é o que libera o privilégio da operação aérea especial. NOTAM (aviso aos aeronavegantes) e cartas ficam no AISWEB (portal de informações aeronáuticas do DECEA); a prova, no Portal de Capacitação da ANAC (Agência Nacional de Aviação Civil).",
       fonte: "Apostila 08, seção 2",
     },
     {
@@ -4774,10 +4774,10 @@
       p: "Na regularização para voar, qual é a ordem de etapas que não pode ser invertida?",
       c: "gov.br → ANATEL (homologação) → SISANT (nº de cadastro) → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) NG (aeronave, equipe, solicitação) → autorização com QR Code",
       e: [
-        "gov.br → SARPAS → SISANT → ANATEL → autorização",
-        "SISANT → gov.br → SARPAS → ANATEL → autorização",
-        "ANATEL → SISANT → gov.br → SARPAS → autorização",
-        "SARPAS → gov.br → ANATEL → SISANT → autorização",
+        "gov.br → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → ANATEL (Agência Nacional de Telecomunicações) → autorização",
+        "SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → gov.br → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → ANATEL (Agência Nacional de Telecomunicações) → autorização",
+        "ANATEL (Agência Nacional de Telecomunicações) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → gov.br → SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → autorização",
+        "SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) → gov.br → ANATEL (Agência Nacional de Telecomunicações) → SISANT (Sistema de Aeronaves Não Tripuladas, o cadastro da ANAC) → autorização",
       ],
       exp: "Uma etapa obriga a anterior: o SARPAS só aceita aeronave com número do SISANT — inclusive o drone de até 250 g.",
       fonte: "Apostila 08, seção 2",
@@ -4785,7 +4785,7 @@
     {
       id: "AP-145", ap: "08", tema: "Espaço aéreo", dif: "facil",
       p: "Em que momento da operação se consulta o AISWEB (portal de informações aeronáuticas do DECEA)?",
-      c: "No planejamento do voo, para conferir NOTAM (aviso aos aeronavegantes) e áreas próximas",
+      c: "No planejamento do voo, para conferir NOTAM e áreas próximas",
       e: [
         "Depois do voo, para registrar a operação realizada",
         "Durante o voo, para acompanhar o tráfego em tempo real",
@@ -4801,7 +4801,7 @@
       c: "Que ele tem endereço novo, e por isso o acesso deve ser feito sempre pela página oficial da ANAC",
       e: [
         "Que ele passou a exigir certificado digital A3",
-        "Que ele substituiu o SARPAS (Solicitação de Acesso ao Espaço Aéreo, o sistema do DECEA) na autorização de voo",
+        "Que ele substituiu o SARPAS na autorização de voo",
         "Que ele dispensou o cadastro de drones até 250 g",
         "Que ele passou a ser pago para pessoa jurídica",
       ],
