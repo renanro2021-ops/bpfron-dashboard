@@ -1481,7 +1481,9 @@ function passo(dt) {
   }
 
   // CSC: os dois sticks para baixo e para dentro (ou para fora)
-  const csc = thr < -0.75 && pit < -0.75 && Math.abs(yawIn) > 0.7 && Math.abs(rol) > 0.7 && Math.sign(yawIn) !== Math.sign(rol);
+  // Lido SEM a curva expo e com folga: stick redondo (toque, Xbox/PS) no canto da diagonal dá ~0,71 por eixo.
+  const B = INP.bruto;
+  const csc = B.thr < -0.6 && B.pit < -0.6 && Math.abs(B.yaw) > 0.6 && Math.abs(B.rol) > 0.6 && Math.sign(B.yaw) !== Math.sign(B.rol);
   if (csc && !S.cscTravado) {
     S.cscTravado = true;
     if (!S.voando) { if (S.motores) desligarMotores('CSC'); else ligarMotores(); }
@@ -1645,7 +1647,7 @@ const ACOES = [
 const NOMES_BT_PADRAO = ['A / ✕', 'B / ○', 'X / □', 'Y / △', 'LB / L1', 'RB / R1', 'LT / L2', 'RT / R2', 'Back / Share', 'Start / Options', 'L3', 'R3', 'Direcional ↑', 'Direcional ↓', 'Direcional ←', 'Direcional →', 'Home / PS'];
 
 const INP = {
-  phys: { LX: 0, LY: 0, RX: 0, RY: 0 }, fn: { thr: 0, yaw: 0, pit: 0, rol: 0 },
+  phys: { LX: 0, LY: 0, RX: 0, RY: 0 }, fn: { thr: 0, yaw: 0, pit: 0, rol: 0 }, bruto: { thr: 0, yaw: 0, pit: 0, rol: 0 },
   kb: { LX: 0, LY: 0, RX: 0, RY: 0 }, toque: { LX: 0, LY: 0, RX: 0, RY: 0 },
   gp: null, lista: [], prev: {}, cont: {}, captura: null, avisouPad: {},
 };
@@ -1734,7 +1736,7 @@ function lerEntradas(dt) {
   if (gp !== INP.gp) { INP.gp = gp; atualizarStatusControle(); }
   for (const k in INP.phys) INP.phys[k] = clamp(INP.kb[k] + gpPhys[k] + INP.toque[k], -1, 1);
   const mp = MAPA_MODO[cfg.modo];
-  for (const f in INP.fn) INP.fn[f] = moldar(INP.phys[mp[f]]);
+  for (const f in INP.fn) { INP.bruto[f] = INP.phys[mp[f]]; INP.fn[f] = moldar(INP.bruto[f]); }
   // botões do controle: só a "borda de subida" dispara a ação
   const ocupado = CAL.aberta || INP.captura;
   for (const a of ACOES) {
@@ -1998,7 +2000,7 @@ const MISSOES = [
   {
     id: 'livre', nome: 'Voo livre', nivel: 'l', icone: '🕊️',
     desc: 'Sem objetivo: base, vila, campo, estrada de terra, linhas de energia e mata. Use para se acostumar com o controle e com as três vistas.',
-    iniciar(M) { M.obj = 'Explore à vontade. Esc abre o menu.'; },
+    iniciar(M) { M.obj = 'Explore à vontade. ☰ (ou Esc) abre o menu.'; },
   },
   {
     id: 'pairado', nome: 'Decolagem, pairado e pouso', nivel: 'b', icone: '🛫', par: 75,
