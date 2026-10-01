@@ -17,6 +17,15 @@
  * do navegador (sessionStorage) uma saudação com o nome de quem entrou e se é
  * aluno ou gestor. Some sozinha em ~2,6 s, ou no primeiro toque/tecla. Fica
  * aqui, e não em cada página, pra valer igual nas 5 páginas e nas apostilas.
+ *
+ * 01/10/2026 — SESSÃO VENCIDA (aluno "não consegue ver o ranking"): o token do
+ * CPF vale 12 h no Worker, mas a página liberava qualquer dr_token guardado sem
+ * olhar a validade, e só reabria o gate em 401 das rotas /api/aro. No dia
+ * seguinte o aluno via a página normal, mas o ranking respondia "Entre com o seu
+ * CPF" e o resultado do simulado NÃO era gravado. Agora: (1) a validade (exp do
+ * JWT) é conferida ao abrir; (2) 401 de /api/aro e /api/drone reabre o gate; e
+ * (3) droneCpf.aposLogin() devolve uma Promise que resolve quando a pessoa
+ * entrar de novo — a página usa pra repetir o envio que falhou, sem perder nada.
  */
 (function () {
   if (window.__droneCpf) return;
@@ -37,6 +46,24 @@
   }
 
   var estado = { pronto: false, souGestor: false, nome: '' };
+  var esperandoLogin = [];
+
+  // exp do JWT do CPF (sem validar assinatura: isso é o Worker que faz; aqui é só
+  // para não abrir a página com uma sessão que o servidor já vai recusar).
+  function tokenVencido(t) {
+    try {
+      var p = JSON.parse(atob(String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return !!p.exp && p.exp * 1000 < Date.now() + 60000;
+    } catch (e) { return true; }
+  }
+
+  function sessaoVencida() {
+    if (!estado.pronto && document.getElementById('drc-ovl')) return;
+    estado.pronto = false;
+    ls('dr_token', null); ls('dr_nome', null);
+    if (estado.souGestor) { ls('bp_token', null); ls('bp_user', null); }
+    montarGate('Sua sessão venceu. Entre de novo — o que você estava fazendo continua de onde parou.');
+  }
 
   window.droneCpf = {
     get pronto() { return estado.pronto; },
@@ -46,6 +73,11 @@
       if (estado.souGestor) { var t = ls('bp_token'); return t ? { authorization: 'Bearer ' + t } : {}; }
       var dr = ls('dr_token'); return dr ? { 'X-Aro': dr } : {};
     },
+    aposLogin: function () {
+      if (estado.pronto) return Promise.resolve(estado);
+      return new Promise(function (ok) { esperandoLogin.push(ok); });
+    },
+    sessaoVencida: function () { sessaoVencida(); },
     sair: function () {
       ls('dr_token', null); ls('dr_nome', null); ls('bp_token', null); ls('bp_user', null); ls('bp_perms', null);
       location.reload();
@@ -76,7 +108,8 @@
 
   function el(id) { return document.getElementById(id); }
 
-  function montarGate() {
+  function montarGate(aviso) {
+    if (el('drc-ovl')) return;
     if (!el('drc-css')) { var st = document.createElement('style'); st.id = 'drc-css'; st.textContent = CSS; document.head.appendChild(st); }
     var o = document.createElement('div');
     o.id = 'drc-ovl';
@@ -84,7 +117,7 @@
       '<div id="drc-box" role="dialog" aria-modal="true">' +
       '<div id="drc-passo-cpf">' +
         '<h2>🛩️ Curso de Drone</h2>' +
-        '<p>Entre com o seu CPF para acessar o material e o formulário ARO.</p>' +
+        '<p>' + (aviso ? '<b style="color:#fcd34d">' + esc(aviso) + '</b>' : 'Entre com o seu CPF para acessar o material e o formulário ARO.') + '</p>' +
         '<label for="drc-cpf">Seu CPF</label>' +
         '<input id="drc-cpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off">' +
         '<div id="drc-msg"></div>' +
@@ -164,6 +197,8 @@
 
   function liberar(souGestor, nome) {
     estado.souGestor = souGestor; estado.nome = nome; estado.pronto = true;
+    var fila = esperandoLogin; esperandoLogin = [];
+    setTimeout(function () { fila.forEach(function (ok) { try { ok(estado); } catch (e) {} }); }, 0);
     var o = el('drc-ovl'); if (o) o.remove();
     document.body.style.overflow = '';
     boasVindas(souGestor, nome);
@@ -279,14 +314,9 @@
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
     var p = fetchOrig.apply(this, arguments);
-    if (/\/api\/aro\b/.test(String(url))) {
+    if (/\/api\/(aro|drone)\b/.test(String(url)) && !/\/api\/aro\/entrar\b/.test(String(url))) {
       p.then(function (r) {
-        if (r.status === 401 && estado.pronto) {
-          estado.pronto = false;
-          ls('dr_token', null); ls('dr_nome', null);
-          if (estado.souGestor) { ls('bp_token', null); ls('bp_user', null); }
-          montarGate();
-        }
+        if (r.status === 401 && estado.pronto) sessaoVencida();
       }).catch(function () {});
     }
     return p;
@@ -313,8 +343,10 @@
 
   function tentarCpf() {
     var drToken = ls('dr_token');
-    if (drToken) { liberar(false, ls('dr_nome') || ''); return; }
-    montarGate();
+    if (drToken && !tokenVencido(drToken)) { liberar(false, ls('dr_nome') || ''); return; }
+    var venceu = !!drToken;
+    if (venceu) { ls('dr_token', null); ls('dr_nome', null); }
+    montarGate(venceu ? 'Sua sessão venceu (vale 12 horas). Entre de novo com o CPF.' : '');
   }
 
   iniciar();

@@ -837,16 +837,29 @@ function enviarResultado() {
     return (ROTULO[e.tipo] || e.tipo) + (e.n > 1 ? ' (' + e.n + 'x)' : '');
   });
   if (integridade.foraMs > 1000) detalhe.push(Math.round(integridade.foraMs / 1000) + 's fora da tela');
+  gravarResultado({
+    banco: cfg.banco, dificuldade: cfg.dif, qtd: c.total, alternativas: cfg.alt,
+    acertos: c.acertos, segundos: segundos, alertas: totalAlertas(), detalhe: detalhe,
+    questoes: prova.map(function (q) { return q.id; }),
+  }, 0);
+}
+
+/* 01/10/2026: com a sessão do CPF vencida (12 h) o Worker devolve 401 e o
+   resultado se perdia calado. Agora o drone-cpf.js reabre a tela do CPF e,
+   quando a pessoa entra de novo, o MESMO resultado é reenviado. */
+function gravarResultado(corpo, tentativa) {
   fetch(API_BASE + '/api/drone/simulado', {
     method: 'POST',
     headers: Object.assign({ 'content-type': 'application/json' }, window.droneCpf ? window.droneCpf.headers() : {}),
-    body: JSON.stringify({
-      banco: cfg.banco, dificuldade: cfg.dif, qtd: c.total, alternativas: cfg.alt,
-      acertos: c.acertos, segundos: segundos, alertas: totalAlertas(), detalhe: detalhe,
-      questoes: prova.map(function (q) { return q.id; }),
-    }),
-  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    body: JSON.stringify(corpo),
+  }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d = d || {}; d._status = r.status; return d; }); })
     .then(function (d) {
+      if (d._status === 401 && tentativa < 2 && window.droneCpf && window.droneCpf.aposLogin) {
+        $('msg-result').className = 'msg erro';
+        $('msg-result').textContent = 'Sua sessão venceu. Entre de novo com o CPF — o resultado é gravado em seguida.';
+        window.droneCpf.aposLogin().then(function () { gravarResultado(corpo, tentativa + 1); });
+        return;
+      }
       $('msg-result').className = 'msg ' + (d && d.ok ? 'ok' : 'erro');
       $('msg-result').textContent = d && d.ok
         ? 'Resultado gravado no ranking da turma.'
@@ -866,6 +879,11 @@ function carregarRanking(banco) {
     headers: window.droneCpf ? window.droneCpf.headers() : {},
   }).then(function (r) { return r.json().catch(function () { return {}; }); })
     .then(function (d) {
+      if (d && d.error === 'cpf_requerido' && window.droneCpf && window.droneCpf.aposLogin) {
+        $('rk-tabela').innerHTML = '<div class="vazio">Sua sessão venceu. Entre de novo com o CPF para ver o ranking.</div>';
+        window.droneCpf.aposLogin().then(function () { carregarRanking(banco); });
+        return;
+      }
       if (!d || !d.ok) {
         $('rk-tabela').innerHTML = '<div class="vazio">' + esc((d && d.detail) || 'Não deu para carregar o ranking.') + '</div>';
         $('rk-meus').innerHTML = '<div class="vazio">—</div>';

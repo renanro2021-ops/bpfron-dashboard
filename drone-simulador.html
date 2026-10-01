@@ -1,0 +1,2793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>Simulador de Voo · Piloto de Drones · BPFRON/RO</title>
+<meta name="description" content="Simulador de voo de drone no estilo DJI para o treino dos alunos do CPPSARP, com joystick, rádio USB, teclado ou toque.">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* drone-simulador.html — Simulador de voo do Curso de Drone (01/10/2026)
+   Página única: Three.js (cdnjs) + física simplificada no estilo DJI (GPS/ATTI,
+   modos Cine/Normal/Esporte, CSC, RTH, bateria, vento), controle por Gamepad API
+   (joystick, controle de videogame, rádio USB), teclado ou sticks na tela.
+   Não fala com o Worker: recordes ficam no navegador (localStorage). */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --y:#F5C518; --t:#dde3f0; --m:#94a3b8;
+  --line:rgba(148,163,184,.16); --card:rgba(12,17,30,.94);
+  --g:#34d399; --r:#f87171; --o:#fb923c; --b:#60a5fa;
+}
+html,body{height:100%;overflow:hidden;background:#060912;color:var(--t);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{touch-action:none;-webkit-user-select:none;user-select:none}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
+
+/* ---------------- HUD (estilo DJI Fly) ---------------- */
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+#hud button{pointer-events:auto}
+.top{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,0))}
+.tb{width:36px;height:36px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff;font-size:18px;cursor:pointer}
+.st{font-weight:700;font-size:13.5px;padding:5px 12px;border-radius:6px;background:rgba(16,163,104,.92);text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.st.am{background:rgba(217,119,6,.95)} .st.vm{background:rgba(220,38,38,.95)} .st.az{background:rgba(37,99,235,.92)}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600;white-space:nowrap}
+.ti small{font-size:11px;opacity:.8;font-weight:500}
+.pill{border:1.5px solid #fff;border-radius:5px;padding:0 6px;font-weight:800;cursor:pointer;pointer-events:auto}
+.bat-b{color:#fca5a5}.bat-a{color:#fcd34d}
+
+#mis{position:absolute;top:58px;left:12px;max-width:min(380px,58vw);background:rgba(6,9,18,.72);border:1px solid rgba(245,197,24,.35);border-radius:12px;padding:10px 13px;text-shadow:none;backdrop-filter:blur(4px)}
+.mis-n{font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px;color:var(--y);letter-spacing:.3px}
+.mis-o{font-size:13.5px;font-weight:600;margin-top:2px;line-height:1.4}
+.mis-p{font-size:12.5px;color:#cbd5e1;margin-top:3px}
+.mis-t{font-size:12px;color:var(--m);margin-top:3px;font-variant-numeric:tabular-nums}
+
+.lado{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px}
+.lado.esq{left:12px}.lado.dir{right:12px}
+.rb{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;font-size:22px;cursor:pointer;display:grid;place-items:center}
+.rb:active{transform:scale(.94)}
+.rb.pq{width:40px;height:40px;font-size:14px;margin:0 auto}
+.rb.on{border-color:var(--y);background:rgba(245,197,24,.25)}
+
+#vista-n{position:absolute;top:58px;left:50%;transform:translateX(-50%);font-size:12.5px;font-weight:700;background:rgba(0,0,0,.45);padding:4px 12px;border-radius:999px;transition:opacity .6s}
+#mira{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);opacity:.75}
+#mira::before,#mira::after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
+#mira::before{left:0;right:0;top:50%;height:1.5px;margin-top:-.75px}
+#mira::after{top:0;bottom:0;left:50%;width:1.5px;margin-left:-.75px}
+#gimbal{position:absolute;right:92px;top:50%;transform:translateY(-50%);width:6px;height:150px;border-radius:3px;background:rgba(255,255,255,.22)}
+#gimbal i{position:absolute;left:-4px;width:14px;height:4px;border-radius:2px;background:var(--y)}
+#gimbal span{position:absolute;right:12px;font-size:11.5px;font-weight:700;white-space:nowrap;transform:translateY(-50%)}
+
+#toast{position:absolute;left:50%;top:26%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,92vw)}
+.ts{background:rgba(0,0,0,.66);border-left:4px solid var(--b);padding:7px 14px;border-radius:8px;font-size:14px;font-weight:600;text-align:center;animation:tsIn .2s ease both;text-shadow:none}
+.ts.am{border-color:var(--y)}.ts.vm{border-color:#ef4444;background:rgba(127,29,29,.8)}.ts.ok{border-color:var(--g)}
+.ts.sai{animation:tsOut .4s ease both}
+@keyframes tsIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
+@keyframes tsOut{to{opacity:0;transform:translateY(-6px)}}
+
+.mk{position:absolute;left:0;top:0;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:700;white-space:nowrap}
+#alvo-m b{width:18px;height:18px;border:2.5px solid #e879f9;transform:rotate(45deg);border-radius:3px;box-shadow:0 0 4px #000}
+#alvo-m span{color:#f5d0fe}
+#drone-m i{width:34px;height:34px;border:2px solid #fde047;border-radius:50%;box-shadow:0 0 3px #000}
+#drone-m span{color:#fde047}
+.mk.borda b,.mk.borda i{border-style:dashed}
+
+#mapa{position:absolute;left:12px;bottom:12px;width:170px;height:170px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(10,16,10,.55);pointer-events:auto;cursor:pointer}
+#tele{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:18px;background:rgba(0,0,0,.42);padding:8px 16px;border-radius:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#tele div{display:flex;align-items:baseline;gap:5px}
+#tele b{font-size:12px;color:#cbd5e1;font-weight:700}
+#tele span{font-size:18px;font-weight:700;min-width:48px}
+#tele em{font-style:normal;font-size:11.5px;color:#cbd5e1}
+#sticks{position:absolute;right:12px;bottom:12px;display:flex;gap:10px}
+.stk{position:relative;width:78px;height:78px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.35)}
+.stk::before,.stk::after{content:"";position:absolute;background:rgba(255,255,255,.18)}
+.stk::before{left:8px;right:8px;top:50%;height:1px}.stk::after{top:8px;bottom:8px;left:50%;width:1px}
+.stk i{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--y);left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 4px #000}
+.stk span{position:absolute;left:0;right:0;bottom:-17px;text-align:center;font-size:10.5px;color:#e2e8f0;font-weight:600}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .35s}
+#crash-v{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(220,38,38,.45));opacity:0;transition:opacity .4s}
+
+/* sticks na tela (celular/tablet) */
+#tq{position:absolute;left:0;right:0;bottom:0;height:46%;pointer-events:none}
+.tq-s{position:absolute;bottom:26px;width:150px;height:150px;border-radius:50%;border:2px solid rgba(255,255,255,.32);background:rgba(0,0,0,.18);pointer-events:auto;touch-action:none}
+.tq-s i{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(245,197,24,.55);border:2px solid rgba(255,255,255,.6)}
+#tq-l{left:200px}#tq-r{right:24px}
+body.toque #sticks{display:none}
+body.toque .lado{top:auto;bottom:18px;transform:none;flex-direction:row;align-items:center;gap:8px}
+body.toque .lado.esq{left:auto;right:calc(50% + 4px)}
+body.toque .lado.dir{right:auto;left:calc(50% + 4px)}
+body.toque .rb.pq{margin:0}
+body.toque #tele{bottom:76px;gap:10px;padding:6px 12px}
+body.toque #tele span{font-size:15px;min-width:34px}
+body.toque #tq-l{left:24px}
+body.toque #mapa{left:auto;right:12px;bottom:auto;top:56px;width:120px;height:120px}
+body.toque #gimbal{display:none}
+#girar{display:none;position:absolute;left:50%;top:40%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;text-align:center}
+@media (orientation:portrait) and (pointer:coarse){#girar{display:block}}
+
+/* ---------------- menus ---------------- */
+.ovl{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 16px;background:rgba(4,6,12,.86);backdrop-filter:blur(6px);color:var(--t);text-shadow:none;user-select:text;-webkit-user-select:text;touch-action:auto}
+.mpan{width:100%;max-width:1040px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden}
+.mhdr{display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:3px solid rgba(245,197,24,.5);background:linear-gradient(100deg,#05070d,#0b0f1a 55%,#0d1220);flex-wrap:wrap}
+.mhdr img{height:48px;width:48px;border-radius:50%;object-fit:cover}
+.mt{font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#fff;line-height:1.1}
+.mt em{font-style:normal;color:var(--y)}
+.ms{font-size:12.5px;color:var(--m)}
+.mhdr-d{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.voltar{font-size:13px;color:var(--m);text-decoration:none}.voltar:hover{color:var(--y)}
+.bp,.bs{border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.bp{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.bs{background:rgba(148,163,184,.12);color:#e2e8f0;border:1px solid var(--line)}
+.bp:disabled,.bs:disabled{opacity:.45;cursor:default}
+.bs:hover:not(:disabled){border-color:rgba(245,197,24,.5)}
+.ctrl-status{margin:14px 22px 0;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.7;border:1px solid var(--line);background:rgba(148,163,184,.07)}
+.ctrl-status.ok{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.ctrl-status.am{border-color:rgba(245,197,24,.45);background:rgba(245,197,24,.08)}
+.ctrl-status .bs{padding:5px 12px;font-size:12.5px;margin-left:8px}
+.tabs{display:flex;gap:4px;padding:14px 22px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;color:var(--m);font:600 14px Inter,sans-serif;padding:10px 14px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:#fff;border-bottom-color:var(--y)}
+.tab{display:none;padding:20px 22px 26px}
+.tab.on{display:block}
+.grid-ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.ex{display:flex;flex-direction:column;gap:8px;text-align:left;background:rgba(12,17,30,.85);border:1px solid var(--line);border-radius:16px;padding:16px;color:inherit;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s}
+.ex:hover,.ex:focus-visible{border-color:rgba(245,197,24,.6);transform:translateY(-2px);outline:none}
+.ex-t{display:flex;align-items:center;gap:10px}
+.ex-ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:22px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25);flex-shrink:0}
+.ex h4{font-family:Rajdhani,sans-serif;font-size:18px;color:#fff;line-height:1.15}
+.ex p{font-size:13px;color:var(--m);line-height:1.55;flex:1}
+.ex-f{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.nv{border-radius:999px;padding:2px 9px;font-weight:700;border:1px solid}
+.nv.b{color:#6ee7b7;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.nv.i{color:#93c5fd;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.08)}
+.nv.a{color:#fca5a5;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08)}
+.nv.l{color:#e2e8f0;border-color:var(--line)}
+.rec{color:var(--y);font-weight:700}
+.bloco{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;background:rgba(6,9,18,.4)}
+.bloco h3{font-family:Rajdhani,sans-serif;font-size:18px;color:#fff;margin-bottom:8px}
+.dica{font-size:13px;color:var(--m);line-height:1.6;margin:6px 0}
+.dica b{color:#e2e8f0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.modo{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:rgba(12,17,30,.6);font-size:12.5px;color:var(--m);line-height:1.5;text-align:left;font-family:inherit}
+.modo b{display:block;color:#fff;font-size:15px;margin-bottom:4px}
+.modo.on{border-color:var(--y);background:rgba(245,197,24,.08)}
+.teste{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.teste .stk{background:rgba(255,255,255,.04)}
+.barras{flex:1;min-width:220px;display:grid;gap:7px}
+.barra{display:grid;grid-template-columns:110px 1fr 44px;gap:8px;align-items:center;font-size:12.5px}
+.barra .tr{position:relative;height:10px;border-radius:5px;background:rgba(148,163,184,.15)}
+.barra .tr::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,.35)}
+.barra .tr i{position:absolute;top:0;bottom:0;border-radius:5px;background:var(--y)}
+.barra span{text-align:right;font-variant-numeric:tabular-nums;color:#cbd5e1}
+table.tb2{width:100%;border-collapse:collapse;font-size:13px}
+table.tb2 td,table.tb2 th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+table.tb2 th{color:var(--m);font-weight:600;font-size:12px}
+table.tb2 .bs{padding:5px 10px;font-size:12px}
+kbd{display:inline-block;border:1px solid rgba(148,163,184,.35);border-bottom-width:2px;border-radius:5px;padding:0 6px;font:600 12px Inter,sans-serif;color:#e2e8f0;background:rgba(148,163,184,.08);margin:1px}
+.campo{display:grid;gap:5px;margin-bottom:12px}
+.campo label{font-size:12.5px;font-weight:700;color:#cbd5e1}
+.campo select,.campo input[type=range]{width:100%}
+.campo select{background:#060912;color:#e2e8f0;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px}
+.campo small{font-size:12px;color:var(--m)}
+.chk{display:flex;gap:9px;align-items:center;font-size:13.5px;margin-bottom:10px;cursor:pointer}
+.chk input{width:17px;height:17px;accent-color:#F5C518}
+input[type=range]{accent-color:#F5C518}
+.guia h4{font-family:Rajdhani,sans-serif;font-size:17px;color:#fff;margin:14px 0 4px}
+.guia p,.guia li{font-size:13.5px;color:#cbd5e1;line-height:1.65}
+.guia ul{padding-left:20px}
+.guia b{color:#fff}
+
+.rpan{width:100%;max-width:520px;margin:auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 24px;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.rpan h2{font-family:Rajdhani,sans-serif;font-size:25px;color:#fff;margin:6px 0}
+.r-ic{font-size:44px}
+.r-nota{font-family:Rajdhani,sans-serif;font-size:58px;font-weight:700;color:var(--y);line-height:1}
+.r-nota small{font-size:20px;color:var(--m)}
+.r-est{font-size:26px;letter-spacing:4px;color:var(--y);min-height:30px}
+.r-sub{font-size:13.5px;color:var(--m);margin-top:4px}
+#r-det{list-style:none;text-align:left;margin:14px 0 4px;display:grid;gap:5px;font-size:13px}
+#r-det li{background:rgba(148,163,184,.07);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;gap:10px}
+#r-det li.ruim b{color:#fca5a5}
+#r-det li.bom b{color:#6ee7b7}
+#r-foto{width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)}
+.rpan .row{justify-content:center;margin-top:16px}
+.cal-txt{font-size:15px;margin:14px 0;line-height:1.55;min-height:48px}
+.cal-txt b{color:var(--y)}
+.cal-passos{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.cal-passos i{width:26px;height:6px;border-radius:3px;background:rgba(148,163,184,.25)}
+.cal-passos i.ok{background:var(--g)}.cal-passos i.at{background:var(--y)}
+#cal-eixos{display:grid;gap:5px;text-align:left;max-height:220px;overflow:auto;padding:4px}
+.rk-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rk-pills button{border:1px solid var(--line);background:rgba(148,163,184,.08);color:#cbd5e1;border-radius:999px;padding:6px 12px;font:600 12.5px Inter,sans-serif;cursor:pointer}
+.rk-pills button.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.6);color:#fff}
+.rk-cx{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.rk{width:100%;border-collapse:collapse;font-size:13px;min-width:460px}
+table.rk th,table.rk td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+table.rk th{color:var(--m);font-size:12px;font-weight:600}
+table.rk td.n{text-align:right;font-variant-numeric:tabular-nums}
+table.rk tr.eu td{background:rgba(245,197,24,.09)}
+table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
+.rk-vazio{padding:22px;text-align:center;color:var(--m);font-size:13.5px}
+#r-rk{margin-top:8px;font-size:13px;min-height:18px}
+#r-rk.ok{color:#6ee7b7}#r-rk.erro{color:#fca5a5}
+#erro-gl{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;background:#060912}
+
+@media (max-width:760px){
+  .cols,.modos{grid-template-columns:1fr}
+  .top-r{gap:9px;font-size:12px}
+  #t-gps,#t-sinal{display:none}
+  #tele{gap:10px;padding:6px 10px;bottom:auto;top:56px}
+  #tele span{font-size:14px;min-width:34px}
+  #mis{top:100px;max-width:70vw}
+  #mapa{width:120px;height:120px;bottom:auto;top:56px;left:auto;right:12px}
+  #tele{left:12px;transform:none}
+  #tq-l{left:16px}
+  .lado{top:44%}
+  .rb{width:44px;height:44px;font-size:19px}
+  #gimbal{right:64px;height:110px}
+  .mhdr-d{margin-left:0}
+}
+@media (max-height:520px){
+  #mis{top:52px} .lado{gap:8px} .rb{width:42px;height:42px}
+}
+</style>
+</head>
+<body>
+<script src="conta.js"></script>
+<script src="drone-cpf.js"></script>
+
+<canvas id="cv" tabindex="0"></canvas>
+
+<div id="hud" hidden>
+  <div class="top">
+    <button class="tb" id="bt-menu" title="Menu e pausa (Esc)">☰</button>
+    <div id="st" class="st">Pronto para voar (GPS)</div>
+    <div class="top-r">
+      <span class="ti" id="t-vento" hidden></span>
+      <span class="ti pill" id="t-modo" title="Modo de voo: Cine / Normal / Esporte (M)">N</span>
+      <span class="ti" id="t-gps">🛰 17</span>
+      <span class="ti" id="t-sinal">📶 100%</span>
+      <span class="ti" id="t-bat">🔋 100% <small id="t-rest">12:00</small></span>
+    </div>
+  </div>
+
+  <div id="mis" hidden>
+    <div class="mis-n" id="mis-n"></div>
+    <div class="mis-o" id="mis-o"></div>
+    <div class="mis-p" id="mis-p"></div>
+    <div class="mis-t" id="mis-t"></div>
+  </div>
+
+  <div class="lado esq">
+    <button class="rb" id="bt-decolar" title="Decolar / pousar automático (T)">⏫</button>
+    <button class="rb" id="bt-rth" title="Voltar para casa — RTH (H)">🏠</button>
+  </div>
+  <div class="lado dir">
+    <button class="rb" id="bt-foto" title="Tirar foto (P ou Enter)">📷</button>
+    <button class="rb" id="bt-vista" title="Trocar vista (C)">🎥</button>
+    <button class="rb pq" id="bt-gc" title="Câmera (gimbal) para cima (R)">▲</button>
+    <button class="rb pq" id="bt-gb" title="Câmera (gimbal) para baixo (F)">▼</button>
+  </div>
+
+  <div id="vista-n"></div>
+  <div id="mira"></div>
+  <div id="gimbal"><i id="gimbal-i"></i><span id="gimbal-t"></span></div>
+  <div class="mk" id="alvo-m" hidden><b></b><span></span></div>
+  <div class="mk" id="drone-m" hidden><i></i><span></span></div>
+  <div id="toast"></div>
+  <canvas id="mapa" title="Mapa (clique para aproximar/afastar)"></canvas>
+  <div id="tele">
+    <div><b>D</b><span id="v-d">0</span><em>m</em></div>
+    <div><b>H</b><span id="v-h">0</span><em>m</em></div>
+    <div><b>H.S</b><span id="v-hs">0</span><em>m/s</em></div>
+    <div><b>V.S</b><span id="v-vs">0</span><em>m/s</em></div>
+  </div>
+  <div id="sticks">
+    <div class="stk"><i id="stk-l"></i><span id="stk-ln"></span></div>
+    <div class="stk"><i id="stk-r"></i><span id="stk-rn"></span></div>
+  </div>
+  <div id="tq" hidden>
+    <div class="tq-s" id="tq-l"><i></i></div>
+    <div class="tq-s" id="tq-r"><i></i></div>
+  </div>
+  <div id="girar">📱 Vire o celular de lado<br><small style="font-weight:500">o simulador é pensado para a tela deitada</small></div>
+  <div id="crash-v"></div>
+  <div id="flash"></div>
+</div>
+
+<!-- ================= MENU ================= -->
+<div id="menu" class="ovl">
+  <div class="mpan">
+    <div class="mhdr">
+      <img src="LOGOS/brasao-curso-drone-ppsarp.png" alt="Brasão do Curso de Drone">
+      <div>
+        <div class="mt">Simulador de <em>Voo</em></div>
+        <div class="ms">Treino de pilotagem no estilo DJI · CPPSARP · BPFRON/RO</div>
+      </div>
+      <div class="mhdr-d">
+        <button class="bp" id="bt-continuar" hidden>▶ Continuar o voo</button>
+        <button class="bs" id="bt-sair-ex" hidden>Encerrar exercício</button>
+        <a class="voltar" href="drone.html">⬅ Curso de Drone</a>
+      </div>
+    </div>
+    <div class="ctrl-status" id="ctrl-status"></div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="ex" class="on">🎯 Exercícios</button>
+      <button data-tab="rk">🏆 Ranking</button>
+      <button data-tab="ct">🎮 Controle</button>
+      <button data-tab="aj">⚙️ Ajustes</button>
+      <button data-tab="cp">📖 Como pilotar</button>
+    </nav>
+
+    <section class="tab on" id="tab-ex">
+      <div class="grid-ex" id="grid-ex"></div>
+    </section>
+
+    <section class="tab" id="tab-rk">
+      <p class="dica" style="margin-top:0">Vale a <b>melhor nota</b> de cada aluno em cada exercício; no empate, ganha o <b>menor tempo</b>. O <b>geral</b> soma as melhores notas dos 8 exercícios (máximo 800). Voo livre não entra.</p>
+      <div class="rk-pills" id="rk-pills"></div>
+      <div class="rk-cx" id="rk-tab"><div class="rk-vazio">Carregando…</div></div>
+      <h3 style="font-family:Rajdhani,sans-serif;font-size:18px;color:#fff;margin:18px 0 8px">Meus voos</h3>
+      <div class="rk-cx" id="rk-meus"><div class="rk-vazio">—</div></div>
+      <div class="row"><button class="bs" id="rk-atualizar">↻ Atualizar</button></div>
+    </section>
+
+    <section class="tab" id="tab-ct">
+      <div class="bloco">
+        <h3>Controle</h3>
+        <div id="ct-pads" class="dica"></div>
+        <p class="dica">Ligue o controle no cabo USB (ou Bluetooth) e <b>aperte qualquer botão</b> ou mexa um stick — o navegador só mostra o controle depois disso. Funciona com controle de Xbox/PlayStation, joystick e <b>rádio de drone/aeromodelo no modo joystick USB</b> (RadioMaster, FrSky, Jumper, controle do DJI FPV…).</p>
+        <p class="dica">Rádio ou controle diferente do de videogame: faça a <b>calibração</b> uma vez — o simulador guarda o ajuste para aquele controle neste navegador.</p>
+        <div class="row">
+          <button class="bp" id="bt-calibrar">🎯 Calibrar os sticks</button>
+          <button class="bs" id="bt-padrao">↺ Voltar ao padrão deste controle</button>
+        </div>
+      </div>
+      <div class="bloco">
+        <h3>Modo dos sticks</h3>
+        <p class="dica">O mesmo ajuste de "Modo do controle" do app DJI Fly. O padrão de fábrica da DJI é o <b>Modo 2</b>.</p>
+        <div class="modos" id="modos">
+          <button class="modo" data-modo="1"><b>Modo 1</b>Esquerdo: frente/trás + girar<br>Direito: subir/descer + lados</button>
+          <button class="modo" data-modo="2"><b>Modo 2 (padrão DJI)</b>Esquerdo: subir/descer + girar<br>Direito: frente/trás + lados</button>
+          <button class="modo" data-modo="3"><b>Modo 3</b>Esquerdo: frente/trás + lados<br>Direito: subir/descer + girar</button>
+        </div>
+      </div>
+      <div class="bloco">
+        <h3>Teste ao vivo</h3>
+        <p class="dica">Mexa os sticks: as barras têm que andar para o lado certo (subir = acelerador para a direita da barra, frente = arfagem para a direita).</p>
+        <div class="teste">
+          <div class="stk"><i id="ts-l"></i><span>Esquerdo</span></div>
+          <div class="stk"><i id="ts-r"></i><span>Direito</span></div>
+          <div class="barras" id="barras"></div>
+        </div>
+      </div>
+      <div class="bloco cols">
+        <div class="campo">
+          <label for="aj-dz">Zona morta: <span id="aj-dz-v"></span></label>
+          <input type="range" id="aj-dz" min="0" max="0.2" step="0.01">
+          <small>Ignora o "tremido" do stick perto do centro. Aumente se o drone anda sozinho.</small>
+        </div>
+        <div class="campo">
+          <label for="aj-expo">Curva exponencial (expo): <span id="aj-expo-v"></span></label>
+          <input type="range" id="aj-expo" min="0" max="0.8" step="0.05">
+          <small>Deixa o centro do stick mais suave para ajustes finos, sem perder a velocidade máxima.</small>
+        </div>
+      </div>
+      <div class="bloco">
+        <h3>Botões do controle</h3>
+        <p class="dica">Clique em <b>Alterar</b> e aperte o botão (ou a chave do rádio) que você quer usar.</p>
+        <table class="tb2" id="ct-binds"></table>
+      </div>
+      <div class="bloco">
+        <h3>Teclado (sem controle)</h3>
+        <table class="tb2">
+          <tr><th>Stick</th><th>Teclas</th></tr>
+          <tr><td>Stick esquerdo (cima/baixo · lados)</td><td><kbd>W</kbd><kbd>S</kbd> · <kbd>A</kbd><kbd>D</kbd></td></tr>
+          <tr><td>Stick direito (cima/baixo · lados)</td><td><kbd>↑</kbd><kbd>↓</kbd> · <kbd>←</kbd><kbd>→</kbd> (ou <kbd>I</kbd><kbd>K</kbd> · <kbd>J</kbd><kbd>L</kbd>)</td></tr>
+          <tr><td>Decolar / pousar automático</td><td><kbd>T</kbd></td></tr>
+          <tr><td>Voltar para casa (RTH)</td><td><kbd>H</kbd></td></tr>
+          <tr><td>Foto</td><td><kbd>P</kbd> ou <kbd>Enter</kbd></td></tr>
+          <tr><td>Trocar vista</td><td><kbd>C</kbd></td></tr>
+          <tr><td>Modo Cine / Normal / Esporte</td><td><kbd>M</kbd></td></tr>
+          <tr><td>Câmera (gimbal) cima / baixo</td><td><kbd>R</kbd> <kbd>F</kbd> ou a rodinha do mouse</td></tr>
+          <tr><td>Pausa / menu</td><td><kbd>Esc</kbd></td></tr>
+        </table>
+        <p class="dica">No Modo 2, o <kbd>W</kbd> sobe e o <kbd>↑</kbd> vai para a frente. Ligar os motores pelo teclado: <kbd>S</kbd>+<kbd>D</kbd>+<kbd>↓</kbd>+<kbd>←</kbd> juntos (o CSC) ou <kbd>T</kbd>.</p>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-aj">
+      <div class="cols">
+        <div class="bloco">
+          <h3>Voo</h3>
+          <div class="campo"><label for="aj-vel">Modo de voo ao decolar</label>
+            <select id="aj-vel"><option value="C">C — Cine (lento e suave)</option><option value="N">N — Normal</option><option value="S">S — Esporte (rápido)</option></select></div>
+          <div class="campo"><label for="aj-gps">Posicionamento</label>
+            <select id="aj-gps"><option value="1">GPS — segura a posição sozinho</option><option value="0">ATTI — sem GPS, o drone deriva com o vento</option></select>
+            <small>O ATTI é o que acontece quando o GPS cai (perto de estrutura metálica, mata fechada, interferência). Treine!</small></div>
+          <div class="campo"><label for="aj-alt">Altitude máxima: <span id="aj-alt-v"></span></label>
+            <input type="range" id="aj-alt" min="30" max="120" step="5"></div>
+          <div class="campo"><label for="aj-rth">Altura do RTH: <span id="aj-rth-v"></span></label>
+            <input type="range" id="aj-rth" min="15" max="100" step="5">
+            <small>No retorno automático o drone sobe até essa altura antes de voltar. Ela tem que passar das árvores, torres e prédios do caminho.</small></div>
+          <div class="campo"><label for="aj-alc">Alcance do sinal</label>
+            <select id="aj-alc"><option value="500">500 m</option><option value="1000">1.000 m</option><option value="1500">1.500 m</option><option value="0">Sem limite</option></select>
+            <small>Passando do alcance, o drone perde o sinal e volta sozinho (failsafe).</small></div>
+        </div>
+        <div class="bloco">
+          <h3>Ambiente</h3>
+          <div class="campo"><label for="aj-vento">Vento: <span id="aj-vento-v"></span></label>
+            <input type="range" id="aj-vento" min="0" max="12" step="1"></div>
+          <label class="chk"><input type="checkbox" id="aj-rajada"> Rajadas de vento</label>
+          <div class="campo"><label for="aj-bat">Bateria</label>
+            <select id="aj-bat"><option value="realista">Realista (~25 min)</option><option value="treino">Treino (~12 min)</option><option value="infinita">Infinita</option></select></div>
+          <h3 style="margin-top:14px">Tela</h3>
+          <label class="chk"><input type="checkbox" id="aj-ind"> Marcar o drone na vista do piloto</label>
+          <label class="chk"><input type="checkbox" id="aj-stk"> Mostrar os sticks na tela</label>
+          <label class="chk"><input type="checkbox" id="aj-som"> Som dos motores</label>
+          <label class="chk"><input type="checkbox" id="aj-toque"> Sticks na tela (toque, para celular/tablet)</label>
+          <div class="campo"><label for="aj-q">Qualidade gráfica</label>
+            <select id="aj-q"><option value="baixa">Baixa — sem sombras (computador fraco / celular)</option><option value="media">Média — sombras e capim</option><option value="alta">Alta — sombras finas, mais capim</option></select>
+            <small id="aj-q-aviso" hidden>Sombras e capim mudam quando a página for recarregada (F5).</small></div>
+        </div>
+      </div>
+      <p class="dica">Alguns exercícios fixam o vento, o posicionamento ou a vista — o painel do exercício avisa.</p>
+    </section>
+
+    <section class="tab guia" id="tab-cp">
+      <h4>1. Ligar os motores</h4>
+      <p>Como no DJI: puxe <b>os dois sticks para baixo e para dentro</b> (ou para baixo e para fora) ao mesmo tempo — é o <b>CSC</b>. Solte e suba o acelerador para decolar. Também dá para usar o botão <b>⏫ decolagem automática</b>, que sobe até 1,2 m e fica pairando.</p>
+      <h4>2. Os sticks no Modo 2</h4>
+      <ul>
+        <li><b>Esquerdo para cima/baixo:</b> sobe e desce (acelerador). No centro, o drone segura a altura.</li>
+        <li><b>Esquerdo para os lados:</b> gira o nariz (guinada).</li>
+        <li><b>Direito para cima/baixo:</b> frente e trás (arfagem).</li>
+        <li><b>Direito para os lados:</b> desliza para a esquerda/direita (rolagem).</li>
+      </ul>
+      <h4>3. Orientação — o erro mais comum</h4>
+      <p>Os comandos são sempre do ponto de vista <b>do drone</b>. Quando ele está <b>de frente para você</b>, esquerda e direita ficam invertidas para quem olha de fora. As luzes ajudam: <b>vermelhas na frente</b>, luz de status <b>atrás</b> (verde piscando = GPS; amarela = ATTI). Treine o exercício <b>VLOS</b>.</p>
+      <h4>4. Modos de voo</h4>
+      <ul>
+        <li><b>C (Cine):</b> devagar e suave — filmagem e ambiente apertado.</li>
+        <li><b>N (Normal):</b> até ~10 m/s, segura posição com GPS.</li>
+        <li><b>S (Esporte):</b> até ~16 m/s e freia mais longe. Cuidado perto de obstáculos.</li>
+        <li><b>GPS × ATTI:</b> no GPS, soltou o stick o drone para e fica parado. No ATTI ele <b>continua deslizando e o vento empurra</b> — é você que segura com o stick direito.</li>
+      </ul>
+      <h4>5. Pousar</h4>
+      <p>Desça devagar nos últimos metros. Encostou no chão, <b>segure o acelerador para baixo</b> até os motores pararem (ou use o CSC). Pouso acima de ~1,6 m/s conta como pouso duro; acima de ~3 m/s é acidente.</p>
+      <h4>6. RTH — voltar para casa</h4>
+      <p>O ponto de decolagem é o <b>Home (H)</b>. No RTH o drone sobe até a <b>altura de RTH</b>, vira, volta e pousa sozinho. Ele não desvia de árvore nem de fio: <b>confira a altura de RTH antes de decolar</b>. Aperte o RTH de novo para cancelar. Com bateria crítica (15%) o drone pousa onde estiver; sem sinal, volta sozinho.</p>
+      <h4>7. Perigos do mapa</h4>
+      <p>Linhas de energia (os fios são finos e difíceis de ver — fique de olho nos <b>postes</b>), torre de rádio da base, caixa d'água, mata alta ao norte, casas da vila, mastro da bandeira e as traves do campo.</p>
+      <h4>8. Lembrete legal</h4>
+      <p>O simulador limita a altura em 120 m (400 pés), como o padrão DJI. Na vida real valem as regras da ANAC (RBAC-E nº 94 e registro no SISANT), do DECEA (ICA 100-40 e solicitação no SARPAS) e da ANATEL, além da avaliação de risco (ARO) antes de cada voo.</p>
+      <h4>9. Controles da DJI</h4>
+      <p>O rádio do DJI FPV e os rádios de aeromodelo funcionam pelo USB como joystick. O RC-N1/RC-N2 (Mini, Air, Mavic) normalmente <b>não</b> aparece como joystick no Windows sem um programa intermediário — para treinar o "dedo", um controle de Xbox/PlayStation no Modo 2 já reproduz a mesma posição dos sticks.</p>
+    </section>
+  </div>
+</div>
+
+<!-- ================= CALIBRAÇÃO ================= -->
+<div id="cal" class="ovl" hidden>
+  <div class="rpan">
+    <h2>🎯 Calibrar os sticks</h2>
+    <p class="r-sub" id="cal-pad"></p>
+    <div class="cal-passos" id="cal-passos"></div>
+    <p class="cal-txt" id="cal-txt"></p>
+    <div id="cal-eixos"></div>
+    <div class="row">
+      <button class="bs" id="cal-cancelar">Cancelar</button>
+      <button class="bp" id="cal-ok">Começar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= RESULTADO ================= -->
+<div id="res" class="ovl" hidden>
+  <div class="rpan">
+    <div class="r-ic" id="r-ic"></div>
+    <h2 id="r-tit"></h2>
+    <div class="r-nota" id="r-nota"></div>
+    <div class="r-est" id="r-est"></div>
+    <div class="r-sub" id="r-sub"></div>
+    <div id="r-rk"></div>
+    <ul id="r-det"></ul>
+    <img id="r-foto" alt="Foto tirada no exercício" hidden>
+    <div class="row">
+      <button class="bp" id="r-de-novo">↻ Tentar de novo</button>
+      <button class="bs" id="r-ranking">🏆 Ranking</button>
+      <button class="bs" id="r-menu">Outros exercícios</button>
+    </div>
+  </div>
+</div>
+
+<div id="erro-gl" hidden>
+  <div class="rpan">
+    <div class="r-ic">⚠️</div>
+    <h2>Não deu para abrir o simulador</h2>
+    <p class="r-sub" id="erro-gl-t">Este navegador não conseguiu ligar o 3D (WebGL). Use o Chrome ou o Edge atualizados e confira se a "aceleração de hardware" está ligada nas configurações.</p>
+    <div class="row"><a class="bs" href="drone.html" style="text-decoration:none">⬅ Voltar</a></div>
+  </div>
+</div>
+
+<script>
+/* Se o motor 3D não carregar (sem internet / CDN bloqueado), avisa em vez de ficar tela preta. */
+setTimeout(function () {
+  if (!window.SIM) {
+    document.getElementById('erro-gl-t').textContent = 'Não consegui baixar o motor 3D do simulador. Confira a internet (ou se a rede bloqueia o cdn.jsdelivr.net) e recarregue a página.';
+    document.getElementById('erro-gl').hidden = false;
+  }
+}, 15000);
+</script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const V3 = THREE.Vector3;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const DEG = Math.PI / 180;
+const G = 9.81;
+const nf = (n, d = 1) => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const mmss = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* aba privada */ } };
+const suave = (atual, alvo, dt, tau) => atual + (alvo - atual) * (1 - Math.exp(-dt / tau));
+function angDif(a, b) { let d = (a - b) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let API_BASE = 'https://bpfron-api.bpfron.workers.dev';
+try { const q = new URLSearchParams(location.search).get('api'); if (q) API_BASE = q.replace(/\/+$/, ''); } catch (e) { /* padrão */ }
+const cabecalhos = () => Object.assign({ 'content-type': 'application/json' }, window.droneCpf ? window.droneCpf.headers() : {});
+// Rumo "de bússola" (0 = norte, horário) de um vetor no plano. Norte = -z.
+const rumo = (dx, dz) => Math.atan2(dx, -dz);
+
+/* =====================================================================
+   CONFIGURAÇÃO (fica no navegador)
+   ===================================================================== */
+const CFG_PADRAO = {
+  modo: 2, vel: 'N', gps: true, vento: 0, rajada: true, bateria: 'treino',
+  altMax: 120, alcance: 1500, rthAlt: 30, indicador: true, qualidade: 'media',
+  sticksTela: true, som: true, toque: null, deadzone: 0.04, expo: 0.25, padId: '',
+};
+const cfg = Object.assign({}, CFG_PADRAO, lsGet('dsim_cfg') || {});
+if (cfg.toque === null) cfg.toque = matchMedia('(pointer:coarse)').matches;
+const salvarCfg = () => lsSet('dsim_cfg', cfg);
+
+// Perfis de velocidade parecidos com os do Mini/Air (valores arredondados).
+const PERFIS = {
+  C: { nome: 'Cine', h: 5, up: 2, down: 1.5, yaw: 40, tilt: 15, tau: 1.0 },
+  N: { nome: 'Normal', h: 10, up: 4, down: 3, yaw: 90, tilt: 25, tau: 0.65 },
+  S: { nome: 'Esporte', h: 16, up: 5, down: 4, yaw: 150, tilt: 35, tau: 0.45 },
+};
+const K_ARRASTO = 0.46; // arrasto linear: na inclinação máxima do Normal dá ~10 m/s
+
+/* =====================================================================
+   RENDERIZADOR E CENA
+   ===================================================================== */
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: $('cv'), antialias: cfg.qualidade !== 'baixa', powerPreference: 'high-performance' });
+} catch (e) {
+  $('erro-gl').hidden = false;
+  throw e;
+}
+const pixelRatio = () => Math.min(devicePixelRatio || 1, cfg.qualidade === 'alta' ? 2 : cfg.qualidade === 'media' ? 1.5 : 1);
+renderer.setPixelRatio(pixelRatio());
+renderer.setSize(innerWidth, innerHeight, false);
+const QUAL = cfg.qualidade;            // baixa | media | alta
+const SOMBRAS = QUAL !== 'baixa';
+renderer.shadowMap.enabled = SOMBRAS;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;  // cor "de câmera": céu sem estourar, sombra sem ficar preta
+renderer.toneMappingExposure = 0.5;
+const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+const LONGE = 6000;
+
+const COR_NEVOA = 0xb9cee2;
+const cena = new THREE.Scene();
+cena.background = new THREE.Color(COR_NEVOA);
+cena.fog = new THREE.FogExp2(COR_NEVOA, 0.00042); // neblina de distância: perto nítido, serra no horizonte azulada
+
+// Sol alto, vindo do sul/leste (atrás do piloto, que olha para o norte): cena iluminada de frente.
+const SOL_DIR = new THREE.Vector3().setFromSphericalCoords(1, 40 * Math.PI / 180, 28 * Math.PI / 180);
+
+// Céu atmosférico (Preetham) com nuvens.
+function montarCeu(escala) {
+  const s = new Sky(); s.scale.setScalar(escala);
+  const u = s.material.uniforms;
+  u.turbidity.value = 2.6; u.rayleigh.value = 1.25; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.86;
+  u.sunPosition.value.copy(SOL_DIR);
+  if (u.cloudCoverage) { u.cloudCoverage.value = 0.42; u.cloudDensity.value = 0.5; u.cloudScale.value = 0.00022; u.cloudElevation.value = 0.6; u.cloudSpeed.value = 0.00003; }
+  return s;
+}
+const ceu = montarCeu(4500);
+cena.add(ceu);
+
+// Reflexo do ambiente (céu em cima, mato embaixo) para o plástico do drone, vidros e a água.
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  env.add(montarCeu(1000));
+  const chaoEnv = new THREE.Mesh(new THREE.CircleGeometry(800, 32), new THREE.MeshBasicMaterial({ color: 0x3e4f2c }));
+  chaoEnv.rotation.x = -Math.PI / 2; chaoEnv.position.y = -2; env.add(chaoEnv);
+  cena.environment = pmrem.fromScene(env, 0.02).texture;
+  cena.environmentIntensity = 0.7;
+  pmrem.dispose();
+}
+
+const hemi = new THREE.HemisphereLight(0xcfe2ff, 0x46552f, 1.15);
+cena.add(hemi);
+const sol = new THREE.DirectionalLight(0xfff0d8, 3.1);
+sol.position.copy(SOL_DIR).multiplyScalar(250);
+cena.add(sol, sol.target);
+if (SOMBRAS) {
+  sol.castShadow = true;
+  const tam = QUAL === 'alta' ? 4096 : 2048, area = QUAL === 'alta' ? 85 : 60;
+  sol.shadow.mapSize.set(tam, tam);
+  const sc = sol.shadow.camera; sc.left = -area; sc.right = area; sc.top = area; sc.bottom = -area; sc.near = 20; sc.far = 600;
+  sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.03;
+}
+
+function texCanvas(w, h, desenha, rep) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  desenha(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = ANISO;
+  if (rep) t.repeat.set(rep[0], rep[1]);
+  return t;
+}
+const sorteio = rng(20260930);
+const R = (a, b) => a + (b - a) * sorteio();
+
+/* ---------------- mundo: listas de colisão ---------------- */
+// caixa: {x,z,hw,hd,y0,top,nome}  ·  árvore: {x,z,tr,tronco,cy,r,ry}  ·  fio: {a:V3,b:V3}
+const MUNDO = { caixas: [], arvores: [], fios: [], mapa: { linhas: [], rets: [], fios: [] } };
+const caixasMissao = [];
+const addCaixa = (x, z, hw, hd, top, nome, y0 = 0) => { const c = { x, z, hw, hd, y0, top, nome }; MUNDO.caixas.push(c); return c; };
+
+const mats = {};
+const lam = (cor, extra) => new THREE.MeshLambertMaterial(Object.assign({ color: cor }, extra || {}));
+function malha(geo, mat, x, y, z, sombra = true) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
+  if (SOMBRAS && sombra) { m.castShadow = true; m.receiveShadow = true; }
+  cena.add(m); return m;
+}
+
+/* ---------------- chão (plano na área de voo, serra no horizonte) ---------------- */
+// Até 1,3 km do centro é plano (é onde se voa e onde vale a colisão com o chão = 0);
+// dali para fora o terreno sobe em morros, só para dar horizonte.
+function relevo(x, z) {
+  const r = Math.hypot(x, z);
+  if (r < 1300) return 0;
+  const k = clamp((r - 1300) / 1600, 0, 1), s = k * k * (3 - 2 * k);
+  const n = 0.55 + 0.25 * Math.sin(x * 0.0021 + 1.3) * Math.cos(z * 0.0017) + 0.14 * Math.sin(x * 0.0063 + z * 0.0041) + 0.08 * Math.sin(z * 0.011 - x * 0.004);
+  return s * 340 * n;
+}
+(function chao() {
+  const tex = texCanvas(512, 512, (g, w, h) => {
+    g.fillStyle = '#c9d4b2'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 9000; i++) { // folhas de capim
+      const l = 120 + Math.random() * 110 | 0, x = Math.random() * w, y = Math.random() * h;
+      g.strokeStyle = `rgba(${l - 35},${l},${l - 70},${0.25 + Math.random() * 0.4})`;
+      g.lineWidth = 0.6 + Math.random() * 1.1;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.random() * 4 - 2, y - 3 - Math.random() * 6); g.stroke();
+    }
+    for (let i = 0; i < 260; i++) { // terra aparecendo
+      g.fillStyle = `rgba(${130 + Math.random() * 30 | 0},${112 + Math.random() * 20 | 0},${80},${0.18 + Math.random() * 0.2})`;
+      g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 1 + Math.random() * 3.5, 0, 7); g.fill();
+    }
+  }, [2400, 2400]);
+  const geo = new THREE.PlaneGeometry(10000, 10000, 240, 240);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, cores = [];
+  const c = new THREE.Color(), seco = new THREE.Color(), verde = new THREE.Color(), mata = new THREE.Color();
+  seco.setRGB(0.63, 0.60, 0.36, THREE.SRGBColorSpace);
+  verde.setRGB(0.40, 0.55, 0.24, THREE.SRGBColorSpace);
+  mata.setRGB(0.24, 0.36, 0.17, THREE.SRGBColorSpace);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    const n = (Math.sin(x * 0.011) + Math.sin(z * 0.013 + 2) + Math.sin((x - z) * 0.006 + 1) + Math.sin((x + z * 0.5) * 0.021)) / 4;
+    const t = clamp(0.5 + n * 0.9 + (Math.sin(x * 0.07 + z * 0.05) * 0.08), 0, 1);
+    c.copy(verde).lerp(seco, t * 0.55);
+    if (z < -320 || relevo(x, z) > 0) c.lerp(mata, clamp((-320 - z) / 120, 0, 1) * 0.7 + clamp(relevo(x, z) / 60, 0, 1) * 0.5);
+    cores.push(c.r, c.g, c.b);
+    pos.setY(i, relevo(x, z));
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cores, 3));
+  geo.computeVertexNormals();
+  const mat = lam(0xffffff, { map: tex, vertexColors: true });
+  // Manchas de capim seco/verde e variação fina calculadas na placa de vídeo, pela posição no
+  // mundo — o pasto deixa de parecer "liso" visto do alto, sem custo de textura gigante.
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vMundo;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMundo = (modelMatrix * vec4(transformed, 1.0)).xz;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+varying vec2 vMundo;
+float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
+float fbm(vec2 p) { float v = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { v += a * vn(p); p *= 2.03; a *= 0.5; } return v; }`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+float nGrande = fbm(vMundo * 0.016), nMedio = fbm(vMundo * 0.09 + 7.0), nFino = vn(vMundo * 0.7);
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.42, 1.22, 0.72), smoothstep(0.45, 0.75, nGrande) * 0.85);
+diffuseColor.rgb *= 0.7 + 0.48 * nMedio;
+diffuseColor.rgb *= 0.93 + 0.12 * nFino;`);
+  };
+  const m = new THREE.Mesh(geo, mat);
+  if (SOMBRAS) m.receiveShadow = true;
+  cena.add(m);
+})();
+
+function faixa(w, d, x, z, tex, y = 0.012) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), lam(0xffffff, { map: tex, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, y, z);
+  if (SOMBRAS) m.receiveShadow = true;
+  cena.add(m); return m;
+}
+
+/* ---------------- estradas, pátio, campo ---------------- */
+const texAsfalto = texCanvas(512, 128, (g, w, h) => {
+  g.fillStyle = '#4a4c4f'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 6000; i++) { const l = 55 + Math.random() * 50 | 0; g.fillStyle = `rgba(${l},${l},${l + 4},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 1.2, 1.2); }
+  g.strokeStyle = 'rgba(30,30,32,.55)'; g.lineWidth = 1; // rachaduras e remendos
+  for (let i = 0; i < 9; i++) { let x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += Math.random() * 18 - 4; y += Math.random() * 10 - 5; g.lineTo(x, y); } g.stroke(); }
+  g.fillStyle = 'rgba(35,36,38,.5)'; g.fillRect(320, 20, 60, 30);
+  g.fillStyle = 'rgba(70,72,75,.6)'; g.fillRect(0, 26, w, 12); g.fillRect(0, h - 38, w, 12); // trilho dos pneus mais claro
+  g.fillStyle = '#e3bd3e'; g.fillRect(0, 61, 256, 3); g.fillRect(0, 66, 256, 3);
+  g.fillStyle = '#e8e8e6'; g.fillRect(0, 5, w, 3); g.fillRect(0, h - 8, w, 3);
+}, [50, 1]);
+const texAcost = texCanvas(256, 64, (g, w, h) => {
+  g.fillStyle = '#8e7a5a'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 1500; i++) { const l = Math.random() * 40 - 20; g.fillStyle = `rgba(${140 + l | 0},${118 + l | 0},${86 + l | 0},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+  for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(90,${110 + Math.random() * 40 | 0},60,.7)`; g.fillRect(Math.random() * w, Math.random() < 0.5 ? Math.random() * 14 : h - Math.random() * 14, 2, 3); }
+}, [100, 1]);
+faixa(1600, 13, 0, 40, texAcost, 0.006); // acostamento de terra
+faixa(1600, 8, 0, 40, texAsfalto);
+MUNDO.mapa.linhas.push({ a: [-800, 40], b: [800, 40], cor: '#6b7280', w: 8 });
+
+const texTerra = texCanvas(128, 512, (g, w, h) => {
+  g.fillStyle = '#9b7b55'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 4000; i++) { const l = Math.random() * 50 - 25; g.fillStyle = `rgba(${150 + l | 0},${118 + l | 0},${82 + l | 0},.85)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+  g.fillStyle = 'rgba(92,68,44,.45)'; g.fillRect(26, 0, 14, h); g.fillRect(w - 40, 0, 14, h); // sulcos dos pneus
+  for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(80,${105 + Math.random() * 50 | 0},50,.8)`; g.fillRect(Math.random() < 0.5 ? Math.random() * 10 : w - Math.random() * 10, Math.random() * h, 3, 4); g.fillRect(56 + Math.random() * 16, Math.random() * h, 2, 3); }
+}, [1, 37]);
+faixa(5, 740, 120, -334, texTerra, 0.01);
+MUNDO.mapa.linhas.push({ a: [120, 36], b: [120, -704], cor: '#a16207', w: 5 });
+
+const texConcreto = texCanvas(128, 128, (g, w, h) => {
+  g.fillStyle = '#a3a098'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 500; i++) { const l = 140 + Math.random() * 45 | 0; g.fillStyle = `rgb(${l},${l},${l - 6})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+  g.strokeStyle = 'rgba(80,80,80,.35)'; g.lineWidth = 2; g.strokeRect(0, 0, w, h);
+}, [11, 8]);
+faixa(44, 32, 0, 3, texConcreto, 0.008);
+MUNDO.mapa.rets.push({ x: 0, z: 3, w: 44, d: 32, cor: '#9ca3af' });
+
+function texHeliponto(cor) {
+  return texCanvas(256, 256, (g, w) => {
+    g.clearRect(0, 0, w, w);
+    g.fillStyle = '#2b2f36'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = cor; g.lineWidth = 12; g.beginPath(); g.arc(128, 128, 104, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = cor; g.font = 'bold 150px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', 128, 136);
+  });
+}
+function heliponto(x, z, cor) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(2.4, 48), lam(0xffffff, { map: texHeliponto(cor), transparent: true, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, 0.014, z);
+  if (SOMBRAS) m.receiveShadow = true;
+  cena.add(m); return m;
+}
+heliponto(0, 0, '#F5C518');
+const PAD_B = new V3(-70, 0, -130);
+
+// Campo de futebol
+const texCampo = texCanvas(512, 340, (g, w, h) => {
+  for (let i = 0; i < 10; i++) { g.fillStyle = i % 2 ? '#5f9a3c' : '#68a543'; g.fillRect(i * w / 10, 0, w / 10, h); }
+  g.strokeStyle = '#f1f5f9'; g.lineWidth = 4;
+  g.strokeRect(8, 8, w - 16, h - 16);
+  g.beginPath(); g.moveTo(w / 2, 8); g.lineTo(w / 2, h - 8); g.stroke();
+  g.beginPath(); g.arc(w / 2, h / 2, 46, 0, Math.PI * 2); g.stroke();
+  g.strokeRect(8, h / 2 - 80, 70, 160); g.strokeRect(w - 78, h / 2 - 80, 70, 160);
+}, [1, 1]);
+faixa(64, 42, -70, -130, texCampo, 0.008);
+heliponto(PAD_B.x, PAD_B.z, '#60a5fa');
+MUNDO.mapa.rets.push({ x: -70, z: -130, w: 64, d: 42, cor: '#4d7c0f' });
+{ // traves
+  const branco = lam(0xf1f5f9);
+  for (const sx of [-1, 1]) {
+    const x = -70 + sx * 31;
+    for (const sz of [-1, 1]) { malha(new THREE.CylinderGeometry(0.06, 0.06, 2.44, 8), branco, x, 1.22, -130 + sz * 3.66); addCaixa(x, -130 + sz * 3.66, 0.06, 0.06, 2.44, 'trave do campo'); }
+    const tv = malha(new THREE.CylinderGeometry(0.06, 0.06, 7.32, 8), branco, x, 2.44, -130); tv.rotation.x = Math.PI / 2;
+    addCaixa(x, -130, 0.06, 3.7, 2.5, 'travessão do campo', 2.38);
+  }
+}
+
+/* ---------------- base do BPFRON ---------------- */
+{
+  const texFach = texCanvas(512, 128, (g, w, h) => {
+    g.fillStyle = '#e7e2d6'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#7d6e55'; g.fillRect(0, h - 14, w, 14);
+    for (let i = 0; i < 8; i++) { g.fillStyle = '#2f4b63'; g.fillRect(18 + i * 62, 34, 36, 40); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(18 + i * 62, 34, 36, 6); }
+    g.fillStyle = '#1e3a5f'; g.fillRect(w / 2 - 70, 4, 140, 24);
+    g.fillStyle = '#F5C518'; g.font = 'bold 18px Arial'; g.textAlign = 'center'; g.fillText('BPFRON', w / 2, 22);
+  });
+  const parede = lam(0xffffff, { map: texFach });
+  const teto = lam(0x8a8f96);
+  const geo = new THREE.BoxGeometry(14, 6, 10);
+  malha(geo, [parede, parede, teto, teto, parede, parede], -30, 3, 2);
+  addCaixa(-30, 2, 7, 5, 6, 'prédio da base');
+  MUNDO.mapa.rets.push({ x: -30, z: 2, w: 14, d: 10, cor: '#d6d3d1' });
+  // mastro da bandeira
+  malha(new THREE.CylinderGeometry(0.06, 0.08, 10, 8), lam(0xd1d5db), -18, 5, 14);
+  addCaixa(-18, 14, 0.08, 0.08, 10, 'mastro da bandeira');
+  const band = malha(new THREE.PlaneGeometry(1.8, 1.2), lam(0x15803d, { side: THREE.DoubleSide }), -17.05, 9.3, 14);
+  band.rotation.y = Math.PI / 2;
+  // platibanda, caixas de ar-condicionado e porta
+  const conc = lam(0xcfc9bb);
+  for (const [w, d, x, z] of [[14.4, 0.3, -30, -3.1], [14.4, 0.3, -30, 7.1], [0.3, 10.4, -37.1, 2], [0.3, 10.4, -22.9, 2]]) malha(new THREE.BoxGeometry(w, 0.8, d), conc, x, 6.4, z);
+  for (const [x, z] of [[-33, 0], [-27, 4]]) malha(new THREE.BoxGeometry(1.2, 0.7, 0.9), lam(0xe5e7eb), x, 6.35, z);
+  malha(new THREE.BoxGeometry(2.4, 0.15, 1.6), conc, -30, 3.1, 7.9); // marquise da porta
+  // torre de rádio (treliça de verdade: 4 montantes + travamento em X, pintura vermelha e branca)
+  const torre = new THREE.Group();
+  const H = 24, base = 0.9, topoL = 0.35, seg = 8;
+  const largura = (y) => base + (topoL - base) * (y / H);
+  const ptsV = [], ptsB = [];
+  for (let i = 0; i < seg; i++) {
+    const y0 = i * H / seg, y1 = (i + 1) * H / seg, a0 = largura(y0), a1 = largura(y1);
+    const cantos = (a, y) => [[-a, y, -a], [a, y, -a], [a, y, a], [-a, y, a]];
+    const c0 = cantos(a0, y0), c1 = cantos(a1, y1);
+    const lista = i % 2 ? ptsB : ptsV;
+    for (let k = 0; k < 4; k++) {
+      const n = (k + 1) % 4;
+      lista.push(...c0[k], ...c1[k]);            // montante
+      lista.push(...c0[k], ...c1[n], ...c0[n], ...c1[k]); // X
+      lista.push(...c1[k], ...c1[n]);            // anel
+    }
+  }
+  const linhaTorre = (pts, cor) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); return new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: cor, toneMapped: false })); };
+  torre.add(linhaTorre(ptsV, 0xc81e1e), linhaTorre(ptsB, 0xf1f5f9));
+  for (const [ax, az] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { // montantes com volume (sombra e visibilidade)
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, H, 5), lam(0xd4d4d8));
+    m.position.set(ax * (base + topoL) / 2, H / 2, az * (base + topoL) / 2);
+    m.rotation.z = -ax * Math.atan((base - topoL) / H); m.rotation.x = az * Math.atan((base - topoL) / H);
+    if (SOMBRAS) m.castShadow = true; torre.add(m);
+  }
+  const antena = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.5, 6), lam(0x9ca3af)); antena.position.y = H + 1.2; torre.add(antena);
+  const topo = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff2020, toneMapped: false }));
+  topo.position.y = H + 2.5; torre.add(topo);
+  torre.position.set(-40, 0, -8); cena.add(torre);
+  addCaixa(-40, -8, 0.7, 0.7, 26.8, 'torre de rádio');
+  MUNDO.mapa.rets.push({ x: -40, z: -8, w: 2, d: 2, cor: '#ef4444' });
+
+  // hangar de chapa (meia-cana)
+  const texChapa = texCanvas(256, 64, (g, w, h) => {
+    for (let i = 0; i < 32; i++) { g.fillStyle = i % 2 ? '#a8adb3' : '#c3c7cc'; g.fillRect(i * 8, 0, 8, h); }
+    for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(120,90,60,${Math.random() * 0.12})`; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+  }, [6, 3]);
+  const hx = -32, hz = 21, hr = 7, hl = 11;
+  const teto2 = new THREE.Mesh(new THREE.CylinderGeometry(hr, hr, hl, 32, 1, true, -Math.PI / 2, Math.PI), lam(0xffffff, { map: texChapa, side: THREE.DoubleSide }));
+  teto2.rotation.x = -Math.PI / 2; teto2.position.set(hx, 0, hz);
+  if (SOMBRAS) { teto2.castShadow = true; teto2.receiveShadow = true; }
+  cena.add(teto2);
+  const texPortao = texCanvas(256, 128, (g, w, h) => {
+    g.fillStyle = '#b6bbc1'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#3f4650'; g.fillRect(48, 36, 160, 92);
+    for (let i = 0; i < 12; i++) { g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(48, 36 + i * 8, 160, 2); }
+    g.fillStyle = '#1e3a5f'; g.fillRect(78, 12, 100, 18);
+    g.fillStyle = '#F5C518'; g.font = 'bold 13px Arial'; g.textAlign = 'center'; g.fillText('HANGAR', 128, 26);
+  }, [1, 1]);
+  for (const s of [-1, 1]) {
+    const tampa = new THREE.Mesh(new THREE.CircleGeometry(hr, 32, 0, Math.PI), lam(0xffffff, { map: s > 0 ? texPortao : texChapa, side: THREE.DoubleSide }));
+    tampa.position.set(hx, 0, hz + s * hl / 2); if (SOMBRAS) tampa.receiveShadow = true;
+    cena.add(tampa);
+  }
+  addCaixa(hx, hz, hr, hl / 2, hr, 'hangar');
+  MUNDO.mapa.rets.push({ x: hx, z: hz, w: hr * 2, d: hl, cor: '#cbd5e1' });
+}
+
+/* ---------------- lago ---------------- */
+const LAGO = { x: -340, z: 150, r: 48 };
+const raioLago = (a) => LAGO.r * (1 + 0.18 * Math.sin(3 * a) + 0.1 * Math.cos(5 * a + 1));
+const dentroLago = (x, z) => { const dx = x - LAGO.x, dz = z - LAGO.z; return Math.hypot(dx, dz) < raioLago(Math.atan2(-dz, dx)) - 0.5; };
+{
+  const forma = (k) => { const s = new THREE.Shape(); for (let i = 0; i <= 64; i++) { const a = i / 64 * Math.PI * 2, r = raioLago(a) * k; (i ? s.lineTo : s.moveTo).call(s, Math.cos(a) * r, Math.sin(a) * r); } return s; };
+  const areia = new THREE.Mesh(new THREE.ShapeGeometry(forma(1.12), 64), lam(0xb8a27a, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  areia.rotation.x = -Math.PI / 2; areia.position.set(LAGO.x, 0.008, LAGO.z); if (SOMBRAS) areia.receiveShadow = true; cena.add(areia);
+  const agua = new THREE.Mesh(new THREE.ShapeGeometry(forma(1), 64), new THREE.MeshStandardMaterial({ color: 0x1f4e5e, roughness: 0.05, metalness: 0.1, envMapIntensity: 1.3, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  agua.rotation.x = -Math.PI / 2; agua.position.set(LAGO.x, 0.016, LAGO.z); cena.add(agua);
+  MUNDO.mapa.rets.push({ x: LAGO.x, z: LAGO.z, w: LAGO.r * 2, d: LAGO.r * 2, cor: '#1e6f8a', redondo: true });
+}
+
+/* ---------------- caixa d'água ---------------- */
+{
+  const x = 60, z = -60, cinza = lam(0x9ca3af);
+  for (const [dx, dz] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) {
+    malha(new THREE.CylinderGeometry(0.22, 0.26, 13, 8), cinza, x + dx, 6.5, z + dz);
+    addCaixa(x + dx, z + dz, 0.26, 0.26, 13, "pilar da caixa d'água");
+  }
+  malha(new THREE.CylinderGeometry(3.2, 3.2, 5, 24), lam(0x60a5fa), x, 15.5, z);
+  malha(new THREE.ConeGeometry(3.3, 1.4, 24), lam(0x475569), x, 18.7, z);
+  addCaixa(x, z, 3.2, 3.2, 19.4, "caixa d'água", 13);
+  MUNDO.mapa.rets.push({ x, z, w: 6.4, d: 6.4, cor: '#60a5fa', redondo: true });
+}
+
+/* ---------------- casas ---------------- */
+const texCasa = texCanvas(128, 64, (g, w, h) => {
+  g.fillStyle = '#f5f5f4'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#6b4f35'; g.fillRect(54, 26, 20, 38);
+  g.fillStyle = '#334155'; g.fillRect(14, 22, 24, 18); g.fillRect(90, 22, 24, 18);
+  g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, h - 5, w, 5);
+});
+const coresParede = [0xf5e6c8, 0xdbeafe, 0xfde2e4, 0xe7f5d0, 0xf1f5f9, 0xfef3c7];
+const coresTelhado = [0x9a3412, 0x7c2d12, 0x78716c, 0xb45309];
+const matsParede = coresParede.map((c) => lam(c, { map: texCasa }));
+const matsTelhado = coresTelhado.map((c) => lam(c));
+function casa(x, z, w, d, h) {
+  const mp = matsParede[(sorteio() * matsParede.length) | 0];
+  const mt = matsTelhado[(sorteio() * matsTelhado.length) | 0];
+  malha(new THREE.BoxGeometry(w, h, d), mp, x, h / 2, z);
+  const tel = malha(new THREE.ConeGeometry(Math.max(w, d) * 0.74, 1.8, 4), mt, x, h + 0.9, z);
+  tel.rotation.y = Math.PI / 4; tel.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
+  addCaixa(x, z, w / 2, d / 2, h + 1.1, 'casa');
+  MUNDO.mapa.rets.push({ x, z, w, d, cor: '#b45309' });
+}
+for (let i = 0; i < 22; i++) {
+  const col = i % 6, lin = (i / 6) | 0;
+  casa(-290 + col * 27 + R(-4, 4), -100 + lin * 26 + R(-3, 3), R(7, 10), R(7, 9), R(2.8, 3.6));
+}
+for (let i = 0; i < 10; i++) {
+  const col = i % 5, lin = (i / 5) | 0;
+  casa(-200 + col * 30 + R(-4, 4), 70 + lin * 40 + R(-3, 3), R(7, 10), R(7, 9), R(2.8, 3.4));
+}
+
+/* ---------------- veículos ---------------- */
+function veiculo(tipo, x, z, girado, cor, comColisao = true, alvo = null) {
+  const g = new THREE.Group();
+  const corpo = lam(cor), vidro = lam(0x1e293b), pneu = lam(0x111111);
+  const L = tipo === 'picape' ? 5.2 : 4.4, W = 1.85;
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.8, L), corpo); base.position.y = 0.75; g.add(base);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.65, tipo === 'picape' ? 1.9 : 2.3), vidro);
+  cab.position.set(0, 1.45, tipo === 'picape' ? -0.75 : 0.1); g.add(cab);
+  const capota = new THREE.Mesh(new THREE.BoxGeometry(W * 0.9, 0.08, tipo === 'picape' ? 1.8 : 2.2), corpo);
+  capota.position.set(0, 1.8, cab.position.z); g.add(capota);
+  if (tipo === 'picape') {
+    for (const sx of [-1, 1]) { const lat = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.45, 2.3), corpo); lat.position.set(sx * 0.9, 1.35, 1.35); g.add(lat); }
+    const tras = new THREE.Mesh(new THREE.BoxGeometry(W, 0.45, 0.08), corpo); tras.position.set(0, 1.35, 2.5); g.add(tras);
+  }
+  if (tipo === 'viatura') {
+    const faixaV = new THREE.Mesh(new THREE.BoxGeometry(W + 0.02, 0.18, L * 0.96), lam(0x1d4ed8)); faixaV.position.y = 0.85; g.add(faixaV);
+    const gir1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.25), new THREE.MeshBasicMaterial({ color: 0xff2222 })); gir1.position.set(-0.3, 1.9, 0.1); g.add(gir1);
+    const gir2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.25), new THREE.MeshBasicMaterial({ color: 0x2255ff })); gir2.position.set(0.3, 1.9, 0.1); g.add(gir2);
+  }
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.25, 14), pneu);
+    r.rotation.z = Math.PI / 2; r.position.set(sx * 0.9, 0.36, sz * L * 0.32); g.add(r);
+  }
+  g.position.set(x, 0, z);
+  if (girado) g.rotation.y = Math.PI / 2;
+  if (SOMBRAS) g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  (alvo || cena).add(g);
+  if (comColisao) {
+    const c = { x, z, hw: girado ? L / 2 : W / 2, hd: girado ? W / 2 : L / 2, y0: 0, top: 1.85, nome: 'veículo' };
+    if (alvo) caixasMissao.push(c); else MUNDO.caixas.push(c);
+  }
+  return g;
+}
+const POI = new V3(-35, 0, -70);
+veiculo('viatura', 14, 10, true, 0xf8fafc);
+veiculo('viatura', POI.x, POI.z, false, 0xf8fafc);
+veiculo('carro', 118.5, -120, false, 0xe5e7eb);
+veiculo('carro', -205, -45, true, 0xb91c1c);
+veiculo('carro', -150, 95, false, 0x1d4ed8);
+veiculo('carro', -60, 40.5, true, 0x334155);
+veiculo('picape', 210, 41, true, 0x6b7280);
+
+/* ---------------- linhas de energia ---------------- */
+const matFio = new THREE.LineBasicMaterial({ color: 0x1f2937 });
+const matPoste = lam(0xa8a29e);
+function linhaEnergia(x0, z0, x1, z1, vao) {
+  const dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
+  const px = -uz, pz = ux; // perpendicular (para os 3 fios)
+  const n = Math.max(1, Math.round(L / vao));
+  const postes = [];
+  for (let i = 0; i <= n; i++) {
+    const x = x0 + dx * i / n, z = z0 + dz * i / n;
+    malha(new THREE.CylinderGeometry(0.12, 0.17, 9.6, 8), matPoste, x, 4.8, z);
+    const cruz = malha(new THREE.BoxGeometry(2.2, 0.14, 0.14), matPoste, x, 9.15, z);
+    cruz.rotation.y = -Math.atan2(pz, px);
+    addCaixa(x, z, 0.2, 0.2, 9.6, 'poste');
+    postes.push([x, z]);
+  }
+  for (let i = 0; i < n; i++) {
+    const [ax, az] = postes[i], [bx, bz] = postes[i + 1];
+    for (const off of [-0.95, 0, 0.95]) {
+      const pts = [];
+      for (let k = 0; k <= 8; k++) {
+        const t = k / 8, flecha = 0.7 * 4 * t * (1 - t);
+        pts.push(new V3(ax + (bx - ax) * t + px * off, 9.2 - flecha, az + (bz - az) * t + pz * off));
+      }
+      cena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFio));
+      for (let k = 0; k < 8; k++) MUNDO.fios.push({ a: pts[k], b: pts[k + 1] });
+    }
+  }
+  MUNDO.mapa.fios.push({ a: [x0, z0], b: [x1, z1] });
+}
+linhaEnergia(-600, 34, 600, 34, 50);
+linhaEnergia(126, 34, 126, -700, 45);
+linhaEnergia(-320, -150, 126, -150, 45);
+
+/* ---------------- pontos fixos dos exercícios ---------------- */
+const PORTAIS_OBS = [[0, 4, -40], [30, 8, -90], [30, 4, -150], [-20, 13, -205], [-75, 6, -160], [-40, 4, -60]];
+const BALOES = [[-40, 8, -30], [35, 12, -70], [45, 6, 15]];
+const BUSCA_PONTOS = [[132, -262, false], [176, -338, true], [-182, -352, false], [96, -470, true], [-262, -196, true]];
+
+/* ---------------- árvores ---------------- */
+function distSeg(px, pz, ax, az, bx, bz) {
+  const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz;
+  const t = l2 ? clamp(((px - ax) * dx + (pz - az) * dz) / l2, 0, 1) : 0;
+  return Math.hypot(px - (ax + dx * t), pz - (az + dz * t));
+}
+function bloqueado(x, z) {
+  if (x > -55 && x < 60 && z > -50 && z < 32) return true;        // base e área do quadrado
+  if (Math.abs(z - 38) < 10) return true;                          // rodovia + linha
+  if (Math.abs(x - 122) < 9 && z < 40) return true;                // estrada de terra + linha
+  if (Math.abs(z + 150) < 6 && x > -330 && x < 135) return true;   // linha B
+  if (x > -110 && x < -30 && z > -160 && z < -100) return true;    // campo
+  if (x > -315 && x < -125 && z > -125 && z < 0) return true;      // vila
+  if (x > -225 && x < -45 && z > 50 && z < 160) return true;       // vila sul
+  if (Math.hypot(x - 60, z + 60) < 10) return true;               // caixa d'água
+  if (Math.hypot(x - POI.x, z - POI.z) < 34) return true;          // órbita
+  if (Math.hypot(x + 40, z + 8) < 6) return true;                  // torre
+  const rota = [[0, 0], ...PORTAIS_OBS.map((p) => [p[0], p[2]]), [0, 0]];
+  for (let i = 0; i < rota.length - 1; i++) if (distSeg(x, z, rota[i][0], rota[i][1], rota[i + 1][0], rota[i + 1][1]) < 7) return true;
+  for (const b of BALOES) if (Math.hypot(x - b[0], z - b[2]) < 8) return true;
+  for (const b of BUSCA_PONTOS) if (Math.hypot(x - b[0], z - b[1]) < 7.5) return true;
+  if (Math.hypot(x - LAGO.x, z - LAGO.z) < LAGO.r * 1.45) return true; // lago + margem
+  return false;
+}
+const ARV = [];
+// tipo: copa (árvore de folha larga), palma (babaçu/açaí) ou arbusto
+function arvore(x, z, escala, pPalma = 0.12) {
+  const s = escala || R(0.75, 1.5);
+  if (sorteio() < pPalma) {
+    const H = R(6, 11) * Math.min(s, 1.3);
+    ARV.push({ tipo: 'palma', x, z, tr: 0.24, tronco: H, cy: H + 0.3, r: 2.6 * Math.min(s, 1.3) * 0.75, ry: 1.1, s: Math.min(s, 1.3), gir: R(0, 6.28) });
+    return;
+  }
+  const tronco = R(2.5, 6) * s, r = R(2.2, 3.6) * s, ry = r * R(0.75, 1.05);
+  ARV.push({ tipo: 'copa', x, z, tr: 0.22 * s, tronco, cy: tronco + ry * 0.7, r, ry, gir: R(0, 6.28) });
+}
+for (let i = 0; i < 2200 && ARV.length < 650; i++) { // mata ao norte (mais densa e alta)
+  const x = R(-780, 780), z = R(-780, -330);
+  if (Math.sin(x * 0.02) * Math.cos(z * 0.025) > 0.55) continue; // clareiras
+  if (!bloqueado(x, z)) arvore(x, z, R(1.1, 1.9), 0.06);
+}
+for (let i = 0; i < 900 && ARV.length < 850; i++) { const x = R(180, 760), z = R(-330, 320); if (!bloqueado(x, z)) arvore(x, z, null, 0.16); }
+for (let i = 0; i < 1500 && ARV.length < 1150; i++) { const x = R(-760, 760), z = R(-330, 400); if (!bloqueado(x, z)) arvore(x, z, null, 0.18); }
+for (let i = 0; i < 300 && ARV.length < 1240; i++) { // arbustos baixos (moita), mais perto da mata e das cercas
+  const x = R(-400, 400), z = R(-320, 300);
+  if (bloqueado(x, z)) continue;
+  const r = R(0.7, 1.6); ARV.push({ tipo: 'copa', x, z, tr: 0.08, tronco: 0.2, cy: r * 0.55, r, ry: r * 0.7, gir: R(0, 6.28) });
+}
+// palmeiras ao redor da vila e da base, e árvores de propósito em volta dos portais
+for (const [x, z] of [[-60, 18], [-66, -8], [-150, -112], [-210, -128], [-290, -2], [-120, 46], [-48, 150], [70, 22], [92, -14]]) arvore(x, z, 1, 1);
+[[23, -92, 1], [37, -88, 1], [24, -84, 0.8], [-20, -205, 0.8], [-27, -200, 0.9], [-13, -211, 0.9], [-250, -60, 0.9], [-180, -20, 1], [-130, -90, 0.8]].forEach(([x, z, s]) => {
+  const t = 2.6 * s, r = 2.6 * s, ry = 2.2 * s; ARV.push({ tipo: 'copa', x, z, tr: 0.22 * s, tronco: t, cy: t + ry * 0.7, r, ry, gir: R(0, 6.28) });
+});
+MUNDO.arvores = ARV;
+
+// Copa: vários "blocos" de folhagem juntos e ondulados, mais escura embaixo.
+function geoCopa() {
+  const det = QUAL === 'baixa' ? 0 : 1;
+  const blocos = [[0, 0, 0, 1], [0.62, -0.12, 0.18, 0.72], [-0.58, -0.08, -0.22, 0.74], [0.12, 0.34, -0.5, 0.66], [-0.22, 0.28, 0.52, 0.64], [0.48, 0.22, -0.34, 0.58], [-0.4, -0.3, 0.3, 0.6]];
+  const geo = mergeGeometries(blocos.slice(0, det ? 7 : 4).map(([x, y, z, s]) => { const g = new THREE.IcosahedronGeometry(s, det); g.translate(x, y, z); return g; }));
+  const p = geo.attributes.position, n = geo.attributes.normal, cores = [];
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const d = 0.1 * Math.sin(x * 9.1 + y * 4.3) * Math.cos(z * 7.7 - y * 3.1);
+    p.setXYZ(i, (x + n.getX(i) * d) * 0.82, (y + n.getY(i) * d) * 0.82, (z + n.getZ(i) * d) * 0.82);
+    const v = 0.5 + 0.5 * clamp((y + 0.7) / 1.5, 0, 1);
+    cores.push(v, v, v);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cores, 3));
+  return geo;
+}
+// Palmeira: folhas compridas arqueadas, com folíolos (textura com transparência).
+function geoPalma() {
+  const folhas = [];
+  for (let i = 0; i < 10; i++) {
+    const L = R(3.6, 4.6), g = new THREE.PlaneGeometry(1.1, L, 1, 10);
+    g.translate(0, L / 2, 0);
+    const p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) {
+      const sComp = p.getY(k), t = sComp / L;
+      p.setXYZ(k, p.getX(k) * (1 - t * 0.55), 0.62 * sComp - 0.95 * sComp * sComp / L, sComp * 0.9);
+    }
+    g.rotateY(i / 10 * Math.PI * 2 + R(-0.15, 0.15));
+    folhas.push(g);
+  }
+  const geo = mergeGeometries(folhas);
+  const n = geo.attributes.normal; for (let i = 0; i < n.count; i++) n.setXYZ(i, 0, 1, 0); // luz "de cima", sem lado escuro
+  return geo;
+}
+const texFolhagem = texCanvas(128, 128, (g, w, h) => {
+  g.fillStyle = '#cfd8c8'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 700; i++) { const l = 150 + Math.random() * 105 | 0; g.fillStyle = `rgba(${l},${l},${l},.8)`; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 1.5 + Math.random() * 2, Math.random() * 3, 0, 7); g.fill(); }
+  for (let i = 0; i < 250; i++) { g.fillStyle = 'rgba(40,50,35,.35)'; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 1 + Math.random() * 2.5, 0, 7); g.fill(); }
+}, [2, 2]);
+const texFolhaPalma = texCanvas(64, 256, (g, w, h) => {
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = '#6f7d3f'; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 2, h); g.lineTo(w / 2, 0); g.stroke();
+  for (let y = 8; y < h; y += 6) {
+    const l = 120 + Math.random() * 60 | 0, comp = (w / 2 - 2) * (0.5 + 0.5 * Math.sin(Math.PI * (y / h) * 0.95 + 0.1));
+    g.strokeStyle = `rgb(${l - 10},${l + 45},${l - 50})`; g.lineWidth = 3.2;
+    for (const s of [-1, 1]) { g.beginPath(); g.moveTo(w / 2, y); g.lineTo(w / 2 + s * comp, y + 10); g.stroke(); }
+  }
+});
+texFolhaPalma.wrapS = texFolhaPalma.wrapT = THREE.ClampToEdgeWrapping;
+
+const COPAS = ARV.filter((a) => a.tipo === 'copa'), PALMAS = ARV.filter((a) => a.tipo === 'palma');
+const geoTronco = new THREE.CylinderGeometry(0.62, 1, 1, 7); geoTronco.translate(0, 0.5, 0);
+const mshTronco = new THREE.InstancedMesh(geoTronco, lam(0x5a4532), COPAS.length);
+const mshCopa = new THREE.InstancedMesh(geoCopa(), lam(0xffffff, { map: texFolhagem, vertexColors: true }), COPAS.length);
+const mshTroncoP = new THREE.InstancedMesh(geoTronco, lam(0x8a7d68), PALMAS.length);
+const mshPalma = new THREE.InstancedMesh(geoPalma(), lam(0xffffff, { map: texFolhaPalma, alphaTest: 0.45, side: THREE.DoubleSide }), PALMAS.length);
+const OBSTRUI_FOTO = [mshCopa, mshTronco, mshPalma, mshTroncoP];
+{
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), cor = new THREE.Color(), um = new THREE.Quaternion();
+  const verdes = [0x355f2b, 0x41702f, 0x4d7b36, 0x2f5427, 0x5a8233, 0x3e6a3a, 0x6b8a3a];
+  COPAS.forEach((a, i) => {
+    m4.compose(new V3(a.x, 0, a.z), um, new V3(a.tr, a.tronco + a.ry * 0.3, a.tr)); mshTronco.setMatrixAt(i, m4);
+    q.setFromEuler(new THREE.Euler(0, a.gir, 0));
+    m4.compose(new V3(a.x, a.cy, a.z), q, new V3(a.r, a.ry, a.r)); mshCopa.setMatrixAt(i, m4);
+    cor.setHex(verdes[(i * 7 + (a.x | 0)) % verdes.length]).multiplyScalar(R(0.85, 1.12)); mshCopa.setColorAt(i, cor);
+  });
+  PALMAS.forEach((a, i) => {
+    m4.compose(new V3(a.x, 0, a.z), um, new V3(0.22, a.tronco, 0.22)); mshTroncoP.setMatrixAt(i, m4);
+    q.setFromEuler(new THREE.Euler(R(-0.08, 0.08), a.gir, R(-0.08, 0.08)));
+    m4.compose(new V3(a.x, a.tronco, a.z), q, new V3(a.s, a.s, a.s)); mshPalma.setMatrixAt(i, m4);
+    cor.setHex(0xc9d98f).multiplyScalar(R(0.85, 1.05)); mshPalma.setColorAt(i, cor);
+  });
+  for (const m of OBSTRUI_FOTO) { if (SOMBRAS) m.castShadow = true; cena.add(m); }
+  if (SOMBRAS) mshCopa.receiveShadow = true;
+}
+
+/* ---------------- capim (tufos) perto da base ---------------- */
+if (false) { // tufos de capim desligados: de cima viravam pontinhos
+  const tex = texCanvas(64, 64, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 30; i++) {
+      const x = 4 + Math.random() * 56, l = 95 + Math.random() * 80 | 0;
+      g.strokeStyle = `rgb(${l + 20},${l + 55},${l - 20})`; g.lineWidth = 1.4 + Math.random() * 1.4;
+      g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + Math.random() * 10 - 5, h * 0.55, x + Math.random() * 18 - 9, 3 + Math.random() * 26); g.stroke();
+    }
+  });
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  const p1 = new THREE.PlaneGeometry(0.8, 0.55); p1.translate(0, 0.27, 0);
+  const geo = mergeGeometries([p1, p1.clone().rotateY(Math.PI / 3), p1.clone().rotateY(-Math.PI / 3)]);
+  const nn = geo.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0);
+  const N = QUAL === 'alta' ? 12000 : 5000;
+  const msh = new THREE.InstancedMesh(geo, lam(0xffffff, { map: tex, alphaTest: 0.5, side: THREE.DoubleSide }), N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), cor = new THREE.Color();
+  let n = 0;
+  for (let i = 0; i < N * 4 && n < N; i++) {
+    const a = R(0, Math.PI * 2), r = Math.sqrt(R(0, 1)) * 230, x = Math.cos(a) * r, z = -30 + Math.sin(a) * r;
+    if (x > -25 && x < 25 && z > -16 && z < 22) continue;              // pátio
+    if (Math.abs(z - 40) < 7.5 || (Math.abs(x - 120) < 3.6 && z < 40)) continue; // estradas
+    if (x > -104 && x < -36 && z > -153 && z < -107) continue;          // campo
+    if (superficie(x, z, 1e9) > 0 || dentroLago(x, z)) continue;       // prédios, casas, veículos
+    q.setFromEuler(new THREE.Euler(0, R(0, 6.28), 0));
+    const s = R(0.6, 1.5);
+    m4.compose(new V3(x, 0, z), q, new V3(s, s * R(0.8, 1.3), s)); msh.setMatrixAt(n, m4);
+    cor.setRGB(R(0.85, 1), R(0.9, 1), R(0.7, 0.85)); msh.setColorAt(n, cor);
+    n++;
+  }
+  msh.count = n;
+  cena.add(msh);
+}
+
+/* =====================================================================
+   DRONE — DJI Mavic 3 (escala real, nariz para -z)
+   Aberto: 347,5 × 283 × 107,7 mm, diagonal 380 mm, hélice 9453F (9,4").
+   Braços dianteiros saem do alto do corpo; os traseiros saem por baixo e
+   ficam mais baixos — por isso as hélices de trás passam por baixo das da frente.
+   ===================================================================== */
+const drone = (function () {
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const corClara = new THREE.MeshStandardMaterial({ color: 0x5d6268, roughness: 0.5, metalness: 0.1, envMapIntensity: 0.8 });
+  const corMedia = new THREE.MeshStandardMaterial({ color: 0x45494f, roughness: 0.55, metalness: 0.1, envMapIntensity: 0.8 });
+  const corEscura = new THREE.MeshStandardMaterial({ color: 0x25282c, roughness: 0.6, metalness: 0.08 });
+  const preto = new THREE.MeshStandardMaterial({ color: 0x121316, roughness: 0.32, metalness: 0.25 });
+  const vidro = new THREE.MeshPhysicalMaterial({ color: 0x060914, roughness: 0.04, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.6 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0xc7cbd0, roughness: 0.22, metalness: 0.9 });
+  const ALT = 0.018, c = new THREE.Group(); c.position.y = ALT; g.add(c);
+  const add = (geo, mat, x = 0, y = 0, z = 0, pai = c) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (SOMBRAS) m.castShadow = true; pai.add(m); return m; };
+  const V2 = THREE.Vector2;
+
+  // perfil do corpo visto de cima (x = lado, y = frente): nariz arredondado, traseira larga
+  const P = [[0, 0.112], [0.027, 0.107], [0.040, 0.090], [0.046, 0.055], [0.049, 0.0], [0.048, -0.060], [0.044, -0.090], [0.030, -0.104], [0, -0.108]];
+  function perfil(k) {
+    const s = new THREE.Shape(); s.moveTo(P[0][0] * k, P[0][1] * k);
+    const dir = P.slice(1).map(([x, y]) => new V2(x * k, y * k));
+    const esq = P.slice(0, -1).reverse().map(([x, y]) => new V2(-x * k, y * k));
+    s.splineThru([...dir, ...esq]);
+    return s;
+  }
+  const casco = (k, alt, bev) => { const geo = new THREE.ExtrudeGeometry(perfil(k), { depth: alt, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 5, curveSegments: 40 }); geo.rotateX(-Math.PI / 2); return geo; };
+  // forma de lâmina/braço: trapézio extrudado
+  const trapezio = (w0, w1, len, alt, bev = 0.002) => {
+    const s = new THREE.Shape(); s.moveTo(-w0 / 2, 0); s.lineTo(w0 / 2, 0); s.lineTo(w1 / 2, len); s.lineTo(-w1 / 2, len); s.closePath();
+    const geo = new THREE.ExtrudeGeometry(s, { depth: alt, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2 });
+    geo.translate(0, 0, -alt / 2); geo.rotateX(-Math.PI / 2); // comprimento vai para -z
+    return geo;
+  };
+  function braco(a, b, w0, w1, alt, mat) {
+    const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, hz = Math.hypot(dx, dz), len = Math.hypot(hz, dy);
+    const m = add(trapezio(w0, w1, len, alt), mat, a.x, a.y, a.z);
+    m.rotation.order = 'YXZ'; m.rotation.y = Math.atan2(-dx, -dz); m.rotation.x = Math.atan2(dy, hz);
+    return m;
+  }
+  const lenteEm = (x, y, z, r, rx, ry, pai = c) => { // sensor de visão: aro preto + vidro
+    const o = new THREE.Group(); o.position.set(x, y, z); o.rotation.set(rx, ry, 0, 'YXZ'); pai.add(o);
+    const aro = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.45, r * 1.45, 0.003, 20), preto); aro.rotation.x = Math.PI / 2; o.add(aro);
+    const vd = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.004, 20), vidro); vd.rotation.x = Math.PI / 2; vd.position.z = -0.001; o.add(vd);
+    return o;
+  };
+
+  // corpo: base cinza média + carenagem de cima mais clara + faixa escura da bateria
+  add(casco(1, 0.036, 0.008), corMedia, 0, 0.032, 0);
+  add(casco(0.955, 0.012, 0.008), corClara, 0, 0.072, 0);
+  { // tampa da bateria (parte de trás de cima, mais escura)
+    const gb = casco(1, 0.008, 0.005); gb.scale(0.9, 1, 0.56);
+    add(gb, corEscura, 0, 0.086, 0.046);
+  }
+  add(new THREE.BoxGeometry(0.094, 0.004, 0.0025), corEscura, 0, 0.1, 0.012);        // emenda da bateria
+  for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.004, 0.002, 0.0025), new THREE.MeshBasicMaterial({ color: 0x39ff6a, toneMapped: false }), -0.009 + i * 0.006, 0.1015, 0.085); // LEDs da bateria
+  add(new THREE.BoxGeometry(0.03, 0.004, 0.012), corEscura, 0, 0.1, 0.098);          // botão / trava da bateria
+  // nariz: sensores de visão (2 pares) — frente, cima, trás, laterais e baixo
+  for (const s of [-1, 1]) {
+    lenteEm(s * 0.021, 0.07, -0.101, 0.0052, 0, -s * 0.35);
+    lenteEm(s * 0.012, 0.099, -0.062, 0.0042, Math.PI / 2, 0);
+    lenteEm(s * 0.02, 0.064, 0.106, 0.0042, 0, Math.PI + s * 0.3);
+    lenteEm(s * 0.0485, 0.06, -0.03, 0.004, 0, -s * Math.PI / 2);
+    lenteEm(s * 0.012, 0.023, -0.03, 0.0045, -Math.PI / 2, 0);
+  }
+  add(new THREE.BoxGeometry(0.012, 0.002, 0.006), new THREE.MeshBasicMaterial({ color: 0xfafafa, toneMapped: false }), 0, 0.022, 0.03); // luz auxiliar de baixo
+  // entradas de ar laterais
+  for (const s of [-1, 1]) for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.002, 0.016, 0.003), preto, s * 0.0495, 0.05, 0.03 + i * 0.007);
+
+  // braços e motores (posições do Mavic 3: diagonal ~380 mm)
+  const MOT = [
+    { x: -0.151, y: 0.083, z: -0.113, raiz: new V3(-0.042, 0.075, -0.06), frente: true },
+    { x: 0.151, y: 0.083, z: -0.113, raiz: new V3(0.042, 0.075, -0.06), frente: true },
+    { x: -0.139, y: 0.052, z: 0.128, raiz: new V3(-0.04, 0.036, 0.07), frente: false },
+    { x: 0.139, y: 0.052, z: 0.128, raiz: new V3(0.04, 0.036, 0.07), frente: false },
+  ];
+  const helices = [], ledsF = [];
+  // pá da hélice (vista de cima), da raiz à ponta
+  const formaPa = new THREE.Shape();
+  formaPa.moveTo(0.012, -0.006); formaPa.bezierCurveTo(0.04, -0.017, 0.08, -0.015, 0.112, -0.006);
+  formaPa.quadraticCurveTo(0.121, 0, 0.113, 0.004); formaPa.bezierCurveTo(0.08, 0.009, 0.04, 0.011, 0.012, 0.006); formaPa.closePath();
+  const geoPa = new THREE.ExtrudeGeometry(formaPa, { depth: 0.0016, bevelEnabled: false, curveSegments: 10 });
+  geoPa.rotateX(-Math.PI / 2);
+  const texDisco = texCanvas(128, 128, (c, w) => {
+    const gr = c.createRadialGradient(64, 64, 6, 64, 64, 63);
+    gr.addColorStop(0, 'rgba(40,40,44,0)'); gr.addColorStop(0.2, 'rgba(40,40,44,.15)'); gr.addColorStop(0.75, 'rgba(40,40,44,.28)'); gr.addColorStop(0.92, 'rgba(60,60,66,.38)'); gr.addColorStop(1, 'rgba(60,60,66,0)');
+    c.fillStyle = gr; c.fillRect(0, 0, w, w);
+  });
+  MOT.forEach((m, i) => {
+    const ponta = new V3(m.x, m.y - 0.008, m.z);
+    braco(m.raiz, ponta, m.frente ? 0.03 : 0.028, 0.02, 0.013, corMedia);
+    add(new THREE.CylinderGeometry(0.0138, 0.0152, 0.018, 24), corEscura, m.x, m.y, m.z);           // estator
+    add(new THREE.CylinderGeometry(0.0148, 0.0148, 0.009, 24), corMedia, m.x, m.y + 0.0128, m.z); // sino
+    add(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 12), metal, m.x, m.y + 0.02, m.z);        // eixo
+    if (m.frente) { // pernas dianteiras (antenas) e LED da frente embaixo do braço
+      const perna = add(new THREE.BoxGeometry(0.006, m.y - 0.012 + ALT, 0.02), corEscura, m.x * 0.97, (m.y - 0.012 - ALT) / 2, m.z + 0.006);
+      perna.rotation.x = 0.08;
+      const led = add(new THREE.BoxGeometry(0.008, 0.003, 0.006), new THREE.MeshBasicMaterial({ color: 0x330000, toneMapped: false }), m.x * 0.92, m.y - 0.012, m.z + 0.012);
+      ledsF.push(led);
+    } else {
+      add(new THREE.CylinderGeometry(0.005, 0.007, m.y - 0.012 + ALT, 8), corEscura, m.x * 0.97, (m.y - 0.012 - ALT) / 2, m.z - 0.004); // pé traseiro
+    }
+    const hg = new THREE.Group(); hg.position.set(m.x, m.y + 0.022, m.z);
+    const pas = new THREE.Group(); hg.add(pas);
+    const sentido = i === 0 || i === 3 ? 1 : -1;
+    for (const ang of [0, Math.PI]) {
+      const pa = new THREE.Mesh(geoPa, preto); pa.rotation.set(sentido * 0.14, ang, 0, 'YXZ'); // passo da hélice
+      if (SOMBRAS) pa.castShadow = true; pas.add(pa);
+    }
+    pas.add(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.013, 0.006, 16), preto));
+    const disco = new THREE.Mesh(new THREE.CircleGeometry(0.121, 48), new THREE.MeshBasicMaterial({ map: texDisco, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    disco.rotation.x = -Math.PI / 2; disco.position.y = 0.002; disco.visible = false; hg.add(disco);
+    c.add(hg);
+    helices.push({ g: hg, pa: pas, disco, sentido });
+  });
+
+  // gimbal + câmera dupla (principal 4/3 + tele) embaixo do nariz
+  add(new THREE.BoxGeometry(0.028, 0.014, 0.03), corEscura, 0, 0.026, -0.098);               // suporte com amortecedores
+  const gimbal = new THREE.Group(); gimbal.position.set(0, 0.011, -0.121); c.add(gimbal);
+  const garfo = (s) => add(new THREE.BoxGeometry(0.004, 0.026, 0.016), corEscura, s * 0.034, 0.004, 0.004, gimbal);
+  garfo(-1); garfo(1);
+  const rr = new THREE.Shape(), cw = 0.06, ch = 0.044, cr = 0.009;
+  rr.moveTo(-cw / 2 + cr, -ch / 2); rr.lineTo(cw / 2 - cr, -ch / 2); rr.quadraticCurveTo(cw / 2, -ch / 2, cw / 2, -ch / 2 + cr);
+  rr.lineTo(cw / 2, ch / 2 - cr); rr.quadraticCurveTo(cw / 2, ch / 2, cw / 2 - cr, ch / 2); rr.lineTo(-cw / 2 + cr, ch / 2);
+  rr.quadraticCurveTo(-cw / 2, ch / 2, -cw / 2, ch / 2 - cr); rr.lineTo(-cw / 2, -ch / 2 + cr); rr.quadraticCurveTo(-cw / 2, -ch / 2, -cw / 2 + cr, -ch / 2);
+  const geoCam = new THREE.ExtrudeGeometry(rr, { depth: 0.036, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 3 });
+  geoCam.translate(0, 0, -0.018);
+  add(geoCam, corEscura, 0, 0, 0, gimbal);
+  const objetiva = (x, y, r, prof) => {
+    const o = new THREE.Group(); o.position.set(x, y, -0.022); gimbal.add(o);
+    const anel = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.22, r * 1.3, prof, 32), preto); anel.rotation.x = Math.PI / 2; anel.position.z = -prof / 2; o.add(anel);
+    const friso = new THREE.Mesh(new THREE.TorusGeometry(r * 1.12, 0.0009, 6, 32), metal); friso.position.z = -prof - 0.0002; o.add(friso);
+    const vd = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), vidro); vd.rotation.x = -Math.PI / 2; vd.scale.y = 0.35; vd.position.z = -prof + 0.0005; o.add(vd);
+  };
+  objetiva(-0.008, -0.002, 0.0118, 0.008); // câmera principal
+  objetiva(0.017, 0.010, 0.0058, 0.006);   // teleobjetiva
+  add(new THREE.CylinderGeometry(0.002, 0.002, 0.002, 8), new THREE.MeshBasicMaterial({ color: 0xff3b30, toneMapped: false }), 0.017, -0.012, -0.0225, gimbal).rotation.x = Math.PI / 2;
+
+  const ledT = add(new THREE.BoxGeometry(0.012, 0.004, 0.003), new THREE.MeshBasicMaterial({ color: 0x002200, toneMapped: false }), 0, 0.066, 0.109); // LED de status (traseiro)
+  cena.add(g);
+  // sombra "de bolha": no modo sem sombras ela é a única noção de altura perto do chão
+  const somb = new THREE.Mesh(new THREE.CircleGeometry(0.3, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false }));
+  somb.rotation.x = -Math.PI / 2; cena.add(somb);
+  return { g, helices, gimbal, ledsF, ledT, somb };
+})();
+
+/* ---------------- câmeras ---------------- */
+const camFPV = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, LONGE);
+const camChase = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.08, LONGE);
+const camPiloto = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, LONGE);
+camFPV.rotation.order = 'YXZ';
+const PILOTO = new V3(0, 1.7, 6);
+const VISTAS = { camera: { cam: camFPV, nome: '📷 Câmera do drone' }, terceira: { cam: camChase, nome: '🚁 Terceira pessoa' }, piloto: { cam: camPiloto, nome: '🧍 Visão do piloto (VLOS)' } };
+let vista = lsGet('dsim_vista') || 'terceira';
+if (!VISTAS[vista]) vista = 'terceira';
+const olharPiloto = new V3(0, 1, 0);
+
+function redimensionar() {
+  renderer.setPixelRatio(pixelRatio());
+  renderer.setSize(innerWidth, innerHeight, false);
+  for (const v of Object.values(VISTAS)) { v.cam.aspect = innerWidth / innerHeight; v.cam.updateProjectionMatrix(); }
+  const mp = $('mapa'), r = mp.getBoundingClientRect(), d = devicePixelRatio || 1;
+  mp.width = Math.round(r.width * d) || 170; mp.height = Math.round(r.height * d) || 170;
+}
+addEventListener('resize', redimensionar);
+
+/* =====================================================================
+   ESTADO DO VOO + FÍSICA
+   ===================================================================== */
+const S = {
+  pos: new V3(), prev: new V3(), vel: new V3(), yaw: 0, yawRate: 0, pitch: 0, roll: 0, gimbal: -12,
+  motores: false, voando: false, jaVoou: false, acidente: null, auto: null, rthFase: '', rthAlt: 30, tParar: 0,
+  bat: 100, tAcelBaixo: 0, segura: null, home: new V3(), homeY: 0, chao: 0,
+  vento: new V3(), ventoDir: 0, t: 0, saturado: 0, sinal: 100, perdeuSinal: false, sat: 17,
+  velModo: cfg.vel, cscTravado: false, pedirFoto: false, rastro: [], avisos: {},
+};
+
+let M = null; // exercício em andamento
+const F = () => Object.assign({}, cfg, (M && M.def.forcar) || {});
+
+function superficie(x, z, yRef) {
+  let h = 0;
+  for (const lista of [MUNDO.caixas, caixasMissao]) for (const c of lista) {
+    if (Math.abs(x - c.x) <= c.hw && Math.abs(z - c.z) <= c.hd && c.top <= yRef + 0.3 && c.top > h) h = c.top;
+  }
+  return h;
+}
+const RAIO = 0.2;
+function colisao(p) {
+  for (const lista of [MUNDO.caixas, caixasMissao]) for (const c of lista) {
+    if (Math.abs(p.x - c.x) < c.hw + RAIO && Math.abs(p.z - c.z) < c.hd + RAIO && p.y + 0.15 > c.y0 && p.y < c.top - 0.12) return c.nome;
+  }
+  for (const a of MUNDO.arvores) {
+    const dx = p.x - a.x, dz = p.z - a.z;
+    if (dx > a.r + 1 || dx < -a.r - 1 || dz > a.r + 1 || dz < -a.r - 1) continue;
+    const dh = dx * dx + dz * dz;
+    if (p.y < a.cy && dh < (a.tr + RAIO) * (a.tr + RAIO)) return 'tronco de árvore';
+    const rr = a.r * 0.85 + RAIO, ry = a.ry * 0.85 + RAIO, dy = p.y + 0.08 - a.cy;
+    if (dh / (rr * rr) + dy * dy / (ry * ry) < 1) return 'copa de árvore';
+  }
+  if (p.y > 6 && p.y < 10.5) {
+    for (const f of MUNDO.fios) {
+      const minx = Math.min(f.a.x, f.b.x) - 1, maxx = Math.max(f.a.x, f.b.x) + 1, minz = Math.min(f.a.z, f.b.z) - 1, maxz = Math.max(f.a.z, f.b.z) + 1;
+      if (p.x < minx || p.x > maxx || p.z < minz || p.z > maxz) continue;
+      const ab = f.b.clone().sub(f.a), t = clamp(p.clone().sub(f.a).dot(ab) / ab.lengthSq(), 0, 1);
+      if (f.a.clone().addScaledVector(ab, t).distanceTo(p) < RAIO + 0.06) return 'fio da rede elétrica';
+    }
+  }
+  return null;
+}
+
+function resetDrone(p, yaw) {
+  S.pos.copy(p || new V3(0, 0, 0)); S.prev.copy(S.pos); S.vel.set(0, 0, 0);
+  S.yaw = yaw || 0; S.yawRate = 0; S.pitch = 0; S.roll = 0; S.gimbal = -12;
+  S.motores = false; S.voando = false; S.jaVoou = false; S.acidente = null; S.auto = null; S.tParar = 0;
+  S.bat = 100; S.tAcelBaixo = 0; S.segura = null; S.home.copy(S.pos); S.homeY = S.pos.y; S.chao = 0;
+  S.t = 0; S.saturado = 0; S.perdeuSinal = false; S.rastro = []; S.avisos = {}; S.pedirFoto = false;
+  S.velModo = (M && M.def.forcar && M.def.forcar.vel) || cfg.vel;
+  $('crash-v').style.opacity = 0;
+}
+
+function ligarMotores() {
+  if (S.acidente || S.motores) return;
+  S.motores = true; S.jaVoou = false; S.tAcelBaixo = 0;
+  S.home.copy(S.pos); S.homeY = S.pos.y;
+  aviso('Motores ligados — suba o acelerador para decolar', 'ok', 2200, 'mot');
+  evento('motores');
+}
+function desligarMotores(motivo) {
+  if (!S.motores) return;
+  S.motores = false; S.auto = null; S.voando = false;
+  aviso(motivo === 'pouso' ? 'Motores desligados' : 'Motores desligados (' + motivo + ')', 'info', 2000, 'mot');
+  evento('motoresOff');
+}
+function acidente(motivo) {
+  if (S.acidente) return;
+  S.acidente = motivo; S.motores = false; S.auto = null;
+  S.chao = superficie(S.pos.x, S.pos.z, S.pos.y);
+  S.vel.multiplyScalar(0.3);
+  $('crash-v').style.opacity = 1;
+  aviso('💥 Acidente: ' + motivo, 'vm', 4000, 'crash');
+  evento('acidente', motivo);
+}
+function iniciarRTH(forcado) {
+  const f = F();
+  if (!f.gps) { aviso('Sem GPS: o RTH não funciona no modo ATTI', 'vm', 3000, 'rth'); return; }
+  if (!S.voando) return;
+  const altRel = S.pos.y - S.homeY;
+  const dist = Math.hypot(S.pos.x - S.home.x, S.pos.z - S.home.z);
+  S.auto = 'rth';
+  S.rthAlt = dist > 20 ? Math.max(Math.min(f.rthAlt, f.altMax), altRel) : altRel;
+  S.rthFase = altRel < S.rthAlt - 0.3 ? 'subir' : 'girar';
+  S.segura = null;
+  aviso(forcado ? 'Retornando para casa' : `RTH: subindo a ${Math.round(S.rthAlt)} m e voltando — aperte RTH de novo para cancelar`, 'am', 3200, 'rth');
+}
+
+function passo(dt) {
+  S.t += dt;
+  const f = F(), P = PERFIS[S.velModo];
+  // vento (direção fixa por exercício + rajadas)
+  const vv = f.vento * (f.rajada ? 1 + 0.35 * Math.sin(S.t * 0.9) * Math.sin(S.t * 0.37 + 1.3) + 0.15 * Math.sin(S.t * 2.3) : 1);
+  S.vento.set(Math.sin(S.ventoDir) * vv, 0, -Math.cos(S.ventoDir) * vv);
+  S.prev.copy(S.pos);
+  const { thr, yaw: yawIn, pit, rol } = INP.fn;
+
+  // caindo depois de acidente / motor desligado no ar
+  if (S.acidente || (!S.motores && S.pos.y > superficie(S.pos.x, S.pos.z, S.pos.y) + 0.02)) {
+    const solo = superficie(S.pos.x, S.pos.z, S.pos.y);
+    if (S.pos.y > solo) {
+      S.vel.y -= G * dt; S.vel.x *= 1 - 0.5 * dt; S.vel.z *= 1 - 0.5 * dt;
+      S.pos.addScaledVector(S.vel, dt);
+      S.roll += dt * 3.2; S.pitch += dt * 1.9;
+      if (S.pos.y <= solo) { S.pos.y = solo; S.vel.set(0, 0, 0); if (!S.acidente) acidente('queda com os motores desligados'); }
+    }
+    return;
+  }
+
+  // CSC: os dois sticks para baixo e para dentro (ou para fora)
+  const csc = thr < -0.75 && pit < -0.75 && Math.abs(yawIn) > 0.7 && Math.abs(rol) > 0.7 && Math.sign(yawIn) !== Math.sign(rol);
+  if (csc && !S.cscTravado) {
+    S.cscTravado = true;
+    if (!S.voando) { if (S.motores) desligarMotores('CSC'); else ligarMotores(); }
+  }
+  if (!csc) S.cscTravado = false;
+
+  // bateria
+  const cap = f.bateria === 'realista' ? 25 * 60 : f.bateria === 'treino' ? 12 * 60 : 0;
+  const vh = Math.hypot(S.vel.x, S.vel.z);
+  if (cap && S.motores) {
+    const carga = S.voando ? 1 + 0.35 * Math.min(1, vh / P.h) + 0.4 * Math.max(0, S.vel.y) / P.up + 0.02 * f.vento : 0.25;
+    S.bat = Math.max(0, S.bat - carga * dt / cap * 100);
+  }
+  if (S.motores && S.bat <= 30 && !S.avisos.b30) { S.avisos.b30 = 1; aviso('🔋 Bateria baixa (30%) — planeje o retorno', 'am', 3500); }
+  if (S.voando && S.bat <= 15 && !S.avisos.b15) { S.avisos.b15 = 1; S.auto = 'pousar'; aviso('🔋 Bateria crítica (15%) — pouso automático', 'vm', 4000); }
+  if (S.motores && S.bat <= 0) { if (S.voando) { S.motores = false; acidente('bateria esgotada em voo'); } else desligarMotores('bateria'); return; }
+
+  if (!S.motores) { S.vel.set(0, 0, 0); S.pitch = suave(S.pitch, 0, dt, 0.1); S.roll = suave(S.roll, 0, dt, 0.1); return; }
+
+  // sinal do rádio (distância até o piloto)
+  const dP = Math.hypot(S.pos.x - PILOTO.x, S.pos.y - PILOTO.y, S.pos.z - PILOTO.z);
+  if (f.alcance > 0) {
+    S.sinal = clamp(100 * (1 - Math.pow(dP / f.alcance, 3)), 0, 100);
+    if (dP > f.alcance && !S.perdeuSinal && S.voando) { S.perdeuSinal = true; aviso('📡 Sinal perdido — RTH automático (failsafe)', 'vm', 4000); if (f.gps) iniciarRTH(true); else S.auto = 'pousar'; }
+    if (dP < f.alcance * 0.9) S.perdeuSinal = false;
+  } else S.sinal = 100;
+
+  const altRel = S.pos.y - S.homeY;
+  const solo = superficie(S.pos.x, S.pos.z, S.pos.y);
+  const fwd = new V3(Math.sin(S.yaw), 0, -Math.cos(S.yaw));
+  const dir = new V3(Math.cos(S.yaw), 0, Math.sin(S.yaw));
+  const semSinal = S.perdeuSinal;
+
+  let vyD = semSinal ? 0 : (thr >= 0 ? thr * P.up : thr * P.down);
+  let yawRateD = semSinal ? 0 : yawIn * P.yaw * DEG;
+  let vD = null;
+  if (f.gps) {
+    const p = semSinal ? 0 : pit, r = semSinal ? 0 : rol;
+    vD = fwd.clone().multiplyScalar(p * P.h).addScaledVector(dir, r * P.h);
+    if (Math.abs(p) < 0.03 && Math.abs(r) < 0.03) {
+      if (!S.segura && vh < 0.6) S.segura = S.pos.clone();
+      if (S.segura) {
+        const e = S.segura.clone().sub(S.pos); e.y = 0;
+        const l = e.length();
+        if (l > 0.001) vD.copy(e.multiplyScalar(Math.min(l * 0.8, 2) / l));
+      }
+    } else S.segura = null;
+  }
+
+  // modos automáticos
+  if (S.auto === 'decolar') {
+    vyD = clamp((1.2 - altRel) * 2.5, 0.25, 1.5); // desacelera chegando em 1,2 m
+    if (altRel >= 1.17) { S.auto = null; vyD = 0; aviso('Decolagem concluída — pairando a 1,2 m', 'ok', 2000); }
+  } else if (S.auto === 'pousar') {
+    const h = S.pos.y - solo;
+    vyD = h > 10 ? -3 : h > 2 ? -1.5 : -0.6;
+    if (thr > 0.5 && !semSinal && S.bat > 15) { S.auto = null; aviso('Pouso cancelado', 'info', 1500); }
+  } else if (S.auto === 'rth') {
+    const toHome = S.home.clone().sub(S.pos); toHome.y = 0;
+    const dist = toHome.length(), brg = rumo(toHome.x, toHome.z);
+    vD = new V3();
+    if (S.rthFase === 'subir') {
+      vyD = P.up; yawRateD = 0;
+      if (altRel >= S.rthAlt - 0.3) S.rthFase = 'girar';
+    } else if (S.rthFase === 'girar') {
+      vyD = clamp((S.rthAlt - altRel) * 1.2, -P.down, P.up);
+      const d = angDif(brg, S.yaw); yawRateD = clamp(d * 3, -1.6, 1.6);
+      if (Math.abs(d) < 0.08 || dist < 2) S.rthFase = 'voltar';
+    } else {
+      vyD = clamp((S.rthAlt - altRel) * 1.2, -P.down, P.up);
+      yawRateD = dist > 3 ? clamp(angDif(brg, S.yaw) * 3, -1.6, 1.6) : 0;
+      const sp = Math.min(12, dist * 0.55);
+      if (dist > 0.01) vD.copy(toHome.multiplyScalar(sp / dist));
+      if (dist < 0.5) { S.auto = 'pousar'; S.segura = S.home.clone(); aviso('Sobre o ponto de decolagem — pousando', 'am', 2200); }
+    }
+  }
+
+  // teto: desacelera chegando perto (sem "passar do ponto") e nunca sobe acima
+  if (vyD > 0) vyD = Math.min(vyD, Math.max(0, (f.altMax - altRel) * 1.2));
+  if (altRel > f.altMax) vyD = Math.min(vyD, -0.5);
+  if (altRel >= f.altMax - 0.5 && thr > 0.1) { if (S.t - (S.avisos.alt || -9) > 4) { S.avisos.alt = S.t; aviso(`Altitude máxima atingida (${f.altMax} m)`, 'am', 2500); } }
+
+  // no solo com motores girando
+  if (!S.voando) {
+    if (S.auto === 'parar') {
+      S.tParar -= dt; if (S.tParar <= 0) desligarMotores('pouso');
+      return;
+    }
+    if (vyD > 0.4) { S.voando = true; S.jaVoou = true; evento('decolou'); }
+    else {
+      S.vel.set(0, 0, 0); S.yawRate = 0;
+      S.pitch = suave(S.pitch, 0, dt, 0.1); S.roll = suave(S.roll, 0, dt, 0.1);
+      if (S.jaVoou && thr < -0.8) { S.tAcelBaixo += dt; if (S.tAcelBaixo > 1) desligarMotores('pouso'); } else S.tAcelBaixo = 0;
+      return;
+    }
+  }
+
+  // dinâmica horizontal: inclinação -> aceleração, arrasto contra o ar (vento)
+  let pCmd, rCmd;
+  if (vD) {
+    const ax = (vD.x - S.vel.x) / P.tau + K_ARRASTO * (S.vel.x - S.vento.x);
+    const az = (vD.z - S.vel.z) / P.tau + K_ARRASTO * (S.vel.z - S.vento.z);
+    pCmd = Math.atan((ax * fwd.x + az * fwd.z) / G);
+    rCmd = Math.atan((ax * dir.x + az * dir.z) / G);
+    const lim = (P.tilt + 5) * DEG, mag = Math.hypot(pCmd, rCmd);
+    if (mag > lim) { pCmd *= lim / mag; rCmd *= lim / mag; if (S.segura && f.vento > 0) S.saturado += dt; } else S.saturado = Math.max(0, S.saturado - dt * 2);
+    if (S.saturado > 2.5 && S.t - (S.avisos.vento || -9) > 8) { S.avisos.vento = S.t; aviso('💨 Vento forte: o drone não consegue segurar a posição', 'am', 3000); }
+  } else {
+    pCmd = (semSinal ? 0 : pit) * P.tilt * DEG; rCmd = (semSinal ? 0 : rol) * P.tilt * DEG;
+  }
+  S.pitch = suave(S.pitch, pCmd, dt, 0.09); S.roll = suave(S.roll, rCmd, dt, 0.09);
+  const af = G * Math.tan(S.pitch), ar = G * Math.tan(S.roll);
+  S.vel.x += (af * fwd.x + ar * dir.x - K_ARRASTO * (S.vel.x - S.vento.x)) * dt;
+  S.vel.z += (af * fwd.z + ar * dir.z - K_ARRASTO * (S.vel.z - S.vento.z)) * dt;
+  S.vel.y = suave(S.vel.y, vyD, dt, 0.3);
+  S.yawRate = suave(S.yawRate, yawRateD, dt, 0.12);
+  S.yaw += S.yawRate * dt;
+  S.pos.addScaledVector(S.vel, dt);
+
+  // chão / teto de prédio
+  const solo2 = superficie(S.pos.x, S.pos.z, S.prev.y);
+  if (S.pos.y <= solo2) {
+    const vImp = -S.vel.y, vh2 = Math.hypot(S.vel.x, S.vel.z);
+    S.pos.y = solo2;
+    if (solo2 === 0 && dentroLago(S.pos.x, S.pos.z)) { acidente('pouso na água (lago)'); return; }
+    if (vImp > 3.2 || vh2 > 3.5) { acidente(vh2 > 3.5 ? 'tocou o chão com velocidade horizontal alta' : 'impacto com o chão (descida rápida demais)'); return; }
+    const automatico = S.auto === 'pousar';
+    S.voando = false; S.vel.set(0, 0, 0); S.yawRate = 0; S.segura = null;
+    S.auto = automatico ? 'parar' : null; S.tParar = 1;
+    evento('pouso', { vImp, vh: vh2, pos: S.pos.clone(), solo: solo2 });
+    return;
+  }
+  const bateu = colisao(S.pos);
+  if (bateu) acidente('colisão com ' + bateu);
+}
+
+/* =====================================================================
+   ENTRADA: GAMEPAD / RÁDIO USB, TECLADO, TOQUE
+   ===================================================================== */
+const MAPA_MODO = {
+  1: { thr: 'RY', yaw: 'LX', pit: 'LY', rol: 'RX' },
+  2: { thr: 'LY', yaw: 'LX', pit: 'RY', rol: 'RX' },
+  3: { thr: 'RY', yaw: 'RX', pit: 'LY', rol: 'LX' },
+};
+const NOMES_FN = { thr: 'Acelerador (subir)', yaw: 'Guinada (girar)', pit: 'Arfagem (frente)', rol: 'Rolagem (direita)' };
+const NOMES_STK = {
+  1: ['Frente · Girar', 'Subir · Lados'],
+  2: ['Subir · Girar', 'Frente · Lados'],
+  3: ['Frente · Lados', 'Subir · Girar'],
+};
+const ACOES = [
+  { id: 'decolar', nome: 'Decolar / pousar automático', tecla: 'T' },
+  { id: 'rth', nome: 'Voltar para casa (RTH)', tecla: 'H' },
+  { id: 'foto', nome: 'Tirar foto', tecla: 'P' },
+  { id: 'vista', nome: 'Trocar vista', tecla: 'C' },
+  { id: 'modo', nome: 'Modo C / N / S', tecla: 'M' },
+  { id: 'gimbalCima', nome: 'Câmera (gimbal) para cima', tecla: 'R', cont: true },
+  { id: 'gimbalBaixo', nome: 'Câmera (gimbal) para baixo', tecla: 'F', cont: true },
+  { id: 'pausa', nome: 'Pausa / menu', tecla: 'Esc' },
+];
+const NOMES_BT_PADRAO = ['A / ✕', 'B / ○', 'X / □', 'Y / △', 'LB / L1', 'RB / R1', 'LT / L2', 'RT / R2', 'Back / Share', 'Start / Options', 'L3', 'R3', 'Direcional ↑', 'Direcional ↓', 'Direcional ←', 'Direcional →', 'Home / PS'];
+
+const INP = {
+  phys: { LX: 0, LY: 0, RX: 0, RY: 0 }, fn: { thr: 0, yaw: 0, pit: 0, rol: 0 },
+  kb: { LX: 0, LY: 0, RX: 0, RY: 0 }, toque: { LX: 0, LY: 0, RX: 0, RY: 0 },
+  gp: null, lista: [], prev: {}, cont: {}, captura: null, avisouPad: {},
+};
+const PADS = lsGet('dsim_pads') || {};
+const salvarPads = () => lsSet('dsim_pads', PADS);
+
+function perfilPadrao(gp) {
+  if (gp.mapping === 'standard') {
+    return {
+      padrao: true, calibrado: false,
+      eixos: { LX: { i: 0, inv: false, min: -1, max: 1 }, LY: { i: 1, inv: true, min: -1, max: 1 }, RX: { i: 2, inv: false, min: -1, max: 1 }, RY: { i: 3, inv: true, min: -1, max: 1 } },
+      binds: { decolar: { t: 'b', i: 2 }, rth: { t: 'b', i: 3 }, foto: { t: 'b', i: 0 }, vista: { t: 'b', i: 1 }, modo: { t: 'b', i: 8 }, gimbalCima: { t: 'b', i: 5 }, gimbalBaixo: { t: 'b', i: 4 }, pausa: { t: 'b', i: 9 } },
+    };
+  }
+  // Rádio USB (EdgeTX/OpenTX em AETR): canal 1 aileron, 2 profundor, 3 acelerador, 4 leme.
+  return {
+    padrao: false, calibrado: false,
+    eixos: { RX: { i: 0, inv: false, min: -1, max: 1 }, RY: { i: 1, inv: false, min: -1, max: 1 }, LY: { i: 2, inv: false, min: -1, max: 1 }, LX: { i: 3, inv: false, min: -1, max: 1 } },
+    binds: {},
+  };
+}
+const nomeCurto = (id) => String(id).replace(/\s*\(.*$/, '').slice(0, 48) || 'controle';
+const perfilDe = (gp) => { if (!PADS[gp.id]) PADS[gp.id] = perfilPadrao(gp); return PADS[gp.id]; };
+function eixo(gp, e) {
+  if (!e || e.i == null) return 0;
+  const raw = gp.axes[e.i] ?? 0;
+  const c = (e.min + e.max) / 2, h = (e.max - e.min) / 2 || 1;
+  const v = clamp((raw - c) / h, -1, 1);
+  return e.inv ? -v : v;
+}
+function bindAtivo(gp, b) {
+  if (!b) return false;
+  if (b.t === 'b') { const x = gp.buttons[b.i]; return !!x && (x.pressed || x.value > 0.5); }
+  const a = gp.axes[b.i]; return a != null && (a - (b.r || 0)) * b.s > 0.5;
+}
+function nomeBind(gp, b) {
+  if (!b) return '—';
+  if (b.t === 'b') return gp && gp.mapping === 'standard' && NOMES_BT_PADRAO[b.i] ? NOMES_BT_PADRAO[b.i] : 'Botão ' + (b.i + 1);
+  return 'Eixo ' + (b.i + 1) + (b.s > 0 ? ' +' : ' −');
+}
+function padAtual() {
+  const brutos = navigator.getGamepads ? navigator.getGamepads() : [];
+  const lista = [];
+  for (const p of brutos) if (p && p.connected !== false) lista.push(p);
+  INP.lista = lista;
+  if (!lista.length) return null;
+  return lista.find((p) => p.id === cfg.padId) || lista.find((p) => p.axes.length >= 4) || lista[0];
+}
+function moldar(v) {
+  const dz = cfg.deadzone, e = cfg.expo, a = Math.abs(v);
+  if (a < dz) return 0;
+  let x = (a - dz) / (1 - dz);
+  x = (1 - e) * x + e * x * x * x;
+  return Math.sign(v) * Math.min(1, x);
+}
+const teclas = new Set();
+const tecla = (c) => teclas.has(c);
+
+function lerEntradas(dt) {
+  // teclado: rampa para não ser "liga/desliga" seco
+  const alvo = {
+    LY: (tecla('KeyW') ? 1 : 0) - (tecla('KeyS') ? 1 : 0),
+    LX: (tecla('KeyD') ? 1 : 0) - (tecla('KeyA') ? 1 : 0),
+    RY: (tecla('ArrowUp') || tecla('KeyI') ? 1 : 0) - (tecla('ArrowDown') || tecla('KeyK') ? 1 : 0),
+    RX: (tecla('ArrowRight') || tecla('KeyL') ? 1 : 0) - (tecla('ArrowLeft') || tecla('KeyJ') ? 1 : 0),
+  };
+  for (const k in alvo) {
+    const a = alvo[k], v = INP.kb[k], taxa = a === 0 ? 6 : 3;
+    INP.kb[k] = a > v ? Math.min(a, v + taxa * dt) : Math.max(a, v - taxa * dt);
+  }
+  const gp = padAtual();
+  const gpPhys = { LX: 0, LY: 0, RX: 0, RY: 0 }, gpBt = {};
+  if (gp) {
+    const pf = perfilDe(gp);
+    for (const k in gpPhys) gpPhys[k] = eixo(gp, pf.eixos[k]);
+    for (const a of ACOES) gpBt[a.id] = bindAtivo(gp, pf.binds[a.id]);
+    if (!INP.avisouPad[gp.id]) {
+      INP.avisouPad[gp.id] = 1;
+      aviso('🎮 Controle conectado: ' + nomeCurto(gp.id), 'ok', 3000);
+      if (gp.mapping !== 'standard' && !pf.calibrado) aviso('Controle diferente do padrão de videogame — faça a calibração no menu (Controle)', 'am', 6000);
+      atualizarStatusControle();
+    }
+    calibracaoTick(gp);
+    capturaTick(gp);
+  }
+  if (gp !== INP.gp) { INP.gp = gp; atualizarStatusControle(); }
+  for (const k in INP.phys) INP.phys[k] = clamp(INP.kb[k] + gpPhys[k] + INP.toque[k], -1, 1);
+  const mp = MAPA_MODO[cfg.modo];
+  for (const f in INP.fn) INP.fn[f] = moldar(INP.phys[mp[f]]);
+  // botões do controle: só a "borda de subida" dispara a ação
+  const ocupado = CAL.aberta || INP.captura;
+  for (const a of ACOES) {
+    const v = !!gpBt[a.id];
+    if (!ocupado && v && !INP.prev[a.id] && !a.cont) acao(a.id, 'pad');
+    INP.prev[a.id] = v;
+  }
+  INP.cont.gimbal = ocupado ? 0 : (gpBt.gimbalCima ? 1 : 0) - (gpBt.gimbalBaixo ? 1 : 0) + (tecla('KeyR') ? 1 : 0) - (tecla('KeyF') ? 1 : 0);
+}
+
+function acao(id, origem) {
+  const menuAberto = !$('menu').hidden || !$('res').hidden;
+  if (id === 'pausa') {
+    if (!$('res').hidden) return;
+    if (!$('menu').hidden) { if (M && !M.fim) fecharMenu(); } else abrirMenu();
+    return;
+  }
+  if (menuAberto || !M) return;
+  iniciarAudio();
+  if (id === 'decolar') {
+    if (S.acidente) return;
+    if (!S.voando) {
+      if (!F().gps) { ligarMotores(); aviso('ATTI: decolagem só manual — suba o acelerador', 'am', 2500); return; }
+      ligarMotores(); S.auto = 'decolar';
+    } else if (S.auto === 'pousar') { S.auto = null; aviso('Pouso cancelado', 'info', 1500); }
+    else { S.auto = 'pousar'; S.segura = null; aviso('Pouso automático', 'am', 1800); }
+  } else if (id === 'rth') {
+    if (S.auto === 'rth') { if (S.perdeuSinal) return; S.auto = null; aviso('RTH cancelado', 'info', 1500); }
+    else iniciarRTH(false);
+  } else if (id === 'foto') {
+    S.pedirFoto = true;
+  } else if (id === 'vista') {
+    if (M.def.vista && M.def.travaVista) { aviso('Este exercício é só na visão do piloto', 'am', 2000, 'vista'); return; }
+    const ordem = ['camera', 'terceira', 'piloto'];
+    vista = ordem[(ordem.indexOf(vista) + 1) % 3]; lsSet('dsim_vista', vista); mostrarVista();
+  } else if (id === 'modo') {
+    if (M.def.forcar && M.def.forcar.vel) { aviso('Este exercício fixa o modo ' + M.def.forcar.vel, 'am', 2000); return; }
+    const ordem = ['C', 'N', 'S'];
+    S.velModo = ordem[(ordem.indexOf(S.velModo) + 1) % 3];
+    aviso('Modo ' + S.velModo + ' — ' + PERFIS[S.velModo].nome, 'info', 1600, 'modo');
+  }
+}
+
+/* teclado */
+const TECLAS_STICK = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyI', 'KeyJ', 'KeyK', 'KeyL', 'KeyR', 'KeyF']);
+addEventListener('keydown', (e) => {
+  if (document.getElementById('drc-ovl')) return; // gate do CPF aberto
+  const campo = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName);
+  if (e.code === 'Escape') {
+    if (INP.captura) { fimCaptura(); return; }
+    if (CAL.aberta) { fecharCal(); return; }
+    acao('pausa', 'tecla'); return;
+  }
+  if (campo) return;
+  if (TECLAS_STICK.has(e.code)) { teclas.add(e.code); if (!$('hud').hidden) e.preventDefault(); }
+  if (e.repeat) return;
+  const mapa = { KeyT: 'decolar', KeyH: 'rth', KeyP: 'foto', Enter: 'foto', KeyC: 'vista', KeyM: 'modo' };
+  if (mapa[e.code] && $('menu').hidden && $('res').hidden) { e.preventDefault(); acao(mapa[e.code], 'tecla'); }
+});
+addEventListener('keyup', (e) => teclas.delete(e.code));
+addEventListener('blur', () => teclas.clear());
+$('cv').addEventListener('wheel', (e) => { e.preventDefault(); S.gimbal = clamp(S.gimbal - Math.sign(e.deltaY) * 4, -90, 20); }, { passive: false });
+
+/* toque: dois sticks virtuais, sempre voltam ao centro */
+function stickToque(el, kx, ky) {
+  const knob = el.querySelector('i');
+  let id = null;
+  const mover = (e) => {
+    const r = el.getBoundingClientRect(), raio = r.width / 2 - 12;
+    let x = (e.clientX - r.left - r.width / 2) / raio, y = -(e.clientY - r.top - r.height / 2) / raio;
+    const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    INP.toque[kx] = x; INP.toque[ky] = y;
+    knob.style.transform = `translate(${x * raio}px,${-y * raio}px)`;
+  };
+  el.addEventListener('pointerdown', (e) => { id = e.pointerId; el.setPointerCapture(id); iniciarAudio(); mover(e); e.preventDefault(); });
+  el.addEventListener('pointermove', (e) => { if (e.pointerId === id) mover(e); });
+  const soltar = (e) => { if (e.pointerId !== id) return; id = null; INP.toque[kx] = 0; INP.toque[ky] = 0; knob.style.transform = ''; };
+  el.addEventListener('pointerup', soltar); el.addEventListener('pointercancel', soltar);
+}
+stickToque($('tq-l'), 'LX', 'LY');
+stickToque($('tq-r'), 'RX', 'RY');
+
+/* botões do HUD */
+$('bt-menu').onclick = () => abrirMenu();
+$('bt-decolar').onclick = () => acao('decolar', 'hud');
+$('bt-rth').onclick = () => acao('rth', 'hud');
+$('bt-foto').onclick = () => acao('foto', 'hud');
+$('bt-vista').onclick = () => acao('vista', 'hud');
+$('t-modo').onclick = () => acao('modo', 'hud');
+for (const [id, s] of [['bt-gc', 1], ['bt-gb', -1]]) {
+  const b = $(id);
+  b.addEventListener('pointerdown', () => { INP.cont.botaoGimbal = s; });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { INP.cont.botaoGimbal = 0; });
+}
+let zoomMapa = 1;
+$('mapa').onclick = () => { zoomMapa = zoomMapa === 1 ? 0.4 : zoomMapa === 0.4 ? 2.5 : 1; };
+
+/* =====================================================================
+   CALIBRAÇÃO DOS STICKS
+   ===================================================================== */
+const CAL = { aberta: false, passo: 0, base: null, usados: [], eixos: {}, cand: -1, tCand: 0, min: {}, max: {}, gpId: '' };
+const CAL_PASSOS = [
+  { txt: 'Solte os sticks na posição de descanso (no rádio, o acelerador pode ficar onde estiver) e clique em <b>Começar</b>.' },
+  { k: 'LY', txt: 'Empurre o stick <b>ESQUERDO para CIMA</b> e segure.' },
+  { k: 'LX', txt: 'Agora o stick <b>ESQUERDO para a DIREITA</b> e segure.' },
+  { k: 'RY', txt: 'Empurre o stick <b>DIREITO para CIMA</b> e segure.' },
+  { k: 'RX', txt: 'Agora o stick <b>DIREITO para a DIREITA</b> e segure.' },
+  { txt: 'Gire os <b>dois sticks em círculos</b>, até o batente, 2 ou 3 vezes. Depois clique em <b>Concluir</b>.' },
+];
+function abrirCal() {
+  const gp = padAtual();
+  if (!gp) { aviso('Nenhum controle encontrado — conecte e aperte um botão do controle', 'am', 3500); return; }
+  Object.assign(CAL, { aberta: true, passo: 0, base: null, usados: [], eixos: {}, cand: -1, tCand: 0, min: {}, max: {}, gpId: gp.id });
+  $('cal-pad').textContent = gp.id;
+  $('cal').hidden = false;
+  desenharCal();
+}
+function fecharCal() { CAL.aberta = false; $('cal').hidden = true; }
+function desenharCal() {
+  $('cal-passos').innerHTML = CAL_PASSOS.map((_, i) => `<i class="${i < CAL.passo ? 'ok' : i === CAL.passo ? 'at' : ''}"></i>`).join('');
+  $('cal-txt').innerHTML = CAL_PASSOS[CAL.passo].txt;
+  const b = $('cal-ok');
+  b.hidden = CAL.passo >= 1 && CAL.passo <= 4;
+  b.textContent = CAL.passo === 0 ? 'Começar' : 'Concluir';
+  b.disabled = CAL.passo === 5;
+}
+$('cal-ok').onclick = () => {
+  const gp = padAtual(); if (!gp) return;
+  if (CAL.passo === 0) { CAL.passo = 1; CAL.base = gp.axes.slice(); desenharCal(); return; }
+  if (CAL.passo === 5) {
+    const pf = perfilDe(gp);
+    for (const k of ['LX', 'LY', 'RX', 'RY']) { const e = CAL.eixos[k]; pf.eixos[k] = { i: e.i, inv: e.inv, min: CAL.min[k], max: CAL.max[k] }; }
+    pf.calibrado = true; salvarPads(); fecharCal(); montarBinds();
+    aviso('✔ Controle calibrado e salvo', 'ok', 2500);
+  }
+};
+$('cal-cancelar').onclick = fecharCal;
+function calibracaoTick(gp) {
+  if (!CAL.aberta || gp.id !== CAL.gpId) return;
+  const ax = gp.axes;
+  // barras de todos os eixos (ajuda a ver o que o controle manda)
+  $('cal-eixos').innerHTML = Array.from(ax).map((v, i) => {
+    const usado = Object.entries(CAL.eixos).find(([, e]) => e.i === i);
+    return `<div class="barra"><b style="font-size:12px">Eixo ${i + 1}${usado ? ' → ' + usado[0] : ''}</b><div class="tr"><i style="left:${v < 0 ? 50 + v * 50 : 50}%;width:${Math.abs(v) * 50}%"></i></div><span>${nf(v, 2)}</span></div>`;
+  }).join('');
+  const passo = CAL_PASSOS[CAL.passo];
+  if (passo.k) {
+    let melhor = -1, dm = 0;
+    for (let i = 0; i < ax.length; i++) {
+      if (CAL.usados.includes(i)) continue;
+      const d = Math.abs(ax[i] - CAL.base[i]); if (d > dm) { dm = d; melhor = i; }
+    }
+    if (dm > 0.5) {
+      if (CAL.cand === melhor) CAL.tCand += 1 / 60; else { CAL.cand = melhor; CAL.tCand = 0; }
+      if (CAL.tCand > 0.35) {
+        CAL.eixos[passo.k] = { i: melhor, inv: ax[melhor] - CAL.base[melhor] < 0 };
+        CAL.usados.push(melhor); CAL.cand = -1; CAL.tCand = 0;
+        CAL.passo++; CAL.base = ax.slice();
+        if (CAL.passo === 5) for (const k of ['LX', 'LY', 'RX', 'RY']) { const v = ax[CAL.eixos[k].i]; CAL.min[k] = v; CAL.max[k] = v; }
+        desenharCal();
+      }
+    } else { CAL.cand = -1; CAL.tCand = 0; }
+  } else if (CAL.passo === 5) {
+    let ok = true;
+    for (const k of ['LX', 'LY', 'RX', 'RY']) {
+      const v = ax[CAL.eixos[k].i];
+      CAL.min[k] = Math.min(CAL.min[k], v); CAL.max[k] = Math.max(CAL.max[k], v);
+      if (CAL.max[k] - CAL.min[k] < 1.2) ok = false;
+    }
+    $('cal-ok').disabled = !ok;
+  }
+}
+
+/* troca de botão: espera o próximo botão (ou chave do rádio) apertado */
+function capturaTick(gp) {
+  const c = INP.captura; if (!c) return;
+  if (!c.base) { c.base = { b: gp.buttons.map((b) => b.pressed || b.value > 0.5), a: gp.axes.slice() }; return; }
+  const pf = perfilDe(gp), usados = Object.values(pf.eixos).map((e) => e.i);
+  for (let i = 0; i < gp.buttons.length; i++) {
+    const p = gp.buttons[i].pressed || gp.buttons[i].value > 0.5;
+    if (p && !c.base.b[i]) { pf.binds[c.acao] = { t: 'b', i }; INP.prev[c.acao] = true; salvarPads(); fimCaptura(); return; }
+  }
+  for (let i = 0; i < gp.axes.length; i++) {
+    if (usados.includes(i)) continue;
+    const d = gp.axes[i] - c.base.a[i];
+    if (Math.abs(d) > 0.6) { pf.binds[c.acao] = { t: 'a', i, s: Math.sign(d), r: c.base.a[i] }; INP.prev[c.acao] = true; salvarPads(); fimCaptura(); return; }
+  }
+}
+function fimCaptura() { INP.captura = null; montarBinds(); }
+
+/* =====================================================================
+   EXERCÍCIOS
+   ===================================================================== */
+const grpM = new THREE.Group(); cena.add(grpM);
+function limparGrpM() {
+  while (grpM.children.length) { const o = grpM.children.pop(); o.traverse((x) => { if (x.geometry) x.geometry.dispose(); }); }
+  caixasMissao.length = 0;
+}
+function circuloPts(r, n = 64, y = 0) { const p = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; p.push(new V3(Math.cos(a) * r, y, Math.sin(a) * r)); } return p; }
+function criarZona(x, z, r, y0, y1, cor) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  const cil = new THREE.Mesh(new THREE.CylinderGeometry(r, r, y1 - y0, 48, 1, true), new THREE.MeshBasicMaterial({ color: cor, toneMapped: false, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
+  cil.position.y = (y0 + y1) / 2; g.add(cil);
+  for (const y of [y0, y1]) g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circuloPts(r, 64, y)), new THREE.LineBasicMaterial({ color: cor, toneMapped: false })));
+  g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circuloPts(r, 64, 0.06)), new THREE.LineBasicMaterial({ color: cor, toneMapped: false })));
+  grpM.add(g); return g;
+}
+function criarFarol(x, z, cor, alt = 50) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, alt, 10, 1, true), new THREE.MeshBasicMaterial({ color: cor, toneMapped: false, transparent: true, opacity: 0.28, depthWrite: false, fog: false }));
+  m.position.set(x, alt / 2, z); grpM.add(m); return m;
+}
+function etiqueta(txt, cor) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const g = c.getContext('2d'); g.fillStyle = cor; g.beginPath(); g.arc(64, 64, 58, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#111'; g.font = 'bold 70px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 64, 68);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: true, toneMapped: false }));
+  s.scale.set(1.1, 1.1, 1); return s;
+}
+function criarPortal(pos, n, r, num) {
+  const g = new THREE.Group(); g.position.copy(pos); g.rotation.y = Math.atan2(n.x, n.z);
+  const mat = new THREE.MeshBasicMaterial({ color: 0xF5C518, toneMapped: false });
+  const anel = new THREE.Mesh(new THREE.TorusGeometry(r, 0.11, 8, 48), mat); g.add(anel);
+  const lab = etiqueta(String(num), '#F5C518'); lab.position.y = r + 0.9; g.add(lab);
+  const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, Math.max(0.1, pos.y - r)), lam(0x64748b));
+  haste.position.y = -(r + (pos.y - r) / 2); g.add(haste);
+  if (pos.y - r > 0.3) caixasMissao.push({ x: pos.x, z: pos.z, hw: 0.08, hd: 0.08, y0: 0, top: pos.y - r - 0.12, nome: 'suporte do portal' });
+  grpM.add(g);
+  return { g, mat, anel, lab, pos: pos.clone(), n: n.clone().normalize(), r };
+}
+function cruzouPortal(pt) {
+  const d0 = S.prev.clone().sub(pt.pos).dot(pt.n), d1 = S.pos.clone().sub(pt.pos).dot(pt.n);
+  if (d0 < 0 && d1 >= 0) {
+    const t = d0 / (d0 - d1), x = S.prev.clone().lerp(S.pos, t);
+    return x.distanceTo(pt.pos) <= pt.r;
+  }
+  return false;
+}
+function marcarPortais(lista, i) {
+  lista.forEach((p, k) => {
+    p.mat.color.setHex(k < i ? 0x475569 : k === i ? 0x22c55e : 0xF5C518);
+    p.anel.scale.setScalar(1); p.lab.visible = k >= i;
+  });
+}
+function criarBalao(x, y, z) {
+  const g = new THREE.Group(); g.position.set(x, y, z);
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.8, 18, 14), new THREE.MeshLambertMaterial({ color: 0xef4444, emissive: 0x330000 }));
+  b.scale.y = 1.15; g.add(b);
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0, -0.9, 0), new V3(0, -y, 0)]), new THREE.LineBasicMaterial({ color: 0xf8fafc })));
+  grpM.add(g); return g;
+}
+function penal(pts, txt, silencioso) {
+  if (!M || M.fim) return;
+  M.penal.push({ pts, txt });
+  if (!silencioso) aviso(`−${pts} ${txt}`, 'am', 2200);
+}
+const dHome = () => Math.hypot(S.pos.x - S.home.x, S.pos.z - S.home.z);
+const pousadoNoHome = (d, raio) => Math.hypot(d.pos.x, d.pos.z) <= raio;
+
+const MISSOES = [
+  {
+    id: 'livre', nome: 'Voo livre', nivel: 'l', icone: '🕊️',
+    desc: 'Sem objetivo: base, vila, campo, estrada de terra, linhas de energia e mata. Use para se acostumar com o controle e com as três vistas.',
+    iniciar(M) { M.obj = 'Explore à vontade. Esc abre o menu.'; },
+  },
+  {
+    id: 'pairado', nome: 'Decolagem, pairado e pouso', nivel: 'b', icone: '🛫', par: 75,
+    desc: 'O básico de tudo: ligue os motores, suba até a zona amarela (2 a 4 m) e segure o drone parado ali por 10 segundos. Depois pouse em cima do H e desligue os motores.',
+    iniciar(M) { M.d.zona = criarZona(0, 0, 1.5, 2, 4, 0xF5C518); M.d.dentro = 0; M.d.estava = false; M.alvo = new V3(0, 3, 0); M.alvoNome = 'Zona'; },
+    passo(M, dt) {
+      const h = S.pos.y - S.homeY, dh = Math.hypot(S.pos.x, S.pos.z);
+      const dentro = S.voando && h >= 2 && h <= 4 && dh <= 1.5;
+      if (M.etapa === 0 && S.motores) M.etapa = 1;
+      if (M.etapa === 1 && dentro) M.etapa = 2;
+      if (M.etapa === 2) {
+        if (dentro) M.d.dentro += dt; else if (M.d.estava) penal(5, 'saiu da zona de pairado');
+        M.d.estava = dentro;
+        if (M.d.dentro >= 10) { M.etapa = 3; M.d.zona.visible = false; M.alvo = new V3(0, 0, 0); M.alvoNome = 'H'; aviso('✔ Pairado concluído! Agora pouse no H.', 'ok', 2500); }
+      }
+      M.obj = ['Ligue os motores: CSC (sticks para baixo e para dentro) ou ⏫', 'Suba até a zona amarela (2 a 4 m de altura)', 'Segure o drone parado dentro da zona', 'Pouse em cima do H', 'Desligue os motores (acelerador para baixo e segure)'][M.etapa];
+      M.prog = M.etapa === 2 ? `Na zona: ${nf(M.d.dentro, 1)} de 10 s` : '';
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.etapa === 3) { if (pousadoNoHome(d, 1.5)) M.etapa = 4; else aviso('Pousou fora do H — decole de novo e pouse em cima dele', 'am', 3000); }
+      if (t === 'motoresOff' && M.etapa === 4) concluir(true);
+    },
+  },
+  {
+    id: 'quadrado', nome: 'Quadrado com o nariz à frente', nivel: 'b', icone: '⬜', par: 110,
+    desc: 'Passe pelos 4 portais em ordem, sempre com o nariz apontado para onde está indo — nas quinas, pare e gire. Volte e pouse no H. Treina a coordenação guinada + arfagem.',
+    iniciar(M) {
+      const pts = [[0, 5, -20], [20, 5, -40], [40, 5, -20], [20, 5, 0]], dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+      M.d.p = pts.map((p, i) => criarPortal(new V3(...p), new V3(dirs[i][0], 0, dirs[i][1]), 2.5, i + 1));
+      M.d.i = 0; marcarPortais(M.d.p, 0);
+    },
+    passo(M) {
+      const L = M.d.p;
+      if (M.d.i < L.length) {
+        const pt = L[M.d.i];
+        if (cruzouPortal(pt)) {
+          const err = Math.abs(angDif(S.yaw, rumo(pt.n.x, pt.n.z)));
+          if (err > 35 * DEG) penal(5, `passou pelo portal ${M.d.i + 1} sem o nariz à frente`);
+          else aviso(`✔ Portal ${M.d.i + 1}`, 'ok', 1200, 'pt');
+          M.d.i++; marcarPortais(L, M.d.i);
+        }
+      }
+      if (M.d.i < L.length) { M.alvo = L[M.d.i].pos; M.alvoNome = 'Portal ' + (M.d.i + 1); M.obj = `Passe pelo portal ${M.d.i + 1} (verde) com o nariz à frente`; }
+      else { M.alvo = new V3(0, 0, 0); M.alvoNome = 'H'; M.obj = M.etapa === 9 ? 'Desligue os motores' : 'Volte e pouse no H'; }
+      M.prog = `Portais: ${M.d.i} de ${L.length}`;
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.d.i >= M.d.p.length) { if (pousadoNoHome(d, 2)) M.etapa = 9; else aviso('Pouse em cima do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'pouso', nome: 'Pouso de precisão', nivel: 'b', icone: '🎯', par: 90,
+    desc: 'Decole da base e pouse no heliponto azul do campo de futebol, uns 150 m a noroeste. Quanto mais no centro do H, maior a nota. Cuidado com as traves.',
+    iniciar(M) { M.d.farol = criarFarol(PAD_B.x, PAD_B.z, 0x60a5fa); M.alvo = PAD_B.clone(); M.alvoNome = 'Heliponto azul'; M.obj = 'Voe até o campo e pouse no centro do H azul'; },
+    passo(M) { M.prog = `Distância até o alvo: ${Math.round(Math.hypot(S.pos.x - PAD_B.x, S.pos.z - PAD_B.z))} m`; if (M.etapa === 9) M.obj = 'Desligue os motores'; },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.etapa !== 9) {
+        const e = Math.hypot(d.pos.x - PAD_B.x, d.pos.z - PAD_B.z);
+        if (e <= 4) {
+          M.etapa = 9; M.d.erro = e;
+          if (e > 0.5) penal(e <= 1 ? 5 : e <= 2 ? 15 : 30, `pousou a ${nf(e, 2)} m do centro`);
+          aviso(`Pousou a ${nf(e, 2)} m do centro`, 'ok', 2500);
+        } else if (Math.hypot(d.pos.x, d.pos.z) > 3) aviso('Fora do alvo — decole e pouse no H azul', 'am', 2500);
+      }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'vlos', nome: 'Voo em linha de visada (VLOS)', nivel: 'i', icone: '👁️', par: 170, vista: 'piloto', travaVista: true,
+    desc: 'Só a visão do piloto, como na vida real. Estoure os 3 balões vermelhos e volte para o H. O drone vai ficar de frente para você — aí esquerda e direita se invertem.',
+    iniciar(M) { M.d.b = BALOES.map((p) => criarBalao(...p)); M.d.i = 0; M.d.longe = false; },
+    passo(M) {
+      const L = M.d.b;
+      if (M.d.i < L.length) {
+        const b = L[M.d.i];
+        if (S.pos.distanceTo(b.position) < 2.2) { b.visible = false; M.d.i++; aviso(`🎈 Balão ${M.d.i} de ${L.length}`, 'ok', 1300, 'bal'); }
+      }
+      const dp = Math.hypot(S.pos.x - PILOTO.x, S.pos.z - PILOTO.z);
+      if (dp > 150 && !M.d.longe) { M.d.longe = true; penal(10, 'passou de 150 m do piloto (perde o contato visual)'); }
+      if (dp < 130) M.d.longe = false;
+      if (M.d.i < L.length) { M.alvo = L[M.d.i].position; M.alvoNome = 'Balão ' + (M.d.i + 1); M.obj = `Estoure o balão ${M.d.i + 1} (encoste nele)`; }
+      else { M.alvo = new V3(0, 0, 0); M.alvoNome = 'H'; M.obj = M.etapa === 9 ? 'Desligue os motores' : 'Volte e pouse no H'; }
+      M.prog = `Balões: ${M.d.i} de ${L.length} · ${Math.round(dp)} m do piloto`;
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.d.i >= M.d.b.length) { if (pousadoNoHome(d, 2.5)) M.etapa = 9; else aviso('Pouse em cima do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'orbita', nome: 'Órbita em ponto de interesse', nivel: 'i', icone: '🔄', par: 200,
+    desc: 'Dê uma volta completa em torno da viatura (raio de 15 a 25 m, altura de 8 a 22 m) sempre com a câmera apontada para ela. É rolagem + guinada ao mesmo tempo — manobra clássica de acompanhamento.',
+    iniciar(M) {
+      const anel = new THREE.Mesh(new THREE.RingGeometry(15, 25, 64), new THREE.MeshBasicMaterial({ color: 0x22c55e, toneMapped: false, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false }));
+      anel.rotation.x = -Math.PI / 2; anel.position.set(POI.x, 0.08, POI.z); grpM.add(anel);
+      const l = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circuloPts(20, 72, 0.1)), new THREE.LineBasicMaterial({ color: 0x22c55e, toneMapped: false }));
+      l.position.set(POI.x, 0, POI.z); grpM.add(l);
+      criarFarol(POI.x, POI.z, 0x22c55e, 30);
+      M.d.ac = 0; M.d.ang = null; M.d.tOrb = 0; M.d.tOk = 0;
+    },
+    passo(M, dt) {
+      const dx = S.pos.x - POI.x, dz = S.pos.z - POI.z, r = Math.hypot(dx, dz), h = S.pos.y - S.homeY;
+      const apontado = Math.abs(angDif(rumo(-dx, -dz), S.yaw)) < 20 * DEG;
+      const ok = S.voando && r >= 15 && r <= 25 && h >= 8 && h <= 22 && apontado;
+      if (M.etapa === 0 && ok) { M.etapa = 1; M.d.ang = Math.atan2(dz, dx); aviso('Na órbita! Dê a volta completa mantendo a viatura na câmera', 'ok', 2600); }
+      if (M.etapa === 1) {
+        M.d.tOrb += dt;
+        const a = Math.atan2(dz, dx);
+        if (ok) { M.d.ac += angDif(a, M.d.ang); M.d.tOk += dt; }
+        M.d.ang = a;
+        if (Math.abs(M.d.ac) >= Math.PI * 2) {
+          M.etapa = 2;
+          const fora = 1 - M.d.tOk / Math.max(M.d.tOrb, 0.01);
+          if (fora > 0.05) penal(Math.round(fora * 60), `${Math.round(fora * 100)}% do tempo fora da órbita ou sem a viatura na câmera`);
+          aviso('✔ Volta completa! Agora volte e pouse no H (pode usar o RTH)', 'ok', 3000);
+        }
+      }
+      M.alvo = M.etapa < 2 ? POI.clone().setY(1.5) : new V3(0, 0, 0);
+      M.alvoNome = M.etapa < 2 ? 'Viatura' : 'H';
+      M.obj = M.etapa === 0 ? 'Entre na faixa verde (15–25 m da viatura, 8–22 m de altura) com o nariz para ela'
+        : M.etapa === 1 ? (ok ? 'Continue a volta — câmera na viatura ✔' : (!apontado ? '⚠ Aponte o nariz para a viatura' : '⚠ Volte para a faixa verde / altura certa'))
+          : M.etapa === 9 ? 'Desligue os motores' : 'Volte e pouse no H';
+      M.prog = M.etapa >= 1 ? `Volta: ${Math.min(360, Math.round(Math.abs(M.d.ac) / DEG))}° de 360°` : `Raio ${Math.round(r)} m · altura ${Math.round(h)} m`;
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.etapa === 2) { if (pousadoNoHome(d, 2.5)) M.etapa = 9; else aviso('Pouse em cima do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'obstaculos', nome: 'Percurso com obstáculos', nivel: 'i', icone: '🌳', par: 210,
+    desc: 'Seis portais entre árvores, por baixo da linha de energia (duas vezes) e por cima da mata. Bateu, acabou. Depois volte e pouse no H.',
+    iniciar(M) {
+      let ant = new V3(0, 0, 0);
+      M.d.p = PORTAIS_OBS.map((p, i) => { const pos = new V3(...p), n = pos.clone().sub(ant).setY(0); ant = pos; return criarPortal(pos, n, 2.2, i + 1); });
+      M.d.i = 0; marcarPortais(M.d.p, 0);
+    },
+    passo(M) {
+      const L = M.d.p;
+      if (M.d.i < L.length && cruzouPortal(L[M.d.i])) { M.d.i++; marcarPortais(L, M.d.i); aviso(`✔ Portal ${M.d.i}`, 'ok', 1200, 'pt'); }
+      if (M.d.i < L.length) { M.alvo = L[M.d.i].pos; M.alvoNome = 'Portal ' + (M.d.i + 1); M.obj = `Passe pelo portal ${M.d.i + 1} (verde)` + (M.d.i === 2 || M.d.i === 5 ? ' — atenção aos fios!' : ''); }
+      else { M.alvo = new V3(0, 0, 0); M.alvoNome = 'H'; M.obj = M.etapa === 9 ? 'Desligue os motores' : 'Volte e pouse no H'; }
+      M.prog = `Portais: ${M.d.i} de ${L.length}`;
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.d.i >= M.d.p.length) { if (pousadoNoHome(d, 2.5)) M.etapa = 9; else aviso('Pouse em cima do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'atti', nome: 'Modo ATTI com vento', nivel: 'a', icone: '💨', par: 100, forcar: { gps: false, vento: 5, rajada: true }, ventoDir: 90,
+    desc: 'O GPS caiu e está ventando 5 m/s (com rajadas) para leste. Decole, segure o drone dentro da zona por 20 segundos corrigindo com o stick direito e pouse no H. Sem RTH, sem decolagem automática.',
+    iniciar(M) { M.d.zona = criarZona(0, 0, 3, 3, 6, 0xfb923c); M.d.dentro = 0; M.d.estava = false; M.alvo = new V3(0, 4.5, 0); M.alvoNome = 'Zona'; },
+    passo(M, dt) {
+      const h = S.pos.y - S.homeY, dh = Math.hypot(S.pos.x, S.pos.z);
+      const dentro = S.voando && h >= 3 && h <= 6 && dh <= 3;
+      if (M.etapa === 0 && dentro) M.etapa = 1;
+      if (M.etapa === 1) {
+        if (dentro) M.d.dentro += dt; else if (M.d.estava) penal(4, 'o vento tirou o drone da zona');
+        M.d.estava = dentro;
+        if (M.d.dentro >= 20) { M.etapa = 2; M.d.zona.visible = false; M.alvo = new V3(0, 0, 0); M.alvoNome = 'H'; aviso('✔ Segurou! Agora pouse no H — o vento continua empurrando', 'ok', 2800); }
+      }
+      M.obj = ['Ligue os motores, suba e entre na zona laranja (3 a 6 m)', 'Segure dentro da zona — corrija o vento com o stick direito', 'Pouse em cima do H', '', '', '', '', '', '', 'Desligue os motores'][M.etapa];
+      M.prog = M.etapa === 1 ? `Na zona: ${nf(M.d.dentro, 1)} de 20 s` : '';
+    },
+    ev(M, t, d) {
+      if (t === 'pouso' && M.etapa === 2) { if (pousadoNoHome(d, 2)) M.etapa = 9; else aviso('Pouse em cima do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+  {
+    id: 'busca', nome: 'Busca e registro fotográfico', nivel: 'a', icone: '🔎', par: 300,
+    desc: 'Denúncia: picape vermelha abandonada na região norte, perto da estrada de terra ou na beira da mata. Encontre, fotografe com o veículo no centro (até 45 m) e volte para a base. A cada tentativa ela está num lugar diferente.',
+    iniciar(M) {
+      const [x, z, gir] = BUSCA_PONTOS[(Math.random() * BUSCA_PONTOS.length) | 0];
+      M.d.alvo = new V3(x, 0.9, z);
+      veiculo('picape', x, z, gir, 0xc81e1e, true, grpM);
+      M.d.fotosRuins = 0;
+      M.obj = 'Encontre a picape vermelha e fotografe (📷 / P)';
+    },
+    passo(M) {
+      if (M.etapa === 1) { M.alvo = new V3(0, 0, 0); M.alvoNome = 'Base'; M.obj = 'Alvo registrado — volte e pouse na base'; }
+      else if (M.etapa === 9) M.obj = 'Desligue os motores';
+      M.prog = `${Math.round(dHome())} m da base · câmera ${Math.round(S.gimbal)}°`;
+    },
+    ev(M, t, d) {
+      if (t === 'foto' && M.etapa === 0) {
+        const r = avaliarFoto(M.d.alvo, 45);
+        if (r.ok) {
+          M.etapa = 1; M.d.foto = d.url; M.d.q = r.q;
+          if (r.q < 0.85) penal(Math.round((1 - r.q) * 25), 'alvo fora do centro da foto');
+          aviso('✔ Alvo registrado! Volte para a base', 'ok', 3000);
+        } else {
+          M.d.fotosRuins++;
+          if (M.d.fotosRuins <= 5) penal(2, 'foto sem o alvo (' + r.motivo + ')');
+        }
+      }
+      if (t === 'pouso' && M.etapa === 1) { if (pousadoNoHome(d, 4)) M.etapa = 9; else aviso('Pouse na base, perto do H', 'am', 2000); }
+      if (t === 'motoresOff' && M.etapa === 9) concluir(true);
+    },
+  },
+];
+
+const raycaster = new THREE.Raycaster();
+function avaliarFoto(alvo, distMax) {
+  const d = camFPV.position.distanceTo(alvo);
+  const p = alvo.clone().project(camFPV);
+  if (p.z > 1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1) return { ok: false, motivo: 'fora do quadro' };
+  if (d > distMax) return { ok: false, motivo: `longe demais: ${Math.round(d)} m` };
+  if (Math.abs(p.x) > 0.5 || Math.abs(p.y) > 0.5) return { ok: false, motivo: 'muito na borda' };
+  raycaster.set(camFPV.position, alvo.clone().sub(camFPV.position).normalize());
+  raycaster.far = d - 1.5;
+  if (raycaster.intersectObjects(OBSTRUI_FOTO, false).length) return { ok: false, motivo: 'encoberto pelas árvores' };
+  return { ok: true, q: 1 - Math.max(Math.abs(p.x), Math.abs(p.y)), d };
+}
+
+function evento(tipo, d) {
+  if (!M || M.fim) return;
+  if (tipo === 'pouso' && M.def.id !== 'livre' && d.vImp > 1.6) penal(10, `pouso duro (${nf(d.vImp)} m/s)`);
+  if (tipo === 'acidente') { const deste = M; setTimeout(() => { if (M === deste) concluir(false, d); }, 1600); return; }
+  if (M.def.ev) M.def.ev(M, tipo, d);
+}
+function missaoPasso(dt) {
+  if (!M || M.fim) return;
+  if (S.motores || S.jaVoou) M.t += dt;
+  if (M.def.passo) M.def.passo(M, dt);
+}
+
+function iniciarMissao(id) {
+  const def = MISSOES.find((m) => m.id === id) || MISSOES[0];
+  limparGrpM();
+  $('toast').innerHTML = '';
+  M = { def, id: def.id, t: 0, etapa: 0, penal: [], fim: false, d: {}, obj: '', prog: '', alvo: null, alvoNome: '' };
+  S.ventoDir = (def.ventoDir != null ? def.ventoDir : Math.random() * 360) * DEG;
+  resetDrone(new V3(0, 0, 0), 0);
+  vista = def.vista || lsGet('dsim_vista') || 'terceira';
+  if (def.iniciar) def.iniciar(M);
+  $('mis-n').textContent = def.icone + ' ' + def.nome;
+  $('mis').hidden = false;
+  $('res').hidden = true;
+  fecharMenu();
+  mostrarVista();
+  const f = F();
+  if (f.vento > 0) aviso(`💨 Vento de ${f.vento} m/s`, 'info', 2500, 'vento');
+  if (!f.gps) aviso('Sem GPS: modo ATTI — o drone não segura a posição sozinho', 'am', 3500, 'atti');
+  iniciarAudio();
+}
+
+function concluir(ok, motivo) {
+  if (!M || M.fim) return;
+  const def = M.def;
+  if (ok && def.par && M.t > def.par) penal(Math.min(30, Math.round((M.t - def.par) * 0.25)), `tempo acima do ideal (${mmss(def.par)})`, true);
+  M.fim = true;
+  const soma = M.penal.reduce((a, p) => a + p.pts, 0);
+  const nota = ok ? clamp(100 - soma, 0, 100) : 0;
+  let recorde = false;
+  if (ok && def.id !== 'livre') {
+    const rec = lsGet('dsim_rec') || {};
+    const ant = rec[def.id];
+    if (!ant || nota > ant.nota || (nota === ant.nota && M.t < ant.t)) { rec[def.id] = { nota, t: Math.round(M.t), em: new Date().toISOString().slice(0, 10) }; lsSet('dsim_rec', rec); recorde = true; }
+  }
+  setTimeout(() => mostrarResultado(ok, nota, motivo, recorde), ok ? 700 : 0);
+  if (def.id !== 'livre') enviarVoo({
+    missao: def.id, concluiu: !!ok, nota, segundos: Math.round(M.t), penalidades: M.penal.length,
+    motivo: ok ? '' : String(motivo || 'acidente'), controle: INP.gp ? 'controle' : (cfg.toque ? 'toque' : 'teclado'), modo: cfg.modo,
+  }, 0);
+}
+
+/* Grava o voo no ranking da turma (aba SIMULADOR_VOO). Sessão do CPF vencida
+   (401): o drone-cpf.js reabre a tela do CPF e o MESMO voo é reenviado depois. */
+function enviarVoo(corpo, tentativa) {
+  const st = (t, c) => { const e = $('r-rk'); e.textContent = t; e.className = c || ''; };
+  st('Gravando no ranking…');
+  fetch(API_BASE + '/api/drone/voo', { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo) })
+    .then((r) => r.json().catch(() => ({})).then((d) => Object.assign(d || {}, { _status: r.status })))
+    .then((d) => {
+      if (d._status === 401 && tentativa < 2 && window.droneCpf && window.droneCpf.aposLogin) {
+        st('Sua sessão venceu — entre de novo com o CPF que o voo é gravado em seguida.', 'erro');
+        window.droneCpf.aposLogin().then(() => enviarVoo(corpo, tentativa + 1));
+        return;
+      }
+      if (d.ok) st(corpo.concluiu ? '🏆 Gravado no ranking da turma.' : 'Tentativa registrada no seu histórico.', 'ok');
+      else st(d.detail || 'Não deu para gravar no ranking (a nota acima continua valendo).', 'erro');
+    })
+    .catch(() => st('Sem conexão para gravar no ranking — a nota acima continua valendo.', 'erro'));
+}
+function mostrarResultado(ok, nota, motivo, recorde) {
+  const def = M.def, livre = def.id === 'livre';
+  $('r-ic').textContent = ok ? (nota >= 70 ? '🏅' : '✔️') : '💥';
+  $('r-tit').textContent = ok ? def.nome : (livre ? 'Acidente' : 'Exercício não concluído');
+  $('r-nota').innerHTML = ok ? `${nota}<small>/100</small>` : '';
+  $('r-est').textContent = ok ? (nota >= 90 ? '★★★' : nota >= 75 ? '★★☆' : nota >= 50 ? '★☆☆' : '☆☆☆') : '';
+  $('r-sub').innerHTML = ok
+    ? `${nota >= 70 ? 'Aprovado' : 'Abaixo de 70 — vale repetir'} · tempo ${mmss(M.t)}${recorde ? ' · <b style="color:#F5C518">novo recorde!</b>' : ''}`
+    : esc('Causa: ' + (motivo || 'acidente'));
+  const det = M.penal.map((p) => `<li class="ruim"><span>${esc(p.txt)}</span><b>−${p.pts}</b></li>`);
+  if (ok && !det.length) det.push('<li class="bom"><span>Sem nenhuma penalidade</span><b>perfeito</b></li>');
+  if (!ok && !livre) det.push(`<li class="ruim"><span>${esc(dicaAcidente(motivo))}</span><b>dica</b></li>`);
+  $('r-det').innerHTML = det.join('');
+  const foto = M.d.foto;
+  $('r-foto').hidden = !foto; if (foto) $('r-foto').src = foto;
+  $('r-de-novo').textContent = livre ? '↻ Recomeçar' : '↻ Tentar de novo';
+  $('r-ranking').hidden = livre;
+  if (livre) $('r-rk').textContent = '';
+  $('res').hidden = false;
+}
+function dicaAcidente(m) {
+  m = String(m || '');
+  if (/fio/.test(m)) return 'Fio de energia quase não aparece: guie-se pelos postes e passe bem abaixo (ou acima) da linha.';
+  if (/árvore/.test(m)) return 'Na vista da câmera é difícil calcular a distância — use a terceira pessoa ou suba antes de passar perto da mata.';
+  if (/água/.test(m)) return 'Lago não é lugar de pouso: o reflexo engana a noção de altura. Pouse sempre em área firme e conhecida.';
+  if (/chão|impacto/.test(m)) return 'Nos últimos 2 metros desça devagar (stick só um pouco para baixo).';
+  if (/bateria/.test(m)) return 'Volte com folga: com 30% já é hora de retornar.';
+  if (/casa|prédio|torre|caixa|poste|mastro|trave/.test(m)) return 'No modo Esporte o drone freia mais longe. Perto de estrutura, use C ou N.';
+  return 'Treine o pairado e a orientação antes de acelerar.';
+}
+$('r-de-novo').onclick = () => iniciarMissao(M ? M.id : 'livre');
+$('r-ranking').onclick = () => { const id = M && M.id; $('res').hidden = true; M = null; limparGrpM(); resetDrone(); $('mis').hidden = true; abrirMenu('rk', id); };
+$('r-menu').onclick = () => { $('res').hidden = true; M = null; limparGrpM(); resetDrone(); $('mis').hidden = true; abrirMenu(); };
+
+/* =====================================================================
+   FOTO
+   ===================================================================== */
+const fotos = [];
+function tirarFoto() {
+  S.pedirFoto = false;
+  const vis = drone.g.visible;
+  drone.g.visible = false; drone.somb.visible = false;
+  ceu.position.copy(camFPV.position);
+  renderer.render(cena, camFPV);
+  let url = '';
+  try { url = renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { /* sem captura */ }
+  drone.g.visible = vis; drone.somb.visible = true;
+  fotos.push(url); if (fotos.length > 8) fotos.shift();
+  const fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = 0.85;
+  requestAnimationFrame(() => { fl.style.transition = 'opacity .35s'; fl.style.opacity = 0; });
+  somFoto();
+  aviso('📷 Foto', 'info', 900, 'foto');
+  evento('foto', { url });
+  return url;
+}
+
+/* =====================================================================
+   SOM (zumbido dos motores, WebAudio)
+   ===================================================================== */
+let audio = null;
+function iniciarAudio() {
+  if (audio || !cfg.som) return;
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const g = ac.createGain(); g.gain.value = 0;
+    const filtro = ac.createBiquadFilter(); filtro.type = 'lowpass'; filtro.frequency.value = 1100;
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator();
+    o1.type = 'sawtooth'; o2.type = 'sawtooth'; o1.frequency.value = 160; o2.frequency.value = 243;
+    o1.connect(filtro); o2.connect(filtro); filtro.connect(g); g.connect(ac.destination);
+    o1.start(); o2.start();
+    audio = { ac, g, o1, o2 };
+  } catch (e) { audio = null; }
+}
+function somMotor() {
+  if (!audio) return;
+  const t = audio.ac.currentTime;
+  let vol = 0, f = 150;
+  if (cfg.som && S.motores && $('menu').hidden) {
+    const esforco = clamp(0.5 + S.vel.y * 0.08 + Math.hypot(S.pitch, S.roll) * 1.2, 0.2, 1.2);
+    f = S.voando ? 150 + esforco * 95 : 120;
+    const dist = vista === 'piloto' ? S.pos.distanceTo(PILOTO) : vista === 'terceira' ? 3 : 0.5;
+    vol = 0.05 / (1 + dist / 12);
+  }
+  audio.g.gain.setTargetAtTime(vol, t, 0.08);
+  audio.o1.frequency.setTargetAtTime(f, t, 0.06);
+  audio.o2.frequency.setTargetAtTime(f * 1.52 + 3, t, 0.06);
+}
+function somFoto() {
+  if (!audio || !cfg.som) return;
+  const t = audio.ac.currentTime, o = audio.ac.createOscillator(), g = audio.ac.createGain();
+  o.type = 'square'; o.frequency.value = 1800; g.gain.value = 0.04;
+  g.gain.setTargetAtTime(0, t + 0.03, 0.02);
+  o.connect(g); g.connect(audio.ac.destination); o.start(t); o.stop(t + 0.12);
+}
+
+/* =====================================================================
+   HUD
+   ===================================================================== */
+const toasts = {};
+function aviso(txt, tipo = 'info', ms = 2500, chave) {
+  const box = $('toast');
+  if (chave && toasts[chave]) toasts[chave].remove();
+  const d = document.createElement('div');
+  d.className = 'ts ' + (tipo === 'info' ? '' : tipo);
+  d.textContent = txt;
+  box.appendChild(d);
+  while (box.children.length > 4) box.firstChild.remove();
+  if (chave) toasts[chave] = d;
+  setTimeout(() => { d.classList.add('sai'); setTimeout(() => d.remove(), 420); }, ms);
+}
+let tVistaN = 0;
+function mostrarVista() {
+  const n = $('vista-n'); n.textContent = VISTAS[vista].nome; n.style.opacity = 1; tVistaN = 2.5;
+  $('mira').hidden = vista !== 'camera';
+}
+
+function statusTxt(f) {
+  const pos = f.gps ? 'GPS' : 'ATTI';
+  if (S.acidente) return ['Acidente', 'vm'];
+  if (S.perdeuSinal) return ['Sinal perdido — retornando', 'vm'];
+  if (S.auto === 'rth') return ['Retornando para casa (RTH)', 'az'];
+  if (S.auto === 'decolar') return ['Decolagem automática', 'az'];
+  if (S.auto === 'pousar' || S.auto === 'parar') return ['Pousando…', 'az'];
+  if (S.motores && S.bat <= 15) return ['Bateria crítica', 'vm'];
+  if (!S.motores) return [`Pronto para voar (${pos})`, f.gps ? '' : 'am'];
+  if (!S.voando) return ['Motores ligados — no solo', f.gps ? '' : 'am'];
+  if (S.bat <= 30) return ['Em voo — bateria baixa', 'am'];
+  return [`Em voo (${pos})`, f.gps ? '' : 'am'];
+}
+let hudAcc = 0;
+function atualizarHud(dt) {
+  const f = F();
+  hudAcc += dt;
+  // sticks (todo quadro)
+  const L = INP.phys;
+  $('stk-l').style.transform = `translate(calc(-50% + ${L.LX * 30}px), calc(-50% + ${-L.LY * 30}px))`;
+  $('stk-r').style.transform = `translate(calc(-50% + ${L.RX * 30}px), calc(-50% + ${-L.RY * 30}px))`;
+  // gimbal
+  const gy = (20 - S.gimbal) / 110 * 150;
+  $('gimbal-i').style.top = (gy - 2) + 'px';
+  const gt = $('gimbal-t'); gt.style.top = gy + 'px'; gt.textContent = Math.round(S.gimbal) + '°';
+  if (tVistaN > 0) { tVistaN -= dt; if (tVistaN <= 0) $('vista-n').style.opacity = 0; }
+  marcadores();
+  if (hudAcc < 0.1) return;
+  hudAcc = 0;
+  const [st, cl] = statusTxt(f);
+  const sEl = $('st'); sEl.textContent = st; sEl.className = 'st ' + cl;
+  $('t-modo').textContent = S.velModo;
+  const sat = f.gps ? (S.sat = clamp(S.sat + (Math.random() < 0.05 ? (Math.random() < 0.5 ? -1 : 1) : 0), 14, 20)) : 4;
+  $('t-gps').textContent = '🛰 ' + sat + (f.gps ? '' : ' ATTI');
+  $('t-sinal').textContent = '📶 ' + Math.round(S.sinal) + '%';
+  const cap = f.bateria === 'realista' ? 25 * 60 : f.bateria === 'treino' ? 12 * 60 : 0;
+  const bt = $('t-bat');
+  bt.className = 'ti ' + (S.bat <= 15 ? 'bat-b' : S.bat <= 30 ? 'bat-a' : '');
+  bt.firstChild.nodeValue = '🔋 ' + (cap ? Math.ceil(S.bat) + '% ' : '∞ ');
+  $('t-rest').textContent = cap ? mmss(S.bat / 100 * cap) : '';
+  const vEl = $('t-vento');
+  if (f.vento > 0) { vEl.hidden = false; const rel = (S.ventoDir - S.yaw) / DEG; vEl.innerHTML = `💨 ${Math.round(S.vento.length())} m/s <span style="display:inline-block;transform:rotate(${rel}deg)">↑</span>`; } else vEl.hidden = true;
+  $('v-d').textContent = Math.round(dHome());
+  const h = S.pos.y - S.homeY;
+  $('v-h').textContent = Math.abs(h) < 10 ? nf(h, 1) : Math.round(h);
+  $('v-hs').textContent = nf(Math.hypot(S.vel.x, S.vel.z), 1);
+  $('v-vs').textContent = nf(S.vel.y, 1);
+  $('bt-decolar').textContent = S.voando ? '⏬' : '⏫';
+  $('bt-decolar').title = S.voando ? 'Pousar automático (T)' : 'Decolar automático (T)';
+  $('bt-rth').classList.toggle('on', S.auto === 'rth');
+  $('sticks').hidden = !cfg.sticksTela;
+  if (M) {
+    $('mis-o').textContent = M.obj || '';
+    $('mis-p').textContent = M.prog || '';
+    $('mis-t').textContent = M.def.id === 'livre' ? '' : '⏱ ' + mmss(M.t) + (M.def.par ? ' · ideal ' + mmss(M.def.par) : '') + (M.penal.length ? ' · −' + M.penal.reduce((a, p) => a + p.pts, 0) : '');
+  }
+  desenharMapa();
+}
+
+const projV = new V3();
+function posTela(p, cam) {
+  projV.copy(p).project(cam);
+  const atras = projV.z > 1;
+  let x = (projV.x * 0.5 + 0.5) * innerWidth, y = (-projV.y * 0.5 + 0.5) * innerHeight;
+  if (atras) { x = innerWidth - x; y = innerHeight - y; }
+  const m = 40, dentro = !atras && x > m && x < innerWidth - m && y > 60 && y < innerHeight - m;
+  if (!dentro) { // prende na borda, na direção certa
+    const cx = innerWidth / 2, cy = innerHeight / 2, dx = x - cx, dy = y - cy;
+    const k = Math.min((innerWidth / 2 - m) / Math.abs(dx || 1e-6), (innerHeight / 2 - m - 30) / Math.abs(dy || 1e-6));
+    x = cx + dx * k; y = cy + dy * k;
+  }
+  return { x, y, dentro };
+}
+function marcadores() {
+  const cam = VISTAS[vista].cam;
+  const am = $('alvo-m');
+  if (M && M.alvo && !M.fim) {
+    const p = posTela(M.alvo, cam);
+    am.hidden = false; am.className = 'mk' + (p.dentro ? '' : ' borda');
+    am.style.transform = `translate(${p.x}px,${p.y}px) translate(-50%,-50%)`;
+    am.querySelector('span').textContent = `${M.alvoNome} · ${Math.round(S.pos.distanceTo(M.alvo))} m`;
+  } else am.hidden = true;
+  const dm = $('drone-m');
+  if (vista === 'piloto' && cfg.indicador) {
+    const p = posTela(S.pos, cam);
+    dm.hidden = false; dm.className = 'mk' + (p.dentro ? '' : ' borda');
+    dm.style.transform = `translate(${p.x}px,${p.y}px) translate(-50%,-50%)`;
+    dm.querySelector('span').textContent = Math.round(S.pos.distanceTo(PILOTO)) + ' m';
+  } else dm.hidden = true;
+}
+
+let escMapa = 1.5;
+function desenharMapa() {
+  const cv = $('mapa'), g = cv.getContext('2d'), W = cv.width, H = cv.height;
+  if (!W) return;
+  const dist = Math.max(dHome(), M && M.alvo ? S.pos.distanceTo(M.alvo) : 0, 50);
+  escMapa += ((clamp(dist * 1.25 / (Math.min(W, H) * 0.42), 0.25, 8) * zoomMapa) - escMapa) * 0.2; // metros por pixel
+  const e = escMapa, cx = W / 2, cy = H / 2;
+  const px = (x) => cx + (x - S.pos.x) / e, pz = (z) => cy + (z - S.pos.z) / e;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(38,62,30,.75)'; g.fillRect(0, 0, W, H);
+  // mata ao norte
+  g.fillStyle = 'rgba(20,46,18,.85)'; const yN = pz(-330); if (yN > 0) g.fillRect(0, 0, W, Math.min(H, yN));
+  for (const r of MUNDO.mapa.rets) {
+    g.fillStyle = r.cor;
+    if (r.redondo) { g.beginPath(); g.arc(px(r.x), pz(r.z), Math.max(2, r.w / 2 / e), 0, 7); g.fill(); }
+    else g.fillRect(px(r.x - r.w / 2), pz(r.z - r.d / 2), Math.max(1.5, r.w / e), Math.max(1.5, r.d / e));
+  }
+  for (const l of MUNDO.mapa.linhas) { g.strokeStyle = l.cor; g.lineWidth = Math.max(1.5, l.w / e); g.beginPath(); g.moveTo(px(l.a[0]), pz(l.a[1])); g.lineTo(px(l.b[0]), pz(l.b[1])); g.stroke(); }
+  g.setLineDash([4, 3]); g.strokeStyle = '#facc15'; g.lineWidth = 1;
+  for (const l of MUNDO.mapa.fios) { g.beginPath(); g.moveTo(px(l.a[0]), pz(l.a[1])); g.lineTo(px(l.b[0]), pz(l.b[1])); g.stroke(); }
+  g.setLineDash([]);
+  // rastro
+  if (S.rastro.length > 1) { g.strokeStyle = 'rgba(96,165,250,.8)'; g.lineWidth = 1.5; g.beginPath(); S.rastro.forEach((p, i) => (i ? g.lineTo : g.moveTo).call(g, px(p[0]), pz(p[1]))); g.stroke(); }
+  // alvo do exercício
+  if (M && M.alvo) { g.fillStyle = '#e879f9'; g.beginPath(); g.arc(px(M.alvo.x), pz(M.alvo.z), 4.5 * (W / 170), 0, 7); g.fill(); }
+  const k = W / 170;
+  // home e piloto
+  g.fillStyle = '#F5C518'; g.font = `bold ${12 * k}px Inter,Arial`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', px(S.home.x), pz(S.home.z));
+  g.fillStyle = '#60a5fa'; g.beginPath(); g.arc(px(PILOTO.x), pz(PILOTO.z), 3.5 * k, 0, 7); g.fill();
+  // drone + cone da câmera
+  g.save(); g.translate(cx, cy); g.rotate(S.yaw);
+  g.fillStyle = 'rgba(255,255,255,.16)'; g.beginPath(); g.moveTo(0, 0); g.lineTo(-22 * k, -40 * k); g.lineTo(22 * k, -40 * k); g.closePath(); g.fill();
+  g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -9 * k); g.lineTo(6.5 * k, 7 * k); g.lineTo(0, 3.5 * k); g.lineTo(-6.5 * k, 7 * k); g.closePath(); g.fill(); g.stroke();
+  g.restore();
+  // escala e norte
+  g.fillStyle = 'rgba(255,255,255,.85)'; g.font = `${10 * k}px Inter,Arial`; g.textAlign = 'left';
+  const barra = [10, 20, 50, 100, 200, 500].find((m) => m / e > 30 * k) || 1000;
+  g.fillRect(8 * k, H - 10 * k, barra / e, 2 * k); g.fillText(barra + ' m', 8 * k, H - 18 * k);
+  g.textAlign = 'center'; g.fillText('N', W - 12 * k, 12 * k);
+}
+
+/* =====================================================================
+   LAÇO PRINCIPAL
+   ===================================================================== */
+const rodando = () => !!M && $('menu').hidden && $('res').hidden && !CAL.aberta;
+const PASSO = 1 / 120;
+const CTRL = { fisica: true }; // os testes desligam o laço em tempo real e avançam a física na mão
+let ultimo = performance.now(), acum = 0, tRastro = 0, chaseD = 1.25;
+function atualizarVisual(dt) {
+  const fwd = new V3(Math.sin(S.yaw), 0, -Math.cos(S.yaw));
+  drone.g.position.copy(S.pos); drone.g.position.y += 0.016;
+  drone.g.rotation.set(-S.pitch, -S.yaw, -S.roll);
+  const giro = S.motores ? (S.voando ? 75 : 40) : (S.acidente ? 0 : 0);
+  for (const h of drone.helices) {
+    h.g.rotation.y += giro * dt * h.sentido;
+    const rapido = giro > 30; h.disco.visible = rapido; h.pa.visible = !rapido;
+  }
+  const pisca = (S.t * 2) % 1 < 0.5;
+  drone.ledsF.forEach((l) => l.material.color.setHex(S.motores ? 0xff1a1a : 0x441010));
+  drone.ledT.material.color.setHex(!pisca ? 0x111111 : (F().gps ? 0x22ff55 : 0xffcc00));
+  drone.gimbal.rotation.x = S.gimbal * DEG + S.pitch;
+  const solo = superficie(S.pos.x, S.pos.z, S.pos.y);
+  const alt = Math.max(0, S.pos.y - solo);
+  drone.somb.position.set(S.pos.x, solo + 0.05, S.pos.z);
+  drone.somb.scale.setScalar(1 + alt * 0.03);
+  drone.somb.material.opacity = clamp((SOMBRAS ? 0.22 : 0.5) - alt * 0.02, 0.03, 0.5);
+  // gimbal contínuo
+  const gv = (INP.cont.gimbal || 0) + (INP.cont.botaoGimbal || 0);
+  if (gv && rodando()) S.gimbal = clamp(S.gimbal + gv * 60 * dt, -90, 20);
+  // câmeras
+  camFPV.position.copy(S.pos).addScaledVector(fwd, 0.16); camFPV.position.y += 0.03;
+  camFPV.rotation.set(S.gimbal * DEG, -S.yaw, 0);
+  // no chão a câmera chega perto (dá para ver o Mavic 3); voando, se afasta para dar noção do espaço
+  chaseD = suave(chaseD, S.voando ? 2.2 : 1.25, dt, 0.9);
+  const alvoChase = S.pos.clone().addScaledVector(fwd, -chaseD); alvoChase.y += 0.12 + chaseD * 0.3;
+  alvoChase.y = Math.max(alvoChase.y, superficie(alvoChase.x, alvoChase.z, alvoChase.y + 5) + 0.4);
+  if (!CTRL.camFixa) camChase.position.lerp(alvoChase, 1 - Math.exp(-dt * 5));
+  if (!CTRL.camFixa) camChase.lookAt(S.pos.x + fwd.x * chaseD * 0.4, S.pos.y + 0.05 + chaseD * 0.1, S.pos.z + fwd.z * chaseD * 0.4);
+  camPiloto.position.copy(PILOTO);
+  olharPiloto.lerp(S.pos, 1 - Math.exp(-dt * 7));
+  camPiloto.lookAt(olharPiloto);
+  drone.g.visible = vista !== 'camera';
+  const cam = VISTAS[vista].cam;
+  ceu.position.copy(cam.position);
+  if (SOMBRAS) { // sombra acompanha o que está sendo visto; arredondada ao texel para não "tremer"
+    const c = vista === 'piloto' ? PILOTO.clone().lerp(S.pos, 0.5) : S.pos.clone();
+    const passoT = 2 * sol.shadow.camera.right / sol.shadow.mapSize.x * 4;
+    c.x = Math.round(c.x / passoT) * passoT; c.z = Math.round(c.z / passoT) * passoT; c.y = 0;
+    sol.position.copy(c).addScaledVector(SOL_DIR, 250); sol.target.position.copy(c);
+  }
+  // rastro para o mapa
+  tRastro += dt;
+  if (tRastro > 0.5 && S.voando) { tRastro = 0; S.rastro.push([S.pos.x, S.pos.z]); if (S.rastro.length > 400) S.rastro.shift(); }
+  // portais pulsando
+  if (M && M.d.p) M.d.p.forEach((p) => { if (p.mat.color.getHex() === 0x22c55e) p.anel.scale.setScalar(1 + Math.sin(S.t * 5) * 0.04); });
+}
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - ultimo) / 1000); ultimo = agora;
+  lerEntradas(dt);
+  if (rodando() && CTRL.fisica) {
+    acum += dt;
+    while (acum >= PASSO) { passo(PASSO); missaoPasso(PASSO); acum -= PASSO; }
+  } else acum = 0;
+  atualizarVisual(dt);
+  if (S.pedirFoto && rodando()) tirarFoto();
+  renderer.render(cena, VISTAS[vista].cam);
+  if (!$('hud').hidden) atualizarHud(dt);
+  if (!$('menu').hidden) testeAoVivo();
+  somMotor();
+}
+
+/* =====================================================================
+   MENU
+   ===================================================================== */
+function abrirMenu(aba, rkFiltro) {
+  $('menu').hidden = false;
+  if (aba) mostrarAba(aba);
+  if (aba === 'rk') { if (rkFiltro) RK.filtro = rkFiltro; carregarRankingVoo(); }
+  $('bt-continuar').hidden = !M || M.fim;
+  $('bt-sair-ex').hidden = !M || M.fim;
+  teclas.clear();
+  montarExercicios();
+  atualizarStatusControle();
+}
+function fecharMenu() {
+  $('menu').hidden = true;
+  $('hud').hidden = false;
+  redimensionar();
+  teclas.clear();
+  ultimo = performance.now();
+  $('cv').focus();
+}
+$('bt-continuar').onclick = () => { if (M && !M.fim) fecharMenu(); };
+$('bt-sair-ex').onclick = () => { M = null; limparGrpM(); resetDrone(); $('mis').hidden = true; abrirMenu(); };
+function mostrarAba(aba) {
+  document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.tab === aba));
+  document.querySelectorAll('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + aba));
+  if (aba === 'ct') montarBinds();
+}
+$('tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  mostrarAba(b.dataset.tab);
+  if (b.dataset.tab === 'rk') carregarRankingVoo();
+});
+
+/* ---------------- ranking do simulador ---------------- */
+const RK = { dados: null, filtro: 'geral' };
+function carregarRankingVoo() {
+  $('rk-tab').innerHTML = '<div class="rk-vazio">Carregando…</div>';
+  fetch(API_BASE + '/api/drone/voo/ranking', { headers: cabecalhos() })
+    .then((r) => r.json().catch(() => ({})))
+    .then((d) => {
+      if (d && d.error === 'cpf_requerido' && window.droneCpf && window.droneCpf.aposLogin) {
+        $('rk-tab').innerHTML = '<div class="rk-vazio">Sua sessão venceu. Entre de novo com o CPF para ver o ranking.</div>';
+        window.droneCpf.aposLogin().then(carregarRankingVoo);
+        return;
+      }
+      if (!d || !d.ok) { $('rk-tab').innerHTML = '<div class="rk-vazio">' + esc((d && d.detail) || 'Não deu para carregar o ranking.') + '</div>'; return; }
+      RK.dados = d; desenharRankingVoo();
+    })
+    .catch(() => { $('rk-tab').innerHTML = '<div class="rk-vazio">Sem conexão com o servidor.</div>'; });
+}
+const MEDALHA = ['🥇', '🥈', '🥉'];
+const quandoBR = (q) => { const t = Date.parse(q || ''); return t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
+function desenharRankingVoo() {
+  const d = RK.dados; if (!d) return;
+  const ids = Object.keys(d.missoes);
+  if (RK.filtro !== 'geral' && !d.missoes[RK.filtro]) RK.filtro = 'geral';
+  const icone = (id) => (MISSOES.find((m) => m.id === id) || {}).icone || '';
+  $('rk-pills').innerHTML = [['geral', '🏆 Geral']].concat(ids.map((id) => [id, icone(id) + ' ' + d.missoes[id]]))
+    .map(([id, nome]) => `<button data-rk="${id}" class="${RK.filtro === id ? 'on' : ''}">${esc(nome)}</button>`).join('');
+  const pos = (i) => (MEDALHA[i] ? MEDALHA[i] : i + 1);
+  const cpfCol = d.gestor ? '<th>CPF</th>' : '';
+  const cpfTd = (p) => (d.gestor ? `<td>${esc(p.cpf || '—')}</td>` : '');
+  if (RK.filtro === 'geral') {
+    $('rk-tab').innerHTML = d.geral.length ? `<table class="rk"><thead><tr><th>#</th><th>Aluno</th>${cpfCol}<th class="n">Pontos</th><th class="n">Exercícios</th><th class="n">Tempo somado</th><th class="n">Tentativas</th></tr></thead><tbody>` +
+      d.geral.map((p, i) => `<tr class="${p.eu ? 'eu' : ''}"><td>${pos(i)}</td><td>${esc(p.nome)}${p.eu ? ' <b style="color:var(--y)">· você</b>' : ''}</td>${cpfTd(p)}<td class="n"><b>${p.pontos}</b>/800</td><td class="n">${p.exercicios}/8</td><td class="n">${p.exercicios ? mmss(p.segundos) : '—'}</td><td class="n">${p.tentativas}</td></tr>`).join('') + '</tbody></table>'
+      : '<div class="rk-vazio">Ninguém concluiu exercício ainda. Seja o primeiro!</div>';
+  } else {
+    const L = d.exercicios[RK.filtro] || [];
+    $('rk-tab').innerHTML = L.length ? `<table class="rk"><thead><tr><th>#</th><th>Aluno</th>${cpfCol}<th class="n">Nota</th><th class="n">Tempo</th><th class="n">Tentativas</th><th>Quando</th></tr></thead><tbody>` +
+      L.map((p, i) => `<tr class="${p.eu ? 'eu' : ''}"><td>${pos(i)}</td><td>${esc(p.nome)}${p.eu ? ' <b style="color:var(--y)">· você</b>' : ''}</td>${cpfTd(p)}<td class="n ${p.nota >= 70 ? 'ok' : 'ruim'}"><b>${p.nota}</b></td><td class="n">${mmss(p.segundos)}</td><td class="n">${p.concluidos}/${p.tentativas}</td><td>${quandoBR(p.quando)}</td></tr>`).join('') + '</tbody></table>'
+      : '<div class="rk-vazio">Ninguém concluiu este exercício ainda.</div>';
+  }
+  $('rk-meus').innerHTML = d.meus.length ? '<table class="rk"><thead><tr><th>Quando</th><th>Exercício</th><th class="n">Nota</th><th class="n">Tempo</th><th>Resultado</th></tr></thead><tbody>' +
+    d.meus.map((v) => `<tr><td>${quandoBR(v.quando)}</td><td>${icone(v.missao)} ${esc(d.missoes[v.missao] || v.missao)}</td><td class="n">${v.concluiu ? v.nota : '—'}</td><td class="n">${mmss(v.segundos)}</td><td class="${v.concluiu ? 'ok' : 'ruim'}">${v.concluiu ? (v.nota >= 70 ? 'Aprovado' : 'Concluído') : esc(v.motivo || 'Não concluído')}</td></tr>`).join('') + '</tbody></table>'
+    : '<div class="rk-vazio">Você ainda não terminou nenhum exercício.</div>';
+}
+$('rk-pills').addEventListener('click', (e) => { const b = e.target.closest('[data-rk]'); if (!b) return; RK.filtro = b.dataset.rk; desenharRankingVoo(); });
+$('rk-atualizar').onclick = carregarRankingVoo;
+const NIVEIS = { b: ['Básico', 'b'], i: ['Intermediário', 'i'], a: ['Avançado', 'a'], l: ['Livre', 'l'] };
+function montarExercicios() {
+  const rec = lsGet('dsim_rec') || {};
+  $('grid-ex').innerHTML = MISSOES.map((m) => {
+    const r = rec[m.id], nv = NIVEIS[m.nivel];
+    return `<button class="ex" data-ex="${m.id}">
+      <div class="ex-t"><div class="ex-ic">${m.icone}</div><h4>${esc(m.nome)}</h4></div>
+      <p>${esc(m.desc)}</p>
+      <div class="ex-f"><span class="nv ${nv[1]}">${nv[0]}</span>${r ? `<span class="rec">Recorde ${r.nota} · ${mmss(r.t)}</span>` : '<span style="color:#64748b">sem recorde</span>'}</div>
+    </button>`;
+  }).join('');
+}
+$('grid-ex').addEventListener('click', (e) => { const b = e.target.closest('[data-ex]'); if (b) iniciarMissao(b.dataset.ex); });
+
+function atualizarStatusControle() {
+  const el = $('ctrl-status'), gp = INP.gp;
+  if (gp) {
+    const pf = perfilDe(gp);
+    const precisa = !pf.padrao && !pf.calibrado;
+    el.className = 'ctrl-status ' + (precisa ? 'am' : 'ok');
+    el.innerHTML = `🎮 <b>${esc(nomeCurto(gp.id))}</b> <span>· Modo ${cfg.modo}${pf.calibrado ? ' · calibrado' : pf.padrao ? ' · padrão de videogame' : ''}</span>` +
+      (precisa ? ' <span>— <b>calibre antes de voar</b></span> <button class="bs" id="cs-cal">Calibrar</button>' : '');
+  } else {
+    el.className = 'ctrl-status';
+    el.innerHTML = '⌨️ Sem controle: voando pelo <b>teclado</b>' + (cfg.toque ? ' e pelos <b>sticks na tela</b>' : '') + '. Conectou o controle? <b>Aperte um botão dele</b>.';
+  }
+  const cs = $('cs-cal'); if (cs) cs.onclick = abrirCal;
+  // lista de controles (se tiver mais de um)
+  const lista = INP.lista;
+  $('ct-pads').innerHTML = !lista.length ? 'Nenhum controle detectado.' :
+    lista.map((p) => `<label class="chk"><input type="radio" name="pad" value="${esc(p.id)}" ${INP.gp && p.id === INP.gp.id ? 'checked' : ''}> ${esc(p.id)} <small style="color:#94a3b8">(${p.axes.length} eixos, ${p.buttons.length} botões)</small></label>`).join('');
+  document.querySelectorAll('input[name=pad]').forEach((r) => { r.onchange = () => { cfg.padId = r.value; salvarCfg(); montarBinds(); }; });
+  document.querySelectorAll('.modo').forEach((b) => b.classList.toggle('on', Number(b.dataset.modo) === cfg.modo));
+  $('stk-ln').textContent = NOMES_STK[cfg.modo][0];
+  $('stk-rn').textContent = NOMES_STK[cfg.modo][1];
+  document.body.classList.toggle('toque', !!cfg.toque && !gp);
+  $('tq').hidden = !(cfg.toque && !gp);
+}
+$('modos').addEventListener('click', (e) => { const b = e.target.closest('[data-modo]'); if (!b) return; cfg.modo = Number(b.dataset.modo); salvarCfg(); atualizarStatusControle(); });
+$('bt-calibrar').onclick = abrirCal;
+$('bt-padrao').onclick = () => {
+  const gp = INP.gp; if (!gp) { aviso('Nenhum controle conectado', 'am', 2000); return; }
+  PADS[gp.id] = perfilPadrao(gp); salvarPads(); montarBinds(); atualizarStatusControle(); aviso('Controle voltou ao padrão', 'info', 2000);
+};
+function montarBinds() {
+  const gp = INP.gp, pf = gp ? perfilDe(gp) : null;
+  $('ct-binds').innerHTML = '<tr><th>Ação</th><th>No controle</th><th>Teclado</th><th></th></tr>' + ACOES.map((a) => `
+    <tr><td>${esc(a.nome)}</td><td>${INP.captura && INP.captura.acao === a.id ? '<b style="color:#F5C518">aperte o botão…</b>' : esc(nomeBind(gp, pf && pf.binds[a.id]))}</td>
+    <td><kbd>${a.tecla}</kbd></td><td>${gp ? `<button class="bs" data-bind="${a.id}">Alterar</button>` : ''}</td></tr>`).join('');
+  atualizarStatusControle();
+}
+$('ct-binds').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-bind]'); if (!b) return;
+  INP.captura = { acao: b.dataset.bind, base: null }; montarBinds();
+});
+$('barras').innerHTML = ['thr', 'yaw', 'pit', 'rol'].map((k) => `<div class="barra"><b style="font-size:12px">${NOMES_FN[k]}</b><div class="tr"><i id="bar-${k}"></i></div><span id="bar-${k}-v">0</span></div>`).join('');
+function testeAoVivo() {
+  if (!document.getElementById('tab-ct').classList.contains('on')) return;
+  for (const k of ['thr', 'yaw', 'pit', 'rol']) {
+    const v = INP.fn[k], b = $('bar-' + k);
+    b.style.left = (v < 0 ? 50 + v * 50 : 50) + '%'; b.style.width = Math.abs(v) * 50 + '%';
+    $('bar-' + k + '-v').textContent = nf(v, 2);
+  }
+  const L = INP.phys;
+  $('ts-l').style.transform = `translate(calc(-50% + ${L.LX * 30}px), calc(-50% + ${-L.LY * 30}px))`;
+  $('ts-r').style.transform = `translate(calc(-50% + ${L.RX * 30}px), calc(-50% + ${-L.RY * 30}px))`;
+}
+
+/* ajustes */
+function ligarAjustes() {
+  const sel = (id, k, conv = (v) => v) => { const el = $(id); el.value = String(k === 'gps' ? (cfg.gps ? 1 : 0) : cfg[k]); el.onchange = () => { cfg[k] = conv(el.value); salvarCfg(); }; };
+  sel('aj-vel', 'vel'); sel('aj-gps', 'gps', (v) => v === '1'); sel('aj-bat', 'bateria'); sel('aj-alc', 'alcance', Number);
+  const qs = $('aj-q'); qs.value = cfg.qualidade; qs.onchange = () => { cfg.qualidade = qs.value; salvarCfg(); redimensionar(); $('aj-q-aviso').hidden = false; };
+  const rng2 = (id, k, fmt) => { const el = $(id), out = $(id + '-v'); el.value = cfg[k]; out.textContent = fmt(cfg[k]); el.oninput = () => { cfg[k] = Number(el.value); out.textContent = fmt(cfg[k]); salvarCfg(); }; };
+  rng2('aj-alt', 'altMax', (v) => v + ' m'); rng2('aj-rth', 'rthAlt', (v) => v + ' m');
+  rng2('aj-vento', 'vento', (v) => v ? v + ' m/s (' + Math.round(v * 3.6) + ' km/h)' : 'sem vento');
+  rng2('aj-dz', 'deadzone', (v) => Math.round(v * 100) + '%'); rng2('aj-expo', 'expo', (v) => Math.round(v * 100) + '%');
+  const chk = (id, k, depois) => { const el = $(id); el.checked = !!cfg[k]; el.onchange = () => { cfg[k] = el.checked; salvarCfg(); if (depois) depois(); }; };
+  chk('aj-rajada', 'rajada'); chk('aj-ind', 'indicador'); chk('aj-stk', 'sticksTela');
+  chk('aj-som', 'som', () => { if (cfg.som) iniciarAudio(); });
+  chk('aj-toque', 'toque', atualizarStatusControle);
+}
+ligarAjustes();
+
+addEventListener('gamepadconnected', () => { lerEntradas(0); atualizarStatusControle(); });
+addEventListener('gamepaddisconnected', (e) => { aviso('🎮 Controle desconectado', 'am', 2500); INP.gp = null; atualizarStatusControle(); });
+
+/* =====================================================================
+   INÍCIO
+   ===================================================================== */
+resetDrone();
+redimensionar();
+abrirMenu();
+mostrarVista();
+requestAnimationFrame(quadro);
+
+// Ponte para os testes automáticos (testes/drone/ver-simulador-navegador.mjs).
+window.SIM = {
+  S, cfg, INP, CAL, CTRL, camChase, MISSOES, MUNDO, PERFIS, PAD_B, POI,
+  get M() { return M; }, get vista() { return vista; },
+  iniciarMissao, acao, abrirMenu, carregarRankingVoo, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
+  avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
+  quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
+};
+</script>
+</body>
+</html>
