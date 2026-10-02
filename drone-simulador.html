@@ -25,16 +25,39 @@ body{touch-action:none;-webkit-user-select:none;user-select:none}
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
 
 /* ---------------- HUD (estilo DJI Fly) ---------------- */
-#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+/* Mesma disposição do DJI Fly: barra de status em cima (com a régua de bateria na
+   borda), decolar/RTH à esquerda, obturador e zoom à direita, indicador de atitude
+   (bússola) + telemetria H/D embaixo à esquerda, parâmetros da câmera embaixo à direita. */
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);font-variant-numeric:tabular-nums}
 #hud button{pointer-events:auto}
-.top{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,0))}
-.tb{width:36px;height:36px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff;font-size:18px;cursor:pointer}
-.st{font-weight:700;font-size:13.5px;padding:5px 12px;border-radius:6px;background:rgba(16,163,104,.92);text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
-.st.am{background:rgba(217,119,6,.95)} .st.vm{background:rgba(220,38,38,.95)} .st.az{background:rgba(37,99,235,.92)}
-.top-r{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600;white-space:nowrap}
-.ti small{font-size:11px;opacity:.8;font-weight:500}
-.pill{border:1.5px solid #fff;border-radius:5px;padding:0 6px;font-weight:800;cursor:pointer;pointer-events:auto}
-.bat-b{color:#fca5a5}.bat-a{color:#fcd34d}
+.top{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;padding:4px 12px 0;background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.28) 70%,rgba(0,0,0,0))}
+.tb{width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.28);color:#fff;font-size:17px;cursor:pointer}
+.st{font-weight:700;font-size:13.5px;padding:4px 30px 4px 10px;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw;background:linear-gradient(90deg,rgba(22,163,74,.95),rgba(22,163,74,.55) 70%,rgba(22,163,74,0));border-radius:3px 0 0 3px}
+.st.am{background:linear-gradient(90deg,rgba(234,179,8,.97),rgba(234,179,8,.55) 70%,rgba(234,179,8,0));color:#1a1300;text-shadow:none}
+.st.vm{background:linear-gradient(90deg,rgba(220,38,38,.97),rgba(220,38,38,.6) 70%,rgba(220,38,38,0))}
+.st.az{background:linear-gradient(90deg,rgba(37,99,235,.95),rgba(37,99,235,.55) 70%,rgba(37,99,235,0))}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:13px;font-weight:700;white-space:nowrap}
+.ti{display:inline-flex;align-items:center;gap:4px}
+.ti svg{width:18px;height:18px;fill:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.8))}
+.ti small{font-size:11px;opacity:.85;font-weight:600}
+.pill{border:1.5px solid #fff;border-radius:4px;padding:0 6px;font-weight:800;cursor:pointer;pointer-events:auto;font-size:12px;line-height:18px}
+.sinb{display:inline-flex;align-items:flex-end;gap:1.5px;height:13px;margin-left:2px}
+.sinb i{width:3px;background:rgba(255,255,255,.3);border-radius:1px}
+.sinb i:nth-child(1){height:3px}.sinb i:nth-child(2){height:5.5px}.sinb i:nth-child(3){height:8px}.sinb i:nth-child(4){height:10.5px}.sinb i:nth-child(5){height:13px}
+.sinb i.on{background:#fff}.sinb.am i.on{background:#facc15}.sinb.vm i.on{background:#f87171}
+.hdt{font-size:10.5px;font-weight:800;letter-spacing:.2px;border:1.2px solid #fff;border-radius:3px;padding:0 2px;line-height:12px}
+#t-bat .bico{position:relative;width:24px;height:12px;border:1.6px solid #fff;border-radius:3px;margin-right:2px}
+#t-bat .bico::after{content:"";position:absolute;right:-4px;top:2.5px;width:2.5px;height:4px;background:#fff;border-radius:0 1px 1px 0}
+#t-bat .bico i{position:absolute;left:1px;top:1px;bottom:1px;width:80%;background:#4ade80;border-radius:1px}
+.bat-b .bico i{background:#f87171!important}.bat-a .bico i{background:#facc15!important}
+.bat-b b{color:#fca5a5}.bat-a b{color:#fde047}
+/* régua de bateria do DJI: verde = carga, amarelo = o que precisa para voltar, vermelho = pouso forçado */
+#batbar{position:absolute;left:0;right:0;top:0;height:4px;background:rgba(0,0,0,.35)}
+#batbar .f{position:absolute;left:0;top:0;bottom:0;background:#22c55e;transition:width .4s}
+#batbar .ver{position:absolute;left:0;top:0;bottom:0;width:10%;background:rgba(239,68,68,.95)}
+#batbar .ama{position:absolute;top:0;bottom:0;background:rgba(250,204,21,.95);left:10%;width:0}
+#batbar .h{position:absolute;top:4px;transform:translateX(-50%);font:800 9px Inter,sans-serif;background:#facc15;color:#111;border-radius:2px;padding:0 3px;text-shadow:none;line-height:12px}
+#batbar .tempo{position:absolute;top:4px;transform:translateX(-50%);font:700 9.5px Inter,sans-serif;background:rgba(0,0,0,.55);border-radius:2px;padding:0 3px;line-height:12px}
 
 #mis{position:absolute;top:58px;left:12px;max-width:min(380px,58vw);background:rgba(6,9,18,.72);border:1px solid rgba(245,197,24,.35);border-radius:12px;padding:10px 13px;text-shadow:none;backdrop-filter:blur(4px)}
 .mis-n{font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px;color:var(--y);letter-spacing:.3px}
@@ -42,21 +65,38 @@ body{touch-action:none;-webkit-user-select:none;user-select:none}
 .mis-p{font-size:12.5px;color:#cbd5e1;margin-top:3px}
 .mis-t{font-size:12px;color:var(--m);margin-top:3px;font-variant-numeric:tabular-nums}
 
-.lado{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px}
-.lado.esq{left:12px}.lado.dir{right:12px}
-.rb{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;font-size:22px;cursor:pointer;display:grid;place-items:center}
+.lado{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:12px}
+.lado.esq{left:14px}.lado.dir{right:14px;gap:9px}
+.rb{width:46px;height:46px;border-radius:50%;border:0;background:rgba(18,20,24,.5);color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.rb svg{width:24px;height:24px;fill:#fff}
 .rb:active{transform:scale(.94)}
-.rb.pq{width:40px;height:40px;font-size:14px;margin:0 auto}
-.rb.on{border-color:var(--y);background:rgba(245,197,24,.25)}
+.rb.pq{width:36px;height:36px;font-size:15px;font-weight:800}
+.rb.pq svg{width:19px;height:19px}
+.rb.on{background:rgba(250,204,21,.85);color:#111}.rb.on svg{fill:#111}
+/* obturador do DJI: anel branco; no vídeo o miolo fica vermelho e vira quadrado gravando */
+.obt{width:62px;height:62px;border-radius:50%;border:3px solid #fff;background:rgba(0,0,0,.18);cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.obt i{width:46px;height:46px;border-radius:50%;background:#fff;transition:all .18s}
+.obt:active i{transform:scale(.9)}
+.obt.video i{background:#ef4444}
+.obt.grav i{width:22px;height:22px;border-radius:5px}
+#rec-t{font:800 12px Inter,sans-serif;color:#fff;background:#dc2626;border-radius:4px;padding:1px 6px;margin-top:-4px;text-shadow:none}
+.zoomv{font:800 12px Inter,sans-serif;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 7px}
 
 #vista-n{position:absolute;top:58px;left:50%;transform:translateX(-50%);font-size:12.5px;font-weight:700;background:rgba(0,0,0,.45);padding:4px 12px;border-radius:999px;transition:opacity .6s}
-#mira{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);opacity:.75}
-#mira::before,#mira::after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
+/* ponto central discreto (o DJI Fly não tem mira grande) */
+#mira{position:absolute;left:50%;top:50%;width:30px;height:30px;transform:translate(-50%,-50%);opacity:.8}
+#mira::before,#mira::after{content:"";position:absolute;background:linear-gradient(90deg,#fff 0 38%,transparent 38% 62%,#fff 62%);box-shadow:0 0 1.5px rgba(0,0,0,.8)}
 #mira::before{left:0;right:0;top:50%;height:1.5px;margin-top:-.75px}
-#mira::after{top:0;bottom:0;left:50%;width:1.5px;margin-left:-.75px}
-#gimbal{position:absolute;right:92px;top:50%;transform:translateY(-50%);width:6px;height:150px;border-radius:3px;background:rgba(255,255,255,.22)}
-#gimbal i{position:absolute;left:-4px;width:14px;height:4px;border-radius:2px;background:var(--y)}
+#mira::after{top:0;bottom:0;left:50%;width:1.5px;margin-left:-.75px;background:linear-gradient(180deg,#fff 0 38%,transparent 38% 62%,#fff 62%)}
+/* inclinação do gimbal: régua fina, como a que o DJI mostra ao mexer na rodinha */
+#gimbal{position:absolute;right:94px;top:50%;transform:translateY(-50%);width:3px;height:150px;border-radius:2px;background:rgba(255,255,255,.35);transition:opacity .5s}
+#gimbal::before{content:"";position:absolute;left:-3px;width:9px;height:1.5px;background:rgba(255,255,255,.7);top:18.2%}
+#gimbal i{position:absolute;left:-5px;width:13px;height:3px;border-radius:2px;background:#fff;box-shadow:0 0 2px #000}
 #gimbal span{position:absolute;right:12px;font-size:11.5px;font-weight:700;white-space:nowrap;transform:translateY(-50%)}
+#gimbal.quieto{opacity:.25}
+/* transmissão: chiado/linhas quando o sinal cai, e cantos escuros da lente */
+#txfx{position:absolute;inset:0;opacity:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 3px)}
+#vinheta{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at center,transparent 62%,rgba(0,0,0,.28) 100%)}
 
 #toast{position:absolute;left:50%;top:26%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:min(560px,92vw)}
 .ts{background:rgba(0,0,0,.66);border-left:4px solid var(--b);padding:7px 14px;border-radius:8px;font-size:14px;font-weight:600;text-align:center;animation:tsIn .2s ease both;text-shadow:none}
@@ -72,12 +112,28 @@ body{touch-action:none;-webkit-user-select:none;user-select:none}
 #drone-m span{color:#fde047}
 .mk.borda b,.mk.borda i{border-style:dashed}
 
-#mapa{position:absolute;left:12px;bottom:12px;width:170px;height:170px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(10,16,10,.55);pointer-events:auto;cursor:pointer}
-#tele{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:18px;background:rgba(0,0,0,.42);padding:8px 16px;border-radius:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
-#tele div{display:flex;align-items:baseline;gap:5px}
-#tele b{font-size:12px;color:#cbd5e1;font-weight:700}
-#tele span{font-size:18px;font-weight:700;min-width:48px}
-#tele em{font-style:normal;font-size:11.5px;color:#cbd5e1}
+/* canto de baixo à esquerda: indicador de atitude (bússola) OU mapa, como no DJI Fly */
+#mapa{position:absolute;left:14px;bottom:14px;width:150px;height:150px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(10,16,10,.55);pointer-events:auto;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.4)}
+#nav{position:absolute;left:14px;bottom:14px;width:150px;height:150px;pointer-events:auto;cursor:pointer}
+#navc{width:100%;height:100%;display:block}
+body:not(.ver-mapa) #mapa{display:none}
+body.ver-mapa #nav{display:none}
+#bt-navmapa{position:absolute;left:142px;bottom:132px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(18,20,24,.7);color:#fff;font-size:13px;cursor:pointer;display:grid;place-items:center;z-index:2}
+#rumo-n{position:absolute;left:89px;bottom:168px;transform:translateX(-50%);font:800 12px Inter,sans-serif;letter-spacing:.3px}
+/* telemetria do DJI: H (altura) com V.S, D (distância) com H.S */
+#tele{position:absolute;left:178px;bottom:22px;display:grid;grid-template-columns:auto auto;column-gap:22px;row-gap:3px;white-space:nowrap}
+#tele .tl{display:flex;align-items:baseline;gap:5px}
+#tele b{font-size:12.5px;color:#e2e8f0;font-weight:800;width:14px}
+#tele .tl>span{font-size:21px;font-weight:700;min-width:44px;font-family:Rajdhani,Inter,sans-serif}
+#tele em{font-style:normal;font-size:12px;color:#e2e8f0;font-weight:600}
+#tele small{grid-column:span 1;font-size:12px;font-weight:700;color:#e2e8f0;padding-left:19px}
+#tele small span{font-size:13.5px;color:#fff}
+/* parâmetros da câmera (só na vista da câmera) */
+#cam-par{position:absolute;right:14px;bottom:14px;display:flex;gap:12px;align-items:center;font-size:11.5px;font-weight:700;background:rgba(0,0,0,.32);padding:5px 10px;border-radius:7px;white-space:nowrap}
+#cam-par b{font-size:12.5px}
+#cam-par .lb{color:#cbd5e1;font-weight:600;font-size:10px;display:block;line-height:1}
+#sticks:not([hidden]) ~ #cam-par{bottom:112px}
+.rb.on svg text{fill:#111}
 #sticks{position:absolute;right:12px;bottom:12px;display:flex;gap:10px}
 .stk{position:relative;width:78px;height:78px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.35)}
 .stk::before,.stk::after{content:"";position:absolute;background:rgba(255,255,255,.18)}
@@ -97,11 +153,15 @@ body.toque .lado{top:auto;bottom:18px;transform:none;flex-direction:row;align-it
 body.toque .lado.esq{left:auto;right:calc(50% + 4px)}
 body.toque .lado.dir{right:auto;left:calc(50% + 4px)}
 body.toque .rb.pq{margin:0}
-body.toque #tele{bottom:76px;gap:10px;padding:6px 12px}
-body.toque #tele span{font-size:15px;min-width:34px}
+body.toque #tele{left:50%;transform:translateX(-50%);bottom:72px;column-gap:16px;row-gap:0;background:rgba(0,0,0,.28);padding:3px 12px;border-radius:8px}
+body.toque #tele .tl>span{font-size:17px;min-width:34px}
 body.toque #tq-l{left:24px}
-body.toque #mapa{left:auto;right:12px;bottom:auto;top:56px;width:120px;height:120px}
-body.toque #gimbal{display:none}
+body.toque #mapa,body.toque #nav{left:auto;right:12px;bottom:auto;top:52px;width:112px;height:112px}
+body.toque #bt-navmapa{left:auto;right:6px;bottom:auto;top:142px}
+body.toque #rumo-n{left:auto;right:68px;bottom:auto;top:166px;transform:translateX(50%)}
+body.toque #gimbal,body.toque #cam-par,body.toque #bt-camm{display:none}
+body.toque .obt{width:46px;height:46px;border-width:2.5px}body.toque .obt i{width:33px;height:33px}
+body.toque .obt.grav i{width:16px;height:16px}
 #girar{display:none;position:absolute;left:50%;top:40%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;text-align:center}
 @media (orientation:portrait) and (pointer:coarse){#girar{display:block}}
 
@@ -208,7 +268,7 @@ input[type=range]{accent-color:#F5C518}
 #rastreio.ruim{border-color:#ef4444;border-style:dashed}
 #rastreio span{position:absolute;left:-2px;top:-20px;white-space:nowrap;font:800 11.5px Inter,sans-serif;background:#22c55e;color:#04140a;padding:1px 6px;border-radius:4px 4px 4px 0}
 #rastreio.ruim span{background:#ef4444;color:#fff}
-#dica-csc{position:absolute;right:12px;bottom:110px;display:flex;align-items:center;gap:10px;max-width:330px;background:rgba(0,0,0,.62);border:1px solid rgba(245,197,24,.5);padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.35;text-shadow:none}
+#dica-csc{position:absolute;left:50%;transform:translateX(-50%);bottom:22px;display:flex;align-items:center;gap:10px;max-width:330px;background:rgba(0,0,0,.62);border:1px solid rgba(245,197,24,.5);padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.35;text-shadow:none}
 #dica-csc b{color:#F5C518}
 body.toque #dica-csc{right:auto;left:50%;transform:translateX(-50%);bottom:136px}
 .mini{position:relative;width:38px;height:38px;flex-shrink:0;border-radius:8px;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.06)}
@@ -237,20 +297,25 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
 @media (max-width:760px){
   .cols,.modos{grid-template-columns:1fr}
   .top-r{gap:9px;font-size:12px}
-  #t-gps,#t-sinal{display:none}
-  #tele{gap:10px;padding:6px 10px;bottom:auto;top:56px}
-  #tele span{font-size:14px;min-width:34px}
+  #t-gps-w,#t-sinal-w{display:none}
+  #tele{column-gap:12px}
+  #tele .tl>span{font-size:16px;min-width:34px}
   #mis{top:100px;max-width:70vw}
-  #mapa{width:120px;height:120px;bottom:auto;top:56px;left:auto;right:12px}
+  #mapa,#nav{width:112px;height:112px;bottom:auto;top:52px;left:auto;right:12px}
+  #bt-navmapa{left:auto;right:6px;bottom:auto;top:142px}
+  #rumo-n{left:auto;right:68px;bottom:auto;top:166px;transform:translateX(50%)}
   #tele{left:12px;transform:none}
+  #cam-par{display:none}
   #tq-l{left:16px}
   .lado{top:44%}
-  .rb{width:44px;height:44px;font-size:19px}
+  .rb{width:42px;height:42px;font-size:18px}
   #gimbal{right:64px;height:110px}
   .mhdr-d{margin-left:0}
 }
 @media (max-height:520px){
-  #mis{top:52px} .lado{gap:8px} .rb{width:42px;height:42px}
+  #mis{top:52px} .lado{gap:7px} .lado.dir{gap:6px} .rb{width:40px;height:40px} .rb.pq{width:32px;height:32px}
+  .obt{width:52px;height:52px}.obt i{width:38px;height:38px}
+  #mapa,#nav{width:124px;height:124px} #bt-navmapa{left:120px;bottom:110px} #rumo-n{left:76px;bottom:142px} #tele{left:150px}
 }
 </style>
 </head>
@@ -261,17 +326,20 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
 <canvas id="cv" tabindex="0"></canvas>
 
 <div id="hud" hidden>
+  <div id="txfx"></div>
+  <div id="vinheta"></div>
   <div class="top">
     <button class="tb" id="bt-menu" title="Menu e pausa (Esc)">☰</button>
     <div id="st" class="st">Pronto para voar (GPS)</div>
     <div class="top-r">
       <span class="ti" id="t-vento" hidden></span>
       <span class="ti pill" id="t-modo" title="Modo de voo: Cine / Normal / Esporte (M)">N</span>
-      <span class="ti" id="t-gps">🛰 17</span>
-      <span class="ti" id="t-sinal">📶 100%</span>
-      <span class="ti" id="t-bat">🔋 100% <small id="t-rest">12:00</small></span>
+      <span class="ti" id="t-gps-w" title="Satélites (GPS)"><svg viewBox="0 0 24 24"><path d="M7.4 2.6 2.6 7.4l3.5 3.5 4.8-4.8zm9.7 9.7-4.8 4.8 3.5 3.5 4.8-4.8zM9.5 9.6l4.9 4.9 2.1-2.1-4.9-4.9zM14 3v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7zm0 3.6v2a1.4 1.4 0 0 1 1.4 1.4h2A3.4 3.4 0 0 0 14 6.6zM4 14l6 6-1.4 1.4-6-6z"/></svg><b id="t-gps">17</b></span>
+      <span class="ti" id="t-sinal-w" title="Sinal da transmissão de vídeo"><span class="hdt">HD</span><span class="sinb" id="t-sinal"><i></i><i></i><i></i><i></i><i></i></span></span>
+      <span class="ti" id="t-bat" title="Bateria do drone e tempo de voo restante"><span class="bico"><i id="t-batf"></i></span><b id="t-batp">100%</b><small id="t-rest">12:00</small></span>
     </div>
   </div>
+  <div id="batbar" hidden><div class="f" id="bb-f"></div><div class="ver"></div><div class="ama" id="bb-ama"></div><div class="h" id="bb-h">H</div></div>
 
   <div id="mis" hidden>
     <div class="mis-n" id="mis-n"></div>
@@ -282,16 +350,19 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
   </div>
 
   <div class="lado esq">
-    <button class="rb" id="bt-decolar" title="Decolar / pousar automático (T)">⏫</button>
-    <button class="rb" id="bt-rth" title="Voltar para casa — RTH (H)">🏠</button>
+    <button class="rb" id="bt-decolar" title="Decolar / pousar automático (T)"></button>
+    <button class="rb" id="bt-rth" title="Voltar para casa — RTH (H)"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-2.05-4.95L14.5 9.5H21V3l-2.64 2.64A8.96 8.96 0 0 0 12 3z"/><text x="12" y="15.6" text-anchor="middle" font-size="9.5" font-weight="900" fill="#fff" font-family="Inter,Arial">H</text></svg></button>
   </div>
   <div class="lado dir">
-    <button class="rb" id="bt-foto" title="Tirar foto (P ou Enter)">📷</button>
-    <button class="rb" id="bt-vista" title="Trocar vista (C)">🎥</button>
+    <button class="rb pq" id="bt-vista" title="Trocar vista: câmera do drone / terceira pessoa / piloto (C)"><svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg></button>
+    <button class="rb pq" id="bt-camm" title="Foto / vídeo (V)"><svg viewBox="0 0 24 24" id="ic-camm"><path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg></button>
+    <button class="obt" id="bt-foto" title="Obturador: tirar foto (P ou Enter) — no modo vídeo, grava (V troca o modo)"><i></i></button>
+    <div id="rec-t" hidden>00:00</div>
+    <button class="rb pq" id="bt-zm" title="Zoom + (Z)">+</button>
+    <span class="zoomv" id="zoom-v">1×</span>
+    <button class="rb pq" id="bt-zn" title="Zoom − (X)">−</button>
     <button class="rb pq" id="bt-gc" title="Câmera (gimbal) para cima (R)">▲</button>
     <button class="rb pq" id="bt-gb" title="Câmera (gimbal) para baixo (F)">▼</button>
-    <button class="rb pq" id="bt-zm" title="Zoom + (Z)">🔍+</button>
-    <button class="rb pq" id="bt-zn" title="Zoom − (X)">🔍−</button>
   </div>
 
   <div id="vista-n"></div>
@@ -305,15 +376,27 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
   <div id="toast"></div>
   <div id="fps" hidden></div>
   <canvas id="mapa" title="Mapa (clique para aproximar/afastar)"></canvas>
+  <div id="nav" title="Indicador de atitude: bússola, inclinação do drone, casa (H) e piloto. Clique para ver o mapa."><canvas id="navc"></canvas></div>
+  <button id="bt-navmapa" title="Trocar entre bússola (indicador de atitude) e mapa">🗺</button>
+  <div id="rumo-n">N 000°</div>
   <div id="tele">
-    <div><b>D</b><span id="v-d">0</span><em>m</em></div>
-    <div><b>H</b><span id="v-h">0</span><em>m</em></div>
-    <div><b>H.S</b><span id="v-hs">0</span><em>m/s</em></div>
-    <div><b>V.S</b><span id="v-vs">0</span><em>m/s</em></div>
+    <div class="tl"><b>H</b><span id="v-h">0</span><em>m</em></div>
+    <div class="tl"><b>D</b><span id="v-d">0</span><em>m</em></div>
+    <small>V.S <span id="v-vs">0</span> m/s</small>
+    <small>H.S <span id="v-hs">0</span> m/s</small>
   </div>
   <div id="sticks">
     <div class="stk"><i id="stk-l"></i><span id="stk-ln"></span></div>
     <div class="stk"><i id="stk-r"></i><span id="stk-rn"></span></div>
+  </div>
+  <div id="cam-par" hidden>
+    <span><span class="lb">MODO</span><b>AUTO</b></span>
+    <span><span class="lb">OBTUR.</span><b id="cp-sh">1/1000</b></span>
+    <span><span class="lb">ABERT.</span><b>F2.8</b></span>
+    <span><span class="lb">ISO</span><b id="cp-iso">100</b></span>
+    <span><span class="lb">EV</span><b>0</b></span>
+    <span><span class="lb" id="cp-res-l">FOTO</span><b id="cp-res">20 MP 4:3</b></span>
+    <span><span class="lb">SD</span><b id="cp-sd">1:52:10</b></span>
   </div>
   <div id="tq" hidden>
     <div class="tq-s" id="tq-l"><i></i></div>
@@ -417,6 +500,7 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
           <tr><td>Decolar / pousar automático</td><td><kbd>T</kbd></td></tr>
           <tr><td>Voltar para casa (RTH)</td><td><kbd>H</kbd></td></tr>
           <tr><td>Foto</td><td><kbd>P</kbd> ou <kbd>Enter</kbd></td></tr>
+          <tr><td>Modo foto / vídeo (no vídeo, o botão redondo grava)</td><td><kbd>V</kbd></td></tr>
           <tr><td>Trocar vista</td><td><kbd>C</kbd></td></tr>
           <tr><td>Modo Cine / Normal / Esporte</td><td><kbd>M</kbd></td></tr>
           <tr><td>Câmera (gimbal) cima / baixo</td><td><kbd>R</kbd> <kbd>F</kbd> ou a rodinha do mouse</td></tr>
@@ -582,7 +666,7 @@ setTimeout(function () {
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { montarCidade, montarCanteiro, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
+import { montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
 
 /* =====================================================================
    UTILIDADES
@@ -613,7 +697,8 @@ const CFG_PADRAO = {
   modo: 2, vel: 'N', gps: true, vento: 0, rajada: true, bateria: 'treino',
   altMax: 120, alcance: 1500, rthAlt: 30, indicador: true, qualidade: 'media',
   sticksTela: true, som: true, toque: null, deadzone: 0.04, expo: 0.25, padId: '',
-  cenario: 'leve', fps: false,
+  // computador já abre no realista (texturas de foto, baixa ~7 MB uma vez); celular fica no leve até escolher
+  cenario: matchMedia('(pointer:coarse)').matches ? 'leve' : 'realista', fps: false,
 };
 const cfg = Object.assign({}, CFG_PADRAO, lsGet('dsim_cfg') || {});
 if (cfg.toque === null) cfg.toque = matchMedia('(pointer:coarse)').matches;
@@ -682,9 +767,9 @@ cena.add(ceu);
   pmrem.dispose();
 }
 
-const hemi = new THREE.HemisphereLight(0xcfe2ff, 0x46552f, 1.15);
+const hemi = new THREE.HemisphereLight(0xcfe2ff, 0x46552f, 0.9); // ambiente mais baixo: lado na sombra fica mais escuro (volume, não "quadrado chapado")
 cena.add(hemi);
-const sol = new THREE.DirectionalLight(0xfff0d8, 3.1);
+const sol = new THREE.DirectionalLight(0xfff0d8, 3.5);
 sol.position.copy(SOL_DIR).multiplyScalar(250);
 cena.add(sol, sol.target);
 if (SOMBRAS) {
@@ -785,8 +870,9 @@ float fbm(vec2 p) { float v = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { v += a
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuse * tex2, 0.45);
 #endif
 float nGrande = fbm(vMundo * 0.016), nMedio = fbm(vMundo * 0.09 + 7.0);
-diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.3, 1.16, 0.78), smoothstep(0.45, 0.75, nGrande) * 0.7);
-diffuseColor.rgb *= 0.7 + 0.48 * nMedio;`);
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.22, 1.12, 0.8), smoothstep(0.5, 0.78, nGrande) * 0.5);  // pasto mais seco
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.7, 0.84, 0.66), smoothstep(0.52, 0.8, fbm(vMundo * 0.035 + 3.0)) * 0.6); // touceiras mais escuras
+diffuseColor.rgb *= 0.72 + 0.45 * nMedio;`);
   };
   const m = new THREE.Mesh(geo, mat);
   if (SOMBRAS) m.receiveShadow = true;
@@ -989,24 +1075,22 @@ const dentroLago = (x, z) => { const dx = x - LAGO.x, dz = z - LAGO.z; return Ma
 }
 
 /* ---------------- casas ---------------- */
-const texCasa = texCanvas(128, 64, (g, w, h) => {
-  g.fillStyle = '#f5f5f4'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#6b4f35'; g.fillRect(54, 26, 20, 38);
-  g.fillStyle = '#334155'; g.fillRect(14, 22, 24, 18); g.fillRect(90, 22, 24, 18);
-  g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, h - 5, w, 5);
-});
+const texCasa = fachadaDetalhada(texCanvas, 'casa');
 const coresParede = [0xf5e6c8, 0xdbeafe, 0xfde2e4, 0xe7f5d0, 0xf1f5f9, 0xfef3c7];
-const coresTelhado = [0x9a3412, 0x7c2d12, 0x78716c, 0xb45309];
+// telhado de verdade (beiral, 4 ou 2 águas), igual ao do bairro
+const TXV = texturasCasa(texCanvas);
+const coresTelhado = [0xffffff, 0xd8c8bc, 0xb7a69a];
 const matsParede = coresParede.map((c) => lam(c, { map: texCasa }));
-const matsTelhado = coresTelhado.map((c) => lam(c));
+const matsTelhado = coresTelhado.map((c) => lam(c, { map: TXV.telha }));
+const matsOitao = coresParede.map((c) => lam(c, { map: TXV.reboco }));
+const matBeiral = lam(0xe9e6df);
 MALHAS.paredesVila = matsParede; MALHAS.telhadosVila = matsTelhado;
 function casa(x, z, w, d, h) {
-  const mp = matsParede[(sorteio() * matsParede.length) | 0];
+  const ip = (sorteio() * matsParede.length) | 0, mp = matsParede[ip];
   const mt = matsTelhado[(sorteio() * matsTelhado.length) | 0];
   malha(new THREE.BoxGeometry(w, h, d), mp, x, h / 2, z);
-  const tel = malha(new THREE.ConeGeometry(Math.max(w, d) * 0.74, 1.8, 4), mt, x, h + 0.9, z);
-  tel.rotation.y = Math.PI / 4; tel.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
-  addCaixa(x, z, w / 2, d / 2, h + 1.1, 'casa');
+  malha(geoTelhado(THREE, w, d, 1.7, ((x * 7 + z * 13) | 0) % 3 ? '4' : '2', 0.5), [mt, matsOitao[ip], matBeiral], x, h, z);
+  addCaixa(x, z, w / 2, d / 2, h + 1.7, 'casa');
   MUNDO.mapa.rets.push({ x, z, w, d, cor: '#b45309' });
 }
 for (let i = 0; i < 22; i++) {
@@ -1466,6 +1550,8 @@ function redimensionar() {
   for (const v of Object.values(VISTAS)) { v.cam.aspect = innerWidth / innerHeight; v.cam.updateProjectionMatrix(); }
   const mp = $('mapa'), r = mp.getBoundingClientRect(), d = devicePixelRatio || 1;
   mp.width = Math.round(r.width * d) || 170; mp.height = Math.round(r.height * d) || 170;
+  const nc = $('navc'), rn = nc.getBoundingClientRect();
+  nc.width = Math.round(rn.width * d) || 150; nc.height = Math.round(rn.height * d) || 150;
 }
 addEventListener('resize', redimensionar);
 
@@ -1478,6 +1564,8 @@ const S = {
   bat: 100, tAcelBaixo: 0, segura: null, home: new V3(), homeY: 0, chao: 0,
   vento: new V3(), ventoDir: 0, t: 0, saturado: 0, sinal: 100, perdeuSinal: false, sat: 17,
   velModo: cfg.vel, cscTravado: false, pedirFoto: false, rastro: [], avisos: {},
+  // câmera: modo foto/vídeo, gravação e o gimbal estabilizado (segue o drone com um leve atraso)
+  camVideo: false, gravando: false, recT: 0, camPitch: 0, camRoll: 0, camYaw: 0, tGimbal: 0,
 };
 
 let M = null; // exercício em andamento
@@ -1520,6 +1608,8 @@ function ajustarZoom(d, absoluto) {
   S.zoomI = clamp(absoluto != null ? absoluto : (S.zoomI || 0) + d, 0, ZOOMS.length - 1);
   camFPV.zoom = ZOOMS[S.zoomI]; camFPV.updateProjectionMatrix();
   $('zoom-n').textContent = ZOOMS[S.zoomI] + '×' + (ZOOMS[S.zoomI] === 7 ? ' tele' : '');
+  $('zoom-n').hidden = vista !== 'camera' || !S.zoomI;
+  $('zoom-v').textContent = ZOOMS[S.zoomI] + '×';
   if (d) aviso('🔍 Zoom ' + ZOOMS[S.zoomI] + '×' + (vista !== 'camera' ? ' — aparece na vista da câmera (C)' : ''), 'info', 1300, 'zoom');
 }
 function resetDrone(p, yaw) {
@@ -1528,6 +1618,7 @@ function resetDrone(p, yaw) {
   S.motores = false; S.voando = false; S.jaVoou = false; S.acidente = null; S.auto = null; S.tParar = 0;
   S.bat = 100; S.tAcelBaixo = 0; S.segura = null; S.home.copy(S.pos); S.homeY = S.pos.y; S.chao = 0;
   S.t = 0; S.saturado = 0; S.perdeuSinal = false; S.rastro = []; S.avisos = {}; S.pedirFoto = false;
+  S.gravando = false; S.recT = 0; S.camPitch = 0; S.camRoll = 0; S.camYaw = S.yaw;
   S.velModo = (M && M.def.forcar && M.def.forcar.vel) || cfg.vel;
   $('crash-v').style.opacity = 0;
   ajustarZoom(0, 0);
@@ -1880,6 +1971,12 @@ function acao(id, origem) {
     else iniciarRTH(false);
   } else if (id === 'foto') {
     S.pedirFoto = true;
+  } else if (id === 'obturador') { // botão redondo do HUD: foto, ou liga/desliga a gravação no modo vídeo
+    if (!S.camVideo) S.pedirFoto = true;
+    else { S.gravando = !S.gravando; if (S.gravando) S.recT = 0; somFoto(); aviso(S.gravando ? '● Gravando vídeo' : '■ Vídeo salvo (' + mmss(S.recT) + ')', S.gravando ? 'vm' : 'info', 1300, 'rec'); }
+  } else if (id === 'camModo') {
+    S.camVideo = !S.camVideo; if (!S.camVideo) S.gravando = false;
+    aviso(S.camVideo ? '🎬 Modo vídeo — o obturador grava' : '📷 Modo foto', 'info', 1300, 'camm');
   } else if (id === 'vista') {
     if (M.def.vista && M.def.travaVista) { aviso('Este exercício é só na visão do piloto', 'am', 2000, 'vista'); return; }
     const ordem = ['camera', 'terceira', 'piloto'];
@@ -1907,7 +2004,7 @@ addEventListener('keydown', (e) => {
   if (campo) return;
   if (TECLAS_STICK.has(e.code)) { teclas.add(e.code); if (!$('hud').hidden) e.preventDefault(); }
   if (e.repeat) return;
-  const mapa = { KeyT: 'decolar', KeyH: 'rth', KeyP: 'foto', Enter: 'foto', KeyC: 'vista', KeyM: 'modo', KeyZ: 'zoomMais', KeyX: 'zoomMenos' };
+  const mapa = { KeyT: 'decolar', KeyH: 'rth', KeyP: 'foto', Enter: 'foto', KeyC: 'vista', KeyM: 'modo', KeyZ: 'zoomMais', KeyX: 'zoomMenos', KeyV: 'camModo' };
   if (mapa[e.code] && $('menu').hidden && $('res').hidden) { e.preventDefault(); acao(mapa[e.code], 'tecla'); }
 });
 addEventListener('keyup', (e) => teclas.delete(e.code));
@@ -1937,7 +2034,12 @@ stickToque($('tq-r'), 'RX', 'RY');
 $('bt-menu').onclick = () => abrirMenu();
 $('bt-decolar').onclick = () => acao('decolar', 'hud');
 $('bt-rth').onclick = () => acao('rth', 'hud');
-$('bt-foto').onclick = () => acao('foto', 'hud');
+$('bt-foto').onclick = () => acao('obturador', 'hud');
+$('bt-camm').onclick = () => acao('camModo', 'hud');
+const trocarNavMapa = () => { document.body.classList.toggle('ver-mapa'); lsSet('dsim_mapa', document.body.classList.contains('ver-mapa') ? 1 : 0); redimensionar(); };
+$('bt-navmapa').onclick = trocarNavMapa;
+$('nav').onclick = trocarNavMapa;
+if (lsGet('dsim_mapa')) document.body.classList.add('ver-mapa');
 $('bt-vista').onclick = () => acao('vista', 'hud');
 $('bt-zm').onclick = () => acao('zoomMais', 'hud');
 $('bt-zn').onclick = () => acao('zoomMenos', 'hud');
@@ -2649,8 +2751,11 @@ function aviso(txt, tipo = 'info', ms = 2500, chave) {
 let tVistaN = 0;
 function mostrarVista() {
   const n = $('vista-n'); n.textContent = VISTAS[vista].nome; n.style.opacity = 1; tVistaN = 2.5;
-  $('mira').hidden = vista !== 'camera';
-  $('zoom-n').hidden = vista !== 'camera';
+  const cam = vista === 'camera';
+  $('mira').hidden = !cam;
+  $('zoom-n').hidden = !cam || !S.zoomI;
+  $('cam-par').hidden = !cam; $('vinheta').hidden = !cam; $('gimbal').hidden = !cam;
+  if (!cam) $('txfx').style.opacity = 0;
 }
 
 function statusTxt(f) {
@@ -2667,17 +2772,27 @@ function statusTxt(f) {
   return [`Em voo (${pos})`, f.gps ? '' : 'am'];
 }
 let hudAcc = 0;
+const IC_SUBIR = '<svg viewBox="0 0 24 24"><path d="M12 3 5 10h4.5v6h5v-6H19zM5 19h14v2H5z"/></svg>';
+const IC_DESCER = '<svg viewBox="0 0 24 24"><path d="M12 17l7-7h-4.5V4h-5v6H5zM5 19h14v2H5z"/></svg>';
+let ultGimbal = -12, tGimbalParado = 9, icDecolar = '';
 function atualizarHud(dt) {
   const f = F();
   hudAcc += dt;
+  const cam = vista === 'camera';
   // sticks (todo quadro)
   const L = INP.phys;
   $('stk-l').style.transform = `translate(calc(-50% + ${L.LX * 30}px), calc(-50% + ${-L.LY * 30}px))`;
   $('stk-r').style.transform = `translate(calc(-50% + ${L.RX * 30}px), calc(-50% + ${-L.RY * 30}px))`;
-  // gimbal
-  const gy = (20 - S.gimbal) / 110 * 150;
-  $('gimbal-i').style.top = (gy - 2) + 'px';
+  // gimbal: a régua acende quando o ângulo muda e apaga depois de 2 s parada (como no DJI)
+  if (Math.abs(S.gimbal - ultGimbal) > 0.05) { ultGimbal = S.gimbal; tGimbalParado = 0; } else tGimbalParado += dt;
+  const gEl = $('gimbal'), gh = gEl.clientHeight || 150, gy = (20 - S.gimbal) / 110 * gh;
+  $('gimbal-i').style.top = (gy - 1.5) + 'px';
   const gt = $('gimbal-t'); gt.style.top = gy + 'px'; gt.textContent = Math.round(S.gimbal) + '°';
+  gEl.classList.toggle('quieto', tGimbalParado > 2);
+  // tempo de gravação pelo relógio (o passo do quadro é limitado a 0,1 s e atrasaria em aparelho lento)
+  const agoraRec = performance.now();
+  if (S.gravando && rodando()) S.recT += Math.min(1, (agoraRec - (S.recUlt || agoraRec)) / 1000);
+  S.recUlt = S.gravando && rodando() ? agoraRec : 0;
   if (tVistaN > 0) { tVistaN -= dt; if (tVistaN <= 0) $('vista-n').style.opacity = 0; }
   marcadores();
   if (hudAcc < 0.1) return;
@@ -2685,31 +2800,115 @@ function atualizarHud(dt) {
   const [st, cl] = statusTxt(f);
   const sEl = $('st'); sEl.textContent = st; sEl.className = 'st ' + cl;
   $('t-modo').textContent = S.velModo;
+  // satélites e sinal da transmissão (5 barrinhas, como o "HD" do DJI)
   const sat = f.gps ? (S.sat = clamp(S.sat + (Math.random() < 0.05 ? (Math.random() < 0.5 ? -1 : 1) : 0), 14, 20)) : 4;
-  $('t-gps').textContent = '🛰 ' + sat + (f.gps ? '' : ' ATTI');
-  $('t-sinal').textContent = '📶 ' + Math.round(S.sinal) + '%';
+  $('t-gps').textContent = sat;
+  $('t-gps-w').style.color = f.gps ? '' : '#fde047';
+  const sg = $('t-sinal'), nb = Math.ceil(S.sinal / 20 - 0.001);
+  [...sg.children].forEach((b, i) => b.classList.toggle('on', i < nb));
+  sg.className = 'sinb' + (S.sinal < 20 ? ' vm' : S.sinal < 45 ? ' am' : '');
+  $('t-sinal-w').title = 'Sinal da transmissão de vídeo: ' + Math.round(S.sinal) + '%';
+  // bateria: ícone + % + tempo restante; régua no topo com a reserva para voltar (H)
   const cap = f.bateria === 'realista' ? 25 * 60 : f.bateria === 'treino' ? 12 * 60 : 0;
   const bt = $('t-bat');
   bt.className = 'ti ' + (S.bat <= 15 ? 'bat-b' : S.bat <= 30 ? 'bat-a' : '');
-  bt.firstChild.nodeValue = '🔋 ' + (cap ? Math.ceil(S.bat) + '% ' : '∞ ');
-  $('t-rest').textContent = cap ? mmss(S.bat / 100 * cap) : '';
+  $('t-batf').style.width = (cap ? clamp(S.bat, 0, 100) * 0.9 : 90) + '%';
+  $('t-batp').textContent = cap ? Math.ceil(S.bat) + '%' : '∞';
+  $('t-rest').textContent = cap ? mmss(S.bat / 100 * cap).replace(':', "'") + '"' : '';
+  const bb = $('batbar'); bb.hidden = !cap;
+  if (cap) {
+    const hAlt = Math.max(0, S.pos.y - S.homeY);
+    const precisa = clamp((dHome() / 12 + hAlt / 3 + 15) / cap * 100, 2, 80); // % para voltar e pousar
+    $('bb-f').style.width = clamp(S.bat, 0, 100) + '%';
+    $('bb-ama').style.width = precisa + '%';
+    $('bb-h').style.left = (10 + precisa) + '%';
+    $('bb-f').style.background = S.bat <= 10 + precisa ? '#facc15' : '#22c55e';
+  }
   const vEl = $('t-vento');
   if (f.vento > 0) { vEl.hidden = false; const rel = (S.ventoDir - S.yaw) / DEG; vEl.innerHTML = `💨 ${Math.round(S.vento.length())} m/s <span style="display:inline-block;transform:rotate(${rel}deg)">↑</span>`; } else vEl.hidden = true;
+  // telemetria
   $('v-d').textContent = Math.round(dHome());
   const h = S.pos.y - S.homeY;
   $('v-h').textContent = Math.abs(h) < 10 ? nf(h, 1) : Math.round(h);
   $('v-hs').textContent = nf(Math.hypot(S.vel.x, S.vel.z), 1);
   $('v-vs').textContent = nf(S.vel.y, 1);
-  $('bt-decolar').textContent = S.voando ? '⏬' : '⏫';
+  const rg = ((Math.round(S.yaw / DEG) % 360) + 360) % 360;
+  $('rumo-n').textContent = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'][Math.round(rg / 45) % 8] + ' ' + String(rg).padStart(3, '0') + '°';
+  // botões
+  const ic = S.voando ? IC_DESCER : IC_SUBIR;
+  if (ic !== icDecolar) { icDecolar = ic; $('bt-decolar').innerHTML = ic; }
   $('bt-decolar').title = S.voando ? 'Pousar automático (T)' : 'Decolar automático (T)';
   $('bt-rth').classList.toggle('on', S.auto === 'rth');
+  const ob = $('bt-foto'); ob.classList.toggle('video', S.camVideo); ob.classList.toggle('grav', S.gravando);
+  $('rec-t').hidden = !S.gravando; $('rec-t').textContent = mmss(S.recT);
+  $('bt-camm').classList.toggle('on', S.camVideo);
   $('sticks').hidden = !cfg.sticksTela;
+  // câmera: parâmetros e chiado da transmissão quando o sinal cai
+  if (cam) {
+    const luz = clamp((S.gimbal + 90) / 110, 0, 1); // olhando para o céu = mais luz
+    $('cp-sh').textContent = '1/' + [320, 400, 500, 640, 800, 1000, 1250, 1600, 2000][Math.round(luz * 8)];
+    $('cp-res-l').textContent = S.camVideo ? 'VÍDEO' : 'FOTO'; $('cp-res').textContent = S.camVideo ? '4K 30' : '20 MP 4:3';
+    const sd = Math.max(0, 6730 - Math.round(S.recT));
+    $('cp-sd').textContent = Math.floor(sd / 3600) + ':' + String(Math.floor(sd / 60) % 60).padStart(2, '0') + ':' + String(sd % 60).padStart(2, '0');
+    const ruido = S.sinal < 60 ? (60 - S.sinal) / 60 : 0;
+    const tx = $('txfx'); tx.style.opacity = ruido ? (0.25 + ruido * 0.6).toFixed(2) : 0;
+    if (ruido) tx.style.transform = `translateY(${(Math.random() * 6) | 0}px)`;
+  }
   if (M) {
     $('mis-o').textContent = M.obj || '';
     $('mis-p').textContent = M.prog || '';
     $('mis-t').textContent = M.def.id === 'livre' ? '' : '⏱ ' + mmss(M.t) + (M.def.par ? ' · ideal ' + mmss(M.def.par) : '') + (M.penal.length ? ' · −' + M.penal.reduce((a, p) => a + p.pts, 0) : '');
   }
-  desenharMapa();
+  if (document.body.classList.contains('ver-mapa')) desenharMapa(); else desenharNav();
+}
+
+/* Indicador de atitude do DJI Fly: bússola que gira com o drone (o nariz fica para
+   cima), horizonte por trás mostrando inclinação e rolagem, casa (H), piloto (azul),
+   alvo do exercício (roxo) e o cone da câmera. */
+function desenharNav() {
+  const cv = $('navc'), r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  if (r.width && Math.abs(cv.width - Math.round(r.width * dpr)) > 1) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+  const g = cv.getContext('2d'), W = cv.width, H = cv.height;
+  if (!W) return;
+  const k = W / 150, cx = W / 2, cy = H / 2, R0 = W / 2 - 2 * k;
+  g.clearRect(0, 0, W, H);
+  // fundo: céu/terra conforme a inclinação (rolagem gira, arfagem desloca)
+  g.save(); g.beginPath(); g.arc(cx, cy, R0 - 14 * k, 0, 7); g.clip();
+  g.translate(cx, cy); g.rotate(-S.roll); g.translate(0, clamp(-S.pitch / DEG * 1.6 * k, -40 * k, 40 * k));
+  g.fillStyle = 'rgba(56,120,190,.55)'; g.fillRect(-W, -H * 2, W * 2, H * 2);
+  g.fillStyle = 'rgba(70,58,40,.62)'; g.fillRect(-W, 0, W * 2, H * 2);
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.4 * k; g.beginPath(); g.moveTo(-W, 0); g.lineTo(W, 0); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 1 * k;
+  for (const p of [-20, -10, 10, 20]) { const y = -p * 1.6 * k, w = (Math.abs(p) === 10 ? 14 : 22) * k; g.beginPath(); g.moveTo(-w, y); g.lineTo(w, y); g.stroke(); }
+  g.restore();
+  // anel da bússola: gira ao contrário do rumo (nariz sempre para cima)
+  g.fillStyle = 'rgba(10,12,16,.55)'; g.beginPath(); g.arc(cx, cy, R0, 0, 7); g.arc(cx, cy, R0 - 14 * k, 0, 7, true); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1 * k; g.beginPath(); g.arc(cx, cy, R0, 0, 7); g.stroke();
+  const ang = (graus) => graus * DEG - S.yaw - Math.PI / 2; // 0° = norte; na tela, -90° = para cima
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let d = 0; d < 360; d += 10) {
+    const a = ang(d), car = d % 90 === 0, mid = d % 30 === 0;
+    const r1 = R0 - (mid ? 2 : 3) * k, r2 = R0 - (mid ? 8 : 5) * k;
+    if (!car) { g.strokeStyle = mid ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.45)'; g.lineWidth = (mid ? 1.4 : 1) * k; g.beginPath(); g.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); g.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); g.stroke(); }
+    else { g.font = `800 ${11 * k}px Inter,Arial`; g.fillStyle = d === 0 ? '#ef4444' : '#fff'; g.fillText({ 0: 'N', 90: 'L', 180: 'S', 270: 'O' }[d], cx + Math.cos(a) * (R0 - 7 * k), cy + Math.sin(a) * (R0 - 7 * k)); }
+  }
+  // marca fixa do nariz no topo
+  g.fillStyle = '#facc15'; g.beginPath(); g.moveTo(cx, cy - R0 + 3 * k); g.lineTo(cx - 4.5 * k, cy - R0 - 3 * k); g.lineTo(cx + 4.5 * k, cy - R0 - 3 * k); g.closePath(); g.fill();
+  // pontos: posição relativa ao drone, girada para o nariz ficar em cima; longe = preso na borda
+  const Ri = R0 - 18 * k, esc = Math.max(40, Math.min(400, dHome() * 1.15));
+  const ponto = (x, z, desenho) => {
+    const dx = x - S.pos.x, dz = z - S.pos.z, d = Math.hypot(dx, dz);
+    const a = Math.atan2(dx, -dz) - S.yaw - Math.PI / 2, rr = Math.min(Ri, d / esc * Ri);
+    desenho(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+  };
+  if (M && M.alvo) ponto(M.alvo.x, M.alvo.z, (x, y) => { g.fillStyle = '#e879f9'; g.strokeStyle = '#000'; g.lineWidth = 1 * k; g.beginPath(); g.moveTo(x, y - 5 * k); g.lineTo(x + 5 * k, y); g.lineTo(x, y + 5 * k); g.lineTo(x - 5 * k, y); g.closePath(); g.fill(); g.stroke(); });
+  ponto(PILOTO.x, PILOTO.z, (x, y) => { g.fillStyle = '#60a5fa'; g.strokeStyle = '#fff'; g.lineWidth = 1.2 * k; g.beginPath(); g.arc(x, y, 3.6 * k, 0, 7); g.fill(); g.stroke(); });
+  ponto(S.home.x, S.home.z, (x, y) => { g.fillStyle = '#facc15'; g.beginPath(); g.arc(x, y, 6.5 * k, 0, 7); g.fill(); g.fillStyle = '#111'; g.font = `900 ${9 * k}px Inter,Arial`; g.fillText('H', x, y + 0.5 * k); });
+  // cone da câmera, "asas" de nível e o drone (seta) no centro
+  g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx - 18 * k, cy - 34 * k); g.lineTo(cx + 18 * k, cy - 34 * k); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(cx - 22 * k, cy); g.lineTo(cx - 9 * k, cy); g.moveTo(cx + 9 * k, cy); g.lineTo(cx + 22 * k, cy); g.stroke();
+  g.fillStyle = '#facc15'; g.strokeStyle = '#000'; g.lineWidth = 1 * k;
+  g.beginPath(); g.moveTo(cx, cy - 9 * k); g.lineTo(cx + 6.5 * k, cy + 7 * k); g.lineTo(cx, cy + 3.5 * k); g.lineTo(cx - 6.5 * k, cy + 7 * k); g.closePath(); g.fill(); g.stroke();
 }
 
 const projV = new V3();
@@ -2807,9 +3006,15 @@ function desenharMapa() {
 /* =====================================================================
    LAÇO PRINCIPAL
    ===================================================================== */
-function poseCamFPV() {
+function poseCamFPV(dt = 0) {
+  // Gimbal de 3 eixos: a imagem fica nivelada mesmo com o drone inclinado; sobra só um
+  // resto pequeno da inclinação ao acelerar/frear, que some devagar (como no vídeo do Mavic).
+  if (dt > 0) {
+    S.camPitch = suave(S.camPitch, clamp(-S.pitch * 0.08, -0.03, 0.03), dt, 0.14);
+    S.camRoll = suave(S.camRoll, clamp(-S.roll * 0.06, -0.025, 0.025), dt, 0.14);
+  }
   camFPV.position.set(S.pos.x + Math.sin(S.yaw) * 0.16, S.pos.y + 0.03, S.pos.z - Math.cos(S.yaw) * 0.16);
-  camFPV.rotation.set(S.gimbal * DEG, -S.yaw, 0);
+  camFPV.rotation.set(S.gimbal * DEG + S.camPitch, -S.yaw, S.camRoll);
   camFPV.updateMatrixWorld();
 }
 const rodando = () => !!M && $('menu').hidden && $('res').hidden && !CAL.aberta;
@@ -2838,7 +3043,7 @@ function atualizarVisual(dt) {
   const gv = (INP.cont.gimbal || 0) + (INP.cont.botaoGimbal || 0);
   if (gv && rodando()) S.gimbal = clamp(S.gimbal + gv * 60 * dt, -90, 20);
   // câmeras
-  poseCamFPV();
+  poseCamFPV(dt);
   // no chão a câmera chega perto (dá para ver o Mavic 3); voando, se afasta para dar noção do espaço
   chaseD = suave(chaseD, S.voando ? 2.2 : 1.25, dt, 0.9);
   const alvoChase = S.pos.clone().addScaledVector(fwd, -chaseD); alvoChase.y += 0.12 + chaseD * 0.3;
@@ -3075,7 +3280,7 @@ async function ligarRealista() {
     const est = await R.estadoPacote();
     if (!est.suportado) throw new Error('este navegador não guarda arquivos (aba anônima?)');
     if (!est.baixado) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Baixando o pacote… ' + Math.round(p * 100) + '%'));
-    await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro },
+    await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, texCanvas, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro },
       (p, t) => progressoCarga(0.7 + p * 0.3, 'Montando o cenário: ' + t));
     cenarioAtivo = 'realista'; cfg.cenario = 'realista'; salvarCfg();
     aviso('🌄 Cenário realista ligado', 'ok', 2500);

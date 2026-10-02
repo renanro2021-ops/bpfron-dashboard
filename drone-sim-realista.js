@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { fachadaDetalhada } from './drone-sim-cidade.js';
 
 export let PACOTE_URL = 'https://bpfron-sim-pacote.bpfron.workers.dev/';
 export const definirUrlPacote = (u) => { PACOTE_URL = u.replace(/\/?$/, '/'); };
@@ -121,7 +122,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   // chão: grama com pedra vista do alto (ladrilho de ~8 m); a variação de cor fica no shader
   // pasto: grama com folhas (ladrilho de ~3 m), puxada para o verde da região
   const grama = manifesto.texturas.leafy_grass ? await tex('leafy_grass', [3300, 3300]) : await tex('aerial_grass_rock', [1250, 1250]);
-  if (M.chao) { aplicar(M.chao.material, grama, { vertexColors: false }); M.chao.material.color.setRGB(0.68, 1.04, 0.48); M.chao.material.normalScale && M.chao.material.normalScale.set(0.5, 0.5); }
+  if (M.chao) { aplicar(M.chao.material, grama, { vertexColors: false }); M.chao.material.color.setRGB(0.5, 0.98, 0.36); M.chao.material.normalScale && M.chao.material.normalScale.set(0.5, 0.5); }
   // pátio, estrada de terra, acostamento, campo
   aplicar(M.patio && M.patio.material, await tex('concrete_floor_worn_001', [11, 8]));
   aplicar(M.terra && M.terra.material, await tex('aerial_mud_1', [1, 74]));
@@ -153,7 +154,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
 
   /* ---- paredes: reboco/tijolo/concreto de foto com as janelas desenhadas por cima ---- */
   const reboco = await tex('painted_plaster_wall'), tijolo = await tex('brick_wall_02'), concreto = await tex('concrete_wall_008');
-  const telha = await tex('clay_roof_tiles_02', [3, 3]), chapa = await tex('corrugated_iron_02', [6, 3]), ferrugem = await tex('rusty_metal_02', [2, 1]);
+  const telha = await tex('clay_roof_tiles_02', [1, 1]), chapa = await tex('corrugated_iron_02', [6, 3]), ferrugem = await tex('rusty_metal_02', [2, 1]);
   const janelas = (cols, andares, corJ, porta) => (g, w, h) => {
     const cw = w / cols, ch = h / andares;
     for (let a = 0; a < andares; a++) for (let c = 0; c < cols; c++) {
@@ -166,10 +167,10 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     }
   };
   const fachadas = reboco.img ? {
-    casa: compor(256, 256, reboco.img, [256, 256], janelas(3, 1, '#5d7a96', true)),
-    comercio: compor(512, 512, reboco.img, [256, 256], janelas(4, 2, '#4e6b88', true)),
-    predio: compor(512, 512, concreto.img || reboco.img, [256, 256], janelas(4, 5, '#5b7895', false)),
-    galpao: chapa.map,
+    // mesmo desenho do cenário leve (moldura, grade, peitoril, portas de enrolar) sobre o reboco de foto
+    casa: ctx.texCanvas ? fachadaDetalhada(ctx.texCanvas, 'casa', reboco.img) : compor(256, 256, reboco.img, [256, 256], janelas(3, 1, '#5d7a96', true)),
+    comercio: ctx.texCanvas ? fachadaDetalhada(ctx.texCanvas, 'comercio', reboco.img) : compor(512, 512, reboco.img, [256, 256], janelas(4, 2, '#4e6b88', true)),
+    predio: ctx.texCanvas ? fachadaDetalhada(ctx.texCanvas, 'predio', concreto.img || reboco.img) : compor(512, 512, concreto.img || reboco.img, [256, 256], janelas(4, 5, '#5b7895', false)),
   } : null;
   if (fachadas && M.cidade) {
     const vistos = new Set();
@@ -179,10 +180,15 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
       if (tipo && fachadas[tipo]) { mat.map = fachadas[tipo]; mat.color.lerp(new THREE.Color(1, 1, 1), 0.45); if (tipo === 'galpao') mat.color.setRGB(1.8, 1.8, 1.8); mat.needsUpdate = true; }
       else if (mat.userData && mat.userData.laje) { aplicar(mat, concreto); mat.color.set(0xffffff); }
     }
+    // telhados (cada material uma vez só: cerâmica vira foto; fibrocimento fica o desenhado)
+    const feitos = new Set();
     for (const m of M.cidade.malhas.telhados) {
-      if (m.geometry.type === 'ConeGeometry') { m.material = m.material.clone(); aplicar(m.material, telha); m.material.color.lerp(new THREE.Color(1, 1, 1), 0.6); }
-      else { m.material = m.material.clone(); aplicar(m.material, chapa); m.material.color.setRGB(1.8, 1.8, 1.8); }
+      if (m.userData.telha) {
+        const mt = [].concat(m.material)[0];
+        if (!feitos.has(mt)) { feitos.add(mt); if (mt.userData.telhado === 'ceramica') { aplicar(mt, telha); mt.color.lerp(new THREE.Color(1, 1, 1), 0.6); } }
+      } else { m.material = m.material.clone(); aplicar(m.material, chapa); m.material.color.setRGB(1.8, 1.8, 1.8); }
     }
+    // muro, oitão e platibanda ficam no reboco claro desenhado (a foto escurecia demais)
   }
   // vila e base do batalhão
   if (fachadas) {
@@ -307,7 +313,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     await espalhar('street_lamp_01', lamp.filter(livre), 'poste de luz');
     await espalhar('fire_hydrant', hid.filter(livre), null);
     await espalhar('metal_trash_can', lixo.filter(livre), null);
-    const quintais = M.cidade.quadras.filter((q) => q.tipo === 'casas').slice(0, 6).map((q) => ({ x: (q.x0 + q.x1) / 2 + 9, z: (q.z0 + q.z1) / 2, r: Math.PI / 2 }));
+    const quintais = M.cidade.quadras.filter((q) => q.tipo === 'casas').slice(0, 6).map((q) => ({ x: (q.x0 + q.x1) / 2 + 9, z: (q.z0 + q.z1) / 2 - 2.6, r: Math.PI / 2 })); // no quintal, longe do muro do fundo
     await espalhar('covered_car', quintais.filter(livre), 'carro coberto');
   }
   avanco('bairro');
