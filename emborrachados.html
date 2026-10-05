@@ -141,6 +141,59 @@ body{
 /* No desktop o carrinho fica sempre aberto; o botão de expandir não existe. */
 .emb-cart-abrir{display:none}
 
+/* Cor do emborrachado (05/10/2026): 3 bolinhas no card, a escolhida manda no +/− */
+.sw{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.35);vertical-align:-1px;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sw-verde{background:linear-gradient(135deg,#3f4a1f,#6b7a3a 55%,#4d5a2a)}
+.sw-preto{background:linear-gradient(135deg,#0d0d0d 50%,#8a8f98 50%)}
+.sw-colorido{background:conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7,#ef4444)}
+.sw-nada{background:repeating-linear-gradient(45deg,#475569 0 3px,#1e293b 3px 6px)}
+.emb-cores{display:flex;align-items:center;gap:7px}
+.emb-cor{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.emb-cor .sw{width:20px;height:20px}
+.emb-cor.on{border-color:var(--yellow)}
+.emb-cores.pisca .emb-cor{animation:embPisca .5s ease 2}
+@keyframes embPisca{50%{transform:scale(1.25)}}
+.emb-cor-lbl{font-size:11px;color:var(--muted);line-height:1.3;min-height:14px}
+.emb-cor-lbl.on{color:#e2e8f0;font-weight:600}
+.emb-cor-lbl.err{color:#fca5a5;font-weight:700}
+.emb-cor-res{font-size:10.5px;color:#6ee7b7;line-height:1.35;min-height:13px}
+.emb-tag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.emb-chip select{background:#0b1220;border:1px solid #f87171;color:#fca5a5;border-radius:7px;font-size:11px;padding:2px 4px}
+
+/* Pagamento (PIX + comprovante) */
+.emb-modal{position:fixed;inset:0;z-index:200;background:rgba(2,6,15,.78);display:flex;align-items:flex-start;justify-content:center;padding:clamp(10px,4vh,40px) 12px;overflow-y:auto}
+.emb-modal-box{position:relative;width:100%;max-width:520px;background:#0c111e;border:1px solid rgba(245,197,24,.45);border-radius:16px;padding:20px 18px 18px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.emb-modal-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(148,163,184,.12);color:#e2e8f0;font-size:15px;cursor:pointer}
+.emb-pag-ttl{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:var(--yellow);margin-bottom:2px;padding-right:36px}
+.emb-pag-valor{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:800;color:#6ee7b7;line-height:1.1;margin:6px 0 12px}
+.emb-passo{border-top:1px solid rgba(148,163,184,.18);padding-top:12px;margin-top:12px}
+.emb-passo h4{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#93c5fd;margin-bottom:8px}
+.emb-chave{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#111827;border:1px dashed rgba(245,197,24,.5);border-radius:11px;padding:10px 12px}
+.emb-chave code{flex:1;min-width:180px;font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#fff;word-break:break-all}
+.emb-pix-info{font-size:12.5px;color:#cbd5e1;margin-top:8px;line-height:1.55}
+.emb-pix-cc{width:100%;min-height:62px;background:#0b1220;border:1px solid var(--border);border-radius:9px;color:#cbd5e1;font-family:ui-monospace,Consolas,monospace;font-size:11px;padding:8px;resize:none;margin-bottom:8px}
+.emb-qr{display:flex;justify-content:center;padding:12px;background:#fff;border-radius:10px;margin-top:8px;width:fit-content;margin-left:auto;margin-right:auto}
+.emb-file{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.emb-file label{display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.45);color:#bfdbfe;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.emb-file input{display:none}
+.emb-file .nome{font-size:12px;color:#cbd5e1;word-break:break-all;flex:1;min-width:120px}
+.emb-pagst{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.emb-pagst.nao{background:rgba(251,191,36,.14);color:#fcd34d}
+.emb-pagst.env{background:rgba(96,165,250,.16);color:#93c5fd}
+.emb-pagst.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
+.emb-tbl .emb-pagst{white-space:normal;line-height:1.3}
+
+/* Gestão: foto na tabela, filtro dos relatórios, PIX */
+.emb-foto{width:54px;height:54px;object-fit:contain;background:#0b1220;border-radius:8px;border:1px solid var(--border)}
+.emb-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:14px}
+.emb-barra select{background:#0b1220;border:1px solid var(--border);color:#e2e8f0;border-radius:8px;padding:7px 9px;font-family:'Inter',sans-serif;font-size:12.5px}
+.emb-barra .lbl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.emb-mini{background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.35);color:#e2e8f0;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;margin:2px 2px 0 0;white-space:nowrap}
+.emb-mini.ok{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.45);color:#6ee7b7}
+.emb-pixcfg{background:var(--card);border:1px solid rgba(245,197,24,.35);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.emb-pixcfg summary{cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow)}
+.emb-fg select,.emb-fg textarea{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 11px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:13px;outline:none}
+
 @media(max-width:760px){
   .emb-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
   /* No celular o carrinho vira uma BARRA compacta: se abrisse inteiro
@@ -185,11 +238,11 @@ body{
 <div class="wrap">
 <div class="emb-top">
   <div class="emb-hint">
-    Escolha os emborrachados e a quantidade, preencha seu <b>RE</b>, <b>nome</b> e <b>contato</b> e envie.
-    O pedido cai direto na planilha do batalhão. Não precisa de senha.
+    Escolha os emborrachados, a <b>cor</b> e a quantidade, preencha seu <b>RE</b>, <b>nome</b> e <b>contato</b> e envie.
+    Depois é só copiar a chave PIX, pagar e mandar o comprovante por aqui mesmo. Não precisa de senha.
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="emb-btn ghost" id="emb-edit-btn" onclick="embToggleBusca()">✏️ Editar meu pedido</button>
+    <button class="emb-btn ghost" id="emb-edit-btn" onclick="embToggleBusca()">✏️ Meu pedido · pagar</button>
     <button class="emb-btn ghost" onclick="embRecarregar()">↻ Atualizar catálogo</button>
     <button class="emb-btn" id="emb-gest-btn" onclick="embToggleGestao()">🔐 Área do gestor</button>
   </div>
@@ -218,7 +271,7 @@ body{
 <!-- Buscar o próprio pedido: RE + 4 últimos dígitos do telefone -->
 <div id="emb-busca" style="display:none">
   <div class="emb-busca-box">
-    <div class="emb-busca-ttl">✏️ Editar ou cancelar um pedido</div>
+    <div class="emb-busca-ttl">✏️ Meu pedido: pagar, editar ou cancelar</div>
     <div class="emb-busca-hint">Informe o <b>RE</b> e os <b>4 últimos dígitos do telefone</b> que você usou ao fazer o pedido.</div>
     <div class="emb-busca-form">
       <div class="emb-fg"><label>RE</label><input id="emb-b-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 95326"></div>
@@ -280,6 +333,14 @@ body{
 </div>
 
 <div class="emb-gest" id="emb-gestao" style="display:none"></div>
+</div>
+
+<!-- Pagamento: chave PIX + envio do comprovante -->
+<div class="emb-modal" id="emb-pag" style="display:none" onclick="if(event.target===this)embFecharPag()">
+  <div class="emb-modal-box">
+    <button class="emb-modal-x" type="button" onclick="embFecharPag()" title="Fechar">✕</button>
+    <div id="emb-pag-corpo"></div>
+  </div>
 </div>
 
 <script>
@@ -354,9 +415,23 @@ async function apiFetchJSON(path){
 ═══════════════════════════════════════════════ */
 let EMB_LOADED = false;
 let EMB_CAT    = null;        // { faixas:[], itens:[] }
-let EMB_CART   = {};          // { <idDoArquivo>: qtd }
+let EMB_CART   = {};          // { "<idDoArquivo>|<cor>": qtd }  (cor "" = pedido antigo, sem cor)
+let EMB_COR_SEL = {};         // { <idDoArquivo>: cor escolhida no card }
 let EMB_GEST_ON = false;
 let EMB_RE_TIMER = null;
+
+// Mesma lista do Worker (EMB_CORES). A classe é só a bolinha de cor na tela.
+const EMB_CORES = ['Verde dissimulado', 'Preto com cinza', 'Colorido'];
+const EMB_COR_SW = { 'Verde dissimulado':'sw-verde', 'Preto com cinza':'sw-preto', 'Colorido':'sw-colorido' };
+function embCorNorm(s){
+  const k = String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  return EMB_CORES.find(c => c.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase() === k) || '';
+}
+function embCorTag(cor){
+  const c = embCorNorm(cor);
+  return c ? `<span class="emb-tag"><i class="sw ${EMB_COR_SW[c]}"></i>${embEsc(c)}</span>`
+           : `<span class="emb-tag" style="color:#fca5a5"><i class="sw sw-nada"></i>cor não informada</span>`;
+}
 
 function embEsc(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -430,57 +505,105 @@ function embRender(){
     html += `<div class="emb-faixa-ttl">${embMoeda(preco)} <span class="cnt">${lista.length} modelo(s)</span></div>`;
     html += '<div class="emb-grid">';
     lista.forEach(i => {
-      const q = EMB_CART[i.id] || 0;
+      const id = embEsc(i.id);
       html += `
-        <div class="emb-card ${q?'has':''}" id="embc-${embEsc(i.id)}">
+        <div class="emb-card" id="embc-${id}">
           <div class="emb-thumb">
             <img loading="lazy" src="${API_BASE}/api/emborrachados/img?id=${encodeURIComponent(i.id)}" alt="${embEsc(i.nome)}">
             <span class="emb-badge">${embMoeda(i.preco)}</span>
           </div>
           <div class="emb-body">
             <div class="emb-nome">${embEsc(i.nome)}</div>
-            <div class="emb-step">
-              <button onclick="embAdd('${embEsc(i.id)}',-1)" ${q?'':'disabled'}>−</button>
-              <span class="q" id="embq-${embEsc(i.id)}">${q}</span>
-              <button onclick="embAdd('${embEsc(i.id)}',1)">+</button>
+            <div>
+              <div class="emb-cores" id="embk-${id}">
+                ${EMB_CORES.map((c, n) =>
+                  `<button type="button" class="emb-cor" data-cor="${n}" title="${c}" onclick="embEscolheCor('${id}',${n})"><i class="sw ${EMB_COR_SW[c]}"></i></button>`
+                ).join('')}
+              </div>
+              <div class="emb-cor-lbl" id="embl-${id}">Escolha a cor</div>
             </div>
+            <div class="emb-step">
+              <button onclick="embAdd('${id}',-1)">−</button>
+              <span class="q" id="embq-${id}">0</span>
+              <button onclick="embAdd('${id}',1)">+</button>
+            </div>
+            <div class="emb-cor-res" id="embr-${id}"></div>
           </div>
         </div>`;
     });
     html += '</div>';
   }
   box.innerHTML = html;
+  itens.forEach(i => embAtualizaCard(i.id));
   embRenderCart();
+}
+
+/* O card mostra a quantidade DA COR ESCOLHIDA; a linha verde embaixo resume
+   todas as cores daquele modelo que já estão no carrinho. */
+function embAtualizaCard(id){
+  const card = document.getElementById('embc-' + id);
+  if (!card) return;
+  const sel = EMB_COR_SEL[id] || '';
+  const q = sel ? (EMB_CART[id + '|' + sel] || 0) : 0;
+  const doModelo = Object.entries(EMB_CART).filter(([k]) => k.split('|')[0] === id);
+  card.classList.toggle('has', doModelo.length > 0);
+  document.getElementById('embq-' + id).textContent = q;
+  const menos = card.querySelector('.emb-step button');
+  if (menos) menos.disabled = !q;
+  card.querySelectorAll('.emb-cor').forEach(b => b.classList.toggle('on', EMB_CORES[+b.dataset.cor] === sel));
+  const lbl = document.getElementById('embl-' + id);
+  lbl.className = 'emb-cor-lbl' + (sel ? ' on' : '');
+  lbl.textContent = sel || 'Escolha a cor';
+  document.getElementById('embr-' + id).textContent = doModelo
+    .map(([k, n]) => `${n}× ${k.split('|')[1] || 'sem cor'}`).join(' · ');
+}
+
+function embEscolheCor(id, n){
+  EMB_COR_SEL[id] = EMB_CORES[n];
+  embAtualizaCard(id);
 }
 
 function embAdd(id, delta){
   const item = (EMB_CAT.itens||[]).find(i => i.id === id);
   if (!item) return;
-  const atual = EMB_CART[id] || 0;
-  const novo = Math.max(0, Math.min(20, atual + delta));
-  if (novo) EMB_CART[id] = novo; else delete EMB_CART[id];
-
-  // Atualiza só o card mexido (evita redesenhar/recarregar todas as imagens).
-  const q = document.getElementById('embq-' + id);
-  if (q) q.textContent = novo;
-  const card = document.getElementById('embc-' + id);
-  if (card){
-    card.classList.toggle('has', !!novo);
-    const menos = card.querySelector('.emb-step button');
-    if (menos) menos.disabled = !novo;
+  const cor = EMB_COR_SEL[id];
+  if (!cor){
+    // Sem cor não entra no carrinho: o fabricante precisa saber qual fazer.
+    const k = document.getElementById('embk-' + id);
+    const lbl = document.getElementById('embl-' + id);
+    if (lbl){ lbl.className = 'emb-cor-lbl err'; lbl.textContent = '⚠ Escolha a cor primeiro'; }
+    if (k){ k.classList.remove('pisca'); void k.offsetWidth; k.classList.add('pisca'); }
+    return;
   }
+  const key = id + '|' + cor;
+  const atual = EMB_CART[key] || 0;
+  const novo = Math.max(0, Math.min(20, atual + delta));
+  if (novo) EMB_CART[key] = novo; else delete EMB_CART[key];
+  // Atualiza só o card mexido (evita redesenhar/recarregar todas as imagens).
+  embAtualizaCard(id);
   embRenderCart();
 }
 
-function embRemover(id){
-  delete EMB_CART[id];
+function embRemover(key){
+  delete EMB_CART[key];
+  embRender();
+}
+
+// Item de pedido antigo (sem cor) ou troca de cor direto no carrinho.
+function embTrocaCorChip(key, cor){
+  const q = EMB_CART[key] || 0;
+  const id = key.split('|')[0];
+  delete EMB_CART[key];
+  const novo = id + '|' + cor;
+  EMB_CART[novo] = Math.min(20, (EMB_CART[novo] || 0) + q);
   embRender();
 }
 
 function embCartItens(){
-  return Object.entries(EMB_CART).map(([id, qtd]) => {
+  return Object.entries(EMB_CART).map(([key, qtd]) => {
+    const [id, cor] = key.split('|');
     const it = (EMB_CAT.itens||[]).find(i => i.id === id);
-    return it ? { ...it, qtd } : null;
+    return it ? { ...it, cor: cor || '', key, qtd } : null;
   }).filter(Boolean);
 }
 
@@ -512,10 +635,14 @@ function embRenderCart(){
 
   const unid  = itens.reduce((a,i) => a + i.qtd, 0);
   const total = itens.reduce((a,i) => a + i.qtd * i.preco, 0);
-  lista.innerHTML = itens.map(i =>
-    `<span class="emb-chip"><b>${i.qtd}×</b> ${embEsc(i.nome)} · ${embMoeda(i.qtd * i.preco)}
-       <button onclick="embRemover('${embEsc(i.id)}')" title="Remover">✕</button></span>`
-  ).join('');
+  lista.innerHTML = itens.map(i => {
+    const cor = i.cor
+      ? embCorTag(i.cor)
+      : `<select onchange="embTrocaCorChip('${embEsc(i.key)}', this.value)"><option value="">⚠ escolha a cor</option>` +
+        EMB_CORES.map(c => `<option>${c}</option>`).join('') + '</select>';
+    return `<span class="emb-chip"><b>${i.qtd}×</b> ${embEsc(i.nome)} · ${cor} · ${embMoeda(i.qtd * i.preco)}
+       <button onclick="embRemover('${embEsc(i.key)}')" title="Remover">✕</button></span>`;
+  }).join('');
   document.getElementById('emb-cart-qtd').textContent = `${itens.length} modelo(s) · ${unid} unidade(s)`;
   document.getElementById('emb-cart-tot').textContent = embMoeda(total);
 }
@@ -602,6 +729,8 @@ async function embEnviar(){
   if (re.length < 4)          { msg.textContent = 'Informe seu RE.'; return; }
   if (nome.length < 5)        { msg.textContent = 'Informe seu nome completo.'; return; }
   if (tel.length < 10)        { msg.textContent = 'Informe um telefone com DDD.'; return; }
+  const semCor = itens.filter(i => !i.cor);
+  if (semCor.length)          { msg.textContent = 'Escolha a cor de: ' + semCor.map(i => i.nome).join(', ') + '.'; return; }
 
   const old = btn.textContent;
   btn.disabled = true; btn.textContent = 'Enviando…';
@@ -610,7 +739,7 @@ async function embEnviar(){
     const r = await fetch(API_BASE + '/api/emborrachados/pedido', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ re, nome, contato: tel, itens: itens.map(i => ({ id: i.id, qtd: i.qtd })) }),
+      body: JSON.stringify({ re, nome, contato: tel, itens: itens.map(i => ({ id: i.id, cor: i.cor, qtd: i.qtd })) }),
     });
     const d = await r.json().catch(()=>({}));
     // Já tem pedido pendente: mostra o atalho de edição em vez de um erro seco.
@@ -621,7 +750,7 @@ async function embEnviar(){
       return;
     }
     if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
-    embSucesso(d, nome);
+    embSucesso(d, nome, { re, tel4: tel.slice(-4) });
   }catch(e){
     msg.className = 'emb-msg err';
     msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao enviar o pedido.');
@@ -630,9 +759,11 @@ async function embEnviar(){
   }
 }
 
-function embSucesso(d, nome){
-  EMB_CART = {};
+function embSucesso(d, nome, ident){
+  EMB_CART = {}; EMB_COR_SEL = {};
   document.getElementById('emb-cart').style.display = 'none';
+  // Guardado pro botão de pagar desta tela (o policial ainda não saiu da página).
+  EMB_ULTIMO = { pedido: String(d.pedido), valor: d.valor_total, re: ident.re, tel4: ident.tel4 };
   const box = document.getElementById('emb-catalogo');
   box.innerHTML = `
     <div class="emb-ok">
@@ -641,13 +772,18 @@ function embSucesso(d, nome){
       <div class="num">Nº ${embEsc(d.pedido)}</div>
       <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">
         Obrigado, <b>${embEsc(nome.split(' ')[0])}</b>! Foram registradas
-        <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> modelo(s).
+        <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).
       </p>
       <p style="color:#6ee7b7;font-size:19px;font-weight:800;margin-bottom:6px">${embMoeda(d.valor_total)}</p>
       <p style="color:#94a3b8;font-size:12px">${embEsc(d.data)} · anote o número do pedido.</p>
-      <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">➕ Fazer outro pedido</button>
+      <button class="emb-send" style="margin-top:18px" onclick="embAbrirPagamento(EMB_ULTIMO)">💳 Pagar com PIX e enviar o comprovante</button>
+      <p style="color:#94a3b8;font-size:12px;margin-top:10px;max-width:460px;margin-left:auto;margin-right:auto">
+        Se preferir pagar depois, entre em <b>✏️ Meu pedido · pagar</b> com o seu RE e os 4 últimos dígitos do telefone.
+      </p>
+      <button class="emb-btn ghost" style="margin-top:14px" onclick="embNovoPedido()">➕ Fazer outro pedido</button>
     </div>`;
 }
+let EMB_ULTIMO = null;
 
 function embNovoPedido(){
   const msg = document.getElementById('emb-msg');
@@ -704,7 +840,44 @@ async function embDoLogin(ev){
   return false;
 }
 
+/* Gestão: o filtro escolhido vale pra tela E pros dois relatórios impressos
+   ("o que você vê é o que imprime"). O total por modelo é recalculado aqui a
+   partir dos pedidos filtrados — por isso não usa o resumo_itens do Worker. */
+let EMB_GEST_DATA = null;
+let EMB_GEST_FILTRO = 'todos';
+const EMB_FILTROS = {
+  todos:     ['Todos os pedidos',                 () => true],
+  pendentes: ['Só status Pendente',               p => /^pendente$/i.test(String(p.status||'Pendente').trim())],
+  comprov:   ['Só os que mandaram comprovante',   p => p.tem_comprovante],
+  conferido: ['Só pagamento conferido',           p => /^conferido$/i.test(String(p.pagamento||'').trim())],
+  sempag:    ['Só os que ainda não pagaram',      p => !p.tem_comprovante],
+};
+function embImg(id){ return id ? API_BASE + '/api/emborrachados/img?id=' + encodeURIComponent(id) : ''; }
+
+function embGestFiltrados(){
+  const f = (EMB_FILTROS[EMB_GEST_FILTRO] || EMB_FILTROS.todos)[1];
+  return ((EMB_GEST_DATA && EMB_GEST_DATA.pedidos) || []).filter(f);
+}
+function embGestResumo(pedidos){
+  const m = new Map();
+  pedidos.forEach(p => (p.itens||[]).forEach(i => {
+    const cor = embCorNorm(i.cor);
+    const k = i.item.toLowerCase() + '|' + cor;
+    const a = m.get(k) || { id: i.id, item: i.item, cor, preco: i.preco, qtd: 0, valor: 0, pedidos: new Set() };
+    a.qtd += Number(i.qtd)||0; a.valor += Number(i.valor)||0; a.pedidos.add(p.pedido);
+    if (!a.id && i.id) a.id = i.id;
+    m.set(k, a);
+  }));
+  // Mesmo modelo fica junto (cores lado a lado) — é como o fabricante lê.
+  return [...m.values()].map(a => ({ ...a, pedidos: a.pedidos.size }))
+    .sort((a, b) => a.item.localeCompare(b.item, 'pt-BR') || EMB_CORES.indexOf(a.cor) - EMB_CORES.indexOf(b.cor));
+}
+
 function embRenderGestao(d){
+  if (d) EMB_GEST_DATA = d;
+  d = EMB_GEST_DATA;
+  const pedidos = embGestFiltrados();
+  const resumo = embGestResumo(pedidos);
   const k = d.kpis || {};
   const kpis = [
     ['📋', k.total_pedidos,   'Pedidos'],
@@ -712,38 +885,277 @@ function embRenderGestao(d){
     ['🎽', k.total_unidades,  'Unidades'],
     ['💰', embMoeda(k.valor_total), 'Valor total'],
     ['⏳', k.pendentes,       'Pendentes'],
+    ['📎', k.com_comprovante, 'Com comprovante'],
+    ['✅', k.conferidos,      'Pag. conferido'],
   ];
   let html = '<div class="emb-kpis">' + kpis.map(([ic,v,l]) =>
     `<div class="emb-kpi"><div class="v">${ic} ${v==null?'—':(typeof v==='number'? v.toLocaleString('pt-BR') : v)}</div><div class="l">${l}</div></div>`
   ).join('') + '</div>';
 
-  html += '<div class="emb-faixa-ttl">📦 Total por modelo <span class="cnt">o que precisa ser encomendado</span></div>';
+  if (d.gestor){
+    html += `<details class="emb-pixcfg" id="emb-pixcfg" ontoggle="if(this.open)embPixCfgCarregar()">
+      <summary>💳 Chave PIX para pagamento <span style="font-family:Inter;font-size:12px;color:#94a3b8;font-weight:500" id="emb-pixcfg-st"></span></summary>
+      <div class="emb-busca-hint" style="margin:10px 0">É a chave que aparece pro policial copiar ao pagar. O "copia e cola" com o valor do pedido é gerado a partir dela.</div>
+      <div class="emb-form" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div class="emb-fg"><label>Tipo da chave *</label>
+          <select id="emb-cfg-tipo"><option value="">— escolha —</option>
+            ${Object.entries(EMB_TIPO_NOME).map(([v,n]) => `<option value="${v}">${n}</option>`).join('')}</select></div>
+        <div class="emb-fg"><label>Chave *</label><input id="emb-cfg-chave" placeholder="CPF, celular, e-mail…"></div>
+        <div class="emb-fg"><label>Titular da conta *</label><input id="emb-cfg-titular" maxlength="60" placeholder="Nome que aparece no banco"></div>
+        <div class="emb-fg"><label>Cidade do titular</label><input id="emb-cfg-cidade" maxlength="40" placeholder="Ex.: Porto Velho"></div>
+        <div class="emb-fg"><label>Banco</label><input id="emb-cfg-banco" maxlength="40" placeholder="Ex.: Nubank"></div>
+      </div>
+      <div class="emb-fg" style="margin-top:10px"><label>Aviso para quem vai pagar (opcional)</label>
+        <textarea id="emb-cfg-aviso" rows="2" maxlength="300" placeholder="Ex.: pagamento até dia 20 para entrar no lote de outubro."></textarea></div>
+      <button class="emb-send" type="button" style="margin-top:10px" onclick="embPixCfgSalvar(this)">💾 Salvar chave PIX</button>
+      <div class="emb-msg" id="emb-cfg-msg"></div>
+    </details>`;
+  }
+
+  html += `<div class="emb-barra">
+      <span class="lbl">Mostrar</span>
+      <select onchange="EMB_GEST_FILTRO=this.value;embRenderGestao()">
+        ${Object.entries(EMB_FILTROS).map(([v,[n]]) => `<option value="${v}" ${v===EMB_GEST_FILTRO?'selected':''}>${n}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:#94a3b8">${pedidos.length} pedido(s) · ${resumo.reduce((a,i)=>a+i.qtd,0)} unidade(s)</span>
+      <span style="flex:1"></span>
+      <button class="emb-btn" type="button" onclick="embImprimirFabricante()">🏭 Relatório p/ o fabricante (com fotos)</button>
+      <button class="emb-btn ghost" type="button" onclick="embImprimirPedidos()">🧾 Relatório dos pedidos</button>
+    </div>`;
+
+  html += '<div class="emb-faixa-ttl">📦 Total por modelo e cor <span class="cnt">o que precisa ser encomendado</span></div>';
   html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
-          '<th>Modelo</th><th>Preço</th><th>Qtd</th><th>Pedidos</th><th>Valor</th></tr></thead><tbody>' +
-          (d.resumo_itens||[]).map(i =>
-            `<tr><td><b>${embEsc(i.item)}</b></td><td>${embMoeda(i.preco)}</td>` +
-            `<td><b style="color:#F5C518">${i.qtd}</b></td><td>${i.pedidos}</td><td>${embMoeda(i.valor)}</td></tr>`
-          ).join('') + '</tbody></table></div>';
+          '<th>Foto</th><th>Modelo</th><th>Cor</th><th>Preço</th><th>Qtd</th><th>Pedidos</th><th>Valor</th></tr></thead><tbody>' +
+          (resumo.length ? resumo.map(i =>
+            `<tr><td>${i.id ? `<img class="emb-foto" loading="lazy" src="${embImg(i.id)}" alt="">` : '<span style="font-size:11px;color:#94a3b8">sem foto<br>(saiu do catálogo)</span>'}</td>` +
+            `<td><b>${embEsc(i.item)}</b></td><td>${embCorTag(i.cor)}</td><td>${embMoeda(i.preco)}</td>` +
+            `<td><b style="color:#F5C518;font-size:15px">${i.qtd}</b></td><td>${i.pedidos}</td><td>${embMoeda(i.valor)}</td></tr>`
+          ).join('') : '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">Nenhum pedido neste filtro.</td></tr>') +
+          '</tbody></table></div>';
 
   html += '<div class="emb-faixa-ttl">🧾 Pedidos <span class="cnt">mais recentes primeiro</span></div>';
   html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
-          '<th>Nº</th><th>Data</th><th>RE</th><th>Nome</th><th>Contato</th><th>Itens</th><th>Un.</th><th>Valor</th><th>Status</th>' +
+          '<th>Nº</th><th>Data</th><th>RE</th><th>Nome</th><th>Contato</th><th>Itens</th><th>Un.</th><th>Valor</th><th>Status</th><th>Pagamento</th>' +
           '</tr></thead><tbody>' +
-          (d.pedidos||[]).map(p =>
-            `<tr>
+          pedidos.map(p => {
+            const conferido = /^conferido$/i.test(String(p.pagamento||'').trim());
+            const acoes = d.gestor && p.tem_comprovante
+              ? '<br>' + (p.comprovantes||[]).map((c, n) =>
+                  `<button class="emb-mini" type="button" onclick="embVerComprovante('${embEsc(c)}', this)">📎 Ver${p.comprovantes.length>1?' '+(n+1):''}</button>`).join('') +
+                (conferido
+                  ? `<button class="emb-mini" type="button" onclick="embConferir('${embEsc(p.pedido)}', false, this)">↩ Desfazer</button>`
+                  : `<button class="emb-mini ok" type="button" onclick="embConferir('${embEsc(p.pedido)}', true, this)">✔ Conferir</button>`)
+              : '';
+            return `<tr>
                <td><b>${embEsc(p.pedido)}</b></td>
                <td style="white-space:nowrap">${embEsc(p.data)}</td>
                <td>${embEsc(p.re)}</td>
                <td>${embEsc(p.nome)}</td>
                <td style="white-space:nowrap">${embEsc(p.contato)}</td>
-               <td>${(p.itens||[]).map(i => `${i.qtd}× ${embEsc(i.item)}`).join('<br>')}</td>
+               <td>${(p.itens||[]).map(i => `${i.qtd}× ${embEsc(i.item)} · ${embCorTag(i.cor)}`).join('<br>')}</td>
                <td>${p.unidades}</td>
-               <td>${embMoeda(p.valor_total)}</td>
+               <td style="white-space:nowrap">${embMoeda(p.valor_total)}</td>
                <td>${embEsc(p.status)}</td>
-             </tr>`
-          ).join('') + '</tbody></table></div>';
+               <td style="min-width:120px">${embPagStatus(p)}${p.pago_em ? `<div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${embEsc(p.pago_em)}</div>` : ''}${acoes}</td>
+             </tr>`;
+          }).join('') + '</tbody></table></div>';
+  if (!d.gestor){
+    html += '<div class="emb-busca-hint" style="margin-top:10px">Para abrir os comprovantes, conferir pagamentos e cadastrar a chave PIX, o login precisa da permissão <b>"Pedido de Emborrachados"</b> no Painel de Controle.</div>';
+  }
 
-  document.getElementById('emb-gestao').innerHTML = html;
+  const box = document.getElementById('emb-gestao');
+  const pixAberto = !!(document.getElementById('emb-pixcfg') || {}).open;
+  box.innerHTML = html;
+  if (pixAberto){ const det = document.getElementById('emb-pixcfg'); if (det) det.open = true; }
+  embPixCfgStatus();
+}
+
+async function embRecarregarGestao(){
+  const d = await apiFetchJSON('/api/emborrachados/pedidos');
+  embRenderGestao(d);
+}
+
+async function apiPostJSON(path, body){
+  const r = await fetch(API_BASE + path, {
+    method:'POST', headers:{ 'Authorization':'Bearer ' + AUTH.token, 'content-type':'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+  return d;
+}
+
+async function embConferir(pedido, conferir, btn){
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '…';
+  try{
+    await apiPostJSON('/api/emborrachados/gestao', { op:'pagamento', pedido, pagamento: conferir ? 'Conferido' : 'Comprovante enviado' });
+    await embRecarregarGestao();
+  }catch(e){
+    btn.disabled = false; btn.textContent = old;
+    alert('❌ ' + e.message);
+  }
+}
+
+/* O arquivo exige o token (header), então não dá pra ser um <a href> direto:
+   baixa como blob e abre numa aba nova. A aba é aberta ANTES do fetch, senão
+   o bloqueador de pop-up do navegador barra. */
+async function embVerComprovante(id, btn){
+  const w = window.open('', '_blank');
+  if (w) w.document.write('<p style="font-family:sans-serif;padding:20px">Abrindo o comprovante…</p>');
+  const old = btn.textContent; btn.textContent = '…';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/comprovante-arquivo?id=' + encodeURIComponent(id),
+      { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
+    if (r.status === 401){ apiLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
+    if (!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(embErro(d, r.status)); }
+    const url = URL.createObjectURL(await r.blob());
+    if (w) w.location.href = url; else window.location.href = url;
+  }catch(e){
+    if (w) w.close();
+    alert('❌ ' + e.message);
+  }finally{ btn.textContent = old; }
+}
+
+function embPixCfgStatus(){
+  const st = document.getElementById('emb-pixcfg-st');
+  if (!st) return;
+  embCarregarPix().then(p => {
+    st.textContent = p.configurado ? `· ${EMB_TIPO_NOME[p.tipo]||p.tipo}: ${embChaveBonita(p.tipo, p.chave)}` : '· ⚠️ ainda não cadastrada — ninguém consegue pagar';
+    st.style.color = p.configurado ? '#94a3b8' : '#fcd34d';
+  }).catch(() => {});
+}
+async function embPixCfgCarregar(){
+  try{
+    const p = await embCarregarPix(true);
+    const set = (id, v) => { const el = document.getElementById(id); if (el && !el.value) el.value = v || ''; };
+    set('emb-cfg-tipo', p.tipo); set('emb-cfg-chave', p.chave); set('emb-cfg-titular', p.titular);
+    set('emb-cfg-cidade', p.cidade); set('emb-cfg-banco', p.banco); set('emb-cfg-aviso', p.aviso);
+  }catch{}
+}
+async function embPixCfgSalvar(btn){
+  const msg = document.getElementById('emb-cfg-msg');
+  const v = id => document.getElementById(id).value;
+  btn.disabled = true; msg.className = 'emb-msg'; msg.textContent = 'Salvando…';
+  try{
+    const d = await apiPostJSON('/api/emborrachados/gestao', { op:'config', valores:{
+      PIX_TIPO: v('emb-cfg-tipo'), PIX_CHAVE: v('emb-cfg-chave'), PIX_TITULAR: v('emb-cfg-titular'),
+      PIX_CIDADE: v('emb-cfg-cidade'), PIX_BANCO: v('emb-cfg-banco'), AVISO: v('emb-cfg-aviso'),
+    }});
+    document.getElementById('emb-cfg-chave').value = d.config.PIX_CHAVE;
+    EMB_PIX = null;
+    msg.className = 'emb-msg ok'; msg.textContent = '✔ Chave PIX salva. Já aparece pra quem for pagar.';
+    embPixCfgStatus();
+  }catch(e){
+    msg.className = 'emb-msg err'; msg.textContent = '❌ ' + e.message;
+  }finally{ btn.disabled = false; }
+}
+
+/* ── Relatórios impressos ──
+   Abrem numa janela própria, com fundo branco, e só mandam imprimir depois
+   que TODAS as fotos carregaram (senão o PDF sai com quadrado vazio). */
+function embJanelaRelatorio(titulo, corpo){
+  const w = window.open('', '_blank');
+  if (!w){ alert('O navegador bloqueou a janela do relatório. Libere pop-ups para este site.'); return; }
+  const brasao = new URL('LOGOS/bpfron_transp.avif', location.href).href;
+  const hoje = new Date().toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  const filtro = (EMB_FILTROS[EMB_GEST_FILTRO] || EMB_FILTROS.todos)[0];
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${embEsc(titulo)}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:18px 22px;font-size:12.5px}
+    .cab{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c9a030;padding-bottom:10px;margin-bottom:12px}
+    .cab img{height:58px}
+    .cab h1{font-size:19px;margin-bottom:2px}
+    .cab .sub{font-size:11.5px;color:#444}
+    .meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:#333;margin-bottom:14px}
+    .meta b{color:#000}
+    .grade{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .cartao{border:1.5px solid #999;border-radius:8px;padding:8px;text-align:center;page-break-inside:avoid;break-inside:avoid}
+    .cartao img{width:100%;height:150px;object-fit:contain;background:#f4f4f4;border-radius:5px}
+    .cartao .semfoto{height:150px;display:flex;align-items:center;justify-content:center;background:#f4f4f4;color:#888;border-radius:5px;font-size:11px}
+    .cartao .nm{font-weight:700;font-size:13px;margin:6px 0 3px}
+    .cartao .qt{font-size:22px;font-weight:800;margin-top:4px}
+    .sw{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #555;vertical-align:-1px;margin-right:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sw-verde{background:linear-gradient(135deg,#3f4a1f,#6b7a3a 55%,#4d5a2a)}
+    .sw-preto{background:linear-gradient(135deg,#0d0d0d 50%,#8a8f98 50%)}
+    .sw-colorido{background:conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7,#ef4444)}
+    .sw-nada{background:#ddd}
+    table{width:100%;border-collapse:collapse;margin-top:6px}
+    th,td{border:1px solid #aaa;padding:5px 7px;text-align:left;vertical-align:middle}
+    th{background:#eee;font-size:11px;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    td.n{text-align:center;font-weight:700}
+    .ped{border:1.5px solid #999;border-radius:8px;padding:9px 11px;margin-bottom:10px;page-break-inside:avoid;break-inside:avoid}
+    .ped h3{font-size:13.5px;margin-bottom:3px}
+    .ped .mini{width:46px;height:46px;object-fit:contain;background:#f4f4f4;border-radius:4px}
+    h2{font-size:14px;margin:16px 0 6px}
+    .rod{margin-top:16px;font-size:10.5px;color:#666;text-align:center}
+    @page{size:A4;margin:12mm}
+    @media print{body{padding:0}}
+  </style></head><body>
+  <div class="cab"><img src="${brasao}" alt="" onerror="this.style.display='none'">
+    <div><h1>${embEsc(titulo)}</h1><div class="sub">Batalhão de Polícia de Fronteira e Divisas · BPFRON/RO</div></div></div>
+  <div class="meta"><span>Emitido em <b>${hoje}</b></span><span>Pedidos incluídos: <b>${embEsc(filtro)}</b></span></div>
+  ${corpo}
+  <div class="rod">Gerado pela página de Pedido de Emborrachados · BPFRON</div>
+  </body></html>`);
+  w.document.close();
+  const imgs = [...w.document.images];
+  Promise.all(imgs.map(i => i.complete ? 0 : new Promise(ok => { i.onload = i.onerror = ok; })))
+    .then(() => setTimeout(() => { w.focus(); w.print(); }, 300));
+}
+
+function embCorTagImpressa(cor){
+  const c = embCorNorm(cor);
+  return c ? `<i class="sw ${EMB_COR_SW[c]}"></i>${embEsc(c)}` : '<i class="sw sw-nada"></i><i>cor não informada</i>';
+}
+
+// Para o fabricante: SÓ o que fabricar (foto, modelo, cor, quantidade). Sem nome de policial nem preço.
+function embImprimirFabricante(){
+  const resumo = embGestResumo(embGestFiltrados());
+  if (!resumo.length){ alert('Nenhum pedido no filtro escolhido.'); return; }
+  const total = resumo.reduce((a,i) => a + i.qtd, 0);
+  const corpo = `
+    <div class="meta"><span>Itens diferentes: <b>${resumo.length}</b></span><span>Total de unidades: <b>${total}</b></span></div>
+    <div class="grade">${resumo.map(i => `
+      <div class="cartao">
+        ${i.id ? `<img src="${embImg(i.id)}" alt="">` : '<div class="semfoto">sem foto (saiu do catálogo)</div>'}
+        <div class="nm">${embEsc(i.item)}</div>
+        <div>${embCorTagImpressa(i.cor)}</div>
+        <div class="qt">${i.qtd} un.</div>
+      </div>`).join('')}
+    </div>
+    <h2>Resumo para conferência</h2>
+    <table><thead><tr><th>#</th><th>Modelo</th><th>Cor</th><th style="text-align:center">Quantidade</th></tr></thead><tbody>
+      ${resumo.map((i, n) => `<tr><td class="n">${n+1}</td><td>${embEsc(i.item)}</td><td>${embCorTagImpressa(i.cor)}</td><td class="n">${i.qtd}</td></tr>`).join('')}
+      <tr><td colspan="3" style="text-align:right"><b>Total</b></td><td class="n">${total}</td></tr>
+    </tbody></table>`;
+  embJanelaRelatorio('Encomenda de emborrachados', corpo);
+}
+
+// Por policial: pra separar e entregar, com a foto de cada item.
+function embImprimirPedidos(){
+  const pedidos = embGestFiltrados();
+  if (!pedidos.length){ alert('Nenhum pedido no filtro escolhido.'); return; }
+  const tot = pedidos.reduce((a,p) => a + (Number(p.valor_total)||0), 0);
+  const un = pedidos.reduce((a,p) => a + (Number(p.unidades)||0), 0);
+  const pagTxt = p => /^conferido$/i.test(String(p.pagamento||'').trim()) ? 'Pagamento conferido'
+                    : (p.tem_comprovante ? 'Comprovante enviado' : 'Aguardando pagamento');
+  const corpo = `
+    <div class="meta"><span>Pedidos: <b>${pedidos.length}</b></span><span>Unidades: <b>${un}</b></span><span>Valor: <b>${embMoeda(tot)}</b></span></div>
+    ${pedidos.map(p => `
+      <div class="ped">
+        <h3>Pedido nº ${embEsc(p.pedido)} · ${embEsc(p.nome)}</h3>
+        <div style="font-size:11.5px;color:#333">RE ${embEsc(p.re)} · ${embEsc(p.contato)} · ${embEsc(p.data)} · Status: <b>${embEsc(p.status)}</b> · <b>${pagTxt(p)}</b></div>
+        <table><thead><tr><th style="width:58px">Foto</th><th>Modelo</th><th>Cor</th><th style="text-align:center">Qtd</th><th>Valor</th></tr></thead><tbody>
+          ${(p.itens||[]).map(i => `<tr>
+            <td>${i.id ? `<img class="mini" src="${embImg(i.id)}" alt="">` : ''}</td>
+            <td>${embEsc(i.item)}</td><td>${embCorTagImpressa(i.cor)}</td>
+            <td class="n">${i.qtd}</td><td>${embMoeda(i.valor)}</td></tr>`).join('')}
+          <tr><td colspan="3" style="text-align:right"><b>Total do pedido</b></td><td class="n">${p.unidades}</td><td><b>${embMoeda(p.valor_total)}</b></td></tr>
+        </tbody></table>
+      </div>`).join('')}`;
+  embJanelaRelatorio('Pedidos de emborrachados', corpo);
 }
 
 /* ── Editar / cancelar o próprio pedido ──
@@ -756,7 +1168,7 @@ function embToggleBusca(){
   const box = document.getElementById('emb-busca');
   const abrir = box.style.display === 'none';
   box.style.display = abrir ? '' : 'none';
-  document.getElementById('emb-edit-btn').textContent = abrir ? '✕ Fechar' : '✏️ Editar meu pedido';
+  document.getElementById('emb-edit-btn').textContent = abrir ? '✕ Fechar' : '✏️ Meu pedido · pagar';
   if (abrir) document.getElementById('emb-b-re').focus();
 }
 
@@ -785,20 +1197,29 @@ async function embBuscarPedido(){
     }
     msg.textContent = '';
     lista.innerHTML = d.pedidos.map(p => {
-      const itens = p.itens.map(i => `${i.qtd}× ${embEsc(i.item)}`).join(' · ');
+      const itens = p.itens.map(i => `${i.qtd}× ${embEsc(i.item)} (${embCorTag(i.cor)})`).join('<br>');
       const podeEditar = p.editavel && p.itens.every(i => i.id);
+      const pag = { pedido: String(p.pedido), valor: p.valor_total, re, tel4 };
+      const motivo = p.tem_comprovante
+        ? 'Já pago: para acrescentar itens, faça um pedido novo. Para cancelar, procure o P4.'
+        : (p.editavel ? 'Um item deste pedido saiu do catálogo — procure o P4.'
+                      : 'Já processado pela gestão. Procure o P4 para alterar.');
       return `<div class="emb-ped">
           <div class="det">
             <b>Pedido nº ${embEsc(p.pedido)}</b> — ${embEsc(p.data)}<br>
             ${itens}<br>
-            <b>${embMoeda(p.valor_total)}</b> · ${p.unidades} unidade(s)
+            <b>${embMoeda(p.valor_total)}</b> · ${p.unidades} unidade(s)<br>
+            <span style="display:inline-block;margin-top:5px">${embPagStatus(p)}</span>
           </div>
           <span class="st ${podeEditar?'ok':'lock'}">${podeEditar ? p.status : (p.editavel ? 'item fora do catálogo' : p.status)}</span>
-          ${podeEditar
-            ? `<button class="emb-btn" onclick="embEditarPedido('${embEsc(p.pedido)}','${re}','${tel4}')">✏️ Editar este</button>`
-            : `<span style="font-size:11.5px;color:#94a3b8;max-width:200px">${p.editavel
-                 ? 'Um item deste pedido saiu do catálogo — procure o P4.'
-                 : 'Já processado pela gestão. Procure o P4 para alterar.'}</span>`}
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+            ${p.pode_pagar
+              ? `<button class="emb-btn" onclick='embAbrirPagamento(${JSON.stringify(pag).replace(/'/g,"&#39;")})'>${p.tem_comprovante ? '📎 Enviar outro comprovante' : '💳 Pagar / enviar comprovante'}</button>`
+              : ''}
+            ${podeEditar
+              ? `<button class="emb-btn ghost" onclick="embEditarPedido('${embEsc(p.pedido)}','${re}','${tel4}')">✏️ Editar este</button>`
+              : `<span style="font-size:11.5px;color:#94a3b8;max-width:220px">${motivo}</span>`}
+          </div>
         </div>`;
     }).join('');
   }catch(e){
@@ -817,12 +1238,17 @@ async function embEditarPedido(pedido, re, tel4){
   const p = (d.pedidos||[]).find(x => String(x.pedido) === String(pedido));
   if (!p){ document.getElementById('emb-b-msg').textContent = 'Pedido não encontrado.'; return; }
 
-  EMB_CART = {};
-  p.itens.forEach(i => { if (i.id) EMB_CART[i.id] = (EMB_CART[i.id]||0) + i.qtd; });
+  EMB_CART = {}; EMB_COR_SEL = {};
+  // Item de pedido antigo vem sem cor: entra como "id|" e o carrinho pede a cor.
+  p.itens.forEach(i => {
+    if (!i.id) return;
+    const key = i.id + '|' + embCorNorm(i.cor);
+    EMB_CART[key] = (EMB_CART[key]||0) + i.qtd;
+  });
   EMB_EDIT = { pedido: String(p.pedido), re, tel4 };
 
   document.getElementById('emb-busca').style.display = 'none';
-  document.getElementById('emb-edit-btn').textContent = '✏️ Editar meu pedido';
+  document.getElementById('emb-edit-btn').textContent = '✏️ Meu pedido · pagar';
   document.getElementById('emb-edit-num').textContent = 'pedido nº ' + p.pedido;
   document.getElementById('emb-edit-bar').style.display = '';
   embRender();
@@ -864,17 +1290,23 @@ async function embSalvarEdicao(){
     msg.textContent = 'O pedido ficou vazio. Use "🗑️ Cancelar pedido" se quiser desistir dele.';
     return;
   }
+  const semCor = itens.filter(i => !i.cor);
+  if (semCor.length){
+    msg.textContent = 'Escolha a cor de: ' + semCor.map(i => i.nome).join(', ') + ' (no carrinho, ao lado de cada item).';
+    return;
+  }
   const old = btn.textContent;
   btn.disabled = true; btn.textContent = 'Salvando…';
   msg.className = 'emb-msg'; msg.textContent = '';
   try{
     const r = await fetch(API_BASE + '/api/emborrachados/editar', {
       method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({ ...EMB_EDIT, itens: itens.map(i => ({ id:i.id, qtd:i.qtd })) }),
+      body: JSON.stringify({ ...EMB_EDIT, itens: itens.map(i => ({ id:i.id, cor:i.cor, qtd:i.qtd })) }),
     });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
     const num = EMB_EDIT.pedido;
+    EMB_ULTIMO = { pedido: String(num), valor: d.valor_total, re: EMB_EDIT.re, tel4: EMB_EDIT.tel4 };
     EMB_EDIT = null; EMB_CART = {};
     document.getElementById('emb-edit-bar').style.display = 'none';
     document.getElementById('emb-cart').style.display = 'none';
@@ -883,9 +1315,10 @@ async function embSalvarEdicao(){
         <div style="font-size:46px;margin-bottom:6px">💾</div>
         <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido atualizado</div>
         <div class="num">Nº ${embEsc(num)}</div>
-        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">Agora são <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> modelo(s).</p>
+        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">Agora são <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).</p>
         <p style="color:#6ee7b7;font-size:19px;font-weight:800">${embMoeda(d.valor_total)}</p>
-        <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
+        <button class="emb-send" style="margin-top:18px" onclick="embAbrirPagamento(EMB_ULTIMO)">💳 Pagar com PIX e enviar o comprovante</button><br>
+        <button class="emb-btn ghost" style="margin-top:14px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
       </div>`;
   }catch(e){
     msg.className = 'emb-msg err';
@@ -922,6 +1355,219 @@ async function embCancelarPedido(){
   }catch(e){
     msg.className = 'emb-msg err';
     msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao cancelar o pedido.');
+  }
+}
+
+/* ── Pagamento: copiar a chave PIX, pagar e mandar o comprovante ──
+   A chave vem da aba CONFIG_PIX (o gestor cadastra na Área do gestor).
+   O "copia e cola" é gerado aqui, no padrão do Banco Central (BR Code
+   estático), já com o VALOR do pedido e o nº do pedido como identificador —
+   o policial não digita valor nenhum. O comprovante vai pelo mesmo RE + 4
+   dígitos do telefone da edição; quem confere é o gestor. */
+let EMB_PIX = null;     // cache da configuração (por carregamento da página)
+let EMB_PAG = null;     // { pedido, valor, re, tel4 } do pagamento aberto
+
+function embPagStatus(p){
+  const k = String(p.pagamento||'').toLowerCase();
+  if (k === 'conferido') return '<span class="emb-pagst ok">✅ Pagamento conferido</span>';
+  if (p.tem_comprovante || k) return '<span class="emb-pagst env">📎 Comprovante enviado</span>';
+  return '<span class="emb-pagst nao">💳 Aguardando pagamento</span>';
+}
+
+function embCrc16(s){
+  let crc = 0xFFFF;
+  for (const b of new TextEncoder().encode(s)){
+    crc ^= b << 8;
+    for (let i = 0; i < 8; i++) crc = ((crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1)) & 0xFFFF;
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+function embPixPayload({ chave, nome, cidade, valor, txid }){
+  const f = (id, v) => id + String(v.length).padStart(2, '0') + v;
+  // Nome e cidade só aceitam ASCII sem acento no BR Code.
+  const limpa = (s, n) => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9 ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim().slice(0, n);
+  let p = f('00', '01') + f('26', f('00', 'br.gov.bcb.pix') + f('01', chave)) + f('52', '0000') + f('53', '986');
+  if (valor > 0) p += f('54', Number(valor).toFixed(2));
+  p += f('58', 'BR') + f('59', limpa(nome, 25) || 'BPFRON') + f('60', limpa(cidade, 15) || 'RONDONIA');
+  p += f('62', f('05', String(txid||'').replace(/[^A-Za-z0-9]/g, '').slice(0, 25) || '***'));
+  p += '6304';
+  return p + embCrc16(p);
+}
+function embChaveBonita(tipo, ch){
+  const d = String(ch||'').replace(/\D/g,'');
+  if (tipo === 'cpf' && d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  if (tipo === 'cnpj' && d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  if (tipo === 'celular'){
+    const n = d.startsWith('55') ? d.slice(2) : d;
+    if (n.length === 11) return n.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  }
+  return ch;
+}
+const EMB_TIPO_NOME = { cpf:'CPF', cnpj:'CNPJ', celular:'Celular', email:'E-mail', aleatoria:'Chave aleatória' };
+
+async function embCopiar(texto, btn){
+  let ok = false;
+  try { await navigator.clipboard.writeText(texto); ok = true; } catch {}
+  if (!ok){
+    // Navegador sem a API (WebView antiga do WhatsApp): copia pelo jeito antigo.
+    const t = document.createElement('textarea');
+    t.value = texto; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, texto.length);
+    try { ok = document.execCommand('copy'); } catch {}
+    t.remove();
+  }
+  if (btn){
+    const old = btn.dataset.txt || btn.textContent; btn.dataset.txt = old;
+    btn.textContent = ok ? '✔ Copiado!' : 'Selecione e copie à mão';
+    setTimeout(() => { btn.textContent = old; }, 2200);
+  }
+}
+
+async function embCarregarPix(forcar){
+  if (EMB_PIX && !forcar) return EMB_PIX;
+  const r = await fetch(API_BASE + '/api/emborrachados/pix');
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+  EMB_PIX = d;
+  return d;
+}
+
+async function embAbrirPagamento(ctx){
+  if (!ctx) return;
+  EMB_PAG = ctx;
+  const modal = document.getElementById('emb-pag');
+  const corpo = document.getElementById('emb-pag-corpo');
+  modal.style.display = '';
+  document.body.style.overflow = 'hidden';
+  corpo.innerHTML = '<div class="emb-state" style="padding:30px 0">Carregando os dados do PIX…</div>';
+  let pix;
+  try { pix = await embCarregarPix(true); }
+  catch(e){ corpo.innerHTML = '<div class="emb-state">❌ ' + embEsc(e.message) + '</div>'; return; }
+
+  const topo = `<div class="emb-pag-ttl">💳 Pagamento do pedido nº ${embEsc(ctx.pedido)}</div>
+    <div style="font-size:12px;color:#94a3b8">Valor a pagar</div>
+    <div class="emb-pag-valor">${embMoeda(ctx.valor)}</div>`;
+  if (!pix.configurado){
+    corpo.innerHTML = topo + `<div class="emb-passo" style="color:#fcd34d;font-size:13.5px;line-height:1.55">
+      ⚠️ A chave PIX ainda não foi cadastrada pelo P4. Seu pedido está registrado — volte aqui mais tarde
+      em <b>✏️ Meu pedido · pagar</b> para pagar e mandar o comprovante.</div>`;
+    return;
+  }
+  const cc = embPixPayload({ chave: pix.chave, nome: pix.titular, cidade: pix.cidade, valor: ctx.valor, txid: 'EMBPED' + ctx.pedido });
+  EMB_PAG.cc = cc;
+  corpo.innerHTML = topo + `
+    ${pix.aviso ? `<div style="font-size:12.5px;color:#fcd34d;margin-bottom:6px;line-height:1.5">ℹ️ ${embEsc(pix.aviso)}</div>` : ''}
+    <div class="emb-passo">
+      <h4>1 · Copie a chave PIX</h4>
+      <div class="emb-chave">
+        <code>${embEsc(embChaveBonita(pix.tipo, pix.chave))}</code>
+        <button class="emb-btn" type="button" onclick="embCopiar(EMB_PIX.chave, this)">📋 Copiar chave</button>
+      </div>
+      <div class="emb-pix-info">
+        Tipo: <b>${embEsc(EMB_TIPO_NOME[pix.tipo] || pix.tipo)}</b><br>
+        Titular: <b>${embEsc(pix.titular)}</b>${pix.banco ? ` · ${embEsc(pix.banco)}` : ''}<br>
+        <span style="color:#94a3b8">Antes de confirmar no banco, confira se aparece esse nome.</span>
+      </div>
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:12.5px;color:#93c5fd;font-weight:700">Prefere o PIX copia e cola (já vem com o valor)?</summary>
+        <div style="margin-top:8px">
+          <textarea class="emb-pix-cc" readonly onclick="this.select()">${embEsc(cc)}</textarea>
+          <button class="emb-btn" type="button" onclick="embCopiar(EMB_PAG.cc, this)">📋 Copiar código</button>
+          <button class="emb-btn ghost" type="button" onclick="embMostrarQR()">🔳 Mostrar QR Code</button>
+          <div id="emb-qr"></div>
+        </div>
+      </details>
+    </div>
+    <div class="emb-passo">
+      <h4>2 · Pague no app do seu banco</h4>
+      <div style="font-size:13px;color:#cbd5e1;line-height:1.55">Pix → <b>Pagar com chave</b> (ou <b>Pix copia e cola</b>), valor de <b>${embMoeda(ctx.valor)}</b>.
+        Depois salve o comprovante (print da tela ou PDF).</div>
+    </div>
+    <div class="emb-passo">
+      <h4>3 · Envie o comprovante</h4>
+      <div class="emb-file">
+        <label>📎 Escolher arquivo<input type="file" id="emb-pag-arq" accept="image/*,application/pdf" onchange="embPagArquivo(this)"></label>
+        <span class="nome" id="emb-pag-nome">nenhum arquivo escolhido</span>
+      </div>
+      <button class="emb-send" id="emb-pag-env" type="button" style="width:100%;margin-top:12px" onclick="embEnviarComprovante()" disabled>📤 Enviar comprovante</button>
+      <div class="emb-msg" id="emb-pag-msg"></div>
+    </div>`;
+}
+
+function embFecharPag(){
+  document.getElementById('emb-pag').style.display = 'none';
+  document.body.style.overflow = '';
+  EMB_PAG = null;
+}
+
+function embPagArquivo(inp){
+  const f = inp.files && inp.files[0];
+  document.getElementById('emb-pag-nome').textContent = f ? f.name + ' · ' + (f.size < 1048576 ? Math.max(1, Math.round(f.size/1024)) + ' KB' : (f.size/1048576).toFixed(1) + ' MB') : 'nenhum arquivo escolhido';
+  document.getElementById('emb-pag-env').disabled = !f;
+  const msg = document.getElementById('emb-pag-msg');
+  msg.className = 'emb-msg'; msg.textContent = '';
+  if (f && f.size > 8 * 1024 * 1024){
+    msg.className = 'emb-msg err'; msg.textContent = 'Arquivo acima de 8 MB — mande um print da tela em vez da foto.';
+    document.getElementById('emb-pag-env').disabled = true;
+  }
+}
+
+let EMB_QR_LIB = null;
+function embMostrarQR(){
+  const box = document.getElementById('emb-qr');
+  if (!box || !EMB_PAG) return;
+  const desenha = () => {
+    box.innerHTML = '<div class="emb-qr"></div>';
+    new QRCode(box.firstChild, { text: EMB_PAG.cc, width: 210, height: 210, correctLevel: QRCode.CorrectLevel.M });
+  };
+  if (window.QRCode) return desenha();
+  box.innerHTML = '<div style="font-size:12px;color:#94a3b8;margin-top:6px">Gerando QR Code…</div>';
+  EMB_QR_LIB = EMB_QR_LIB || new Promise((ok, erro) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = ok; s.onerror = erro;
+    document.head.appendChild(s);
+  });
+  EMB_QR_LIB.then(desenha).catch(() => {
+    EMB_QR_LIB = null;
+    box.innerHTML = '<div style="font-size:12px;color:#fca5a5;margin-top:6px">Não deu pra gerar o QR Code agora — use o código acima.</div>';
+  });
+}
+
+async function embEnviarComprovante(){
+  const inp = document.getElementById('emb-pag-arq');
+  const btn = document.getElementById('emb-pag-env');
+  const msg = document.getElementById('emb-pag-msg');
+  const f = inp && inp.files && inp.files[0];
+  if (!f || !EMB_PAG) return;
+  const fd = new FormData();
+  fd.append('re', EMB_PAG.re);
+  fd.append('tel4', EMB_PAG.tel4);
+  fd.append('pedido', EMB_PAG.pedido);
+  fd.append('file', f, f.name);
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  msg.className = 'emb-msg'; msg.textContent = '';
+  try{
+    const r = await fetch(API_BASE + '/api/emborrachados/comprovante', { method:'POST', body: fd });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
+    document.getElementById('emb-pag-corpo').innerHTML = `
+      <div style="text-align:center;padding:16px 4px">
+        <div style="font-size:48px">✅</div>
+        <div class="emb-pag-ttl" style="padding:0">Comprovante enviado!</div>
+        <p style="color:#cbd5e1;font-size:14px;margin:10px 0 4px">Pedido nº <b>${embEsc(EMB_PAG.pedido)}</b> · ${embMoeda(EMB_PAG.valor)}</p>
+        <p style="color:#94a3b8;font-size:12.5px;line-height:1.5">O P4 confere o pagamento e encaminha o pedido ao fabricante.
+          Se mandou o arquivo errado, abra <b>✏️ Meu pedido · pagar</b> e envie outro.</p>
+        <button class="emb-send" type="button" style="margin-top:14px" onclick="embFecharPag()">Fechar</button>
+      </div>`;
+    // Se o pagamento veio da lista do "Meu pedido", atualiza o status lá.
+    const busca = document.getElementById('emb-busca');
+    if (busca && busca.style.display !== 'none' && document.getElementById('emb-b-lista').innerHTML) embBuscarPedido();
+  }catch(e){
+    msg.className = 'emb-msg err';
+    msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao enviar o comprovante.');
+    btn.disabled = false; btn.textContent = '📤 Enviar comprovante';
   }
 }
 
