@@ -6673,6 +6673,30 @@ function dpClassOpm(raw){
 // OPM do lançamento (cai pro cadastro do policial se a linha vier sem OPM)
 function dpMisClass(m, p){ return dpClassOpm((m && m.opm) || (p && p.opm) || ''); }
 
+/* Efetivo ATIVO do BPFRON = quem está com OPM BPFRON no cadastro POLICIAIS de
+   HOJE (mesmo critério do painel do P1). A pílula BPFRON mostra só essa gente:
+   quem foi transferido some dela mesmo tendo lançamento antigo como BPFRON
+   (pedido do usuário, 06/10/2026). O RE é comparado inteiro e, na falta, pelos
+   5 últimos dígitos (escala às vezes traz o RE completo, ex. 100096357). */
+let DP_EFET_CURTO = null;
+function dpReCurto(re){ const d = String(re||'').replace(/\D/g,''); return d.length > 5 ? d.slice(-5) : d; }
+function dpCadastro(p){
+  if(!p || !p.re) return null;
+  const re = String(p.re).trim();
+  if(DP_EFET_BY_RE[re]) return DP_EFET_BY_RE[re];
+  if(!DP_EFET_CURTO){
+    DP_EFET_CURTO = {};
+    Object.values(DP_EFET_BY_RE).forEach(e=>{ const k = dpReCurto(e.re); if(k && !DP_EFET_CURTO[k]) DP_EFET_CURTO[k] = e; });
+  }
+  return DP_EFET_CURTO[dpReCurto(re)] || null;
+}
+// Sem cadastro carregado (lista vazia) não dá pra saber quem é ativo: não esconde ninguém.
+function dpAtivoBpfron(p){
+  if(!Object.keys(DP_EFET_BY_RE).length) return true;
+  const e = dpCadastro(p);
+  return !!e && dpUnidade(e.opm) === 'BPFRON';
+}
+
 let DP_CMD_SEL = null;   // 'BPFRON' | 'CRP' | 'CPE' | 'OUTRAS'
 let DP_SUB_SEL = null;   // CRP: 'CRP-I'… | CPE: 'BOPE'…
 let DP_BAT_SEL = null;   // batalhão dentro do CRP selecionado
@@ -6704,6 +6728,7 @@ function dpBuildView(){
   const pols = [], opMap = {};
   let lanc = 0;
   (DP_DATA.policiais||[]).forEach(p=>{
+    if(DP_CMD_SEL === 'BPFRON' && !dpAtivoBpfron(p)) return; // só o efetivo ativo
     const ms = (p.missoes||[]).filter(m=>dpMisMatch(dpMisClass(m,p)));
     if(!ms.length) return;
     const valor = ms.reduce((a,m)=>a+(m.valor_total||0),0);
@@ -6735,15 +6760,19 @@ function dpV(){ if(!DP_VIEW) dpBuildView(); return DP_VIEW || { policiais:[], po
 function dpCmdStats(){
   const g = { BPFRON:{v:0,l:0}, CRP:{v:0,l:0}, CPE:{v:0,l:0}, OUTRAS:{v:0,l:0} };
   const crp = {}, uni = {};
+  // lançamentos BPFRON de quem já saiu do batalhão (ficam fora da pílula, mas o info avisa)
+  const saiu = { v:0, l:0, pol:new Set() };
   (DP_DATA.policiais||[]).forEach(p=>{
+    const ativo = dpAtivoBpfron(p);
     (p.missoes||[]).forEach(m=>{
       const c = dpMisClass(m,p), val = m.valor_total||0;
+      if(c.grupo === 'BPFRON' && !ativo){ saiu.v += val; saiu.l++; saiu.pol.add(dpKey(p)); return; }
       g[c.grupo].v += val; g[c.grupo].l++;
       if(c.crp){ const x = crp[c.crp] = crp[c.crp]||{v:0,l:0}; x.v+=val; x.l++; }
       const u = uni[c.unid] = uni[c.unid]||{v:0,l:0,grupo:c.grupo,crp:c.crp}; u.v+=val; u.l++;
     });
   });
-  return { g, crp, uni };
+  return { g, crp, uni, saiu };
 }
 
 function dpRenderCmdBar(){
@@ -6786,7 +6815,7 @@ function dpRenderCmdBar(){
   if(info){
     const v = dpV();
     let alvo = 'Todos os comandos';
-    if(DP_CMD_SEL === 'BPFRON') alvo = 'BPFRON (Batalhão de Polícia de Fronteira — CPE)';
+    if(DP_CMD_SEL === 'BPFRON') alvo = 'BPFRON — efetivo ativo (OPM BPFRON no cadastro de hoje)';
     else if(DP_CMD_SEL === 'CRP') alvo = DP_BAT_SEL ? `${DP_BAT_SEL} (${DP_SUB_SEL})`
       : DP_SUB_SEL ? `${DP_SUB_SEL} — ${DP_CRP[DP_SUB_SEL].sede} · ${DP_CRP[DP_SUB_SEL].bats.join(', ')}`
       : 'CRP I a IV (todos os BPMs)';
@@ -6796,7 +6825,11 @@ function dpRenderCmdBar(){
     info.innerHTML = `<span>📍 <b>${dpEsc(alvo)}</b></span><span>•</span>`
       + `<span>${(v.policiais||[]).length} policiais</span><span>•</span>`
       + `<span>${(v.kpis.total_lancamentos||0)} lançamentos</span><span>•</span>`
-      + `<span><b>${fR(v.kpis.total_pago||0)}</b></span>`;
+      + `<span><b>${fR(v.kpis.total_pago||0)}</b></span>`
+      + (DP_CMD_SEL === 'BPFRON' && st.saiu.l
+        ? `<span>•</span><span style="opacity:.75" title="Lançados como BPFRON, mas hoje o cadastro POLICIAIS dá outra OPM (ou o RE não está no cadastro)">`
+          + `fora: ${st.saiu.pol.size} que saíram do batalhão (${st.saiu.l} lanç., ${fR(st.saiu.v)})</span>`
+        : '');
   }
 }
 
@@ -6833,6 +6866,7 @@ async function initDiaria(){
     // índice do efetivo por RE (pro autocomplete do formulário)
     DP_EFET_BY_RE = {};
     (DP_DATA.efetivo||[]).forEach(e=>{ if(e.re) DP_EFET_BY_RE[String(e.re).trim()] = e; });
+    DP_EFET_CURTO = null;
     dpRenderAll();
   } catch(e){
     if (status) status.textContent = '⚠️ ' + (e && e.message ? e.message : 'Erro ao carregar diárias.');
@@ -7465,6 +7499,7 @@ async function dpCadSalvar(i){
     DP_POL_PREFILL[i] = Object.assign({}, DP_POL_PREFILL[i]||{}, { re:chave, divergente:false, no_cadastro:true, nome:dados.nome, nome_escala:dados.nome, nome_cadastro:'' });
     // atualiza o cache local do efetivo pra não voltar o valor antigo no próximo dpOnRE
     if(dados.re) DP_EFET_BY_RE[dados.re]={ re:dados.re, guerra:dados.guerra.toUpperCase(), posto_grad:dados.posto_grad.toUpperCase(), opm:dados.opm.toUpperCase(), nome:(dados.nome||dados.guerra).toUpperCase() };
+    DP_EFET_CURTO = null;
     if(st){ st.style.color='#34d399'; st.textContent = r.op==='criado' ? '✅ cadastrado' : '✅ cadastro atualizado'; }
     const box=document.getElementById('dm-cad-'+i); if(box){ box.style.display='none'; box.innerHTML=''; }
   }catch(e){
