@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leilão · Prestação de Contas · BPFRON/RO</title>
+<script src="conta.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #060912;
+  --bg2:      #0b0f1a;
+  --yellow:   #F5C518;
+  --text:     #dde3f0;
+  --muted:    #94a3b8;
+  --border:   rgba(245,197,24,0.10);
+  --card:     rgba(12,17,30,0.85);
+  --red:      #ef4444;
+  --redsoft:  rgba(239,68,68,.12);
+  --green:    #34d399;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  font-size:15.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1240px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
+.hdr-back:hover{color:var(--yellow)}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif}
+.hdr-link:hover{color:var(--yellow)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(20px,4vw,34px) 16px 70px}
+
+.tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.tab{flex:1;min-width:130px;background:rgba(148,163,184,.07);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--muted);font-family:'Inter',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;transition:.13s}
+.tab:hover{background:rgba(148,163,184,.13);color:#cbd5e1}
+.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.tab .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(148,163,184,.15);font-size:12px}
+.pane{display:none}
+.pane.on{display:block}
+
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:28px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec:first-child{margin-top:0}
+.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.sec .sp{flex:1}
+
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px)}
+.hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
+.aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 16px;font-size:14px;color:#fcd34d;line-height:1.6;margin-bottom:18px}
+.aviso b{color:#fde68a}
+
+.fg{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.fg label i{font-style:normal;color:#fca5a5}
+.fg input,.fg textarea,.fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15px;outline:none;min-height:44px;width:100%}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:rgba(245,197,24,.6)}
+.fg textarea{min-height:70px;resize:vertical}
+.fg small{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.span2{grid-column:span 2}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}.span2{grid-column:auto}}
+
+.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:12px 20px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;min-height:44px;transition:.12s}
+.btn:hover{background:rgba(245,197,24,.22)}
+.btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
+.btn.ghost:hover{background:rgba(148,163,184,.18)}
+.btn.danger{background:var(--redsoft);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.btn.danger:hover{background:rgba(239,68,68,.2)}
+.btn.small{padding:7px 12px;font-size:13px;min-height:34px}
+.btn.icon{padding:5px 9px;font-size:14px;min-height:32px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.msg{font-size:14px;min-height:19px;margin-top:12px;line-height:1.6}
+.msg.err{color:#fca5a5}
+.msg.ok{color:#6ee7b7}
+
+/* ---------------- lista de leilões ---------------- */
+.leiloes{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:26px}
+.lcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:.13s;text-align:left;font-family:'Inter',sans-serif;color:var(--text)}
+.lcard:hover{border-color:rgba(245,197,24,.38)}
+.lcard.on{border-color:rgba(245,197,24,.7);background:rgba(245,197,24,.07)}
+.lcard .lt{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#fff;line-height:1.25}
+.lcard .lp{font-size:12.5px;color:var(--muted);margin-top:2px}
+.lcard .ls{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(148,163,184,.1);font-size:13px;color:var(--muted)}
+.lcard .ls span{display:flex;justify-content:space-between;gap:10px}
+.lcard .ls b{font-size:14.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.st{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border:1px solid}
+.st.EM_ANDAMENTO{color:#93c5fd;border-color:rgba(147,197,253,.4);background:rgba(147,197,253,.08)}
+.st.ENCERRADO{color:#fcd34d;border-color:rgba(252,211,77,.4);background:rgba(252,211,77,.08)}
+.st.CONTAS_PRESTADAS{color:#6ee7b7;border-color:rgba(110,231,183,.4);background:rgba(110,231,183,.08)}
+
+/* ---------------- KPIs ---------------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:800px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;min-width:0}
+.kpi .kl{font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.kpi .kv{font-family:'Rajdhani',sans-serif;font-size:clamp(20px,3vw,27px);font-weight:700;color:#fff;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .ks{font-size:12px;color:var(--muted)}
+.kv.pos{color:var(--green)} .kv.neg{color:#fca5a5} .kv.warn{color:#fcd34d}
+
+.cab-leilao{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+.cab-leilao .ct{flex:1;min-width:220px}
+.cab-leilao h2{font-family:'Rajdhani',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;color:#fff;line-height:1.2}
+.cab-leilao .cp{font-size:13.5px;color:var(--muted);margin-top:4px}
+
+.dados{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 22px}
+.dados div{font-size:14px;min-width:0;overflow-wrap:anywhere}
+.dados span{display:block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ---------------- tabelas ---------------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--border);white-space:nowrap;background:rgba(5,8,15,.5)}
+td{padding:11px 12px;border-bottom:1px solid rgba(148,163,184,.08);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.v{text-align:right;white-space:nowrap;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+th.v{text-align:right}
+td .sub{display:block;font-size:12.5px;color:var(--muted)}
+td.acoes{white-space:nowrap;text-align:right}
+tr.cancel td{opacity:.5}
+tr.cancel td.v{text-decoration:line-through}
+tr.cancel .motivo{opacity:1;color:#fca5a5}
+tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);background:rgba(245,197,24,.04)}
+.arq{display:inline-flex;align-items:center;gap:4px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:#6ee7b7;border-radius:8px;padding:4px 9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+.arq:hover{background:rgba(52,211,153,.2)}
+.falta{display:inline-block;color:#fcd34d;font-size:12.5px;font-weight:700;white-space:nowrap}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tools input[type=search]{flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:14.5px;outline:none;min-height:42px}
+/* Celular: cada linha da tabela vira um cartão, com o rótulo antes do valor. */
+@media(max-width:700px){
+  .tbl-wrap table,.tbl-wrap tbody,.tbl-wrap tr,.tbl-wrap td{display:block;width:100%}
+  .tbl-wrap thead{display:none}
+  .tbl-wrap tbody tr{padding:12px 14px;border-bottom:1px solid rgba(148,163,184,.12)}
+  .tbl-wrap td{border:none;padding:3px 0}
+  .tbl-wrap td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .tbl-wrap td.v{text-align:left;font-size:17px}
+  .tbl-wrap td.acoes{text-align:left;padding-top:8px}
+  .tbl-wrap td.acoes:empty,.tbl-wrap tfoot td:empty{display:none}
+  .tbl-wrap tfoot tr{display:flex;justify-content:space-between;gap:10px;padding:12px 14px}
+  .tbl-wrap tfoot td{padding:0;width:auto;background:none;border:none}
+}
+.chk{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);cursor:pointer;user-select:none}
+
+.docs{display:flex;flex-direction:column;gap:8px}
+.doc{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap}
+.doc .di{font-size:24px}
+.doc .dt{flex:1;min-width:180px}
+.doc .dt b{color:#e2e8f0;font-size:14.5px}
+.doc .dt span{display:block;font-size:12.5px;color:var(--muted)}
+
+.hist{display:flex;flex-direction:column}
+.hl{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px}
+.hl:last-child{border-bottom:none}
+.hl .hq{color:var(--muted);font-size:12.5px}
+.hl .ha b{color:var(--yellow)}
+@media(max-width:600px){.hl{grid-template-columns:1fr;gap:2px}}
+
+.vazio{text-align:center;color:var(--muted);padding:36px 12px;font-size:14.5px;line-height:1.7}
+
+/* ---------------- modais ---------------- */
+.modal{position:fixed;inset:0;background:rgba(3,6,12,.82);backdrop-filter:blur(3px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+.modal.on{display:flex}
+.modal-box{background:#0b111e;border:1px solid rgba(245,197,24,.28);border-radius:16px;padding:22px;max-width:720px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7)}
+.modal-tit{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff;margin-bottom:16px}
+.anexo{border:2px dashed rgba(245,197,24,.3);border-radius:12px;padding:14px;text-align:center;cursor:pointer;background:rgba(245,197,24,.02);font-size:14px;color:var(--muted);transition:.12s}
+.anexo:hover,.anexo.over{border-color:rgba(245,197,24,.7);background:rgba(245,197,24,.07)}
+.anexo b{color:#e2e8f0}
+.anexo.tem{border-style:solid;border-color:rgba(52,211,153,.45);color:#6ee7b7}
+
+/* ---------------- visor de arquivo ---------------- */
+.visor{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:300;display:none;flex-direction:column}
+.visor.on{display:flex}
+.visor-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#070b14;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.visor-bar .vt{flex:1;min-width:0;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.visor-corpo{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;min-height:0}
+.visor-corpo iframe{width:100%;height:100%;border:0;background:#fff}
+.visor-corpo img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* ---------------- relatório (impressão) ---------------- */
+#relatorio{display:none}
+@media print{
+  body{background:#fff !important;color:#000}
+  body > *:not(#relatorio){display:none !important}
+  #relatorio{display:block;font-family:'Inter',Arial,sans-serif;font-size:10.5pt;color:#000}
+  #relatorio h1{font-size:15pt;margin:0}
+  #relatorio h3{font-size:11pt;margin:16px 0 6px;border-bottom:1.5px solid #000;padding-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+  #relatorio table{width:100%;border-collapse:collapse;font-size:9pt}
+  #relatorio th,#relatorio td{border:1px solid #888;padding:4px 6px;text-align:left;vertical-align:top;color:#000;background:none}
+  #relatorio th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:8.5pt;text-transform:uppercase}
+  #relatorio td.v,#relatorio th.v{text-align:right;white-space:nowrap}
+  #relatorio tfoot td{font-weight:700}
+  #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
+  #relatorio .rcab img{height:62px}
+  #relatorio .rres{display:flex;gap:10px;margin:10px 0}
+  #relatorio .rres div{flex:1;border:1px solid #000;padding:6px 8px}
+  #relatorio .rres span{display:block;font-size:8pt;text-transform:uppercase}
+  #relatorio .rres b{font-size:13pt}
+  #relatorio .rdados td{border:none;padding:2px 6px 2px 0;font-size:9.5pt}
+  #relatorio .rass{margin-top:46px;display:flex;justify-content:space-around;gap:30px;text-align:center;font-size:9.5pt}
+  #relatorio .rass div{flex:1;border-top:1px solid #000;padding-top:4px}
+  #relatorio .rrod{margin-top:18px;font-size:8pt;color:#444}
+  #relatorio tr.cancel td{color:#777;text-decoration:line-through}
+  @page{size:A4;margin:14mm 12mm}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div class="hdr-brand-text">
+        <div class="hdr-title">Leilão · <em>Prestação de Contas</em></div>
+        <div class="hdr-sub">Entradas de recurso, gastos e comprovantes · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="sistemas.html">⬅ Sistemas</a>
+      <span id="userchip"></span>
+      <button class="hdr-link" id="btn-sair" style="display:none">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============================== LOGIN ============================== -->
+  <div id="login-box" style="max-width:460px;margin:30px auto 0">
+    <div class="sec" style="justify-content:center">🔐 Entrar</div>
+    <div class="box">
+      <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
+        Mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard, mas o acesso é <b style="color:#cbd5e1">liberado login por login</b>:
+        para consultar é preciso a permissão <b style="color:#cbd5e1">“Leilão · Prestação de contas (ver)”</b> e, para lançar,
+        <b style="color:#cbd5e1">“(gestor)”</b>.
+      </p>
+      <div class="fg"><label>Usuário</label><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="fg" style="margin-top:12px"><label>Senha</label><input id="f-pass" type="password" autocomplete="current-password"></div>
+      <button class="btn" id="btn-entrar" style="width:100%;margin-top:16px">Entrar</button>
+      <div class="msg" id="msg-login"></div>
+    </div>
+  </div>
+
+  <!-- ============================== APP ============================== -->
+  <div id="app" style="display:none">
+    <div id="estado" class="vazio">Carregando…</div>
+
+    <div id="corpo" style="display:none">
+      <div class="sec">🔨 Leilões <span class="sp"></span>
+        <button class="btn small" id="btn-novo-leilao" style="display:none">➕ Novo leilão</button>
+      </div>
+      <div class="leiloes" id="lista-leiloes"></div>
+
+      <div id="sem-leilao" class="vazio" style="display:none"></div>
+
+      <div id="det" style="display:none">
+        <div class="cab-leilao">
+          <div class="ct">
+            <h2 id="d-titulo"></h2>
+            <div class="cp" id="d-sub"></div>
+          </div>
+          <div class="btnrow" style="margin-top:0">
+            <button class="btn small ghost" id="btn-relatorio">🖨️ Relatório de prestação de contas</button>
+            <button class="btn small ghost ges" id="btn-editar-leilao">✏️ Editar leilão</button>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="kl">💰 Arrecadado</div><div class="kv pos" id="k-ent"></div><div class="ks" id="k-ent-n"></div></div>
+          <div class="kpi"><div class="kl">🧾 Gasto</div><div class="kv neg" id="k-gas"></div><div class="ks" id="k-gas-n"></div></div>
+          <div class="kpi"><div class="kl">🏦 Saldo</div><div class="kv" id="k-sal"></div><div class="ks">arrecadado − gasto</div></div>
+          <div class="kpi"><div class="kl">📎 Sem comprovante</div><div class="kv" id="k-pend"></div><div class="ks">lançamentos sem arquivo</div></div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab on" data-aba="proc">📁 Processo <span class="n" id="n-proc"></span></button>
+          <button class="tab" data-aba="ent">💰 Entradas <span class="n" id="n-ent"></span></button>
+          <button class="tab" data-aba="gas">🧾 Gastos <span class="n" id="n-gas"></span></button>
+          <button class="tab" data-aba="hist">🕓 Histórico</button>
+        </div>
+
+        <!-- ---------------- processo ---------------- -->
+        <div class="pane on" id="pane-proc">
+          <div class="box"><div class="dados" id="d-dados"></div></div>
+          <div class="sec">📄 Documentos do processo <span class="sp"></span>
+            <button class="btn small ges" id="btn-novo-doc">➕ Anexar documento</button>
+          </div>
+          <div class="docs" id="lista-docs"></div>
+          <p class="hint">Edital, portaria da comissão, laudo de avaliação, ata, termo de arrematação, homologação, extrato da conta — tudo que comprova o processo do leilão.</p>
+        </div>
+
+        <!-- ---------------- entradas ---------------- -->
+        <div class="pane" id="pane-ent">
+          <div class="tools">
+            <input type="search" id="busca-ent" placeholder="🔎 Buscar por lote, arrematante, forma…">
+            <label class="chk"><input type="checkbox" id="ver-canc-ent"> mostrar cancelados</label>
+            <button class="btn small ges" id="btn-nova-ent">➕ Lançar entrada</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Data</th><th>Lote</th><th>Arrematante / pagador</th><th>Forma</th><th class="v">Valor</th><th>Comprovante</th><th class="ges"></th></tr></thead>
+            <tbody id="tb-ent"></tbody>
+            <tfoot><tr><td colspan="4">Total arrecadado (sem cancelados)</td><td class="v" id="tf-ent"></td><td></td><td class="ges"></td></tr></tfoot>
+          </table></div>
+        </div>
+
+        <!-- ---------------- gastos ---------------- -->
+        <div class="pane" id="pane-gas">
+          <div class="tools">
+            <input type="search" id="busca-gas" placeholder="🔎 Buscar por descrição, fornecedor, nº da nota…">
+            <label class="chk"><input type="checkbox" id="ver-canc-gas"> mostrar cancelados</label>
+            <button class="btn small ges" id="btn-novo-gas">➕ Lançar gasto</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Data</th><th>Descrição</th><th>Fornecedor</th><th>Documento</th><th class="v">Valor</th><th>Nota / recibo</th><th class="ges"></th></tr></thead>
+            <tbody id="tb-gas"></tbody>
+            <tfoot><tr><td colspan="4">Total gasto (sem cancelados)</td><td class="v" id="tf-gas"></td><td></td><td class="ges"></td></tr></tfoot>
+          </table></div>
+        </div>
+
+        <!-- ---------------- histórico ---------------- -->
+        <div class="pane" id="pane-hist">
+          <div class="box"><div class="hist" id="lista-hist"></div></div>
+          <p class="hint">Toda gravação fica registrada aqui: quem fez, quando e o que mudou. Nada é apagado — lançamento cancelado continua visível com o motivo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== MODAL: LEILÃO ============================== -->
+<div class="modal" id="m-leilao">
+  <div class="modal-box">
+    <div class="modal-tit" id="ml-tit">Novo leilão</div>
+    <div class="grid2">
+      <div class="fg span2"><label>Nome do leilão <i>*</i></label><input id="ml-titulo" placeholder="Ex.: Leilão de bens inservíveis 2026"></div>
+      <div class="fg"><label>Nº do processo (SEI)</label><input id="ml-processo" placeholder="0021.000000/2026-00"></div>
+      <div class="fg"><label>Data do leilão</label><input id="ml-data" type="date"></div>
+      <div class="fg"><label>Modalidade</label><input id="ml-modalidade" list="dl-modal" placeholder="Presencial, eletrônico…"></div>
+      <div class="fg"><label>Situação</label>
+        <select id="ml-status">
+          <option value="EM_ANDAMENTO">Em andamento</option>
+          <option value="ENCERRADO">Encerrado (falta prestar contas)</option>
+          <option value="CONTAS_PRESTADAS">Contas prestadas</option>
+        </select></div>
+      <div class="fg"><label>Leiloeiro / comissão</label><input id="ml-leiloeiro"></div>
+      <div class="fg"><label>Local</label><input id="ml-local"></div>
+      <div class="fg span2"><label>Conta que recebe o recurso</label><input id="ml-conta" placeholder="Banco, agência, conta, titular / chave PIX"></div>
+      <div class="fg span2"><label>Descrição / objeto</label><textarea id="ml-descricao" placeholder="O que foi leiloado, finalidade do recurso…"></textarea></div>
+      <div class="fg span2"><label>Observações</label><textarea id="ml-obs"></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="ml-salvar">💾 Salvar</button>
+      <button class="btn ghost" data-fecha>Cancelar</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="btn danger" id="ml-excluir" style="display:none">🗑️ Excluir leilão</button>
+    </div>
+    <div class="msg" id="ml-msg"></div>
+  </div>
+</div>
+
+<!-- ============================== MODAL: DOCUMENTO ============================== -->
+<div class="modal" id="m-doc">
+  <div class="modal-box">
+    <div class="modal-tit">Anexar documento do processo</div>
+    <div class="grid2">
+      <div class="fg"><label>Tipo <i>*</i></label><input id="md-tipo" list="dl-tipodoc" placeholder="Edital, ata, laudo…"></div>
+      <div class="fg"><label>Data do documento</label><input id="md-data" type="date"></div>
+      <div class="fg span2"><label>Descrição</label><input id="md-descricao" placeholder="Ex.: Ata da sessão pública, assinada pela comissão"></div>
+      <div class="fg span2"><label>Arquivo <i>*</i></label><div class="anexo" data-campo="arquivo" id="md-arq"></div></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="md-salvar">📤 Enviar</button>
+      <button class="btn ghost" data-fecha>Cancelar</button>
+    </div>
+    <div class="msg" id="md-msg"></div>
+  </div>
+</div>
+
+<!-- ============================== MODAL: ENTRADA ============================== -->
+<div class="modal" id="m-ent">
+  <div class="modal-box">
+    <div class="modal-tit" id="me-tit">Lançar entrada de recurso</div>
+    <div class="grid2">
+      <div class="fg"><label>Lote</label><input id="me-lote" placeholder="Ex.: 07"></div>
+      <div class="fg"><label>Data do pagamento</label><input id="me-data" type="date"></div>
+      <div class="fg span2"><label>Descrição do lote</label><input id="me-descricao_lote" placeholder="Ex.: Viatura L200 placa NEX-0000, sucata"></div>
+      <div class="fg"><label>Arrematante / quem pagou <i>*</i></label><input id="me-arrematante"></div>
+      <div class="fg"><label>CPF / CNPJ</label><input id="me-doc_arrematante" inputmode="numeric"></div>
+      <div class="fg"><label>Valor (R$) <i>*</i></label><input id="me-valor" inputmode="decimal" placeholder="0,00"></div>
+      <div class="fg"><label>Forma</label><input id="me-forma" list="dl-forma" placeholder="PIX, depósito…"></div>
+      <div class="fg span2"><label>Comprovante do depósito / pagamento</label><div class="anexo" data-campo="arquivo" id="me-arq"></div></div>
+      <div class="fg span2"><label>Observações</label><textarea id="me-obs"></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="me-salvar">💾 Salvar</button>
+      <button class="btn ghost" data-fecha>Cancelar</button>
+    </div>
+    <div class="msg" id="me-msg"></div>
+  </div>
+</div>
+
+<!-- ============================== MODAL: GASTO ============================== -->
+<div class="modal" id="m-gas">
+  <div class="modal-box">
+    <div class="modal-tit" id="mg-tit">Lançar gasto</div>
+    <div class="grid2">
+      <div class="fg span2"><label>O que foi pago <i>*</i></label><input id="mg-descricao" placeholder="Ex.: Publicação do edital no Diário Oficial"></div>
+      <div class="fg"><label>Data</label><input id="mg-data" type="date"></div>
+      <div class="fg"><label>Categoria</label><input id="mg-categoria" list="dl-cat"></div>
+      <div class="fg"><label>Fornecedor / recebedor</label><input id="mg-fornecedor"></div>
+      <div class="fg"><label>CPF / CNPJ</label><input id="mg-doc_fornecedor" inputmode="numeric"></div>
+      <div class="fg"><label>Tipo de documento</label><input id="mg-tipo_doc" list="dl-tipofiscal" placeholder="Nota fiscal, recibo…"></div>
+      <div class="fg"><label>Nº do documento</label><input id="mg-num_doc"></div>
+      <div class="fg"><label>Valor (R$) <i>*</i></label><input id="mg-valor" inputmode="decimal" placeholder="0,00"></div>
+      <div class="fg"><label>Forma de pagamento</label><input id="mg-forma_pagto" list="dl-forma"></div>
+      <div class="fg"><label>Nota fiscal / recibo</label><div class="anexo" data-campo="arquivo" id="mg-arq"></div></div>
+      <div class="fg"><label>Comprovante do pagamento <small>(opcional)</small></label><div class="anexo" data-campo="pagamento" id="mg-pag"></div></div>
+      <div class="fg span2"><label>Observações</label><textarea id="mg-obs"></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="mg-salvar">💾 Salvar</button>
+      <button class="btn ghost" data-fecha>Cancelar</button>
+    </div>
+    <div class="msg" id="mg-msg"></div>
+  </div>
+</div>
+
+<!-- ============================== MODAL: CANCELAR ============================== -->
+<div class="modal" id="m-canc">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-tit" id="mc-tit">Cancelar lançamento</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px" id="mc-txt"></p>
+    <div class="fg"><label>Motivo <i>*</i> <small>(fica visível na prestação de contas)</small></label><input id="mc-motivo"></div>
+    <div class="fg" style="margin-top:12px"><label>Sua senha</label><input id="mc-senha" type="password" autocomplete="current-password"></div>
+    <div class="btnrow">
+      <button class="btn danger" id="mc-ok">Confirmar</button>
+      <button class="btn ghost" data-fecha>Voltar</button>
+    </div>
+    <div class="msg" id="mc-msg"></div>
+  </div>
+</div>
+
+<!-- ============================== VISOR ============================== -->
+<div class="visor" id="visor">
+  <div class="visor-bar">
+    <div class="vt" id="v-tit"></div>
+    <button class="btn small ghost" id="v-baixar">⬇️ Baixar</button>
+    <button class="btn small ghost" id="v-aba">↗ Abrir em outra aba</button>
+    <button class="btn small" id="v-fechar">✕ Fechar</button>
+  </div>
+  <div class="visor-corpo" id="v-corpo"></div>
+</div>
+
+<datalist id="dl-modal"><option>Presencial</option><option>Eletrônico</option><option>Presencial e eletrônico</option></datalist>
+<datalist id="dl-tipodoc"><option>Processo SEI (íntegra)</option><option>Edital</option><option>Portaria / comissão</option><option>Laudo de avaliação</option><option>Ata do leilão</option><option>Termo de arrematação</option><option>Homologação</option><option>Extrato bancário</option><option>Outro</option></datalist>
+<datalist id="dl-forma"><option>PIX</option><option>Depósito</option><option>TED/DOC</option><option>Boleto</option><option>GRU / DARE</option><option>Dinheiro</option><option>Cartão</option><option>Outro</option></datalist>
+<datalist id="dl-cat"><option>Taxa do leiloeiro</option><option>Publicação de edital</option><option>Manutenção / reparo</option><option>Material</option><option>Serviço</option><option>Transporte / remoção</option><option>Tarifa bancária</option><option>Equipamento</option><option>Outros</option></datalist>
+<datalist id="dl-tipofiscal"><option>Nota fiscal</option><option>NF-e</option><option>NFS-e (serviço)</option><option>Cupom fiscal</option><option>Recibo</option><option>Fatura / boleto</option><option>Outro</option></datalist>
+
+<div id="relatorio"></div>
+
+<script>
+/* =====================================================================
+   leilao.html — prestação de contas do leilão (07/10/2026)
+
+   É só a casca: vai pro GitHub Pages, que é público, então nenhum dado nem
+   comprovante mora aqui. Tudo vem do Worker com login, e o arquivo é baixado
+   com o token (fetch → blob) — nunca por link aberto.
+   ===================================================================== */
+
+/* ?api= existe só para os testes locais e SÓ aceita localhost: esta página
+   manda o token (e recebe a senha) — um link com ?api=site-de-fora entregaria
+   o login de quem clicasse. */
+const API_BASE = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function lembrar(k, v){ try{ localStorage.setItem(k, v || ''); }catch(e){} }
+function lido(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+
+const $ = (id) => document.getElementById(id);
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function show(id, on){ $(id).style.display = on ? '' : 'none'; }
+function fTam(b){ b = Number(b)||0; if (b < 1024) return b + ' B'; if (b < 1048576) return (b/1024).toFixed(0) + ' KB'; return (b/1048576).toFixed(1) + ' MB'; }
+function fData(s){ const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; }
+function fQuando(s){
+  const d = new Date(s); if (isNaN(d)) return esc(s);
+  return d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+const BRL = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
+const brl = (n) => BRL.format(Number(n) || 0);
+const hoje = () => new Date(Date.now() - 4*3600e3).toISOString().slice(0,10);
+const STATUS_NOME = { EM_ANDAMENTO:'Em andamento', ENCERRADO:'Encerrado', CONTAS_PRESTADAS:'Contas prestadas' };
+
+function cab(extra){
+  const h = Object.assign({}, extra || {});
+  if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token;
+  return h;
+}
+async function api(path, opt){
+  const r = await fetch(API_BASE + path, Object.assign({ headers: cab() }, opt || {}));
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; throw e; }
+  return d;
+}
+const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body||{}) });
+const apiForm = (path, form) => api(path, { method:'POST', headers: cab(), body: form });
+
+/* ============================== login ============================== */
+async function entrar(){
+  const btn = $('btn-entrar'), m = $('msg-login');
+  const user = $('f-user').value.trim(), pass = $('f-pass').value;
+  if (!user || !pass){ m.className='msg err'; m.textContent='Informe usuário e senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; m.className='msg'; m.textContent='';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, pass }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('f-pass').value = '';
+    boot();
+  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+function sair(){ AUTH.token=''; AUTH.user=''; D=null; boot(); }
+$('btn-entrar').addEventListener('click', entrar);
+$('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+$('f-user').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-pass').focus(); });
+$('btn-sair').addEventListener('click', sair);
+
+function boot(){
+  show('login-box', !AUTH.logged);
+  show('app', AUTH.logged);
+  const ps = permsSessao();
+  $('userchip').textContent = AUTH.logged ? ('👤 ' + ((ps && ps.nome) || AUTH.user)) : '';
+  $('btn-sair').style.display = AUTH.logged ? '' : 'none';
+  if (AUTH.logged) carregar();
+}
+
+/* ============================== dados ============================== */
+let D = null;                       // resposta do /api/leilao
+let SEL = lido('leilao_sel');       // leilão aberto
+let ABA = 'proc';
+
+async function carregar(manterAba){
+  if (!D){ show('estado', true); show('corpo', false); $('estado').textContent = 'Carregando a prestação de contas…'; }
+  try { D = await api('/api/leilao'); }
+  catch(e){
+    if (e.status === 401){ AUTH.token=''; AUTH.user=''; boot(); return; }
+    show('corpo', false); show('estado', true);
+    $('estado').innerHTML = e.status === 403
+      ? '🔒 <b>Acesso restrito</b><br>' + esc(e.message) + '<br><br>A prestação de contas do leilão não é aberta a todo o efetivo: cada login é liberado individualmente.'
+      : '⚠️ ' + esc(e.message);
+    return;
+  }
+  show('estado', false); show('corpo', true);
+  document.querySelectorAll('.ges').forEach(el => el.style.display = D.gestor ? '' : 'none');
+  show('btn-novo-leilao', D.gestor);
+  if (!D.leiloes.some(l => l.id === SEL)) SEL = (D.leiloes[0] || {}).id || '';
+  if (!manterAba) ABA = 'proc';
+  render();
+}
+
+const leilaoSel = () => D.leiloes.find(l => l.id === SEL);
+const doLeilao = (lista) => lista.filter(x => x.leilao_id === SEL);
+
+function render(){
+  $('lista-leiloes').innerHTML = D.leiloes.map(l => `
+    <button class="lcard ${l.id === SEL ? 'on' : ''}" data-id="${esc(l.id)}">
+      <div class="lt">${esc(l.titulo)}</div>
+      <div class="lp">${l.processo ? 'Processo ' + esc(l.processo) + ' · ' : ''}${l.data_leilao ? fData(l.data_leilao) + ' · ' : ''}<span class="st ${esc(l.status)}">${esc(STATUS_NOME[l.status] || l.status)}</span></div>
+      <div class="ls"><span>Arrecadado <b style="color:var(--green)">${brl(l.totais.entradas)}</b></span>
+        <span>Gasto <b style="color:#fca5a5">${brl(l.totais.gastos)}</b></span>
+        <span>Saldo <b style="color:#fff">${brl(l.totais.saldo)}</b></span></div>
+    </button>`).join('');
+  $('lista-leiloes').querySelectorAll('.lcard').forEach(b => b.addEventListener('click', () => {
+    SEL = b.dataset.id; lembrar('leilao_sel', SEL); render();
+  }));
+
+  const l = leilaoSel();
+  show('det', !!l);
+  show('sem-leilao', !l);
+  if (!l){
+    $('sem-leilao').innerHTML = D.gestor
+      ? 'Nenhum leilão cadastrado ainda.<br>Clique em <b>➕ Novo leilão</b> para começar pelo processo.'
+      : 'Nenhum leilão cadastrado ainda.';
+    return;
+  }
+
+  $('d-titulo').textContent = l.titulo;
+  $('d-sub').innerHTML = [l.processo ? 'Processo <b style="color:#cbd5e1">' + esc(l.processo) + '</b>' : 'Sem nº de processo',
+    l.data_leilao ? 'leilão em ' + fData(l.data_leilao) : '', `<span class="st ${esc(l.status)}">${esc(STATUS_NOME[l.status] || l.status)}</span>`]
+    .filter(Boolean).join(' · ');
+
+  const t = l.totais;
+  $('k-ent').textContent = brl(t.entradas); $('k-ent-n').textContent = t.n_entradas + ' entrada(s)';
+  $('k-gas').textContent = brl(t.gastos);   $('k-gas-n').textContent = t.n_gastos + ' gasto(s)';
+  $('k-sal').textContent = brl(t.saldo);    $('k-sal').className = 'kv ' + (t.saldo < 0 ? 'neg' : 'pos');
+  $('k-pend').textContent = t.sem_comprovante; $('k-pend').className = 'kv ' + (t.sem_comprovante ? 'warn' : 'pos');
+
+  const docs = doLeilao(D.documentos);
+  $('n-proc').textContent = docs.length;
+  $('n-ent').textContent = t.n_entradas;
+  $('n-gas').textContent = t.n_gastos;
+
+  renderProcesso(l, docs);
+  renderEntradas();
+  renderGastos();
+  renderHistorico();
+  trocarAba(ABA);
+}
+
+function trocarAba(a){
+  ABA = a;
+  document.querySelectorAll('.tab[data-aba]').forEach(b => b.classList.toggle('on', b.dataset.aba === a));
+  ['proc','ent','gas','hist'].forEach(x => $('pane-' + x).classList.toggle('on', x === a));
+}
+document.querySelectorAll('.tab[data-aba]').forEach(b => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+
+function renderProcesso(l, docs){
+  const item = (rot, v) => v ? `<div><span>${rot}</span>${esc(v)}</div>` : '';
+  $('d-dados').innerHTML = [
+    item('Nº do processo', l.processo), item('Data do leilão', fData(l.data_leilao)),
+    item('Modalidade', l.modalidade), item('Leiloeiro / comissão', l.leiloeiro), item('Local', l.local),
+    item('Conta que recebe', l.conta), item('Descrição / objeto', l.descricao), item('Observações', l.obs),
+    item('Cadastrado por', (l.criado_por || '') + (l.criado_em ? ' em ' + fQuando(l.criado_em) : '')),
+  ].join('') || '<div>Sem dados.</div>';
+
+  $('lista-docs').innerHTML = docs.length ? docs.map(d => `
+    <div class="doc">
+      <div class="di">${/pdf/.test(d.arq_mime) ? '📄' : '🖼️'}</div>
+      <div class="dt"><b>${esc(d.tipo)}</b>${d.descricao ? ' — ' + esc(d.descricao) : ''}
+        <span>${d.data ? fData(d.data) + ' · ' : ''}${esc(d.arq_nome)} · ${fTam(d.arq_tam)} · enviado por ${esc(d.enviado_por)}</span></div>
+      <button class="arq" data-url="${esc(d.url)}" data-nome="${esc(d.tipo + ' — ' + d.arq_nome)}">📎 Abrir</button>
+      ${D.gestor ? `<button class="btn icon danger" data-canc="documento" data-id="${esc(d.id)}" title="Excluir documento">🗑️</button>` : ''}
+    </div>`).join('') : '<div class="vazio">Nenhum documento anexado ainda.</div>';
+}
+
+function filtra(lista, termo, campos, verCanc){
+  termo = termo.trim().toLowerCase();
+  return lista.filter(x => (verCanc || x.status !== 'CANCELADO') &&
+    (!termo || campos.some(c => String(x[c] || '').toLowerCase().includes(termo))));
+}
+
+const btnArq = (url, nome, rot) => url ? `<button class="arq" data-url="${esc(url)}" data-nome="${esc(nome)}">📎 ${rot}</button>` : '';
+// lançamento cancelado não é pendência: não cobra o arquivo que falta
+const falta = (x) => x.status === 'CANCELADO' ? '—' : '<span class="falta">⚠️ falta</span>';
+const linhaCanc = (x) => x.status === 'CANCELADO'
+  ? `<span class="sub motivo">⛔ Cancelado por ${esc(x.atualizado_por)} em ${fQuando(x.atualizado_em)} — ${esc(x.motivo)}</span>` : '';
+const acoes = (tipo, x) => D.gestor && x.status !== 'CANCELADO'
+  ? `<td class="acoes"><button class="btn icon ghost" data-edit="${tipo}" data-id="${esc(x.id)}" title="Corrigir">✏️</button>
+     <button class="btn icon danger" data-canc="${tipo}" data-id="${esc(x.id)}" title="Cancelar">⛔</button></td>`
+  : (D.gestor ? '<td class="acoes"></td>' : '');
+
+function renderEntradas(){
+  const todas = doLeilao(D.entradas).sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const lista = filtra(todas, $('busca-ent').value, ['lote','descricao_lote','arrematante','doc_arrematante','forma','obs'], $('ver-canc-ent').checked);
+  $('tb-ent').innerHTML = lista.length ? lista.map(e => `
+    <tr class="${e.status === 'CANCELADO' ? 'cancel' : ''}">
+      <td data-l="Data">${fData(e.data)}</td>
+      <td data-l="Lote">${esc(e.lote || '—')}${e.descricao_lote ? `<span class="sub">${esc(e.descricao_lote)}</span>` : ''}</td>
+      <td data-l="Arrematante / pagador">${esc(e.arrematante)}${e.doc_arrematante ? `<span class="sub">${esc(e.doc_arrematante)}</span>` : ''}${e.obs ? `<span class="sub">${esc(e.obs)}</span>` : ''}${linhaCanc(e)}</td>
+      <td data-l="Forma">${esc(e.forma || '—')}</td>
+      <td class="v" data-l="Valor">${brl(e.valor)}</td>
+      <td data-l="Comprovante">${btnArq(e.url, 'Comprovante — ' + e.arrematante, 'Ver') || falta(e)}</td>
+      ${acoes('entrada', e)}
+    </tr>`).join('') : `<tr><td colspan="7" class="vazio">${todas.length ? 'Nada bate com a busca.' : 'Nenhuma entrada lançada.'}</td></tr>`;
+  $('tf-ent').textContent = brl(leilaoSel().totais.entradas);
+}
+
+function renderGastos(){
+  const todas = doLeilao(D.gastos).sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const lista = filtra(todas, $('busca-gas').value, ['descricao','categoria','fornecedor','doc_fornecedor','tipo_doc','num_doc','forma_pagto','obs'], $('ver-canc-gas').checked);
+  $('tb-gas').innerHTML = lista.length ? lista.map(g => `
+    <tr class="${g.status === 'CANCELADO' ? 'cancel' : ''}">
+      <td data-l="Data">${fData(g.data)}</td>
+      <td data-l="Descrição">${esc(g.descricao)}${g.categoria ? `<span class="sub">${esc(g.categoria)}</span>` : ''}${g.obs ? `<span class="sub">${esc(g.obs)}</span>` : ''}${linhaCanc(g)}</td>
+      <td data-l="Fornecedor">${esc(g.fornecedor || '—')}${g.doc_fornecedor ? `<span class="sub">${esc(g.doc_fornecedor)}</span>` : ''}</td>
+      <td data-l="Documento">${esc(g.tipo_doc || '—')}${g.num_doc ? ' nº ' + esc(g.num_doc) : ''}${g.forma_pagto ? `<span class="sub">${esc(g.forma_pagto)}</span>` : ''}</td>
+      <td class="v" data-l="Valor">${brl(g.valor)}</td>
+      <td data-l="Nota / recibo">${btnArq(g.url, (g.tipo_doc || 'Documento') + ' — ' + g.descricao, 'Nota') || falta(g)}
+          ${btnArq(g.url_pag, 'Pagamento — ' + g.descricao, 'Pagto')}</td>
+      ${acoes('gasto', g)}
+    </tr>`).join('') : `<tr><td colspan="7" class="vazio">${todas.length ? 'Nada bate com a busca.' : 'Nenhum gasto lançado.'}</td></tr>`;
+  $('tf-gas').textContent = brl(leilaoSel().totais.gastos);
+}
+
+const TIPO_NOME = { leilao:'leilão', documento:'documento', entrada:'entrada', gasto:'gasto' };
+function renderHistorico(){
+  const h = D.historico.filter(x => x.leilao_id === SEL);
+  $('lista-hist').innerHTML = h.length ? h.map(x => `
+    <div class="hl"><div class="hq">${fQuando(x.quando)}<br>${esc(x.quem)}</div>
+    <div class="ha"><b>${esc(x.acao)}</b> ${esc(TIPO_NOME[x.tipo] || x.tipo)} — ${esc(x.resumo)}</div></div>`).join('')
+    : '<div class="vazio">Sem registros.</div>';
+}
+
+['busca-ent','ver-canc-ent'].forEach(id => $(id).addEventListener('input', renderEntradas));
+['busca-gas','ver-canc-gas'].forEach(id => $(id).addEventListener('input', renderGastos));
+
+/* Botões das listas (abrir arquivo, editar, cancelar) por delegação. */
+document.addEventListener('click', (ev) => {
+  const a = ev.target.closest('[data-url]');
+  if (a && a.dataset.url){ abrirArquivo(a.dataset.url, a.dataset.nome); return; }
+  const ed = ev.target.closest('[data-edit]');
+  if (ed){ ed.dataset.edit === 'entrada' ? abrirEntrada(ed.dataset.id) : abrirGasto(ed.dataset.id); return; }
+  const cc = ev.target.closest('[data-canc]');
+  if (cc){ abrirCancelar(cc.dataset.canc, cc.dataset.id); return; }
+  const fe = ev.target.closest('[data-fecha]');
+  if (fe){ fe.closest('.modal').classList.remove('on'); }
+});
+
+/* ============================== visor de arquivo ============================== */
+let VIS = { url:'', nome:'' };
+async function abrirArquivo(path, nome){
+  $('v-tit').textContent = nome || 'Arquivo';
+  $('v-corpo').innerHTML = '<div class="vazio">Baixando…</div>';
+  $('visor').classList.add('on');
+  try {
+    const r = await fetch(API_BASE + path, { headers: cab() });
+    if (!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(d.detail || d.error || ('Erro ' + r.status)); }
+    const blob = await r.blob();
+    const m = (r.headers.get('content-disposition') || '').match(/filename="([^"]+)"/);
+    if (VIS.url) URL.revokeObjectURL(VIS.url);
+    VIS = { url: URL.createObjectURL(blob), nome: (m && m[1]) || 'arquivo' };
+    $('v-corpo').innerHTML = /^image\//.test(blob.type)
+      ? `<img src="${VIS.url}" alt="">`
+      : `<iframe src="${VIS.url}" title="Arquivo"></iframe>`;
+  } catch(e){ $('v-corpo').innerHTML = '<div class="vazio">⚠️ ' + esc(e.message) + '</div>'; }
+}
+function fecharVisor(){ $('visor').classList.remove('on'); $('v-corpo').innerHTML = ''; }
+$('v-fechar').addEventListener('click', fecharVisor);
+$('v-baixar').addEventListener('click', () => { if (!VIS.url) return; const a = document.createElement('a'); a.href = VIS.url; a.download = VIS.nome; a.click(); });
+$('v-aba').addEventListener('click', () => { if (VIS.url) window.open(VIS.url, '_blank'); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('visor').classList.contains('on')) fecharVisor();
+  else document.querySelectorAll('.modal.on').forEach(m => m.classList.remove('on'));
+});
+
+/* ============================== campos de anexo ============================== */
+const ANEXOS = {};   // id do .anexo -> File
+const ANEXO_TXT = {
+  'md-arq': 'Arraste o PDF ou a foto, ou <b>clique para escolher</b>',
+  'me-arq': 'Comprovante do PIX/depósito (PDF ou foto) — <b>clique ou arraste</b>',
+  'mg-arq': 'Nota fiscal ou recibo — <b>clique ou arraste</b>',
+  'mg-pag': 'Comprovante de que pagou — <b>clique ou arraste</b>',
+};
+function resetAnexo(id, atual){
+  delete ANEXOS[id];
+  const el = $(id);
+  el.classList.remove('tem');
+  el.innerHTML = ANEXO_TXT[id] + (atual ? `<br><small>Já tem: ${esc(atual)} — escolha outro só se for trocar</small>` : '');
+}
+document.querySelectorAll('.anexo').forEach(el => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'application/pdf,image/*'; inp.style.display = 'none';
+  el.after(inp);
+  const usar = (f) => {
+    if (!f) return;
+    if (f.size > 15 * 1048576){ el.innerHTML = '⚠️ ' + esc(f.name) + ' passa de 15 MB.'; return; }
+    ANEXOS[el.id] = f; el.classList.add('tem');
+    el.innerHTML = '✅ <b>' + esc(f.name) + '</b> · ' + fTam(f.size) + '<br><small>clique para trocar</small>';
+  };
+  el.addEventListener('click', () => inp.click());
+  inp.addEventListener('change', () => { usar(inp.files[0]); inp.value = ''; });
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('over'));
+  el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('over'); usar(e.dataTransfer.files[0]); });
+});
+
+function msg(id, txt, tipo){ $(id).className = 'msg ' + (tipo || ''); $(id).textContent = txt || ''; }
+async function gravando(btn, fn){
+  const t = btn.textContent; btn.disabled = true; btn.textContent = 'Salvando…';
+  try { await fn(); } finally { btn.disabled = false; btn.textContent = t; }
+}
+const valor = (id) => $(id).value.trim();
+
+/* ============================== leilão ============================== */
+const ML = ['titulo','processo','modalidade','leiloeiro','local','conta','descricao','obs'];
+let ML_ID = '';
+function abrirLeilao(id){
+  ML_ID = id || '';
+  const l = id ? leilaoSel() : {};
+  $('ml-tit').textContent = id ? 'Editar leilão' : 'Novo leilão';
+  ML.forEach(k => $('ml-' + k).value = l[k] || '');
+  $('ml-data').value = l.data_leilao || '';
+  $('ml-status').value = l.status || 'EM_ANDAMENTO';
+  show('ml-excluir', !!id);
+  msg('ml-msg');
+  $('m-leilao').classList.add('on');
+  $('ml-titulo').focus();
+}
+$('btn-novo-leilao').addEventListener('click', () => abrirLeilao(''));
+$('btn-editar-leilao').addEventListener('click', () => abrirLeilao(SEL));
+$('ml-excluir').addEventListener('click', () => { $('m-leilao').classList.remove('on'); abrirCancelar('leilao', ML_ID); });
+$('ml-salvar').addEventListener('click', () => gravando($('ml-salvar'), async () => {
+  const body = { id: ML_ID, data_leilao: $('ml-data').value, status: $('ml-status').value };
+  ML.forEach(k => body[k] = valor('ml-' + k));
+  if (!body.titulo){ msg('ml-msg', 'Dê um nome ao leilão.', 'err'); return; }
+  try {
+    const r = await apiPost('/api/leilao/salvar', body);
+    SEL = r.id; lembrar('leilao_sel', SEL);
+    $('m-leilao').classList.remove('on');
+    await carregar(!!ML_ID);
+  } catch(e){ msg('ml-msg', e.message, 'err'); }
+}));
+
+/* ============================== documento ============================== */
+$('btn-novo-doc').addEventListener('click', () => {
+  $('md-tipo').value = ''; $('md-descricao').value = ''; $('md-data').value = hoje();
+  resetAnexo('md-arq'); msg('md-msg');
+  $('m-doc').classList.add('on');
+});
+$('md-salvar').addEventListener('click', () => gravando($('md-salvar'), async () => {
+  if (!valor('md-tipo')){ msg('md-msg', 'Diga o tipo do documento (edital, ata…).', 'err'); return; }
+  if (!ANEXOS['md-arq']){ msg('md-msg', 'Escolha o arquivo.', 'err'); return; }
+  const f = new FormData();
+  f.append('leilao_id', SEL); f.append('tipo', valor('md-tipo'));
+  f.append('descricao', valor('md-descricao')); f.append('data', $('md-data').value);
+  f.append('arquivo', ANEXOS['md-arq']);
+  msg('md-msg', 'Enviando o arquivo…');
+  try {
+    await apiForm('/api/leilao/documento', f);
+    $('m-doc').classList.remove('on');
+    await carregar(true);
+  } catch(e){ msg('md-msg', e.message, 'err'); }
+}));
+
+/* ============================== entrada ============================== */
+const ME = ['lote','descricao_lote','arrematante','doc_arrematante','forma','obs'];
+let ME_ID = '';
+function abrirEntrada(id){
+  ME_ID = id || '';
+  const e = id ? D.entradas.find(x => x.id === id) : {};
+  $('me-tit').textContent = id ? 'Corrigir entrada' : 'Lançar entrada de recurso';
+  ME.forEach(k => $('me-' + k).value = e[k] || '');
+  $('me-valor').value = id ? String(e.valor.toFixed(2)).replace('.', ',') : '';
+  $('me-data').value = e.data || hoje();
+  resetAnexo('me-arq', e.arq_nome);
+  msg('me-msg');
+  $('m-ent').classList.add('on');
+}
+$('btn-nova-ent').addEventListener('click', () => abrirEntrada(''));
+$('me-salvar').addEventListener('click', () => gravando($('me-salvar'), async () => {
+  if (!valor('me-arrematante')){ msg('me-msg', 'Informe quem arrematou / quem pagou.', 'err'); return; }
+  if (!valor('me-valor')){ msg('me-msg', 'Informe o valor.', 'err'); return; }
+  const f = new FormData();
+  if (ME_ID) f.append('id', ME_ID); else f.append('leilao_id', SEL);
+  ME.forEach(k => f.append(k, valor('me-' + k)));
+  f.append('valor', valor('me-valor')); f.append('data', $('me-data').value);
+  if (ANEXOS['me-arq']) f.append('arquivo', ANEXOS['me-arq']);
+  msg('me-msg', ANEXOS['me-arq'] ? 'Enviando o comprovante…' : 'Gravando…');
+  try {
+    await apiForm('/api/leilao/entrada', f);
+    $('m-ent').classList.remove('on');
+    await carregar(true);
+  } catch(e){ msg('me-msg', e.message, 'err'); }
+}));
+
+/* ============================== gasto ============================== */
+const MG = ['descricao','categoria','fornecedor','doc_fornecedor','tipo_doc','num_doc','forma_pagto','obs'];
+let MG_ID = '';
+function abrirGasto(id){
+  MG_ID = id || '';
+  const g = id ? D.gastos.find(x => x.id === id) : {};
+  $('mg-tit').textContent = id ? 'Corrigir gasto' : 'Lançar gasto';
+  MG.forEach(k => $('mg-' + k).value = g[k] || '');
+  $('mg-valor').value = id ? String(g.valor.toFixed(2)).replace('.', ',') : '';
+  $('mg-data').value = g.data || hoje();
+  resetAnexo('mg-arq', g.arq_nome); resetAnexo('mg-pag', g.pag_nome);
+  msg('mg-msg');
+  $('m-gas').classList.add('on');
+}
+$('btn-novo-gas').addEventListener('click', () => abrirGasto(''));
+$('mg-salvar').addEventListener('click', () => gravando($('mg-salvar'), async () => {
+  if (!valor('mg-descricao')){ msg('mg-msg', 'Descreva o que foi pago.', 'err'); return; }
+  if (!valor('mg-valor')){ msg('mg-msg', 'Informe o valor.', 'err'); return; }
+  const f = new FormData();
+  if (MG_ID) f.append('id', MG_ID); else f.append('leilao_id', SEL);
+  MG.forEach(k => f.append(k, valor('mg-' + k)));
+  f.append('valor', valor('mg-valor')); f.append('data', $('mg-data').value);
+  if (ANEXOS['mg-arq']) f.append('arquivo', ANEXOS['mg-arq']);
+  if (ANEXOS['mg-pag']) f.append('pagamento', ANEXOS['mg-pag']);
+  msg('mg-msg', ANEXOS['mg-arq'] || ANEXOS['mg-pag'] ? 'Enviando os arquivos…' : 'Gravando…');
+  try {
+    await apiForm('/api/leilao/gasto', f);
+    $('m-gas').classList.remove('on');
+    await carregar(true);
+  } catch(e){ msg('mg-msg', e.message, 'err'); }
+}));
+
+/* ============================== cancelar / excluir ============================== */
+let MC = null;
+function abrirCancelar(tipo, id){
+  MC = { tipo, id };
+  let txt = '';
+  if (tipo === 'entrada'){ const e = D.entradas.find(x => x.id === id); txt = `Entrada de ${brl(e.valor)} — ${e.arrematante}.`; }
+  if (tipo === 'gasto'){ const g = D.gastos.find(x => x.id === id); txt = `Gasto de ${brl(g.valor)} — ${g.descricao}.`; }
+  if (tipo === 'documento'){ const d = D.documentos.find(x => x.id === id); txt = `${d.tipo} — ${d.arq_nome}.`; }
+  if (tipo === 'leilao'){ txt = `${leilaoSel().titulo}. Só dá para excluir leilão sem lançamento ativo.`; }
+  $('mc-tit').textContent = tipo === 'entrada' || tipo === 'gasto' ? 'Cancelar lançamento' : 'Excluir ' + TIPO_NOME[tipo];
+  $('mc-txt').textContent = txt + (tipo === 'entrada' || tipo === 'gasto'
+    ? ' O lançamento continua visível como cancelado, com o motivo, e sai do saldo.'
+    : ' Nada é apagado de verdade: o registro e o arquivo continuam guardados e a exclusão vai pro histórico.');
+  $('mc-motivo').value = ''; $('mc-senha').value = ''; msg('mc-msg');
+  $('m-canc').classList.add('on');
+  $('mc-motivo').focus();
+}
+$('mc-ok').addEventListener('click', () => gravando($('mc-ok'), async () => {
+  if (!valor('mc-motivo')){ msg('mc-msg', 'Diga o motivo.', 'err'); return; }
+  if (!$('mc-senha').value){ msg('mc-msg', 'Digite sua senha para confirmar.', 'err'); return; }
+  try {
+    await apiPost('/api/leilao/cancelar', { tipo: MC.tipo, id: MC.id, motivo: valor('mc-motivo'), senha: $('mc-senha').value });
+    $('m-canc').classList.remove('on');
+    await carregar(MC.tipo !== 'leilao');
+  } catch(e){ msg('mc-msg', e.message, 'err'); }
+}));
+
+/* ============================== relatório ============================== */
+$('btn-relatorio').addEventListener('click', () => {
+  const l = leilaoSel(); if (!l) return;
+  const ent = doLeilao(D.entradas).sort((a,b) => String(a.data).localeCompare(String(b.data)));
+  const gas = doLeilao(D.gastos).sort((a,b) => String(a.data).localeCompare(String(b.data)));
+  const docs = doLeilao(D.documentos);
+  const cancel = (x) => x.status === 'CANCELADO' ? ' class="cancel"' : '';
+  const nota = (x) => x.status === 'CANCELADO' ? `<br><i>Cancelado: ${esc(x.motivo)}</i>` : '';
+  const ps = permsSessao();
+  const t = l.totais;
+  const linha = (r, v) => v ? `<tr><td><b>${r}:</b></td><td>${esc(v)}</td></tr>` : '';
+
+  $('relatorio').innerHTML = `
+    <div class="rcab"><img src="LOGOS/bpfron_transp.avif" alt="">
+      <div><div style="font-size:9pt">POLÍCIA MILITAR DO ESTADO DE RONDÔNIA · BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS</div>
+      <h1>PRESTAÇÃO DE CONTAS — ${esc(l.titulo)}</h1>
+      <div style="font-size:9.5pt">${l.processo ? 'Processo nº ' + esc(l.processo) + ' · ' : ''}Situação: ${esc(STATUS_NOME[l.status] || l.status)}</div></div></div>
+    <table class="rdados">${linha('Data do leilão', fData(l.data_leilao))}${linha('Modalidade', l.modalidade)}${linha('Leiloeiro / comissão', l.leiloeiro)}${linha('Local', l.local)}${linha('Conta que recebe', l.conta)}${linha('Objeto', l.descricao)}</table>
+    <div class="rres">
+      <div><span>Total arrecadado</span><b>${brl(t.entradas)}</b><br>${t.n_entradas} entrada(s)</div>
+      <div><span>Total gasto</span><b>${brl(t.gastos)}</b><br>${t.n_gastos} gasto(s)</div>
+      <div><span>Saldo</span><b>${brl(t.saldo)}</b></div>
+      <div><span>Sem comprovante</span><b>${t.sem_comprovante}</b></div>
+    </div>
+    <h3>1. Entradas de recurso</h3>
+    <table><thead><tr><th>Data</th><th>Lote</th><th>Arrematante / pagador</th><th>Forma</th><th class="v">Valor</th><th>Comprov.</th></tr></thead><tbody>
+    ${ent.map(e => `<tr${cancel(e)}><td>${fData(e.data)}</td><td>${esc(e.lote)}${e.descricao_lote ? ' — ' + esc(e.descricao_lote) : ''}</td><td>${esc(e.arrematante)}${e.doc_arrematante ? '<br>' + esc(e.doc_arrematante) : ''}${nota(e)}</td><td>${esc(e.forma)}</td><td class="v">${brl(e.valor)}</td><td>${e.url ? 'Sim' : 'NÃO'}</td></tr>`).join('') || '<tr><td colspan="6">Nenhuma entrada.</td></tr>'}
+    </tbody><tfoot><tr><td colspan="4">Total arrecadado</td><td class="v">${brl(t.entradas)}</td><td></td></tr></tfoot></table>
+    <h3>2. Gastos (prestação de contas)</h3>
+    <table><thead><tr><th>Data</th><th>Descrição</th><th>Fornecedor</th><th>Documento</th><th class="v">Valor</th><th>Nota/Pagto</th></tr></thead><tbody>
+    ${gas.map(g => `<tr${cancel(g)}><td>${fData(g.data)}</td><td>${esc(g.descricao)}${g.categoria ? '<br>' + esc(g.categoria) : ''}${nota(g)}</td><td>${esc(g.fornecedor)}${g.doc_fornecedor ? '<br>' + esc(g.doc_fornecedor) : ''}</td><td>${esc(g.tipo_doc)}${g.num_doc ? ' nº ' + esc(g.num_doc) : ''}${g.forma_pagto ? '<br>' + esc(g.forma_pagto) : ''}</td><td class="v">${brl(g.valor)}</td><td>${g.url ? 'Sim' : 'NÃO'} / ${g.url_pag ? 'Sim' : '—'}</td></tr>`).join('') || '<tr><td colspan="6">Nenhum gasto.</td></tr>'}
+    </tbody><tfoot><tr><td colspan="4">Total gasto</td><td class="v">${brl(t.gastos)}</td><td></td></tr>
+    <tr><td colspan="4">SALDO (arrecadado − gasto)</td><td class="v">${brl(t.saldo)}</td><td></td></tr></tfoot></table>
+    <h3>3. Documentos do processo</h3>
+    <table><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Arquivo</th></tr></thead><tbody>
+    ${docs.map(d => `<tr><td>${fData(d.data)}</td><td>${esc(d.tipo)}</td><td>${esc(d.descricao)}</td><td>${esc(d.arq_nome)}</td></tr>`).join('') || '<tr><td colspan="4">Nenhum documento anexado.</td></tr>'}
+    </tbody></table>
+    <p style="font-size:8.5pt;margin-top:8px">Lançamentos cancelados aparecem riscados, com o motivo, e não entram nos totais. Os comprovantes, notas fiscais e recibos estão arquivados digitalmente e podem ser consultados no sistema.</p>
+    <div class="rass"><div>Responsável pela prestação de contas</div><div>Comandante / ordenador de despesa</div></div>
+    <div class="rrod">Emitido em ${fQuando(new Date().toISOString())} por ${esc((ps && ps.nome) || AUTH.user)} · BPFRON/RO</div>`;
+  setTimeout(() => window.print(), 300);
+});
+
+boot();
+</script>
+</body>
+</html>
