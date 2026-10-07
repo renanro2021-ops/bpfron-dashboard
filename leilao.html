@@ -164,9 +164,31 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
 .docs{display:flex;flex-direction:column;gap:8px}
 .doc{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap}
 .doc .di{font-size:24px}
-.doc .dt{flex:1;min-width:180px}
+.doc .dt{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}
 .doc .dt b{color:#e2e8f0;font-size:14.5px}
 .doc .dt span{display:block;font-size:12.5px;color:var(--muted)}
+
+/* ---------------- checklist do processo ---------------- */
+.chk-prog{height:8px;background:rgba(148,163,184,.12);border-radius:999px;overflow:hidden;margin:-4px 0 16px}
+.chk-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a030,var(--green));transition:width .3s}
+.etapa{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.etapa-tit{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;flex-wrap:wrap}
+.etapa-tit .en{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(245,197,24,.15);color:var(--yellow);font-size:13px}
+.etapa-tit .ec{margin-left:auto;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--muted)}
+.etapa.completa{border-color:rgba(52,211,153,.35)}
+.etapa.completa .etapa-tit .en{background:rgba(52,211,153,.15);color:var(--green)}
+.item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid rgba(148,163,184,.08);flex-wrap:wrap}
+.item:first-of-type{border-top:none}
+.item .ic{font-size:17px;line-height:1.3;width:22px;flex-shrink:0;text-align:center}
+.item .it{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.item .it b{color:#e2e8f0;font-size:14.5px;font-weight:600}
+.item .it .op{font-size:12px;color:var(--muted);font-weight:500}
+.item .it small{display:block;font-size:12.5px;color:var(--muted);line-height:1.5}
+.item.pend .it b{color:#fcd34d}
+.item.opc .it b{color:var(--muted)}
+.item .arqs{display:flex;flex-direction:column;gap:6px;width:100%;padding-left:32px}
+.item .arqs .doc{padding:8px 12px}
+.item .ia{display:flex;gap:6px;align-items:center}
 
 .hist{display:flex;flex-direction:column}
 .hl{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px}
@@ -302,24 +324,26 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
         <!-- ---------------- processo ---------------- -->
         <div class="pane on" id="pane-proc">
           <div class="box"><div class="dados" id="d-dados"></div></div>
-          <div class="sec">📄 Documentos do processo <span class="sp"></span>
+          <div class="sec">📋 Documentos do processo <small id="chk-resumo"></small><span class="sp"></span>
             <button class="btn small ges" id="btn-novo-doc">➕ Anexar documento</button>
           </div>
-          <div class="docs" id="lista-docs"></div>
-          <p class="hint">Edital, portaria da comissão, laudo de avaliação, ata, termo de arrematação, homologação, extrato da conta — tudo que comprova o processo do leilão.</p>
+          <div class="chk-prog"><i id="chk-barra"></i></div>
+          <div id="lista-docs"></div>
+          <p class="hint">Checklist montado a partir dos leilões de madeira já feitos na PMRO (2º BPM e BPA, Lei 14.133/2021 e IP nº 001/CPE/PMRO/2023).
+            Os itens marcados “se houver” não contam como pendência. Os comprovantes de pagamento ficam em <b>Entradas</b> e as notas e recibos em <b>Gastos</b>; o checklist só confere se nenhum ficou sem arquivo.</p>
         </div>
 
         <!-- ---------------- entradas ---------------- -->
         <div class="pane" id="pane-ent">
           <div class="tools">
-            <input type="search" id="busca-ent" placeholder="🔎 Buscar por lote, arrematante, forma…">
+            <input type="search" id="busca-ent" placeholder="🔎 Buscar por lote, espécie, arrematante, forma…">
             <label class="chk"><input type="checkbox" id="ver-canc-ent"> mostrar cancelados</label>
             <button class="btn small ges" id="btn-nova-ent">➕ Lançar entrada</button>
           </div>
           <div class="tbl-wrap"><table>
             <thead><tr><th>Data</th><th>Lote</th><th>Arrematante / pagador</th><th>Forma</th><th class="v">Valor</th><th>Comprovante</th><th class="ges"></th></tr></thead>
             <tbody id="tb-ent"></tbody>
-            <tfoot><tr><td colspan="4">Total arrecadado (sem cancelados)</td><td class="v" id="tf-ent"></td><td></td><td class="ges"></td></tr></tfoot>
+            <tfoot><tr><td colspan="4">Total arrecadado (sem cancelados)<span id="tf-ent-vol"></span></td><td class="v" id="tf-ent"></td><td></td><td class="ges"></td></tr></tfoot>
           </table></div>
         </div>
 
@@ -352,7 +376,7 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
   <div class="modal-box">
     <div class="modal-tit" id="ml-tit">Novo leilão</div>
     <div class="grid2">
-      <div class="fg span2"><label>Nome do leilão <i>*</i></label><input id="ml-titulo" placeholder="Ex.: Leilão de bens inservíveis 2026"></div>
+      <div class="fg span2"><label>Nome do leilão <i>*</i></label><input id="ml-titulo" placeholder="Ex.: Leilão de madeira apreendida nº 01/2026"></div>
       <div class="fg"><label>Nº do processo (SEI)</label><input id="ml-processo" placeholder="0021.000000/2026-00"></div>
       <div class="fg"><label>Data do leilão</label><input id="ml-data" type="date"></div>
       <div class="fg"><label>Modalidade</label><input id="ml-modalidade" list="dl-modal" placeholder="Presencial, eletrônico…"></div>
@@ -365,7 +389,7 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
       <div class="fg"><label>Leiloeiro / comissão</label><input id="ml-leiloeiro"></div>
       <div class="fg"><label>Local</label><input id="ml-local"></div>
       <div class="fg span2"><label>Conta que recebe o recurso</label><input id="ml-conta" placeholder="Banco, agência, conta, titular / chave PIX"></div>
-      <div class="fg span2"><label>Descrição / objeto</label><textarea id="ml-descricao" placeholder="O que foi leiloado, finalidade do recurso…"></textarea></div>
+      <div class="fg span2"><label>Descrição / objeto</label><textarea id="ml-descricao" placeholder="Madeira apreendida e destinada ao BPFRON (espécies, volume total), finalidade do recurso…"></textarea></div>
       <div class="fg span2"><label>Observações</label><textarea id="ml-obs"></textarea></div>
     </div>
     <div class="btnrow">
@@ -383,8 +407,9 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
   <div class="modal-box">
     <div class="modal-tit">Anexar documento do processo</div>
     <div class="grid2">
-      <div class="fg"><label>Tipo <i>*</i></label><input id="md-tipo" list="dl-tipodoc" placeholder="Edital, ata, laudo…"></div>
+      <div class="fg"><label>Tipo <i>*</i></label><select id="md-tipo"></select></div>
       <div class="fg"><label>Data do documento</label><input id="md-data" type="date"></div>
+      <div class="fg span2" id="md-outro-box" style="display:none"><label>Qual documento? <i>*</i></label><input id="md-outro" placeholder="Ex.: Ofício à SEDAM"></div>
       <div class="fg span2"><label>Descrição</label><input id="md-descricao" placeholder="Ex.: Ata da sessão pública, assinada pela comissão"></div>
       <div class="fg span2"><label>Arquivo <i>*</i></label><div class="anexo" data-campo="arquivo" id="md-arq"></div></div>
     </div>
@@ -403,7 +428,9 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
     <div class="grid2">
       <div class="fg"><label>Lote</label><input id="me-lote" placeholder="Ex.: 07"></div>
       <div class="fg"><label>Data do pagamento</label><input id="me-data" type="date"></div>
-      <div class="fg span2"><label>Descrição do lote</label><input id="me-descricao_lote" placeholder="Ex.: Viatura L200 placa NEX-0000, sucata"></div>
+      <div class="fg"><label>Espécie / produto</label><input id="me-especie" list="dl-especie" placeholder="Ex.: Itaúba — estacas"></div>
+      <div class="fg"><label>Volume (m³)</label><input id="me-volume" inputmode="decimal" placeholder="Ex.: 18,9156"></div>
+      <div class="fg span2"><label>Descrição do lote</label><input id="me-descricao_lote" placeholder="Ex.: 562 palanques roliços — Termo de constatação nº …"></div>
       <div class="fg"><label>Arrematante / quem pagou <i>*</i></label><input id="me-arrematante"></div>
       <div class="fg"><label>CPF / CNPJ</label><input id="me-doc_arrematante" inputmode="numeric"></div>
       <div class="fg"><label>Valor (R$) <i>*</i></label><input id="me-valor" inputmode="decimal" placeholder="0,00"></div>
@@ -472,7 +499,7 @@ tfoot td{font-weight:800;color:var(--yellow);border-top:1px solid var(--border);
 </div>
 
 <datalist id="dl-modal"><option>Presencial</option><option>Eletrônico</option><option>Presencial e eletrônico</option></datalist>
-<datalist id="dl-tipodoc"><option>Processo SEI (íntegra)</option><option>Edital</option><option>Portaria / comissão</option><option>Laudo de avaliação</option><option>Ata do leilão</option><option>Termo de arrematação</option><option>Homologação</option><option>Extrato bancário</option><option>Outro</option></datalist>
+<datalist id="dl-especie"><option>Itaúba</option><option>Angelim pedra</option><option>Cambará</option><option>Cerejeira</option><option>Garapa</option><option>Jatobá</option><option>Cumaru</option><option>Ipê</option><option>Maçaranduba</option><option>Roxinho</option><option>Tauari</option><option>Faveira ferro</option><option>Madeira mista</option></datalist>
 <datalist id="dl-forma"><option>PIX</option><option>Depósito</option><option>TED/DOC</option><option>Boleto</option><option>GRU / DARE</option><option>Dinheiro</option><option>Cartão</option><option>Outro</option></datalist>
 <datalist id="dl-cat"><option>Taxa do leiloeiro</option><option>Publicação de edital</option><option>Manutenção / reparo</option><option>Material</option><option>Serviço</option><option>Transporte / remoção</option><option>Tarifa bancária</option><option>Equipamento</option><option>Outros</option></datalist>
 <datalist id="dl-tipofiscal"><option>Nota fiscal</option><option>NF-e</option><option>NFS-e (serviço)</option><option>Cupom fiscal</option><option>Recibo</option><option>Fatura / boleto</option><option>Outro</option></datalist>
@@ -658,14 +685,113 @@ function renderProcesso(l, docs){
     item('Cadastrado por', (l.criado_por || '') + (l.criado_em ? ' em ' + fQuando(l.criado_em) : '')),
   ].join('') || '<div>Sem dados.</div>';
 
-  $('lista-docs').innerHTML = docs.length ? docs.map(d => `
-    <div class="doc">
+  renderChecklist(docs);
+}
+
+/* ============================== checklist do processo ==============================
+   Montado a partir dos leilões de MADEIRA que a PMRO já fez (2º BPM, Edital
+   2/2024; BPA, Edital 4/2024 — Lei 14.133/2021 e IP nº 001/CPE/PMRO/2023).
+   O item é marcado quando existe documento com aquele TIPO (o select do
+   anexo usa exatamente estes nomes). "opc" = só se houver, não é pendência.
+   "auto" = conferido pelos lançamentos, não por documento anexado. */
+const ETAPAS = [
+  { nome: 'Origem da madeira', itens: [
+    { t: 'Auto de infração / Termo de apreensão', d: 'De onde veio a madeira.' },
+    { t: 'Termo de constatação / Levantamento florestal', d: 'Espécie, tipo e volume (m³) de cada lote.' },
+    { t: 'Decisão de destinação (judicial ou administrativa)', d: 'A decisão que destina a madeira ao batalhão.' },
+    { t: 'Termo de doação', d: 'Formaliza a doação ao batalhão.' },
+  ]},
+  { nome: 'Preparação', itens: [
+    { t: 'Norma de referência (IP 001/CPE/PMRO/2023)', d: 'A instrução da PM que rege o leilão — fica no processo como referência.', opc: true },
+    { t: 'Portaria da comissão', d: 'Designa leiloeiro, 1º e 2º secretários.' },
+    { t: 'Termo de avaliação', d: 'Valor de cada lote (pauta fiscal como piso, valor de mercado como teto) e as cotações usadas.' },
+    { t: 'Edital', d: 'Com os anexos: modelo de proposta / termo de arrematação (pessoa física e jurídica).' },
+  ]},
+  { nome: 'Divulgação', itens: [
+    { t: 'Publicação no Diário Oficial', d: 'Página do DOE com o edital.' },
+    { t: 'Comprovante de divulgação / afixação', d: 'Foto do edital no mural, divulgação nos meios oficiais.' },
+    { t: 'Impugnações e respostas', d: 'Só se alguém impugnar o edital.', opc: true },
+  ]},
+  { nome: 'Sessão do leilão', itens: [
+    { t: 'Documentos dos participantes', d: 'RG/CPF ou contrato social, procuração e o CTF/APP do IBAMA.' },
+    { t: 'Propostas', d: 'Os envelopes / propostas recebidas.' },
+    { t: 'Ata da sessão', d: 'Abertura das propostas e resultado.' },
+    { t: 'Consulta à SEDAM (pendências no DOF)', d: 'Confirma que o vencedor não tem pendência no sistema DOF.' },
+  ]},
+  { nome: 'Pagamento', itens: [
+    { t: 'Termo de compromisso', d: 'O arrematante se compromete a pagar no prazo.' },
+    { t: 'Termo de arrematação', d: 'Assinado pelo leiloeiro, pelo arrematante e por 2 testemunhas, depois do pagamento.' },
+    { auto: 'entradas', t: 'Comprovantes de pagamento de cada lote', d: 'Lançados na aba Entradas (pagamento em espécie: recibo + depósito na conta).' },
+  ]},
+  { nome: 'Entrega da madeira', itens: [
+    { t: 'DOF / DOF Especial / AUTESP', d: 'Emitidos pela SEDAM — sem eles a madeira não sai do pátio.' },
+    { t: 'Termo de entrega', d: 'Retirada do lote pelo arrematante.' },
+  ]},
+  { nome: 'Encerramento e prestação de contas', itens: [
+    { t: 'Relatório final / Homologação', d: 'Relatório da comissão encerrando o leilão.' },
+    { t: 'Extrato da conta', d: 'Mostra o dinheiro entrando e saindo.' },
+    { auto: 'gastos', t: 'Notas fiscais e recibos dos gastos', d: 'Lançados na aba Gastos.' },
+  ]},
+];
+const TIPOS_CHECK = ETAPAS.flatMap(e => e.itens.filter(i => !i.auto).map(i => i.t));
+const normTipo = (t) => String(t || '').trim().toLowerCase();
+let CHECK = { feitos: 0, total: 0, etapas: [] };
+
+/* Situação de um item: { ok, docs, txt }. */
+function situacaoItem(it, docs){
+  if (it.auto){
+    const lista = doLeilao(it.auto === 'entradas' ? D.entradas : D.gastos).filter(x => x.status !== 'CANCELADO');
+    const sem = lista.filter(x => !x.url).length;
+    if (!lista.length) return { ok:false, docs:[], txt: it.auto === 'entradas' ? 'Nenhuma entrada lançada ainda.' : 'Nenhum gasto lançado ainda.' };
+    return { ok: !sem, docs:[], txt: sem ? `${sem} de ${lista.length} sem arquivo.` : `${lista.length} lançamento(s), todos com arquivo.` };
+  }
+  const meus = docs.filter(d => normTipo(d.tipo) === normTipo(it.t));
+  return { ok: meus.length > 0, docs: meus, txt: '' };
+}
+
+function linhaDoc(d){
+  return `<div class="doc">
       <div class="di">${/pdf/.test(d.arq_mime) ? '📄' : '🖼️'}</div>
-      <div class="dt"><b>${esc(d.tipo)}</b>${d.descricao ? ' — ' + esc(d.descricao) : ''}
+      <div class="dt"><b>${esc(d.descricao || d.arq_nome)}</b>
         <span>${d.data ? fData(d.data) + ' · ' : ''}${esc(d.arq_nome)} · ${fTam(d.arq_tam)} · enviado por ${esc(d.enviado_por)}</span></div>
       <button class="arq" data-url="${esc(d.url)}" data-nome="${esc(d.tipo + ' — ' + d.arq_nome)}">📎 Abrir</button>
       ${D.gestor ? `<button class="btn icon danger" data-canc="documento" data-id="${esc(d.id)}" title="Excluir documento">🗑️</button>` : ''}
-    </div>`).join('') : '<div class="vazio">Nenhum documento anexado ainda.</div>';
+    </div>`;
+}
+
+function renderChecklist(docs){
+  let feitos = 0, total = 0;
+  const etapas = [];
+  const html = ETAPAS.map((e, n) => {
+    let okEt = 0, totEt = 0;
+    const sits = [];
+    const itens = e.itens.map(it => {
+      const s = situacaoItem(it, docs);
+      sits.push({ it, s });
+      if (!it.opc){ totEt++; if (s.ok) okEt++; }
+      const cls = s.ok ? 'ok' : (it.opc ? 'opc' : 'pend');
+      const ic = s.ok ? '✅' : (it.opc ? '◻️' : '⬜');
+      const botao = it.auto
+        ? `<button class="btn small ghost" data-irpara="${it.auto === 'entradas' ? 'ent' : 'gas'}">Ver ${it.auto === 'entradas' ? 'entradas' : 'gastos'}</button>`
+        : (D.gestor ? `<button class="btn small ghost" data-anexar="${esc(it.t)}">➕ ${s.ok ? 'Mais um' : 'Anexar'}</button>` : '');
+      return `<div class="item ${cls}"><div class="ic">${ic}</div>
+        <div class="it"><b>${esc(it.t)}</b>${it.opc ? ' <span class="op">(se houver)</span>' : ''}<small>${esc(s.txt || it.d)}</small></div>
+        <div class="ia">${botao}</div>
+        ${s.docs.length ? `<div class="arqs">${s.docs.map(linhaDoc).join('')}</div>` : ''}</div>`;
+    }).join('');
+    feitos += okEt; total += totEt;
+    etapas.push({ nome: e.nome, sits });
+    return `<div class="etapa ${okEt === totEt ? 'completa' : ''}"><div class="etapa-tit"><span class="en">${n + 1}</span>${esc(e.nome)}<span class="ec">${okEt} de ${totEt}</span></div>${itens}</div>`;
+  }).join('');
+
+  const outros = docs.filter(d => !TIPOS_CHECK.some(t => normTipo(t) === normTipo(d.tipo)));
+  $('lista-docs').innerHTML = html + (outros.length
+    ? `<div class="etapa"><div class="etapa-tit"><span class="en">+</span>Outros documentos<span class="ec">${outros.length}</span></div>
+       ${outros.map(d => `<div class="item ok"><div class="ic">📎</div><div class="it"><b>${esc(d.tipo)}</b></div><div class="arqs">${linhaDoc(d)}</div></div>`).join('')}</div>`
+    : '');
+  $('chk-resumo').textContent = `· ${feitos} de ${total} itens`;
+  $('chk-barra').style.width = (total ? Math.round(feitos / total * 100) : 0) + '%';
+  CHECK = { feitos, total, etapas, outros };
 }
 
 function filtra(lista, termo, campos, verCanc){
@@ -684,13 +810,14 @@ const acoes = (tipo, x) => D.gestor && x.status !== 'CANCELADO'
      <button class="btn icon danger" data-canc="${tipo}" data-id="${esc(x.id)}" title="Cancelar">⛔</button></td>`
   : (D.gestor ? '<td class="acoes"></td>' : '');
 
+const fVol = (v) => v ? Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) + ' m³' : '';
 function renderEntradas(){
   const todas = doLeilao(D.entradas).sort((a,b) => String(b.data).localeCompare(String(a.data)));
-  const lista = filtra(todas, $('busca-ent').value, ['lote','descricao_lote','arrematante','doc_arrematante','forma','obs'], $('ver-canc-ent').checked);
+  const lista = filtra(todas, $('busca-ent').value, ['lote','especie','descricao_lote','arrematante','doc_arrematante','forma','obs'], $('ver-canc-ent').checked);
   $('tb-ent').innerHTML = lista.length ? lista.map(e => `
     <tr class="${e.status === 'CANCELADO' ? 'cancel' : ''}">
       <td data-l="Data">${fData(e.data)}</td>
-      <td data-l="Lote">${esc(e.lote || '—')}${e.descricao_lote ? `<span class="sub">${esc(e.descricao_lote)}</span>` : ''}</td>
+      <td data-l="Lote">${esc(e.lote || '—')}${e.especie || e.volume ? `<span class="sub">${esc([e.especie, fVol(e.volume)].filter(Boolean).join(' · '))}</span>` : ''}${e.descricao_lote ? `<span class="sub">${esc(e.descricao_lote)}</span>` : ''}</td>
       <td data-l="Arrematante / pagador">${esc(e.arrematante)}${e.doc_arrematante ? `<span class="sub">${esc(e.doc_arrematante)}</span>` : ''}${e.obs ? `<span class="sub">${esc(e.obs)}</span>` : ''}${linhaCanc(e)}</td>
       <td data-l="Forma">${esc(e.forma || '—')}</td>
       <td class="v" data-l="Valor">${brl(e.valor)}</td>
@@ -698,6 +825,8 @@ function renderEntradas(){
       ${acoes('entrada', e)}
     </tr>`).join('') : `<tr><td colspan="7" class="vazio">${todas.length ? 'Nada bate com a busca.' : 'Nenhuma entrada lançada.'}</td></tr>`;
   $('tf-ent').textContent = brl(leilaoSel().totais.entradas);
+  const vol = doLeilao(D.entradas).filter(e => e.status !== 'CANCELADO').reduce((t, e) => t + (Number(e.volume) || 0), 0);
+  $('tf-ent-vol').textContent = vol ? ' · ' + fVol(Math.round(vol * 10000) / 10000) + ' vendidos' : '';
 }
 
 function renderGastos(){
@@ -737,6 +866,10 @@ document.addEventListener('click', (ev) => {
   if (ed){ ed.dataset.edit === 'entrada' ? abrirEntrada(ed.dataset.id) : abrirGasto(ed.dataset.id); return; }
   const cc = ev.target.closest('[data-canc]');
   if (cc){ abrirCancelar(cc.dataset.canc, cc.dataset.id); return; }
+  const an = ev.target.closest('[data-anexar]');
+  if (an){ abrirDoc(an.dataset.anexar); return; }
+  const ip = ev.target.closest('[data-irpara]');
+  if (ip){ trocarAba(ip.dataset.irpara); return; }
   const fe = ev.target.closest('[data-fecha]');
   if (fe){ fe.closest('.modal').classList.remove('on'); }
 });
@@ -838,16 +971,23 @@ $('ml-salvar').addEventListener('click', () => gravando($('ml-salvar'), async ()
 }));
 
 /* ============================== documento ============================== */
-$('btn-novo-doc').addEventListener('click', () => {
-  $('md-tipo').value = ''; $('md-descricao').value = ''; $('md-data').value = hoje();
+$('md-tipo').innerHTML = '<option value="">Escolha…</option>' + ETAPAS.map((e, n) =>
+  `<optgroup label="${n + 1}. ${esc(e.nome)}">${e.itens.filter(i => !i.auto).map(i => `<option>${esc(i.t)}</option>`).join('')}</optgroup>`).join('') +
+  '<option value="__outro">Outro documento (escrever)</option>';
+$('md-tipo').addEventListener('change', () => show('md-outro-box', $('md-tipo').value === '__outro'));
+function abrirDoc(tipo){
+  $('md-tipo').value = tipo || ''; $('md-outro').value = ''; show('md-outro-box', false);
+  $('md-descricao').value = ''; $('md-data').value = hoje();
   resetAnexo('md-arq'); msg('md-msg');
   $('m-doc').classList.add('on');
-});
+}
+$('btn-novo-doc').addEventListener('click', () => abrirDoc(''));
 $('md-salvar').addEventListener('click', () => gravando($('md-salvar'), async () => {
-  if (!valor('md-tipo')){ msg('md-msg', 'Diga o tipo do documento (edital, ata…).', 'err'); return; }
+  const tipo = $('md-tipo').value === '__outro' ? valor('md-outro') : $('md-tipo').value;
+  if (!tipo){ msg('md-msg', 'Escolha o tipo do documento.', 'err'); return; }
   if (!ANEXOS['md-arq']){ msg('md-msg', 'Escolha o arquivo.', 'err'); return; }
   const f = new FormData();
-  f.append('leilao_id', SEL); f.append('tipo', valor('md-tipo'));
+  f.append('leilao_id', SEL); f.append('tipo', tipo);
   f.append('descricao', valor('md-descricao')); f.append('data', $('md-data').value);
   f.append('arquivo', ANEXOS['md-arq']);
   msg('md-msg', 'Enviando o arquivo…');
@@ -859,7 +999,7 @@ $('md-salvar').addEventListener('click', () => gravando($('md-salvar'), async ()
 }));
 
 /* ============================== entrada ============================== */
-const ME = ['lote','descricao_lote','arrematante','doc_arrematante','forma','obs'];
+const ME = ['lote','especie','descricao_lote','arrematante','doc_arrematante','forma','obs'];
 let ME_ID = '';
 function abrirEntrada(id){
   ME_ID = id || '';
@@ -868,6 +1008,7 @@ function abrirEntrada(id){
   ME.forEach(k => $('me-' + k).value = e[k] || '');
   $('me-valor').value = id ? String(e.valor.toFixed(2)).replace('.', ',') : '';
   $('me-data').value = e.data || hoje();
+  $('me-volume').value = id && e.volume ? String(e.volume).replace('.', ',') : '';
   resetAnexo('me-arq', e.arq_nome);
   msg('me-msg');
   $('m-ent').classList.add('on');
@@ -879,7 +1020,7 @@ $('me-salvar').addEventListener('click', () => gravando($('me-salvar'), async ()
   const f = new FormData();
   if (ME_ID) f.append('id', ME_ID); else f.append('leilao_id', SEL);
   ME.forEach(k => f.append(k, valor('me-' + k)));
-  f.append('valor', valor('me-valor')); f.append('data', $('me-data').value);
+  f.append('valor', valor('me-valor')); f.append('data', $('me-data').value); f.append('volume', valor('me-volume'));
   if (ANEXOS['me-arq']) f.append('arquivo', ANEXOS['me-arq']);
   msg('me-msg', ANEXOS['me-arq'] ? 'Enviando o comprovante…' : 'Gravando…');
   try {
@@ -974,16 +1115,20 @@ $('btn-relatorio').addEventListener('click', () => {
     </div>
     <h3>1. Entradas de recurso</h3>
     <table><thead><tr><th>Data</th><th>Lote</th><th>Arrematante / pagador</th><th>Forma</th><th class="v">Valor</th><th>Comprov.</th></tr></thead><tbody>
-    ${ent.map(e => `<tr${cancel(e)}><td>${fData(e.data)}</td><td>${esc(e.lote)}${e.descricao_lote ? ' — ' + esc(e.descricao_lote) : ''}</td><td>${esc(e.arrematante)}${e.doc_arrematante ? '<br>' + esc(e.doc_arrematante) : ''}${nota(e)}</td><td>${esc(e.forma)}</td><td class="v">${brl(e.valor)}</td><td>${e.url ? 'Sim' : 'NÃO'}</td></tr>`).join('') || '<tr><td colspan="6">Nenhuma entrada.</td></tr>'}
+    ${ent.map(e => `<tr${cancel(e)}><td>${fData(e.data)}</td><td>${esc(e.lote)}${e.especie || e.volume ? ' — ' + esc([e.especie, fVol(e.volume)].filter(Boolean).join(', ')) : ''}${e.descricao_lote ? '<br>' + esc(e.descricao_lote) : ''}</td><td>${esc(e.arrematante)}${e.doc_arrematante ? '<br>' + esc(e.doc_arrematante) : ''}${nota(e)}</td><td>${esc(e.forma)}</td><td class="v">${brl(e.valor)}</td><td>${e.url ? 'Sim' : 'NÃO'}</td></tr>`).join('') || '<tr><td colspan="6">Nenhuma entrada.</td></tr>'}
     </tbody><tfoot><tr><td colspan="4">Total arrecadado</td><td class="v">${brl(t.entradas)}</td><td></td></tr></tfoot></table>
     <h3>2. Gastos (prestação de contas)</h3>
     <table><thead><tr><th>Data</th><th>Descrição</th><th>Fornecedor</th><th>Documento</th><th class="v">Valor</th><th>Nota/Pagto</th></tr></thead><tbody>
     ${gas.map(g => `<tr${cancel(g)}><td>${fData(g.data)}</td><td>${esc(g.descricao)}${g.categoria ? '<br>' + esc(g.categoria) : ''}${nota(g)}</td><td>${esc(g.fornecedor)}${g.doc_fornecedor ? '<br>' + esc(g.doc_fornecedor) : ''}</td><td>${esc(g.tipo_doc)}${g.num_doc ? ' nº ' + esc(g.num_doc) : ''}${g.forma_pagto ? '<br>' + esc(g.forma_pagto) : ''}</td><td class="v">${brl(g.valor)}</td><td>${g.url ? 'Sim' : 'NÃO'} / ${g.url_pag ? 'Sim' : '—'}</td></tr>`).join('') || '<tr><td colspan="6">Nenhum gasto.</td></tr>'}
     </tbody><tfoot><tr><td colspan="4">Total gasto</td><td class="v">${brl(t.gastos)}</td><td></td></tr>
     <tr><td colspan="4">SALDO (arrecadado − gasto)</td><td class="v">${brl(t.saldo)}</td><td></td></tr></tfoot></table>
-    <h3>3. Documentos do processo</h3>
-    <table><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Arquivo</th></tr></thead><tbody>
-    ${docs.map(d => `<tr><td>${fData(d.data)}</td><td>${esc(d.tipo)}</td><td>${esc(d.descricao)}</td><td>${esc(d.arq_nome)}</td></tr>`).join('') || '<tr><td colspan="4">Nenhum documento anexado.</td></tr>'}
+    <h3>3. Documentos do processo — ${CHECK.feitos} de ${CHECK.total} itens</h3>
+    <table><thead><tr><th>Etapa</th><th>Documento</th><th>Situação</th><th>Arquivo(s)</th></tr></thead><tbody>
+    ${CHECK.etapas.map((e, n) => e.sits.map(({ it, s }, i) => `<tr>${i === 0 ? `<td rowspan="${e.sits.length}">${n + 1}. ${esc(e.nome)}</td>` : ''}
+      <td>${esc(it.t)}${it.opc ? ' (se houver)' : ''}</td>
+      <td>${s.ok ? 'OK' : (it.opc ? '—' : '<b>PENDENTE</b>')}${s.txt ? '<br>' + esc(s.txt) : ''}</td>
+      <td>${s.docs.map(d => `${fData(d.data)} ${esc(d.descricao || d.arq_nome)}`).join('<br>')}</td></tr>`).join('')).join('')}
+    ${(CHECK.outros || []).map(d => `<tr><td>Outros</td><td>${esc(d.tipo)}</td><td>OK</td><td>${fData(d.data)} ${esc(d.descricao || d.arq_nome)}</td></tr>`).join('')}
     </tbody></table>
     <p style="font-size:8.5pt;margin-top:8px">Lançamentos cancelados aparecem riscados, com o motivo, e não entram nos totais. Os comprovantes, notas fiscais e recibos estão arquivados digitalmente e podem ser consultados no sistema.</p>
     <div class="rass"><div>Responsável pela prestação de contas</div><div>Comandante / ordenador de despesa</div></div>
