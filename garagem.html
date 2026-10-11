@@ -180,8 +180,8 @@ textarea{min-height:92px;resize:vertical}
     <div class="step" style="margin-bottom:6px">🚓 Situação da frota agora</div>
     <div class="hint" id="frota-hora" style="margin:0 0 10px"></div>
     <div class="filtros" id="frota-filtros">
-      <button class="on" data-f="uso" onclick="setFiltroFrota('uso')">🔵 Em uso <span id="n-uso"></span></button>
-      <button data-f="livre" onclick="setFiltroFrota('livre')">🟢 Disponíveis <span id="n-livre"></span></button>
+      <button class="on" data-f="livre" onclick="setFiltroFrota('livre')">🟢 Disponíveis <span id="n-livre"></span></button>
+      <button data-f="uso" onclick="setFiltroFrota('uso')">🔵 Em uso <span id="n-uso"></span></button>
     </div>
     <div id="frota-lista"></div>
     <button class="btn gray" style="width:100%;margin-top:6px" onclick="carregar()">🔄 Atualizar</button>
@@ -382,7 +382,7 @@ function montar(dados){
 }
 
 /* ─── navegação e situação da frota ─── */
-let VISTA = 'check', FILTRO_FROTA = 'uso', FILTRO_SEL = '';
+let VISTA = 'check', FILTRO_FROTA = 'livre', FILTRO_SEL = '';
 function irVista(v){
   VISTA = v;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
@@ -530,8 +530,9 @@ function renderViaturas(){
   const q = norm($('busca').value);
   const lista = APP.viaturas.filter(v => (!q || norm(v.prefixo + v.placa + v.modelo).includes(q))
     && (!FILTRO_SEL || (FILTRO_SEL === 'uso' ? v.em_uso : !v.em_uso)));
-  const minha = v => (EU && v.em_uso && v.ultimo && v.ultimo.motorista_re === EU.re) ? 0 : 1;
-  lista.sort((a, b) => minha(a) - minha(b));   // a que está com você vem primeiro
+  // sempre as disponíveis primeiro, depois as em uso (entre estas, a que está com você na frente)
+  const ordem = v => !v.em_uso ? 0 : (EU && v.ultimo && v.ultimo.motorista_re === EU.re) ? 1 : 2;
+  lista.sort((a, b) => ordem(a) - ordem(b));
   $('vgrid').innerHTML = lista.map(v => {
     const chips = [];
     chips.push(v.em_uso ? '<span class="chip uso">🔵 Em uso</span>' : '<span class="chip livre">🟢 Disponível</span>');
