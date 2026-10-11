@@ -428,7 +428,8 @@ function mostrarQuem(){
     $('eu-nome').textContent = EU.nome; $('eu-re').textContent = EU.re;
     $('eu-uni').textContent = '🏷️ Outra unidade' + (EU.unidade ? ' · ' + EU.unidade : ''); show('eu-uni', !!EU.externo);
   }
-  show('s-vtr', !!EU);
+  // quem está com viatura em uso só vê a dela: a lista some até ele dar o Término
+  show('s-vtr', !!EU && !travarNaMinha());
   renderMinha();
   if (!EU) setTimeout(() => $('re').focus(), 50);
 }
@@ -495,6 +496,17 @@ function trocarPolicial(){
 function minhasViaturas(){
   return (APP && EU) ? APP.viaturas.filter(v => v.em_uso && v.ultimo && v.ultimo.motorista_re === EU.re) : [];
 }
+// Trava: com viatura em uso, a escolhida é sempre a dele (se for uma só, já abre no Término).
+function travarNaMinha(){
+  const L = minhasViaturas();
+  if (!L.length) return false;
+  if (!SEL || !L.includes(SEL)){
+    SEL = L.length === 1 ? L[0] : null;
+    F.devolvendo = false; F.ciente = '';
+    if (!SEL) show('s-form', false);
+  }
+  return true;
+}
 function renderMinha(){
   const L = (VISTA === 'frota' || !$('s-ok').classList.contains('hidden')) ? [] : minhasViaturas();
   show('s-minha', L.length > 0);
@@ -502,7 +514,7 @@ function renderMinha(){
     <div class="mv"><div><div class="pf">${esc(v.prefixo)}</div>
       <div class="d">${esc(v.modelo)} · ${esc(v.placa)}<br>Saiu em ${esc(fData(v.ultimo.data))} (há ${esc(tempoDesde(v.ultimo.data))})${v.ultimo.km ? ' com <b>' + fN(v.ultimo.km) + ' km</b>' : ''}</div></div></div>
     <button class="btn-main" style="margin:0 0 12px" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')">🏁 Registrar término de uso · ${esc(v.prefixo)}</button>`).join('')
-    + '<div class="hint" style="margin-top:0">Vai pegar outra viatura? Escolha na lista abaixo.</div>' : '';
+    + '<div class="hint" style="margin-top:0">🔒 Para pegar outra viatura, registre antes o <b>término</b> desta. Não está mais com ela? Procure o gestor da garagem.</div>' : '';
 }
 // Próxima troca de óleo: km (se informado, usa o do painel; senão o último registrado).
 function oleoInfo(v, km){
@@ -702,6 +714,7 @@ async function enviar(){
       else { EU = { ...EU, externo: true, unidade: EU.unidade || x.unidade || '' }; try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(_){} mostrarQuem(); renderExt(); erroEnvio('🏷️ ' + esc(e.message)); }
     }
     else if (e.code === 'sequencia'){ erroEnvio('⛔ ' + esc(e.message)); await recarregarSilencioso(); }
+    else if (e.code === 'ja_em_uso'){ const m = '🔒 ' + esc(e.message); await recarregarSilencioso(); mostrarQuem(); if (SEL) abrirForm(false); erroEnvio(m); }
     else if (e.status === 404 && e.code === 're_nao_encontrado'){ erroEnvio(esc(e.message)); trocarPolicial(); }
     else erroEnvio('⚠️ Não foi enviado: ' + esc(e.message) + '<br><span style="font-size:12.5px">Seus dados continuam na tela — tente de novo.</span>');
   }finally{ $('btn-enviar').disabled = false; carregandoOvl(''); }
