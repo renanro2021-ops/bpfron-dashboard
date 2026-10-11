@@ -130,6 +130,19 @@ textarea{min-height:92px;resize:vertical}
 .uso-item .t b{display:block;font:700 16px 'Rajdhani',sans-serif;color:var(--blue)}
 .uso-item.livre{border-color:rgba(52,211,153,.3)}
 .uso-item.livre .ic{background:rgba(52,211,153,.12)}
+.info2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.info2 .bx{background:#0b1120;border:1px solid #273244;border-radius:12px;padding:10px 12px}
+.info2 .bx .l{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.info2 .bx .v{font:700 20px 'Rajdhani',sans-serif;color:#fff;line-height:1.2;margin-top:2px}
+.info2 .bx .s{font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.info2 .bx.ok{border-color:rgba(52,211,153,.4)} .info2 .bx.ok .s{color:var(--ok)}
+.info2 .bx.breve{border-color:rgba(251,146,60,.55)} .info2 .bx.breve .s{color:var(--orange)}
+.info2 .bx.venc{border-color:rgba(248,113,113,.65);background:rgba(248,113,113,.1)} .info2 .bx.venc .s{color:#fecaca;font-weight:700}
+.vtr .km{font-size:12px;color:#cbd5e1;margin-top:6px;line-height:1.4}
+.minha{border-color:rgba(96,165,250,.6);background:rgba(15,30,60,.6)}
+.minha .mv{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.minha .mv .pf{font:700 24px 'Rajdhani',sans-serif;color:#fff;line-height:1.1}
+.minha .mv .d{font-size:13px;color:#bfdbfe;line-height:1.45}
 .sub{font:700 13px 'Rajdhani',sans-serif;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;color:var(--muted)}
 .sticky-send{position:sticky;bottom:0;padding:12px 0 calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,var(--bg) 30%)}
 </style>
@@ -185,13 +198,24 @@ textarea{min-height:92px;resize:vertical}
       </div>
       <div class="hint">Digite o seu RE. Ele fica salvo neste celular para as próximas vezes.</div>
       <div id="re-erro" class="err" style="font-size:13.5px;margin-top:8px"></div>
+      <div id="quem-ext" class="hidden">
+        <div class="aviso yel">⚠️ O RE <b id="ext-re"></b> não está no cadastro do BPFRON. Se digitou errado, corrija o número acima e confirme de novo. Se você é de <b>outra unidade</b>, identifique-se:</div>
+        <label class="lb" for="ext-nome">Posto/graduação e nome <span class="req">*</span></label>
+        <input id="ext-nome" autocomplete="off" maxlength="120" placeholder="Ex.: 3º SGT PM Fulano">
+        <label class="lb" for="ext-uni">Sua unidade <span class="req">*</span></label>
+        <input id="ext-uni" autocomplete="off" maxlength="60" placeholder="Ex.: 5º BPM">
+        <button class="btn-main" style="margin-top:14px" onclick="confirmarExt()">Continuar</button>
+      </div>
     </div>
     <div id="quem-ok" class="eu hidden">
       <div class="av">👮</div>
-      <div><b id="eu-nome"></b><span class="muted" style="font-size:12.5px">RE <span id="eu-re"></span></span></div>
+      <div><b id="eu-nome"></b><span class="muted" style="font-size:12.5px">RE <span id="eu-re"></span></span><span id="eu-uni" class="chip pend hidden" style="margin-top:4px"></span></div>
       <a href="#" onclick="trocarPolicial();return false">não sou eu</a>
     </div>
   </div>
+
+  <!-- viatura que este policial está usando agora (atalho pro Término) -->
+  <div id="s-minha" class="card minha hidden"></div>
 
   <!-- 2. viatura -->
   <div id="s-vtr" class="card hidden">
@@ -222,6 +246,7 @@ textarea{min-height:92px;resize:vertical}
         <button class="opt" id="m-fim" onclick="setMomento('Término de uso')">🏁 Término de uso<small>estou devolvendo</small></button>
       </div>
       <div id="momento-info" class="aviso blue hidden"></div>
+      <div class="info2" id="vtr-info"></div>
 
       <label class="lb" for="km">Hodômetro (km) <span class="req">*</span></label>
       <input id="km" inputmode="numeric" autocomplete="off" placeholder="Km do painel" oninput="kmInput()">
@@ -242,6 +267,14 @@ textarea{min-height:92px;resize:vertical}
       <label class="lb" for="local">Local de atuação (município / base) <span class="req">*</span></label>
       <input id="local" list="dl-local" autocomplete="off" placeholder="Ex.: Base Nova Mutum">
       <datalist id="dl-local"></datalist>
+
+      <div id="ext-wrap" class="hidden">
+        <div class="aviso yel" id="ext-aviso"></div>
+        <label class="lb" for="fin">Finalidade do uso da viatura <span class="req">*</span></label>
+        <textarea id="fin" maxlength="500" style="min-height:70px" placeholder="Ex.: apoio à Operação Hórus em Guajará-Mirim."></textarea>
+        <label class="lb" for="aut">Quem autorizou você a pegar a viatura <span class="req">*</span></label>
+        <input id="aut" autocomplete="off" maxlength="120" placeholder="Posto e nome de quem autorizou">
+      </div>
     </div>
 
     <div class="card">
@@ -342,6 +375,7 @@ function montar(dados){
   $('termo').textContent = APP.termo;
   if (SEL) SEL = APP.viaturas.find(v => v.prefixo === SEL.prefixo) || null;
   try{ EU = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); }catch(e){ EU = null; }
+  reconferirEU();
   mostrarQuem();
   renderViaturas();
   if (SEL) abrirForm(false);
@@ -353,7 +387,7 @@ function irVista(v){
   VISTA = v;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   show('s-frota', v === 'frota');
-  if (v === 'frota'){ ['s-quem','s-vtr','s-form','s-ok'].forEach(id => $(id).classList.add('hidden')); renderFrotaSit(); }
+  if (v === 'frota'){ ['s-quem','s-minha','s-vtr','s-form','s-ok'].forEach(id => $(id).classList.add('hidden')); renderFrotaSit(); }
   else { mostrarQuem(); if (SEL) abrirForm(false); }
   window.scrollTo({ top:0 });
 }
@@ -390,8 +424,12 @@ function mostrarQuem(){
   if (VISTA === 'frota') return renderFrotaSit();
   show('s-quem', true);
   show('quem-form', !EU); show('quem-ok', !!EU);
-  if (EU){ $('eu-nome').textContent = EU.nome; $('eu-re').textContent = EU.re; }
+  if (EU){
+    $('eu-nome').textContent = EU.nome; $('eu-re').textContent = EU.re;
+    $('eu-uni').textContent = '🏷️ Outra unidade' + (EU.unidade ? ' · ' + EU.unidade : ''); show('eu-uni', !!EU.externo);
+  }
   show('s-vtr', !!EU);
+  renderMinha();
   if (!EU) setTimeout(() => $('re').focus(), 50);
 }
 async function identificar(){
@@ -401,17 +439,89 @@ async function identificar(){
   $('btn-re').disabled = true; $('btn-re').textContent = '…';
   try{
     const d = await api('/api/garagem/identificar', { re });
-    EU = { re: d.re, nome: [d.posto, d.nome].filter(Boolean).join(' ') };
-    try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(e){}
-    mostrarQuem();
-    $('s-vtr').scrollIntoView({ behavior:'smooth', block:'start' });
+    if (d.desconhecido){
+      // RE fora do cadastro: outra unidade. Pede nome e unidade antes de seguir.
+      EXT_PEND = d;
+      $('ext-re').textContent = d.re;
+      $('ext-nome').value = [d.posto, d.nome].filter(Boolean).join(' '); $('ext-uni').value = d.unidade || '';
+      show('quem-ext', true); $('ext-nome').focus();
+      return;
+    }
+    entrarComo(euDe(d));
   }catch(e){ $('re-erro').textContent = e.message; }
   finally{ $('btn-re').disabled = false; $('btn-re').textContent = 'Confirmar'; }
 }
+let EXT_PEND = null;
+function euDe(d){
+  return { re: d.re, nome: [d.posto, d.nome].filter(Boolean).join(' '), externo: !!d.externo, unidade: d.unidade || '', desconhecido: !!d.desconhecido };
+}
+function entrarComo(eu){
+  EU = eu; EXT_PEND = null; show('quem-ext', false);
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(e){}
+  mostrarQuem(); renderViaturas();
+  if (SEL) abrirForm(false);
+  ($('s-minha').classList.contains('hidden') ? $('s-vtr') : $('s-minha')).scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function confirmarExt(){
+  const nome = $('ext-nome').value.trim(), uni = $('ext-uni').value.trim();
+  if (!EXT_PEND) return;
+  if ($('re').value.replace(/\D/g,'') !== EXT_PEND.re) return identificar();   // corrigiu o RE: confere de novo
+  if (nome.length < 3 || !uni){ $('re-erro').textContent = 'Informe seu posto/nome e a sua unidade.'; return; }
+  $('re-erro').textContent = '';
+  entrarComo({ re: EXT_PEND.re, nome, externo: true, unidade: uni, desconhecido: true });
+}
+// O RE fica salvo no celular: reconfere uma vez por abertura se a pessoa é do batalhão ou de
+// outra unidade (o cadastro muda, e quem salvou antes desta regra não tem a informação).
+let EU_CONFERIDO = false;
+async function reconferirEU(){
+  if (!EU || EU_CONFERIDO) return;
+  EU_CONFERIDO = true;
+  try{
+    const d = await api('/api/garagem/identificar', { re: EU.re });
+    if (!EU || EU.re !== d.re) return;
+    if (d.desconhecido) EU = { ...EU, externo: true, desconhecido: true, unidade: EU.unidade || d.unidade || '' };
+    else EU = euDe(d);
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(e){}
+    if (VISTA !== 'frota' && $('s-ok').classList.contains('hidden')){ mostrarQuem(); renderViaturas(); if (SEL) abrirForm(false); }
+  }catch(e){ EU_CONFERIDO = false; }
+}
 function trocarPolicial(){
   EU = null; try{ localStorage.removeItem(LS_KEY); }catch(e){}
-  SEL = null; show('s-form', false); $('re').value = '';
+  SEL = null; show('s-form', false); $('re').value = ''; EXT_PEND = null; show('quem-ext', false);
   mostrarQuem(); renderViaturas();
+}
+
+/* ─── viatura que o policial está usando (atalho pro Término) ─── */
+function minhasViaturas(){
+  return (APP && EU) ? APP.viaturas.filter(v => v.em_uso && v.ultimo && v.ultimo.motorista_re === EU.re) : [];
+}
+function renderMinha(){
+  const L = (VISTA === 'frota' || !$('s-ok').classList.contains('hidden')) ? [] : minhasViaturas();
+  show('s-minha', L.length > 0);
+  $('s-minha').innerHTML = L.length ? `<div class="step" style="color:var(--blue)">🚓 Você está com ${L.length > 1 ? 'estas viaturas' : 'esta viatura'}</div>` + L.map(v => `
+    <div class="mv"><div><div class="pf">${esc(v.prefixo)}</div>
+      <div class="d">${esc(v.modelo)} · ${esc(v.placa)}<br>Saiu em ${esc(fData(v.ultimo.data))} (há ${esc(tempoDesde(v.ultimo.data))})${v.ultimo.km ? ' com <b>' + fN(v.ultimo.km) + ' km</b>' : ''}</div></div></div>
+    <button class="btn-main" style="margin:0 0 12px" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')">🏁 Registrar término de uso · ${esc(v.prefixo)}</button>`).join('')
+    + '<div class="hint" style="margin-top:0">Vai pegar outra viatura? Escolha na lista abaixo.</div>' : '';
+}
+// Próxima troca de óleo: km (se informado, usa o do painel; senão o último registrado).
+function oleoInfo(v, km){
+  if (!v.km_proxima_troca) return { cls:'', txt:'Sem registro', sub:'troca de óleo não cadastrada — avise o gestor' };
+  const base = km || v.km_atual || 0, falta = base ? v.km_proxima_troca - base : null;
+  const txt = fN(v.km_proxima_troca) + ' km';
+  if (falta === null) return { cls:'', txt, sub:'' };
+  if (falta <= 0) return { cls:'venc', txt, sub:'🛢️ VENCIDA há ' + fN(-falta) + ' km — avise o gestor' };
+  if (falta <= 1000) return { cls:'breve', txt, sub:'🛢️ faltam só ' + fN(falta) + ' km' };
+  return { cls:'ok', txt, sub:'faltam ' + fN(falta) + ' km' };
+}
+function renderVtrInfo(){
+  if (!SEL) return;
+  const u = SEL.ultimo, kmDig = Number($('km').value.replace(/\D/g,'')) || 0;
+  const o = oleoInfo(SEL, kmDig >= (SEL.km_atual || 0) ? kmDig : 0);
+  $('vtr-info').innerHTML = `
+    <div class="bx"><div class="l">🧭 Último km da viatura</div><div class="v">${SEL.km_atual ? fN(SEL.km_atual) + ' km' : '—'}</div>
+      <div class="s">${u ? (u.momento === 'Término de uso' ? 'término' : 'início') + ' em ' + esc(fData(u.data)) : 'primeiro registro desta viatura'}</div></div>
+    <div class="bx ${o.cls}"><div class="l">🛢️ Próxima troca de óleo</div><div class="v">${o.txt}</div><div class="s">${o.sub}</div></div>`;
 }
 
 /* ─── 2. viaturas ─── */
@@ -420,17 +530,20 @@ function renderViaturas(){
   const q = norm($('busca').value);
   const lista = APP.viaturas.filter(v => (!q || norm(v.prefixo + v.placa + v.modelo).includes(q))
     && (!FILTRO_SEL || (FILTRO_SEL === 'uso' ? v.em_uso : !v.em_uso)));
+  const minha = v => (EU && v.em_uso && v.ultimo && v.ultimo.motorista_re === EU.re) ? 0 : 1;
+  lista.sort((a, b) => minha(a) - minha(b));   // a que está com você vem primeiro
   $('vgrid').innerHTML = lista.map(v => {
     const chips = [];
     chips.push(v.em_uso ? '<span class="chip uso">🔵 Em uso</span>' : '<span class="chip livre">🟢 Disponível</span>');
     if (v.critico) chips.push('<span class="chip crit">⚠️ Motor/Transmissão</span>');
     else if (v.pendencias.length) chips.push(`<span class="chip pend">🔧 ${v.itens_bloqueados.length || v.pendencias.length} alteração(ões)</span>`);
     if (v.km_para_troca !== null && v.km_para_troca <= 1000) chips.push(`<span class="chip oleo">🛢️ ${v.km_para_troca <= 0 ? 'Óleo vencido' : 'Óleo em breve'}</span>`);
-    const quem = v.em_uso && v.ultimo ? `<div class="quem">com ${esc(v.ultimo.motorista)} desde ${esc(fData(v.ultimo.data))}</div>` : '';
+    const quem = v.em_uso && v.ultimo ? `<div class="quem">${EU && v.ultimo.motorista_re === EU.re ? '⭐ com VOCÊ' : 'com ' + esc(v.ultimo.motorista)} desde ${esc(fData(v.ultimo.data))}</div>` : '';
+    const kms = `<div class="km">🧭 ${v.km_atual ? fN(v.km_atual) + ' km' : 'sem km'}${v.km_proxima_troca ? ' · 🛢️ óleo aos ' + fN(v.km_proxima_troca) : ''}</div>`;
     return `<button class="vtr ${SEL && SEL.prefixo === v.prefixo ? 'sel' : ''}" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')">
       <div class="pf">${esc(v.prefixo)}</div>
       <div class="md">${esc(v.modelo)} · ${esc(v.placa)}</div>
-      <div class="st">${chips.join('')}</div>${quem}
+      <div class="st">${chips.join('')}</div>${kms}${quem}
     </button>`;
   }).join('') || '<div class="muted">Nenhuma viatura encontrada.</div>';
 }
@@ -469,6 +582,7 @@ function abrirForm(rolar){
   if (u && u.local && !$('local').value) $('local').value = emUso ? u.local : '';
   if (emUso && u && u.comandante && !$('cmt').value) $('cmt').value = u.comandante;
   renderMomento();
+  renderExt();
   // pendências já abertas (itens travados)
   show('pend-wrap', SEL.pendencias.length > 0);
   $('pend-list').innerHTML = SEL.pendencias.map(p => `<div class="pend-box">
@@ -481,7 +595,13 @@ function abrirForm(rolar){
   kmInput();
   if (rolar) setTimeout(() => $('s-form').scrollIntoView({ behavior:'smooth', block:'start' }), 60);
 }
-function setMomento(m){ F.momento = m; renderMomento(); kmInput(); }
+function setMomento(m){ F.momento = m; renderMomento(); renderExt(); kmInput(); }
+// Policial de outra unidade: ao pegar a viatura informa a finalidade e quem autorizou.
+function precisaExt(){ return !!(EU && EU.externo && F.momento === 'Início de uso'); }
+function renderExt(){
+  show('ext-wrap', precisaExt());
+  $('ext-aviso').innerHTML = '🏷️ Você é de <b>outra unidade</b>' + (EU && EU.unidade ? ' (' + esc(EU.unidade) + ')' : '') + '. Para usar viatura do BPFRON, informe a <b>finalidade</b> e <b>quem autorizou</b>.';
+}
 function renderMomento(){
   $('m-ini').classList.toggle('on', F.momento === 'Início de uso');
   $('m-fim').classList.toggle('on', F.momento === 'Término de uso');
@@ -508,6 +628,7 @@ function cienteTexto(){
     : `Estou ciente de que estou pegando esta viatura com uma diferença de <b>+${fN(dif)} km</b> do último checklist e confirmo que o valor está correto.`;
 }
 function kmInput(){
+  renderVtrInfo();
   const a = kmAviso();
   $('km-aviso').innerHTML = a; show('km-aviso', !!a); show('km-ciente', !!a);
   if (a) $('ciente-txt').innerHTML = cienteTexto() + ' <span style="color:var(--err)">*</span>';
@@ -550,6 +671,8 @@ async function enviar(){
   if (kmAviso() && F.ciente !== 'Sim') faltas.push('confirmação do km (ou corrija o valor)');
   if (!$('cmt').value.trim()) faltas.push('comandante');
   if (!$('local').value.trim()) faltas.push('local de atuação');
+  if (precisaExt() && !$('fin').value.trim()) faltas.push('finalidade do uso da viatura');
+  if (precisaExt() && !$('aut').value.trim()) faltas.push('quem autorizou');
   if (F.itens.size && !$('alt').value.trim()) faltas.push('descrição das alterações');
   if (!F.cond) faltas.push('se a viatura está limpa ou suja');
   if (F.cond === 'Suja' && !$('just').value.trim()) faltas.push('justificativa da viatura suja');
@@ -562,6 +685,8 @@ async function enviar(){
     itens: [...F.itens], alteracoes: $('alt').value.trim(),
     condicao: F.cond, justificativa_suja: $('just').value.trim(),
     ciente_km: kmAviso() ? F.ciente : '', aceite: true,
+    finalidade: precisaExt() ? $('fin').value.trim() : '', autorizado_por: precisaExt() ? $('aut').value.trim() : '',
+    ...(EU.desconhecido ? { nome_externo: EU.nome, unidade: EU.unidade } : {}),
   };
   $('btn-enviar').disabled = true; carregandoOvl('Enviando checklist…');
   try{
@@ -569,6 +694,12 @@ async function enviar(){
     mostrarSucesso(body, d);
   }catch(e){
     if (e.code === 'km_divergente'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('O km diverge do maior já registrado (' + fN(e.data.km_max) + ' km). Confira e confirme.'); }
+    else if (e.code === 'externo_dados'){
+      // o servidor diz que este RE é de outra unidade (o celular tinha a informação antiga)
+      const x = e.data || {};
+      if (x.desconhecido && !(EU.desconhecido && EU.unidade)){ trocarPolicial(); $('re').value = body.re; identificar(); }
+      else { EU = { ...EU, externo: true, unidade: EU.unidade || x.unidade || '' }; try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(_){} mostrarQuem(); renderExt(); erroEnvio('🏷️ ' + esc(e.message)); }
+    }
     else if (e.code === 'sequencia'){ erroEnvio('⛔ ' + esc(e.message)); await recarregarSilencioso(); }
     else if (e.status === 404 && e.code === 're_nao_encontrado'){ erroEnvio(esc(e.message)); trocarPolicial(); }
     else erroEnvio('⚠️ Não foi enviado: ' + esc(e.message) + '<br><span style="font-size:12.5px">Seus dados continuam na tela — tente de novo.</span>');
@@ -579,20 +710,21 @@ async function recarregarSilencioso(){
 }
 function mostrarSucesso(b, d){
   const v = APP.viaturas.find(x => x.prefixo === b.prefixo);   // "Situação da frota" já reflete o envio
-  if (v){ v.em_uso = b.momento === 'Início de uso'; v.ultimo = { ...(v.ultimo || {}), momento:b.momento, data:new Date(Date.now() - 4*3600e3).toISOString().slice(0,19), km:b.km, motorista:d.motorista }; }
-  show('s-form', false); show('s-vtr', false); show('s-quem', false); show('s-ok', true);
+  if (v){ v.em_uso = b.momento === 'Início de uso'; v.ultimo = { ...(v.ultimo || {}), momento:b.momento, data:new Date(Date.now() - 4*3600e3).toISOString().slice(0,19), km:b.km, motorista:d.motorista, motorista_re:EU.re }; }
+  show('s-form', false); show('s-vtr', false); show('s-quem', false); show('s-minha', false); show('s-ok', true);
   $('ok-sub').textContent = d.quando + ' — registrado na planilha da Garagem.';
   $('ok-resumo').innerHTML = `
     <div>🚓 <b>${esc(b.prefixo)}</b> — ${esc(b.momento)}</div>
     <div>👮 ${esc(d.motorista)}</div>
     <div>📍 ${esc(b.local)} · Cmt: ${esc(b.comandante)}</div>
+    ${b.finalidade ? `<div>🏷️ Finalidade: ${esc(b.finalidade)}<br>✍️ Autorizado por: <b>${esc(b.autorizado_por)}</b></div>` : ''}
     <div>🧭 ${fN(b.km)} km · ${esc(b.condicao)}</div>
     <div>${b.itens.length ? '🔧 Alterações: <b>' + esc(b.itens.join(', ')) + '</b> — o gestor foi avisado.' : '✅ Sem alterações'}</div>`;
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 function novoChecklist(){
   SEL = null; F.momento = ''; F.ciente = ''; F.cond = ''; F.itens = new Set(); F.devolvendo = false;
-  ['km','cmt','local','alt','just','busca'].forEach(id => $(id).value = '');
+  ['km','cmt','local','alt','just','busca','fin','aut'].forEach(id => $(id).value = '');
   $('aceite').checked = false; setCond(''); erroEnvio('');
   show('s-ok', false);
   carregar();

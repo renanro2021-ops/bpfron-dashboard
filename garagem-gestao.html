@@ -379,7 +379,7 @@ html,body{overflow-x:hidden}
         <div class="fg"><label>Momento</label><select id="ck-m" onchange="PG.ck=0;renderCheck()"><option value="">Todos</option><option>Início de uso</option><option>Término de uso</option></select></div>
         <div class="fg"><label>De</label><input type="date" id="ck-de" onchange="PG.ck=0;renderCheck()"></div>
         <div class="fg"><label>Até</label><input type="date" id="ck-ate" onchange="PG.ck=0;renderCheck()"></div>
-        <div class="fg"><label>Filtro</label><select id="ck-f" onchange="PG.ck=0;renderCheck()"><option value="">—</option><option value="alt">Com alteração</option><option value="suja">Viatura suja</option><option value="km">Km divergente</option></select></div>
+        <div class="fg"><label>Filtro</label><select id="ck-f" onchange="PG.ck=0;renderCheck()"><option value="">—</option><option value="alt">Com alteração</option><option value="suja">Viatura suja</option><option value="km">Km divergente</option><option value="ext">Outra unidade</option></select></div>
         <button class="btn gray" onclick="exportCheck()">⬇️ CSV</button>
       </div>
       <div class="tbl-wrap"><table class="t" id="ck-tbl"></table></div>
@@ -568,6 +568,7 @@ function renderUso(){
       <div class="pf">${esc(v.prefixo)}</div><div class="md">${esc(v.modelo)} · ${esc(v.placa)}</div>
       <div class="who">👮 ${esc(u.motorista)}</div>
       <div class="inf">🕐 saiu ${fDH(u.data)}${u.km ? ' · ' + fN(u.km) + ' km' : ''}<br>📍 ${esc(u.local || '—')}${u.comandante ? '<br>⭐ Cmt: ' + esc(u.comandante) : ''}</div>
+      ${u.externo ? `<div class="inf" style="color:#fde68a;margin-top:6px">🏷️ Outra unidade${u.externo.unidade ? ': ' + esc(u.externo.unidade) : ''}<br>🎯 ${esc(u.externo.finalidade || '—')}<br>✍️ Autorizou: ${esc(u.externo.autorizado_por || '—')}</div>` : ''}
       ${longo ? `<div class="inf" style="color:#fde68a;margin-top:6px">⏱️ Em uso há mais de 24 h${CAN ? ` — <a href="#" style="color:#fde68a" onclick="event.stopPropagation();encerrarUso(${v._i});return false">encerrar uso</a>` : ''}</div>` : ''}
     </div>`;
   }).join('') || '<div class="empty">Nenhuma viatura em uso agora — toda a frota está na base.</div>';
@@ -933,15 +934,15 @@ function reativarViatura(prefixo){
 function filtraCheck(){
   const q = norm($('ck-q').value), v = $('ck-v').value, m = $('ck-m').value, de = $('ck-de').value, ate = $('ck-ate').value, f = $('ck-f').value;
   return D.checklists.filter(c => (!v || c.prefixo === v) && (!m || c.momento === m) && (!de || c.data >= de) && (!ate || c.data.slice(0,10) <= ate)
-    && (!f || (f === 'alt' ? c.itens.length : f === 'suja' ? c.condicao === 'Suja' : c.ciente_km === 'Sim'))
-    && (!q || norm([c.prefixo, c.motorista, c.comandante, c.local, c.alteracoes, c.itens.join(' ')].join(' ')).includes(q)));
+    && (!f || (f === 'alt' ? c.itens.length : f === 'suja' ? c.condicao === 'Suja' : f === 'ext' ? c.externo : c.ciente_km === 'Sim'))
+    && (!q || norm([c.prefixo, c.motorista, c.comandante, c.local, c.alteracoes, c.itens.join(' '), c.externo ? [c.externo.unidade, c.externo.finalidade, c.externo.autorizado_por].join(' ') : ''].join(' ')).includes(q)));
 }
 function renderCheck(){
   if (!D) return;
   const L = filtraCheck(), por = 50, pag = Math.min(PG.ck, Math.max(0, Math.ceil(L.length / por) - 1));
   const P = L.slice(pag*por, pag*por + por);
   $('ck-tbl').innerHTML = `<thead><tr><th>Data/hora</th><th>Viatura</th><th>Momento</th><th>Motorista</th><th class="num">Km</th><th>Comandante</th><th>Local</th><th>Condição</th><th>Alterações</th></tr></thead><tbody>
-    ${P.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td><b>${esc(c.prefixo)}</b></td><td>${c.momento === 'Início de uso' ? '🚦 Início' : '🏁 Término'}</td><td>${esc(c.motorista)}</td>
+    ${P.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td><b>${esc(c.prefixo)}</b></td><td>${c.momento === 'Início de uso' ? '🚦 Início' : '🏁 Término'}</td><td>${esc(c.motorista)}${c.externo ? ' <span class="chip y" title="Policial de outra unidade">🏷️ outra unidade</span>' : ''}</td>
       <td class="num">${c.km ? fN(c.km) : ''}${c.ciente_km === 'Sim' ? ' <span title="Km divergente confirmado">⚠️</span>' : ''}</td><td>${esc(c.comandante)}</td><td>${esc(c.local)}</td>
       <td>${c.condicao === 'Suja' ? '<span class="chip o">Suja</span>' : esc(c.condicao)}</td><td>${c.itens.length ? `<span class="chip y">${esc(c.itens.join(', '))}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Nenhum checklist.</td></tr>'}</tbody>`;
   const tot = Math.ceil(L.length / por) || 1;
@@ -951,6 +952,7 @@ function verCheck(id){
   const c = D.checklists.find(x => x.id === id); if (!c) return;
   const L = [['Data/hora', fDH(c.data)], ['Viatura', c.prefixo], ['Momento', c.momento], ['Motorista', c.motorista + ' (RE ' + c.motorista_re + ')'], ['Hodômetro', c.km ? fN(c.km) + ' km' + (c.ciente_km === 'Sim' ? ' — ⚠️ divergente, confirmado pelo motorista' : '') : '—'],
     ['Comandante', c.comandante], ['Local', c.local], ['Condição', c.condicao + (c.justificativa ? ' — ' + c.justificativa : '')], ['Itens alterados', c.itens.join(', ') || 'nenhum'], ['Descrição', c.alteracoes]];
+  if (c.externo) L.splice(4, 0, ['Unidade do motorista', '🏷️ ' + (c.externo.unidade || 'outra unidade')], ['Finalidade do uso', c.externo.finalidade], ['Quem autorizou', c.externo.autorizado_por]);
   modal('📋 Checklist ' + esc(c.prefixo), `<table class="t">${L.map(([k,v]) => `<tr><td class="muted" style="width:160px">${k}</td><td style="white-space:pre-line">${esc(v || '—')}</td></tr>`).join('')}</table>`, '<button class="btn gray" onclick="fecharModal()">Fechar</button>', true);
 }
 function baixarCSV(nome, linhas){
@@ -958,8 +960,8 @@ function baixarCSV(nome, linhas){
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' })); a.download = nome; a.click(); URL.revokeObjectURL(a.href);
 }
 function exportCheck(){
-  baixarCSV('checklists_garagem.csv', [['Data','Viatura','Momento','Motorista','RE','Km','Km divergente','Comandante','Local','Condição','Justificativa','Itens','Descrição'],
-    ...filtraCheck().map(c => [fDH(c.data), c.prefixo, c.momento, c.motorista, c.motorista_re, c.km, c.ciente_km, c.comandante, c.local, c.condicao, c.justificativa, c.itens.join(', '), c.alteracoes])]);
+  baixarCSV('checklists_garagem.csv', [['Data','Viatura','Momento','Motorista','RE','Km','Km divergente','Comandante','Local','Condição','Justificativa','Itens','Descrição','Outra unidade','Finalidade do uso','Quem autorizou'],
+    ...filtraCheck().map(c => { const x = c.externo || {}; return [fDH(c.data), c.prefixo, c.momento, c.motorista, c.motorista_re, c.km, c.ciente_km, c.comandante, c.local, c.condicao, c.justificativa, c.itens.join(', '), c.alteracoes, c.externo ? (x.unidade || 'Sim') : '', x.finalidade || '', x.autorizado_por || '']; })]);
 }
 
 /* ── notas fiscais (lista) ── */
