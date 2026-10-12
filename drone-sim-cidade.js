@@ -310,8 +310,12 @@ export function montarCidade(ctx) {
   const texRua = texCanvas(512, 128, (g, w, h) => {
     g.fillStyle = '#4c4e51'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 4000; i++) { const l = 60 + Math.random() * 45 | 0; g.fillStyle = `rgba(${l},${l},${l + 4},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 1.3, 1.3); }
-    g.fillStyle = '#e9e9e6'; for (let x = 0; x < w; x += 64) g.fillRect(x, h / 2 - 2, 32, 4);
+    g.fillStyle = '#e3bd3e'; g.fillRect(0, h / 2 - 2, w, 3); // eixo amarelo contínuo (rua de mão dupla)
   }, [1, 1]);
+  const texAsfaltoLiso = texCanvas(128, 128, (g, w, h) => {
+    g.fillStyle = '#4c4e51'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1000; i++) { const l = 60 + Math.random() * 45 | 0; g.fillStyle = `rgba(${l},${l},${l + 4},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 1.3, 1.3); }
+  }, [2, 2]);
   const texCalcada = texCanvas(256, 256, (g, w, h) => {
     g.fillStyle = '#b4b0a6'; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(90,88,80,.5)'; g.lineWidth = 2;
@@ -361,6 +365,7 @@ export function montarCidade(ctx) {
   lajeMat.userData.laje = true;
   const sombra = (m) => { if (SOMBRAS) { m.castShadow = true; m.receiveShadow = true; } return m; };
   const malhas = { paredes: [], telhados: [], ruas: [], calcadas: [] };
+  const casas = []; // cada casa do bairro (posição, medidas, frente e colisão): o cenário realista põe um modelo no lugar
 
   /* ---------- ruas e calçadas ---------- */
   const faixaRua = (x, z, w, d, girada) => {
@@ -393,8 +398,39 @@ export function montarCidade(ctx) {
   const texC = mat.calcada.map; texC.wrapS = texC.wrapT = THREE.RepeatWrapping;
   const mCalc = new THREE.Mesh(mergeGeometries(calcadas, false), mat.calcada); if (SOMBRAS) mCalc.receiveShadow = true; cena.add(mCalc); malhas.calcadas.push(mCalc);
 
+  /* ---------- cruzamentos, faixas de pedestre e meio-fio ----------
+     No desenho do pacote de ruas que o usuário trouxe (asfalto, eixo amarelo, faixa de
+     pedestre em cada braço do cruzamento, guia clara): o miolo do cruzamento é um
+     remendo de asfalto liso (os eixos das duas ruas não se cruzam mais) e cada braço
+     ganha linha de retenção + faixa de pedestre. Nada aqui usa o sorteio do bairro. */
+  {
+    const chapa = (w, d, x, z, y) => { const g = new THREE.PlaneGeometry(w, d); g.rotateX(-Math.PI / 2); g.translate(x, y, z); return g; };
+    const miolos = [], brancas = [], guias = [];
+    for (const x of C.ruasNS) for (const z of C.ruasLO) {
+      miolos.push(chapa(lr, lr, x, z, 0.02));
+      // braços que existem: a rua N-S vai de zMin a zMax e a L-O de xMin a xMax
+      const bracos = [[0, -1, z - mr > zMin + 1], [0, 1, z + mr < zMax - 1], [-1, 0, x - mr > xMin + 1], [1, 0, x + mr < xMax - 1]];
+      for (const [dx, dz, existe] of bracos) {
+        if (!existe) continue;
+        const ao = dx !== 0; // braço ao longo de x
+        const pos = (dist, lado) => (ao ? [x + dx * (mr + dist), z + lado] : [x + lado, z + dz * (mr + dist)]);
+        for (let k = -4; k <= 4; k++) { const [px, pz] = pos(2.6, k * 1.0); brancas.push(ao ? chapa(3, 0.5, px, pz, 0.024) : chapa(0.5, 3, px, pz, 0.024)); } // faixa de pedestre: 9 listras de 3 m
+        const [lx, lz] = pos(5.0, 0); brancas.push(ao ? chapa(0.3, lr - 0.6, lx, lz, 0.024) : chapa(lr - 0.6, 0.3, lx, lz, 0.024));              // linha de retenção
+      }
+    }
+    for (const q of quadras) { // guia (meio-fio) clara na borda de cada quadra
+      const cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2, w = q.x1 - q.x0, d = q.z1 - q.z0, e = 0.28;
+      guias.push(chapa(w, e, cx, q.z0 + e / 2, 0.034), chapa(w, e, cx, q.z1 - e / 2, 0.034), chapa(e, d, q.x0 + e / 2, cz, 0.034), chapa(e, d, q.x1 - e / 2, cz, 0.034));
+    }
+    const dec = (cor, extra) => new THREE.MeshLambertMaterial(Object.assign({ color: cor, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }, extra || {}));
+    const junta = (arr, m) => { const ms = new THREE.Mesh(mergeGeometries(arr, false), m); if (SOMBRAS) ms.receiveShadow = true; cena.add(ms); return ms; };
+    malhas.cruzamentos = junta(miolos, dec(0xffffff, { map: texAsfaltoLiso, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+    malhas.faixas = junta(brancas, dec(0xe9e9e4));
+    malhas.guias = junta(guias, dec(0xcfcbc2, { polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  }
+
   /* ---------- prédios ---------- */
-  const predio = (tipo, x, z, w, d, h, cor) => {
+  const predio = (tipo, x, z, w, d, h, cor, frente = 1) => { // frente: +1 = fachada para +z, -1 = para -z
     const parede = paredeMat(tipo, cor);
     const m = sombra(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [parede, parede, lajeMat, lajeMat, parede, parede]));
     m.position.set(x, h / 2, z); cena.add(m); malhas.paredes.push(m);
@@ -432,7 +468,8 @@ export function montarCidade(ctx) {
         addCaixa(x, z - d / 2 - 0.75, tw / 2, 0.75, 3.3, 'toldo', 2.7);
       }
     }
-    addCaixa(x, z, w / 2, d / 2, topo, tipo === 'casa' ? 'casa' : 'prédio');
+    const caixa = addCaixa(x, z, w / 2, d / 2, topo, tipo === 'casa' ? 'casa' : 'prédio');
+    if (tipo === 'casa') casas.push({ x, z, w, d, h, cor, frente, malha: m, caixa });
     ocupado.push({ x0: x - w / 2 - 0.5, x1: x + w / 2 + 0.5, z0: z - d / 2 - 0.5, z1: z + d / 2 + 0.5 });
     MUNDO.mapa.rets.push({ x, z, w, d, cor: tipo === 'casa' ? '#b45309' : '#9ca3af' });
   };
@@ -476,7 +513,7 @@ export function montarCidade(ctx) {
         let w = R(8, 10); const d = R(8, 10), lx = x0 + (k + 0.5) * lotW, lz = lado ? z1 - d / 2 - R(0.5, 2.5) : z0 + d / 2 + R(0.5, 2.5);
         w = Math.min(w, folga * 2);
         const off = clampN(R(-1, 1), -(folga - w / 2), folga - w / 2), cor = coresParede[(rnd() * coresParede.length) | 0];
-        predio('casa', lx + off, lz, w, d, R(3, 3.6), cor);
+        predio('casa', lx + off, lz, w, d, R(3, 3.6), cor, lado ? 1 : -1);
         coresLote.push(cor);
       }
       muros(x0, x1, z0, z1, lotW, zm, coresLote);
@@ -588,11 +625,11 @@ export function montarCidade(ctx) {
       if (SOMBRAS && (parte === 'pintura' || parte === 'vidro')) mesh.castShadow = true;
       g.add(mesh);
     }
-    g.userData = { tipo, placa, ...dimensoesCarro(tipo) };
+    g.userData = { tipo, placa, cor: corHex, ...dimensoesCarro(tipo) };
     return g;
   }
 
-  return { carros, carroAvulso, quadras, malhas, mat, matCarro, instancias, texPlacas, canvasPlacas, livre };
+  return { carros, carroAvulso, quadras, malhas, mat, matCarro, instancias, texPlacas, canvasPlacas, livre, casas };
 }
 
 /* ------------------------------------------------------------------ veículo andando */
@@ -776,4 +813,119 @@ export function montarCanteiro(ctx) {
 }
 function coresConteiner(THREE, mapa) {
   return [0x2f6db5, 0xb8402a, 0x3f7d3a, 0xc9a227].map((c) => new THREE.MeshLambertMaterial({ color: c, map: mapa }));
+}
+
+/* ------------------------------------------------------------------ complexo de galpões */
+/* Conjunto industrial abandonado a nordeste da base (x 160–320, z -225 a -85), feito para
+   voar POR DENTRO: um galpão comprido de concreto com portão nas duas pontas, janelões
+   nas laterais e um rasgo no telhado; uma cobertura aberta sobre pilares; contêineres
+   com corredor entre eles; tanques enferrujados; uma fila de pórticos com tubulação; e
+   uma torre treliçada. Tudo de peças retas, cada uma com a sua caixa de colisão (vão de
+   porta e de janela é vão de verdade: dá para passar). Desenho próprio — a ideia de um
+   "bando" para atravessar voando veio do simulador FPV que o usuário mostrou.
+   No cenário realista os materiais trocam pelas texturas de foto do pacote. */
+export const GALPOES = { x0: 160, x1: 320, z0: -225, z1: -85 };
+export function montarGalpoes(ctx) {
+  const { THREE, cena, addCaixa, MUNDO, SOMBRAS, texCanvas, mergeGeometries } = ctx;
+  const G = GALPOES;
+  const ruido = (cor, n, forca) => texCanvas(128, 128, (g, w, h) => {
+    g.fillStyle = cor; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < n; i++) { const l = Math.random() * forca | 0; g.fillStyle = `rgba(${l},${l},${l},.35)`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 2 + Math.random() * 3); }
+  }, [1, 1]);
+  const texChapa = texCanvas(128, 64, (g, w, h) => { for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? '#8f969b' : '#a9b0b5'; g.fillRect(i * 8, 0, 8, h); } for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(120,80,45,${Math.random() * 0.25})`; g.fillRect(Math.random() * w, Math.random() * h, 4, 6); } }, [1, 1]);
+  const mats = {
+    concreto: new THREE.MeshLambertMaterial({ color: 0xb4b1a8, map: ruido('#b9b6ad', 500, 90) }),
+    telha: new THREE.MeshLambertMaterial({ color: 0xffffff, map: texChapa, side: THREE.DoubleSide }),
+    ferrugem: new THREE.MeshLambertMaterial({ color: 0x9a5a36, map: ruido('#a8693f', 700, 70) }),
+    aco: new THREE.MeshLambertMaterial({ color: 0x5b6168 }),
+    piso: new THREE.MeshLambertMaterial({ color: 0xffffff, map: ruido('#8f8d86', 900, 110), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    conteiner: [0x2f6db5, 0xb8402a, 0x3f7d3a, 0xc9a227, 0x6b7280].map((c) => new THREE.MeshLambertMaterial({ color: c, map: texChapa })),
+  };
+  const baldes = new Map();
+  const por = (m, g) => { if (!baldes.has(m)) baldes.set(m, []); baldes.get(m).push(g); };
+  // caixa reta: desenho + colisão (y0 = base, y1 = topo); a textura repete a cada ~4 m
+  const bloco = (m, x, z, w, d, y0, y1, nome = 'galpão', colide = true) => {
+    const g = new THREE.BoxGeometry(w, y1 - y0, d), uv = g.attributes.uv, eu = Math.max(1, Math.max(w, d) / 4), ev = Math.max(1, (y1 - y0) / 4);
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * eu, uv.getY(i) * ev);
+    g.translate(x, (y0 + y1) / 2, z); por(m, g);
+    if (colide) addCaixa(x, z, w / 2, d / 2, y1, nome, y0);
+  };
+
+  /* piso de concreto e acesso pela estrada de terra */
+  { const g = new THREE.PlaneGeometry(G.x1 - G.x0, G.z1 - G.z0); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 26, uv.getY(i) * 22);
+    g.translate((G.x0 + G.x1) / 2, 0.012, (G.z0 + G.z1) / 2); por(mats.piso, g);
+    const r = new THREE.PlaneGeometry(G.x0 - 122, 6); r.rotateX(-Math.PI / 2); const u2 = r.attributes.uv; for (let i = 0; i < u2.count; i++) u2.setXY(i, u2.getX(i) * 7, u2.getY(i));
+    r.translate((G.x0 + 122) / 2, 0.012, -155); por(mats.piso, r); }
+
+  /* GALPÃO A — 44 × 18 m, parede de 8 m, comprido no eixo leste–oeste (x). Atravessa-se pelos portões das pontas. */
+  { const cx = 225, cz = -185, L = 44, W = 18, H = 8, e = 0.5, xa = cx - L / 2, xb = cx + L / 2, za = cz - W / 2, zb = cz + W / 2;
+    for (const z of [za, zb]) { // laterais: mureta, pilares entre 5 janelões de 5 × 3,5 m e viga em cima
+      bloco(mats.concreto, cx, z, L, e, 0, 2.5); bloco(mats.concreto, cx, z, L, e, 6, H);
+      for (let k = 0; k <= 5; k++) bloco(mats.concreto, xa + 2 + k * 8, z, 3, e, 2.5, 6);
+    }
+    for (const x of [xa, xb]) { // pontas: portão de 8 × 6 m no meio
+      bloco(mats.concreto, x, cz - 6.5, e, 5, 0, H); bloco(mats.concreto, x, cz + 6.5, e, 5, 0, H); bloco(mats.concreto, x, cz, e, 8, 6, H);
+    }
+    // telhado de chapa com um rasgo de 14 × 8 m no meio (dá para entrar e sair por cima)
+    bloco(mats.telha, cx - 14.5, cz, 15, W + 1, H, H + 0.25, 'telhado do galpão'); bloco(mats.telha, cx + 14.5, cz, 15, W + 1, H, H + 0.25, 'telhado do galpão');
+    bloco(mats.telha, cx, cz - 6.75, 14, 5.5, H, H + 0.25, 'telhado do galpão'); bloco(mats.telha, cx, cz + 6.75, 14, 5.5, H, H + 0.25, 'telhado do galpão');
+    for (const x of [cx - 11, cx + 11]) bloco(mats.aco, x, cz, 0.3, W, H - 0.5, H - 0.2, 'viga do galpão'); // tesouras
+    MUNDO.mapa.rets.push({ x: cx, z: cz, w: L, d: W, cor: '#a8a29e' });
+  }
+
+  /* COBERTURA B — 30 × 16 m sobre 8 pilares, sem parede: passa-se por baixo, a 6 m */
+  { const cx = 285, cz = -128, L = 30, W = 16, H = 6;
+    for (const dx of [-14, -4.7, 4.7, 14]) for (const dz of [-7.4, 7.4]) bloco(mats.aco, cx + dx, cz + dz, 0.4, 0.4, 0, H, 'pilar da cobertura');
+    bloco(mats.telha, cx, cz, L, W, H, H + 0.25, 'cobertura');
+    MUNDO.mapa.rets.push({ x: cx, z: cz, w: L, d: W, cor: '#94a3b8' });
+  }
+
+  /* contêineres (6,1 × 2,44 × 2,6 m): duas fileiras com corredor de 5 m e três empilhados */
+  { const pilha = [[186, -120, 0, 0], [186, -127.5, 1, 0], [186, -135, 2, 0], [196, -120, 3, 0], [196, -127.5, 4, 0], [196, -135, 1, 0], [186, -120, 2, 1], [196, -135, 0, 1], [186, -127.5, 3, 1]];
+    for (const [x, z, c, andar] of pilha) bloco(mats.conteiner[c], x, z, 2.44, 6.1, andar * 2.6, andar * 2.6 + 2.6, 'contêiner');
+    for (const [x, z, c] of [[215, -112, 4], [222, -105, 0]]) bloco(mats.conteiner[c], x, z, 6.1, 2.44, 0, 2.6, 'contêiner');
+    MUNDO.mapa.rets.push({ x: 191, z: -127.5, w: 13, d: 22, cor: '#2f6db5' });
+  }
+
+  /* tanques enferrujados: dois em pé e um deitado sobre berços */
+  for (const [x, z, r, h] of [[300, -198, 4.5, 10], [311, -182, 3.6, 8]]) {
+    const c = new THREE.CylinderGeometry(r, r, h, 24); c.translate(x, h / 2, z); por(mats.ferrugem, c);
+    const t = new THREE.ConeGeometry(r * 1.02, 1.1, 24); t.translate(x, h + 0.55, z); por(mats.ferrugem, t);
+    addCaixa(x, z, r * 0.9, r * 0.9, h + 1.1, 'tanque');
+    MUNDO.mapa.rets.push({ x, z, w: r * 2, d: r * 2, cor: '#9a5a36', redondo: true });
+  }
+  { const c = new THREE.CylinderGeometry(1.7, 1.7, 9, 18); c.rotateZ(Math.PI / 2); c.translate(178, 2.6, -205); por(mats.ferrugem, c);
+    addCaixa(178, -205, 4.5, 1.6, 4.3, 'tanque', 0.9);
+    for (const dx of [-3, 3]) bloco(mats.concreto, 178 + dx, -205, 0.6, 3, 0, 1.2, 'berço do tanque'); }
+
+  /* pórticos com tubulação: 4 quadros de 6 m de vão e 5 m de altura — passa-se por baixo, em fila */
+  for (let k = 0; k < 4; k++) {
+    const z = -168 + k * 15;
+    for (const dx of [-3, 3]) bloco(mats.aco, 258 + dx, z, 0.3, 0.3, 0, 5, 'pórtico');
+    bloco(mats.aco, 258, z, 6.6, 0.3, 5, 5.3, 'pórtico');
+  }
+  for (const dx of [-1.6, 0, 1.6]) { const c = new THREE.CylinderGeometry(0.28, 0.28, 47, 10); c.rotateX(Math.PI / 2); c.translate(258 + dx, 5.6, -145.5); por(mats.ferrugem, c); }
+  addCaixa(258, -145.5, 2.1, 23.5, 5.95, 'tubulação', 5.3);
+
+  /* torre treliçada de 28 m */
+  { const x = 312, z = -98, H = 28, b = 1.4, t = 0.4, pts = [];
+    for (let i = 0; i < 8; i++) {
+      const y0 = i * H / 8, y1 = (i + 1) * H / 8, a0 = b + (t - b) * (y0 / H), a1 = b + (t - b) * (y1 / H);
+      const c0 = [[-a0, y0, -a0], [a0, y0, -a0], [a0, y0, a0], [-a0, y0, a0]], c1 = [[-a1, y1, -a1], [a1, y1, -a1], [a1, y1, a1], [-a1, y1, a1]];
+      for (let k = 0; k < 4; k++) { const n = (k + 1) % 4; pts.push(...c0[k], ...c1[k], ...c0[k], ...c1[n], ...c0[n], ...c1[k], ...c1[k], ...c1[n]); }
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const lin = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x8a4b2a })); lin.position.set(x, 0, z); cena.add(lin);
+    for (const [ax, az] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const c = new THREE.CylinderGeometry(0.05, 0.08, H, 5); c.translate(x + ax * (b + t) / 2, H / 2, z + az * (b + t) / 2); por(mats.ferrugem, c); }
+    addCaixa(x, z, 1.1, 1.1, H, 'torre treliçada');
+    MUNDO.mapa.rets.push({ x, z, w: 3, d: 3, cor: '#9a5a36' });
+  }
+
+  const malhas = [];
+  for (const [m, arr] of baldes) {
+    const ms = new THREE.Mesh(mergeGeometries(arr.map((g) => (g.index ? g.toNonIndexed() : g)), false), m);
+    if (SOMBRAS) { ms.castShadow = m !== mats.piso; ms.receiveShadow = true; }
+    cena.add(ms); malhas.push(ms);
+  }
+  return { mats, malhas, area: G };
 }

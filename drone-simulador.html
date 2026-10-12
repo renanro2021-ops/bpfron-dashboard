@@ -268,6 +268,22 @@ input[type=range]{accent-color:#F5C518}
 #rastreio.ruim{border-color:#ef4444;border-style:dashed}
 #rastreio span{position:absolute;left:-2px;top:-20px;white-space:nowrap;font:800 11.5px Inter,sans-serif;background:#22c55e;color:#04140a;padding:1px 6px;border-radius:4px 4px 4px 0}
 #rastreio.ruim span{background:#ef4444;color:#fff}
+/* corrida FPV: cronômetro no alto e semáforo da largada no meio */
+#fpv-crono{position:absolute;top:96px;left:50%;transform:translateX(-50%);display:flex;gap:14px;align-items:baseline;background:rgba(6,9,18,.6);border:1px solid rgba(245,197,24,.4);border-radius:12px;padding:5px 16px;font:700 14px Inter,sans-serif;color:#e2e8f0;text-shadow:none;white-space:nowrap}
+#fpv-crono b{font:700 30px Rajdhani,sans-serif;color:#F5C518;letter-spacing:.5px;min-width:104px;text-align:center}
+#fpv-luz{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);font:700 120px Rajdhani,sans-serif;color:#fff;text-shadow:0 4px 26px rgba(0,0,0,.75);line-height:1}
+#fpv-luz.vai{color:#22c55e}
+/* vista FPV: some o painel estilo DJI e fica o painel de óculos de FPV */
+body.ver-fpv #st,body.ver-fpv .top-r,body.ver-fpv #batbar,body.ver-fpv .lado.dir,body.ver-fpv #nav,body.ver-fpv #mapa,body.ver-fpv #tele,body.ver-fpv #bt-navmapa,body.ver-fpv #rumo-n,body.ver-fpv #zoom-n{display:none !important}
+#osd{position:absolute;inset:0;pointer-events:none;font-family:'Courier New',Consolas,monospace;font-weight:700;color:#f1f5f9;text-shadow:0 0 3px #000,1px 1px 0 #000,-1px -1px 0 #000;letter-spacing:1.5px}
+#osd .am{color:#F5C518} #osd .vm{color:#f87171}
+.osd-t{position:absolute;top:44px;left:50%;transform:translateX(-50%);display:flex;gap:34px;font-size:17px;white-space:nowrap}
+.osd-e,.osd-d{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:baseline;gap:7px}
+.osd-e{left:9%} .osd-d{right:9%}
+.osd-e b,.osd-d b{font-size:30px} .osd-e small,.osd-d small{font-size:11px}
+.osd-b{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);display:flex;gap:40px;font-size:16px;white-space:nowrap}
+.hv-linha{margin:8px 22px 0;padding:8px 14px;border-radius:12px;font-size:13.5px;border:1px solid rgba(245,197,24,.3);background:rgba(245,197,24,.07);color:#e2e8f0}
+.hv-linha span{color:var(--m)}
 #dica-csc{position:absolute;left:50%;transform:translateX(-50%);bottom:22px;display:flex;align-items:center;gap:10px;max-width:330px;background:rgba(0,0,0,.62);border:1px solid rgba(245,197,24,.5);padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.35;text-shadow:none}
 #dica-csc b{color:#F5C518}
 body.toque #dica-csc{right:auto;left:50%;transform:translateX(-50%);bottom:136px}
@@ -369,6 +385,13 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
   <div id="mira"></div>
   <div id="zoom-n" hidden>1×</div>
   <div id="rastreio" hidden><span></span></div>
+  <div id="fpv-hud" hidden><div id="fpv-crono"></div><div id="fpv-luz" hidden></div></div>
+  <div id="osd" hidden>
+    <div class="osd-t"><span id="osd-arm">DESARMADO</span><span id="osd-modo">GPS</span><span id="osd-av" class="am"></span></div>
+    <div class="osd-e"><b id="osd-vel">0</b><small>KM/H</small></div>
+    <div class="osd-d"><b id="osd-alt">0,0</b><small>M</small></div>
+    <div class="osd-b"><span id="osd-bat">BAT 100%</span><span id="osd-t">0:00</span><span>FPV</span><span id="osd-dist">CASA 0 m</span></div>
+  </div>
   <div id="dica-csc" hidden><div class="mini"><i></i></div><div class="mini"><i class="d"></i></div><span>Ligar os motores: <b>os dois sticks para baixo e para dentro</b> ao mesmo tempo (CSC) — ou o botão ⏫</span></div>
   <div id="gimbal"><i id="gimbal-i"></i><span id="gimbal-t"></span></div>
   <div class="mk" id="alvo-m" hidden><b></b><span></span></div>
@@ -423,6 +446,7 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
       </div>
     </div>
     <div class="ctrl-status" id="ctrl-status"></div>
+    <div class="hv-linha" id="hv-linha"></div>
     <nav class="tabs" id="tabs">
       <button data-tab="ex" class="on">🎯 Exercícios</button>
       <button data-tab="rk">🏆 Ranking</button>
@@ -432,12 +456,12 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
     </nav>
 
     <section class="tab on" id="tab-ex">
-      <div class="ban" id="ban-realista" hidden>🌄 <span><b>Cenário realista:</b> texturas fotográficas, objetos escaneados, bairro com trânsito e canteiro de obras. Baixa uma vez (~<span id="ban-mb">6</span> MB) e fica guardado no aparelho.</span><button class="bp" id="ban-ligar">Experimentar</button></div>
+      <div class="ban" id="ban-realista" hidden>🌄 <span><b>Cenário realista:</b> texturas fotográficas, casas, carros e viaturas de verdade, bairro com trânsito e canteiro de obras. Baixa uma vez (~<span id="ban-mb">10</span> MB) e fica guardado no aparelho.</span><button class="bp" id="ban-ligar">Experimentar</button></div>
       <div class="grid-ex" id="grid-ex"></div>
     </section>
 
     <section class="tab" id="tab-rk">
-      <p class="dica" style="margin-top:0">Vale a <b>melhor nota</b> de cada aluno em cada exercício; no empate, ganha o <b>menor tempo</b>. O <b>geral</b> soma as melhores notas de todos os exercícios (100 por exercício). Voo livre não entra.</p>
+      <p class="dica" style="margin-top:0">Vale a <b>melhor nota</b> de cada aluno em cada exercício; no empate, ganha o <b>menor tempo</b>. O <b>geral</b> soma as melhores notas de todos os exercícios (100 por exercício). O voo livre não dá ponto, mas conta em <b>⏱ Horas de voo</b>, junto com o tempo dos exercícios.</p>
       <div class="rk-pills" id="rk-pills"></div>
       <div class="rk-cx" id="rk-tab"><div class="rk-vazio">Carregando…</div></div>
       <h3 style="font-family:Rajdhani,sans-serif;font-size:18px;color:#fff;margin:18px 0 8px">Meus voos</h3>
@@ -554,6 +578,13 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
           <div class="campo"><label for="aj-q">Qualidade gráfica</label>
             <select id="aj-q"><option value="baixa">Baixa — sem sombras (computador fraco / celular)</option><option value="media">Média — sombras e capim</option><option value="alta">Alta — sombras finas, mais capim</option></select>
             <small id="aj-q-aviso" hidden>Sombras e capim mudam quando a página for recarregada (F5).</small></div>
+          <div class="campo"><label for="aj-luz">Luz do dia</label>
+            <select id="aj-luz"><option value="dia">Dia claro</option><option value="tarde">Fim de tarde (sol baixo e quente)</option></select>
+            <small id="aj-luz-aviso" hidden>A luz muda quando a página for recarregada (F5).</small></div>
+          <div class="campo"><label for="aj-drone">Drone</label>
+            <select id="aj-drone"><option value="mavic3">DJI Mavic 3 (padrão)</option><option value="dji_mavic3c">DJI Mavic 3 Classic</option><option value="dji_mini3">DJI Mini 3 Pro</option><option value="dji_avata2">DJI Avata 2</option><option value="dji_matrice">DJI Matrice 300</option><option value="drone_fpv">FPV de corrida (camuflado)</option></select>
+            <small>Muda só a aparência — o voo e a câmera são os mesmos. O modelo baixa uma vez (até 2 MB) e fica guardado no aparelho.</small>
+            <small>Modelos 3D: “DJI Mavic3 Classic DJI drone”, de Metazeon, e “DJI Matrice t300”, de joao.silva19 (Sketchfab, CC-BY 4.0). Casas: City Kit Suburban, de Kenney (CC0).</small></div>
         </div>
       </div>
       <p class="dica">Alguns exercícios fixam o vento, o posicionamento ou a vista — o painel do exercício avisa.</p>
@@ -666,7 +697,7 @@ setTimeout(function () {
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
+import { montarGalpoes, GALPOES, montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
 
 /* =====================================================================
    UTILIDADES
@@ -685,7 +716,10 @@ function angDif(a, b) { let d = (a - b) % (2 * Math.PI); if (d > Math.PI) d -= 2
 function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let API_BASE = 'https://bpfron-api.bpfron.workers.dev';
-try { const q = new URLSearchParams(location.search).get('api'); if (q) API_BASE = q.replace(/\/+$/, ''); } catch (e) { /* padrão */ }
+// Cópia local de teste (testes/drone/_ver-local.mjs grava dr_local): API e pacote saem do próprio servidor local,
+// mesmo quando a página é aberta sem os parâmetros no endereço (voltando do menu do curso, pelo histórico…).
+const LOCAL = (() => { try { return /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && localStorage.getItem('dr_local') === location.origin ? location.origin : ''; } catch (e) { return ''; } })();
+try { const q = new URLSearchParams(location.search).get('api'); if (q) API_BASE = q.replace(/\/+$/, ''); else if (LOCAL) API_BASE = LOCAL; } catch (e) { /* padrão */ }
 const cabecalhos = () => Object.assign({ 'content-type': 'application/json' }, window.droneCpf ? window.droneCpf.headers() : {});
 // Rumo "de bússola" (0 = norte, horário) de um vetor no plano. Norte = -z.
 const rumo = (dx, dz) => Math.atan2(dx, -dz);
@@ -699,16 +733,21 @@ const CFG_PADRAO = {
   sticksTela: true, som: true, toque: null, deadzone: 0.04, expo: 0.25, padId: '',
   // computador já abre no realista (texturas de foto, baixa ~7 MB uma vez); celular fica no leve até escolher
   cenario: matchMedia('(pointer:coarse)').matches ? 'leve' : 'realista', fps: false,
+  drone: 'mavic3', luz: 'tarde', // luz quente de fim de tarde como padrão (pedido do usuário, 12/10/2026); "dia claro" fica nos Ajustes
 };
 const cfg = Object.assign({}, CFG_PADRAO, lsGet('dsim_cfg') || {});
 if (cfg.toque === null) cfg.toque = matchMedia('(pointer:coarse)').matches;
 const salvarCfg = () => lsSet('dsim_cfg', cfg);
+// Luz de fim de tarde (Ajustes): sol baixo e quente, sombra comprida e névoa dourada. Vale ao recarregar.
+const TARDE = cfg.luz === 'tarde';
 
 // Perfis de velocidade parecidos com os do Mini/Air (valores arredondados).
 const PERFIS = {
   C: { nome: 'Cine', h: 5, up: 2, down: 1.5, yaw: 40, tilt: 15, tau: 1.0 },
   N: { nome: 'Normal', h: 10, up: 4, down: 3, yaw: 90, tilt: 25, tau: 0.65 },
   S: { nome: 'Esporte', h: 16, up: 5, down: 4, yaw: 150, tilt: 35, tau: 0.45 },
+  // FPV: só no exercício de corrida (não entra no rodízio C/N/S) — ~80 km/h, resposta mais seca
+  F: { nome: 'FPV', h: 22, up: 8, down: 7, yaw: 190, tilt: 46, tau: 0.32 },
 };
 const K_ARRASTO = 0.46; // arrasto linear: na inclinação máxima do Normal dá ~10 m/s
 
@@ -735,19 +774,19 @@ const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 const LONGE = 6000;
 const MALHAS = {}; // referências que o cenário realista (drone-sim-realista.js) troca de material
 
-const COR_NEVOA = 0xb9cee2;
+const COR_NEVOA = TARDE ? 0xd8c6ac : 0xb9cee2;
 const cena = new THREE.Scene();
 cena.background = new THREE.Color(COR_NEVOA);
 cena.fog = new THREE.FogExp2(COR_NEVOA, 0.00042); // neblina de distância: perto nítido, serra no horizonte azulada
 
 // Sol alto, vindo do sul/leste (atrás do piloto, que olha para o norte): cena iluminada de frente.
-const SOL_DIR = new THREE.Vector3().setFromSphericalCoords(1, 40 * Math.PI / 180, 28 * Math.PI / 180);
+const SOL_DIR = new THREE.Vector3().setFromSphericalCoords(1, (TARDE ? 73 : 40) * Math.PI / 180, (TARDE ? 58 : 28) * Math.PI / 180);
 
 // Céu atmosférico (Preetham) com nuvens.
 function montarCeu(escala) {
   const s = new Sky(); s.scale.setScalar(escala);
   const u = s.material.uniforms;
-  u.turbidity.value = 2.6; u.rayleigh.value = 1.25; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.86;
+  u.turbidity.value = TARDE ? 3.8 : 2.6; u.rayleigh.value = TARDE ? 2.0 : 1.25; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.86;
   u.sunPosition.value.copy(SOL_DIR);
   if (u.cloudCoverage) { u.cloudCoverage.value = 0.42; u.cloudDensity.value = 0.5; u.cloudScale.value = 0.00022; u.cloudElevation.value = 0.6; u.cloudSpeed.value = 0.00003; }
   return s;
@@ -767,9 +806,9 @@ cena.add(ceu);
   pmrem.dispose();
 }
 
-const hemi = new THREE.HemisphereLight(0xcfe2ff, 0x46552f, 0.9); // ambiente mais baixo: lado na sombra fica mais escuro (volume, não "quadrado chapado")
+const hemi = new THREE.HemisphereLight(TARDE ? 0xb7c6dc : 0xcfe2ff, TARDE ? 0x4a4432 : 0x46552f, TARDE ? 0.7 : 0.9); // ambiente mais baixo: lado na sombra fica mais escuro (volume, não "quadrado chapado")
 cena.add(hemi);
-const sol = new THREE.DirectionalLight(0xfff0d8, 3.5);
+const sol = new THREE.DirectionalLight(TARDE ? 0xffd09a : 0xfff0d8, TARDE ? 3.9 : 3.5);
 sol.position.copy(SOL_DIR).multiplyScalar(250);
 cena.add(sol, sol.target);
 if (SOMBRAS) {
@@ -810,13 +849,32 @@ function malha(geo, mat, x, y, z, sombra = true) {
 /* ---------------- chão (plano na área de voo, serra no horizonte) ---------------- */
 // Até 1,3 km do centro é plano (é onde se voa e onde vale a colisão com o chão = 0);
 // dali para fora o terreno sobe em morros, só para dar horizonte.
+/* Morros DENTRO da área de voo (12/10/2026): seis elevações suaves a 500–700 m da base, com
+   colisão de verdade. São elas que dão profundidade ao cenário — encosta perto, morro
+   verde no meio, serra azul no fundo. Ficam só onde não há nada no chão: longe da base, da
+   rodovia, da estrada de terra, das redes elétricas, da vila, do bairro, do lago e dos pontos
+   dos exercícios. [x, z, raio, altura] */
+const MORROS = [[520, -400, 240, 46], [-520, -330, 250, 52], [-450, 470, 240, 40], [520, 420, 250, 44], [60, 560, 230, 34], [-150, -700, 240, 48]];
 function relevo(x, z) {
+  let h = 0;
+  for (const [mx, mz, raio, alt] of MORROS) { const d = Math.hypot(x - mx, z - mz); if (d < raio) { const t = 1 - d / raio; h += alt * t * t * (3 - 2 * t); } }
   const r = Math.hypot(x, z);
-  if (r < 1300) return 0;
+  if (r < 1300) return h;
   const k = clamp((r - 1300) / 1600, 0, 1), s = k * k * (3 - 2 * k);
   const n = 0.55 + 0.25 * Math.sin(x * 0.0021 + 1.3) * Math.cos(z * 0.0017) + 0.14 * Math.sin(x * 0.0063 + z * 0.0041) + 0.08 * Math.sin(z * 0.011 - x * 0.004);
-  return s * 340 * n;
+  return h + s * 340 * n;
 }
+// Altura do chão para a física: a MESMA grade de 41,7 m que desenha o terreno, interpolada —
+// assim o drone toca o chão onde o chão aparece (antes o chão valia 0 em todo lugar).
+const REL = { n: 241, x0: -5000, cel: 10000 / 240, h: new Float32Array(241 * 241) };
+for (let j = 0; j < REL.n; j++) for (let i = 0; i < REL.n; i++) REL.h[j * REL.n + i] = relevo(REL.x0 + i * REL.cel, REL.x0 + j * REL.cel);
+function alturaChao(x, z) {
+  const fx = (x - REL.x0) / REL.cel, fz = (z - REL.x0) / REL.cel;
+  if (!(fx >= 0 && fz >= 0 && fx < REL.n - 1 && fz < REL.n - 1)) return 0;
+  const i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j, k = j * REL.n + i, H = REL.h;
+  return (H[k] * (1 - tx) + H[k + 1] * tx) * (1 - tz) + (H[k + REL.n] * (1 - tx) + H[k + REL.n + 1] * tx) * tz;
+}
+for (const [mx, mz, raio] of MORROS) MUNDO.mapa.rets.push({ x: mx, z: mz, w: raio * 1.5, d: raio * 1.5, cor: '#4d6b2a', redondo: true });
 (function chao() {
   const tex = texCanvas(512, 512, (g, w, h) => {
     g.fillStyle = '#c9d4b2'; g.fillRect(0, 0, w, h);
@@ -878,6 +936,26 @@ diffuseColor.rgb *= 0.72 + 0.45 * nMedio;`);
   if (SOMBRAS) m.receiveShadow = true;
   cena.add(m);
   MALHAS.chao = m;
+})();
+
+/* ---------------- serra distante (profundidade) ----------------
+   Uma segunda linha de serra, mais alta e bem mais longe que os morros verdes, já
+   desbotada pela névoa: morro perto nítido, morro longe esverdeado e, atrás, a serra
+   azulada. É essa sobreposição de camadas que dá a noção de distância no horizonte. */
+(function serraDistante() {
+  const N = 360, RAIO_S = 4600, pos = [], cor = [], idx = [];
+  const base = new THREE.Color(COR_NEVOA), topo = new THREE.Color(TARDE ? 0x9a8f9c : 0x8496ae);
+  for (let i = 0; i <= N; i++) {
+    const a = i / N * Math.PI * 2;
+    const h = 560 + 210 * Math.sin(3 * a + 1) + 130 * Math.sin(7 * a + 2.3) + 150 * Math.abs(Math.sin(11 * a + 0.4)) + 70 * Math.abs(Math.sin(29 * a + 0.7)) + 35 * Math.sin(61 * a);
+    pos.push(Math.cos(a) * RAIO_S, -60, Math.sin(a) * RAIO_S, Math.cos(a) * RAIO_S, Math.max(330, h), Math.sin(a) * RAIO_S);
+    cor.push(base.r, base.g, base.b, topo.r, topo.g, topo.b);
+    if (i < N) { const p = i * 2; idx.push(p, p + 1, p + 2, p + 2, p + 1, p + 3); }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }));
+  m.frustumCulled = false; cena.add(m); MALHAS.serraLonge = m;
 })();
 
 function faixa(w, d, x, z, tex, y = 0.012) {
@@ -1085,12 +1163,14 @@ const matsTelhado = coresTelhado.map((c) => lam(c, { map: TXV.telha }));
 const matsOitao = coresParede.map((c) => lam(c, { map: TXV.reboco }));
 const matBeiral = lam(0xe9e6df);
 MALHAS.paredesVila = matsParede; MALHAS.telhadosVila = matsTelhado;
+MALHAS.casasVila = []; // o cenário realista troca cada uma por um modelo de casa (drone-sim-ambiente.js)
 function casa(x, z, w, d, h) {
   const ip = (sorteio() * matsParede.length) | 0, mp = matsParede[ip];
   const mt = matsTelhado[(sorteio() * matsTelhado.length) | 0];
-  malha(new THREE.BoxGeometry(w, h, d), mp, x, h / 2, z);
-  malha(geoTelhado(THREE, w, d, 1.7, ((x * 7 + z * 13) | 0) % 3 ? '4' : '2', 0.5), [mt, matsOitao[ip], matBeiral], x, h, z);
-  addCaixa(x, z, w / 2, d / 2, h + 1.7, 'casa');
+  const parede = malha(new THREE.BoxGeometry(w, h, d), mp, x, h / 2, z);
+  const telhado = malha(geoTelhado(THREE, w, d, 1.7, ((x * 7 + z * 13) | 0) % 3 ? '4' : '2', 0.5), [mt, matsOitao[ip], matBeiral], x, h, z);
+  const caixa = addCaixa(x, z, w / 2, d / 2, h + 1.7, 'casa');
+  MALHAS.casasVila.push({ x, z, w, d, h, cor: coresParede[ip], malhas: [parede, telhado], caixa });
   MUNDO.mapa.rets.push({ x, z, w, d, cor: '#b45309' });
 }
 for (let i = 0; i < 22; i++) {
@@ -1103,8 +1183,11 @@ for (let i = 0; i < 10; i++) {
 }
 
 /* ---------------- veículos ---------------- */
-function veiculo(tipo, x, z, girado, cor, comColisao = true, alvo = null) {
-  const g = new THREE.Group();
+// No cenário realista os carros de caixa dão lugar a modelos de verdade: AMB.fabrica
+// (drone-sim-ambiente.js) monta o modelo; FIXOS guarda os que já existem, para a troca.
+const AMB = { fabrica: null, droneFPV: null };
+const FIXOS = [];
+function carroDeCaixa(g, tipo, cor) {
   const corpo = lam(cor), vidro = lam(0x1e293b), pneu = lam(0x111111);
   const L = tipo === 'picape' ? 5.2 : 4.4, W = 1.85;
   const base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.8, L), corpo); base.position.y = 0.75; g.add(base);
@@ -1125,14 +1208,21 @@ function veiculo(tipo, x, z, girado, cor, comColisao = true, alvo = null) {
     const r = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.25, 14), pneu);
     r.rotation.z = Math.PI / 2; r.position.set(sx * 0.9, 0.36, sz * L * 0.32); g.add(r);
   }
+  if (SOMBRAS) g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return { L, W, H: 1.85 };
+}
+function veiculo(tipo, x, z, girado, cor, comColisao = true, alvo = null) {
+  const g = new THREE.Group();
+  const d = AMB.fabrica ? AMB.fabrica.fixo(g, tipo, cor) : carroDeCaixa(g, tipo, cor);
   g.position.set(x, 0, z);
   if (girado) g.rotation.y = Math.PI / 2;
-  if (SOMBRAS) g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   (alvo || cena).add(g);
+  let c = null;
   if (comColisao) {
-    const c = { x, z, hw: girado ? L / 2 : W / 2, hd: girado ? W / 2 : L / 2, y0: 0, top: 1.85, nome: 'veículo' };
+    c = { x, z, hw: girado ? d.L / 2 : d.W / 2, hd: girado ? d.W / 2 : d.L / 2, y0: 0, top: d.H, nome: 'veículo' };
     if (alvo) caixasMissao.push(c); else MUNDO.caixas.push(c);
   }
+  if (!alvo) FIXOS.push({ g, tipo, cor, girado, caixa: c });
   return g;
 }
 const POI = new V3(-35, 0, -70);
@@ -1178,6 +1268,11 @@ linhaEnergia(-320, -150, 126, -150, 45);
 
 /* ---------------- pontos fixos dos exercícios ---------------- */
 const PORTAIS_OBS = [[0, 4, -40], [30, 8, -90], [30, 4, -150], [-20, 13, -205], [-75, 6, -160], [-40, 4, -60]];
+// Corrida FPV (~690 m): volta na base, por baixo da rede elétrica, ruas do bairro e de volta pela rodovia.
+// Só passa por onde nunca nasce árvore (base, faixa da rodovia e ruas); a rede é cruzada no meio do vão
+// e as curvas do bairro são feitas DENTRO do cruzamento (cortar a esquina dá no muro e no telhado da casa).
+const PISTA_FPV = [[0, 4, -22], [22, 6, -40], [46, 7, -20], [50, 5, 14], [75, 4, 34], [100, 5, 52], [100, 5, 110], [100, 6, 152], [112, 6, 160],
+  [194, 6, 160], [200, 6, 150], [200, 5, 70], [186, 5, 42], [130, 6, 42], [60, 5, 44], [25, 4, 34], [0, 4.5, -6]]; // chegada 6 m à frente do H (o mastro não fica em cima do heliponto)
 const BALOES = [[-40, 8, -30], [35, 12, -70], [45, 6, 15]];
 const BUSCA_PONTOS = [[132, -262, false], [176, -338, true], [-182, -352, false], [96, -470, true], [-262, -196, true]];
 
@@ -1299,53 +1394,92 @@ const OBSTRUI_FOTO = [mshCopa, mshTronco, mshPalma, mshTroncoP];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), cor = new THREE.Color(), um = new THREE.Quaternion();
   const verdes = [0x355f2b, 0x41702f, 0x4d7b36, 0x2f5427, 0x5a8233, 0x3e6a3a, 0x6b8a3a];
   COPAS.forEach((a, i) => {
-    m4.compose(new V3(a.x, 0, a.z), um, new V3(a.tr, a.tronco + a.ry * 0.3, a.tr)); mshTronco.setMatrixAt(i, m4);
+    a.y0 = alturaChao(a.x, a.z); // árvore em cima de morro nasce na altura do chão dali
+    m4.compose(new V3(a.x, a.y0, a.z), um, new V3(a.tr, a.tronco + a.ry * 0.3, a.tr)); mshTronco.setMatrixAt(i, m4);
     q.setFromEuler(new THREE.Euler(0, a.gir, 0));
-    m4.compose(new V3(a.x, a.cy, a.z), q, new V3(a.r, a.ry, a.r)); mshCopa.setMatrixAt(i, m4);
+    m4.compose(new V3(a.x, a.y0 + a.cy, a.z), q, new V3(a.r, a.ry, a.r)); mshCopa.setMatrixAt(i, m4);
     cor.setHex(verdes[(i * 7 + (a.x | 0)) % verdes.length]).multiplyScalar(R(0.85, 1.12)); mshCopa.setColorAt(i, cor);
   });
   PALMAS.forEach((a, i) => {
-    m4.compose(new V3(a.x, 0, a.z), um, new V3(0.22, a.tronco, 0.22)); mshTroncoP.setMatrixAt(i, m4);
+    a.y0 = alturaChao(a.x, a.z);
+    m4.compose(new V3(a.x, a.y0, a.z), um, new V3(0.22, a.tronco, 0.22)); mshTroncoP.setMatrixAt(i, m4);
     q.setFromEuler(new THREE.Euler(R(-0.08, 0.08), a.gir, R(-0.08, 0.08)));
-    m4.compose(new V3(a.x, a.tronco, a.z), q, new V3(a.s, a.s, a.s)); mshPalma.setMatrixAt(i, m4);
+    m4.compose(new V3(a.x, a.y0 + a.tronco, a.z), q, new V3(a.s, a.s, a.s)); mshPalma.setMatrixAt(i, m4);
     cor.setHex(0xc9d98f).multiplyScalar(R(0.85, 1.05)); mshPalma.setColorAt(i, cor);
   });
   for (const m of OBSTRUI_FOTO) { if (SOMBRAS) m.castShadow = true; cena.add(m); }
   if (SOMBRAS) mshCopa.receiveShadow = true;
 }
 
-/* ---------------- capim (tufos) perto da base ---------------- */
-if (false) { // tufos de capim desligados: de cima viravam pontinhos
-  const tex = texCanvas(64, 64, (g, w, h) => {
-    g.clearRect(0, 0, w, h);
-    for (let i = 0; i < 30; i++) {
-      const x = 4 + Math.random() * 56, l = 95 + Math.random() * 80 | 0;
-      g.strokeStyle = `rgb(${l + 20},${l + 55},${l - 20})`; g.lineWidth = 1.4 + Math.random() * 1.4;
-      g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + Math.random() * 10 - 5, h * 0.55, x + Math.random() * 18 - 9, 3 + Math.random() * 26); g.stroke();
+/* ---------------- capim (folhas em volta da base) ----------------
+   Folha de verdade, não cartão pintado: três lâminas cruzadas que afinam para a ponta,
+   escuras no pé e claras em cima, balançando com o vento (o vértice se desloca no
+   shader). Fica só num raio de 210 m da base — é onde o drone voa baixo e o capim dá
+   noção de escala e de velocidade; de longe o pasto continua sendo a textura do chão.
+   A 1ª tentativa (tufo desenhado num cartão) virava pontinho preto visto do alto.
+   Usa sorteio próprio: não mexe na sequência das árvores, dos carros nem das placas. */
+const CAPIM = { sh: null, malha: null };
+if (QUAL !== 'baixa') {
+  const lamina = (giro) => {
+    const g = new THREE.PlaneGeometry(0.26, 0.6, 1, 3); g.translate(0, 0.3, 0);
+    const p = g.attributes.position, cores = [];
+    for (let i = 0; i < p.count; i++) {
+      const t = p.getY(i) / 0.6;
+      p.setXYZ(i, p.getX(i) * (1 - 0.78 * t), p.getY(i), 0.12 * t * t); // afina e enverga para a ponta
+      cores.push(0.13 + 0.09 * t, 0.26 + 0.13 * t, 0.05 + 0.04 * t); // quase o verde do chão: de perto dá volume, do alto some no pasto (pé escuro virava pontinho preto)
     }
-  });
-  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-  const p1 = new THREE.PlaneGeometry(0.8, 0.55); p1.translate(0, 0.27, 0);
-  const geo = mergeGeometries([p1, p1.clone().rotateY(Math.PI / 3), p1.clone().rotateY(-Math.PI / 3)]);
+    g.setAttribute('color', new THREE.Float32BufferAttribute(cores, 3));
+    g.rotateY(giro); return g;
+  };
+  // cada lâmina entra duas vezes (frente e verso), todas com a normal para cima: com DoubleSide o verso
+  // ficava com a normal invertida, sem luz — era o lado preto que virava pontinho escuro visto do alto
+  const verso = (g) => { const v = g.clone(), ix = v.index.array; for (let i = 0; i < ix.length; i += 3) { const k = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = k; } return v; };
+  const geo = mergeGeometries([0, 2.1, 4.2].flatMap((a) => { const g = lamina(a); return [g, verso(g)]; }));
   const nn = geo.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0);
-  const N = QUAL === 'alta' ? 12000 : 5000;
-  const msh = new THREE.InstancedMesh(geo, lam(0xffffff, { map: tex, alphaTest: 0.5, side: THREE.DoubleSide }), N);
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), cor = new THREE.Color();
+  const mat = lam(0xffffff, { vertexColors: true });
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTempoCapim = { value: 0 }; CAPIM.sh = sh;
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uTempoCapim;')
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+  #ifdef USE_INSTANCING
+    float faseC = uTempoCapim * 1.6 + instanceMatrix[3].x * 0.14 + instanceMatrix[3].z * 0.17;
+    float vaiC = 0.1 * position.y * (sin(faseC) + 0.6 * sin(faseC * 2.3 + 1.3));
+    transformed.x += vaiC; transformed.z += vaiC * 0.6;
+  #endif`);
+  };
+  const N = QUAL === 'alta' ? 30000 : 18000, rC = rng(4242), RC = (a, b) => a + (b - a) * rC();
+  const msh = new THREE.InstancedMesh(geo, mat, N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), cor = new THREE.Color(), L = CIDADE.limite;
   let n = 0;
-  for (let i = 0; i < N * 4 && n < N; i++) {
-    const a = R(0, Math.PI * 2), r = Math.sqrt(R(0, 1)) * 230, x = Math.cos(a) * r, z = -30 + Math.sin(a) * r;
-    if (x > -25 && x < 25 && z > -16 && z < 22) continue;              // pátio
-    if (Math.abs(z - 40) < 7.5 || (Math.abs(x - 120) < 3.6 && z < 40)) continue; // estradas
-    if (x > -104 && x < -36 && z > -153 && z < -107) continue;          // campo
-    if (superficie(x, z, 1e9) > 0 || dentroLago(x, z)) continue;       // prédios, casas, veículos
-    q.setFromEuler(new THREE.Euler(0, R(0, 6.28), 0));
-    const s = R(0.6, 1.5);
-    m4.compose(new V3(x, 0, z), q, new V3(s, s * R(0.8, 1.3), s)); msh.setMatrixAt(n, m4);
-    cor.setRGB(R(0.85, 1), R(0.9, 1), R(0.7, 0.85)); msh.setColorAt(n, cor);
+  for (let i = 0; i < N * 5 && n < N; i++) {
+    const a = RC(0, Math.PI * 2), r = Math.sqrt(RC(0, 1)) * 210, x = Math.cos(a) * r, z = -30 + Math.sin(a) * r;
+    if (x > -24 && x < 24 && z > -15 && z < 21) continue;                                     // pátio
+    if (Math.abs(z - 40) < 7.5 || (Math.abs(x - 120) < 3.6 && z < 40)) continue;              // rodovia e estrada de terra
+    if (x > -104 && x < -36 && z > -153 && z < -107) continue;                                // campo de futebol
+    if (x > L.x0 - 1 && x < L.x1 + 1 && z > L.z0 - 1 && z < L.z1 + 1) continue;               // bairro
+    if (x > CANTEIRO.x0 - 1 && x < CANTEIRO.x1 + 1 && z > CANTEIRO.z0 - 1 && z < CANTEIRO.z1 + 1) continue; // canteiro
+    if (x > GALPOES.x0 - 1 && x < GALPOES.x1 + 1 && z > GALPOES.z0 - 1 && z < GALPOES.z1 + 1) continue;     // piso dos galpões
+    if (superficie(x, z, 1e9) > 0 || dentroLago(x, z)) continue;                              // prédio, hangar, casa, veículo, lago
+    q.setFromEuler(new THREE.Euler(0, RC(0, 6.28), 0));
+    const s = RC(0.55, 1.35);
+    m4.compose(new V3(x, 0, z), q, new V3(s, s * RC(0.8, 1.3), s)); msh.setMatrixAt(n, m4);
+    cor.setRGB(RC(0.75, 1.15), RC(0.8, 1.1), RC(0.6, 0.95)); msh.setColorAt(n, cor);
     n++;
   }
-  msh.count = n;
-  cena.add(msh);
+  msh.count = n; msh.frustumCulled = false;
+  if (SOMBRAS) msh.receiveShadow = true;
+  cena.add(msh); CAPIM.malha = msh; MALHAS.capim = msh;
+}
+
+/* Tira as árvores de um retângulo (onde entra construção nova): some o desenho e some a colisão.
+   É feito DEPOIS do sorteio para não mexer na sequência que define árvores, carros e placas. */
+function limparArea(x0, x1, z0, z1) {
+  const zero = new THREE.Matrix4().makeScale(0, 0, 0), fora = (a) => a.x >= x0 && a.x <= x1 && a.z >= z0 && a.z <= z1;
+  COPAS.forEach((a, i) => { if (fora(a)) { mshTronco.setMatrixAt(i, zero); mshCopa.setMatrixAt(i, zero); } });
+  PALMAS.forEach((a, i) => { if (fora(a)) { mshTroncoP.setMatrixAt(i, zero); mshPalma.setMatrixAt(i, zero); } });
+  for (const m of [mshTronco, mshCopa, mshTroncoP, mshPalma]) m.instanceMatrix.needsUpdate = true;
+  for (let i = ARV.length - 1; i >= 0; i--) if (fora(ARV[i])) ARV.splice(i, 1);
 }
 
 /* ---------------- árvores das praças do bairro ---------------- */
@@ -1369,7 +1503,10 @@ function arvoresExtras(lista) {
 const ctxCidade = { THREE, cena, mergeGeometries, addCaixa, MUNDO, SOMBRAS, rnd: sorteio, texCanvas, ANISO, arvoresExtras };
 const CID = montarCidade(ctxCidade);
 const CANT = montarCanteiro(ctxCidade);
-Object.assign(MALHAS, { cidade: CID, canteiro: CANT, copas: COPAS_MALHAS, troncos: TRONCOS_MALHAS });
+// complexo de galpões para voar por dentro (nordeste da base): primeiro saem as árvores sorteadas ali
+limparArea(GALPOES.x0 - 6, GALPOES.x1 + 6, GALPOES.z0 - 6, GALPOES.z1 + 6); limparArea(122, GALPOES.x0, -161, -149);
+const GALP = montarGalpoes(ctxCidade);
+Object.assign(MALHAS, { cidade: CID, canteiro: CANT, galpoes: GALP, copas: COPAS_MALHAS, troncos: TRONCOS_MALHAS });
 
 /* ---------------- trânsito na rodovia ----------------
    Carros andam dentro do passo da física (VEICULOS), então o teste é
@@ -1539,10 +1676,60 @@ const camChase = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.08,
 const camPiloto = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, LONGE);
 camFPV.rotation.order = 'YXZ';
 const PILOTO = new V3(0, 1.7, 6);
-const VISTAS = { camera: { cam: camFPV, nome: '📷 Câmera do drone' }, terceira: { cam: camChase, nome: '🚁 Terceira pessoa' }, piloto: { cam: camPiloto, nome: '🧍 Visão do piloto (VLOS)' } };
+// 'fpv' usa a mesma câmera da 'camera', mas presa no corpo do drone (sem gimbal), com lente aberta, chuvisco e painel enxuto
+const VISTAS = { fpv: { cam: camFPV, nome: '🥽 FPV (câmera de bordo)' }, camera: { cam: camFPV, nome: '📷 Câmera do drone' }, terceira: { cam: camChase, nome: '🚁 Terceira pessoa' }, piloto: { cam: camPiloto, nome: '🧍 Visão do piloto (VLOS)' } };
 let vista = lsGet('dsim_vista') || 'terceira';
 if (!VISTAS[vista]) vista = 'terceira';
 const olharPiloto = new V3(0, 1, 0);
+
+/* ---------------- lente da câmera de bordo (corrida FPV) ----------------
+   Câmera de FPV não é a câmera limpa do Mavic: é uma lente bem aberta (a imagem
+   "embarrila" — o horizonte curva nas bordas), com as cores se separando um pouco
+   nos cantos, borda escurecida e o chuvisco do vídeo, que aumenta quando o sinal
+   cai. A cena é desenhada numa textura e passa por este filtro antes de ir para a
+   tela. Só entra na corrida FPV, na vista da câmera, e só se a placa de vídeo
+   aceitar textura de meia precisão (senão a imagem sai direto, como antes). */
+const LENTE = { rt: null, ok: null, cena: null, cam: null, mat: null };
+function prepararLente() {
+  if (LENTE.ok !== null) return LENTE.ok;
+  LENTE.ok = cfg.lente !== false && renderer.capabilities.isWebGL2 && (renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float'));
+  if (!LENTE.ok) return false;
+  const t = renderer.getDrawingBufferSize(new THREE.Vector2());
+  LENTE.rt = new THREE.WebGLRenderTarget(t.x, t.y, { type: THREE.HalfFloatType, samples: QUAL === 'baixa' ? 0 : 4 });
+  LENTE.mat = new THREE.ShaderMaterial({
+    uniforms: { tCena: { value: LENTE.rt.texture }, uOlho: { value: 0.2 }, uCroma: { value: 0.3 }, uVinheta: { value: 0.5 }, uRuido: { value: 0.05 }, uTempo: { value: 0 }, uAspecto: { value: 1 } },
+    depthTest: false, depthWrite: false,
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `
+      uniform sampler2D tCena; uniform float uOlho, uCroma, uVinheta, uRuido, uTempo, uAspecto; varying vec2 vUv;
+      // olho de peixe: quanto mais longe do centro, mais longe a amostra (a borda "encolhe"); o divisor mantém os cantos dentro da imagem
+      vec2 olho(vec2 uv, float k) { vec2 d = uv - 0.5; d.x *= uAspecto; float r2 = dot(d, d), canto = 0.25 * (uAspecto * uAspecto + 1.0); d *= (1.0 + k * r2) / (1.0 + k * canto); d.x /= uAspecto; return d + 0.5; }
+      float sorte(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7)) + uTempo * 43.7) * 43758.5453); }
+      void main() {
+        vec2 c = vUv - 0.5; float r2 = dot(c, c);
+        vec3 cor = vec3(texture2D(tCena, olho(vUv, uOlho * (1.0 + uCroma * r2))).r, texture2D(tCena, olho(vUv, uOlho)).g, texture2D(tCena, olho(vUv, uOlho * (1.0 - uCroma * r2))).b);
+        cor *= 1.0 - uVinheta * smoothstep(0.1, 0.6, r2);
+        gl_FragColor = vec4(cor, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        // chuvisco: grão fino que muda a cada quadro + faixas horizontais fracas (interferência)
+        float grao = sorte(gl_FragCoord.xy) - 0.5, faixaH = sorte(vec2(floor(gl_FragCoord.y / 3.0), 7.0)) - 0.5;
+        gl_FragColor.rgb += grao * uRuido + faixaH * uRuido * 0.35;
+      }`,
+  });
+  LENTE.cena = new THREE.Scene(); LENTE.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const tri = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), LENTE.mat); tri.frustumCulled = false; LENTE.cena.add(tri);
+  return true;
+}
+function desenharCena() {
+  const cam = VISTAS[vista].cam;
+  if (!(vista === 'fpv' && prepararLente())) { renderer.render(cena, cam); return; }
+  const u = LENTE.mat.uniforms;
+  u.uTempo.value = (performance.now() / 1000) % 100; u.uAspecto.value = innerWidth / innerHeight;
+  u.uRuido.value = 0.045 + 0.3 * Math.pow(1 - clamp(S.sinal / 100, 0, 1), 1.5);   // sinal fraco = mais chuvisco
+  renderer.setRenderTarget(LENTE.rt); renderer.render(cena, cam);
+  renderer.setRenderTarget(null); renderer.render(LENTE.cena, LENTE.cam);
+}
 
 function redimensionar() {
   renderer.setPixelRatio(pixelRatio());
@@ -1552,6 +1739,7 @@ function redimensionar() {
   mp.width = Math.round(r.width * d) || 170; mp.height = Math.round(r.height * d) || 170;
   const nc = $('navc'), rn = nc.getBoundingClientRect();
   nc.width = Math.round(rn.width * d) || 150; nc.height = Math.round(rn.height * d) || 150;
+  if (LENTE.rt) { const t = renderer.getDrawingBufferSize(new THREE.Vector2()); LENTE.rt.setSize(t.x, t.y); }
 }
 addEventListener('resize', redimensionar);
 
@@ -1572,23 +1760,26 @@ let M = null; // exercício em andamento
 const F = () => Object.assign({}, cfg, (M && M.def.forcar) || {});
 
 function superficie(x, z, yRef) {
-  let h = 0;
+  let h = alturaChao(x, z); // o chão: 0 na área plana, a altura do morro fora dela
   for (const lista of [MUNDO.caixas, caixasMissao]) for (const c of lista) {
     if (Math.abs(x - c.x) <= c.hw && Math.abs(z - c.z) <= c.hd && c.top <= yRef + 0.3 && c.top > h) h = c.top;
   }
   return h;
 }
 const RAIO = 0.2;
+const SEM_CMD = { thr: 0, yaw: 0, pit: 0, rol: 0 };
 function colisao(p) {
   for (const lista of [MUNDO.caixas, caixasMissao]) for (const c of lista) {
     if (Math.abs(p.x - c.x) < c.hw + RAIO && Math.abs(p.z - c.z) < c.hd + RAIO && p.y + 0.15 > c.y0 && p.y < c.top - 0.12) return c.nome;
   }
+
   for (const a of MUNDO.arvores) {
     const dx = p.x - a.x, dz = p.z - a.z;
     if (dx > a.r + 1 || dx < -a.r - 1 || dz > a.r + 1 || dz < -a.r - 1) continue;
     const dh = dx * dx + dz * dz;
-    if (p.y < a.cy && dh < (a.tr + RAIO) * (a.tr + RAIO)) return 'tronco de árvore';
-    const rr = a.r * 0.85 + RAIO, ry = a.ry * 0.85 + RAIO, dy = p.y + 0.08 - a.cy;
+    const py = p.y - (a.y0 || 0); // altura acima do pé da árvore (ela pode estar num morro)
+    if (py < a.cy && dh < (a.tr + RAIO) * (a.tr + RAIO)) return 'tronco de árvore';
+    const rr = a.r * 0.85 + RAIO, ry = a.ry * 0.85 + RAIO, dy = py + 0.08 - a.cy;
     if (dh / (rr * rr) + dy * dy / (ry * ry) < 1) return 'copa de árvore';
   }
   if (p.y > 6 && p.y < 10.5) {
@@ -1605,8 +1796,9 @@ function colisao(p) {
 /* Zoom do Mavic 3: câmera principal 1–4× (digital), tele 7× e híbrido até 28×. */
 const ZOOMS = [1, 2, 3, 4, 7, 14, 28];
 function ajustarZoom(d, absoluto) {
+  if (d && vista === 'fpv') return; // câmera de bordo do FPV é fixa: sem zoom
   S.zoomI = clamp(absoluto != null ? absoluto : (S.zoomI || 0) + d, 0, ZOOMS.length - 1);
-  camFPV.zoom = ZOOMS[S.zoomI]; camFPV.updateProjectionMatrix();
+  camFPV.zoom = vista === 'fpv' ? 1 : ZOOMS[S.zoomI]; camFPV.updateProjectionMatrix();
   $('zoom-n').textContent = ZOOMS[S.zoomI] + '×' + (ZOOMS[S.zoomI] === 7 ? ' tele' : '');
   $('zoom-n').hidden = vista !== 'camera' || !S.zoomI;
   $('zoom-v').textContent = ZOOMS[S.zoomI] + '×';
@@ -1618,7 +1810,7 @@ function resetDrone(p, yaw) {
   S.motores = false; S.voando = false; S.jaVoou = false; S.acidente = null; S.auto = null; S.tParar = 0;
   S.bat = 100; S.tAcelBaixo = 0; S.segura = null; S.home.copy(S.pos); S.homeY = S.pos.y; S.chao = 0;
   S.t = 0; S.saturado = 0; S.perdeuSinal = false; S.rastro = []; S.avisos = {}; S.pedirFoto = false;
-  S.gravando = false; S.recT = 0; S.camPitch = 0; S.camRoll = 0; S.camYaw = S.yaw;
+  S.gravando = false; S.recT = 0; S.camPitch = 0; S.camRoll = 0; S.camYaw = S.yaw; S.travaCmd = false;
   S.velModo = (M && M.def.forcar && M.def.forcar.vel) || cfg.vel;
   $('crash-v').style.opacity = 0;
   ajustarZoom(0, 0);
@@ -1667,7 +1859,7 @@ function passo(dt) {
   const vv = f.vento * (f.rajada ? 1 + 0.35 * Math.sin(S.t * 0.9) * Math.sin(S.t * 0.37 + 1.3) + 0.15 * Math.sin(S.t * 2.3) : 1);
   S.vento.set(Math.sin(S.ventoDir) * vv, 0, -Math.cos(S.ventoDir) * vv);
   S.prev.copy(S.pos);
-  const { thr, yaw: yawIn, pit, rol } = INP.fn;
+  const { thr, yaw: yawIn, pit, rol } = S.travaCmd ? SEM_CMD : INP.fn; // travaCmd: semáforo da corrida FPV
 
   // caindo depois de acidente / motor desligado no ar
   if (S.acidente || (!S.motores && S.pos.y > superficie(S.pos.x, S.pos.z, S.pos.y) + 0.02)) {
@@ -1683,7 +1875,7 @@ function passo(dt) {
 
   // CSC: os dois sticks para baixo e para dentro (ou para fora)
   // Lido SEM a curva expo e com folga: stick redondo (toque, Xbox/PS) no canto da diagonal dá ~0,71 por eixo.
-  const B = INP.bruto;
+  const B = S.travaCmd ? SEM_CMD : INP.bruto;
   const csc = B.thr < -0.6 && B.pit < -0.6 && Math.abs(B.yaw) > 0.6 && Math.abs(B.rol) > 0.6 && Math.sign(B.yaw) !== Math.sign(B.rol);
   if (csc && !S.cscTravado) {
     S.cscTravado = true;
@@ -1978,9 +2170,9 @@ function acao(id, origem) {
     S.camVideo = !S.camVideo; if (!S.camVideo) S.gravando = false;
     aviso(S.camVideo ? '🎬 Modo vídeo — o obturador grava' : '📷 Modo foto', 'info', 1300, 'camm');
   } else if (id === 'vista') {
-    if (M.def.vista && M.def.travaVista) { aviso('Este exercício é só na visão do piloto', 'am', 2000, 'vista'); return; }
-    const ordem = ['camera', 'terceira', 'piloto'];
-    vista = ordem[(ordem.indexOf(vista) + 1) % 3]; lsSet('dsim_vista', vista); mostrarVista();
+    if (M.def.vista && M.def.travaVista) { aviso('Este exercício é só na ' + (M.def.vista === 'fpv' ? 'câmera de bordo (FPV)' : 'visão do piloto'), 'am', 2000, 'vista'); return; }
+    const ordem = ['camera', 'terceira', 'piloto', 'fpv'];
+    vista = ordem[(ordem.indexOf(vista) + 1) % ordem.length]; lsSet('dsim_vista', vista); mostrarVista();
   } else if (id === 'zoomMais' || id === 'zoomMenos') {
     ajustarZoom(id === 'zoomMais' ? 1 : -1);
   } else if (id === 'modo') {
@@ -2174,10 +2366,10 @@ function etiqueta(txt, cor) {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: true, toneMapped: false }));
   s.scale.set(1.1, 1.1, 1); return s;
 }
-function criarPortal(pos, n, r, num) {
+function criarPortal(pos, n, r, num, tubo = 0.11) {
   const g = new THREE.Group(); g.position.copy(pos); g.rotation.y = Math.atan2(n.x, n.z);
   const mat = new THREE.MeshBasicMaterial({ color: 0xF5C518, toneMapped: false });
-  const anel = new THREE.Mesh(new THREE.TorusGeometry(r, 0.11, 8, 48), mat); g.add(anel);
+  const anel = new THREE.Mesh(new THREE.TorusGeometry(r, tubo, 8, 48), mat); g.add(anel);
   const lab = etiqueta(String(num), '#F5C518'); lab.position.y = r + 0.9; g.add(lab);
   const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, Math.max(0.1, pos.y - r)), lam(0x64748b));
   haste.position.y = -(r + (pos.y - r) / 2); g.add(haste);
@@ -2397,7 +2589,7 @@ const MISSOES = [
       const c = CID.carros[(Math.random() * CID.carros.length) | 0];
       M.d.carro = c; M.d.erros = 0;
       M.alvo = new V3(125, 0, 160); M.alvoNome = 'Bairro';
-      M.d.descricao = `${NOME_TIPO[c.tipo]} ${nomeCor(c.cor)}`.trim();
+      M.d.descricao = c.descricao || `${NOME_TIPO[c.tipo]} ${nomeCor(c.cor)}`.trim(); // no cenário realista o modelo é outro
       $('mis-img').src = imagemPlaca(c.placa); $('mis-img').hidden = false;
     },
     passo(M) {
@@ -2481,13 +2673,13 @@ const MISSOES = [
   },
   {
     id: 'busca', nome: 'Busca e registro fotográfico', nivel: 'a', icone: '🔎', par: 300,
-    desc: 'Denúncia: picape vermelha abandonada na região norte, perto da estrada de terra ou na beira da mata. Encontre, fotografe com o veículo no centro (até 45 m) e volte para a base. A cada tentativa ela está num lugar diferente.',
+    desc: 'Denúncia: carro vermelho abandonado na região norte, perto da estrada de terra ou na beira da mata. Encontre, fotografe com o veículo no centro (até 45 m) e volte para a base. A cada tentativa ele está num lugar diferente.',
     iniciar(M) {
       const [x, z, gir] = BUSCA_PONTOS[(Math.random() * BUSCA_PONTOS.length) | 0];
       M.d.alvo = new V3(x, 0.9, z);
-      veiculo('picape', x, z, gir, 0xc81e1e, true, grpM);
+      veiculo('carro', x, z, gir, 0xc81e1e, true, grpM);
       M.d.fotosRuins = 0;
-      M.obj = 'Encontre a picape vermelha e fotografe (📷 / P)';
+      M.obj = 'Encontre o carro vermelho e fotografe (📷 / P)';
     },
     passo(M) {
       if (M.etapa === 1) { M.alvo = new V3(0, 0, 0); M.alvoNome = 'Base'; M.obj = 'Alvo registrado — volte e pouse na base'; }
@@ -2510,7 +2702,62 @@ const MISSOES = [
       if (t === 'motoresOff' && M.etapa === 9) concluir(true);
     },
   },
+  {
+    id: 'fpv', nome: 'Corrida FPV (reflexo)', nivel: 'a', icone: '🏁', vista: 'fpv', travaVista: true, fpv: true,
+    forcar: { vel: 'F', gps: true, vento: 0, bateria: 'infinita' },
+    desc: 'Circuito cronometrado na câmera de bordo: 17 portais pela base, por baixo da rede elétrica e pelas ruas do bairro, no modo FPV (até 80 km/h). Largada com semáforo — o seu tempo de reação é medido. Bateu, acabou.',
+    iniciar(M) {
+      let ant = new V3(0, 2, 0);
+      M.d.p = PISTA_FPV.map((p, i) => { const pos = new V3(...p), n = pos.clone().sub(ant).setY(0); ant = pos; return criarPortal(pos, n, 3, i + 1, 0.2); });
+      M.d.i = 0; marcarPortais(M.d.p, 0);
+      // largada no ar: motores ligados, pairando a 2 m, comandos travados até o "VAI!"
+      S.motores = true; S.voando = true; S.jaVoou = true; S.pos.y = 2; S.prev.copy(S.pos); S.segura = S.pos.clone(); S.travaCmd = true;
+      Object.assign(M.d, { espera: 3 + Math.random() * 1.5, tl: 0, tGo: 0, reacao: null, vmax: 0 });
+      M.alvo = M.d.p[0].pos; M.alvoNome = 'Portal 1';
+      M.obj = 'Sticks soltos: os comandos liberam no VAI!';
+      vista = 'terceira'; // a largada é vista de fora; no VAI! corta para a câmera de bordo
+    },
+    passo(M, dt) {
+      const L = M.d.p, B = INP.bruto;
+      const mexeu = Math.max(Math.abs(B.thr), Math.abs(B.yaw), Math.abs(B.pit), Math.abs(B.rol)) > 0.3;
+      if (M.etapa === 0) { // semáforo: 3, 2, 1 e um tempo que muda a cada largada (não dá para adivinhar)
+        M.t = 0; M.d.tl += dt;
+        const falta = M.d.espera - M.d.tl;
+        if (falta < 1 && falta > 0 && mexeu) { // queimou: volta a contagem
+          Object.assign(M.d, { espera: 3 + Math.random() * 1.5, tl: 0 });
+          aviso('Queimou a largada — solte os sticks', 'am', 1800, 'fpv');
+          return;
+        }
+        luzFPV(falta > 2 ? '3' : falta > 1 ? '2' : falta > 0 ? '1' : 'VAI!', falta <= 0);
+        if (falta <= 0) { M.etapa = 1; S.travaCmd = false; S.segura = null; M.obj = 'Passe pelos portais em ordem (o verde é o próximo)'; vista = 'fpv'; mostrarVista(); }
+        return;
+      }
+      M.d.tGo += dt;
+      if (M.d.reacao == null && mexeu) M.d.reacao = M.d.tGo;
+      if (M.d.tGo > 1.1) luzFPV('');
+      M.d.vmax = Math.max(M.d.vmax, Math.hypot(S.vel.x, S.vel.z));
+      if (M.d.i < L.length && cruzouPortal(L[M.d.i])) {
+        M.d.i++; marcarPortais(L, M.d.i);
+        if (M.d.i < L.length) aviso(`✔ ${M.d.i}/${L.length}`, 'ok', 700, 'pt');
+        else {
+          const par = 60, reacao = M.d.reacao == null ? M.d.tGo : M.d.reacao;
+          if (M.t > par) penal(Math.min(45, Math.round((M.t - par) * 1.5)), `tempo acima de ${mmss(par)}`, true);
+          if (reacao > 0.8) penal(5, 'reação lenta na largada (mais de 0,8 s)', true);
+          M.d.extras = [['Tempo da volta', cronoTxt(M.t)], ['Reação na largada', nf(reacao, 2) + ' s'], ['Velocidade máxima', Math.round(M.d.vmax * 3.6) + ' km/h']];
+          concluir(true); return;
+        }
+      }
+      M.alvo = L[M.d.i].pos; M.alvoNome = 'Portal ' + (M.d.i + 1);
+      M.prog = `Portal ${M.d.i + 1} de ${L.length}`;
+    },
+  },
 ];
+// cronômetro com centésimos (corrida) e semáforo da largada
+const cronoTxt = (s) => { const c = Math.max(0, Math.round(s * 100)); return Math.floor(c / 6000) + ':' + String(Math.floor(c / 100) % 60).padStart(2, '0') + ',' + String(c % 100).padStart(2, '0'); };
+function luzFPV(txt, vai) {
+  const e = $('fpv-luz'); if (e.textContent === txt) return;
+  e.textContent = txt; e.hidden = !txt; e.className = vai ? 'vai' : '';
+}
 
 const NOME_TIPO = { sedan: 'sedã', hatch: 'hatch', suv: 'SUV', picape: 'picape' };
 const NOME_COR = { f2f2f0: 'branco', b9bcc0: 'prata', '6b6e72': 'cinza', '16181b': 'preto', '9b1b1b': 'vermelho', '1d3f7a': 'azul', '5a3a22': 'marrom', '2f5d3a': 'verde' };
@@ -2537,7 +2784,7 @@ function avaliarPlaca(alvo) {
       cand.push({ c, centro, dist, px, legivel: px >= innerHeight * 0.055, meio: Math.max(Math.abs(ndc.x), Math.abs(ndc.y)) });
     }
   }
-  const obstrui = [...CID.malhas.paredes, ...CID.malhas.telhados, ...CID.instancias.filter((m) => m.material === CID.matCarro.pintura), ...OBSTRUI_FOTO];
+  const obstrui = [...CID.malhas.paredes, ...CID.malhas.telhados, ...(CID.corpos || CID.instancias.filter((m) => m.material === CID.matCarro.pintura)), ...OBSTRUI_FOTO];
   const visivel = (k) => {
     raycaster.set(camFPV.position, k.centro.clone().sub(camFPV.position).normalize()); raycaster.far = k.dist - 0.35;
     return !raycaster.intersectObjects(obstrui, false).length;
@@ -2571,23 +2818,66 @@ function evento(tipo, d) {
 }
 function missaoPasso(dt) {
   if (!M || M.fim) return;
+  if (S.motores) M.ar += dt; // tempo de motor ligado: é o que vira hora de voo
   if (S.motores || S.jaVoou) M.t += dt;
   if (M.def.passo) M.def.passo(M, dt);
 }
 
 function encerrarExtras() {
+  HV.fechar(M);
   if (M && M.d && M.d.limpar) { M.d.limpar(); M.d.limpar = null; }
-  $('mis-img').hidden = true; $('rastreio').hidden = true;
+  $('mis-img').hidden = true; $('rastreio').hidden = true; $('fpv-hud').hidden = true; luzFPV('');
 }
+
+/* ---------------- horas de voo ----------------
+   Exercício terminado (concluído ou com acidente) já vai para o ranking com o seu
+   tempo. O que ficava de fora era o VOO LIVRE — e o exercício abandonado no meio.
+   Esse tempo de motor ligado se acumula aqui (`pend`, guardado no navegador para
+   não se perder se a aba fechar) e é mandado para o Worker como voo "livre".
+   `tot` é o acumulado deste navegador, para mostrar na hora. */
+const HV = {
+  pend: Number(lsGet('dsim_hv_pend')) || 0,
+  tot: Object.assign({ livre: 0, ex: 0 }, lsGet('dsim_hv') || {}),
+  enviando: false,
+  // junta ao pendente o tempo de motor ligado desta sessão que ainda não foi para o ranking
+  fechar(m, manter) {
+    if (!m || !(m.ar > 0)) return;
+    this.pend += m.ar; this.tot.livre += m.ar; m.ar = 0;
+    lsSet('dsim_hv_pend', Math.round(this.pend)); lsSet('dsim_hv', this.tot);
+    if (!manter) this.enviar();
+  },
+  exercicio(seg) { this.tot.ex += seg; lsSet('dsim_hv', this.tot); },
+  enviar(naSaida) {
+    const seg = Math.round(this.pend);
+    if (seg < 20 || this.enviando) return;
+    this.enviando = true;
+    const corpo = { missao: 'livre', concluiu: false, nota: 0, segundos: seg, penalidades: 0, motivo: '', controle: INP.gp ? 'controle' : (cfg.toque ? 'toque' : 'teclado'), modo: cfg.modo };
+    fetch(API_BASE + '/api/drone/voo', { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo), keepalive: !!naSaida })
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => { if (d && d.ok) { this.pend = Math.max(0, this.pend - seg); lsSet('dsim_hv_pend', Math.round(this.pend)); } })
+      .catch(() => { /* sem conexão: fica guardado e vai na próxima */ })
+      .finally(() => { this.enviando = false; });
+  },
+  agora() { return { livre: this.tot.livre + (M && M.ar > 0 ? M.ar : 0), ex: this.tot.ex }; },
+};
+const hhmm = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} h ${String(m).padStart(2, '0')} min` : m ? `${m} min` : `${s} s`; };
+function mostrarHoras() {
+  const a = HV.agora();
+  $('hv-linha').innerHTML = `⏱ <b>Horas de voo neste aparelho: ${hhmm(a.livre + a.ex)}</b> <span>· voo livre ${hhmm(a.livre)} · exercícios ${hhmm(a.ex)}</span>`;
+}
+// aba fechada ou celular bloqueado no meio do voo: guarda e manda o que já voou
+addEventListener('pagehide', () => { HV.fechar(M, true); HV.enviar(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { HV.fechar(M, true); HV.enviar(true); } });
 function iniciarMissao(id) {
   const def = MISSOES.find((m) => m.id === id) || MISSOES[0];
   encerrarExtras();
   limparGrpM();
   $('toast').innerHTML = '';
-  M = { def, id: def.id, t: 0, etapa: 0, penal: [], fim: false, d: {}, obj: '', prog: '', alvo: null, alvoNome: '' };
+  M = { def, id: def.id, t: 0, ar: 0, etapa: 0, penal: [], fim: false, d: {}, obj: '', prog: '', alvo: null, alvoNome: '' };
   S.ventoDir = (def.ventoDir != null ? def.ventoDir : Math.random() * 360) * DEG;
   resetDrone(new V3(0, 0, 0), 0);
   vista = def.vista || lsGet('dsim_vista') || 'terceira';
+  $('fpv-hud').hidden = !def.fpv; // a lente (aberta na vista FPV, normal nas outras) é acertada pelo mostrarVista
   if (def.iniciar) def.iniciar(M);
   $('mis-n').textContent = def.icone + ' ' + def.nome;
   $('mis').hidden = false;
@@ -2614,6 +2904,8 @@ function concluir(ok, motivo) {
     if (!ant || nota > ant.nota || (nota === ant.nota && M.t < ant.t)) { rec[def.id] = { nota, t: Math.round(M.t), em: new Date().toISOString().slice(0, 10) }; lsSet('dsim_rec', rec); recorde = true; }
   }
   setTimeout(() => mostrarResultado(ok, nota, motivo, recorde), ok ? 700 : 0);
+  // o tempo deste exercício vai junto com a nota; no voo livre fica para o HV.fechar
+  if (def.id !== 'livre') { HV.exercicio(M.t); M.ar = 0; }
   if (def.id !== 'livre') enviarVoo({
     missao: def.id, concluiu: !!ok, nota, segundos: Math.round(M.t), penalidades: M.penal.length,
     motivo: ok ? '' : String(motivo || 'acidente'), controle: INP.gp ? 'controle' : (cfg.toque ? 'toque' : 'teclado'), modo: cfg.modo,
@@ -2645,10 +2937,11 @@ function mostrarResultado(ok, nota, motivo, recorde) {
   $('r-nota').innerHTML = ok ? `${nota}<small>/100</small>` : '';
   $('r-est').textContent = ok ? (nota >= 90 ? '★★★' : nota >= 75 ? '★★☆' : nota >= 50 ? '★☆☆' : '☆☆☆') : '';
   $('r-sub').innerHTML = ok
-    ? `${nota >= 70 ? 'Aprovado' : 'Abaixo de 70 — vale repetir'} · tempo ${mmss(M.t)}${recorde ? ' · <b style="color:#F5C518">novo recorde!</b>' : ''}`
+    ? `${nota >= 70 ? 'Aprovado' : 'Abaixo de 70 — vale repetir'} · tempo ${def.fpv ? cronoTxt(M.t) : mmss(M.t)}${recorde ? ' · <b style="color:#F5C518">novo recorde!</b>' : ''}`
     : esc('Causa: ' + (motivo || 'acidente'));
-  const det = M.penal.map((p) => `<li class="ruim"><span>${esc(p.txt)}</span><b>−${p.pts}</b></li>`);
-  if (ok && !det.length) det.push('<li class="bom"><span>Sem nenhuma penalidade</span><b>perfeito</b></li>');
+  const det = (ok && M.d.extras ? M.d.extras : []).map(([t, v]) => `<li class="bom"><span>${esc(t)}</span><b>${esc(v)}</b></li>`)
+    .concat(M.penal.map((p) => `<li class="ruim"><span>${esc(p.txt)}</span><b>−${p.pts}</b></li>`));
+  if (ok && !M.penal.length) det.push('<li class="bom"><span>Sem nenhuma penalidade</span><b>perfeito</b></li>');
   if (!ok && !livre) det.push(`<li class="ruim"><span>${esc(dicaAcidente(motivo))}</span><b>dica</b></li>`);
   $('r-det').innerHTML = det.join('');
   const foto = M.d.foto;
@@ -2751,11 +3044,24 @@ function aviso(txt, tipo = 'info', ms = 2500, chave) {
 let tVistaN = 0;
 function mostrarVista() {
   const n = $('vista-n'); n.textContent = VISTAS[vista].nome; n.style.opacity = 1; tVistaN = 2.5;
-  const cam = vista === 'camera';
-  $('mira').hidden = !cam;
+  const cam = vista === 'camera', bordo = vista === 'fpv'; // a câmera de bordo não tem gimbal, zoom nem ajuste de foto
+  $('mira').hidden = !cam && !bordo;
   $('zoom-n').hidden = !cam || !S.zoomI;
   $('cam-par').hidden = !cam; $('vinheta').hidden = !cam; $('gimbal').hidden = !cam;
   if (!cam) $('txfx').style.opacity = 0;
+  document.body.classList.toggle('ver-fpv', bordo); $('osd').hidden = !bordo;
+  camFPV.fov = bordo ? 88 : 50; camFPV.zoom = bordo ? 1 : ZOOMS[S.zoomI || 0]; camFPV.updateProjectionMatrix();
+}
+/* Painel da vista FPV, no estilo dos óculos de FPV: só o essencial, em letra de vídeo. */
+const osdSet = (id, t, cls) => { const e = $(id); if (e.textContent !== t) e.textContent = t; if (cls !== undefined && e.className !== cls) e.className = cls; };
+function osdFPV() {
+  const f = F(), semBat = f.bateria === 'infinita';
+  osdSet('osd-arm', S.acidente ? 'ACIDENTE' : S.motores ? (S.voando ? 'ARMADO' : 'ARMADO · NO CHÃO') : 'DESARMADO', S.acidente ? 'vm' : S.motores ? '' : 'am');
+  osdSet('osd-modo', (f.gps ? 'GPS' : 'ATTI') + ' · ' + (PERFIS[S.velModo] ? PERFIS[S.velModo].nome.toUpperCase() : S.velModo));
+  osdSet('osd-av', S.auto === 'rth' ? 'VOLTANDO (RTH)' : S.auto === 'pousar' ? 'POUSANDO' : !semBat && S.bat <= 30 ? 'BATERIA BAIXA' : S.sinal < 35 ? 'SINAL FRACO' : '', 'am');
+  osdSet('osd-vel', String(Math.round(Math.hypot(S.vel.x, S.vel.z) * 3.6)));
+  osdSet('osd-alt', nf(Math.max(0, S.pos.y - S.homeY), 1));
+  osdSet('osd-bat', semBat ? 'BAT ∞' : 'BAT ' + Math.round(S.bat) + '%'); osdSet('osd-t', mmss(S.t)); osdSet('osd-dist', 'CASA ' + Math.round(dHome()) + ' m');
 }
 
 function statusTxt(f) {
@@ -3014,8 +3320,20 @@ function poseCamFPV(dt = 0) {
     S.camRoll = suave(S.camRoll, clamp(-S.roll * 0.06, -0.025, 0.025), dt, 0.14);
   }
   camFPV.position.set(S.pos.x + Math.sin(S.yaw) * 0.16, S.pos.y + 0.03, S.pos.z - Math.cos(S.yaw) * 0.16);
-  camFPV.rotation.set(S.gimbal * DEG + S.camPitch, -S.yaw, S.camRoll);
+  if (vista === 'fpv') {
+    // FPV: câmera presa no corpo (sem gimbal), apontada 12° para cima. A imagem rola junto com o
+    // drone, mas acompanha só um terço da arfagem: 100% rígida, a freada automática do GPS (nariz
+    // 50° para cima ao soltar o stick) jogava a imagem inteira para o céu.
+    camFPV.rotation.set(12 * DEG - S.pitch * 0.35, -S.yaw, -S.roll * 0.7);
+    // a lente abre um pouco com a velocidade (88° parado → 100° a 80 km/h): dá a sensação de aceleração
+    const alvo = 88 + 12 * clamp(Math.hypot(S.vel.x, S.vel.z) / 22, 0, 1);
+    if (dt > 0 && Math.abs(camFPV.fov - alvo) > 0.05) { camFPV.fov = suave(camFPV.fov, alvo, dt, 0.25); camFPV.updateProjectionMatrix(); }
+  } else camFPV.rotation.set(S.gimbal * DEG + S.camPitch, -S.yaw, S.camRoll);
   camFPV.updateMatrixWorld();
+}
+function hudFPV() {
+  const v = Math.hypot(S.vel.x, S.vel.z) * 3.6;
+  $('fpv-crono').innerHTML = `<b>${cronoTxt(M.etapa ? M.t : 0)}</b><span>🏁 ${Math.min(M.d.i + 1, M.d.p.length)}/${M.d.p.length}</span><span>${Math.round(v)} km/h</span>`;
 }
 const rodando = () => !!M && $('menu').hidden && $('res').hidden && !CAL.aberta;
 const PASSO = 1 / 120;
@@ -3045,7 +3363,7 @@ function atualizarVisual(dt) {
   // câmeras
   poseCamFPV(dt);
   // no chão a câmera chega perto (dá para ver o Mavic 3); voando, se afasta para dar noção do espaço
-  chaseD = suave(chaseD, S.voando ? 2.2 : 1.25, dt, 0.9);
+  chaseD = suave(chaseD, (S.voando ? 2.2 : 1.25) * (AMB.droneModelo ? AMB.droneModelo.zoom : 1), dt, 0.9); // drone grande: câmera mais longe
   const alvoChase = S.pos.clone().addScaledVector(fwd, -chaseD); alvoChase.y += 0.12 + chaseD * 0.3;
   alvoChase.y = Math.max(alvoChase.y, superficie(alvoChase.x, alvoChase.z, alvoChase.y + 5) + 0.4);
   if (!CTRL.camFixa) camChase.position.lerp(alvoChase, 1 - Math.exp(-dt * 5));
@@ -3053,7 +3371,22 @@ function atualizarVisual(dt) {
   camPiloto.position.copy(PILOTO);
   olharPiloto.lerp(S.pos, 1 - Math.exp(-dt * 7));
   camPiloto.lookAt(olharPiloto);
-  drone.g.visible = vista !== 'camera';
+  // na corrida FPV o Mavic dá lugar ao drone de corrida do pacote (quando o cenário realista está ligado)
+  // drone escolhido em Ajustes (modelo do pacote) vale em todo voo; sem escolha, o Mavic desenhado —
+  // e, na corrida FPV com o cenário realista ligado, o drone de corrida camuflado
+  const fpvM = !!(M && M.def.fpv), dAlt = AMB.droneModelo, outro = fpvM && !dAlt && AMB.droneFPV, deFora = vista !== 'camera' && vista !== 'fpv';
+  if (vista === 'fpv' && !$('hud').hidden) osdFPV();
+  drone.g.visible = deFora && !dAlt && !outro;
+  if (AMB.droneFPV) {
+    AMB.droneFPV.visible = !!outro && deFora;
+    AMB.droneFPV.position.copy(drone.g.position); AMB.droneFPV.rotation.copy(drone.g.rotation);
+  }
+  if (dAlt) {
+    dAlt.g.visible = deFora; dAlt.g.position.copy(drone.g.position); dAlt.g.rotation.copy(drone.g.rotation);
+    for (const d of dAlt.discos) d.visible = giro > 30;
+  }
+  if (fpvM && !$('hud').hidden) hudFPV();
+  if (CAPIM.sh) CAPIM.sh.uniforms.uTempoCapim.value = (performance.now() / 1000) % 1000;
   const cam = VISTAS[vista].cam;
   ceu.position.copy(cam.position);
   if (SOMBRAS) { // sombra acompanha o que está sendo visto; arredondada ao texel para não "tremer"
@@ -3080,7 +3413,7 @@ function quadro(agora) {
   } else acum = 0;
   atualizarVisual(dt);
   if (S.pedirFoto && rodando()) tirarFoto();
-  renderer.render(cena, VISTAS[vista].cam);
+  desenharCena();
   if (!$('hud').hidden) atualizarHud(dt);
   if (!$('menu').hidden) testeAoVivo();
   somMotor();
@@ -3096,6 +3429,7 @@ function abrirMenu(aba, rkFiltro) {
   $('bt-continuar').hidden = !M || M.fim;
   $('bt-sair-ex').hidden = !M || M.fim;
   teclas.clear();
+  mostrarHoras();
   montarExercicios();
   atualizarStatusControle();
 }
@@ -3142,17 +3476,23 @@ const quandoBR = (q) => { const t = Date.parse(q || ''); return t ? new Date(t).
 function desenharRankingVoo() {
   const d = RK.dados; if (!d) return;
   const ids = Object.keys(d.missoes);
-  if (RK.filtro !== 'geral' && !d.missoes[RK.filtro]) RK.filtro = 'geral';
+  if (RK.filtro !== 'geral' && RK.filtro !== 'horas' && !d.missoes[RK.filtro]) RK.filtro = 'geral';
   const icone = (id) => (MISSOES.find((m) => m.id === id) || {}).icone || '';
-  $('rk-pills').innerHTML = [['geral', '🏆 Geral']].concat(ids.map((id) => [id, icone(id) + ' ' + d.missoes[id]]))
+  const nomeM = (id) => (id === 'livre' ? 'Voo livre' : d.missoes[id] || id);
+  $('rk-pills').innerHTML = [['geral', '🏆 Geral'], ['horas', '⏱ Horas de voo']].concat(ids.map((id) => [id, icone(id) + ' ' + d.missoes[id]]))
     .map(([id, nome]) => `<button data-rk="${id}" class="${RK.filtro === id ? 'on' : ''}">${esc(nome)}</button>`).join('');
   const pos = (i) => (MEDALHA[i] ? MEDALHA[i] : i + 1);
   const cpfCol = d.gestor ? '<th>CPF</th>' : '';
   const cpfTd = (p) => (d.gestor ? `<td>${esc(p.cpf || '—')}</td>` : '');
   if (RK.filtro === 'geral') {
     $('rk-tab').innerHTML = d.geral.length ? `<table class="rk"><thead><tr><th>#</th><th>Aluno</th>${cpfCol}<th class="n">Pontos</th><th class="n">Exercícios</th><th class="n">Tempo somado</th><th class="n">Tentativas</th></tr></thead><tbody>` +
-      d.geral.map((p, i) => `<tr class="${p.eu ? 'eu' : ''}"><td>${pos(i)}</td><td>${esc(p.nome)}${p.eu ? ' <b style="color:var(--y)">· você</b>' : ''}</td>${cpfTd(p)}<td class="n"><b>${p.pontos}</b>/800</td><td class="n">${p.exercicios}/8</td><td class="n">${p.exercicios ? mmss(p.segundos) : '—'}</td><td class="n">${p.tentativas}</td></tr>`).join('') + '</tbody></table>'
+      d.geral.map((p, i) => `<tr class="${p.eu ? 'eu' : ''}"><td>${pos(i)}</td><td>${esc(p.nome)}${p.eu ? ' <b style="color:var(--y)">· você</b>' : ''}</td>${cpfTd(p)}<td class="n"><b>${p.pontos}</b>/${ids.length * 100}</td><td class="n">${p.exercicios}/${ids.length}</td><td class="n">${p.exercicios ? mmss(p.segundos) : '—'}</td><td class="n">${p.tentativas}</td></tr>`).join('') + '</tbody></table>'
       : '<div class="rk-vazio">Ninguém concluiu exercício ainda. Seja o primeiro!</div>';
+  } else if (RK.filtro === 'horas') { // tempo de motor ligado: exercícios (terminados) + voo livre
+    const H = d.horas || [];
+    $('rk-tab').innerHTML = H.length ? `<table class="rk"><thead><tr><th>#</th><th>Aluno</th>${cpfCol}<th class="n">Horas de voo</th><th class="n">Voo livre</th><th class="n">Exercícios</th><th class="n">Voos</th></tr></thead><tbody>` +
+      H.map((p, i) => `<tr class="${p.eu ? 'eu' : ''}"><td>${pos(i)}</td><td>${esc(p.nome)}${p.eu ? ' <b style="color:var(--y)">· você</b>' : ''}</td>${cpfTd(p)}<td class="n"><b>${hhmm(p.total)}</b></td><td class="n">${hhmm(p.livre)}</td><td class="n">${hhmm(p.exercicios)}</td><td class="n">${p.voos}</td></tr>`).join('') + '</tbody></table>'
+      : `<div class="rk-vazio">${d.horas ? 'Ninguém voou ainda.' : 'O servidor ainda não soma as horas de voo (falta atualizar o Worker).'}</div>`;
   } else {
     const L = d.exercicios[RK.filtro] || [];
     $('rk-tab').innerHTML = L.length ? `<table class="rk"><thead><tr><th>#</th><th>Aluno</th>${cpfCol}<th class="n">Nota</th><th class="n">Tempo</th><th class="n">Tentativas</th><th>Quando</th></tr></thead><tbody>` +
@@ -3160,7 +3500,9 @@ function desenharRankingVoo() {
       : '<div class="rk-vazio">Ninguém concluiu este exercício ainda.</div>';
   }
   $('rk-meus').innerHTML = d.meus.length ? '<table class="rk"><thead><tr><th>Quando</th><th>Exercício</th><th class="n">Nota</th><th class="n">Tempo</th><th>Resultado</th></tr></thead><tbody>' +
-    d.meus.map((v) => `<tr><td>${quandoBR(v.quando)}</td><td>${icone(v.missao)} ${esc(d.missoes[v.missao] || v.missao)}</td><td class="n">${v.concluiu ? v.nota : '—'}</td><td class="n">${mmss(v.segundos)}</td><td class="${v.concluiu ? 'ok' : 'ruim'}">${v.concluiu ? (v.nota >= 70 ? 'Aprovado' : 'Concluído') : esc(v.motivo || 'Não concluído')}</td></tr>`).join('') + '</tbody></table>'
+    d.meus.map((v) => (v.missao === 'livre'
+      ? `<tr><td>${quandoBR(v.quando)}</td><td>🕊️ Voo livre</td><td class="n">—</td><td class="n">${mmss(v.segundos)}</td><td>Hora de voo</td></tr>`
+      : `<tr><td>${quandoBR(v.quando)}</td><td>${icone(v.missao)} ${esc(nomeM(v.missao))}</td><td class="n">${v.concluiu ? v.nota : '—'}</td><td class="n">${mmss(v.segundos)}</td><td class="${v.concluiu ? 'ok' : 'ruim'}">${v.concluiu ? (v.nota >= 70 ? 'Aprovado' : 'Concluído') : esc(v.motivo || 'Não concluído')}</td></tr>`)).join('') + '</tbody></table>'
     : '<div class="rk-vazio">Você ainda não terminou nenhum exercício.</div>';
 }
 $('rk-pills').addEventListener('click', (e) => { const b = e.target.closest('[data-rk]'); if (!b) return; RK.filtro = b.dataset.rk; desenharRankingVoo(); });
@@ -3248,8 +3590,41 @@ function ligarAjustes() {
   chk('aj-toque', 'toque', atualizarStatusControle);
   chk('aj-fps', 'fps', () => { $('fps').hidden = !cfg.fps; });
   $('fps').hidden = !cfg.fps;
+  const lz = $('aj-luz'); lz.value = cfg.luz || 'tarde'; lz.onchange = () => { cfg.luz = lz.value; salvarCfg(); $('aj-luz-aviso').hidden = false; };
+  const dr = $('aj-drone'); dr.value = cfg.drone || 'mavic3';
+  dr.onchange = () => { cfg.drone = dr.value; salvarCfg(); trocarDrone(true); };
 }
 ligarAjustes();
+
+/* ---------------- escolha do drone (Ajustes → Drone) ----------------
+   Troca só a aparência: o Mavic 3 desenhado pelo simulador dá lugar a um modelo do
+   pacote (Mavic 3 Classic, Mini 3 Pro, Avata 2, Matrice 300 ou o FPV camuflado). O voo,
+   a câmera e a colisão continuam os mesmos — é o mesmo "motor" com outra carcaça.
+   As hélices vêm paradas no modelo; um disco translúcido gira por cima quando o motor liga. */
+let pedidoDrone = 0;
+async function trocarDrone(avisar) {
+  const id = cfg.drone || 'mavic3', pedido = ++pedidoDrone;
+  const tirar = () => { if (AMB.droneModelo) { cena.remove(AMB.droneModelo.g); AMB.droneModelo = null; } };
+  if (id === 'mavic3') { tirar(); return; }
+  try {
+    if (avisar) aviso('Carregando o modelo do drone…', 'info', 4000, 'drone');
+    const { cena: modelo, info } = await (await moduloRealista()).carregarModelo(id);
+    if (pedido !== pedidoDrone) return; // escolheu outro enquanto este baixava
+    tirar();
+    const g = new THREE.Group(); g.rotation.order = 'YXZ'; g.visible = false;
+    modelo.traverse((o) => { if (o.isMesh) { o.castShadow = SOMBRAS; if (o.material.map) o.material.map.anisotropy = ANISO; } });
+    g.add(modelo);
+    const tam = info.tam ? Math.max(info.tam[0], info.tam[2]) : 0.38;
+    const matDisco = new THREE.MeshBasicMaterial({ color: 0x1b1f24, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false });
+    const discos = (info.helices || []).map((h) => { const d = new THREE.Mesh(new THREE.CircleGeometry(h.r, 28), matDisco); d.rotation.x = -Math.PI / 2; d.position.set(h.x, h.y + 0.004, h.z); d.visible = false; g.add(d); return d; });
+    cena.add(g);
+    AMB.droneModelo = { id, g, discos, tam, zoom: clamp(tam / 0.38, 0.75, 2.6) };
+    if (avisar) aviso('🛸 Drone: ' + (info.drone || id), 'ok', 2200, 'drone');
+  } catch (e) {
+    console.warn(e);
+    if (pedido === pedidoDrone) { tirar(); if (avisar) aviso('Não deu para carregar esse drone (' + e.message + '). Ficou o Mavic 3.', 'am', 5000, 'drone'); }
+  }
+}
 
 addEventListener('gamepadconnected', () => { lerEntradas(0); atualizarStatusControle(); });
 addEventListener('gamepaddisconnected', (e) => { aviso('🎮 Controle desconectado', 'am', 2500); INP.gp = null; atualizarStatusControle(); });
@@ -3258,7 +3633,7 @@ addEventListener('gamepaddisconnected', (e) => { aviso('🎮 Controle desconecta
    CENÁRIO REALISTA (drone-sim-realista.js, carregado só quando pedido)
    ===================================================================== */
 let cenarioAtivo = 'leve', REAL = null;
-const urlPacote = (() => { try { return new URLSearchParams(location.search).get('pacote'); } catch (e) { return null; } })();
+const urlPacote = (() => { try { return new URLSearchParams(location.search).get('pacote') || (LOCAL ? LOCAL + '/pacote/' : null); } catch (e) { return null; } })();
 const livreCanteiro = (x, z) => superficie(x, z, 1e9) === 0;
 async function moduloRealista() {
   if (!REAL) { REAL = await import('./drone-sim-realista.js'); if (urlPacote) REAL.definirUrlPacote(urlPacote); }
@@ -3280,14 +3655,16 @@ async function ligarRealista() {
     const est = await R.estadoPacote();
     if (!est.suportado) throw new Error('este navegador não guarda arquivos (aba anônima?)');
     if (!est.baixado) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Baixando o pacote… ' + Math.round(p * 100) + '%'));
-    await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, texCanvas, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro },
+    else if (await R.temVersaoNova()) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Atualizando o pacote… ' + Math.round(p * 100) + '%'));
+    await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, texCanvas, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro,
+      AMB, FIXOS, VEICULOS, CID, nomeCor, TARDE, alturaChao, GALPOES, desenharPlaca: desenharPlacaCanvas },
       (p, t) => progressoCarga(0.7 + p * 0.3, 'Montando o cenário: ' + t));
     cenarioAtivo = 'realista'; cfg.cenario = 'realista'; salvarCfg();
     aviso('🌄 Cenário realista ligado', 'ok', 2500);
   } catch (e) {
     console.warn(e);
-    aviso('Não deu para ligar o cenário realista: ' + e.message, 'vm', 6000);
-    cfg.cenario = 'leve'; salvarCfg();
+    aviso('Não deu para ligar o cenário realista: ' + e.message + ' — recarregue a página (F5) para tentar de novo', 'vm', 9000);
+    // falha passageira (pacote sendo atualizado, internet caiu) não troca a escolha para o leve: no próximo F5 ele tenta de novo
   }
   $('carregando').hidden = true; atualizarCenarioUI();
 }
@@ -3296,7 +3673,7 @@ async function atualizarCenarioUI() {
   $('ban-realista').hidden = cenarioAtivo === 'realista';
   try {
     const R = await moduloRealista(), est = await R.estadoPacote();
-    const mb = est.bytes ? (est.bytes / 1048576).toFixed(1).replace('.', ',') : '6';
+    const mb = est.bytes ? (est.bytes / 1048576).toFixed(1).replace('.', ',') : '10';
     $('ban-mb').textContent = mb;
     $('cen-status').innerHTML = !est.suportado ? 'Este navegador não consegue guardar o pacote (aba anônima?). Use o cenário leve.'
       : est.baixado ? `Pacote <b>guardado neste aparelho</b> (${mb} MB, versão ${esc(est.versao || '')}). O cenário realista abre sem internet.`
@@ -3325,12 +3702,14 @@ abrirMenu();
 mostrarVista();
 requestAnimationFrame(quadro);
 if (cfg.cenario === 'realista') ligarRealista(); else atualizarCenarioUI();
+if (cfg.drone && cfg.drone !== 'mavic3') trocarDrone(false);
 
 // Ponte para os testes automáticos (testes/drone/ver-simulador-navegador.mjs).
 window.SIM = {
   S, cfg, INP, CAL, CTRL, camChase, CID, CANT, VEICULOS, MISSOES, MUNDO, PERFIS, PAD_B, POI,
   get M() { return M; }, get vista() { return vista; },
   iniciarMissao, acao, abrirMenu, carregarRankingVoo, avaliarPlaca, ajustarZoom, poseCamFPV, ZOOMS, ligarRealista, get cenario() { return cenarioAtivo; }, MALHAS, OBSTRUI_FOTO, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
+  AMB, FIXOS, HV, PISTA_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
   avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
   quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
 };

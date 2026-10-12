@@ -34,6 +34,8 @@
   var API_PADRAO = 'https://bpfron-api.bpfron.workers.dev';
   var apiBase = (function () {
     try { var q = new URLSearchParams(location.search).get('api'); if (q) return q.replace(/\/+$/, ''); } catch (e) {}
+    // cópia local de teste (testes/drone/_ver-local.mjs): vale mesmo abrindo a página sem o ?api= no endereço
+    try { if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && localStorage.getItem('dr_local') === location.origin) return location.origin; } catch (e) {}
     return API_PADRAO;
   })();
 

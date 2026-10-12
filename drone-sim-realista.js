@@ -30,9 +30,10 @@ async function obter(arq, rede = false) {
   return r;
 }
 const listaArquivos = (m) => [
-  ...Object.values(m.modelos).map((x) => [x.arq, x.bytes]),
+  ...Object.values(m.modelos).filter((x) => !x.drone).map((x) => [x.arq, x.bytes]), // os drones de escolher baixam um a um, só se forem escolhidos
   ...Object.values(m.texturas).flatMap((x) => [[x.cor, x.bytes / 2], [x.rel, x.bytes / 2]]),
   ...Object.values(m.folhas).map((x) => [x.arq, x.bytes]),
+  ...(m.extras || []).map((x) => [x.arq, x.bytes]),
   [m.hdri, 1.4e6],
 ];
 
@@ -46,6 +47,18 @@ export async function estadoPacote() {
   let faltam = 0;
   if (local) for (const [arq] of listaArquivos(local)) if (!(await c.match(PACOTE_URL + arq))) faltam++;
   return { suportado: true, baixado: !!local && faltam === 0, versao: local && local.versao, bytes: local && local.bytes, faltam };
+}
+
+/* O pacote do servidor é mais novo que o guardado no aparelho? (sem internet → não) */
+export async function temVersaoNova() {
+  try {
+    const c = await abrirCache(), r = c && (await c.match(PACOTE_URL + 'manifesto.json'));
+    if (!r) return false;
+    const local = await r.json(), ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 5000);
+    const rede = await (await fetch(PACOTE_URL + 'manifesto.json', { cache: 'no-cache', signal: ctrl.signal })).json();
+    clearTimeout(t);
+    return !!rede.versao && rede.versao !== local.versao;
+  } catch (e) { return false; }
 }
 
 /* Baixa (ou atualiza) tudo para o Cache Storage, avisando o progresso (0–1). */
@@ -73,6 +86,26 @@ export async function baixarPacote(progresso = () => {}) {
 }
 export async function apagarPacote() { if ('caches' in self) await caches.delete(CACHE); }
 
+/* ------------------------------------------------------------------ drones para escolher
+   Os modelos de drone ficam no mesmo pacote, mas podem ser usados sem ligar o cenário
+   realista: baixa-se só o arquivo do drone escolhido (e ele fica guardado no aparelho). */
+async function manifestoAtual() {
+  // lê o do servidor SEM guardar: quem troca o manifesto guardado é só o baixarPacote, senão ele acharia que o pacote já está em dia
+  try { const r = await fetch(PACOTE_URL + 'manifesto.json', { cache: 'no-cache' }); if (r.ok) return await r.json(); } catch (e) { /* sem internet */ }
+  return (await obter('manifesto.json')).json();
+}
+export async function listarDrones() {
+  const m = await manifestoAtual();
+  return Object.entries(m.modelos).filter(([, x]) => x.drone).map(([id, x]) => ({ id, nome: x.drone }));
+}
+export async function carregarModelo(id) {
+  const m = (await manifestoAtual()).modelos[id];
+  if (!m) throw new Error('este modelo não está no pacote');
+  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+  const url = URL.createObjectURL(await (await obter(m.arq)).blob());
+  try { return { cena: (await loader.loadAsync(url)).scene, info: m }; } finally { URL.revokeObjectURL(url); }
+}
+
 /* ------------------------------------------------------------------ aplicar */
 export async function aplicarRealista(ctx, progresso = () => {}) {
   const { renderer, cena, ANISO, SOMBRAS, M, addCaixa, MUNDO, rnd } = ctx;
@@ -81,7 +114,9 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   const blobUrl = async (arq) => URL.createObjectURL(await (await obter(arq)).blob());
   const imagem = async (arq) => createImageBitmap(await (await obter(arq)).blob());
 
-  let passos = 0; const totalPassos = 8;
+  let passos = 0; const totalPassos = manifesto.modelos.carro_sedan ? 11 : 8;
+  // um pouco mais de névoa de distância que no cenário leve: os morros de longe desbotam em camadas
+  if (cena.fog && cena.fog.density) cena.fog.density = 0.00055;
   const avanco = (txt) => progresso(++passos / totalPassos, txt);
 
   /* ---- céu HDR: luz ambiente e reflexo ---- */
@@ -89,7 +124,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   hdr.mapping = THREE.EquirectangularReflectionMapping;
   const pmrem = new THREE.PMREMGenerator(renderer);
   cena.environment = pmrem.fromEquirectangular(hdr).texture;
-  cena.environmentIntensity = 0.9;
+  cena.environmentIntensity = ctx.TARDE ? 0.4 : 0.9; // o céu do pacote é de meio-dia: no fim de tarde ele ilumina menos, para não apagar o sol dourado
   hdr.dispose(); pmrem.dispose();
   avanco('céu');
 
@@ -141,7 +176,9 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
       M.rodovia.material.normalMap.repeat.set(200, 2);
     }
     if (M.cidade) {
-      const base = compor(512, 320, asf.img, [160, 160], (g, w, h) => { g.fillStyle = 'rgba(235,235,232,.88)'; for (let x = 0; x < w; x += 64) g.fillRect(x, h / 2 - 3, 32, 6); });
+      const base = compor(512, 320, asf.img, [160, 160], (g, w, h) => { g.fillStyle = 'rgba(227,189,62,.92)'; g.fillRect(0, h / 2 - 3, w, 5); }); // eixo amarelo contínuo
+      // miolo dos cruzamentos: o mesmo asfalto de foto, sem o eixo
+      if (M.cidade.malhas.cruzamentos) { const liso = compor(256, 256, asf.img, [128, 128]); liso.repeat.set(1, 1); aplicar(M.cidade.malhas.cruzamentos.material, { map: liso, normalMap: asf.normalMap }); }
       for (const m of M.cidade.malhas.ruas) {
         const rep = m.material.map.repeat.clone(); const t = base.clone(); t.needsUpdate = true; t.repeat.copy(rep);
         aplicar(m.material, { map: t, normalMap: asf.normalMap });
@@ -217,6 +254,16 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     aplicar(K.mats.brita, await tex('brown_mud_rocks_01', [2, 1])); K.mats.brita.color.set(0xcfcac2);
     aplicar(K.mats.areia, await tex('aerial_mud_1', [2, 1])); K.mats.areia.color.set(0xf2dcae);
   }
+  /* ---- complexo de galpões: concreto, chapa e ferrugem de foto ---- */
+  if (M.galpoes) {
+    const G2 = M.galpoes.mats, chapaG = await tex('corrugated_iron_02', [1, 1]);
+    // as fotos são escuras: a cor de base clareia (senão o conjunto vira uma mancha preta no fim de tarde)
+    aplicar(G2.concreto, await tex('concrete_wall_008', [1, 1])); G2.concreto.color.setRGB(1.5, 1.5, 1.45);
+    aplicar(G2.piso, await tex('concrete_floor_worn_001', [1, 1])); G2.piso.color.setRGB(1.7, 1.7, 1.7);
+    aplicar(G2.telha, chapaG); G2.telha.color.setRGB(2.2, 2.2, 2.2);
+    aplicar(G2.ferrugem, await tex('rusty_metal_02', [1, 1])); G2.ferrugem.color.setRGB(1.7, 1.4, 1.2);
+    for (const m of G2.conteiner) { aplicar(m, chapaG); m.color.multiplyScalar(2.8); }
+  }
   avanco('canteiro');
 
   /* ---- árvores: copa refeita com cartões de folhagem de foto ---- */
@@ -256,6 +303,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   const modelo = async (id) => { const m = manifesto.modelos[id]; if (!m) return null; const g = await loader.loadAsync(await blobUrl(m.arq)); return g.scene; };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ups = new THREE.Vector3(0, 1, 0);
+  const chaoEm = (l) => (ctx.alturaChao ? ctx.alturaChao(l.x, l.z) : 0); // pedra e tronco em cima de morro ficam na altura do chão dali
   async function espalhar(id, lugares, colisao) {
     const cenaG = await modelo(id); if (!cenaG || !lugares.length) return;
     cenaG.updateMatrixWorld(true);
@@ -266,7 +314,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
       lugares.forEach((l, i) => {
         q.setFromAxisAngle(ups, l.r || 0);
         const s = l.s || 1;
-        m4.compose(new THREE.Vector3(l.x, l.y || 0, l.z), q, new THREE.Vector3(s, s, s)).multiply(o.matrixWorld);
+        m4.compose(new THREE.Vector3(l.x, (l.y || 0) + chaoEm(l), l.z), q, new THREE.Vector3(s, s, s)).multiply(o.matrixWorld);
         im.setMatrixAt(i, m4);
       });
       im.castShadow = SOMBRAS; im.receiveShadow = SOMBRAS; im.frustumCulled = false;
@@ -275,7 +323,7 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     if (colisao) for (const l of lugares) {
       const s = l.s || 1, c = Math.abs(Math.cos(l.r || 0)), sn = Math.abs(Math.sin(l.r || 0));
       const w = (box.max.x - box.min.x) * s, d = (box.max.z - box.min.z) * s;
-      addCaixa(l.x, l.z, (w * c + d * sn) / 2, (w * sn + d * c) / 2, (box.max.y) * s + (l.y || 0), colisao);
+      addCaixa(l.x, l.z, (w * c + d * sn) / 2, (w * sn + d * c) / 2, (box.max.y) * s + (l.y || 0) + chaoEm(l), colisao);
     }
   }
   const K = ctx.CANTEIRO;
@@ -293,7 +341,8 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   await espalhar('wooden_crate_01', [[220, -4], [221.2, -4.4], [220.6, -3.2], [258, 6]].map(([x, z]) => ({ x, z, r: R(0, 3) })), null);
   await espalhar('utility_box_01', [{ x: 152, z: -2, r: Math.PI / 2 }, { x: 228, z: 20 }], 'caixa de energia');
   // pedras escaneadas: na borda do canteiro e espalhadas pelo pasto
-  const pedra = (n, x0, x1, z0, z1, s0, s1) => Array.from({ length: n }, () => ({ x: R(x0, x1), z: R(z0, z1), r: R(0, 6), s: R(s0, s1) })).filter((p) => !ctx.bloqueado(p.x, p.z) || (p.x > K.x0 && p.x < K.x1 && p.z > K.z0 && p.z < K.z1 && ctx.livreCanteiro(p.x, p.z)));
+  const noGalpao = (p) => { const g = ctx.GALPOES; return !!g && p.x > g.x0 - 3 && p.x < g.x1 + 3 && p.z > g.z0 - 3 && p.z < g.z1 + 3; }; // nada de pedra dentro do galpão
+  const pedra = (n, x0, x1, z0, z1, s0, s1) => Array.from({ length: n }, () => ({ x: R(x0, x1), z: R(z0, z1), r: R(0, 6), s: R(s0, s1) })).filter((p) => !noGalpao(p)).filter((p) => !ctx.bloqueado(p.x, p.z) || (p.x > K.x0 && p.x < K.x1 && p.z > K.z0 && p.z < K.z1 && ctx.livreCanteiro(p.x, p.z)));
   await espalhar('namaqualand_boulder_02', pedra(10, K.x0, K.x1, K.z0, K.z1 - 6, 0.8, 1.6), 'pedra');
   await espalhar('namaqualand_boulder_03', pedra(14, -380, 380, -320, 300, 0.8, 1.8), 'pedra');
   await espalhar('namaqualand_boulder_05', pedra(14, -380, 380, -320, 300, 0.8, 1.8), 'pedra');
@@ -306,8 +355,10 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   // bairro: postes de luz, hidrantes, lixeiras e carros cobertos
   if (M.cidade) {
     const C = ctx.CIDADE, lamp = [], hid = [], lixo = [];
-    for (const x of C.ruasNS) for (let z = C.limite.z0 + 12; z < C.limite.z1 - 4; z += 26) lamp.push({ x: x + C.larguraRua / 2 + 0.6, z, r: -Math.PI / 2 });
-    for (const z of C.ruasLO) for (let x = C.ruasNS[0] + 14; x < C.ruasNS[C.ruasNS.length - 1]; x += 30) lamp.push({ x, z: z - C.larguraRua / 2 - 0.6, r: 0 });
+    // poste só na calçada: os que cairiam no meio de um cruzamento (pista da rua transversal) ficam de fora
+    const noCruzamento = (v, eixos) => eixos.some((e) => Math.abs(v - e) < C.larguraRua / 2 + 1.5);
+    for (const x of C.ruasNS) for (let z = C.limite.z0 + 12; z < C.limite.z1 - 4; z += 26) if (!noCruzamento(z, C.ruasLO)) lamp.push({ x: x + C.larguraRua / 2 + 0.6, z, r: -Math.PI / 2 });
+    for (const z of C.ruasLO) for (let x = C.ruasNS[0] + 14; x < C.ruasNS[C.ruasNS.length - 1]; x += 30) if (!noCruzamento(x, C.ruasNS)) lamp.push({ x, z: z - C.larguraRua / 2 - 0.6, r: 0 });
     for (const x of C.ruasNS) for (const z of C.ruasLO) { hid.push({ x: x + 6.2, z: z + 6.2, r: R(0, 6) }); lixo.push({ x: x - 6.4, z: z + 6.6, r: 0 }); }
     const livre = (p) => M.cidade.livre(p.x, p.z, 0.6, 0.6);
     await espalhar('street_lamp_01', lamp.filter(livre), 'poste de luz');
@@ -317,5 +368,11 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     await espalhar('covered_car', quintais.filter(livre), 'carro coberto');
   }
   avanco('bairro');
+
+  /* ---- casas e carros de verdade e drone FPV (pacote de 12/10/2026 em diante) ---- */
+  if (manifesto.modelos.carro_sedan || manifesto.modelos.casas_kit) {
+    const { aplicarAmbiente } = await import('./drone-sim-ambiente.js');
+    await aplicarAmbiente(ctx, { manifesto, modelo, obter, avanco, tex });
+  }
   return manifesto;
 }
