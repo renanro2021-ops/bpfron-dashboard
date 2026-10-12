@@ -1224,6 +1224,23 @@ const PORTAIS_OBS = [[0, 4, -40], [30, 8, -90], [30, 4, -150], [-20, 13, -205], 
 // e as curvas do bairro são feitas DENTRO do cruzamento (cortar a esquina dá no muro e no telhado da casa).
 const PISTA_FPV = [[0, 4, -22], [22, 6, -40], [46, 7, -20], [50, 5, 14], [75, 4, 34], [100, 5, 52], [100, 5, 110], [100, 6, 152], [112, 6, 160],
   [194, 6, 160], [200, 6, 150], [200, 5, 70], [186, 5, 42], [130, 6, 42], [60, 5, 44], [25, 4, 34], [0, 4.5, -6]]; // chegada 6 m à frente do H (o mastro não fica em cima do heliponto)
+/* Três pistas (12/10/2026) — cada uma é um exercício, com ranking próprio. [x, altura, z, raio do portal (opcional)]
+   FÁCIL: oval curto dentro da área da base, portal largo, curva aberta, nada no caminho.
+   MÉDIA: a de sempre (PISTA_FPV).
+   DIFÍCIL: vai até o complexo de galpões — por baixo da rede elétrica, por dentro do galpão (portão a portão),
+   por baixo da cobertura, por baixo dos pórticos da tubulação e pelo corredor de contêineres — e volta. */
+const PISTAS_FPV = {
+  fpv_facil: { nome: 'Corrida FPV · Fácil', nivel: 'i', raio: 4, par: 35,
+    desc: 'Pista de iniciação na câmera de bordo: oval curto em volta do pátio da base, com 9 portais largos e curvas abertas, sem obstáculo no caminho. Largada com semáforo — o tempo de reação é medido. Serve para pegar a mão do modo FPV (até 80 km/h).',
+    pts: [[0, 4, -22], [12, 5, -38], [32, 5.5, -42], [48, 5, -30], [50, 5, -8], [44, 4.5, 14], [28, 4.5, 24], [12, 4.5, 12], [0, 4.5, -6]] },
+  fpv: { nome: 'Corrida FPV · Média', nivel: 'a', raio: 3, par: 60,
+    desc: 'Circuito cronometrado na câmera de bordo: 17 portais pela base, por baixo da rede elétrica e pelas ruas do bairro, no modo FPV (até 80 km/h). Largada com semáforo — o seu tempo de reação é medido. Bateu, acabou.',
+    pts: PISTA_FPV },
+  fpv_dificil: { nome: 'Corrida FPV · Difícil', nivel: 'a', raio: 2.5, par: 110,
+    desc: 'Pista técnica até o complexo de galpões (a nordeste): por baixo da rede elétrica, por DENTRO do galpão de portão a portão, por baixo da cobertura, por baixo dos pórticos da tubulação e pelo corredor de contêineres, e de volta à base. 19 portais apertados — quem entra rápido demais bate. Bateu, acabou.',
+    pts: [[0, 4, -22], [30, 6, -50], [85, 6, -100], [126, 5, -126.6], [165, 4, -158], [196, 3, -185], [249, 3, -185], [275, 4, -165], [285, 3, -140], [285, 3, -116],
+      [262, 3, -108], [258, 2.6, -120, 2.2], [258, 2.6, -172, 2.2], [228, 4, -166], [191, 3, -146], [191, 3, -113], [126, 5, -80.7], [40, 5, -25], [0, 4.5, -6]] },
+};
 const BALOES = [[-40, 8, -30], [35, 12, -70], [45, 6, 15]];
 const BUSCA_PONTOS = [[132, -262, false], [176, -338, true], [-182, -352, false], [96, -470, true], [-262, -196, true]];
 
@@ -1426,8 +1443,13 @@ if (QUAL !== 'baixa') {
 
 /* Tira as árvores de um retângulo (onde entra construção nova): some o desenho e some a colisão.
    É feito DEPOIS do sorteio para não mexer na sequência que define árvores, carros e placas. */
-function limparArea(x0, x1, z0, z1) {
-  const zero = new THREE.Matrix4().makeScale(0, 0, 0), fora = (a) => a.x >= x0 && a.x <= x1 && a.z >= z0 && a.z <= z1;
+function limparArea(x0, x1, z0, z1) { limparOnde((a) => a.x >= x0 && a.x <= x1 && a.z >= z0 && a.z <= z1); }
+// árvores a menos de "folga" metros (mais a copa) de um traçado [x, y, z]
+function limparCorredor(pts, folga) {
+  limparOnde((a) => { for (let i = 0; i < pts.length - 1; i++) if (distSeg(a.x, a.z, pts[i][0], pts[i][2], pts[i + 1][0], pts[i + 1][2]) < folga + (a.r || 0)) return true; return false; });
+}
+function limparOnde(fora) {
+  const zero = new THREE.Matrix4().makeScale(0, 0, 0);
   COPAS.forEach((a, i) => { if (fora(a)) { mshTronco.setMatrixAt(i, zero); mshCopa.setMatrixAt(i, zero); } });
   PALMAS.forEach((a, i) => { if (fora(a)) { mshTroncoP.setMatrixAt(i, zero); mshPalma.setMatrixAt(i, zero); } });
   for (const m of [mshTronco, mshCopa, mshTroncoP, mshPalma]) m.instanceMatrix.needsUpdate = true;
@@ -1458,6 +1480,8 @@ const CID = montarCidade(ctxCidade);
 const CANT = montarCanteiro(ctxCidade);
 // complexo de galpões para voar por dentro (nordeste da base): primeiro saem as árvores sorteadas ali
 limparArea(GALPOES.x0 - 6, GALPOES.x1 + 6, GALPOES.z0 - 6, GALPOES.z1 + 6); limparArea(122, GALPOES.x0, -161, -149);
+// pistas novas da corrida FPV: o traçado fica sem árvore (a pista média já só passava por onde não nasce nenhuma)
+for (const k of ['fpv_facil', 'fpv_dificil']) limparCorredor([[0, 2, 0], ...PISTAS_FPV[k].pts], 7);
 const GALP = montarGalpoes(ctxCidade);
 Object.assign(MALHAS, { cidade: CID, canteiro: CANT, galpoes: GALP, copas: COPAS_MALHAS, troncos: TRONCOS_MALHAS });
 
@@ -2655,13 +2679,18 @@ const MISSOES = [
       if (t === 'motoresOff' && M.etapa === 9) concluir(true);
     },
   },
-  {
-    id: 'fpv', nome: 'Corrida FPV (reflexo)', nivel: 'a', icone: '🏁', vista: 'fpv', travaVista: true, fpv: true,
+  ...Object.keys(PISTAS_FPV).map(corridaFPV),
+];
+// Corrida FPV: o mesmo exercício para as três pistas (muda o traçado, o tamanho do portal e o tempo de referência)
+function corridaFPV(id) {
+  const P = PISTAS_FPV[id];
+  return {
+    id, nome: P.nome, nivel: P.nivel, icone: '🏁', vista: 'fpv', travaVista: true, fpv: true,
     forcar: { vel: 'F', gps: true, vento: 0, bateria: 'infinita' },
-    desc: 'Circuito cronometrado na câmera de bordo: 17 portais pela base, por baixo da rede elétrica e pelas ruas do bairro, no modo FPV (até 80 km/h). Largada com semáforo — o seu tempo de reação é medido. Bateu, acabou.',
+    desc: P.desc,
     iniciar(M) {
       let ant = new V3(0, 2, 0);
-      M.d.p = PISTA_FPV.map((p, i) => { const pos = new V3(...p), n = pos.clone().sub(ant).setY(0); ant = pos; return criarPortal(pos, n, 3, i + 1, 0.2); });
+      M.d.p = P.pts.map((p, i) => { const pos = new V3(p[0], p[1], p[2]), n = pos.clone().sub(ant).setY(0); ant = pos; return criarPortal(pos, n, p[3] || P.raio, i + 1, 0.2); });
       M.d.i = 0; marcarPortais(M.d.p, 0);
       // largada no ar: motores ligados, pairando a 2 m, comandos travados até o "VAI!"
       S.motores = true; S.voando = true; S.jaVoou = true; S.pos.y = 2; S.prev.copy(S.pos); S.segura = S.pos.clone(); S.travaCmd = true;
@@ -2693,7 +2722,7 @@ const MISSOES = [
         M.d.i++; marcarPortais(L, M.d.i);
         if (M.d.i < L.length) aviso(`✔ ${M.d.i}/${L.length}`, 'ok', 700, 'pt');
         else {
-          const par = 60, reacao = M.d.reacao == null ? M.d.tGo : M.d.reacao;
+          const par = P.par, reacao = M.d.reacao == null ? M.d.tGo : M.d.reacao;
           if (M.t > par) penal(Math.min(45, Math.round((M.t - par) * 1.5)), `tempo acima de ${mmss(par)}`, true);
           if (reacao > 0.8) penal(5, 'reação lenta na largada (mais de 0,8 s)', true);
           M.d.extras = [['Tempo da volta', cronoTxt(M.t)], ['Reação na largada', nf(reacao, 2) + ' s'], ['Velocidade máxima', Math.round(M.d.vmax * 3.6) + ' km/h']];
@@ -2703,8 +2732,8 @@ const MISSOES = [
       M.alvo = L[M.d.i].pos; M.alvoNome = 'Portal ' + (M.d.i + 1);
       M.prog = `Portal ${M.d.i + 1} de ${L.length}`;
     },
-  },
-];
+  };
+}
 // cronômetro com centésimos (corrida) e semáforo da largada
 const cronoTxt = (s) => { const c = Math.max(0, Math.round(s * 100)); return Math.floor(c / 6000) + ':' + String(Math.floor(c / 100) % 60).padStart(2, '0') + ',' + String(c % 100).padStart(2, '0'); };
 function luzFPV(txt, vai) {
@@ -2856,7 +2885,8 @@ function concluir(ok, motivo) {
     const ant = rec[def.id];
     if (!ant || nota > ant.nota || (nota === ant.nota && M.t < ant.t)) { rec[def.id] = { nota, t: Math.round(M.t), em: new Date().toISOString().slice(0, 10) }; lsSet('dsim_rec', rec); recorde = true; }
   }
-  setTimeout(() => mostrarResultado(ok, nota, motivo, recorde), ok ? 700 : 0);
+  const esta = M; // se o aluno já começou outro exercício quando o resultado ia abrir, ele não aparece por cima
+  setTimeout(() => { if (M === esta) mostrarResultado(ok, nota, motivo, recorde); }, ok ? 700 : 0);
   // o tempo deste exercício vai junto com a nota; no voo livre fica para o HV.fechar
   if (def.id !== 'livre') { HV.exercicio(M.t); M.ar = 0; }
   if (def.id !== 'livre') enviarVoo({
@@ -3669,7 +3699,7 @@ window.SIM = {
   S, cfg, INP, CAL, CTRL, camChase, CID, CANT, VEICULOS, MISSOES, MUNDO, PERFIS, PAD_B, POI,
   get M() { return M; }, get vista() { return vista; },
   iniciarMissao, acao, abrirMenu, carregarRankingVoo, avaliarPlaca, ajustarZoom, poseCamFPV, ZOOMS, ligarRealista, get cenario() { return cenarioAtivo; }, MALHAS, OBSTRUI_FOTO, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
-  GRAFICOS, nivelDe, escolherNivel, AMB, FIXOS, HV, PISTA_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
+  GRAFICOS, nivelDe, escolherNivel, AMB, FIXOS, HV, PISTA_FPV, PISTAS_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
   avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
   quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
 };
