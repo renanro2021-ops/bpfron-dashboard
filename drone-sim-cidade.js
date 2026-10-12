@@ -19,6 +19,10 @@ export const CIDADE = {
   ruasLO: [60, 110, 160, 210, 260],      // ruas leste-oeste (z do eixo)
   larguraRua: 10, calcada: 2.2,
   limite: { x0: -8, x1: 258, z0: 44, z1: 268 },
+  // rodovia em frente à base (leste–oeste): faz parte da malha de ruas desde 12/10/2026
+  rodovia: { z: 40, larg: 8, x0: -800, x1: 800, acost: 2.5 },
+  // quem chega na rodovia pelo norte: [x do eixo, largura] — acesso da base e estrada de terra
+  entradasNorte: [[12, 7], [120, 5]],
 };
 
 /* ------------------------------------------------------------------ placas */
@@ -378,6 +382,10 @@ export function montarCidade(ctx) {
   const zMin = C.limite.z0, zMax = C.ruasLO[C.ruasLO.length - 1] + mr, xMin = C.ruasNS[0] - mr, xMax = C.ruasNS[C.ruasNS.length - 1] + mr;
   for (const x of C.ruasNS) faixaRua(x, (zMin + zMax) / 2, lr, zMax - zMin, true);
   for (const z of C.ruasLO) faixaRua((xMin + xMax) / 2, z, xMax - xMin, lr, false);
+  // rodovia: a MESMA rua do bairro (asfalto + eixo amarelo), só mais estreita. Era um desenho à parte,
+  // com outra textura, e ficava por cima do acostamento na mesma altura (as duas superfícies "piscavam").
+  const RV = C.rodovia;
+  faixaRua((RV.x0 + RV.x1) / 2, RV.z, RV.x1 - RV.x0, RV.larg, false);
   for (const x of C.ruasNS) MUNDO.mapa.linhas.push({ a: [x, zMin], b: [x, zMax], cor: '#6b7280', w: lr });
   for (const z of C.ruasLO) MUNDO.mapa.linhas.push({ a: [xMin, z], b: [xMax, z], cor: '#6b7280', w: lr });
 
@@ -418,6 +426,25 @@ export function montarCidade(ctx) {
         const [lx, lz] = pos(5.0, 0); brancas.push(ao ? chapa(0.3, lr - 0.6, lx, lz, 0.024) : chapa(lr - 0.6, 0.3, lx, lz, 0.024));              // linha de retenção
       }
     }
+    /* rodovia: miolo liso em cada entroncamento, linha de retenção na rua que chega, linha branca de
+       bordo e acostamento de cascalho — os dois últimos são interrompidos onde entra uma rua, para
+       nenhuma peça ficar em cima da outra (era o que fazia a estrada piscar vista do alto). */
+    const zN = RV.z - RV.larg / 2, zS = RV.z + RV.larg / 2, acost = [];
+    const entN = C.entradasNorte, entS = C.ruasNS.map((x) => [x, lr]);
+    for (const [x, w] of entN.concat(entS)) miolos.push(chapa(w, RV.larg, x, RV.z, 0.02));
+    for (const [x] of entS) brancas.push(chapa(lr - 0.6, 0.4, x, zS + 0.9, 0.024));
+    const aoLongo = (cortes, peca) => { // trechos da rodovia entre uma entrada e a seguinte
+      let x = RV.x0;
+      for (const [c, w] of cortes.slice().sort((a, b) => a[0] - b[0]).concat([[RV.x1 + 1, 2]])) { const fim = Math.min(RV.x1, c - w / 2); if (fim > x) peca((x + fim) / 2, fim - x); x = c + w / 2; }
+    };
+    const terra = (w, d, x, z) => { const g = chapa(w, d, x, z, 0.01), p = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / 4, p.getZ(i) / 4); return g; };
+    aoLongo(entN, (x, w) => { brancas.push(chapa(w, 0.15, x, zN + 0.3, 0.024)); acost.push(terra(w, RV.acost, x, zN - RV.acost / 2)); });
+    aoLongo(entS, (x, w) => { brancas.push(chapa(w, 0.15, x, zS - 0.3, 0.024)); acost.push(terra(w, RV.acost, x, zS + RV.acost / 2)); });
+    const texAcost = texCanvas(128, 128, (g, w, h) => {
+      g.fillStyle = '#978568'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 1800; i++) { const l = Math.random() * 50 - 25; g.fillStyle = `rgba(${150 + l | 0},${130 + l | 0},${100 + l | 0},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+      for (let i = 0; i < 160; i++) { const l = 120 + Math.random() * 80 | 0; g.fillStyle = `rgba(${l},${l - 6},${l - 18},.7)`; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 0.8 + Math.random() * 1.6, 0, 7); g.fill(); }
+    }, [1, 1]);
     for (const q of quadras) { // guia (meio-fio) clara na borda de cada quadra
       const cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2, w = q.x1 - q.x0, d = q.z1 - q.z0, e = 0.28;
       guias.push(chapa(w, e, cx, q.z0 + e / 2, 0.034), chapa(w, e, cx, q.z1 - e / 2, 0.034), chapa(e, d, q.x0 + e / 2, cz, 0.034), chapa(e, d, q.x1 - e / 2, cz, 0.034));
@@ -427,6 +454,7 @@ export function montarCidade(ctx) {
     malhas.cruzamentos = junta(miolos, dec(0xffffff, { map: texAsfaltoLiso, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
     malhas.faixas = junta(brancas, dec(0xe9e9e4));
     malhas.guias = junta(guias, dec(0xcfcbc2, { polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    malhas.acost = junta(acost, dec(0xffffff, { map: texAcost, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   }
 
   /* ---------- prédios ---------- */
@@ -854,8 +882,8 @@ export function montarGalpoes(ctx) {
   /* piso de concreto e acesso pela estrada de terra */
   { const g = new THREE.PlaneGeometry(G.x1 - G.x0, G.z1 - G.z0); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 26, uv.getY(i) * 22);
     g.translate((G.x0 + G.x1) / 2, 0.012, (G.z0 + G.z1) / 2); por(mats.piso, g);
-    const r = new THREE.PlaneGeometry(G.x0 - 122, 6); r.rotateX(-Math.PI / 2); const u2 = r.attributes.uv; for (let i = 0; i < u2.count; i++) u2.setXY(i, u2.getX(i) * 7, u2.getY(i));
-    r.translate((G.x0 + 122) / 2, 0.012, -155); por(mats.piso, r); }
+    const r = new THREE.PlaneGeometry(G.x0 - 122.5, 6); r.rotateX(-Math.PI / 2); const u2 = r.attributes.uv; for (let i = 0; i < u2.count; i++) u2.setXY(i, u2.getX(i) * 7, u2.getY(i));
+    r.translate((G.x0 + 122.5) / 2, 0.012, -155); por(mats.piso, r); }
 
   /* GALPÃO A — 44 × 18 m, parede de 8 m, comprido no eixo leste–oeste (x). Atravessa-se pelos portões das pontas. */
   { const cx = 225, cz = -185, L = 44, W = 18, H = 8, e = 0.5, xa = cx - L / 2, xb = cx + L / 2, za = cz - W / 2, zb = cz + W / 2;
@@ -928,4 +956,329 @@ export function montarGalpoes(ctx) {
     cena.add(ms); malhas.push(ms);
   }
   return { mats, malhas, area: G };
+}
+
+/* ------------------------------------------------------------------ base do BPFRON */
+/* O ponto de decolagem (12/10/2026). A primeira versão era uma caixa com as janelas pintadas,
+   um hangar de meia-cana e um pátio liso. Agora é um quartel pequeno de verdade: sede com
+   telhado de quatro águas, barrado, janelas com moldura/vidro/peitoril e marquise com o
+   letreiro; hangar de duas águas em chapa, com portas de enrolar; pátio de placas de concreto
+   com vagas pintadas; acesso asfaltado até a rodovia com guarita, cancela e portão; cerca de
+   alambrado nos fundos; muro de identificação e três mastros com bandeira.
+   As caixas de colisão antigas ("prédio da base", "hangar", "mastro da bandeira") continuam no
+   mesmo lugar e com o mesmo nome — exercícios e testes dependem delas. Nada alto foi posto ao
+   norte e a leste do heliponto (por onde passam os exercícios) nem na chegada da corrida FPV.
+   Não usa o sorteio do mapa. No cenário realista os materiais trocam pelas fotos do pacote. */
+export const BASE = { patio: { x0: -22, x1: 22, z0: -13, z1: 19 }, acesso: { x0: 8.5, x1: 15.5, z0: 19, z1: 36 } };
+export function montarBase(ctx) {
+  const { THREE, cena, addCaixa, MUNDO, SOMBRAS, texCanvas, mergeGeometries } = ctx;
+  const TX = texturasCasa(texCanvas);
+  const L = (cor, extra) => new THREE.MeshLambertMaterial(Object.assign({ color: cor }, extra || {}));
+  const dec = (n) => ({ polygonOffset: true, polygonOffsetFactor: -n, polygonOffsetUnits: -n });
+  const A = Math.random;
+
+  /* ---------- texturas desenhadas (cenário leve) ---------- */
+  const texPiso = texCanvas(256, 256, (g, w, h) => { // 4 placas de 4 m com junta de dilatação
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const l = 178 + A() * 14 | 0; g.fillStyle = `rgb(${l},${l - 2},${l - 9})`; g.fillRect(i * 128, j * 128, 128, 128); }
+    for (let i = 0; i < 3200; i++) { const l = 150 + A() * 60 | 0; g.fillStyle = `rgba(${l},${l},${l - 8},.5)`; g.fillRect(A() * w, A() * h, 1.5, 1.5); }
+    for (let i = 0; i < 7; i++) { g.fillStyle = `rgba(60,58,52,${0.04 + A() * 0.07})`; g.beginPath(); g.ellipse(A() * w, A() * h, 6 + A() * 16, 4 + A() * 10, A() * 3, 0, 7); g.fill(); }
+    g.fillStyle = 'rgba(62,60,55,.75)'; for (const k of [0, 128]) { g.fillRect(k, 0, 2, h); g.fillRect(0, k, w, 2); }
+  });
+  const texAsf = texCanvas(128, 128, (g, w, h) => {
+    g.fillStyle = '#4c4e51'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1000; i++) { const l = 60 + A() * 45 | 0; g.fillStyle = `rgba(${l},${l},${l + 4},.8)`; g.fillRect(A() * w, A() * h, 1.3, 1.3); }
+  });
+  const texCalc = texCanvas(128, 128, (g, w, h) => {
+    g.fillStyle = '#c4c0b5'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 700; i++) { const l = 165 + A() * 50 | 0; g.fillStyle = `rgba(${l},${l - 3},${l - 10},.6)`; g.fillRect(A() * w, A() * h, 2, 2); }
+    g.strokeStyle = 'rgba(95,92,84,.5)'; g.lineWidth = 2; g.strokeRect(0, 0, w, h); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+  });
+  const texChapa = texCanvas(128, 64, (g, w, h) => { // chapa trapezoidal pintada (parede do hangar)
+    for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? '#b9c0c4' : '#d3d8db'; g.fillRect(i * 8, 0, 8, h); g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(i * 8, 0, 1, h); }
+    for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(110,90,60,${A() * 0.1})`; g.fillRect(A() * w, A() * h, 3, 8); }
+  });
+  const texZinco = texCanvas(128, 128, (g, w, h) => { // telha metálica (as ondas sobem a água do telhado)
+    for (let x = 0; x < w; x++) { const k = 0.8 + 0.2 * Math.sin(x / w * Math.PI * 2 * 8), v = (176 * k) | 0; g.fillStyle = `rgb(${v},${v + 3},${v + 6})`; g.fillRect(x, 0, 1, h); }
+    for (let i = 0; i < 30; i++) { g.fillStyle = `rgba(90,80,60,${A() * 0.1})`; g.fillRect(A() * w, A() * h, 5 + A() * 20, 10 + A() * 50); }
+    g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(0, 0, w, 2);
+  });
+  const texPorta = texCanvas(64, 128, (g, w, h) => { // porta de enrolar
+    g.fillStyle = '#56687a'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 5) { g.fillStyle = 'rgba(255,255,255,.13)'; g.fillRect(0, y, w, 1); g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, y + 4, w, 1); }
+    g.fillStyle = '#e3bd3e'; g.fillRect(0, h - 6, w, 6); g.fillStyle = '#1f2937'; for (let x = 0; x < w; x += 12) g.fillRect(x, h - 6, 6, 6);
+  });
+  const texGrade = texCanvas(64, 64, (g, w, h) => { // alambrado: de perto se vê o losango, de longe vira um véu cinza
+    g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(205,210,215,.62)'; g.lineWidth = 1.3;
+    for (let k = -w; k < w * 2; k += 8) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + w, h); g.stroke(); g.beginPath(); g.moveTo(k + w, 0); g.lineTo(k, h); g.stroke(); }
+  });
+  const texSebe = texCanvas(64, 64, (g, w, h) => {
+    g.fillStyle = '#3d6a2c'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 500; i++) { const l = A(); g.fillStyle = `rgba(${40 + l * 60 | 0},${85 + l * 80 | 0},${30 + l * 40 | 0},.8)`; g.beginPath(); g.arc(A() * w, A() * h, 1 + A() * 2, 0, 7); g.fill(); }
+  });
+  const texConc = texCanvas(64, 64, (g, w, h) => {
+    g.fillStyle = '#b9b5aa'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 300; i++) { const l = 150 + A() * 60 | 0; g.fillStyle = `rgba(${l},${l},${l - 8},.5)`; g.fillRect(A() * w, A() * h, 2, 2); }
+  });
+  const texCancela = texCanvas(128, 16, (g, w, h) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#f1f5f9' : '#c81e1e'; g.fillRect(i * 16, 0, 16, h); } });
+  const placa = (w, h, desenha) => { const t = texCanvas(w, h, desenha); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+  const texLetreiro = placa(1024, 160, (g, w, h) => {
+    g.fillStyle = '#1e3a5f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#F5C518'; g.lineWidth = 6; g.strokeRect(8, 8, w - 16, h - 16);
+    g.fillStyle = '#F5C518'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 96px Arial'; g.fillText('BPFRON', w / 2, 62);
+    g.fillStyle = '#f1f5f9'; g.font = 'bold 30px Arial'; g.fillText('BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS', w / 2, 128);
+  });
+  const texMuro = placa(1024, 280, (g, w, h) => {
+    g.fillStyle = '#1e3a5f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#F5C518'; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#F5C518'; g.font = 'bold 130px Arial'; g.fillText('BPFRON', w / 2, 96);
+    g.fillStyle = '#f1f5f9'; g.font = 'bold 36px Arial'; g.fillText('BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS', w / 2, 188);
+    g.font = '28px Arial'; g.fillText('POLÍCIA MILITAR DO ESTADO DE RONDÔNIA', w / 2, 236);
+  });
+  const texHangar = placa(512, 96, (g, w, h) => {
+    g.fillStyle = '#1e3a5f'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#F5C518'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 50px Arial'; g.fillText('HANGAR', w / 2, 36);
+    g.fillStyle = '#f1f5f9'; g.font = 'bold 20px Arial'; g.fillText('OPERAÇÕES COM DRONES', w / 2, 76);
+  });
+  const estrela = (g, cx, cy, r) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.4 : r; g.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); } g.closePath(); g.fill(); };
+  const bandeiras = [
+    placa(256, 176, (g, w, h) => { // Rondônia
+      g.fillStyle = '#1f3f93'; g.fillRect(0, 0, w, h / 2); g.fillStyle = '#ffd400'; g.fillRect(0, h / 2, w, h / 2);
+      g.fillStyle = '#009b3a'; g.beginPath(); g.moveTo(0, h); g.lineTo(w / 2, h / 2); g.lineTo(w, h); g.closePath(); g.fill();
+      g.fillStyle = '#ffffff'; estrela(g, w / 2, h / 2, 26);
+    }),
+    placa(256, 176, (g, w, h) => { // Brasil
+      g.fillStyle = '#009b3a'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#fedf00'; g.beginPath(); g.moveTo(w / 2, 14); g.lineTo(w - 22, h / 2); g.lineTo(w / 2, h - 14); g.lineTo(22, h / 2); g.closePath(); g.fill();
+      g.fillStyle = '#002776'; g.beginPath(); g.arc(w / 2, h / 2, 44, 0, 7); g.fill();
+      g.strokeStyle = '#ffffff'; g.lineWidth = 7; g.beginPath(); g.arc(w / 2, h / 2 + 62, 78, -Math.PI * 0.72, -Math.PI * 0.28); g.stroke();
+    }),
+    placa(256, 176, (g, w, h) => { // do batalhão
+      g.fillStyle = '#1e3a5f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#F5C518'; g.lineWidth = 8; g.strokeRect(8, 8, w - 16, h - 16);
+      g.fillStyle = '#F5C518'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 54px Arial'; g.fillText('BPFRON', w / 2, h / 2);
+    }),
+  ];
+
+  const mats = {
+    reboco: L(0xf1ede2, { map: TX.reboco }),
+    barrado: L(0x24405f),
+    friso: L(0xdcd8cd),
+    telha: L(0xffffff, { map: TX.telha }),
+    forro: L(0xe9e6df),
+    vidro: new THREE.MeshStandardMaterial({ color: 0x17283a, roughness: 0.06, metalness: 0.75, envMapIntensity: 1.5 }),
+    esquadria: L(0xeef0f2),
+    chapa: L(0xffffff, { map: texChapa }),
+    chapaTeto: L(0xffffff, { map: texZinco, side: THREE.DoubleSide }),
+    porta: L(0xffffff, { map: texPorta }),
+    aco: L(0x4b5563),
+    conc: L(0xffffff, { map: texConc }),
+    sebe: L(0xffffff, { map: texSebe }),
+    amareloSolido: L(0xe3bd3e),
+    laranja: L(0xf97316, { side: THREE.DoubleSide }),
+    calcada: L(0xffffff, { map: texCalc }),
+    cancela: L(0xffffff, { map: texCancela }),
+    piso: L(0xffffff, Object.assign({ map: texPiso }, dec(2))),
+    asfalto: L(0xffffff, Object.assign({ map: texAsf }, dec(2))),
+    branco: L(0xecece6, dec(5)),
+    amarelo: L(0xe3bd3e, dec(5)),
+    grade: L(0xffffff, { map: texGrade, transparent: true, depthWrite: false, side: THREE.DoubleSide }),
+  };
+  const noChao = new Set([mats.piso, mats.asfalto, mats.branco, mats.amarelo]); // pintura e piso: não fazem sombra
+
+  /* ---------- peças ---------- */
+  const baldes = new Map();
+  const por = (m, g) => { if (!baldes.has(m)) baldes.set(m, []); baldes.get(m).push(g.index ? g.toNonIndexed() : g); };
+  // caixa reta de y0 a y1. lad = [metros por repetição na horizontal, na vertical]; 0 = a textura estica uma vez
+  const caixa = (m, x, z, w, d, y0, y1, lad = [4, 4]) => {
+    const g = new THREE.BoxGeometry(w, y1 - y0, d), uv = g.attributes.uv, h = y1 - y0;
+    for (let i = 0; i < uv.count; i++) {
+      const f = i >> 2, topo = f === 2 || f === 3;
+      const su = lad[0] ? (f < 2 ? d : w) / lad[0] : 1, sv = topo ? (lad[0] ? d / lad[0] : 1) : (lad[1] ? h / lad[1] : 1);
+      uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv);
+    }
+    g.translate(x, (y0 + y1) / 2, z); por(m, g);
+  };
+  const cil = (m, x, z, r, y0, y1, seg = 10, rTopo = r) => { const g = new THREE.CylinderGeometry(rTopo, r, y1 - y0, seg); g.translate(x, (y0 + y1) / 2, z); por(m, g); };
+  // pintura/piso deitado no chão; a textura segue a posição no mundo (as placas emendam de uma peça para a outra)
+  const chao = (m, x0, x1, z0, z1, y = 0.012, lad = 8) => {
+    const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0); g.rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, y, (z0 + z1) / 2);
+    const p = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / lad, p.getZ(i) / lad);
+    por(m, g);
+  };
+  const telhado = (geo, x, y, z, ms) => { // cada grupo do geoTelhado vai para o seu material
+    geo.translate(x, y, z);
+    for (const gr of geo.groups) {
+      const g = new THREE.BufferGeometry();
+      for (const [k, a] of Object.entries(geo.attributes)) g.setAttribute(k, new THREE.BufferAttribute(a.array.slice(gr.start * a.itemSize, (gr.start + gr.count) * a.itemSize), a.itemSize));
+      por(ms[gr.materialIndex], g);
+    }
+  };
+  // peça encostada numa fachada. eixo 'x': a parede corre ao longo de x, no plano z = b; eixo 'z': corre ao longo de z, no plano x = b.
+  // s = lado para onde a parede olha (+1/-1); a = centro ao longo da parede; sai = quanto a frente da peça fica para fora da parede
+  const peca = (m, eixo, s, a, b, larg, y0, y1, sai, lad = [0, 0]) => {
+    const e = sai + 0.04, c = b + s * (sai - e / 2);
+    if (eixo === 'x') caixa(m, a, c, larg, e, y0, y1, lad); else caixa(m, c, a, e, larg, y0, y1, lad);
+  };
+  const janela = (eixo, s, a, b, larg, y0 = 1.0, alt = 1.35, folhas = 2) => {
+    peca(mats.friso, eixo, s, a, b, larg + 0.24, y0 - 0.12, y0 + alt + 0.12, 0.07);   // moldura
+    peca(mats.vidro, eixo, s, a, b, larg, y0, y0 + alt, 0.09);
+    peca(mats.friso, eixo, s, a, b, larg + 0.4, y0 - 0.2, y0 - 0.12, 0.2);             // peitoril
+    for (let k = 0; k <= folhas; k++) peca(mats.esquadria, eixo, s, a - larg / 2 + k * larg / folhas, b, 0.06, y0, y0 + alt, 0.12);
+    for (const y of [y0, y0 + alt - 0.06]) peca(mats.esquadria, eixo, s, a, b, larg, y, y + 0.06, 0.12);
+  };
+  const soltas = []; // malhas com textura própria (letreiros, bandeiras)
+  const painel = (tex, w, h, x, y, z, giroY) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), L(0xffffff, { map: tex }));
+    m.position.set(x, y, z); m.rotation.y = giroY; cena.add(m); soltas.push(m); return m;
+  };
+  // tela de alambrado entre dois pontos
+  const tela = (x0, z0, x1, z1, y0, y1) => {
+    const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, y1 - y0), uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len / 0.5, uv.getY(i) * (y1 - y0) / 0.5);
+    g.rotateY(Math.atan2(-(z1 - z0), x1 - x0)); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); por(mats.grade, g);
+  };
+  const cerca = (x0, z0, x1, z1, alt = 2.1) => {
+    const len = Math.hypot(x1 - x0, z1 - z0), ao = Math.abs(x1 - x0) > Math.abs(z1 - z0), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    caixa(mats.conc, cx, cz, ao ? len : 0.18, ao ? 0.18 : len, 0, 0.35, [1, 1]);                 // mureta
+    tela(x0, z0, x1, z1, 0.35, alt);
+    caixa(mats.aco, cx, cz, ao ? len : 0.05, ao ? 0.05 : len, alt - 0.03, alt + 0.02);            // travessa de cima
+    const n = Math.max(1, Math.round(len / 3));
+    for (let i = 0; i <= n; i++) caixa(mats.aco, x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n, 0.07, 0.07, 0.35, alt + 0.2);
+    addCaixa(cx, cz, ao ? len / 2 : 0.1, ao ? 0.1 : len / 2, alt + 0.2, 'cerca da base');
+    MUNDO.mapa.linhas.push({ a: [x0, z0], b: [x1, z1], cor: '#64748b', w: 0.6 });
+  };
+
+  /* ---------- pátio, acesso e pintura ---------- */
+  const P = BASE.patio, AC = BASE.acesso;
+  chao(mats.piso, P.x0, P.x1, P.z0, P.z1);
+  chao(mats.piso, -25, -22, 15.5, 19); chao(mats.piso, -25, -12, 19, 27);                          // frente do hangar
+  chao(mats.asfalto, AC.x0, AC.x1, AC.z0, AC.z1, 0.012, 4);
+  for (const x of [AC.x0 + 0.25, AC.x1 - 0.25]) chao(mats.branco, x - 0.07, x + 0.07, AC.z0, AC.z1 - 1.2, 0.02);
+  chao(mats.branco, AC.x0 + 0.4, AC.x1 - 0.4, AC.z1 - 1.0, AC.z1 - 0.6, 0.02);                    // linha de retenção na saída para a rodovia
+  // área de toque do heliponto: quadrado amarelo de 10 m
+  for (const s of [-1, 1]) { chao(mats.amarelo, -5, 5, s * 5 - 0.08, s * 5 + 0.08, 0.02); chao(mats.amarelo, s * 5 - 0.08, s * 5 + 0.08, -5, 5, 0.02); }
+  // vagas das viaturas (lado leste do pátio): 5 vagas de 3 × 6 m, com batente de roda
+  for (let k = 0; k <= 5; k++) chao(mats.branco, 15.6, 21.6, -11.5 + k * 3 - 0.06, -11.5 + k * 3 + 0.06, 0.02);
+  for (let k = 0; k < 5; k++) caixa(mats.amareloSolido, 21.3, -10 + k * 3, 0.16, 1.9, 0.01, 0.13);
+  // meio-fio do pátio (aberto na saída para o acesso e na frente do hangar)
+  const guia = (x0, x1, z0, z1) => caixa(mats.friso, (x0 + x1) / 2, (z0 + z1) / 2, Math.max(0.16, x1 - x0), Math.max(0.16, z1 - z0), 0, 0.12);
+  guia(P.x0, P.x1, P.z0 - 0.16, P.z0); guia(P.x1, P.x1 + 0.16, P.z0, P.z1);
+  guia(P.x0, AC.x0, P.z1, P.z1 + 0.16); guia(AC.x1, P.x1, P.z1, P.z1 + 0.16);
+  guia(P.x0 - 0.16, P.x0, P.z0, -4.6);
+  MUNDO.mapa.rets.push({ x: (AC.x0 + AC.x1) / 2, z: (AC.z0 + AC.z1) / 2, w: AC.x1 - AC.x0, d: AC.z1 - AC.z0, cor: '#6b7280' });
+
+  /* ---------- sede: 14 × 10 m, parede de 3,5 m, telhado de quatro águas ---------- */
+  { const cx = -30, cz = 2, W = 14, D = 10, H = 3.5, xa = cx - W / 2, xb = cx + W / 2, za = cz - D / 2, zb = cz + D / 2;
+    caixa(mats.calcada, -30.2, 3, 16.6, 15, 0, 0.07, [2, 2]);                                      // calçada em volta
+    caixa(mats.calcada, -26.5, 11.5, 9, 2, 0, 0.07, [2, 2]);                                       // passeio até o pátio
+    caixa(mats.reboco, cx, cz, W, D, 0, H, [4, 0]);
+    caixa(mats.barrado, cx, cz, W + 0.06, D + 0.06, 0, 0.9);
+    caixa(mats.friso, cx, cz, W + 0.3, D + 0.3, H - 0.24, H);                                      // cimalha
+    telhado(geoTelhado(THREE, W, D, 2.1, '4', 0.75), cx, H, cz, [mats.telha, mats.reboco, mats.forro]);
+    // frente (sul): porta de vidro sob a marquise e uma janela larga de cada lado
+    janela('x', 1, -34.9, zb, 2.2, 1.0, 1.35, 3); janela('x', 1, -25.1, zb, 2.2, 1.0, 1.35, 3);
+    peca(mats.friso, 'x', 1, cx, zb, 2.5, 0.07, 2.5, 0.07); peca(mats.vidro, 'x', 1, cx, zb, 2.1, 0.12, 2.3, 0.09);
+    for (const dx of [-1.05, 0, 1.05]) peca(mats.esquadria, 'x', 1, cx + dx, zb, 0.07, 0.12, 2.3, 0.12);
+    peca(mats.esquadria, 'x', 1, cx, zb, 2.1, 2.24, 2.3, 0.12);
+    caixa(mats.friso, cx, zb + 1.25, 5.6, 2.5, 0.07, 0.2);                                         // patamar
+    for (const dx of [-2.45, 2.45]) { caixa(mats.friso, cx + dx, zb + 2.2, 0.32, 0.32, 0.2, 2.85); addCaixa(cx + dx, zb + 2.2, 0.16, 0.16, 2.85, 'prédio da base (coluna)'); }
+    caixa(mats.friso, cx, zb + 1.25, 5.6, 2.5, 2.85, 3.15);                                        // laje da marquise
+    caixa(mats.barrado, cx, zb + 2.42, 5.6, 0.16, 3.15, 4.05);                                     // testeira do letreiro
+    painel(texLetreiro, 5.4, 0.8, cx, 3.6, zb + 2.51, 0);
+    addCaixa(cx, zb + 1.25, 2.8, 1.25, 4.05, 'prédio da base (marquise)', 2.85);
+    for (const x of [-35, -25]) caixa(mats.sebe, x, zb + 1.0, 3.4, 0.8, 0.07, 0.85, [1, 1]);       // canteiro de sebe
+    // fundos (norte): 4 janelas e dois condensadores de ar-condicionado
+    for (const x of [-35, -31.7, -28.3, -25]) janela('x', -1, x, za, 1.8);
+    for (const x of [-33.4, -26.6]) { peca(mats.esquadria, 'x', -1, x, za, 0.85, 0.2, 0.8, 0.32); peca(mats.aco, 'x', -1, x, za, 0.5, 0.27, 0.73, 0.33); }
+    // leste (para o pátio) e oeste
+    for (const z of [-1.2, 2, 5.2]) janela('z', 1, z, xb, 1.6);
+    for (const z of [0, 4.2]) janela('z', -1, z, xa, 1.6);
+    peca(mats.barrado, 'z', -1, -2, xa, 0.9, 0.07, 2.1, 0.05);                                     // porta dos fundos
+    addCaixa(cx, cz, W / 2, D / 2, 6, 'prédio da base');
+    MUNDO.mapa.rets.push({ x: cx, z: cz, w: W, d: D, cor: '#d6d3d1' });
+  }
+
+  /* ---------- hangar: 14 × 11 m, chapa sobre mureta, telhado de duas águas ---------- */
+  { const hx = -32, hz = 21, W = 14, D = 11, H = 4.6, xb = hx + W / 2, za = hz - D / 2, zb = hz + D / 2;
+    caixa(mats.conc, hx, hz, W + 0.1, D + 0.1, 0, 0.8, [1, 1]);
+    caixa(mats.chapa, hx, hz, W, D, 0.8, H, [2, 0]);
+    telhado(geoTelhado(THREE, W, D, 1.9, '2', 0.2), hx, H, hz, [mats.chapaTeto, mats.chapa, mats.forro]);
+    for (const z of [18.2, 23.8]) { // duas portas de enrolar para o pátio
+      peca(mats.aco, 'z', 1, z, xb, 4.7, 0, 3.85, 0.05); peca(mats.porta, 'z', 1, z, xb, 4.4, 0, 3.7, 0.07);
+    }
+    for (const z of [15.75, 21, 26.25]) cil(mats.amareloSolido, xb + 0.55, z, 0.09, 0, 0.95);      // balizadores
+    painel(texHangar, 4.4, 0.82, xb + 0.23, 5.25, hz, Math.PI / 2);
+    for (const x of [-36.5, -33.5, -30.5, -27.5]) { janela('x', 1, x, zb, 1.6, 3.3, 0.7); janela('x', -1, x, za, 1.6, 3.3, 0.7); } // basculantes
+    for (const dx of [-4, 0, 4]) { cil(mats.esquadria, hx + dx, hz, 0.2, H + 1.8, H + 2.05, 8); const e = new THREE.SphereGeometry(0.36, 10, 8); e.translate(hx + dx, H + 2.25, hz); por(mats.esquadria, e); } // exaustores eólicos
+    addCaixa(hx, hz, 7, 5.5, 7, 'hangar');
+    MUNDO.mapa.rets.push({ x: hx, z: hz, w: W, d: D, cor: '#cbd5e1' });
+  }
+
+  /* ---------- mastros e bandeiras (Rondônia, Brasil, batalhão) ---------- */
+  caixa(mats.friso, -19.6, 14, 2, 7, 0, 0.25);
+  [[16.6, 9], [14, 10.5], [11.4, 9]].forEach(([z, h], i) => {
+    const x = -19.6;
+    cil(mats.esquadria, x, z, 0.08, 0.25, h, 8, 0.05);
+    const e = new THREE.SphereGeometry(0.1, 8, 6); e.translate(x, h + 0.08, z); por(mats.amareloSolido, e);
+    addCaixa(x, z, 0.08, 0.08, h, 'mastro da bandeira');
+    const g = new THREE.PlaneGeometry(1.9, 1.3, 10, 1), p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) p.setZ(k, 0.09 * Math.sin((p.getX(k) + 0.95) * 3.2 + i) * (p.getX(k) + 0.95) / 1.9); // ondulado, preso no mastro
+    g.translate(1.02, 0, 0); g.rotateY(Math.PI / 2); g.computeVertexNormals(); // solta para o norte, com a frente para o pátio
+    const m = new THREE.Mesh(g, L(0xffffff, { map: bandeiras[i], side: THREE.DoubleSide }));
+    m.position.set(x, h - 0.8, z); if (SOMBRAS) m.castShadow = true; cena.add(m); soltas.push(m);
+  });
+
+  /* ---------- guarita, cancela e portão ---------- */
+  { const gx = 5.6, gz = 27.2;
+    caixa(mats.calcada, gx, gz, 3.4, 3.4, 0, 0.07, [2, 2]);
+    caixa(mats.reboco, gx, gz, 2.6, 2.6, 0, 2.5, [4, 0]); caixa(mats.barrado, gx, gz, 2.66, 2.66, 0, 0.9);
+    caixa(mats.friso, gx, gz, 3.7, 3.7, 2.5, 2.68);                                                // laje com beiral
+    janela('z', 1, gz, gx + 1.3, 1.6, 1.0, 1.1); janela('x', 1, gx, gz + 1.3, 1.6, 1.0, 1.1); janela('x', -1, gx, gz - 1.3, 1.0, 1.0, 1.1, 1);
+    peca(mats.barrado, 'z', -1, gz, gx - 1.3, 0.85, 0.07, 2.1, 0.05);                              // porta
+    addCaixa(gx, gz, 1.85, 1.85, 2.68, 'guarita');
+    MUNDO.mapa.rets.push({ x: gx, z: gz, w: 2.6, d: 2.6, cor: '#d6d3d1' });
+    // cancela abaixada
+    caixa(mats.aco, 8.0, 26.9, 0.26, 0.26, 0, 1.15); caixa(mats.aco, 14.9, 26.9, 0.12, 0.12, 0, 1.0);
+    caixa(mats.cancela, 11.4, 26.9, 6.8, 0.07, 0.97, 1.09, [0, 0]);
+    addCaixa(11.4, 26.9, 3.4, 0.08, 1.3, 'cancela', 0.8); // faixa mais alta que o braço: a física dá 12 cm de folga em cima de toda caixa
+    // portão: pilares e duas folhas abertas para dentro
+    for (const x of [8.1, 15.9]) { caixa(mats.reboco, x, 31.5, 0.5, 0.5, 0, 2.5, [4, 0]); caixa(mats.friso, x, 31.5, 0.62, 0.62, 2.5, 2.62); addCaixa(x, 31.5, 0.3, 0.3, 2.62, 'portão da base'); }
+    for (const x of [8.35, 15.65]) {
+      tela(x, 27.75, x, 31.2, 0.2, 2.0);
+      for (const y of [0.2, 1.1, 2.0]) caixa(mats.aco, x, 29.48, 0.05, 3.45, y - 0.03, y + 0.03);
+      for (const z of [27.75, 31.2]) caixa(mats.aco, x, z, 0.06, 0.06, 0.15, 2.05);
+      addCaixa(x, 29.48, 0.08, 1.75, 2.05, 'portão da base');
+    }
+  }
+
+  /* ---------- cerca dos fundos, mureta da frente e muro de identificação ---------- */
+  cerca(-52, 31.5, -13.2, 31.5); cerca(-6.8, 31.5, 7.85, 31.5); cerca(-52, -22, -52, 31.5);
+  caixa(mats.conc, 28, 31.5, 23.7, 0.25, 0, 0.5, [1, 1]); addCaixa(28, 31.5, 11.85, 0.13, 0.5, 'mureta da base');
+  caixa(mats.reboco, -10, 31.5, 6.4, 0.4, 0, 2.3, [4, 0]); caixa(mats.barrado, -10, 31.5, 6.46, 0.46, 0, 0.45); caixa(mats.friso, -10, 31.5, 6.6, 0.56, 2.3, 2.42);
+  painel(texMuro, 5.9, 1.6, -10, 1.38, 31.71, 0); painel(texMuro, 5.9, 1.6, -10, 1.38, 31.29, Math.PI);
+  addCaixa(-10, 31.5, 3.3, 0.28, 2.42, 'muro do letreiro');
+
+  /* ---------- biruta e poste de iluminação (fora do caminho dos exercícios) ---------- */
+  { const x = -20.6, z = -11.8;
+    cil(mats.esquadria, x, z, 0.07, 0, 6, 8, 0.05); addCaixa(x, z, 0.1, 0.1, 6.1, 'biruta');
+    const cone = new THREE.CylinderGeometry(0.1, 0.32, 1.7, 10, 1, true); cone.rotateZ(-Math.PI / 2 - 0.6); cone.translate(x + 0.75, 5.35, z);
+    por(mats.laranja, cone);
+  }
+  { const x = -10.5, z = 28.4;
+    cil(mats.aco, x, z, 0.1, 0, 8, 8, 0.06); caixa(mats.aco, x, z, 1.7, 0.08, 7.9, 7.98);
+    for (const dx of [-0.7, 0.7]) caixa(mats.esquadria, x + dx, z - 0.12, 0.42, 0.3, 7.72, 7.9);
+    addCaixa(x, z, 0.14, 0.14, 8.05, 'poste de iluminação');
+  }
+
+  /* ---------- junta tudo: um desenho por material ---------- */
+  const malhas = [];
+  for (const [m, arr] of baldes) {
+    const ms = new THREE.Mesh(mergeGeometries(arr, false), m);
+    if (SOMBRAS) { ms.castShadow = !noChao.has(m) && m !== mats.grade; ms.receiveShadow = m !== mats.grade; }
+    if (m === mats.grade) ms.renderOrder = 2;
+    cena.add(ms); malhas.push(ms);
+  }
+  return {
+    mats, malhas, soltas,
+    arvores: [[-47, -17, 0.85], [-47.5, 9, 0.9], [-46, 27, 0.8], [-2, 27.4, 0.8]],      // sombra nos fundos e na entrada
+    semCapim: [[-38.7, -21.7, -4.7, 12.7], [-39.3, -11.8, 12.7, 27.2], [AC.x0 - 0.3, AC.x1 + 0.3, AC.z0, AC.z1], [3.7, 7.5, 25.3, 29.1]],
+  };
 }

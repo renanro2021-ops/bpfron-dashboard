@@ -537,11 +537,14 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
 
     <section class="tab" id="tab-aj">
       <div class="bloco">
-        <h3>Cenário</h3>
-        <div class="modos" id="cenarios" style="grid-template-columns:1fr 1fr">
-          <button class="modo" data-cen="leve"><b>Leve</b>Desenhado. Roda em qualquer celular e não precisa baixar nada.</button>
-          <button class="modo" data-cen="realista"><b>Realista</b>Texturas fotográficas e objetos escaneados (CC0, Poly Haven). Baixa um pacote uma vez e ele fica guardado no aparelho.</button>
+        <h3>Gráficos</h3>
+        <div class="modos" id="cenarios" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+          <button class="modo" data-niv="baixo"><b>Baixo</b>Cenário desenhado, sem sombras nem capim. Para celular ou computador fraco. Não baixa nada.</button>
+          <button class="modo" data-niv="medio"><b>Médio</b>Cenário desenhado, com sombras e capim. Não baixa nada.</button>
+          <button class="modo" data-niv="alto"><b>Alto</b>Realista: texturas de foto, casas, carros e viaturas modelados. Baixa um pacote uma vez e ele fica guardado no aparelho.</button>
+          <button class="modo" data-niv="ultra"><b>Ultra</b>Realista com sombras mais finas, mais capim e imagem mais nítida. Para computador com placa de vídeo.</button>
         </div>
+        <p class="dica">Se o voo estiver travando, desça um nível; se estiver sobrando, suba. Trocar de nível recarrega a página.</p>
         <p class="dica" id="cen-status">Verificando o pacote…</p>
         <div class="row"><button class="bs" id="cen-baixar">⬇ Baixar / atualizar pacote</button><button class="bs" id="cen-apagar">🗑 Apagar pacote</button></div>
       </div>
@@ -575,9 +578,6 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
           <label class="chk"><input type="checkbox" id="aj-som"> Som dos motores</label>
           <label class="chk"><input type="checkbox" id="aj-fps"> Mostrar FPS (quadros por segundo)</label>
           <label class="chk"><input type="checkbox" id="aj-toque"> Sticks na tela (toque, para celular/tablet)</label>
-          <div class="campo"><label for="aj-q">Qualidade gráfica</label>
-            <select id="aj-q"><option value="baixa">Baixa — sem sombras (computador fraco / celular)</option><option value="media">Média — sombras e capim</option><option value="alta">Alta — sombras finas, mais capim</option></select>
-            <small id="aj-q-aviso" hidden>Sombras e capim mudam quando a página for recarregada (F5).</small></div>
           <div class="campo"><label for="aj-luz">Luz do dia</label>
             <select id="aj-luz"><option value="dia">Dia claro</option><option value="tarde">Fim de tarde (sol baixo e quente)</option></select>
             <small id="aj-luz-aviso" hidden>A luz muda quando a página for recarregada (F5).</small></div>
@@ -697,7 +697,7 @@ setTimeout(function () {
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { montarGalpoes, GALPOES, montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
+import { montarBase, BASE, montarGalpoes, GALPOES, montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
 
 /* =====================================================================
    UTILIDADES
@@ -966,23 +966,8 @@ function faixa(w, d, x, z, tex, y = 0.012) {
 }
 
 /* ---------------- estradas, pátio, campo ---------------- */
-const texAsfalto = texCanvas(512, 128, (g, w, h) => {
-  g.fillStyle = '#4a4c4f'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 6000; i++) { const l = 55 + Math.random() * 50 | 0; g.fillStyle = `rgba(${l},${l},${l + 4},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 1.2, 1.2); }
-  g.strokeStyle = 'rgba(30,30,32,.55)'; g.lineWidth = 1; // rachaduras e remendos
-  for (let i = 0; i < 9; i++) { let x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += Math.random() * 18 - 4; y += Math.random() * 10 - 5; g.lineTo(x, y); } g.stroke(); }
-  g.fillStyle = 'rgba(35,36,38,.5)'; g.fillRect(320, 20, 60, 30);
-  g.fillStyle = 'rgba(70,72,75,.6)'; g.fillRect(0, 26, w, 12); g.fillRect(0, h - 38, w, 12); // trilho dos pneus mais claro
-  g.fillStyle = '#e3bd3e'; g.fillRect(0, 61, 256, 3); g.fillRect(0, 66, 256, 3);
-  g.fillStyle = '#e8e8e6'; g.fillRect(0, 5, w, 3); g.fillRect(0, h - 8, w, 3);
-}, [50, 1]);
-const texAcost = texCanvas(256, 64, (g, w, h) => {
-  g.fillStyle = '#8e7a5a'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 1500; i++) { const l = Math.random() * 40 - 20; g.fillStyle = `rgba(${140 + l | 0},${118 + l | 0},${86 + l | 0},.8)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
-  for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(90,${110 + Math.random() * 40 | 0},60,.7)`; g.fillRect(Math.random() * w, Math.random() < 0.5 ? Math.random() * 14 : h - Math.random() * 14, 2, 3); }
-}, [100, 1]);
-MALHAS.acost = faixa(1600, 13, 0, 40, texAcost, 0.006); // acostamento de terra
-MALHAS.rodovia = faixa(1600, 8, 0, 40, texAsfalto);
+// A rodovia (z = 40) e o acostamento são desenhados junto com as ruas do bairro, no drone-sim-cidade.js:
+// mesmo asfalto, mesmo eixo amarelo, e nenhuma peça em cima da outra (era o que fazia a estrada piscar).
 MUNDO.mapa.linhas.push({ a: [-800, 40], b: [800, 40], cor: '#6b7280', w: 8 });
 
 const texTerra = texCanvas(128, 512, (g, w, h) => {
@@ -994,12 +979,7 @@ const texTerra = texCanvas(128, 512, (g, w, h) => {
 MALHAS.terra = faixa(5, 740, 120, -334, texTerra, 0.01);
 MUNDO.mapa.linhas.push({ a: [120, 36], b: [120, -704], cor: '#a16207', w: 5 });
 
-const texConcreto = texCanvas(128, 128, (g, w, h) => {
-  g.fillStyle = '#a3a098'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 500; i++) { const l = 140 + Math.random() * 45 | 0; g.fillStyle = `rgb(${l},${l},${l - 6})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
-  g.strokeStyle = 'rgba(80,80,80,.35)'; g.lineWidth = 2; g.strokeRect(0, 0, w, h);
-}, [11, 8]);
-MALHAS.patio = faixa(44, 32, 0, 3, texConcreto, 0.008);
+// o piso do pátio é montado com a base (montarBase, mais abaixo)
 MUNDO.mapa.rets.push({ x: 0, z: 3, w: 44, d: 32, cor: '#9ca3af' });
 
 function texHeliponto(cor) {
@@ -1043,30 +1023,8 @@ MUNDO.mapa.rets.push({ x: -70, z: -130, w: 64, d: 42, cor: '#4d7c0f' });
 
 /* ---------------- base do BPFRON ---------------- */
 {
-  const texFach = texCanvas(512, 128, (g, w, h) => {
-    g.fillStyle = '#e7e2d6'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#7d6e55'; g.fillRect(0, h - 14, w, 14);
-    for (let i = 0; i < 8; i++) { g.fillStyle = '#2f4b63'; g.fillRect(18 + i * 62, 34, 36, 40); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(18 + i * 62, 34, 36, 6); }
-    g.fillStyle = '#1e3a5f'; g.fillRect(w / 2 - 70, 4, 140, 24);
-    g.fillStyle = '#F5C518'; g.font = 'bold 18px Arial'; g.textAlign = 'center'; g.fillText('BPFRON', w / 2, 22);
-  });
-  const parede = lam(0xffffff, { map: texFach });
-  const teto = lam(0x8a8f96);
-  const geo = new THREE.BoxGeometry(14, 6, 10);
-  malha(geo, [parede, parede, teto, teto, parede, parede], -30, 3, 2);
-  MALHAS.base = { paredes: [parede], teto };
-  addCaixa(-30, 2, 7, 5, 6, 'prédio da base');
-  MUNDO.mapa.rets.push({ x: -30, z: 2, w: 14, d: 10, cor: '#d6d3d1' });
-  // mastro da bandeira
-  malha(new THREE.CylinderGeometry(0.06, 0.08, 10, 8), lam(0xd1d5db), -18, 5, 14);
-  addCaixa(-18, 14, 0.08, 0.08, 10, 'mastro da bandeira');
-  const band = malha(new THREE.PlaneGeometry(1.8, 1.2), lam(0x15803d, { side: THREE.DoubleSide }), -17.05, 9.3, 14);
-  band.rotation.y = Math.PI / 2;
-  // platibanda, caixas de ar-condicionado e porta
-  const conc = lam(0xcfc9bb);
-  for (const [w, d, x, z] of [[14.4, 0.3, -30, -3.1], [14.4, 0.3, -30, 7.1], [0.3, 10.4, -37.1, 2], [0.3, 10.4, -22.9, 2]]) malha(new THREE.BoxGeometry(w, 0.8, d), conc, x, 6.4, z);
-  for (const [x, z] of [[-33, 0], [-27, 4]]) malha(new THREE.BoxGeometry(1.2, 0.7, 0.9), lam(0xe5e7eb), x, 6.35, z);
-  malha(new THREE.BoxGeometry(2.4, 0.15, 1.6), conc, -30, 3.1, 7.9); // marquise da porta
+  // sede, hangar, pátio, acesso, guarita, cerca e mastros: drone-sim-cidade.js (montarBase)
+  MALHAS.base = montarBase({ THREE, cena, mergeGeometries, addCaixa, MUNDO, SOMBRAS, texCanvas, ANISO });
   // torre de rádio (treliça de verdade: 4 montantes + travamento em X, pintura vermelha e branca)
   const torre = new THREE.Group();
   const H = 24, base = 0.9, topoL = 0.35, seg = 8;
@@ -1099,31 +1057,6 @@ MUNDO.mapa.rets.push({ x: -70, z: -130, w: 64, d: 42, cor: '#4d7c0f' });
   addCaixa(-40, -8, 0.7, 0.7, 26.8, 'torre de rádio');
   MUNDO.mapa.rets.push({ x: -40, z: -8, w: 2, d: 2, cor: '#ef4444' });
 
-  // hangar de chapa (meia-cana)
-  const texChapa = texCanvas(256, 64, (g, w, h) => {
-    for (let i = 0; i < 32; i++) { g.fillStyle = i % 2 ? '#a8adb3' : '#c3c7cc'; g.fillRect(i * 8, 0, 8, h); }
-    for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(120,90,60,${Math.random() * 0.12})`; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
-  }, [6, 3]);
-  const hx = -32, hz = 21, hr = 7, hl = 11;
-  const teto2 = new THREE.Mesh(new THREE.CylinderGeometry(hr, hr, hl, 32, 1, true, -Math.PI / 2, Math.PI), lam(0xffffff, { map: texChapa, side: THREE.DoubleSide }));
-  teto2.rotation.x = -Math.PI / 2; teto2.position.set(hx, 0, hz);
-  if (SOMBRAS) { teto2.castShadow = true; teto2.receiveShadow = true; }
-  cena.add(teto2);
-  const texPortao = texCanvas(256, 128, (g, w, h) => {
-    g.fillStyle = '#b6bbc1'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#3f4650'; g.fillRect(48, 36, 160, 92);
-    for (let i = 0; i < 12; i++) { g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(48, 36 + i * 8, 160, 2); }
-    g.fillStyle = '#1e3a5f'; g.fillRect(78, 12, 100, 18);
-    g.fillStyle = '#F5C518'; g.font = 'bold 13px Arial'; g.textAlign = 'center'; g.fillText('HANGAR', 128, 26);
-  }, [1, 1]);
-  for (const s of [-1, 1]) {
-    const tampa = new THREE.Mesh(new THREE.CircleGeometry(hr, 32, 0, Math.PI), lam(0xffffff, { map: s > 0 ? texPortao : texChapa, side: THREE.DoubleSide }));
-    tampa.position.set(hx, 0, hz + s * hl / 2); if (SOMBRAS) tampa.receiveShadow = true;
-    cena.add(tampa);
-  }
-  addCaixa(hx, hz, hr, hl / 2, hr, 'hangar');
-  MALHAS.hangar = [teto2.material];
-  MUNDO.mapa.rets.push({ x: hx, z: hz, w: hr * 2, d: hl, cor: '#cbd5e1' });
 }
 
 /* ---------------- lago ---------------- */
@@ -1140,14 +1073,31 @@ const dentroLago = (x, z) => { const dx = x - LAGO.x, dz = z - LAGO.z; return Ma
 }
 
 /* ---------------- caixa d'água ---------------- */
+// Castelo d'água de concreto (12/10/2026): pilares travados por vigas, laje, reservatório com a faixa
+// do batalhão e escada de marinheiro. As caixas de colisão são as mesmas da primeira versão.
 {
-  const x = 60, z = -60, cinza = lam(0x9ca3af);
+  const x = 60, z = -60;
+  const conc = lam(0xffffff, { map: texCanvas(64, 64, (g, w, h) => { g.fillStyle = '#b4b1a8'; g.fillRect(0, 0, w, h); for (let i = 0; i < 300; i++) { const l = 140 + Math.random() * 60 | 0; g.fillStyle = `rgba(${l},${l},${l - 8},.5)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } }, [1, 3]) });
   for (const [dx, dz] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) {
-    malha(new THREE.CylinderGeometry(0.22, 0.26, 13, 8), cinza, x + dx, 6.5, z + dz);
+    malha(new THREE.BoxGeometry(0.42, 13, 0.42), conc, x + dx, 6.5, z + dz);
     addCaixa(x + dx, z + dz, 0.26, 0.26, 13, "pilar da caixa d'água");
   }
-  malha(new THREE.CylinderGeometry(3.2, 3.2, 5, 24), lam(0x60a5fa), x, 15.5, z);
-  malha(new THREE.ConeGeometry(3.3, 1.4, 24), lam(0x475569), x, 18.7, z);
+  for (const y of [4.3, 8.6]) for (const [w, d, dx, dz] of [[4.4, 0.3, 0, -2], [4.4, 0.3, 0, 2], [0.3, 4.4, -2, 0], [0.3, 4.4, 2, 0]]) malha(new THREE.BoxGeometry(w, 0.35, d), conc, x + dx, y, z + dz); // vigas de travamento
+  malha(new THREE.CylinderGeometry(3.6, 3.6, 0.3, 28), conc, x, 12.95, z);                                   // laje
+  const texTanque = texCanvas(1024, 256, (g, w, h) => {
+    g.fillStyle = '#d9dcdc'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 90; i++) { g.fillStyle = `rgba(70,75,70,${0.03 + Math.random() * 0.07})`; g.fillRect(Math.random() * w, 0, 3 + Math.random() * 10, 30 + Math.random() * 200); } // escorrido
+    g.fillStyle = '#1e3a5f'; g.fillRect(0, 96, w, 70);
+    g.fillStyle = '#F5C518'; g.font = 'bold 54px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let k = 0; k < 4; k++) g.fillText('BPFRON', w / 8 + k * w / 4, 132);
+    g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, w, 6); g.fillRect(0, h - 8, w, 8);
+  });
+  malha(new THREE.CylinderGeometry(3.2, 3.2, 5, 32), lam(0xffffff, { map: texTanque }), x, 15.6, z);
+  malha(new THREE.ConeGeometry(3.35, 1.3, 32), lam(0x8d9296), x, 18.75, z);
+  malha(new THREE.CylinderGeometry(0.25, 0.25, 0.5, 8), lam(0x8d9296), x, 19.5, z);                        // respiro
+  const texEscada = texCanvas(32, 512, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#5b6168'; g.fillRect(2, 0, 4, h); g.fillRect(w - 6, 0, 4, h); for (let y = 6; y < h; y += 12) g.fillRect(2, y, w - 4, 3); });
+  const escada = malha(new THREE.PlaneGeometry(0.55, 18), lam(0xffffff, { map: texEscada, alphaTest: 0.5, side: THREE.DoubleSide }), x + 3.32, 9, z, false);
+  escada.rotation.y = Math.PI / 2;
   addCaixa(x, z, 3.2, 3.2, 19.4, "caixa d'água", 13);
   MUNDO.mapa.rets.push({ x, z, w: 6.4, d: 6.4, cor: '#60a5fa', redondo: true });
 }
@@ -1226,11 +1176,12 @@ function veiculo(tipo, x, z, girado, cor, comColisao = true, alvo = null) {
   return g;
 }
 const POI = new V3(-35, 0, -70);
-veiculo('viatura', 14, 10, true, 0xf8fafc);
+veiculo('viatura', 18.6, 2, true, 0xf8fafc);       // na vaga do pátio
 veiculo('viatura', POI.x, POI.z, false, 0xf8fafc);
 veiculo('carro', 118.5, -120, false, 0xe5e7eb);
 veiculo('carro', -205, -45, true, 0xb91c1c);
 veiculo('carro', -150, 95, false, 0x1d4ed8);
+veiculo('viatura', 18.6, -7, true, 0xf8fafc);      // segunda viatura, duas vagas adiante
 
 /* ---------------- linhas de energia ---------------- */
 const matFio = new THREE.LineBasicMaterial({ color: 0x1f2937 });
@@ -1455,6 +1406,7 @@ if (QUAL !== 'baixa') {
   for (let i = 0; i < N * 5 && n < N; i++) {
     const a = RC(0, Math.PI * 2), r = Math.sqrt(RC(0, 1)) * 210, x = Math.cos(a) * r, z = -30 + Math.sin(a) * r;
     if (x > -24 && x < 24 && z > -15 && z < 21) continue;                                     // pátio
+    if (MALHAS.base.semCapim.some(([a, b, c, d]) => x > a && x < b && z > c && z < d)) continue; // calçadas, acesso e frente do hangar
     if (Math.abs(z - 40) < 7.5 || (Math.abs(x - 120) < 3.6 && z < 40)) continue;              // rodovia e estrada de terra
     if (x > -104 && x < -36 && z > -153 && z < -107) continue;                                // campo de futebol
     if (x > L.x0 - 1 && x < L.x1 + 1 && z > L.z0 - 1 && z < L.z1 + 1) continue;               // bairro
@@ -1484,16 +1436,16 @@ function limparArea(x0, x1, z0, z1) {
 
 /* ---------------- árvores das praças do bairro ---------------- */
 const COPAS_MALHAS = [mshCopa], TRONCOS_MALHAS = [mshTronco];
-function arvoresExtras(lista) {
+function arvoresExtras(lista, sorte = R) {
   if (!lista.length) return;
-  const extras = lista.map(([x, z, sc]) => { const t = 2.4 * sc, r = 2.6 * sc, ry = 2.2 * sc; const a = { tipo: 'copa', x, z, tr: 0.2 * sc, tronco: t, cy: t + ry * 0.7, r, ry, gir: R(0, 6.28) }; ARV.push(a); return a; });
+  const extras = lista.map(([x, z, sc]) => { const t = 2.4 * sc, r = 2.6 * sc, ry = 2.2 * sc; const a = { tipo: 'copa', x, z, tr: 0.2 * sc, tronco: t, cy: t + ry * 0.7, r, ry, gir: sorte(0, 6.28) }; ARV.push(a); return a; });
   const mt = new THREE.InstancedMesh(geoTronco, mshTronco.material, extras.length);
   const mc = new THREE.InstancedMesh(mshCopa.geometry, mshCopa.material, extras.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), um = new THREE.Quaternion(), cor = new THREE.Color();
   extras.forEach((a, i) => {
     m4.compose(new V3(a.x, 0, a.z), um, new V3(a.tr, a.tronco + a.ry * 0.3, a.tr)); mt.setMatrixAt(i, m4);
     q.setFromEuler(new THREE.Euler(0, a.gir, 0)); m4.compose(new V3(a.x, a.cy, a.z), q, new V3(a.r, a.ry, a.r)); mc.setMatrixAt(i, m4);
-    cor.setHex(0x4d7b36).multiplyScalar(R(0.85, 1.1)); mc.setColorAt(i, cor);
+    cor.setHex(0x4d7b36).multiplyScalar(sorte(0.85, 1.1)); mc.setColorAt(i, cor);
   });
   if (SOMBRAS) { mt.castShadow = true; mc.castShadow = true; }
   cena.add(mt, mc); OBSTRUI_FOTO.push(mc, mt); COPAS_MALHAS.push(mc); TRONCOS_MALHAS.push(mt);
@@ -1502,6 +1454,7 @@ function arvoresExtras(lista) {
 /* ---------------- bairro e canteiro de obras (drone-sim-cidade.js) ---------------- */
 const ctxCidade = { THREE, cena, mergeGeometries, addCaixa, MUNDO, SOMBRAS, rnd: sorteio, texCanvas, ANISO, arvoresExtras };
 const CID = montarCidade(ctxCidade);
+{ const sb = rng(771); arvoresExtras(MALHAS.base.arvores, (a, b) => a + (b - a) * sb()); } // árvores de sombra da base
 const CANT = montarCanteiro(ctxCidade);
 // complexo de galpões para voar por dentro (nordeste da base): primeiro saem as árvores sorteadas ali
 limparArea(GALPOES.x0 - 6, GALPOES.x1 + 6, GALPOES.z0 - 6, GALPOES.z1 + 6); limparArea(122, GALPOES.x0, -161, -149);
@@ -1672,8 +1625,8 @@ const drone = (function () {
 
 /* ---------------- câmeras ---------------- */
 const camFPV = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, LONGE);
-const camChase = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.08, LONGE);
-const camPiloto = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, LONGE);
+const camChase = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.2, LONGE);
+const camPiloto = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.3, LONGE);
 camFPV.rotation.order = 'YXZ';
 const PILOTO = new V3(0, 1.7, 6);
 // 'fpv' usa a mesma câmera da 'camera', mas presa no corpo do drone (sem gimbal), com lente aberta, chuvisco e painel enxuto
@@ -3539,7 +3492,7 @@ function atualizarStatusControle() {
   $('ct-pads').innerHTML = !lista.length ? 'Nenhum controle detectado.' :
     lista.map((p) => `<label class="chk"><input type="radio" name="pad" value="${esc(p.id)}" ${INP.gp && p.id === INP.gp.id ? 'checked' : ''}> ${esc(p.id)} <small style="color:#94a3b8">(${p.axes.length} eixos, ${p.buttons.length} botões)</small></label>`).join('');
   document.querySelectorAll('input[name=pad]').forEach((r) => { r.onchange = () => { cfg.padId = r.value; salvarCfg(); montarBinds(); }; });
-  document.querySelectorAll('.modo').forEach((b) => b.classList.toggle('on', Number(b.dataset.modo) === cfg.modo));
+  document.querySelectorAll('.modo[data-modo]').forEach((b) => b.classList.toggle('on', Number(b.dataset.modo) === cfg.modo));
   $('stk-ln').textContent = NOMES_STK[cfg.modo][0];
   $('stk-rn').textContent = NOMES_STK[cfg.modo][1];
   document.body.classList.toggle('toque', !!cfg.toque && !gp);
@@ -3579,7 +3532,6 @@ function testeAoVivo() {
 function ligarAjustes() {
   const sel = (id, k, conv = (v) => v) => { const el = $(id); el.value = String(k === 'gps' ? (cfg.gps ? 1 : 0) : cfg[k]); el.onchange = () => { cfg[k] = conv(el.value); salvarCfg(); }; };
   sel('aj-vel', 'vel'); sel('aj-gps', 'gps', (v) => v === '1'); sel('aj-bat', 'bateria'); sel('aj-alc', 'alcance', Number);
-  const qs = $('aj-q'); qs.value = cfg.qualidade; qs.onchange = () => { cfg.qualidade = qs.value; salvarCfg(); redimensionar(); $('aj-q-aviso').hidden = false; };
   const rng2 = (id, k, fmt) => { const el = $(id), out = $(id + '-v'); el.value = cfg[k]; out.textContent = fmt(cfg[k]); el.oninput = () => { cfg[k] = Number(el.value); out.textContent = fmt(cfg[k]); salvarCfg(); }; };
   rng2('aj-alt', 'altMax', (v) => v + ' m'); rng2('aj-rth', 'rthAlt', (v) => v + ' m');
   rng2('aj-vento', 'vento', (v) => v ? v + ' m/s (' + Math.round(v * 3.6) + ' km/h)' : 'sem vento');
@@ -3633,6 +3585,16 @@ addEventListener('gamepaddisconnected', (e) => { aviso('🎮 Controle desconecta
    CENÁRIO REALISTA (drone-sim-realista.js, carregado só quando pedido)
    ===================================================================== */
 let cenarioAtivo = 'leve', REAL = null;
+/* Gráficos em quatro níveis (12/10/2026). Cada nível é uma combinação do que já existia:
+   cenário (desenhado × realista) e qualidade (sombras, capim, nitidez da imagem). */
+const GRAFICOS = { baixo: ['leve', 'baixa'], medio: ['leve', 'media'], alto: ['realista', 'media'], ultra: ['realista', 'alta'] };
+const nivelDe = (cen, q) => (cen === 'realista' ? (q === 'alta' ? 'ultra' : 'alto') : (q === 'baixa' ? 'baixo' : 'medio'));
+function escolherNivel(n) {
+  const par = GRAFICOS[n]; if (!par) return;
+  const [cen, q] = par, recarrega = q !== QUAL || (cen === 'leve' && cenarioAtivo === 'realista'); // sombras, capim e a volta para o desenhado só valem ao recarregar
+  cfg.cenario = cen; cfg.qualidade = q; salvarCfg();
+  if (recarrega) location.reload(); else if (cen === 'realista') ligarRealista(); else atualizarCenarioUI();
+}
 const urlPacote = (() => { try { return new URLSearchParams(location.search).get('pacote') || (LOCAL ? LOCAL + '/pacote/' : null); } catch (e) { return null; } })();
 const livreCanteiro = (x, z) => superficie(x, z, 1e9) === 0;
 async function moduloRealista() {
@@ -3669,7 +3631,7 @@ async function ligarRealista() {
   $('carregando').hidden = true; atualizarCenarioUI();
 }
 async function atualizarCenarioUI() {
-  document.querySelectorAll('[data-cen]').forEach((b) => b.classList.toggle('on', b.dataset.cen === cenarioAtivo));
+  document.querySelectorAll('[data-niv]').forEach((b) => b.classList.toggle('on', b.dataset.niv === nivelDe(cenarioAtivo, QUAL)));
   $('ban-realista').hidden = cenarioAtivo === 'realista';
   try {
     const R = await moduloRealista(), est = await R.estadoPacote();
@@ -3682,11 +3644,9 @@ async function atualizarCenarioUI() {
   } catch (e) { $('cen-status').textContent = 'Sem acesso ao pacote agora (sem internet?).'; }
 }
 $('cenarios').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-cen]'); if (!b) return;
-  if (b.dataset.cen === 'realista') { cfg.cenario = 'realista'; salvarCfg(); ligarRealista(); }
-  else if (cenarioAtivo === 'realista') { cfg.cenario = 'leve'; salvarCfg(); location.reload(); }
+  const b = e.target.closest('[data-niv]'); if (b) escolherNivel(b.dataset.niv);
 });
-$('ban-ligar').onclick = () => { cfg.cenario = 'realista'; salvarCfg(); ligarRealista(); };
+$('ban-ligar').onclick = () => escolherNivel(QUAL === 'alta' ? 'ultra' : 'alto');
 $('cen-baixar').onclick = baixarSoPacote;
 $('cen-apagar').onclick = async () => {
   const R = await moduloRealista(); await R.apagarPacote(); aviso('Pacote apagado do aparelho', 'info', 2500);
@@ -3709,7 +3669,7 @@ window.SIM = {
   S, cfg, INP, CAL, CTRL, camChase, CID, CANT, VEICULOS, MISSOES, MUNDO, PERFIS, PAD_B, POI,
   get M() { return M; }, get vista() { return vista; },
   iniciarMissao, acao, abrirMenu, carregarRankingVoo, avaliarPlaca, ajustarZoom, poseCamFPV, ZOOMS, ligarRealista, get cenario() { return cenarioAtivo; }, MALHAS, OBSTRUI_FOTO, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
-  AMB, FIXOS, HV, PISTA_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
+  GRAFICOS, nivelDe, escolherNivel, AMB, FIXOS, HV, PISTA_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
   avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
   quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
 };

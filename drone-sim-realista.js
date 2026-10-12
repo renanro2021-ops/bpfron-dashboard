@@ -159,26 +159,21 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   const grama = manifesto.texturas.leafy_grass ? await tex('leafy_grass', [3300, 3300]) : await tex('aerial_grass_rock', [1250, 1250]);
   if (M.chao) { aplicar(M.chao.material, grama, { vertexColors: false }); M.chao.material.color.setRGB(0.5, 0.98, 0.36); M.chao.material.normalScale && M.chao.material.normalScale.set(0.5, 0.5); }
   // pátio, estrada de terra, acostamento, campo
-  aplicar(M.patio && M.patio.material, await tex('concrete_floor_worn_001', [11, 8]));
   aplicar(M.terra && M.terra.material, await tex('aerial_mud_1', [1, 74]));
-  aplicar(M.acost && M.acost.material, await tex('aerial_mud_1', [160, 1.3]));
+  // acostamento da rodovia: fica o cascalho desenhado (a foto é escura e virava uma tarja preta ao lado do asfalto); da foto vem só o relevo
+  { const ac = M.cidade && M.cidade.malhas.acost; if (ac) { const t = await tex('brown_mud_rocks_01', [1, 1]); if (t.normalMap && 'normalMap' in ac.material) { ac.material.normalMap = t.normalMap; ac.material.needsUpdate = true; } } }
   avanco('chão');
 
   // asfalto com as faixas pintadas por cima (rodovia e ruas do bairro)
   const asf = await tex('asphalt_02');
   if (asf.img) {
-    if (M.rodovia) {
-      const t = compor(1024, 256, asf.img, [256, 256], (g, w, h) => {
-        g.fillStyle = 'rgba(227,189,62,.92)'; g.fillRect(0, 122, 512, 6); g.fillRect(0, 132, 512, 6);
-        g.fillStyle = 'rgba(232,232,230,.9)'; g.fillRect(0, 8, w, 6); g.fillRect(0, h - 14, w, 6);
-      });
-      t.repeat.set(50, 1); aplicar(M.rodovia.material, { map: t, normalMap: asf.normalMap });
-      M.rodovia.material.normalMap.repeat.set(200, 2);
-    }
+    // a rodovia é uma das ruas (M.cidade.malhas.ruas): recebe o mesmo asfalto e o mesmo eixo amarelo
     if (M.cidade) {
       const base = compor(512, 320, asf.img, [160, 160], (g, w, h) => { g.fillStyle = 'rgba(227,189,62,.92)'; g.fillRect(0, h / 2 - 3, w, 5); }); // eixo amarelo contínuo
       // miolo dos cruzamentos: o mesmo asfalto de foto, sem o eixo
-      if (M.cidade.malhas.cruzamentos) { const liso = compor(256, 256, asf.img, [128, 128]); liso.repeat.set(1, 1); aplicar(M.cidade.malhas.cruzamentos.material, { map: liso, normalMap: asf.normalMap }); }
+      const liso = compor(256, 256, asf.img, [128, 128]); liso.repeat.set(1, 1);
+      if (M.cidade.malhas.cruzamentos) aplicar(M.cidade.malhas.cruzamentos.material, { map: liso, normalMap: asf.normalMap });
+      if (M.base && M.base.mats) { const la = liso.clone(); la.needsUpdate = true; aplicar(M.base.mats.asfalto, { map: la, normalMap: asf.normalMap }); } // acesso da base
       for (const m of M.cidade.malhas.ruas) {
         const rep = m.material.map.repeat.clone(); const t = base.clone(); t.needsUpdate = true; t.repeat.copy(rep);
         aplicar(m.material, { map: t, normalMap: asf.normalMap });
@@ -231,16 +226,29 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   if (fachadas) {
     for (const mat of M.paredesVila || []) { mat.map = fachadas.casa; mat.color.lerp(new THREE.Color(1, 1, 1), 0.45); mat.needsUpdate = true; }
     for (const mat of M.telhadosVila || []) { aplicar(mat, telha); mat.color.lerp(new THREE.Color(1, 1, 1), 0.6); }
-    if (M.base) {
-      const t = compor(1024, 256, concreto.img || reboco.img, [256, 256], (g, w, h) => {
-        janelas(8, 1, '#4f6e8c', false)(g, w, h * 0.9);
-        g.fillStyle = '#1e3a5f'; g.fillRect(w / 2 - 140, 8, 280, 44);
-        g.fillStyle = '#F5C518'; g.font = 'bold 34px Arial'; g.textAlign = 'center'; g.fillText('BPFRON', w / 2, 42);
-      });
-      for (const mat of M.base.paredes) { mat.map = t; mat.needsUpdate = true; }
-      aplicar(M.base.teto, concreto); M.base.teto.color.set(0xffffff);
+    /* base do batalhão (montarBase): reboco, telha, chapa e concreto de foto. As janelas, portas e
+       letreiros são peças de verdade, então a parede recebe só o reboco liso. */
+    if (M.base && M.base.mats) {
+      const B = M.base.mats;
+      aplicar(B.reboco, await tex('painted_plaster_wall', [1, 1])); B.reboco.color.setRGB(1.5, 1.47, 1.38);
+      aplicar(B.telha, telha); B.telha.color.lerp(new THREE.Color(1, 1, 1), 0.6);
+      const chapaB = await tex('corrugated_iron_02', [1, 1]);
+      // parede do hangar: fica a chapa pintada (a foto é de chapa crua, parda); da foto vem só o relevo das ondas
+      if (chapaB.normalMap && 'normalMap' in B.chapa) { B.chapa.normalMap = chapaB.normalMap; B.chapa.needsUpdate = true; }
+      aplicar(B.chapaTeto, await tex('corrugated_iron_02', [1, 1])); B.chapaTeto.color.setRGB(2.0, 2.0, 2.05);
+      aplicar(B.conc, await tex('concrete_wall_008', [1, 1])); B.conc.color.setRGB(1.5, 1.5, 1.45);
+      aplicar(B.calcada, await tex('concrete_pavement', [1, 1])); B.calcada.color.setRGB(1.25, 1.25, 1.22);
+      // pátio: concreto de foto com as juntas das placas de 4 m desenhadas por cima
+      const piso = await tex('concrete_floor_worn_001');
+      if (piso.img) {
+        const t = compor(512, 512, piso.img, [256, 256], (g, w, h) => {
+          g.fillStyle = 'rgba(226,222,212,.5)'; g.fillRect(0, 0, w, h);   // a foto é de piso escuro: clareia para concreto de pátio
+          g.fillStyle = 'rgba(28,27,24,.7)'; for (const k of [0, w / 2]) { g.fillRect(k, 0, 4, h); g.fillRect(0, k, w, 4); }
+          g.fillStyle = 'rgba(255,255,255,.07)'; for (const k of [4, w / 2 + 4]) { g.fillRect(k, 0, 2, h); g.fillRect(0, k, w, 2); }
+        });
+        aplicar(B.piso, { map: t, normalMap: piso.normalMap }); B.piso.color.setRGB(1.45, 1.44, 1.4);
+      }
     }
-    if (M.hangar) for (const mat of M.hangar) { aplicar(mat, chapa); mat.color.setRGB(1.8, 1.8, 1.8); }
   }
   avanco('prédios');
 
