@@ -235,7 +235,7 @@
        nome de guerra (o que vem depois do posto/quadro);
      - "Grupamento de Radiopatrulha Aérea" / "Núcleo de Inteligência": nome de
        setor, não tem posto -> mostra inteiro;
-     - "ALAN DA SILVA SAMPAIO" (relação do curso) -> dois primeiros nomes. */
+     - "JOÃO DA SILVA PEREIRA" (nome completo, como vem na relação do curso) -> dois primeiros nomes. */
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
