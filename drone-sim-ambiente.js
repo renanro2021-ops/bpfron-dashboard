@@ -48,6 +48,8 @@ export async function aplicarAmbiente(ctx, P) {
   const { cena, SOMBRAS, ANISO, M, AMB, FIXOS, VEICULOS, CID } = ctx;
   const { manifesto, modelo, avanco } = P;
   const tem = (id) => !!(manifesto.modelos && manifesto.modelos[id]);
+  // carros e casas em quadras de 130 m: o que está fora da vista (e da sombra) não é desenhado
+  const emQuadras = (im) => (ctx.emCelulas ? ctx.emCelulas(THREE, im, 130) : (im.frustumCulled = false, [im]));
   const info = (id) => manifesto.modelos[id];
 
   /* ================================================================ carros */
@@ -88,8 +90,9 @@ export async function aplicarAmbiente(ctx, P) {
           m4.compose(new V3(c.x, 0, c.z), q, new V3(c.s, c.s, c.s)).multiply(o.matrixWorld); im.setMatrixAt(k, m4);
           if (ehPintura) im.setColorAt(k, cor.setHex(c.cor));
         });
-        im.castShadow = SOMBRAS && (ehPintura || id === 'caminhao'); im.frustumCulled = false;
-        cena.add(im); if (ehPintura) corpos.push(im);
+        im.castShadow = SOMBRAS && (ehPintura || id === 'caminhao');
+        const quadras = emQuadras(im);
+        cena.add(...quadras); if (ehPintura) corpos.push(...quadras);
       });
     }
     // placas: um retângulo por placa (2 por carro), todas no mesmo atlas do bairro
@@ -102,7 +105,7 @@ export async function aplicarAmbiente(ctx, P) {
         off[j * 2] = (c.celula % 8) * 0.125; off[j * 2 + 1] = 1 - (Math.floor(c.celula / 8) + 1) * 86 / 2048;
       }));
       geo.setAttribute('aPlaca', new THREE.InstancedBufferAttribute(off, 2));
-      im.frustumCulled = false; cena.add(im);
+      cena.add(...emQuadras(im));
     }
     for (const antigo of CID.instancias) antigo.visible = false; // os carros de caixa saem de cena
     CID.corpos = corpos;
@@ -233,8 +236,9 @@ export async function aplicarAmbiente(ctx, P) {
           lista.forEach(({ c }, k) => tons.set(TONS_TELHA[Math.floor(sorte(c.x, c.z, 4) * TONS_TELHA.length)], k * 3));
           o.geometry.setAttribute('aTelha', new THREE.InstancedBufferAttribute(tons, 3));
         }
-        im.castShadow = SOMBRAS; im.receiveShadow = SOMBRAS; im.frustumCulled = false;
-        cena.add(im); novas.push(im);
+        im.castShadow = SOMBRAS; im.receiveShadow = SOMBRAS;
+        const quadras = emQuadras(im);
+        cena.add(...quadras); novas.push(...quadras);
       }
     }
     // os telhados antigos do bairro (juntados por material) saem de cena; quem encobre foto agora são as casas novas

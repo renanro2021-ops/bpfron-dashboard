@@ -25,6 +25,51 @@ export const CIDADE = {
   entradasNorte: [[12, 7], [120, 5]],
 };
 
+/* ------------------------------------------------------------------ desempenho
+   Divide uma malha instanciada em várias, uma por quadrado de "lado" metros do mapa.
+   Uma malha instanciada é desenhada inteira ou não é desenhada: com as 1.100 árvores (ou as
+   casas, os carros, o capim) numa malha só, tudo ia para a placa de vídeo mesmo fora da vista —
+   e de novo no mapa de sombra, que só cobre os 120 m em volta do drone. Em pedaços, o que está
+   fora da vista (e da sombra) é pulado. As malhas novas dividem a geometria e o material da
+   original; instância de escala zero (árvore retirada) fica de fora. Devolve a lista das malhas
+   novas — a original não é mexida nem tirada de cena (quem chama decide). */
+export function emCelulas(THREE, im, lado = 150) {
+  const m4 = new THREE.Matrix4(), e = m4.elements, cor = new THREE.Color(), grupos = new Map();
+  for (let i = 0; i < im.count; i++) {
+    im.getMatrixAt(i, m4);
+    if (e[0] === 0 && e[1] === 0 && e[2] === 0) continue;
+    const k = Math.floor(e[12] / lado) + ',' + Math.floor(e[14] / lado);
+    let g = grupos.get(k); if (!g) grupos.set(k, g = []);
+    g.push(i);
+  }
+  const G = im.geometry, porInstancia = Object.values(G.attributes).some((a) => a.isInstancedBufferAttribute);
+  const novas = [];
+  for (const idx of grupos.values()) {
+    let geo = G;
+    if (porInstancia) { // atributo por instância (placa do carro, tom da telha): geometria própria, com os MESMOS vértices
+      geo = new THREE.BufferGeometry(); geo.index = G.index; geo.groups = G.groups;
+      geo.boundingBox = G.boundingBox; geo.boundingSphere = G.boundingSphere;
+      for (const [nome, a] of Object.entries(G.attributes)) {
+        if (!a.isInstancedBufferAttribute) { geo.setAttribute(nome, a); continue; }
+        const v = new a.array.constructor(idx.length * a.itemSize);
+        idx.forEach((i, j) => { for (let c = 0; c < a.itemSize; c++) v[j * a.itemSize + c] = a.array[i * a.itemSize + c]; });
+        geo.setAttribute(nome, new THREE.InstancedBufferAttribute(v, a.itemSize, a.normalized, a.meshPerAttribute));
+      }
+    }
+    const nova = new THREE.InstancedMesh(geo, im.material, idx.length);
+    idx.forEach((i, j) => {
+      im.getMatrixAt(i, m4); nova.setMatrixAt(j, m4);
+      if (im.instanceColor) { im.getColorAt(i, cor); nova.setColorAt(j, cor); }
+    });
+    nova.name = im.name; nova.visible = im.visible; nova.renderOrder = im.renderOrder;
+    nova.castShadow = im.castShadow; nova.receiveShadow = im.receiveShadow;
+    Object.assign(nova.userData, im.userData);
+    nova.computeBoundingSphere();
+    novas.push(nova);
+  }
+  return novas;
+}
+
 /* ------------------------------------------------------------------ placas */
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 export function sortearPlaca(rnd) {

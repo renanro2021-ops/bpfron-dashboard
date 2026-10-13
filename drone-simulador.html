@@ -577,6 +577,7 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
           <label class="chk"><input type="checkbox" id="aj-stk"> Mostrar os sticks na tela</label>
           <label class="chk"><input type="checkbox" id="aj-som"> Som dos motores</label>
           <label class="chk"><input type="checkbox" id="aj-fps"> Mostrar FPS (quadros por segundo)</label>
+          <label class="chk"><input type="checkbox" id="aj-res"> Nitidez automática (baixa a resolução da imagem se o aparelho ficar lento)</label>
           <label class="chk"><input type="checkbox" id="aj-toque"> Sticks na tela (toque, para celular/tablet)</label>
           <div class="campo"><label for="aj-luz">Luz do dia</label>
             <select id="aj-luz"><option value="dia">Dia claro</option><option value="tarde">Fim de tarde (sol baixo e quente)</option></select>
@@ -697,7 +698,7 @@ setTimeout(function () {
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { montarBase, BASE, montarGalpoes, GALPOES, montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
+import { emCelulas, montarBase, BASE, montarGalpoes, GALPOES, montarCidade, montarCanteiro, geoTelhado, texturasCasa, fachadaDetalhada, VeiculoNaRota, CIDADE, CANTEIRO, placaFormatada, sortearPlaca, sortearCor, dimensoesCarro, desenharPlaca as desenharPlacaCanvas } from './drone-sim-cidade.js';
 
 /* =====================================================================
    UTILIDADES
@@ -733,6 +734,7 @@ const CFG_PADRAO = {
   sticksTela: true, som: true, toque: null, deadzone: 0.04, expo: 0.25, padId: '',
   // computador já abre no realista (texturas de foto, baixa ~7 MB uma vez); celular fica no leve até escolher
   cenario: matchMedia('(pointer:coarse)').matches ? 'leve' : 'realista', fps: false,
+  resAuto: true, // nitidez automática: baixa a resolução da cena 3D quando o aparelho não dá conta (Ajustes → Tela)
   drone: 'mavic3', luz: 'tarde', // luz quente de fim de tarde como padrão (pedido do usuário, 12/10/2026); "dia claro" fica nos Ajustes
 };
 const cfg = Object.assign({}, CFG_PADRAO, lsGet('dsim_cfg') || {});
@@ -761,7 +763,8 @@ try {
   $('erro-gl').hidden = false;
   throw e;
 }
-const pixelRatio = () => Math.min(devicePixelRatio || 1, cfg.qualidade === 'alta' ? 2 : cfg.qualidade === 'media' ? 1.5 : 1);
+const RES = { k: 1, soma: 0, n: 0, subiu: false, espera: 0, pausa: 40, antes: null, desistiu: false }; // nitidez automática (ver nitidezAuto)
+const pixelRatio = () => Math.min(devicePixelRatio || 1, cfg.qualidade === 'alta' ? 2 : cfg.qualidade === 'media' ? 1.5 : 1) * RES.k;
 renderer.setPixelRatio(pixelRatio());
 renderer.setSize(innerWidth, innerHeight, false);
 const QUAL = cfg.qualidade;            // baixa | media | alta
@@ -1405,8 +1408,9 @@ if (QUAL !== 'baixa') {
   const geo = mergeGeometries([0, 2.1, 4.2].flatMap((a) => { const g = lamina(a); return [g, verso(g)]; }));
   const nn = geo.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0);
   const mat = lam(0xffffff, { vertexColors: true });
+  CAPIM.sh = { uniforms: { uTempoCapim: { value: 0 } } };
   mat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTempoCapim = { value: 0 }; CAPIM.sh = sh;
+    sh.uniforms.uTempoCapim = CAPIM.sh.uniforms.uTempoCapim;
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nuniform float uTempoCapim;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -1436,9 +1440,11 @@ if (QUAL !== 'baixa') {
     cor.setRGB(RC(0.75, 1.15), RC(0.8, 1.1), RC(0.6, 0.95)); msh.setColorAt(n, cor);
     n++;
   }
-  msh.count = n; msh.frustumCulled = false;
+  msh.count = n;
   if (SOMBRAS) msh.receiveShadow = true;
-  cena.add(msh); CAPIM.malha = msh; MALHAS.capim = msh;
+  // em quadras de 70 m: o capim fora da vista não é desenhado (eram 650 mil triângulos por quadro, sempre)
+  const quadras = emCelulas(THREE, msh, 70);
+  cena.add(...quadras); CAPIM.malha = quadras; MALHAS.capim = quadras;
 }
 
 /* Tira as árvores de um retângulo (onde entra construção nova): some o desenho e some a colisão.
@@ -1483,7 +1489,17 @@ limparArea(GALPOES.x0 - 6, GALPOES.x1 + 6, GALPOES.z0 - 6, GALPOES.z1 + 6); limp
 // pistas novas da corrida FPV: o traçado fica sem árvore (a pista média já só passava por onde não nasce nenhuma)
 for (const k of ['fpv_facil', 'fpv_dificil']) limparCorredor([[0, 2, 0], ...PISTAS_FPV[k].pts], 7);
 const GALP = montarGalpoes(ctxCidade);
-Object.assign(MALHAS, { cidade: CID, canteiro: CANT, galpoes: GALP, copas: COPAS_MALHAS, troncos: TRONCOS_MALHAS });
+/* Árvores em quadras de 200 m (ver emCelulas no drone-sim-cidade.js): as de fora da vista e de fora
+   da sombra deixam de ser desenhadas. Daqui em diante ninguém mais mexe em árvore pelo índice —
+   limparArea e limparCorredor têm de ser chamados ANTES deste ponto. */
+COPAS_MALHAS.forEach((m, i) => { m.userData.atlas = i; }); // a folhagem de foto do cenário realista continua a mesma de cada grupo
+const TOTAL_COPAS = COPAS_MALHAS.reduce((s, m) => s + m.count, 0);
+for (const im of [mshCopa, mshTronco, mshPalma, mshTroncoP]) {
+  const quadras = emCelulas(THREE, im, 200);
+  cena.remove(im); cena.add(...quadras);
+  for (const lista of [OBSTRUI_FOTO, COPAS_MALHAS, TRONCOS_MALHAS]) { const k = lista.indexOf(im); if (k >= 0) lista.splice(k, 1, ...quadras); }
+}
+Object.assign(MALHAS, { cidade: CID, canteiro: CANT, galpoes: GALP, copas: COPAS_MALHAS, troncos: TRONCOS_MALHAS, copasTotal: TOTAL_COPAS });
 
 /* ---------------- trânsito na rodovia ----------------
    Carros andam dentro do passo da física (VEICULOS), então o teste é
@@ -3384,11 +3400,40 @@ function atualizarVisual(dt) {
   // portais pulsando
   if (M && M.d.p) M.d.p.forEach((p) => { if (p.mat.color.getHex() === 0x22c55e) p.anel.scale.setScalar(1 + Math.sin(S.t * 5) * 0.04); });
 }
-let fpsN = 0, fpsT = 0;
+/* Nitidez automática (Ajustes → Tela): quando o aparelho não segura uns 40 quadros por segundo em voo,
+   a cena 3D passa a ser desenhada com menos pontos e esticada para a tela — o painel continua nítido,
+   porque é HTML por cima. Sobe de novo, um degrau por vez, quando sobra folga; se a subida derruba os
+   quadros, volta e espera cada vez mais para tentar outra vez. Se baixar não adianta (limite de 30
+   quadros da economia de bateria, tela de 30 Hz, processador), devolve a nitidez e não insiste. */
+function aplicarNitidez() {
+  renderer.setPixelRatio(pixelRatio()); renderer.setSize(innerWidth, innerHeight, false);
+  if (LENTE.rt) { const t = renderer.getDrawingBufferSize(new THREE.Vector2()); LENTE.rt.setSize(t.x, t.y); }
+}
+function nitidezAuto(dtReal) {
+  if (!cfg.resAuto || RES.desistiu || !CTRL.fisica || !rodando() || dtReal > 0.4) { RES.soma = RES.n = 0; return; }
+  RES.soma += dtReal; RES.n++;
+  if (RES.soma < 1.5) return;
+  const qps = RES.n / RES.soma, era = RES.k; RES.soma = RES.n = 0;
+  if (RES.espera > 0) RES.espera--;
+  if (RES.antes) { // a última descida adiantou?
+    const a = RES.antes; RES.antes = null;
+    if (qps < a.qps * 1.04) { RES.k = a.k; RES.desistiu = true; aplicarNitidez(); return; }
+  }
+  if (qps < 40 && RES.k > 0.6) {
+    RES.antes = { k: RES.k, qps };
+    RES.k = Math.max(0.6, Math.round((RES.k - (qps < 25 ? 0.2 : 0.1)) * 10) / 10);
+    if (RES.subiu) { RES.espera = RES.pausa; RES.pausa = Math.min(320, RES.pausa * 2); RES.antes = null; } // a subida de agora há pouco não se sustentou
+    RES.subiu = false;
+  } else if (qps >= 52 && RES.k < 1 && !RES.espera) { RES.k = Math.min(1, Math.round((RES.k + 0.1) * 10) / 10); RES.subiu = true; }
+  else RES.subiu = false;
+  if (RES.k !== era) aplicarNitidez();
+}
+let fpsN = 0, fpsT = 0, nCoberto = 0;
 function quadro(agora) {
   requestAnimationFrame(quadro);
-  const dt = Math.min(0.1, (agora - ultimo) / 1000); ultimo = agora;
-  if (cfg.fps) { fpsN++; fpsT += dt; if (fpsT >= 0.5) { $('fps').textContent = Math.round(fpsN / fpsT) + ' FPS'; fpsN = 0; fpsT = 0; } }
+  const bruto = (agora - ultimo) / 1000, dt = Math.min(0.1, bruto); ultimo = agora;
+  nitidezAuto(bruto);
+  if (cfg.fps) { fpsN++; fpsT += dt; if (fpsT >= 0.5) { $('fps').textContent = Math.round(fpsN / fpsT) + ' FPS' + (RES.k < 1 ? ' · nitidez ' + Math.round(RES.k * 100) + '%' : ''); fpsN = 0; fpsT = 0; } }
   lerEntradas(dt);
   if (rodando() && CTRL.fisica) {
     acum += dt;
@@ -3396,7 +3441,11 @@ function quadro(agora) {
   } else acum = 0;
   atualizarVisual(dt);
   if (S.pedirFoto && rodando()) tirarFoto();
-  desenharCena();
+  // com o menu aberto a cena fica quase toda coberta (fundo escuro e desfocado): 1 quadro a cada 6 basta,
+  // e o aparelho descansa enquanto o aluno lê o menu, os ajustes ou o ranking
+  const coberto = !$('menu').hidden;
+  if (!coberto) nCoberto = 0;
+  if (!coberto || nCoberto++ % 6 === 0) desenharCena();
   if (!$('hud').hidden) atualizarHud(dt);
   if (!$('menu').hidden) testeAoVivo();
   somMotor();
@@ -3571,6 +3620,7 @@ function ligarAjustes() {
   chk('aj-som', 'som', () => { if (cfg.som) iniciarAudio(); });
   chk('aj-toque', 'toque', atualizarStatusControle);
   chk('aj-fps', 'fps', () => { $('fps').hidden = !cfg.fps; });
+  chk('aj-res', 'resAuto', () => { Object.assign(RES, { k: 1, soma: 0, n: 0, subiu: false, espera: 0, antes: null, desistiu: false }); aplicarNitidez(); });
   $('fps').hidden = !cfg.fps;
   const lz = $('aj-luz'); lz.value = cfg.luz || 'tarde'; lz.onchange = () => { cfg.luz = lz.value; salvarCfg(); $('aj-luz-aviso').hidden = false; };
   const dr = $('aj-drone'); dr.value = cfg.drone || 'mavic3';
@@ -3649,7 +3699,7 @@ async function ligarRealista() {
     if (!est.baixado) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Baixando o pacote… ' + Math.round(p * 100) + '%'));
     else if (await R.temVersaoNova()) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Atualizando o pacote… ' + Math.round(p * 100) + '%'));
     await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, texCanvas, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro,
-      AMB, FIXOS, VEICULOS, CID, nomeCor, TARDE, alturaChao, GALPOES, desenharPlaca: desenharPlacaCanvas },
+      AMB, FIXOS, VEICULOS, CID, nomeCor, TARDE, alturaChao, GALPOES, desenharPlaca: desenharPlacaCanvas, emCelulas },
       (p, t) => progressoCarga(0.7 + p * 0.3, 'Montando o cenário: ' + t));
     cenarioAtivo = 'realista'; cfg.cenario = 'realista'; salvarCfg();
     aviso('🌄 Cenário realista ligado', 'ok', 2500);
@@ -3700,6 +3750,7 @@ window.SIM = {
   get M() { return M; }, get vista() { return vista; },
   iniciarMissao, acao, abrirMenu, carregarRankingVoo, avaliarPlaca, ajustarZoom, poseCamFPV, ZOOMS, ligarRealista, get cenario() { return cenarioAtivo; }, MALHAS, OBSTRUI_FOTO, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
   GRAFICOS, nivelDe, escolherNivel, AMB, FIXOS, HV, PISTA_FPV, PISTAS_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
+  renderer, cena, THREE, RES, nitidezAuto, // para a medição de desempenho (testes/drone/_perf.mjs)
   avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
   quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
 };

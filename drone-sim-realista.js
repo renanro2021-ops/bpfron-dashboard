@@ -98,12 +98,27 @@ export async function listarDrones() {
   const m = await manifestoAtual();
   return Object.entries(m.modelos).filter(([, x]) => x.drone).map(([id, x]) => ({ id, nome: x.drone }));
 }
+/* Vidro "de transmissão" (o vidro refrativo dos modelos: para-brisa do sedã e da viatura,
+   giroflex, visor do gerador) obriga o Three.js a desenhar a cena INTEIRA uma segunda vez a
+   cada quadro, só para ter o que mostrar através do vidro. Medido em 12/10/2026 num PC de
+   vídeo integrado: 51 → 27 ms por quadro sem ele. Vira vidro comum (fumê, com o reflexo do
+   céu), que de cima de um drone não se distingue do outro. */
+function vidroComum(raiz) {
+  raiz.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const m of [].concat(o.material)) if (m && m.transmission > 0) {
+      m.transmission = 0; m.thickness = 0;
+      if (m.opacity < 1) m.opacity = Math.max(m.opacity, 0.45);
+    }
+  });
+  return raiz;
+}
 export async function carregarModelo(id) {
   const m = (await manifestoAtual()).modelos[id];
   if (!m) throw new Error('este modelo não está no pacote');
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   const url = URL.createObjectURL(await (await obter(m.arq)).blob());
-  try { return { cena: (await loader.loadAsync(url)).scene, info: m }; } finally { URL.revokeObjectURL(url); }
+  try { return { cena: vidroComum((await loader.loadAsync(url)).scene), info: m }; } finally { URL.revokeObjectURL(url); }
 }
 
 /* ------------------------------------------------------------------ aplicar */
@@ -292,12 +307,19 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
       }
       return ctx.mergeGeometries(pecas, false);
     })();
-    const cor = new THREE.Color();
+    const cor = new THREE.Color(), matDe = new Map();
+    /* As copas chegam em quadras (emCelulas), sem as árvores retiradas. O tom de cada copa tem sorteio
+       próprio; o sorteio do mapa anda o mesmo tanto de sempre (3 por árvore, contando as retiradas),
+       para as pedras e os troncos sorteados mais abaixo caírem nos mesmos lugares de antes. */
+    let sem = 20261012; const T = (a, b) => { sem = (sem * 1664525 + 1013904223) >>> 0; return a + (b - a) * sem / 4294967296; };
+    if (M.copasTotal) for (let i = 0; i < 3 * M.copasTotal; i++) rnd();
+    const tom = M.copasTotal ? T : R;
     M.copas.forEach((orig, idx) => {
-      const mat = new THREE.MeshLambertMaterial({ map: atlas[idx % atlas.length], alphaTest: 0.5, side: THREE.DoubleSide });
-      const nova = new THREE.InstancedMesh(geoCartoes, mat, orig.count);
+      const qual = (orig.userData.atlas != null ? orig.userData.atlas : idx) % atlas.length;
+      if (!matDe.has(qual)) matDe.set(qual, new THREE.MeshLambertMaterial({ map: atlas[qual], alphaTest: 0.5, side: THREE.DoubleSide }));
+      const nova = new THREE.InstancedMesh(geoCartoes, matDe.get(qual), orig.count);
       nova.instanceMatrix.copy(orig.instanceMatrix);
-      for (let i = 0; i < orig.count; i++) { cor.setRGB(R(0.82, 1.05), R(0.88, 1.08), R(0.78, 0.95)); nova.setColorAt(i, cor); }
+      for (let i = 0; i < orig.count; i++) { cor.setRGB(tom(0.82, 1.05), tom(0.88, 1.08), tom(0.78, 0.95)); nova.setColorAt(i, cor); }
       nova.castShadow = SOMBRAS; nova.receiveShadow = false;
       cena.add(nova); orig.visible = false;
       const k = ctx.OBSTRUI_FOTO.indexOf(orig); if (k >= 0) ctx.OBSTRUI_FOTO[k] = nova;
@@ -309,10 +331,12 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
 
   /* ---- objetos escaneados (instanciados) ---- */
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  const modelo = async (id) => { const m = manifesto.modelos[id]; if (!m) return null; const g = await loader.loadAsync(await blobUrl(m.arq)); return g.scene; };
+  const modelo = async (id) => { const m = manifesto.modelos[id]; if (!m) return null; const g = await loader.loadAsync(await blobUrl(m.arq)); return vidroComum(g.scene); };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ups = new THREE.Vector3(0, 1, 0);
+  const emQuadras = (im, lado = 150) => (ctx.emCelulas ? ctx.emCelulas(THREE, im, lado) : (im.frustumCulled = false, [im]));
   const chaoEm = (l) => (ctx.alturaChao ? ctx.alturaChao(l.x, l.z) : 0); // pedra e tronco em cima de morro ficam na altura do chão dali
-  async function espalhar(id, lugares, colisao) {
+  // sombra = false: objeto miúdo (hidrante, lixeira, pneu, caixote) recebe sombra mas não entra no mapa de sombra — a dele nem se vê
+  async function espalhar(id, lugares, colisao, sombra = true) {
     const cenaG = await modelo(id); if (!cenaG || !lugares.length) return;
     cenaG.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(cenaG);
@@ -325,8 +349,8 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
         m4.compose(new THREE.Vector3(l.x, (l.y || 0) + chaoEm(l), l.z), q, new THREE.Vector3(s, s, s)).multiply(o.matrixWorld);
         im.setMatrixAt(i, m4);
       });
-      im.castShadow = SOMBRAS; im.receiveShadow = SOMBRAS; im.frustumCulled = false;
-      cena.add(im);
+      im.castShadow = SOMBRAS && sombra; im.receiveShadow = SOMBRAS;
+      cena.add(...emQuadras(im)); // o que está fora da vista (e da sombra) não é desenhado
     });
     if (colisao) for (const l of lugares) {
       const s = l.s || 1, c = Math.abs(Math.cos(l.r || 0)), sn = Math.abs(Math.sin(l.r || 0));
@@ -343,10 +367,10 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   await espalhar('concrete_road_barrier_02', barreiras.filter((_, i) => i % 2 === 1), 'barreira de concreto');
   await espalhar('Barrel_01', [[196, -12], [196.8, -11.4], [195.6, -11], [262, 4], [263, 4.6]].map(([x, z]) => ({ x, z, r: R(0, 6) })), 'tambor');
   await espalhar('barrel_03', [[197.4, -12.6], [261.4, 5.2], [180, -52]].map(([x, z]) => ({ x, z, r: R(0, 6) })), 'tambor');
-  await espalhar('old_tyre', Array.from({ length: 9 }, (_, i) => ({ x: 270 + (i % 3) * 0.7, z: -50 + Math.floor(i / 3) * 0.7, y: 0.3 * (i % 2), r: R(0, 6) })), null);
+  await espalhar('old_tyre', Array.from({ length: 9 }, (_, i) => ({ x: 270 + (i % 3) * 0.7, z: -50 + Math.floor(i / 3) * 0.7, y: 0.3 * (i % 2), r: R(0, 6) })), null, false);
   await espalhar('portable_generator', [{ x: 212, z: 9, r: 0.4 }, { x: 246, z: -20, r: 2 }], 'gerador');
-  await espalhar('propane_tank', [[213.5, 9.5], [214, 10.2], [244, -19]].map(([x, z]) => ({ x, z })), null);
-  await espalhar('wooden_crate_01', [[220, -4], [221.2, -4.4], [220.6, -3.2], [258, 6]].map(([x, z]) => ({ x, z, r: R(0, 3) })), null);
+  await espalhar('propane_tank', [[213.5, 9.5], [214, 10.2], [244, -19]].map(([x, z]) => ({ x, z })), null, false);
+  await espalhar('wooden_crate_01', [[220, -4], [221.2, -4.4], [220.6, -3.2], [258, 6]].map(([x, z]) => ({ x, z, r: R(0, 3) })), null, false);
   await espalhar('utility_box_01', [{ x: 152, z: -2, r: Math.PI / 2 }, { x: 228, z: 20 }], 'caixa de energia');
   // pedras escaneadas: na borda do canteiro e espalhadas pelo pasto
   const noGalpao = (p) => { const g = ctx.GALPOES; return !!g && p.x > g.x0 - 3 && p.x < g.x1 + 3 && p.z > g.z0 - 3 && p.z < g.z1 + 3; }; // nada de pedra dentro do galpão
@@ -370,8 +394,8 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     for (const x of C.ruasNS) for (const z of C.ruasLO) { hid.push({ x: x + 6.2, z: z + 6.2, r: R(0, 6) }); lixo.push({ x: x - 6.4, z: z + 6.6, r: 0 }); }
     const livre = (p) => M.cidade.livre(p.x, p.z, 0.6, 0.6);
     await espalhar('street_lamp_01', lamp.filter(livre), 'poste de luz');
-    await espalhar('fire_hydrant', hid.filter(livre), null);
-    await espalhar('metal_trash_can', lixo.filter(livre), null);
+    await espalhar('fire_hydrant', hid.filter(livre), null, false);
+    await espalhar('metal_trash_can', lixo.filter(livre), null, false);
     const quintais = M.cidade.quadras.filter((q) => q.tipo === 'casas').slice(0, 6).map((q) => ({ x: (q.x0 + q.x1) / 2 + 9, z: (q.z0 + q.z1) / 2 - 2.6, r: Math.PI / 2 })); // no quintal, longe do muro do fundo
     await espalhar('covered_car', quintais.filter(livre), 'carro coberto');
   }
