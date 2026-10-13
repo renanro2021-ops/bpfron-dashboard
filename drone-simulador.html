@@ -582,10 +582,13 @@ table.rk .ok{color:#6ee7b7}.rk .ruim{color:#fca5a5}
           <div class="campo"><label for="aj-luz">Luz do dia</label>
             <select id="aj-luz"><option value="dia">Dia claro</option><option value="tarde">Fim de tarde (sol baixo e quente)</option></select>
             <small id="aj-luz-aviso" hidden>A luz muda quando a página for recarregada (F5).</small></div>
+          <div class="campo"><label for="aj-cor">Cor da imagem</label>
+            <select id="aj-cor"><option value="cinema">Cinema (mais contraste e cor)</option><option value="natural">Natural</option></select>
+            <small id="aj-cor-aviso" hidden>A cor muda quando a página for recarregada (F5).</small></div>
           <div class="campo"><label for="aj-drone">Drone</label>
             <select id="aj-drone"><option value="mavic3">DJI Mavic 3 (padrão)</option><option value="dji_mavic3c">DJI Mavic 3 Classic</option><option value="dji_mini3">DJI Mini 3 Pro</option><option value="dji_avata2">DJI Avata 2</option><option value="dji_matrice">DJI Matrice 300</option><option value="drone_fpv">FPV de corrida (camuflado)</option></select>
             <small>Muda só a aparência — o voo e a câmera são os mesmos. O modelo baixa uma vez (até 2 MB) e fica guardado no aparelho.</small>
-            <small>Modelos 3D: “DJI Mavic3 Classic DJI drone”, de Metazeon, e “DJI Matrice t300”, de joao.silva19 (Sketchfab, CC-BY 4.0). Casas: City Kit Suburban, de Kenney (CC0).</small></div>
+            <small>Modelos 3D: “DJI Mavic3 Classic DJI drone”, de Metazeon, e “DJI Matrice t300”, de joao.silva19 (Sketchfab, CC-BY 4.0). Casas: “Farm house”, de Poly by Google (CC-BY 3.0), e “House”, de Quaternius (CC0), via poly.pizza.</small></div>
         </div>
       </div>
       <p class="dica">Alguns exercícios fixam o vento, o posicionamento ou a vista — o painel do exercício avisa.</p>
@@ -734,6 +737,7 @@ const CFG_PADRAO = {
   sticksTela: true, som: true, toque: null, deadzone: 0.04, expo: 0.25, padId: '',
   // computador já abre no realista (texturas de foto, baixa ~7 MB uma vez); celular fica no leve até escolher
   cenario: matchMedia('(pointer:coarse)').matches ? 'leve' : 'realista', fps: false,
+  cor: 'cinema', // cor da imagem: "cinema" (um pouco mais de contraste e saturação) ou "natural" (Ajustes → Tela)
   resAuto: true, // nitidez automática: baixa a resolução da cena 3D quando o aparelho não dá conta (Ajustes → Tela)
   drone: 'mavic3', luz: 'tarde', // luz quente de fim de tarde como padrão (pedido do usuário, 12/10/2026); "dia claro" fica nos Ajustes
 };
@@ -773,6 +777,23 @@ renderer.shadowMap.enabled = SOMBRAS;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;  // cor "de câmera": céu sem estourar, sombra sem ficar preta
 renderer.toneMappingExposure = 0.5;
+/* Cor "de cinema" (Ajustes → Tela → Cor da imagem): o mesmo ACES, com um pouco mais de saturação e de contraste
+   em torno do cinza médio. É feito DENTRO do cálculo de cor de cada material (a função de tone mapping "sob
+   medida" do Three.js), então não existe passada extra de pós-processamento: custa o mesmo que antes e vale
+   também para a foto do exercício e para a lente FPV. */
+if (cfg.cor !== 'natural') {
+  const padrao = 'vec3 CustomToneMapping( vec3 color ) { return color; }', pars = THREE.ShaderChunk.tonemapping_pars_fragment;
+  if (pars.includes(padrao)) {
+    THREE.ShaderChunk.tonemapping_pars_fragment = pars.replace(padrao, `vec3 CustomToneMapping( vec3 color ) {
+      color = ACESFilmicToneMapping( color );
+      float lumC = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );
+      color = mix( vec3( lumC ), color, 1.08 );
+      color = 0.18 * pow( max( color, vec3( 0.0 ) ) / 0.18, vec3( 1.08 ) );
+      return clamp( color, 0.0, 1.0 );
+    }`);
+    renderer.toneMapping = THREE.CustomToneMapping;
+  }
+}
 const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 const LONGE = 6000;
 const MALHAS = {}; // referências que o cenário realista (drone-sim-realista.js) troca de material
@@ -820,6 +841,7 @@ if (SOMBRAS) {
   sol.shadow.mapSize.set(tam, tam);
   const sc = sol.shadow.camera; sc.left = -area; sc.right = area; sc.top = area; sc.bottom = -area; sc.near = 20; sc.far = 600;
   sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.03;
+  sol.shadow.radius = QUAL === 'alta' ? 3 : 2.2; // borda da sombra mais macia (as mesmas amostras, só mais espalhadas: não custa nada)
 }
 
 function texCanvas(w, h, desenha, rep) {
@@ -947,7 +969,8 @@ diffuseColor.rgb *= 0.72 + 0.45 * nMedio;`);
    azulada. É essa sobreposição de camadas que dá a noção de distância no horizonte. */
 (function serraDistante() {
   const N = 360, RAIO_S = 4600, pos = [], cor = [], idx = [];
-  const base = new THREE.Color(COR_NEVOA), topo = new THREE.Color(TARDE ? 0x9a8f9c : 0x8496ae);
+  // longe é mais CLARO e mais azulado que perto (o ar no caminho): a serra escura virava um recorte chapado atrás dos morros já enevoados
+  const base = new THREE.Color(COR_NEVOA), topo = new THREE.Color(TARDE ? 0xb3aec2 : 0x9fb1c8);
   for (let i = 0; i <= N; i++) {
     const a = i / N * Math.PI * 2;
     const h = 560 + 210 * Math.sin(3 * a + 1) + 130 * Math.sin(7 * a + 2.3) + 150 * Math.abs(Math.sin(11 * a + 0.4)) + 70 * Math.abs(Math.sin(29 * a + 0.7)) + 35 * Math.sin(61 * a);
@@ -1189,6 +1212,8 @@ veiculo('viatura', 18.6, -7, true, 0xf8fafc);      // segunda viatura, duas vaga
 /* ---------------- linhas de energia ---------------- */
 const matFio = new THREE.LineBasicMaterial({ color: 0x1f2937 });
 const matPoste = lam(0xa8a29e);
+// postes e fios são juntados no fim (1 malha + 1 conjunto de linhas): eram 106 malhas e 156 linhas, uma chamada de desenho cada
+const REDE = { postes: [], fios: [] };
 function linhaEnergia(x0, z0, x1, z1, vao) {
   const dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
   const px = -uz, pz = ux; // perpendicular (para os 3 fios)
@@ -1196,9 +1221,9 @@ function linhaEnergia(x0, z0, x1, z1, vao) {
   const postes = [];
   for (let i = 0; i <= n; i++) {
     const x = x0 + dx * i / n, z = z0 + dz * i / n;
-    malha(new THREE.CylinderGeometry(0.12, 0.17, 9.6, 8), matPoste, x, 4.8, z);
-    const cruz = malha(new THREE.BoxGeometry(2.2, 0.14, 0.14), matPoste, x, 9.15, z);
-    cruz.rotation.y = -Math.atan2(pz, px);
+    const fuste = new THREE.CylinderGeometry(0.12, 0.17, 9.6, 8); fuste.translate(x, 4.8, z);
+    const cruz = new THREE.BoxGeometry(2.2, 0.14, 0.14); cruz.rotateY(-Math.atan2(pz, px)); cruz.translate(x, 9.15, z);
+    REDE.postes.push(fuste, cruz);
     addCaixa(x, z, 0.2, 0.2, 9.6, 'poste');
     postes.push([x, z]);
   }
@@ -1210,8 +1235,7 @@ function linhaEnergia(x0, z0, x1, z1, vao) {
         const t = k / 8, flecha = 0.7 * 4 * t * (1 - t);
         pts.push(new V3(ax + (bx - ax) * t + px * off, 9.2 - flecha, az + (bz - az) * t + pz * off));
       }
-      cena.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFio));
-      for (let k = 0; k < 8; k++) MUNDO.fios.push({ a: pts[k], b: pts[k + 1] });
+      for (let k = 0; k < 8; k++) { REDE.fios.push(pts[k], pts[k + 1]); MUNDO.fios.push({ a: pts[k], b: pts[k + 1] }); }
     }
   }
   MUNDO.mapa.fios.push({ a: [x0, z0], b: [x1, z1] });
@@ -1219,6 +1243,9 @@ function linhaEnergia(x0, z0, x1, z1, vao) {
 linhaEnergia(-600, 34, 600, 34, 50);
 linhaEnergia(126, 34, 126, -700, 45);
 linhaEnergia(-320, -150, 126, -150, 45);
+MALHAS.postes = malha(mergeGeometries(REDE.postes.map((g) => g.toNonIndexed())), matPoste, 0, 0, 0);
+MALHAS.fios = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(REDE.fios), matFio);
+cena.add(MALHAS.fios);
 
 /* ---------------- pontos fixos dos exercícios ---------------- */
 const PORTAIS_OBS = [[0, 4, -40], [30, 8, -90], [30, 4, -150], [-20, 13, -205], [-75, 6, -160], [-40, 4, -60]];
@@ -1445,6 +1472,7 @@ if (QUAL !== 'baixa') {
   // em quadras de 70 m: o capim fora da vista não é desenhado (eram 650 mil triângulos por quadro, sempre)
   const quadras = emCelulas(THREE, msh, 70);
   cena.add(...quadras); CAPIM.malha = quadras; MALHAS.capim = quadras;
+  CAPIM.alcance = 230; // folha de 60 cm: além disso é menos de 2 pontos na tela (registrado mais abaixo, quando comAlcance já existe)
 }
 
 /* Tira as árvores de um retângulo (onde entra construção nova): some o desenho e some a colisão.
@@ -2973,6 +3001,7 @@ function tirarFoto() {
   const vis = drone.g.visible;
   drone.g.visible = false; drone.somb.visible = false;
   ceu.position.copy(camFPV.position);
+  cortarPorDistancia(camFPV); // a foto sai pela câmera do drone (com o zoom dela), não pela vista que está na tela
   renderer.render(cena, camFPV);
   let url = '';
   try { url = renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { /* sem captura */ }
@@ -3400,6 +3429,19 @@ function atualizarVisual(dt) {
   // portais pulsando
   if (M && M.d.p) M.d.p.forEach((p) => { if (p.mat.color.getHex() === 0x22c55e) p.anel.scale.setScalar(1 + Math.sin(S.t * 5) * 0.04); });
 }
+/* Limite de distância: coisa miúda ou detalhe (capim, hidrante, lixeira, roda e farol de carro estacionado, placa)
+   deixa de ser desenhada quando está longe demais para ocupar mais que um ou dois pontos da tela. O alcance é
+   dado em metros para a câmera sem zoom e cresce junto com o zoom — com a tele de 7× a placa a 1 km continua lá.
+   Vale para a câmera que está desenhando (inclusive a da foto). Só entra aqui malha que ninguém mais liga e desliga. */
+const ALCANCE = [];
+function comAlcance(malhas, metros) {
+  for (const m of [].concat(malhas || [])) { if (!m.boundingSphere) m.computeBoundingSphere(); ALCANCE.push({ m, c: m.boundingSphere.center, r: m.boundingSphere.radius, d: metros }); }
+}
+const TAN25 = Math.tan(25 * Math.PI / 180);
+function cortarPorDistancia(cam) {
+  const k = Math.max(0.75, (cam.zoom || 1) * TAN25 / Math.tan(cam.fov * Math.PI / 360)), p = cam.position;
+  for (const o of ALCANCE) o.m.visible = p.distanceTo(o.c) - o.r < o.d * k;
+}
 /* Nitidez automática (Ajustes → Tela): quando o aparelho não segura uns 40 quadros por segundo em voo,
    a cena 3D passa a ser desenhada com menos pontos e esticada para a tela — o painel continua nítido,
    porque é HTML por cima. Sobe de novo, um degrau por vez, quando sobra folga; se a subida derruba os
@@ -3428,7 +3470,7 @@ function nitidezAuto(dtReal) {
   else RES.subiu = false;
   if (RES.k !== era) aplicarNitidez();
 }
-let fpsN = 0, fpsT = 0, nCoberto = 0;
+let fpsN = 0, fpsT = 0, nCoberto = 0, nQuadro = 0;
 function quadro(agora) {
   requestAnimationFrame(quadro);
   const bruto = (agora - ultimo) / 1000, dt = Math.min(0.1, bruto); ultimo = agora;
@@ -3445,6 +3487,7 @@ function quadro(agora) {
   // e o aparelho descansa enquanto o aluno lê o menu, os ajustes ou o ranking
   const coberto = !$('menu').hidden;
   if (!coberto) nCoberto = 0;
+  if (ALCANCE.length && (nQuadro++ & 3) === 0) cortarPorDistancia(VISTAS[vista].cam);
   if (!coberto || nCoberto++ % 6 === 0) desenharCena();
   if (!$('hud').hidden) atualizarHud(dt);
   if (!$('menu').hidden) testeAoVivo();
@@ -3622,6 +3665,7 @@ function ligarAjustes() {
   chk('aj-fps', 'fps', () => { $('fps').hidden = !cfg.fps; });
   chk('aj-res', 'resAuto', () => { Object.assign(RES, { k: 1, soma: 0, n: 0, subiu: false, espera: 0, antes: null, desistiu: false }); aplicarNitidez(); });
   $('fps').hidden = !cfg.fps;
+  const cr = $('aj-cor'); cr.value = cfg.cor === 'natural' ? 'natural' : 'cinema'; cr.onchange = () => { cfg.cor = cr.value; salvarCfg(); $('aj-cor-aviso').hidden = false; };
   const lz = $('aj-luz'); lz.value = cfg.luz || 'tarde'; lz.onchange = () => { cfg.luz = lz.value; salvarCfg(); $('aj-luz-aviso').hidden = false; };
   const dr = $('aj-drone'); dr.value = cfg.drone || 'mavic3';
   dr.onchange = () => { cfg.drone = dr.value; salvarCfg(); trocarDrone(true); };
@@ -3699,7 +3743,7 @@ async function ligarRealista() {
     if (!est.baixado) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Baixando o pacote… ' + Math.round(p * 100) + '%'));
     else if (await R.temVersaoNova()) await R.baixarPacote((p) => progressoCarga(p * 0.7, 'Atualizando o pacote… ' + Math.round(p * 100) + '%'));
     await R.aplicarRealista({ renderer, cena, ANISO, SOMBRAS, M: MALHAS, addCaixa, texCanvas, MUNDO, rnd: rng(777), mergeGeometries, OBSTRUI_FOTO, CANTEIRO, CIDADE, bloqueado, livreCanteiro,
-      AMB, FIXOS, VEICULOS, CID, nomeCor, TARDE, alturaChao, GALPOES, desenharPlaca: desenharPlacaCanvas, emCelulas },
+      AMB, FIXOS, VEICULOS, CID, nomeCor, TARDE, alturaChao, GALPOES, desenharPlaca: desenharPlacaCanvas, emCelulas, comAlcance },
       (p, t) => progressoCarga(0.7 + p * 0.3, 'Montando o cenário: ' + t));
     cenarioAtivo = 'realista'; cfg.cenario = 'realista'; salvarCfg();
     aviso('🌄 Cenário realista ligado', 'ok', 2500);
@@ -3736,6 +3780,7 @@ $('cen-apagar').onclick = async () => {
 /* =====================================================================
    INÍCIO
    ===================================================================== */
+if (CAPIM.malha) comAlcance(CAPIM.malha, CAPIM.alcance);
 resetDrone();
 redimensionar();
 abrirMenu();
@@ -3750,7 +3795,7 @@ window.SIM = {
   get M() { return M; }, get vista() { return vista; },
   iniciarMissao, acao, abrirMenu, carregarRankingVoo, avaliarPlaca, ajustarZoom, poseCamFPV, ZOOMS, ligarRealista, get cenario() { return cenarioAtivo; }, MALHAS, OBSTRUI_FOTO, get RK() { return RK; }, fecharMenu, abrirCal, colisao, superficie, tirarFoto, avaliarFoto, montarBinds,
   GRAFICOS, nivelDe, escolherNivel, AMB, FIXOS, HV, PISTA_FPV, PISTAS_FPV, camFPV, desenharRankingVoo, mostrarHoras, LENTE, trocarDrone, MORROS, alturaChao, GALPOES,
-  renderer, cena, THREE, RES, nitidezAuto, // para a medição de desempenho (testes/drone/_perf.mjs)
+  renderer, cena, THREE, RES, nitidezAuto, ALCANCE, cortarPorDistancia, // para a medição de desempenho (testes/drone/_perf.mjs)
   avancar(seg) { const n = Math.round(seg / PASSO); for (let i = 0; i < n; i++) { lerEntradas(PASSO); if (rodando()) { passo(PASSO); missaoPasso(PASSO); } } atualizarVisual(0.016); },
   quadros(n) { for (let i = 0; i < n; i++) { lerEntradas(0.016); atualizarVisual(0.016); } },
 };

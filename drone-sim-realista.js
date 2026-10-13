@@ -336,7 +336,8 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   const emQuadras = (im, lado = 150) => (ctx.emCelulas ? ctx.emCelulas(THREE, im, lado) : (im.frustumCulled = false, [im]));
   const chaoEm = (l) => (ctx.alturaChao ? ctx.alturaChao(l.x, l.z) : 0); // pedra e tronco em cima de morro ficam na altura do chão dali
   // sombra = false: objeto miúdo (hidrante, lixeira, pneu, caixote) recebe sombra mas não entra no mapa de sombra — a dele nem se vê
-  async function espalhar(id, lugares, colisao, sombra = true) {
+  // alcance (metros, sem zoom): além disso o objeto miúdo nem é desenhado — ver comAlcance no drone-simulador.html
+  async function espalhar(id, lugares, colisao, sombra = true, alcance = 0) {
     const cenaG = await modelo(id); if (!cenaG || !lugares.length) return;
     cenaG.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(cenaG);
@@ -350,7 +351,8 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
         im.setMatrixAt(i, m4);
       });
       im.castShadow = SOMBRAS && sombra; im.receiveShadow = SOMBRAS;
-      cena.add(...emQuadras(im)); // o que está fora da vista (e da sombra) não é desenhado
+      const quadras = emQuadras(im); cena.add(...quadras); // o que está fora da vista (e da sombra) não é desenhado
+      if (alcance && ctx.comAlcance) ctx.comAlcance(quadras, alcance);
     });
     if (colisao) for (const l of lugares) {
       const s = l.s || 1, c = Math.abs(Math.cos(l.r || 0)), sn = Math.abs(Math.sin(l.r || 0));
@@ -367,10 +369,10 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
   await espalhar('concrete_road_barrier_02', barreiras.filter((_, i) => i % 2 === 1), 'barreira de concreto');
   await espalhar('Barrel_01', [[196, -12], [196.8, -11.4], [195.6, -11], [262, 4], [263, 4.6]].map(([x, z]) => ({ x, z, r: R(0, 6) })), 'tambor');
   await espalhar('barrel_03', [[197.4, -12.6], [261.4, 5.2], [180, -52]].map(([x, z]) => ({ x, z, r: R(0, 6) })), 'tambor');
-  await espalhar('old_tyre', Array.from({ length: 9 }, (_, i) => ({ x: 270 + (i % 3) * 0.7, z: -50 + Math.floor(i / 3) * 0.7, y: 0.3 * (i % 2), r: R(0, 6) })), null, false);
+  await espalhar('old_tyre', Array.from({ length: 9 }, (_, i) => ({ x: 270 + (i % 3) * 0.7, z: -50 + Math.floor(i / 3) * 0.7, y: 0.3 * (i % 2), r: R(0, 6) })), null, false, 320);
   await espalhar('portable_generator', [{ x: 212, z: 9, r: 0.4 }, { x: 246, z: -20, r: 2 }], 'gerador');
-  await espalhar('propane_tank', [[213.5, 9.5], [214, 10.2], [244, -19]].map(([x, z]) => ({ x, z })), null, false);
-  await espalhar('wooden_crate_01', [[220, -4], [221.2, -4.4], [220.6, -3.2], [258, 6]].map(([x, z]) => ({ x, z, r: R(0, 3) })), null, false);
+  await espalhar('propane_tank', [[213.5, 9.5], [214, 10.2], [244, -19]].map(([x, z]) => ({ x, z })), null, false, 320);
+  await espalhar('wooden_crate_01', [[220, -4], [221.2, -4.4], [220.6, -3.2], [258, 6]].map(([x, z]) => ({ x, z, r: R(0, 3) })), null, false, 320);
   await espalhar('utility_box_01', [{ x: 152, z: -2, r: Math.PI / 2 }, { x: 228, z: 20 }], 'caixa de energia');
   // pedras escaneadas: na borda do canteiro e espalhadas pelo pasto
   const noGalpao = (p) => { const g = ctx.GALPOES; return !!g && p.x > g.x0 - 3 && p.x < g.x1 + 3 && p.z > g.z0 - 3 && p.z < g.z1 + 3; }; // nada de pedra dentro do galpão
@@ -393,16 +395,16 @@ export async function aplicarRealista(ctx, progresso = () => {}) {
     for (const z of C.ruasLO) for (let x = C.ruasNS[0] + 14; x < C.ruasNS[C.ruasNS.length - 1]; x += 30) if (!noCruzamento(x, C.ruasNS)) lamp.push({ x, z: z - C.larguraRua / 2 - 0.6, r: 0 });
     for (const x of C.ruasNS) for (const z of C.ruasLO) { hid.push({ x: x + 6.2, z: z + 6.2, r: R(0, 6) }); lixo.push({ x: x - 6.4, z: z + 6.6, r: 0 }); }
     const livre = (p) => M.cidade.livre(p.x, p.z, 0.6, 0.6);
-    await espalhar('street_lamp_01', lamp.filter(livre), 'poste de luz');
-    await espalhar('fire_hydrant', hid.filter(livre), null, false);
-    await espalhar('metal_trash_can', lixo.filter(livre), null, false);
+    await espalhar('street_lamp_01', lamp.filter(livre), 'poste de luz', true, 650);
+    await espalhar('fire_hydrant', hid.filter(livre), null, false, 300);
+    await espalhar('metal_trash_can', lixo.filter(livre), null, false, 300);
     const quintais = M.cidade.quadras.filter((q) => q.tipo === 'casas').slice(0, 6).map((q) => ({ x: (q.x0 + q.x1) / 2 + 9, z: (q.z0 + q.z1) / 2 - 2.6, r: Math.PI / 2 })); // no quintal, longe do muro do fundo
     await espalhar('covered_car', quintais.filter(livre), 'carro coberto');
   }
   avanco('bairro');
 
   /* ---- casas e carros de verdade e drone FPV (pacote de 12/10/2026 em diante) ---- */
-  if (manifesto.modelos.carro_sedan || manifesto.modelos.casas_kit) {
+  if (manifesto.modelos.carro_sedan || manifesto.modelos.casa_velha || manifesto.modelos.casa_fazenda) {
     const { aplicarAmbiente } = await import('./drone-sim-ambiente.js');
     await aplicarAmbiente(ctx, { manifesto, modelo, obter, avanco, tex });
   }

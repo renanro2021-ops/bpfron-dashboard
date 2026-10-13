@@ -403,7 +403,7 @@ export function montarCidade(ctx) {
   const oitaoMat = (cor) => (matOitao[cor] = matOitao[cor] || new THREE.MeshLambertMaterial({ color: cor, map: TX.reboco }));
   const extras = { plat: [], toldo: [], muro: [], portao: [] }; // juntados num desenho só no fim
   // telhados das casas: separados por material e juntados no fim (1 desenho por material, não 3 por casa)
-  const baldes = new Map();
+  const baldes = new Map(), baldesParede = new Map(), lajes = [];
   const porNoBalde = (m, g) => { if (!baldes.has(m)) baldes.set(m, []); baldes.get(m).push(g); };
   const separarGrupos = (geo) => geo.groups.map((gr) => {
     const g = new THREE.BufferGeometry();
@@ -505,11 +505,18 @@ export function montarCidade(ctx) {
   /* ---------- prédios ---------- */
   const predio = (tipo, x, z, w, d, h, cor, frente = 1) => { // frente: +1 = fachada para +z, -1 = para -z
     const parede = paredeMat(tipo, cor);
-    const m = sombra(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [parede, parede, lajeMat, lajeMat, parede, parede]));
-    m.position.set(x, h / 2, z); cena.add(m); malhas.paredes.push(m);
+    /* As paredes vão para o balde do material e são juntadas no fim: uma malha por cor para o bairro inteiro.
+       Antes cada prédio era uma caixa de 6 faces com material próprio = 6 desenhos por prédio (uns 440 só
+       nas casas). A laje de cima só entra onde aparece — na casa e no galpão o telhado a cobre. */
+    const caixaG = new THREE.BoxGeometry(w, h, d);
     // repete a textura conforme o tamanho (janela de ~3 m)
-    const uv = m.geometry.attributes.uv; const rep = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+    const uv = caixaG.attributes.uv; const rep = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
     for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * Math.max(1, Math.round(rep[f][0] / (tipo === 'galpao' ? 30 : 9))), uv.getY(i) * (tipo === 'casa' || tipo === 'galpao' ? 1 : Math.max(1, Math.round(rep[f][1] / (tipo === 'predio' ? 15 : 7))))); }
+    const indices = Array.from(caixaG.index.array);
+    const faces = (quais) => { const g = caixaG.clone(); g.setIndex(indices.filter((_, i) => quais.includes((i / 6) | 0))); g.clearGroups(); g.translate(x, h / 2, z); return g; };
+    if (!baldesParede.has(parede)) baldesParede.set(parede, []);
+    baldesParede.get(parede).push(faces([0, 1, 4, 5]));
+    if (tipo === 'comercio' || tipo === 'predio') lajes.push(faces([2]));
     let topo = h;
     if (tipo === 'casa') {
       // mesmo número de sorteios de antes (o resto do bairro, carros e placas não muda)
@@ -542,7 +549,7 @@ export function montarCidade(ctx) {
       }
     }
     const caixa = addCaixa(x, z, w / 2, d / 2, topo, tipo === 'casa' ? 'casa' : 'prédio');
-    if (tipo === 'casa') casas.push({ x, z, w, d, h, cor, frente, malha: m, caixa });
+    if (tipo === 'casa') casas.push({ x, z, w, d, h, cor, frente, malha: null, parede, caixa }); // "malha" = a malha juntada da cor dela (preenchida no fim)
     ocupado.push({ x0: x - w / 2 - 0.5, x1: x + w / 2 + 0.5, z0: z - d / 2 - 0.5, z1: z + d / 2 + 0.5 });
     MUNDO.mapa.rets.push({ x, z, w, d, cor: tipo === 'casa' ? '#b45309' : '#9ca3af' });
   };
@@ -612,6 +619,12 @@ export function montarCidade(ctx) {
   const juntar = (arr, m) => { if (!arr.length) return null; const ms = sombra(new THREE.Mesh(mergeGeometries(arr, false), m)); cena.add(ms); return ms; };
   malhas.muros = juntar(extras.muro.concat(extras.plat), matMuro);
   for (const [m, arr] of baldes) { const t = juntar(arr, m); t.userData.telha = true; malhas.telhados.push(t); }
+  { // paredes: uma malha por material; cada casa aponta para a malha da sua cor (o cenário realista esconde todas de uma vez)
+    const malhaDe = new Map();
+    for (const [m, arr] of baldesParede) { const t = juntar(arr, m); malhaDe.set(m, t); malhas.paredes.push(t); }
+    for (const c of casas) { c.malha = malhaDe.get(c.parede); delete c.parede; }
+    const laje = juntar(lajes, lajeMat); if (laje) malhas.paredes.push(laje);
+  }
   malhas.toldos = juntar(extras.toldo, matToldo);
   malhas.portoes = juntar(extras.portao, matPortao);
 
@@ -669,8 +682,7 @@ export function montarCidade(ctx) {
         if (parte === 'pintura') { cor.setHex(c.cor); msh.setColorAt(k, cor); }
       });
       if (SOMBRAS && (parte === 'pintura' || parte === 'vidro')) msh.castShadow = true;
-      msh.frustumCulled = false; // a esfera de limite do InstancedMesh não cobre o bairro todo
-      cena.add(msh); instancias.push(msh);
+      for (const q of emCelulas(THREE, msh, 130)) { cena.add(q); instancias.push(q); } // em quadras: fora da vista não desenha
     }
   }
   for (const c of carros) {
