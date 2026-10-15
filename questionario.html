@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Questionário Colaborativo — BPFRON</title>
+<script src="conta.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   QUESTIONÁRIO COLABORATIVO — uma resposta só, preenchida por várias pessoas
+   ao mesmo tempo (15/10/2026). Quem responde entra pelo link com RE + 4
+   últimos do CPF, se estiver na lista do gestor. Cada pergunta trava enquanto
+   alguém edita; todo mundo vê quem está onde. O gestor (permissão "pesquisa")
+   cria, mantém a lista e tira os relatórios. Servidor: backend/questionario.js.
+   =========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --bg3:#101524; --yellow:#F5C518; --gold:#c9a030;
+  --blue2:#3b82f6; --green2:#22c55e; --red:#dc2626;
+  --text:#dde3f0; --muted:#8b97a8; --border:rgba(245,197,24,0.16);
+  --card:#0f172a; --topo:0px;
+}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
+body{padding:0 0 70px}
+a{color:var(--yellow)}
+[hidden]{display:none !important}
+
+/* ---------- cabeçalho ---------- */
+.pg-hdr{background:linear-gradient(180deg,#0b1020,#070b14);border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pg-hdr .ic{font-size:22px}
+.pg-hdr .ht{font-family:Rajdhani,sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--yellow)}
+.pg-hdr .hs{font-size:11.5px;color:var(--muted)}
+.pg-hdr .dir{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;color:var(--muted);background:#0c1220;border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px}
+
+.wrap{max-width:1020px;margin:0 auto;padding:18px 16px}
+.wrap.largo{max-width:1220px}
+.wrap.estreito{max-width:520px}
+
+/* ---------- blocos ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 17px;margin-bottom:14px}
+.sec-t{font-family:Rajdhani,sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sec-t .dir{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+input[type=text],input[type=password],input[type=date],textarea,select{
+  width:100%;background:#0a0f1c;border:1px solid rgba(255,255,255,.12);border-radius:9px;
+  color:var(--text);padding:9px 11px;font-size:14px;font-family:inherit}
+textarea{min-height:76px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--yellow)}
+input::placeholder,textarea::placeholder{color:#55607a}
+input:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
+select option{background:#0a0f1c}
+.btn{background:linear-gradient(180deg,#f5c518,#d4a017);color:#141414;border:none;border-radius:9px;
+  padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:Rajdhani,sans-serif;
+  letter-spacing:.6px;text-transform:uppercase}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sec{background:#1a2234;color:var(--text);border:1px solid var(--border)}
+.btn.pq{padding:7px 12px;font-size:12px}
+.btn.dan{background:#2a1416;color:#fca5a5;border:1px solid rgba(220,38,38,.45)}
+.btn.ok{background:linear-gradient(180deg,#22c55e,#15803d);color:#fff}
+.msg{border-radius:10px;padding:11px 13px;font-size:13.5px;margin-bottom:12px;line-height:1.5}
+.msg.err{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.45);color:#fca5a5}
+.msg.warn{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);color:#fde68a}
+.msg.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#86efac}
+.msg.info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.4);color:#bfdbfe}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted);
+  background:#0c1220;display:inline-block;white-space:nowrap}
+.pill.on{border-color:rgba(34,197,94,.45);color:#86efac}
+.pill.off{border-color:rgba(255,255,255,.14);color:#94a3b8}
+.pill.n{border-color:rgba(245,197,24,.45);color:var(--yellow);font-weight:600}
+.vazio{text-align:center;color:var(--muted);padding:34px 16px;font-size:14px;line-height:1.6}
+.load{text-align:center;padding:46px 20px;color:var(--muted)}
+.sp{width:32px;height:32px;border:3px solid rgba(245,197,24,.2);border-top-color:var(--yellow);
+  border-radius:50%;animation:gira .8s linear infinite;margin:0 auto 13px}
+@keyframes gira{to{transform:rotate(360deg)}}
+.chkline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.chkline input{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer}
+.barra{height:10px;background:#0a0f1c;border:1px solid rgba(255,255,255,.1);border-radius:6px;overflow:hidden}
+.barra i{display:block;height:100%;background:linear-gradient(90deg,#15803d,#22c55e);transition:width .4s}
+.tabela{width:100%;border-collapse:collapse;font-size:13px}
+.tabela th{text-align:left;padding:7px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--gold);border-bottom:1px solid var(--border);white-space:nowrap}
+.tabela td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.rolar{overflow:auto}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.5}
+
+/* ---------- login / entrada ---------- */
+.login-box{max-width:390px;margin:40px auto;background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:26px 24px}
+.login-box h2{font-family:Rajdhani,sans-serif;font-size:21px;color:var(--yellow);margin-bottom:5px;text-align:center}
+.login-box p{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5}
+.campo{margin-bottom:12px}
+.login-box .btn{width:100%;padding:12px}
+.erro-txt{color:#fca5a5;font-size:13px;margin-top:10px;text-align:center;line-height:1.5}
+.ent{text-align:left;padding:24px 22px;margin-top:26px}
+.ent .ic{font-size:34px;text-align:center}
+.ent h1{font-family:Rajdhani,sans-serif;font-size:22px;color:var(--yellow);text-align:center;margin:6px 0 8px;line-height:1.25}
+.ent .desc{font-size:13px;color:#c3ccdb;line-height:1.55;margin-bottom:14px;white-space:pre-wrap}
+.ent .prog{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+.ent .btn{width:100%;padding:12px;margin-top:4px}
+.ent .gest{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);text-align:center;font-size:12.5px;color:var(--muted)}
+.ent .gest button.link{background:none;border:none;color:var(--yellow);cursor:pointer;font-size:12.5px;text-decoration:underline}
+.ajuda{font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px;background:#0a0f1c;border-radius:10px;padding:10px 12px}
+
+/* ---------- lista do gestor ---------- */
+.qcard{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:12px;
+  padding:14px 15px;margin-bottom:11px;border-left:4px solid var(--green2)}
+.qcard.fechado{border-left-color:var(--muted)}
+.qcard h3{font-size:16px;color:#eaf0fa;margin-bottom:4px;font-weight:600;line-height:1.3}
+.qcard .met{font-size:11.5px;color:var(--muted);margin-bottom:9px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.qcard .acoes{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+
+/* ---------- topo ao vivo ---------- */
+.q-topo{position:sticky;top:0;z-index:30;background:rgba(7,11,20,.97);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(6px)}
+.q-topo .in{max-width:1220px;margin:0 auto;padding:10px 16px 8px}
+.q-l1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.q-l1 h1{font-family:Rajdhani,sans-serif;font-size:17px;color:#eaf0fa;font-weight:700;line-height:1.2;flex:1;min-width:200px}
+.con{font-size:11.5px;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.con i{width:9px;height:9px;border-radius:50%;background:#64748b;display:inline-block}
+.con.on i{background:var(--green2);box-shadow:0 0 8px rgba(34,197,94,.7)}
+.con.off i{background:#f59e0b;animation:pisca 1s infinite}
+@keyframes pisca{50%{opacity:.3}}
+.q-l2{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.q-l2 .barra{flex:1;min-width:140px}
+.q-l2 .txt{font-size:12px;color:var(--muted);white-space:nowrap}
+.q-l3{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;min-height:30px}
+.q-l3 .lb{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.avs{display:flex;align-items:center;padding-left:6px;flex-wrap:wrap}
+.av{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#0b1020;background:var(--c);border:2px solid #070b14;margin-left:-6px;
+  cursor:pointer;position:relative;flex-shrink:0;font-family:Inter,sans-serif}
+.av.eu{outline:2px solid var(--yellow);outline-offset:1px}
+.av.g::after{content:"★";position:absolute;right:-4px;bottom:-4px;font-size:10px;color:var(--yellow);text-shadow:0 0 2px #000}
+.av.pq{width:20px;height:20px;font-size:8.5px;margin-left:-4px;border-width:1.5px}
+.onde{font-size:11.5px;color:var(--muted);margin-left:6px}
+.q-eu{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}
+.tab{background:none;border:1px solid transparent;color:var(--muted);border-radius:9px 9px 0 0;padding:7px 12px;
+  font-size:13px;cursor:pointer;font-family:inherit}
+.tab.sel{color:var(--yellow);border-color:var(--border);border-bottom-color:transparent;background:var(--card)}
+
+/* ---------- área de preenchimento ---------- */
+.qlay{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.qnav{position:sticky;top:calc(var(--topo) + 12px);max-height:calc(100vh - var(--topo) - 24px);overflow:auto;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px}
+.qnav .it{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;
+  padding:8px 9px;cursor:pointer;color:var(--text);font-family:inherit;margin-bottom:2px}
+.qnav .it:hover{background:#121a2c}
+.qnav .it.sel{background:rgba(245,197,24,.08);border-color:rgba(245,197,24,.35)}
+.qnav .it .t{font-size:13px;line-height:1.3;display:block}
+.qnav .it .d{font-size:11px;color:var(--gold);display:block;margin-top:2px}
+.qnav .it .m{display:flex;align-items:center;gap:7px;margin-top:5px}
+.qnav .it .m .barra{flex:1;height:6px}
+.qnav .it .m .c{font-size:11px;color:var(--muted);white-space:nowrap}
+.qnav .it.cheia .m .c{color:#86efac}
+.sec-sel{display:none;margin-bottom:12px}
+.sec-cab{margin-bottom:12px}
+.sec-cab h2{font-family:Rajdhani,sans-serif;font-size:21px;color:var(--yellow);line-height:1.2}
+.sec-cab .sub{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filtros{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+
+.qc{background:var(--card);border:1px solid rgba(255,255,255,.08);border-left:4px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:13px 15px;margin-bottom:10px;transition:border-color .25s,box-shadow .25s;--c:#94a3b8}
+.qc.resp{border-left-color:var(--green2)}
+.qc.vaz.ob{border-left-color:rgba(245,197,24,.55)}
+.qc.trv{border-color:var(--c);box-shadow:0 0 0 1px var(--c) inset}
+.qc.meu{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
+.qc.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px rgba(34,197,94,.65)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.qc.alvo{animation:alvo 1.6s ease-out}
+@keyframes alvo{0%{box-shadow:0 0 0 4px rgba(245,197,24,.7)}100%{box-shadow:0 0 0 0 rgba(245,197,24,0)}}
+.qh{display:flex;gap:9px;align-items:flex-start}
+.qn{font-family:Rajdhani,sans-serif;font-weight:700;color:var(--gold);min-width:28px;font-size:15px;line-height:1.35}
+.qt{flex:1;font-size:14.5px;line-height:1.45;color:#eaf0fa}
+.qt .ob{color:var(--yellow);margin-left:3px}
+.olhando{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.qi{margin-top:10px}
+.ops{display:flex;flex-wrap:wrap;gap:7px}
+.opb{background:#0a0f1c;border:1px solid rgba(255,255,255,.14);color:var(--text);border-radius:9px;
+  padding:8px 13px;font-size:13.5px;cursor:pointer;font-family:inherit;text-align:left;line-height:1.35}
+.opb:hover:not(:disabled){border-color:rgba(245,197,24,.55)}
+.opb.sel{background:rgba(245,197,24,.14);border-color:var(--yellow);color:#fde68a;font-weight:600}
+.opb:disabled{opacity:.5;cursor:not-allowed}
+.ops.col{flex-direction:column;align-items:stretch}
+.ops.col .opb::before{content:"○ ";color:var(--muted)}
+.ops.col .opb.sel::before{content:"● ";color:var(--yellow)}
+.ops.mult .opb::before{content:"☐ ";color:var(--muted)}
+.ops.mult .opb.sel::before{content:"☑ ";color:var(--yellow)}
+.limpar{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;margin-left:4px;font-family:inherit}
+.qs{margin-top:9px;font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-height:18px}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600}
+.tag.lk{background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);border:1px solid var(--c)}
+.tag.me{background:rgba(245,197,24,.12);color:var(--yellow);border:1px solid rgba(245,197,24,.45)}
+.tag.ok{color:#86efac}
+.tag.er{color:#fca5a5}
+.sec-nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
+.banner{margin-bottom:14px}
+
+/* ---------- gestão ---------- */
+.grid-add{display:grid;grid-template-columns:150px 1fr auto;gap:9px;align-items:end}
+.grid-fora{display:grid;grid-template-columns:1fr 110px 150px;gap:9px;margin-top:9px}
+.link-box{display:flex;gap:7px;margin:4px 0 10px;flex-wrap:wrap}
+.link-box input{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;flex:1;min-width:220px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px;text-align:center}
+.kpi .v{font-family:Rajdhani,sans-serif;font-size:26px;font-weight:700;color:var(--yellow);line-height:1}
+.kpi .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#334155}
+.dot.on{background:var(--green2);box-shadow:0 0 6px rgba(34,197,94,.7)}
+.dep-in{max-width:170px;padding:6px 9px;font-size:13px}
+.rel-acoes{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+/* ---------- modal e aviso ---------- */
+.ovl{position:fixed;inset:0;background:rgba(3,6,14,.82);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+.ovl.on{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:500px;
+  width:100%;max-height:88vh;overflow:auto}
+.modal.grande{max-width:760px}
+.modal h3{font-family:Rajdhani,sans-serif;font-size:19px;color:var(--yellow);margin-bottom:10px}
+.modal p{font-size:13.5px;color:#c3ccdb;line-height:1.55;margin-bottom:12px}
+.modal .fim{display:flex;gap:8px;justify-content:flex-end;margin-top:15px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:7px;
+  align-items:center;pointer-events:none;width:min(560px,calc(100% - 24px))}
+.ts{background:#111a2e;border:1px solid var(--border);color:var(--text);border-radius:11px;padding:10px 14px;font-size:13.5px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);line-height:1.45;animation:sobe .25s ease-out;pointer-events:auto}
+.ts.warn{border-color:rgba(245,197,24,.6)}
+.ts.err{border-color:rgba(220,38,38,.6);color:#fecaca}
+.ts.ok{border-color:rgba(34,197,94,.6)}
+@keyframes sobe{from{transform:translateY(8px);opacity:0}}
+
+@media(max-width:860px){
+  .qlay{grid-template-columns:1fr}
+  .qnav{display:none}
+  .sec-sel{display:block}
+  .grid-add,.grid-fora{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .wrap{padding:13px 11px}
+  .q-topo .in{padding:8px 11px 7px}
+  .q-l1 h1{font-size:15px}
+  .onde{display:none}
+  .tabs{flex-wrap:nowrap;overflow-x:auto}
+  .tab{white-space:nowrap}
+  .qc{padding:12px 12px}
+  .qt{font-size:14px}
+}
+
+/* ═══ RELATÓRIOS IMPRESSOS ═════════════════════════════════════════════════
+   A tela some e sai só o #print-area, montado na hora. Mesmo formato dos
+   relatórios do pesquisas.html / ocorrencias.html. */
+#print-area{display:none}
+@media print{
+  @page{ size:A4; margin:14mm 12mm; }
+  html,body{background:#fff !important;color:#000;padding:0;margin:0}
+  body > *:not(#print-area){display:none !important}
+  #print-area{display:block;font-size:10pt;line-height:1.42;color:#000}
+  .pr-cab{display:flex;align-items:center;gap:12pt;border-bottom:2.5pt solid #000;padding-bottom:7pt;margin-bottom:10pt}
+  .pr-cab .pr-logo{width:58pt;height:58pt;object-fit:contain;flex-shrink:0}
+  .pr-cab .pr-org{font-size:9pt;letter-spacing:.6pt;text-transform:uppercase;color:#333}
+  .pr-cab h1{font-size:14.5pt;margin:2pt 0 1pt;letter-spacing:.2pt}
+  .pr-cab .pr-sub{font-size:9pt;color:#333}
+  .pr-meta{border:.7pt solid #999;border-left:3pt solid #000;padding:6pt 8pt;margin-bottom:9pt;font-size:9pt}
+  .pr-meta div{margin:1pt 0}
+  .pr-h2{font-size:11.5pt;margin:12pt 0 4pt;padding-bottom:2pt;border-bottom:1.2pt solid #000;break-after:avoid;page-break-after:avoid}
+  .pr-h2 small{font-weight:normal;font-size:8.5pt;color:#444}
+  .pr-tab{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:6pt}
+  .pr-tab th{text-align:left;border:.7pt solid #999;padding:3pt 4pt;font-size:7.5pt;text-transform:uppercase;
+    letter-spacing:.3pt;background:#f0f0f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pr-tab td{border:.7pt solid #bbb;padding:3pt 4pt;vertical-align:top}
+  .pr-tab tr{break-inside:avoid;page-break-inside:avoid}
+  .pr-tab td.n{width:24pt;text-align:center;font-weight:700}
+  .pr-tab td.r{width:42%;white-space:pre-wrap}
+  .pr-tab td.vz{color:#777;font-style:italic}
+  .pr-tab .quem{display:block;font-size:7.5pt;color:#555;margin-top:2pt}
+  .pr-quebra{break-before:page;page-break-before:always}
+  .pr-fim{margin-top:10pt;padding-top:5pt;border-top:.7pt solid #999;font-size:8pt;color:#444;text-align:center}
+  .pr-resumo{width:100%;border-collapse:collapse;margin-bottom:10pt;font-size:9pt}
+  .pr-resumo td{border:.7pt solid #999;padding:5pt 6pt;text-align:center}
+  .pr-resumo .pr-v{font-size:13pt;font-weight:700;display:block}
+  .pr-resumo .pr-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.4pt;color:#444}
+}
+</style>
+</head>
+<body>
+
+<div class="pg-hdr" id="pg-hdr">
+  <span class="ic">📋</span>
+  <div>
+    <div class="ht">QUESTIONÁRIO COLABORATIVO</div>
+    <div class="hs">BPFRON · uma resposta só, preenchida a várias mãos</div>
+  </div>
+  <div class="dir" id="hdr-dir"></div>
+</div>
+
+<!-- topo fixo da tela ao vivo: título, andamento, quem está aqui, abas do gestor -->
+<div class="q-topo" id="q-topo" hidden><div class="in">
+  <div class="q-l1">
+    <h1 id="q-tit"></h1>
+    <span class="pill" id="q-status"></span>
+    <span class="con" id="q-con"><i></i><span>conectando…</span></span>
+    <span class="q-eu" id="q-eu"></span>
+  </div>
+  <div class="q-l2">
+    <div class="barra"><i id="q-barra" style="width:0"></i></div>
+    <span class="txt" id="q-prog"></span>
+    <button class="btn sec pq" id="btn-prox" onclick="proximaPendente()">➜ Próxima sem resposta</button>
+  </div>
+  <div class="q-l3">
+    <span class="lb">Agora aqui:</span>
+    <div class="avs" id="q-avs"></div>
+    <span class="onde" id="q-onde"></span>
+  </div>
+  <div class="tabs" id="q-tabs" hidden>
+    <button class="tab sel" data-aba="preencher" onclick="abaGestor('preencher')">📝 Preencher</button>
+    <button class="tab" data-aba="membros" onclick="abaGestor('membros')">👥 Quem responde</button>
+    <button class="tab" data-aba="andamento" onclick="abaGestor('andamento')">📊 Andamento e relatórios</button>
+    <button class="tab" data-aba="ajustes" onclick="abaGestor('ajustes')">⚙️ Ajustes</button>
+  </div>
+</div></div>
+
+<div id="tela-carregando" class="load"><div class="sp"></div>Carregando…</div>
+
+<!-- gestor: login -->
+<div class="wrap" id="tela-login" hidden>
+  <div class="login-box">
+    <h2>🔐 Área do gestor</h2>
+    <p>Questionários colaborativos do BPFRON.<br>Entre com o seu login do sistema.</p>
+    <form onsubmit="return fazerLogin(event)">
+      <div class="campo"><label class="lbl" for="lg-user">Usuário</label>
+        <input type="text" id="lg-user" autocomplete="username" required></div>
+      <div class="campo"><label class="lbl" for="lg-pass">Senha</label>
+        <input type="password" id="lg-pass" autocomplete="current-password" required></div>
+      <button class="btn" id="lg-btn" type="submit">Entrar</button>
+    </form>
+    <div class="erro-txt" id="lg-erro"></div>
+  </div>
+</div>
+
+<!-- gestor: lista -->
+<div class="wrap" id="tela-lista" hidden></div>
+
+<!-- quem responde: entrada pelo link -->
+<div class="wrap estreito" id="tela-entrada" hidden>
+  <div class="card ent">
+    <div class="ic">📋</div>
+    <h1 id="ent-tit"></h1>
+    <div class="desc" id="ent-desc"></div>
+    <div class="prog" id="ent-prog"></div>
+    <div id="ent-erro" class="msg err" hidden></div>
+    <form id="f-re" onsubmit="return entrarRE(event)">
+      <div class="campo"><label class="lbl" for="ent-re">Seu RE</label>
+        <input type="text" id="ent-re" inputmode="numeric" autocomplete="off" placeholder="Ex.: 100012345" required></div>
+      <button class="btn" type="submit" id="btn-re">Continuar</button>
+    </form>
+    <form id="f-conf" onsubmit="return entrarConfirma(event)" hidden>
+      <div class="campo"><label class="lbl" for="ent-conf" id="lbl-conf">4 últimos dígitos do seu CPF</label>
+        <input type="password" id="ent-conf" autocomplete="off" required></div>
+      <button class="btn" type="submit" id="btn-conf">Entrar no questionário</button>
+      <div style="text-align:center;margin-top:10px"><button type="button" class="limpar" onclick="voltarRE()">← trocar o RE</button></div>
+    </form>
+    <div class="gest" id="ent-gestor"></div>
+    <div class="ajuda">
+      <b>Como funciona:</b> todo mundo preenche o <b>mesmo</b> questionário, ao mesmo tempo, e tudo
+      salva sozinho. Se uma pergunta aparecer com <b>🔒</b>, outra pessoa está editando: espere ela
+      terminar ou vá para outra. Você vê quem está conectado e em que parte cada um está.
+    </div>
+  </div>
+</div>
+
+<!-- tela ao vivo -->
+<div class="wrap largo" id="tela-q" hidden>
+  <div class="banner" id="banner"></div>
+  <div id="aba-preencher" class="qlay">
+    <nav class="qnav" id="qnav" aria-label="Seções"></nav>
+    <main>
+      <select class="sec-sel" id="sec-sel" onchange="irSecao(+this.value)" aria-label="Seção"></select>
+      <div class="sec-cab" id="sec-cab"></div>
+      <div class="filtros">
+        <label class="chkline"><input type="checkbox" id="so-pend" onchange="Q.soPend=this.checked;renderSecao()"> Mostrar só as sem resposta</label>
+      </div>
+      <div id="qarea"></div>
+      <div class="sec-nav" id="sec-nav"></div>
+    </main>
+  </div>
+  <div id="aba-membros" hidden></div>
+  <div id="aba-andamento" hidden></div>
+  <div id="aba-ajustes" hidden></div>
+</div>
+
+<!-- tela de aviso (retirado da lista, outra aba, sessão vencida) -->
+<div class="wrap estreito" id="tela-aviso" hidden>
+  <div class="card ent" id="aviso-corpo"></div>
+</div>
+
+<div class="ovl" id="ovl"><div class="modal" id="modal"></div></div>
+<div id="toast" aria-live="polite"></div>
+<div id="print-area"></div>
+
+<script>
+/* ==========================================================================
+   Estado e autenticação
+   ========================================================================== */
+const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+const AUTH = {
+  get token(){ return localStorage.getItem('bp_token') || ''; },
+  set token(t){ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); },
+  get user(){ return localStorage.getItem('bp_user') || ''; },
+  set user(u){ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); },
+  get logged(){ return !!this.token; }
+};
+// ALLOWLIST — espelha pesquisaEditors() do worker.js (mesma permissão das Pesquisas).
+const PESQUISA_GESTORES = ['desousa','cmtfelipe','p3','p3cmt','p301','p3aux'];
+function permsSessao(){ try{ const p = JSON.parse(localStorage.getItem('bp_perms') || 'null'); return p && p.user === AUTH.user ? p : null; }catch(e){ return null; } }
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function temPerm(id, lista){ const p = permsSessao(); return p ? p.perms.includes(id) : lista.includes(AUTH.user); }
+function podeGerir(){ return AUTH.logged && temPerm('pesquisa', PESQUISA_GESTORES); }
+function nomeSessao(){ const p = permsSessao(); return (p && p.nome) || AUTH.user; }
+
+const URLP = new URLSearchParams(location.search);
+const PARAM_ID = (URLP.get('id') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+
+/* Estado do questionário aberto. resp[n] = { v, re, nome, em }; travas[n] = { re, nome } */
+const Q = {
+  id: PARAM_ID, token: '', eu: null, def: null, status: 'ABERTO', concluido: null,
+  resp: {}, travas: {}, presentes: [], sec: 0, soPend: false, aba: 'preencher',
+  membros: null, dados: null, nuncaConectou: true
+};
+let WSK = null, tentativas = 0, falhasIniciais = 0, timerRecon = null, timerPing = null;
+let EDIT = null;              // { n } pergunta de texto que estou editando
+const DEB = {};               // debounce de gravação por pergunta
+const ULT_ENV = {};           // último valor mandado por pergunta
+const PEND = {};              // id da mensagem -> n (esperando o ok)
+let seqMsg = 0, ultDigitando = 0;
+const OTIM = {};              // resposta de antes de um clique (volta se o servidor recusar)
+function desfazerOtimista(n){
+  if (!(n in OTIM)) return;
+  if (OTIM[n]) Q.resp[n] = OTIM[n]; else delete Q.resp[n];
+  delete OTIM[n];
+  renderProgresso(); renderNav();
+}
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const TZ = { timeZone:'America/Porto_Velho' };
+function fmtQuando(ms, curto){
+  if (!ms) return '';
+  const d = new Date(ms);
+  return curto
+    ? d.toLocaleString('pt-BR', { ...TZ, day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }).replace(',', '')
+    : d.toLocaleString('pt-BR', TZ).replace(',', '');
+}
+const CORES = ['#60a5fa','#f472b6','#34d399','#fbbf24','#a78bfa','#f87171','#2dd4bf','#fb923c','#a3e635','#e879f9','#38bdf8','#facc15'];
+function cor(re){ let h = 0; for (const c of String(re)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return CORES[h % CORES.length]; }
+function iniciais(nome){
+  const p = String(nome || '?').replace(/^(SD|CB|\d?º?\s*SGT|ST|\d?º?\s*TEN|CAP|MAJ|TC|CEL|ASP)\s+/i, '')
+    .replace(/^(QPPM|QOPM|QPPMC|QOBM)\s+/i, '').trim().split(/\s+/);
+  return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+function rotuloPessoa(p){ return ((p.posto ? p.posto + ' ' : '') + (p.nome || '')).trim() || p.re; }
+
+function telas(...ids){
+  for (const id of ['tela-carregando','tela-login','tela-lista','tela-entrada','tela-q','tela-aviso']) $(id).hidden = !ids.includes(id);
+  $('q-topo').hidden = !ids.includes('tela-q');
+  $('pg-hdr').hidden = ids.includes('tela-q');
+  medirTopo();
+}
+function medirTopo(){
+  requestAnimationFrame(() => document.documentElement.style.setProperty('--topo', ($('q-topo').hidden ? 0 : $('q-topo').offsetHeight) + 'px'));
+}
+window.addEventListener('resize', medirTopo);
+
+function toast(msg, tipo, ms){
+  const el = document.createElement('div');
+  el.className = 'ts ' + (tipo || '');
+  el.innerHTML = msg;
+  $('toast').appendChild(el);
+  setTimeout(() => el.remove(), ms || 4200);
+}
+function abrirModal(html, grande){
+  $('modal').className = 'modal' + (grande ? ' grande' : '');
+  $('modal').innerHTML = html;
+  $('ovl').classList.add('on');
+}
+function fecharModal(){ $('ovl').classList.remove('on'); $('modal').innerHTML = ''; }
+$('ovl').addEventListener('click', (e) => { if (e.target === $('ovl')) fecharModal(); });
+
+async function api(rota, opts){
+  const o = Object.assign({ headers:{} }, opts || {});
+  if (o.auth !== false && AUTH.token) o.headers.Authorization = 'Bearer ' + AUTH.token;
+  if (o.body && typeof o.body !== 'string'){ o.body = JSON.stringify(o.body); o.headers['Content-Type'] = 'application/json'; }
+  let r;
+  try { r = await fetch(API_BASE + rota, o); }
+  catch(e){ return { status:0, d:{ detail:'Sem conexão com o servidor. Confira a internet e tente de novo.' } }; }
+  let d = {};
+  try { d = await r.json(); } catch(e){ d = {}; }
+  return { status:r.status, d };
+}
+
+function renderChip(){
+  const dir = $('hdr-dir');
+  if (Q.eu && !Q.eu.gestor){
+    dir.innerHTML = '<span class="chip">👤 ' + esc(rotuloPessoa(Q.eu)) + '</span>' +
+      '<button class="btn sec pq" onclick="sairQuestionario()">Sair</button>';
+  } else if (AUTH.logged){
+    dir.innerHTML = '<span class="chip">🛡️ ' + esc(nomeSessao()) + '</span>' +
+      (PARAM_ID ? '<a class="btn sec pq" href="questionario.html" style="text-decoration:none">☰ Meus questionários</a>' : '') +
+      '<a class="btn sec pq" href="pesquisas.html" style="text-decoration:none">📊 Pesquisas</a>' +
+      '<button class="btn sec pq" onclick="sairGestor()">Sair</button>';
+  } else dir.innerHTML = '';
+}
+
+/* ==========================================================================
+   Início
+   ========================================================================== */
+async function init(){
+  renderChip();
+  if (!PARAM_ID){
+    if (!AUTH.logged){ telas('tela-login'); return; }
+    if (!podeGerir()){ telas('tela-login'); $('lg-erro').textContent = semAcessoTxt(); return; }
+    return carregarLista();
+  }
+  return telaEntrada();
+}
+function semAcessoTxt(){
+  return 'Este usuário não tem acesso aos questionários. Peça a um administrador para marcar ' +
+         '"Pesquisas e Formulários" no Painel de Controle.';
+}
+
+async function fazerLogin(ev){
+  ev.preventDefault();
+  const btn = $('lg-btn'), erro = $('lg-erro');
+  erro.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const r = await api('/api/login', { method:'POST', auth:false,
+      body:{ user:($('lg-user').value || '').trim(), pass:$('lg-pass').value || '' } });
+    if (r.status !== 200 || !r.d.token) throw new Error(r.d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : (r.d.detail || 'Falha no login.'));
+    AUTH.token = r.d.token; AUTH.user = r.d.user; salvarPerms(r.d);
+    $('lg-pass').value = '';
+    renderChip();
+    if (!podeGerir()){ erro.textContent = semAcessoTxt(); return false; }
+    if (PARAM_ID) await entrarGestor();
+    else await carregarLista();
+  }catch(e){ erro.textContent = e.message; }
+  finally{ btn.disabled = false; btn.textContent = 'Entrar'; }
+  return false;
+}
+function sairGestor(){
+  AUTH.token = ''; AUTH.user = '';
+  try{ localStorage.removeItem('bp_perms'); }catch(e){}
+  fecharWs(); location.href = 'questionario.html';
+}
+
+/* ==========================================================================
+   Gestor: lista e criação
+   ========================================================================== */
+async function carregarLista(){
+  telas('tela-carregando');
+  const r = await api('/api/questionario');
+  if (r.status === 401){ AUTH.token = ''; renderChip(); telas('tela-login'); return; }
+  if (r.status === 403){ telas('tela-login'); $('lg-erro').textContent = semAcessoTxt(); return; }
+  if (r.status !== 200){ telas('tela-lista'); $('tela-lista').innerHTML = '<div class="msg err">' + esc(r.d.detail || 'Não consegui carregar.') + '</div>'; return; }
+  const lista = r.d.questionarios || [];
+  telas('tela-lista');
+  $('tela-lista').innerHTML =
+    '<div class="card"><div class="sec-t">📋 Questionários colaborativos' +
+      '<div class="dir"><button class="btn pq" onclick="modalNovo()">➕ Novo questionário</button></div></div>' +
+    '<p style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px">Para documento que pede <b>uma resposta só</b> do batalhão ' +
+      '(ofício, levantamento do MP, inspeção) e que vários setores precisam preencher juntos. Para ouvir o efetivo — ' +
+      'cada um com a sua resposta — use as <a href="pesquisas.html">Pesquisas</a>.</p>' +
+    (lista.length ? lista.map(cardLista).join('') : '<div class="vazio">Nenhum questionário ainda.<br>Clique em <b>➕ Novo questionário</b>.</div>') +
+    '</div>';
+}
+function cardLista(q){
+  const pct = q.total ? Math.round(100 * q.respondidas / q.total) : 0;
+  const fechado = q.status === 'CONCLUIDO';
+  return '<div class="qcard' + (fechado ? ' fechado' : '') + '">' +
+    '<h3>' + esc(q.titulo) + '</h3>' +
+    '<div class="met"><span class="pill ' + (fechado ? 'off' : 'on') + '">' + (fechado ? '✅ Concluído' : '🟢 Em preenchimento') + '</span>' +
+      '<span class="pill">' + q.respondidas + ' de ' + q.total + ' respondidas</span>' +
+      '<span class="pill">👥 ' + (q.membros || 0) + ' na lista</span>' +
+      (q.online ? '<span class="pill n">● ' + q.online + ' agora</span>' : '') +
+      '<span>código <b>' + esc(q.id) + '</b> · criado ' + esc(fmtQuando(q.criado_em, true)) + '</span></div>' +
+    '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
+    (q.erro_planilha ? '<div class="msg warn" style="margin:9px 0 0">⚠️ A planilha não recebeu o histórico da última vez (' + esc(q.erro_planilha.msg || '') + '). Abra e use “Enviar agora” em Andamento.</div>' : '') +
+    '<div class="acoes"><a class="btn pq" style="text-decoration:none" href="questionario.html?id=' + encodeURIComponent(q.id) + '&g=1">Abrir</a>' +
+      '<button class="btn sec pq" onclick="copiarLink(\'' + esc(q.id) + '\')">🔗 Copiar link</button></div>' +
+  '</div>';
+}
+function linkDe(id){ return location.origin + location.pathname.replace(/[^/]*$/, '') + 'questionario.html?id=' + id; }
+function copiarTexto(t, ok){
+  const fim = () => toast(ok || '✅ Copiado.', 'ok');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(fim).catch(() => prompt('Copie:', t));
+  else prompt('Copie:', t);
+}
+function copiarLink(id){ copiarTexto(linkDe(id), '✅ Link copiado.'); }
+
+function modalNovo(){
+  abrirModal(
+    '<h3>➕ Novo questionário colaborativo</h3>' +
+    '<p>Cole o questionário em JSON (ou escolha o arquivo .json). Formato: <code>{ "titulo", "descricao", ' +
+    '"secoes": [ { "titulo", "departamento", "perguntas": [ ... ] } ] }</code> — as perguntas seguem o mesmo esquema ' +
+    'das Pesquisas (curta, longa, unica, multipla, escala, simnao, numero, data). O da Resolução 279 do CNMP está em ' +
+    '<code>formularios/cnmp-279/cnmp-279-colaborativo.json</code>.</p>' +
+    '<input type="file" id="nv-arq" accept=".json,application/json" style="margin-bottom:9px;color:var(--muted);font-size:12.5px">' +
+    '<textarea id="nv-json" class="mono" style="min-height:190px" placeholder=\'{ "titulo": "...", "secoes": [ ... ] }\' oninput="previaNovo()"></textarea>' +
+    '<div id="nv-prev" style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5"></div>' +
+    '<div class="fim"><button class="btn sec pq" onclick="fecharModal()">Cancelar</button>' +
+    '<button class="btn pq" id="nv-btn" onclick="criarNovo()" disabled>Criar questionário</button></div>', true);
+  $('nv-arq').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    $('nv-json').value = await f.text(); previaNovo();
+  });
+}
+function lerJsonNovo(){
+  const bruto = ($('nv-json').value || '').trim();
+  if (!bruto) return { erro:'' };
+  const tent = [bruto];
+  const cerca = bruto.match(/```(?:json)?\s*([\s\S]*?)```/i); if (cerca) tent.unshift(cerca[1]);
+  const ch = bruto.slice(bruto.indexOf('{'), bruto.lastIndexOf('}') + 1); if (ch.length > 2) tent.push(ch);
+  for (const t of tent){ try { return { obj: JSON.parse(t) }; } catch(e){} }
+  return { erro:'Não é um JSON válido.' };
+}
+function previaNovo(){
+  const r = lerJsonNovo(), pv = $('nv-prev'), btn = $('nv-btn');
+  btn.disabled = true;
+  if (!r.obj){ pv.innerHTML = r.erro ? '<span style="color:#fca5a5">' + esc(r.erro) + '</span>' : ''; return; }
+  const o = r.obj;
+  const secoes = Array.isArray(o.secoes) ? o.secoes : (Array.isArray(o.perguntas) ? [{ titulo:'Questionário', perguntas:o.perguntas }] : []);
+  const total = secoes.reduce((s, x) => s + ((x && x.perguntas) || []).length, 0);
+  if (!o.titulo || !total){ pv.innerHTML = '<span style="color:#fca5a5">Faltam o título ou as perguntas.</span>'; return; }
+  pv.innerHTML = '<b style="color:var(--text)">' + esc(o.titulo) + '</b><br>' + secoes.length + ' seção(ões) · ' + total + ' pergunta(s): ' +
+    secoes.map((s) => esc(s.titulo || 'sem título') + ' (' + ((s.perguntas || []).length) + ')').join(' · ');
+  btn.disabled = false;
+}
+async function criarNovo(){
+  const r = lerJsonNovo(); if (!r.obj) return;
+  const btn = $('nv-btn'); btn.disabled = true; btn.textContent = 'Criando…';
+  const x = await api('/api/questionario', { method:'POST', body:{ op:'criar', ...r.obj } });
+  btn.disabled = false; btn.textContent = 'Criar questionário';
+  if (x.status !== 200){ $('nv-prev').innerHTML = '<span style="color:#fca5a5">' + esc(x.d.detail || x.d.error || 'Não consegui criar.') + '</span>'; return; }
+  fecharModal();
+  location.href = 'questionario.html?id=' + encodeURIComponent(x.d.id) + '&g=1';
+}
+
+/* ==========================================================================
+   Entrada pelo link: RE + confirmação (ou gestor pelo login)
+   ========================================================================== */
+const CH_SESSAO = 'qt_' + PARAM_ID;
+function lerSessao(){
+  try{ const s = JSON.parse(localStorage.getItem(CH_SESSAO) || 'null'); return s && s.exp > Date.now() ? s : null; }catch(e){ return null; }
+}
+function salvarSessao(token, eu, horas){
+  try{ localStorage.setItem(CH_SESSAO, JSON.stringify({ token, eu, exp: Date.now() + (horas || 12) * 3600e3 - 60e3 })); }catch(e){}
+}
+function limparSessao(){ try{ localStorage.removeItem(CH_SESSAO); }catch(e){} }
+
+let ENT_RE = '';
+async function telaEntrada(msgErro){
+  telas('tela-carregando');
+  const r = await api('/api/questionario/info?id=' + encodeURIComponent(PARAM_ID), { auth:false });
+  if (r.status !== 200){
+    aviso('❓', 'Questionário não encontrado', esc(r.d.detail || 'Confira o link que você recebeu.'));
+    return;
+  }
+  const info = r.d;
+  $('ent-tit').textContent = info.titulo;
+  $('ent-desc').textContent = info.descricao || '';
+  $('ent-prog').innerHTML = (info.status === 'CONCLUIDO' ? '✅ <b>Concluído</b> pelo gestor · ' : '') +
+    info.respondidas + ' de ' + info.total + ' perguntas já respondidas.';
+
+  if (!msgErro){
+    const s = lerSessao();
+    if (s){ Q.token = s.token; return conectar(); }
+    if (URLP.get('g') === '1' && podeGerir()) return entrarGestor();
+  }
+  erroEntrada(msgErro || '');
+  $('f-conf').hidden = true; $('f-re').hidden = false;
+
+  const g = $('ent-gestor');
+  if (podeGerir()){
+    g.innerHTML = 'Você está logado como gestor (' + esc(nomeSessao()) + ').<br>' +
+      '<button class="btn sec" style="margin-top:9px" onclick="entrarGestor()">🛡️ Entrar como gestor</button>';
+  } else {
+    g.innerHTML = 'É o gestor deste questionário? <button class="link" onclick="loginGestorAqui()">Entrar com o login do sistema</button>';
+  }
+  telas('tela-entrada');
+  setTimeout(() => $('ent-re').focus(), 50);
+}
+function loginGestorAqui(){ telas('tela-login'); setTimeout(() => $('lg-user').focus(), 50); }
+function erroEntrada(t){ const e = $('ent-erro'); e.hidden = !t; e.textContent = t || ''; }
+function voltarRE(){ $('f-conf').hidden = true; $('f-re').hidden = false; erroEntrada(''); $('ent-re').focus(); }
+
+async function entrarRE(ev){
+  ev.preventDefault();
+  ENT_RE = ($('ent-re').value || '').replace(/\D/g, '');
+  if (ENT_RE.length < 4){ erroEntrada('Digite o seu RE.'); return false; }
+  const btn = $('btn-re'); btn.disabled = true; btn.textContent = 'Conferindo…';
+  const r = await api('/api/questionario/entrar', { method:'POST', auth:false, body:{ id:PARAM_ID, re:ENT_RE } });
+  btn.disabled = false; btn.textContent = 'Continuar';
+  return tratarEntrada(r);
+}
+async function entrarConfirma(ev){
+  ev.preventDefault();
+  const conf = ($('ent-conf').value || '').trim();
+  if (!conf){ erroEntrada('Preencha a confirmação.'); return false; }
+  const btn = $('btn-conf'); btn.disabled = true; btn.textContent = 'Entrando…';
+  const r = await api('/api/questionario/entrar', { method:'POST', auth:false, body:{ id:PARAM_ID, re:ENT_RE, confirma:conf } });
+  btn.disabled = false; btn.textContent = 'Entrar no questionário';
+  return tratarEntrada(r);
+}
+function tratarEntrada(r){
+  if (r.status === 200 && r.d.precisa){
+    erroEntrada('');
+    $('f-re').hidden = true; $('f-conf').hidden = false;
+    const cpf = r.d.precisa === 'cpf4';
+    $('lbl-conf').textContent = cpf ? '4 últimos dígitos do seu CPF' : 'Sua data de nascimento (dd/mm/aaaa)';
+    const inp = $('ent-conf');
+    inp.value = ''; inp.type = cpf ? 'password' : 'text';
+    inp.inputMode = cpf ? 'numeric' : 'text'; inp.maxLength = cpf ? 4 : 10;
+    inp.placeholder = cpf ? '••••' : 'dd/mm/aaaa';
+    setTimeout(() => inp.focus(), 30);
+    return false;
+  }
+  if (r.status === 200 && r.d.token){
+    Q.token = r.d.token; salvarSessao(r.d.token, r.d.eu, 12);
+    conectar();
+    return false;
+  }
+  erroEntrada(r.d.detail || 'Não foi possível entrar.');
+  return false;
+}
+async function entrarGestor(){
+  telas('tela-carregando');
+  const r = await api('/api/questionario/entrar', { method:'POST', body:{ id:PARAM_ID, gestor:true } });
+  if (r.status !== 200 || !r.d.token){
+    if (r.status === 401){ AUTH.token = ''; renderChip(); telas('tela-login'); return; }
+    aviso('⛔', 'Não foi possível entrar como gestor', esc(r.d.detail || 'Tente de novo.'));
+    return;
+  }
+  Q.token = r.d.token; salvarSessao(r.d.token, r.d.eu, 8);
+  conectar();
+}
+function sairQuestionario(){
+  limparSessao(); fecharWs();
+  location.href = 'questionario.html?id=' + encodeURIComponent(PARAM_ID);
+}
+function aviso(ic, tit, html, botoes){
+  fecharWs();
+  $('aviso-corpo').innerHTML = '<div class="ic">' + ic + '</div><h1>' + esc(tit) + '</h1>' +
+    '<div class="desc" style="text-align:center">' + html + '</div>' + (botoes || '');
+  telas('tela-aviso');
+}
+
+/* ==========================================================================
+   Conexão ao vivo (WebSocket)
+   ========================================================================== */
+function conectar(){
+  fecharWs();
+  if (Q.nuncaConectou) telas('tela-carregando');
+  const ws = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/questionario/ws?t=' + encodeURIComponent(Q.token));
+  WSK = ws;
+  let abriu = false;
+  ws.onopen = () => {
+    abriu = true; tentativas = 0; renderConexao(true);
+    clearInterval(timerPing);
+    timerPing = setInterval(() => mandar({ t:'ping' }), 25000);
+  };
+  ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch(x){ return; } receber(m); };
+  ws.onclose = (e) => {
+    if (WSK !== ws) return;           // conexão antiga, já trocada
+    clearInterval(timerPing);
+    renderConexao(false);
+    if (e.code === 4003) return removido();
+    if (e.code === 4000) return outraAba();
+    /* Nunca abriu: token vencido, retirado da lista, questionário arquivado ou
+       rede ruim. Tenta de novo UMA vez; depois volta para a entrada, sem laço. */
+    if (!abriu && Q.nuncaConectou){
+      if (++falhasIniciais >= 2){
+        limparSessao(); Q.token = '';
+        return telaEntrada('Não consegui abrir o questionário. Sua sessão pode ter vencido ou o seu RE saiu da lista — entre de novo.');
+      }
+      clearTimeout(timerRecon);
+      timerRecon = setTimeout(conectar, 1500);
+      return;
+    }
+    reconectar();
+  };
+}
+function fecharWs(){
+  clearTimeout(timerRecon); clearInterval(timerPing);
+  const w = WSK; WSK = null;
+  if (w){ try{ w.onclose = null; w.close(); }catch(e){} }
+}
+function reconectar(){
+  clearTimeout(timerRecon);
+  const espera = [1000, 2000, 4000, 8000, 15000][Math.min(tentativas++, 4)];
+  timerRecon = setTimeout(() => { if (Q.token) conectar(); else telaEntrada(); }, espera);
+}
+function mandar(o){
+  if (WSK && WSK.readyState === 1){ WSK.send(JSON.stringify(o)); return true; }
+  return false;
+}
+function renderConexao(on){
+  const el = $('q-con');
+  el.className = 'con ' + (on ? 'on' : 'off');
+  el.querySelector('span').textContent = on ? 'ao vivo' : 'reconectando…';
+  document.querySelectorAll('#qarea input, #qarea textarea, #qarea .opb').forEach((x) => {
+    if (!on) x.dataset.offline = '1'; else delete x.dataset.offline;
+  });
+  if (!on && !Q.nuncaConectou) document.querySelectorAll('#qarea input, #qarea textarea, #qarea .opb, #qarea .limpar').forEach((x) => { x.disabled = true; });
+  if (on && Q.def) Object.keys(Q.def.perguntas).forEach((k) => atualizarCard(+k + 1));
+}
+
+function receber(m){
+  switch (m.t){
+    case 'bemvindo': {
+      const primeira = Q.nuncaConectou;
+      Q.nuncaConectou = false;
+      Q.eu = m.eu; Q.def = m.def; Q.status = m.status; Q.concluido = m.concluido;
+      Q.resp = m.respostas || {}; Q.presentes = m.presentes || []; Q.travas = m.travas || {};
+      try{ const s = JSON.parse(localStorage.getItem(CH_SESSAO) || 'null'); if (s){ s.eu = m.eu; localStorage.setItem(CH_SESSAO, JSON.stringify(s)); } }catch(e){}
+      if (primeira) montarTela();
+      else { if ($('tela-q').hidden) telas('tela-q'); renderLeve(); reenviarPendentes(); retomarEdicao(); }
+      return;
+    }
+    case 'presenca': Q.presentes = m.presentes || []; renderPresenca(); return;
+    case 'trava': {
+      Q.travas[m.n] = { re:m.re, nome:m.nome };
+      atualizarCard(m.n); return;
+    }
+    case 'solta': delete Q.travas[m.n]; atualizarCard(m.n); return;
+    case 'negado': {
+      if (m.motivo === 'concluido') toast('O questionário foi concluído — não aceita mais alterações.', 'warn');
+      else toast('🔒 <b>' + esc(m.por || 'Outra pessoa') + '</b> está editando a pergunta ' + m.n + '. Espere terminar ou vá para outra.', 'warn');
+      desfazerOtimista(m.n);
+      desfazerEdicao(m.n);
+      return;
+    }
+    case 'perdeu': {
+      if (m.motivo === 'concluido') { desfazerEdicao(m.n); return; }
+      toast('Você ficou mais de 1 minuto parado na pergunta ' + m.n + ' e ela foi liberada para os outros. O que você digitou até ali já estava salvo.', 'warn', 6500);
+      desfazerEdicao(m.n);
+      return;
+    }
+    case 'resp': {
+      if (m.v) Q.resp[m.n] = { v:m.v, re:m.re, nome:m.nome, em:m.em }; else delete Q.resp[m.n];
+      atualizarCard(m.n, m.re !== (Q.eu && Q.eu.re));
+      renderProgresso(); renderNav();
+      if (Q.aba === 'andamento') renderAndamento();
+      return;
+    }
+    case 'ok': {
+      const n = PEND[m.id]; delete PEND[m.id];
+      if (n != null){ delete OTIM[n]; marcarSalvo(n, true); }
+      return;
+    }
+    case 'erro': {
+      const n = m.n; if (m.id) delete PEND[m.id];
+      toast('⚠️ Pergunta ' + n + ': ' + esc(m.detail || 'não foi possível gravar.'), 'err', 5500);
+      desfazerOtimista(n);
+      marcarSalvo(n, false);
+      atualizarCard(n);
+      return;
+    }
+    case 'status': {
+      Q.status = m.status; Q.concluido = m.concluido;
+      if (m.status === 'CONCLUIDO'){ EDIT = null; toast('✅ O gestor concluiu o questionário. Agora é só leitura.', 'ok', 6000); }
+      else toast('O gestor reabriu o questionário para alterações.', 'ok');
+      renderTudo(); return;
+    }
+    case 'secoes': Q.def.secoes = m.secoes; renderNav(); renderCabSecao(); if (Q.aba === 'ajustes') renderAjustes(); return;
+    case 'def': Q.def = m.def; Q.sec = 0; renderTudo(); return;
+    case 'membros': Q.membros = m.membros; if (Q.aba === 'membros') renderListaMembros(); return;
+    case 'removido': removido(); return;
+    case 'outra_aba': outraAba(); return;
+  }
+}
+function removido(){
+  limparSessao(); Q.token = '';
+  aviso('🚪', 'Você saiu da lista deste questionário',
+    'O gestor retirou o seu RE da lista de quem responde. O que você já tinha respondido continua salvo.<br><br>' +
+    'Se foi engano, fale com o gestor.');
+}
+function outraAba(){
+  aviso('🪟', 'Questionário aberto em outra janela',
+    'Você abriu este questionário em outra aba ou aparelho, e esta aqui foi desconectada para não duplicar.',
+    '<button class="btn" onclick="conectar()">Continuar por aqui</button>');
+}
+
+/* ==========================================================================
+   Tela ao vivo
+   ========================================================================== */
+function montarTela(){
+  renderChip();
+  telas('tela-q');
+  $('q-tabs').hidden = !(Q.eu && Q.eu.gestor);
+  const area = $('qarea');
+  area.addEventListener('focusin', (e) => { const el = e.target.closest('[data-campo]'); if (el) focoCampo(+el.dataset.n, el); });
+  area.addEventListener('input', (e) => { const el = e.target.closest('[data-campo]'); if (el) digitou(+el.dataset.n, el); });
+  area.addEventListener('focusout', (e) => { const el = e.target.closest('[data-campo]'); if (el) saiuCampo(+el.dataset.n, el); });
+  area.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-op]'); if (b){ clicouOpcao(+b.dataset.n, b.dataset.op); return; }
+    const l = e.target.closest('[data-limpar]'); if (l) clicouOpcao(+l.dataset.limpar, null);
+  });
+  // a seção salva na URL não se perde ao recarregar
+  const s = parseInt(URLP.get('s'), 10);
+  if (s >= 1 && s <= Q.def.secoes.length) Q.sec = s - 1;
+  renderTudo();
+  mandar({ t:'onde', n:null, s:Q.sec });
+}
+function renderEu(){
+  $('q-eu').innerHTML = Q.eu.gestor
+    ? '<span class="chip">🛡️ ' + esc(Q.eu.nome) + ' (gestor)</span><a class="btn sec pq" style="text-decoration:none" href="questionario.html">☰ Meus questionários</a>'
+    : '<span class="chip">👤 ' + esc(rotuloPessoa(Q.eu)) + (Q.eu.dep ? ' · ' + esc(Q.eu.dep) : '') + '</span><button class="btn sec pq" onclick="sairQuestionario()">Sair</button>';
+}
+function renderTudo(){
+  renderEu();
+  $('q-tit').textContent = Q.def.titulo;
+  const fechado = Q.status === 'CONCLUIDO';
+  $('q-status').className = 'pill ' + (fechado ? 'off' : 'on');
+  $('q-status').textContent = fechado ? '✅ Concluído' : '🟢 Em preenchimento';
+  $('btn-prox').hidden = fechado;
+  $('banner').innerHTML = fechado
+    ? '<div class="msg ok">✅ Questionário <b>concluído</b>' + (Q.concluido ? ' por ' + esc(Q.concluido.por && Q.concluido.por.nome) + ' em ' + esc(fmtQuando(Q.concluido.em)) : '') +
+      '. As respostas estão travadas — só leitura.' + (Q.eu.gestor ? ' Para corrigir algo, reabra em ⚙️ Ajustes.' : '') + '</div>'
+    : '';
+  renderProgresso(); renderPresenca(); renderNav(); renderSecao();
+  if (Q.aba !== 'preencher') abaGestor(Q.aba);
+  medirTopo();
+}
+/* Reconexão: atualiza o que mudou sem recriar os campos (não perde o que está na tela). */
+function renderLeve(){
+  renderEu(); renderProgresso(); renderPresenca(); renderNav(); renderCabSecao();
+  for (const q of perguntasDaSecao(Q.sec)) atualizarCard(q.n);
+  if (Q.aba === 'andamento') renderAndamento();
+}
+/* O que não foi gravado por falta de conexão vai agora — só se ninguém mudou
+   aquela resposta enquanto isso (senão avisa, para não apagar o trabalho do outro). */
+const PEND_OFF = {};
+function reenviarPendentes(){
+  for (const k of Object.keys(PEND_OFF)){
+    const n = +k, p = PEND_OFF[k]; delete PEND_OFF[k];
+    const atual = (Q.resp[n] || {}).v || '';
+    if (atual !== p.base || travaDeOutro(n)){
+      toast('⚠️ Pergunta ' + n + ': o que você digitou sem conexão não foi gravado porque outra pessoa mudou a resposta nesse meio tempo. Confira.', 'warn', 8000);
+      continue;
+    }
+    const id = 'm' + (++seqMsg); PEND[id] = n; ULT_ENV[n] = p.v;
+    mandar({ t:'salvar', n, v:p.v, id }); mandar({ t:'soltar', n });
+  }
+}
+function respondida(n){ const r = Q.resp[n]; return !!(r && r.v !== ''); }
+function contar(lista){ let c = 0; for (const q of lista) if (respondida(q.n)) c++; return c; }
+function perguntasDaSecao(i){ return Q.def.perguntas.filter((q) => q.s === i); }
+function renderProgresso(){
+  const tot = Q.def.perguntas.length, c = contar(Q.def.perguntas);
+  const ob = Q.def.perguntas.filter((q) => q.obrig && !respondida(q.n)).length;
+  $('q-barra').style.width = (tot ? 100 * c / tot : 0) + '%';
+  $('q-prog').innerHTML = '<b style="color:var(--text)">' + c + '</b> de ' + tot + ' respondidas (' + (tot ? Math.round(100 * c / tot) : 0) + '%)' +
+    (ob ? ' · <span style="color:#fde68a">' + ob + ' obrigatória(s) sem resposta</span>' : '');
+}
+function renderPresenca(){
+  const ps = (Q.presentes || []).slice().sort((a, b) => (a.re === Q.eu.re ? -1 : b.re === Q.eu.re ? 1 : 0));
+  $('q-avs').innerHTML = ps.map((p) => {
+    const sec = Q.def.secoes[p.s];
+    const onde = (p.n ? 'pergunta ' + p.n + ' · ' : '') + (sec ? sec.titulo : '');
+    return '<span class="av' + (p.re === Q.eu.re ? ' eu' : '') + (p.gestor ? ' g' : '') + '" style="--c:' + cor(p.re) + '" ' +
+      'title="' + esc(rotuloPessoa(p) + (p.dep ? ' (' + p.dep + ')' : '') + (p.re === Q.eu.re ? ' — você' : '') + ' — em: ' + onde) + '" ' +
+      'onclick="irPessoa(\'' + esc(p.re) + '\')">' + esc(iniciais(p.nome)) + '</span>';
+  }).join('');
+  const outros = ps.filter((p) => p.re !== Q.eu.re);
+  $('q-onde').textContent = outros.length
+    ? outros.length + ' outra(s) pessoa(s) conectada(s) — passe o mouse ou toque no círculo para ver onde cada um está'
+    : 'Só você agora.';
+  renderNav();
+  if (Q.def) for (const q of perguntasDaSecao(Q.sec)) pintarOlhando(q.n);
+}
+function irPessoa(re){
+  const p = (Q.presentes || []).find((x) => x.re === re);
+  if (!p) return;
+  if (Q.aba !== 'preencher') abaGestor('preencher');
+  if (p.s !== Q.sec) irSecao(p.s);
+  if (p.n){ const c = $('qc-' + p.n); if (c){ c.scrollIntoView({ behavior:'smooth', block:'center' }); c.classList.remove('alvo'); void c.offsetWidth; c.classList.add('alvo'); } }
+  toast('📍 ' + esc(rotuloPessoa(p)) + (p.dep ? ' (' + esc(p.dep) + ')' : '') + ' está em <b>' + esc((Q.def.secoes[p.s] || {}).titulo || '') + '</b>' + (p.n ? ', pergunta ' + p.n : '') + '.');
+}
+function renderNav(){
+  if (!Q.def) return;
+  const pessoasNaSecao = (i) => (Q.presentes || []).filter((p) => p.s === i && p.re !== Q.eu.re);
+  $('qnav').innerHTML = Q.def.secoes.map((s, i) => {
+    const ps = perguntasDaSecao(i), c = contar(ps);
+    const av = pessoasNaSecao(i).map((p) => '<span class="av pq" style="--c:' + cor(p.re) + '" title="' + esc(rotuloPessoa(p)) + '">' + esc(iniciais(p.nome)) + '</span>').join('');
+    return '<button class="it' + (i === Q.sec ? ' sel' : '') + (c === ps.length ? ' cheia' : '') + '" onclick="irSecao(' + i + ')">' +
+      '<span class="t">' + esc(s.titulo) + '</span>' +
+      (s.departamento ? '<span class="d">' + esc(s.departamento) + '</span>' : '') +
+      '<span class="m"><span class="barra"><i style="width:' + (ps.length ? 100 * c / ps.length : 0) + '%"></i></span>' +
+      '<span class="c">' + c + '/' + ps.length + '</span><span class="avs">' + av + '</span></span></button>';
+  }).join('');
+  $('sec-sel').innerHTML = Q.def.secoes.map((s, i) => {
+    const ps = perguntasDaSecao(i), n = pessoasNaSecao(i).length;
+    return '<option value="' + i + '"' + (i === Q.sec ? ' selected' : '') + '>' + esc(s.titulo) + ' — ' + contar(ps) + '/' + ps.length + (n ? ' · 👥 ' + n : '') + '</option>';
+  }).join('');
+}
+function renderCabSecao(){
+  const s = Q.def.secoes[Q.sec], ps = perguntasDaSecao(Q.sec);
+  $('sec-cab').innerHTML = '<h2>' + esc(s.titulo) + '</h2><div class="sub">' +
+    (s.departamento ? '<span class="pill n">Responsável: ' + esc(s.departamento) + '</span>' : '') +
+    '<span>Seção ' + (Q.sec + 1) + ' de ' + Q.def.secoes.length + ' · ' + ps.length + ' pergunta(s), da ' + ps[0].n + ' à ' + ps[ps.length - 1].n + '</span></div>';
+}
+function irSecao(i){
+  if (i < 0 || i >= Q.def.secoes.length) return;
+  Q.sec = i;
+  try{ const u = new URL(location.href); u.searchParams.set('s', i + 1); u.searchParams.delete('g'); history.replaceState(null, '', u); }catch(e){}
+  renderNav(); renderSecao();
+  mandar({ t:'onde', n:null, s:i });
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+function renderSecao(){
+  renderCabSecao();
+  const ps = perguntasDaSecao(Q.sec);
+  const vis = Q.soPend ? ps.filter((q) => !respondida(q.n) || (EDIT && EDIT.n === q.n)) : ps;
+  $('qarea').innerHTML = vis.length ? vis.map(cardHTML).join('')
+    : '<div class="vazio">✅ Todas as perguntas desta seção já têm resposta.</div>';
+  for (const q of vis) atualizarCard(q.n);
+  const ant = Q.sec > 0, prox = Q.sec < Q.def.secoes.length - 1;
+  $('sec-nav').innerHTML =
+    (ant ? '<button class="btn sec" onclick="irSecao(' + (Q.sec - 1) + ')">← ' + esc(Q.def.secoes[Q.sec - 1].titulo) + '</button>' : '<span></span>') +
+    (prox ? '<button class="btn" onclick="irSecao(' + (Q.sec + 1) + ')">' + esc(Q.def.secoes[Q.sec + 1].titulo) + ' →</button>' : '');
+}
+
+/* Cartão de uma pergunta. O valor e o estado (trava, quem respondeu) são
+   aplicados depois por atualizarCard — assim uma resposta que chega de outra
+   pessoa não recria o campo que eu estou usando. */
+function cardHTML(q){
+  let campo = '';
+  const base = 'data-campo="1" data-n="' + q.n + '" id="in-' + q.n + '"';
+  if (q.tipo === 'curta') campo = '<input type="text" maxlength="300" ' + base + ' placeholder="Escreva aqui">';
+  else if (q.tipo === 'longa') campo = '<textarea maxlength="2000" ' + base + ' placeholder="Escreva aqui"></textarea>';
+  else if (q.tipo === 'numero') campo = '<input type="text" inputmode="decimal" maxlength="20" style="max-width:220px" ' + base + ' placeholder="Digite o número">';
+  else if (q.tipo === 'data') campo = '<input type="date" style="max-width:220px" ' + base + '>';
+  else {
+    let ops = [], cls = 'ops';
+    if (q.tipo === 'simnao') ops = ['SIM', 'NÃO'];
+    else if (q.tipo === 'escala'){ for (let i = 1; i <= (q.max || 5); i++) ops.push(String(i)); }
+    else { ops = q.opcoes || []; cls += q.tipo === 'multipla' ? ' mult col' : ' col'; }
+    campo = '<div class="' + cls + '" id="ops-' + q.n + '">' + ops.map((o) =>
+      '<button type="button" class="opb" data-n="' + q.n + '" data-op="' + esc(o) + '">' + esc(o) + '</button>').join('') + '</div>' +
+      (q.tipo === 'escala' && (q.rotulo_min || q.rotulo_max) ? '<div style="font-size:11.5px;color:var(--muted);margin-top:5px">1 = ' + esc(q.rotulo_min) + ' · ' + (q.max || 5) + ' = ' + esc(q.rotulo_max) + '</div>' : '');
+  }
+  return '<div class="qc" id="qc-' + q.n + '">' +
+    '<div class="qh"><span class="qn">' + q.n + '</span><span class="qt">' + esc(q.texto) + (q.obrig ? '<span class="ob" title="obrigatória">*</span>' : '') + '</span>' +
+    '<span class="olhando" id="ol-' + q.n + '"></span></div>' +
+    '<div class="qi">' + campo + '</div>' +
+    '<div class="qs" id="qs-' + q.n + '"></div></div>';
+}
+function valorTela(q, v){
+  if (!v) return '';
+  if (q.tipo === 'numero') return String(v).replace('.', ',');
+  return v;
+}
+function valorLegivel(q, v){
+  if (!v) return '';
+  if (q.tipo === 'multipla'){ try{ return JSON.parse(v).join('; '); }catch(e){ return v; } }
+  if (q.tipo === 'data' && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v.slice(8, 10) + '/' + v.slice(5, 7) + '/' + v.slice(0, 4);
+  if (q.tipo === 'numero') return String(v).replace('.', ',');
+  return v;
+}
+function travaDeOutro(n){ const t = Q.travas[n]; return t && t.re !== Q.eu.re ? t : null; }
+function podeEditar(){ return Q.status === 'ABERTO' && WSK && WSK.readyState === 1; }
+
+function atualizarCard(n, flash){
+  const card = $('qc-' + n); if (!card) { return; }
+  const q = Q.def.perguntas[n - 1];
+  const r = Q.resp[n], tem = respondida(n);
+  const outro = travaDeOutro(n);
+  const meu = EDIT && EDIT.n === n;
+  card.className = 'qc ' + (tem ? 'resp' : 'vaz') + (q.obrig ? ' ob' : '') + (outro ? ' trv' : '') + (meu ? ' meu' : '');
+  card.style.setProperty('--c', outro ? cor(outro.re) : '#94a3b8');
+  const bloq = !!outro || !podeEditar();
+  const inp = $('in-' + n);
+  if (inp){
+    if (!meu) inp.value = valorTela(q, r ? r.v : '');
+    inp.disabled = bloq && !meu;
+  }
+  const ops = $('ops-' + n);
+  if (ops){
+    let marc = [];
+    if (r && r.v) marc = q.tipo === 'multipla' ? (() => { try{ return JSON.parse(r.v); }catch(e){ return []; } })() : [r.v];
+    ops.querySelectorAll('.opb').forEach((b) => { b.classList.toggle('sel', marc.includes(b.dataset.op)); b.disabled = bloq; });
+  }
+  let st = '';
+  if (outro) st = '<span class="tag lk">🔒 ' + esc(outro.nome) + ' está editando</span>';
+  else if (meu) st = '<span class="tag me">✏️ Você está editando — salva sozinho</span><span id="sv-' + n + '"></span>';
+  if (tem && !meu) st += '<span class="tag ok">✓ ' + (r.re === Q.eu.re ? 'Você respondeu' : 'Respondida por ' + esc(r.nome)) + ' · ' + esc(fmtQuando(r.em, true)) + '</span>';
+  else if (!tem && !meu && !outro) st += '<span>' + (q.obrig ? 'Sem resposta' : 'Sem resposta (opcional)') + '</span>';
+  if (!outro && !meu && tem && q.tipo !== 'curta' && q.tipo !== 'longa' && q.tipo !== 'numero' && q.tipo !== 'data' && podeEditar()) {
+    st += '<button class="limpar" data-limpar="' + n + '">limpar resposta</button>';
+  }
+  $('qs-' + n).innerHTML = st;
+  pintarOlhando(n);
+  if (flash){ card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+  if (Q.soPend && tem && !meu && Q.aba === 'preencher' && q.s === Q.sec) card.style.display = 'none'; else card.style.display = '';
+}
+function pintarOlhando(n){
+  const el = $('ol-' + n); if (!el) return;
+  const t = Q.travas[n];
+  el.innerHTML = (Q.presentes || []).filter((p) => p.n === n && p.re !== Q.eu.re && !(t && t.re === p.re))
+    .map((p) => '<span class="av pq" style="--c:' + cor(p.re) + '" title="' + esc(rotuloPessoa(p)) + ' está olhando esta pergunta">' + esc(iniciais(p.nome)) + '</span>').join('');
+}
+
+/* ---------- edição: campos de texto (curta, longa, número, data) ---------- */
+function focoCampo(n, el){
+  if (!podeEditar()){ el.blur(); return; }
+  const t = travaDeOutro(n);
+  if (t){ el.blur(); toast('🔒 <b>' + esc(t.nome) + '</b> está editando esta pergunta. Espere terminar ou vá para outra.', 'warn'); return; }
+  if (EDIT && EDIT.n !== n) soltar(EDIT.n);
+  EDIT = { n };
+  ULT_ENV[n] = (Q.resp[n] || {}).v || '';
+  mandar({ t:'travar', n });
+  mandar({ t:'onde', n, s:Q.sec });
+  atualizarCard(n);
+}
+function digitou(n, el){
+  const q = Q.def.perguntas[n - 1];
+  if (q.tipo === 'numero'){
+    const limpo = el.value.replace(/[^\d,.\-]/g, '');
+    if (limpo !== el.value) el.value = limpo;
+  }
+  if (!EDIT || EDIT.n !== n) return;
+  const sv = $('sv-' + n); if (sv) sv.innerHTML = '<span style="color:var(--muted)">digitando…</span>';
+  clearTimeout(DEB[n]);
+  DEB[n] = setTimeout(() => gravar(n, el.value), 700);
+  if (Date.now() - ultDigitando > 15000){ ultDigitando = Date.now(); mandar({ t:'digitando', n }); }
+}
+function saiuCampo(n, el){
+  if (!EDIT || EDIT.n !== n) return;
+  clearTimeout(DEB[n]);
+  gravar(n, el.value);
+  soltar(n);
+}
+function gravar(n, valor){
+  const q = Q.def.perguntas[n - 1];
+  let v = String(valor ?? '');
+  if (q.tipo === 'numero') v = v.trim();
+  if (v === ULT_ENV[n]) { marcarSalvo(n, true); return; }
+  const id = 'm' + (++seqMsg);
+  if (!mandar({ t:'salvar', n, v, id })){
+    PEND_OFF[n] = { v, base:(Q.resp[n] || {}).v || '' };
+    marcarSalvo(n, false, 'sem conexão — vai salvar quando voltar');
+    return;
+  }
+  PEND[id] = n; ULT_ENV[n] = v;
+  const sv = $('sv-' + n); if (sv) sv.innerHTML = '<span style="color:var(--muted)">salvando…</span>';
+}
+function soltar(n){
+  if (EDIT && EDIT.n === n) EDIT = null;
+  mandar({ t:'soltar', n });
+  mandar({ t:'onde', n:null, s:Q.sec });
+  atualizarCard(n);
+}
+function marcarSalvo(n, ok, txt){
+  const sv = $('sv-' + n);
+  if (sv) sv.innerHTML = ok ? '<span class="tag ok">✓ salvo</span>' : '<span class="tag er">⚠️ ' + esc(txt || 'não salvou') + '</span>';
+  if (!ok && !txt) ULT_ENV[n] = null;   // força reenviar na próxima
+}
+function desfazerEdicao(n){
+  clearTimeout(DEB[n]);
+  if (EDIT && EDIT.n === n){
+    EDIT = null;
+    const el = $('in-' + n); if (el && document.activeElement === el) el.blur();
+  }
+  atualizarCard(n);
+}
+/* Voltou a conexão com um campo aberto: pega a pergunta de novo e reenvia o que
+   ficou na tela (se ninguém tiver pegado nesse meio tempo). */
+function retomarEdicao(){
+  if (!EDIT) return;
+  const n = EDIT.n, el = $('in-' + n);
+  if (!el || document.activeElement !== el || travaDeOutro(n)){ EDIT = null; atualizarCard(n); return; }
+  mandar({ t:'travar', n });
+  ULT_ENV[n] = (Q.resp[n] || {}).v || '';
+  gravar(n, el.value);
+}
+
+/* ---------- edição: opções (Sim/Não, escolha, caixas, escala) ---------- */
+function clicouOpcao(n, op){
+  if (!podeEditar()) return;
+  const t = travaDeOutro(n);
+  if (t){ toast('🔒 <b>' + esc(t.nome) + '</b> está editando esta pergunta. Espere terminar ou vá para outra.', 'warn'); return; }
+  if (EDIT && EDIT.n !== n) { const el = $('in-' + EDIT.n); if (el) el.blur(); }
+  const q = Q.def.perguntas[n - 1];
+  const atual = (Q.resp[n] || {}).v || '';
+  let v;
+  if (op == null) v = '';
+  else if (q.tipo === 'multipla'){
+    let marc = []; try{ marc = atual ? JSON.parse(atual) : []; }catch(e){ marc = []; }
+    marc = marc.includes(op) ? marc.filter((x) => x !== op) : marc.concat(op);
+    v = marc.length ? marc : '';
+  } else v = atual === op ? atual : op;
+  if (q.tipo !== 'multipla' && v === atual && op != null) return;
+  const id = 'm' + (++seqMsg);
+  PEND[id] = n;
+  OTIM[n] = Q.resp[n] ? { ...Q.resp[n] } : null;
+  mandar({ t:'onde', n, s:Q.sec });
+  mandar({ t:'salvar', n, v, id });
+  mandar({ t:'soltar', n });
+  // mostra na hora; a confirmação do servidor corrige se algo der errado
+  const vv = Array.isArray(v) ? JSON.stringify(q.opcoes.filter((o) => v.includes(o))) : v;
+  if (vv) Q.resp[n] = { v:vv, re:Q.eu.re, nome:rotuloPessoa(Q.eu), em:Date.now() }; else delete Q.resp[n];
+  atualizarCard(n); renderProgresso(); renderNav();
+}
+
+function proximaPendente(){
+  const tot = Q.def.perguntas.length;
+  const atualN = EDIT ? EDIT.n : 0;
+  const cand = Q.def.perguntas.filter((q) => !respondida(q.n) && !travaDeOutro(q.n));
+  if (!cand.length){ toast('✅ Não há pergunta livre sem resposta.', 'ok'); return; }
+  const prox = cand.find((q) => q.n > atualN && q.s >= Q.sec) || cand[0];
+  if (Q.aba !== 'preencher') abaGestor('preencher');
+  if (prox.s !== Q.sec) irSecao(prox.s);
+  setTimeout(() => {
+    const c = $('qc-' + prox.n); if (!c) return;
+    c.scrollIntoView({ behavior:'smooth', block:'center' });
+    c.classList.remove('alvo'); void c.offsetWidth; c.classList.add('alvo');
+  }, 120);
+  return tot;
+}
+
+/* ==========================================================================
+   Gestor: abas
+   ========================================================================== */
+function abaGestor(aba){
+  if (!Q.eu || !Q.eu.gestor) aba = 'preencher';
+  Q.aba = aba;
+  document.querySelectorAll('#q-tabs .tab').forEach((b) => b.classList.toggle('sel', b.dataset.aba === aba));
+  $('aba-preencher').hidden = aba !== 'preencher';
+  for (const a of ['membros','andamento','ajustes']) $('aba-' + a).hidden = aba !== a;
+  if (aba === 'membros') renderMembros(true);
+  if (aba === 'andamento') renderAndamento(true);
+  if (aba === 'ajustes') renderAjustes();
+  medirTopo();
+}
+async function carregarDados(){
+  const r = await api('/api/questionario/dados?id=' + encodeURIComponent(PARAM_ID));
+  if (r.status === 401){ toast('Sua sessão do sistema expirou. Entre de novo.', 'err'); return null; }
+  if (r.status !== 200){ toast(esc(r.d.detail || 'Não consegui carregar os dados.'), 'err'); return null; }
+  Q.dados = r.d; Q.membros = r.d.membros;
+  return r.d;
+}
+
+/* ---------- quem responde ---------- */
+/* O formulário de incluir é montado UMA vez; as atualizações (inclusão,
+   retirada, alguém conectando) só redesenham a tabela — senão o RE que o
+   gestor já está digitando para a próxima pessoa sumiria. */
+async function renderMembros(buscar){
+  const el = $('aba-membros');
+  if (!$('mb-lista')) montarAbaMembros(el);
+  if (buscar || !Q.membros){
+    if (!Q.membros) $('mb-lista').innerHTML = '<div class="load"><div class="sp"></div>Carregando a lista…</div>';
+    if (!(await carregarDados())) return;
+  }
+  renderListaMembros();
+}
+function renderListaMembros(){
+  if (!$('mb-lista') || !Q.membros) return;
+  const ativos = Q.membros.filter((m) => m.ativo), saidos = Q.membros.filter((m) => !m.ativo);
+  const online = new Set((Q.presentes || []).map((p) => p.re));
+  const nResp = {};
+  for (const k in Q.resp) nResp[Q.resp[k].re] = (nResp[Q.resp[k].re] || 0) + 1;
+  const deps = [...new Set([...Q.membros.map((m) => m.dep), ...Q.def.secoes.map((s) => s.departamento)].filter(Boolean))].sort();
+  $('mb-deps').innerHTML = deps.map((d) => '<option value="' + esc(d) + '">').join('');
+  $('mb-lista').innerHTML = '<div class="sec-t">👥 Quem responde (' + ativos.length + ')</div>' +
+      (ativos.length ? '<div class="rolar"><table class="tabela"><thead><tr><th></th><th>Policial</th><th>RE</th><th>Departamento</th><th>Respostas</th><th>Incluído</th><th></th></tr></thead><tbody>' +
+        ativos.map((m) => '<tr><td><span class="dot' + (online.has(m.re) ? ' on' : '') + '" title="' + (online.has(m.re) ? 'conectado agora' : 'fora') + '"></span></td>' +
+          '<td>' + esc(rotuloPessoa(m)) + (m.cadastro ? '' : ' <span class="pill" title="incluído à mão, fora do cadastro">fora do cadastro</span>') + '</td>' +
+          '<td>' + esc(m.re) + '</td>' +
+          '<td><input class="dep-in" type="text" list="mb-deps" value="' + esc(m.dep || '') + '" onchange="mudarDep(\'' + esc(m.re) + '\', this.value)"></td>' +
+          '<td>' + (nResp[m.re] || 0) + '</td>' +
+          '<td style="font-size:12px;color:var(--muted)">' + esc(fmtQuando(m.em, true)) + '</td>' +
+          '<td><button class="btn dan pq" onclick="retirarMembro(\'' + esc(m.re) + '\')">Retirar</button></td></tr>').join('') +
+        '</tbody></table></div>'
+      : '<div class="vazio">Ninguém na lista ainda. Inclua acima o RE de quem vai responder cada parte.</div>') +
+      (saidos.length ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">Retirados da lista (' + saidos.length + ') — o que responderam continua no histórico</summary>' +
+        '<div style="font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.7">' + saidos.map((m) => esc(rotuloPessoa(m)) + ' — RE ' + esc(m.re) + (m.dep ? ' (' + esc(m.dep) + ')' : '')).join('<br>') + '</div></details>' : '');
+}
+function montarAbaMembros(el){
+  const link = linkDe(PARAM_ID);
+  el.innerHTML =
+    '<div class="card"><div class="sec-t">🔗 Link para quem responde</div>' +
+      '<div class="link-box"><input type="text" readonly value="' + esc(link) + '" onclick="this.select()">' +
+      '<button class="btn pq" onclick="copiarLink(\'' + esc(PARAM_ID) + '\')">Copiar link</button>' +
+      '<button class="btn sec pq" onclick="copiarWhats()">📱 Copiar mensagem para o WhatsApp</button></div>' +
+      '<div style="font-size:12.5px;color:var(--muted);line-height:1.5">Só entra quem está na lista abaixo, com o RE e os 4 últimos dígitos do CPF. ' +
+      'Mudou o responsável? Retire o antigo e inclua o novo: quem sai é desconectado na hora e o que ele já respondeu continua.</div></div>' +
+    '<div class="card"><div class="sec-t">➕ Incluir na lista</div>' +
+      '<form onsubmit="return incluirMembro(event)">' +
+      '<div class="grid-add"><div><label class="lbl" for="mb-re">RE</label><input type="text" id="mb-re" inputmode="numeric" required></div>' +
+      '<div><label class="lbl" for="mb-dep">Departamento / setor</label><input type="text" id="mb-dep" list="mb-deps" placeholder="Ex.: P1, P3, SJD, P4"></div>' +
+      '<button class="btn" type="submit" id="mb-btn">Incluir</button></div>' +
+      '<datalist id="mb-deps"></datalist>' +
+      '<div id="mb-fora" hidden><div class="msg warn" style="margin:10px 0 0">Este RE não está no cadastro do batalhão. Informe o nome e os 4 últimos dígitos do CPF da pessoa — é com eles que ela vai entrar.</div>' +
+      '<div class="grid-fora"><div><label class="lbl" for="mb-nome">Nome</label><input type="text" id="mb-nome"></div>' +
+      '<div><label class="lbl" for="mb-posto">Posto/grad.</label><input type="text" id="mb-posto" placeholder="SD"></div>' +
+      '<div><label class="lbl" for="mb-cpf">4 últimos do CPF</label><input type="text" id="mb-cpf" inputmode="numeric" maxlength="4"></div></div></div>' +
+      '<div id="mb-erro" class="erro-txt" style="text-align:left"></div></form></div>' +
+    '<div class="card" id="mb-lista"></div>';
+}
+function copiarWhats(){
+  const t = '📋 *' + Q.def.titulo + '*\n\n' +
+    'O BPFRON precisa responder este questionário. Preencha a parte do seu setor pelo link:\n' + linkDe(PARAM_ID) + '\n\n' +
+    'Entre com o seu *RE* e os *4 últimos dígitos do CPF*. Várias pessoas podem preencher ao mesmo tempo e tudo salva sozinho — ' +
+    'se uma pergunta estiver com 🔒, outra pessoa está editando: espere ou vá para outra.';
+  copiarTexto(t, '✅ Mensagem copiada. É só colar no WhatsApp.');
+}
+async function incluirMembro(ev){
+  ev.preventDefault();
+  const btn = $('mb-btn'), erro = $('mb-erro');
+  erro.textContent = '';
+  const corpo = { op:'membro', id:PARAM_ID, re:$('mb-re').value, dep:$('mb-dep').value };
+  if (!$('mb-fora').hidden){ corpo.nome = $('mb-nome').value; corpo.posto = $('mb-posto').value; corpo.cpf4 = $('mb-cpf').value; }
+  btn.disabled = true;
+  const r = await api('/api/questionario', { method:'POST', body:corpo });
+  btn.disabled = false;
+  if (r.status === 400 && r.d.fora_cadastro && $('mb-fora').hidden){ $('mb-fora').hidden = false; $('mb-nome').focus(); return false; }
+  if (r.status !== 200){ erro.textContent = r.d.detail || 'Não consegui incluir.'; return false; }
+  toast('✅ ' + esc(rotuloPessoa(r.d.membro)) + ' incluído(a) na lista.', 'ok');
+  // limpa para a próxima pessoa (o departamento fica: costuma ser o mesmo)
+  for (const id of ['mb-re', 'mb-nome', 'mb-posto', 'mb-cpf']) $(id).value = '';
+  $('mb-fora').hidden = true;
+  $('mb-re').focus();
+  renderMembros(true);
+  return false;
+}
+async function mudarDep(re, dep){
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'departamento', id:PARAM_ID, re, dep } });
+  if (r.status !== 200) toast(esc(r.d.detail || 'Não consegui alterar.'), 'err'); else toast('✅ Departamento alterado.', 'ok');
+}
+function retirarMembro(re){
+  const m = (Q.membros || []).find((x) => x.re === re); if (!m) return;
+  abrirModal('<h3>Retirar da lista?</h3><p><b>' + esc(rotuloPessoa(m)) + '</b> (RE ' + esc(m.re) + ') sai da lista de quem responde: ' +
+    'se estiver com a página aberta, é desconectado na hora e não entra mais pelo link. <b>O que ele já respondeu continua</b> — e fica no histórico.</p>' +
+    '<div class="fim"><button class="btn sec pq" onclick="fecharModal()">Cancelar</button>' +
+    '<button class="btn dan pq" id="rt-btn" onclick="confirmarRetirar(\'' + esc(re) + '\')">Retirar</button></div>');
+}
+async function confirmarRetirar(re){
+  $('rt-btn').disabled = true;
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'remover', id:PARAM_ID, re } });
+  fecharModal();
+  if (r.status !== 200){ toast(esc(r.d.detail || 'Não consegui retirar.'), 'err'); return; }
+  toast('Retirado(a) da lista.', 'ok');
+  renderMembros(true);
+}
+
+/* ---------- andamento e relatórios ---------- */
+async function renderAndamento(buscar){
+  const el = $('aba-andamento');
+  if (buscar){
+    if (!Q.dados) el.innerHTML = '<div class="load"><div class="sp"></div>Carregando…</div>';
+    if (!(await carregarDados())) return;
+  }
+  if (!Q.dados) return;
+  const d = Q.def, tot = d.perguntas.length, c = contar(d.perguntas);
+  const ob = d.perguntas.filter((q) => q.obrig && !respondida(q.n)).length;
+  const membros = (Q.membros || []).filter((m) => m.ativo);
+  const ult = Object.values(Q.resp).reduce((a, r) => Math.max(a, r.em || 0), 0);
+  const pessoas = resumoPessoas();
+  const planOk = !Q.dados.erro_planilha && !Q.dados.pendentes_planilha;
+  el.innerHTML =
+    '<div class="kpis">' +
+      kpi(c + '/' + tot, 'respondidas') + kpi(ob, 'obrigatórias sem resposta') + kpi(membros.length, 'na lista') +
+      kpi((Q.presentes || []).length, 'conectados agora') + kpi(ult ? fmtQuando(ult, true) : '—', 'última resposta') +
+    '</div>' +
+    '<div class="card"><div class="sec-t">🖨️ Relatórios</div>' +
+      '<div class="rel-acoes">' +
+        '<button class="btn" onclick="relatorioMP()">📄 Resposta consolidada (para enviar)</button>' +
+        '<button class="btn sec" onclick="relatorioAuditoria()">🕵️ Quem respondeu o quê</button>' +
+        '<button class="btn sec" onclick="relatorioPendencias()">⏳ O que falta</button>' +
+      '</div>' +
+      '<label class="chkline" style="margin-top:11px"><input type="checkbox" id="rel-quem"> Na resposta consolidada, mostrar quem respondeu cada pergunta</label>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">A resposta consolidada sai no formato do questionário, uma resposta por pergunta — é a que vai para o órgão. ' +
+      '“Quem respondeu o quê” é o controle interno: o resumo por pessoa e o histórico completo, com o que estava antes de cada alteração.</div></div>' +
+    '<div class="card"><div class="sec-t">📚 Andamento por seção</div><div class="rolar"><table class="tabela"><thead><tr><th>Seção</th><th>Responsável</th><th>Respondidas</th><th style="width:28%"></th><th>Obrig. sem resposta</th></tr></thead><tbody>' +
+      d.secoes.map((s, i) => {
+        const ps = perguntasDaSecao(i), cc = contar(ps), oo = ps.filter((q) => q.obrig && !respondida(q.n)).length;
+        return '<tr><td><a href="#" onclick="abaGestor(\'preencher\');irSecao(' + i + ');return false">' + esc(s.titulo) + '</a></td><td>' + esc(s.departamento || '—') + '</td>' +
+          '<td>' + cc + '/' + ps.length + '</td><td><div class="barra"><i style="width:' + (100 * cc / ps.length) + '%"></i></div></td><td>' + (oo || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>' +
+    '<div class="card"><div class="sec-t">👤 Por pessoa</div>' +
+      (pessoas.length ? '<div class="rolar"><table class="tabela"><thead><tr><th>Quem</th><th>Departamento</th><th>Respostas (final)</th><th>Alterações</th><th>Última atividade</th></tr></thead><tbody>' +
+        pessoas.map((p) => '<tr><td>' + esc(p.nome) + '</td><td>' + esc(p.dep || '—') + '</td><td>' + p.finais + '</td><td>' + p.alteracoes + '</td><td>' + esc(fmtQuando(p.ultima, true)) + '</td></tr>').join('') +
+        '</tbody></table></div>' : '<div class="vazio">Ninguém respondeu ainda.</div>') + '</div>' +
+    '<div class="card"><div class="sec-t">🗂️ Cópia na planilha</div>' +
+      (planOk ? '<div class="msg ok" style="margin:0">✓ Todo o histórico já está na planilha das Pesquisas (aba Q_HISTORICO).</div>'
+        : '<div class="msg warn" style="margin:0 0 10px">' + (Q.dados.pendentes_planilha || 0) + ' alteração(ões) aguardando envio para a planilha' +
+          (Q.dados.erro_planilha ? ' — último erro: ' + esc(Q.dados.erro_planilha.msg || '') : '') + '. Nada se perde: o envio é refeito sozinho.</div>' +
+          '<button class="btn sec pq" onclick="sincronizar()">↻ Enviar agora</button>') +
+    '</div>';
+}
+function kpi(v, l){ return '<div class="kpi"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>'; }
+function resumoPessoas(){
+  const pes = {};
+  const membro = (re) => (Q.membros || []).find((m) => m.re === re);
+  const base = (re, nome, dep) => (pes[re] ||= { re, nome: nome || re, dep: dep || '', finais:0, alteracoes:0, ultima:0, perguntas:[] });
+  for (const k in Q.resp){
+    const r = Q.resp[k], m = membro(r.re);
+    const p = base(r.re, m ? rotuloPessoa(m) : r.nome, m ? m.dep : (String(r.re).startsWith('u:') ? 'Gestor' : ''));
+    p.finais++; p.perguntas.push(+k); p.ultima = Math.max(p.ultima, r.em || 0);
+  }
+  for (const h of (Q.dados && Q.dados.hist) || []){
+    if (h.evento !== 'resposta') continue;
+    const m = membro(h.re);
+    const p = base(h.re, m ? rotuloPessoa(m) : ((h.posto ? h.posto + ' ' : '') + h.nome), m ? m.dep : h.dep);
+    p.alteracoes++; p.ultima = Math.max(p.ultima, h.em || 0);
+  }
+  return Object.values(pes).sort((a, b) => b.finais - a.finais || a.nome.localeCompare(b.nome));
+}
+async function sincronizar(){
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'sincronizar', id:PARAM_ID } });
+  if (r.status === 200) toast('✅ ' + (r.d.enviados || 0) + ' linha(s) enviadas para a planilha.', 'ok');
+  else toast('⚠️ ' + esc(r.d.detail || r.d.erro || 'A planilha não respondeu.'), 'err');
+  renderAndamento(true);
+}
+
+/* ---------- ajustes ---------- */
+function renderAjustes(){
+  const fechado = Q.status === 'CONCLUIDO';
+  $('aba-ajustes').innerHTML =
+    '<div class="card"><div class="sec-t">🏷️ Departamento responsável por seção</div>' +
+      '<p style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Aparece no índice e no topo de cada seção, para cada um achar a sua parte. Todos continuam podendo responder tudo.</p>' +
+      '<div class="rolar"><table class="tabela"><tbody>' +
+      Q.def.secoes.map((s, i) => '<tr><td>' + esc(s.titulo) + '</td><td style="width:230px"><input class="dep-in" style="max-width:none" type="text" value="' + esc(s.departamento || '') + '" placeholder="Ex.: P1" onchange="salvarSecao(' + i + ', this.value)"></td></tr>').join('') +
+      '</tbody></table></div></div>' +
+    '<div class="card"><div class="sec-t">' + (fechado ? '🔓 Reabrir' : '✅ Concluir') + '</div>' +
+      (fechado
+        ? '<p style="font-size:13px;color:#c3ccdb;line-height:1.55;margin-bottom:11px">Reabrir volta a aceitar alterações de todos. A fotografia da conclusão continua na planilha.</p><button class="btn sec" onclick="mudarStatus(\'ABERTO\')">🔓 Reabrir para alterações</button>'
+        : '<p style="font-size:13px;color:#c3ccdb;line-height:1.55;margin-bottom:11px">Concluir trava as respostas para todo mundo (só leitura) e grava uma fotografia de todas as respostas na planilha (aba Q_RESPOSTAS). Dá para reabrir depois.</p><button class="btn ok" onclick="confirmarConcluir()">✅ Concluir questionário</button>') +
+    '</div>' +
+    '<div class="card"><div class="sec-t">🗄️ Arquivar</div>' +
+      '<p style="font-size:13px;color:#c3ccdb;line-height:1.55;margin-bottom:11px">Tira o questionário da lista e desativa o link. <b>Nada é apagado</b>: respostas e histórico continuam no servidor e na planilha.</p>' +
+      '<button class="btn dan" onclick="pedirArquivar()">Arquivar…</button></div>';
+}
+async function salvarSecao(i, dep){
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'secao', id:PARAM_ID, i, departamento:dep } });
+  if (r.status !== 200) toast(esc(r.d.detail || 'Não consegui salvar.'), 'err'); else toast('✅ Responsável da seção salvo.', 'ok');
+}
+function confirmarConcluir(){
+  const falta = Q.def.perguntas.filter((q) => q.obrig && !respondida(q.n)).length;
+  abrirModal('<h3>Concluir o questionário?</h3>' +
+    (falta ? '<div class="msg warn">Ainda há <b>' + falta + '</b> pergunta(s) obrigatória(s) sem resposta.</div>' : '') +
+    '<p>As respostas ficam travadas para todos e uma fotografia vai para a planilha. Quem estiver editando agora é avisado.</p>' +
+    '<div class="fim"><button class="btn sec pq" onclick="fecharModal()">Cancelar</button><button class="btn ok pq" onclick="mudarStatus(\'CONCLUIDO\')">Concluir</button></div>');
+}
+async function mudarStatus(st){
+  fecharModal();
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'status', id:PARAM_ID, status:st } });
+  if (r.status !== 200){ toast(esc(r.d.detail || 'Não consegui alterar.'), 'err'); return; }
+  if (st === 'CONCLUIDO' && r.d.planilha && !r.d.planilha.ok) toast('⚠️ Concluído, mas a fotografia não chegou à planilha: ' + esc(r.d.planilha.erro || ''), 'err', 8000);
+  setTimeout(renderAjustes, 300);
+}
+function pedirArquivar(){
+  abrirModal('<h3>Arquivar questionário</h3><p>O link deixa de funcionar e ele some da sua lista. Nada é apagado. Digite a sua senha para confirmar.</p>' +
+    '<input type="password" id="arq-senha" autocomplete="current-password" placeholder="Sua senha">' +
+    '<div id="arq-erro" class="erro-txt" style="text-align:left"></div>' +
+    '<div class="fim"><button class="btn sec pq" onclick="fecharModal()">Cancelar</button><button class="btn dan pq" id="arq-btn" onclick="arquivar()">Arquivar</button></div>');
+  setTimeout(() => $('arq-senha').focus(), 30);
+}
+async function arquivar(){
+  $('arq-btn').disabled = true;
+  const r = await api('/api/questionario', { method:'POST', body:{ op:'arquivar', id:PARAM_ID, senha:$('arq-senha').value } });
+  $('arq-btn').disabled = false;
+  if (r.status !== 200){ $('arq-erro').textContent = r.d.detail || 'Não consegui arquivar.'; return; }
+  fecharModal(); limparSessao(); fecharWs();
+  location.href = 'questionario.html';
+}
+
+/* ==========================================================================
+   Relatórios impressos
+   ========================================================================== */
+function cabRelatorio(titulo, sub){
+  return '<div class="pr-cab"><img class="pr-logo" src="LOGOS/bpfron_transp.avif" alt="">' +
+    '<div><div class="pr-org">Polícia Militar do Estado de Rondônia · Batalhão de Polícia de Fronteira e Divisas — BPFRON</div>' +
+    '<h1>' + esc(titulo) + '</h1><div class="pr-sub">' + esc(sub) + '</div></div></div>';
+}
+function metaRelatorio(){
+  const tot = Q.def.perguntas.length, c = contar(Q.def.perguntas);
+  return '<div class="pr-meta">' +
+    (Q.def.descricao ? '<div>' + esc(Q.def.descricao) + '</div>' : '') +
+    '<div><b>Situação:</b> ' + (Q.status === 'CONCLUIDO' && Q.concluido
+      ? 'concluído em ' + esc(fmtQuando(Q.concluido.em)) + ' por ' + esc(Q.concluido.por && Q.concluido.por.nome)
+      : 'em preenchimento') + ' · <b>' + c + '</b> de ' + tot + ' perguntas respondidas</div>' +
+    '<div><b>Emitido em:</b> ' + esc(fmtQuando(Date.now())) + ' · código ' + esc(PARAM_ID) + '</div></div>';
+}
+function imprimir(html){
+  $('print-area').innerHTML = html;
+  const img = $('print-area').querySelector('img');
+  const vai = () => { window.print(); };
+  if (img && !img.complete){ img.onload = img.onerror = vai; setTimeout(vai, 1500); } else vai();
+}
+async function relatorioMP(){
+  if (!(await carregarDados())) return;
+  const quem = $('rel-quem') && $('rel-quem').checked;
+  let h = cabRelatorio(Q.def.titulo, 'Resposta do BPFRON') + metaRelatorio();
+  Q.def.secoes.forEach((s, i) => {
+    h += '<div class="pr-h2">' + esc(s.titulo) + (s.departamento ? ' <small>· responsável: ' + esc(s.departamento) + '</small>' : '') + '</div>' +
+      '<table class="pr-tab"><thead><tr><th>Nº</th><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>' +
+      perguntasDaSecao(i).map((q) => {
+        const r = Q.resp[q.n], v = r ? valorLegivel(q, r.v) : '';
+        return '<tr><td class="n">' + q.n + '</td><td>' + esc(q.texto) + '</td>' +
+          '<td class="r' + (v ? '' : ' vz') + '">' + (v ? esc(v) : 'sem resposta') +
+          (quem && r ? '<span class="quem">' + esc(r.nome) + ' · ' + esc(fmtQuando(r.em, true)) + '</span>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  });
+  h += '<div class="pr-fim">Documento gerado pelo sistema do BPFRON a partir do questionário colaborativo ' + esc(PARAM_ID) + '.</div>';
+  imprimir(h);
+}
+async function relatorioAuditoria(){
+  if (!(await carregarDados())) return;
+  const pessoas = resumoPessoas();
+  const tot = Q.def.perguntas.length, c = contar(Q.def.perguntas);
+  let h = cabRelatorio('Quem respondeu o quê', Q.def.titulo + ' — controle interno') + metaRelatorio();
+  h += '<table class="pr-resumo"><tr>' +
+    '<td><span class="pr-v">' + c + '/' + tot + '</span><span class="pr-l">respondidas</span></td>' +
+    '<td><span class="pr-v">' + pessoas.length + '</span><span class="pr-l">pessoas responderam</span></td>' +
+    '<td><span class="pr-v">' + (Q.membros || []).filter((m) => m.ativo).length + '</span><span class="pr-l">na lista hoje</span></td>' +
+    '<td><span class="pr-v">' + (Q.dados.hist || []).filter((x) => x.evento === 'resposta').length + '</span><span class="pr-l">alterações registradas</span></td></tr></table>';
+  h += '<div class="pr-h2">Resumo por pessoa</div><table class="pr-tab"><thead><tr><th>Quem</th><th>Departamento</th><th>Respostas (final)</th><th>Alterações</th><th>Última atividade</th></tr></thead><tbody>' +
+    pessoas.map((p) => '<tr><td>' + esc(p.nome) + (String(p.re).startsWith('u:') ? '' : ' (RE ' + esc(p.re) + ')') + '</td><td>' + esc(p.dep || '—') + '</td><td>' + p.finais + '</td><td>' + p.alteracoes + '</td><td>' + esc(fmtQuando(p.ultima, true)) + '</td></tr>').join('') +
+    '</tbody></table>';
+  for (const p of pessoas.filter((x) => x.finais)){
+    h += '<div class="pr-h2">' + esc(p.nome) + (p.dep ? ' <small>· ' + esc(p.dep) + '</small>' : '') + ' <small>— ' + p.finais + ' resposta(s) que estão valendo</small></div>' +
+      '<table class="pr-tab"><thead><tr><th>Nº</th><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>' +
+      p.perguntas.sort((a, b) => a - b).map((n) => { const q = Q.def.perguntas[n - 1], r = Q.resp[n];
+        return '<tr><td class="n">' + n + '</td><td>' + esc(q.texto) + '</td><td class="r">' + esc(valorLegivel(q, r.v)) + '<span class="quem">' + esc(fmtQuando(r.em, true)) + '</span></td></tr>'; }).join('') +
+      '</tbody></table>';
+  }
+  const EV = { resposta:'Resposta', criado:'Criado', membro_incluido:'Incluído na lista', membro_removido:'Retirado da lista',
+    membro_alterado:'Departamento alterado', concluido:'Concluído', reaberto:'Reaberto', secao:'Responsável da seção', definicao:'Perguntas alteradas' };
+  h += '<div class="pr-h2 pr-quebra">Histórico completo <small>(do mais antigo para o mais novo)</small></div>' +
+    '<table class="pr-tab"><thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th>Pergunta</th><th>Antes</th><th>Depois</th></tr></thead><tbody>' +
+    (Q.dados.hist || []).map((x) => { const q = x.n ? Q.def.perguntas[x.n - 1] : null;
+      return '<tr><td style="white-space:nowrap">' + esc(fmtQuando(x.em, true)) + '</td><td>' + esc(((x.posto ? x.posto + ' ' : '') + (x.nome || '')).trim()) + (x.dep ? '<span class="quem">' + esc(x.dep) + '</span>' : '') + '</td>' +
+        '<td>' + esc(EV[x.evento] || x.evento) + '</td><td>' + (q ? x.n + '. ' + esc(q.texto) : '') + '</td>' +
+        '<td>' + esc(q ? valorLegivel(q, x.antes) : x.antes) + '</td><td>' + esc(q ? valorLegivel(q, x.depois) : x.depois) + '</td></tr>'; }).join('') +
+    '</tbody></table><div class="pr-fim">Controle interno do BPFRON — questionário ' + esc(PARAM_ID) + '.</div>';
+  imprimir(h);
+}
+async function relatorioPendencias(){
+  if (!(await carregarDados())) return;
+  const falta = Q.def.perguntas.filter((q) => !respondida(q.n));
+  let h = cabRelatorio('O que falta responder', Q.def.titulo) + metaRelatorio();
+  if (!falta.length) h += '<p>Todas as perguntas têm resposta.</p>';
+  Q.def.secoes.forEach((s, i) => {
+    const fs = falta.filter((q) => q.s === i); if (!fs.length) return;
+    h += '<div class="pr-h2">' + esc(s.titulo) + (s.departamento ? ' <small>· responsável: ' + esc(s.departamento) + '</small>' : '') + ' <small>— ' + fs.length + ' sem resposta</small></div>' +
+      '<table class="pr-tab"><tbody>' + fs.map((q) => '<tr><td class="n">' + q.n + '</td><td>' + esc(q.texto) + (q.obrig ? ' <b>(obrigatória)</b>' : '') + '</td></tr>').join('') + '</tbody></table>';
+  });
+  imprimir(h);
+}
+
+window.addEventListener('beforeunload', () => { if (EDIT){ const el = $('in-' + EDIT.n); if (el){ clearTimeout(DEB[EDIT.n]); gravar(EDIT.n, el.value); } } });
+init();
+</script>
+</body>
+</html>
