@@ -1456,6 +1456,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
         </div>
         <div class="ec-fg">
           <button class="btn-page-nav" onclick="ecHoje()">📅 Hoje</button>
+          <button class="btn-page-nav" onclick="ecRecarregar()" title="Buscar de novo as escalas lançadas na Diária">🔄 Atualizar</button>
         </div>
       </div>
 
@@ -1480,7 +1481,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           </div>
           <div id="ec-map-stats"></div>
         </div>
-        <div class="ec-map-note">Marcadores posicionados pela região/município da escala (aproximado). Clique num marcador (ou no 📍 da guarnição na lista) para dar zoom na localidade.</div>
+        <div class="ec-map-note">Dados das escalas lançadas na Diária por Policial. Marcadores posicionados pela localidade de cada policial (aproximado). Clique num marcador (ou no 📍 da guarnição na lista) para dar zoom na localidade.</div>
       </div>
 
       <div id="ec-status" class="ec-status"></div>
@@ -5161,7 +5162,8 @@ function fecharModal() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
 
-/* ═══════════════════════ POLICIAIS EM CAMPO (Escalas — Google Sheets) ═══════════════════════ */
+/* ═══════════════════════ POLICIAIS EM CAMPO (escalas lançadas na Diária) ═══════════════════════ */
+// ⚠️ Fonte atual = /api/campo/diarias (ver ecLoad). ESCALA_SOURCES/ecPx/ecParseSheet abaixo são do modelo antigo (planilhas), não são mais chamados.
 // Fonte das escalas: UMA PLANILHA por operação; cada ABA (gid) = um período.
 // As abas são descobertas em runtime via /htmlview (o nome da aba traz o período).
 // Para adicionar/trocar uma operação, basta incluir { op, sigla, sheetId } aqui.
@@ -5173,6 +5175,7 @@ const ESCALA_SOURCES = [
 const EC_ANO_PADRAO = 2026;   // as abas/datas não trazem o ano
 const EC_PROXIES = ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy/?quest='];
 let EC_LOADED = false, EC_LOADING = false, EC_DATA = [], EC_MAP = null, EC_MARKERS = [];
+let EC_ERRO = '';
 let EC_BASE_MARKERS = [], EC_SHOW_BASES = true, EC_SHOW_POL = true;
 let EC_P2_ONLY = false;       // botão P2: mostra no mapa só as equipes de inteligência (NI / AI CRP)
 let EC_LAST_ESC = [];         // últimas escalas desenhadas (p/ redesenhar sem passar por renderCampo)
@@ -5376,36 +5379,51 @@ function ecAtivo(esc, d){
 function ecClean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
 // (parser antigo de escalas em texto/.md removido — substituído por ecParseSheet, que lê CSV do Google Sheets)
 
-/* ── Carregamento (Google Sheets, uma aba por período) ── */
+/* ── Carregamento: escalas lançadas na DIÁRIA (Worker /api/campo/diarias) ──
+   Uma fonte só: o que é lançado na Diária (datas, policiais, guarnição e localidade
+   de cada um) é o que aparece aqui. Cada escala lançada = 1 "escala"; cada EQUIPE
+   da escala = 1 guarnição. As planilhas antigas (ESCALA_SOURCES) não são mais lidas. */
+function ecDataISO(s){
+  const m = String(s||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+  return m ? new Date(+m[1], +m[2]-1, +m[3], 12, 0, 0) : null;
+}
+// bloco da lista (BPFRON / CRP I..IV / CPE / OUTRAS OPMs) pela OPM dominante da guarnição,
+// usando a mesma classificação da página Diária (dpClassOpm)
+function ecBlocoDiaria(q){
+  const cont = {};
+  (q.policiais||[]).forEach(p => {
+    const c = dpClassOpm(p.opm);
+    const bl = c.grupo==='BPFRON' ? 'BPFRON' : c.grupo==='CRP' ? c.crp.replace('-',' ') : c.grupo==='CPE' ? 'CPE' : 'OUTRAS OPMs';
+    cont[bl] = (cont[bl]||0) + 1;
+  });
+  return Object.keys(cont).sort((x,y)=>cont[y]-cont[x])[0] || 'OUTRAS OPMs';
+}
+// batalhão dominante da guarnição, com a normalização da Diária ("3° BPM", "BPCOQUE"…)
+function ecBatDiaria(q){
+  const cont = {};
+  (q.policiais||[]).forEach(p => { const u = dpUnidade(p.opm); if(u) cont[u] = (cont[u]||0) + 1; });
+  return Object.keys(cont).sort((x,y)=>cont[y]-cont[x])[0] || '';
+}
 async function ecLoad(){
   if(EC_LOADED || EC_LOADING) return;
   EC_LOADING = true;
   const st = document.getElementById('ec-status');
-  if(st) st.textContent = 'Carregando escalas…';
-
-  // Abas-template vazias (Página1 / Sheet1 / Planilha1) não têm escala: pulamos pra
-  // não disparar uma exportação que volta vazia e percorre toda a cadeia de proxies (lento).
-  const TPL = /^(p[áa]gina ?\d+|sheet ?\d+|planilha ?\d+)$/i;
-
-  // Carrega cada operação EM PARALELO (o tempo total ≈ o da planilha mais lenta, não a soma);
-  // dentro de cada operação as abas seguem em sequência (não sobrecarrega o proxy).
-  const perSource = await Promise.all(ESCALA_SOURCES.map(async (src) => {
-    const out = [];
-    try{
-      const tabs = (await ecListTabs(src.sheetId)).filter(t => !TPL.test((t.name||'').trim()));
-      for(const tab of tabs){
-        const csv = await ecFetchTab(src.sheetId, tab.gid);
-        if(!csv) continue;
-        const esc = ecParseSheet(csv, tab.name, src.op, src.sigla);
-        if(esc.equipes.length) out.push(esc);
-      }
-      console.log('[CAMPO] '+src.sigla+': '+tabs.length+' abas úteis, '+
-        out.reduce((b,e)=>b+e.equipes.reduce((c,q)=>c+q.policiais.length,0),0)+' policiais');
-    }catch(err){ console.warn('[CAMPO] falha em '+src.sigla+':', err.message); }
-    return out;
-  }));
-
-  EC_DATA = perSource.flat();
+  if(st) st.textContent = 'Carregando escalas lançadas na Diária…';
+  try{
+    const arr = await apiFetchJSON('/api/campo/diarias');
+    EC_DATA = (Array.isArray(arr) ? arr : []).map(e => {
+      const ini = ecDataISO(e.periodo && e.periodo.ini), fim = ecDataISO(e.periodo && e.periodo.fim) || ini;
+      const equipes = (e.equipes||[]).filter(q => q.policiais && q.policiais.length);
+      equipes.forEach(q => { q.batalhao = ecBatDiaria(q); q.bloco = ecBlocoDiaria(q); });
+      return { ...e, periodo: ini ? { ini, fim, raw: e.periodoRaw } : null, equipes };
+    }).filter(e => e.equipes.length);
+    EC_ERRO = '';
+    console.log('[CAMPO] Diária: '+EC_DATA.length+' escalas, '+
+      EC_DATA.reduce((b,e)=>b+e.equipes.reduce((c,q)=>c+q.policiais.length,0),0)+' policiais');
+  }catch(err){
+    console.warn('[CAMPO] falha ao ler a Diária:', err.message);
+    EC_DATA = []; EC_ERRO = err.message || 'erro';
+  }
   EC_LOADED = true; EC_LOADING = false;
 }
 
@@ -5745,6 +5763,12 @@ function renderGaragemDetail(){
   }
 }
 
+async function ecRecarregar(){
+  EC_LOADED = false;
+  showPageLoader('Atualizando escalas da Diária…');
+  try { await ecLoad(); } finally { hidePageLoader(); }
+  ecPopulateFonte(); ecPopulateBat(); renderCampo();
+}
 async function initCampo(){
   if(!EC_LOADED){
     showPageLoader('Carregando escalas de policiais em campo…');
@@ -6510,10 +6534,12 @@ function ecEqCard(q, e, busca, showPeriod){
   const loc = ecTeamLocalidade(q, e);
   const geo = ecTeamGeo(q, e);   // coord da localidade p/ o clique dar zoom no mapa
   const isAI = (q.batalhao === 'AI CRP');   // AI CRP = efetivo de batalhões variados → mostra coluna OPM
+  // localidades diferentes na mesma guarnição → mostra a de cada policial ao lado do nome
+  const locMista = new Set(q.policiais.map(p=>(p.localidade||'').trim().toUpperCase()).filter(Boolean)).size > 1;
   const rows = q.policiais.map(p=>`<tr>
     <td>${ecEsc(p.posto)}</td>
     <td style="color:#9aa6b2;font-variant-numeric:tabular-nums">${ecEsc(p.re)}</td>
-    <td class="ec-nm">${ecHL(p.nome,busca)}</td>
+    <td class="ec-nm">${ecHL(p.nome,busca)}${(locMista&&p.localidade)?`<div style="font-size:10.5px;font-weight:500;color:#6ee7b7">📍 ${ecEsc(p.localidade)}</div>`:''}</td>
     <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${(p.telefone||p.contato)?ecEsc(p.telefone||p.contato):'<span style="opacity:.4">—</span>'}</td>
     <td>${p.funcao?`<span class="ec-fn ${ecEsc(p.funcao)}">${ecEsc(p.funcao)}</span>`:'—'}</td>
     ${isAI?`<td class="ec-opm">${ecEsc(p.opm)||'<span style="opacity:.4">—</span>'}</td>`:''}</tr>`).join('');
@@ -6533,7 +6559,7 @@ function renderCampo(){
   const st    = document.getElementById('ec-status');
   if(!lista) return;
   if(!EC_LOADED){ st.textContent='Carregando…'; return; }
-  if(!EC_DATA.length){ kpis.innerHTML=''; lista.innerHTML='<div class="ec-empty">Não foi possível carregar as escalas da planilha. Verifique o compartilhamento da planilha e a conexão (o site busca via proxy CORS).</div>'; st.textContent=''; return; }
+  if(!EC_DATA.length){ kpis.innerHTML=''; lista.innerHTML='<div class="ec-empty">'+(EC_ERRO ? 'Não foi possível carregar as escalas da Diária ('+ecEsc(EC_ERRO)+').' : 'Nenhuma escala lançada na Diária ainda. Lance a escala em <b>Diária por Policial</b> e ela aparece aqui.')+'</div>'; st.textContent=''; return; }
 
   const dval = document.getElementById('ec-date').value;
   const dref = dval ? new Date(+dval.slice(0,4), +dval.slice(5,7)-1, +dval.slice(8,10), 12,0,0) : new Date();
