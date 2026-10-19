@@ -5875,7 +5875,11 @@ function ecToggleP2(btn){
 }
 // resolve a localidade (coord + nome) de uma equipe — mesma lógica do render do mapa
 function ecTeamGeo(q, esc){
-  const teamTxt = [q.nome, q.local, q.locHint, q.opm, q.bloco, esc&&esc.local,
+  /* Só o texto DA PRÓPRIA guarnição. O esc.local junta as localidades de todas as
+     guarnições da escala ("ITINERANTE · NOVA MUTUM · NOVA MAMORÉ…"): com ele aqui, uma
+     única guarnição itinerante mandava a escala inteira para a Base Nova Mutum
+     (Ordem de Serviço 28, 19/10/2026). Ele continua só como último recurso, lá embaixo. */
+  const teamTxt = [q.nome, q.local, q.locHint, q.opm, q.bloco,
     ...q.policiais.map(p=>`${p.nome} ${p.funcao} ${p.localidade} ${p.opm}`)].join(' ');
   let g = ecItinerante(teamTxt);
   if(!g){ for(const p of q.policiais){ g = ecGeocode(p.localidade); if(g) break; } }
@@ -5912,9 +5916,9 @@ function ecRenderMap(escalas){
     if(EC_SHOW_POL) mk.addTo(EC_MAP);
     const body = gr.eqs.map(({esc,q})=>{
       const pol = q.policiais.map(p=>`<div style="margin:3px 0;color:#1f2937"><b style="color:#0a0f1a">${ecEsc(p.posto)}</b> ${ecEsc(p.nome)} <span style="color:#6b7280">(${ecEsc(p.funcao)||'—'})</span>${(p.telefone||p.contato)?` · <span style="color:#6b7280">📞 ${ecEsc(p.telefone||p.contato)}</span>`:''}</div>`).join('');
-      const meta = ecEsc(esc.periodoRaw);
+      const meta = ecEsc(q.periodoRaw || esc.periodoRaw);
       return `<div style="margin-top:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f8fafc;padding:7px 9px">
-        <div style="color:#9a7b00;font-weight:800;font-size:12px">🛡️ ${ecEqTipo(q)} ${ecEsc(q.nome)}${q.batalhao?` · ${ecEsc(q.batalhao)}`:''}</div>
+        <div style="color:#9a7b00;font-weight:800;font-size:12px">🛡️ ${/^(EQUIPE|GUARNI|BPFRON|N[ÚU]CLEO)/i.test(q.nome||'') ? '' : ecEqTipo(q)+' '}${ecEsc(q.nome)}${q.batalhao?` · ${ecEsc(q.batalhao)}`:''}</div>
         ${meta?`<div style="color:#6b7280;font-size:10.5px;margin-bottom:3px">${meta}</div>`:''}${pol}</div>`;
     }).join('');
     mk.bindPopup(
