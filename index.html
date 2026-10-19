@@ -5414,7 +5414,14 @@ async function ecLoad(){
     EC_DATA = (Array.isArray(arr) ? arr : []).map(e => {
       const ini = ecDataISO(e.periodo && e.periodo.ini), fim = ecDataISO(e.periodo && e.periodo.fim) || ini;
       const equipes = (e.equipes||[]).filter(q => q.policiais && q.policiais.length);
-      equipes.forEach(q => { q.batalhao = ecBatDiaria(q); q.bloco = ecBlocoDiaria(q); });
+      equipes.forEach(q => {
+        q.batalhao = ecBatDiaria(q); q.bloco = ecBlocoDiaria(q);
+        // data de CADA policial (a guarnição pode ter gente entrando em dias diferentes)
+        q.policiais.forEach(p => { p._ini = ecDataISO(p.ini) || ini; p._fim = ecDataISO(p.fim) || p._ini || fim; });
+        const is = q.policiais.map(p=>p.ini).filter(Boolean).sort(), fs = q.policiais.map(p=>p.fim).filter(Boolean).sort();
+        const br = s => s ? s.split('-').reverse().join('/') : '';
+        if(is.length) q.periodoRaw = is[0] === fs[fs.length-1] ? br(is[0]) : br(is[0]) + ' a ' + br(fs[fs.length-1]);
+      });
       return { ...e, periodo: ini ? { ini, fim, raw: e.periodoRaw } : null, equipes };
     }).filter(e => e.equipes.length);
     EC_ERRO = '';
@@ -6545,9 +6552,9 @@ function ecEqCard(q, e, busca, showPeriod){
     ${isAI?`<td class="ec-opm">${ecEsc(p.opm)||'<span style="opacity:.4">—</span>'}</td>`:''}</tr>`).join('');
   const bat = q.batalhao||q.opm||'';
   return `<div class="ec-eq">
-    <div class="ec-eq-head"><span class="ec-eq-name">🛡️ ${ecEqTipo(q)} ${ecEsc(q.nome)}</span>
+    <div class="ec-eq-head"><span class="ec-eq-name">🛡️ ${/^(EQUIPE|GUARNI|BPFRON|N[ÚU]CLEO)/i.test(q.nome||'') ? '' : ecEqTipo(q)+' '}${ecEsc(q.nome)}</span>
       ${bat?`<span class="ec-eq-vtr">🎖️ ${ecEsc(bat)}</span>`:''}
-      ${(showPeriod&&e.periodoRaw)?`<span class="ec-eq-vtr">🗓️ ${ecEsc(e.periodoRaw)}</span>`:''}
+      ${((showPeriod||(q.periodoRaw&&q.periodoRaw!==e.periodoRaw))&&(q.periodoRaw||e.periodoRaw))?`<span class="ec-eq-vtr">🗓️ ${ecEsc(q.periodoRaw||e.periodoRaw)}</span>`:''}
       <span class="ec-eq-vtr">👮 ${q.policiais.length} pol.</span></div>
     ${loc?`<div class="ec-eq-loc${geo?' clk':''}"${geo?` onclick="ecFlyTo(${geo.coord[0]},${geo.coord[1]},12)" title="Ver no mapa"`:''}><span class="ec-eq-loc-ic">📍</span><span class="ec-eq-loc-txt">${ecEsc(loc)}</span></div>`:''}
     <table class="ec-tbl${isAI?' ec-tbl-ai':''}"><thead><tr><th>Posto/Grad</th><th>RE</th><th>Nome</th><th>Telefone</th><th>Função</th>${isAI?'<th>OPM</th>':''}</tr></thead><tbody>${rows}</tbody></table>
@@ -6570,7 +6577,14 @@ function renderCampo(){
   // filtra escalas
   let escs = EC_DATA.slice();
   if(fonte) escs = escs.filter(e=>e.fonte===fonte);
-  if(soAtivos && !busca) escs = escs.filter(e=>ecAtivo(e, dref));
+  if(soAtivos && !busca){
+    escs = escs.filter(e=>ecAtivo(e, dref));
+    // escala da Diária: cada policial tem a sua data — mostra só quem está em campo no dia
+    const t = dref.getTime();
+    escs = escs.map(e=>({ ...e, equipes: e.equipes.map(q=>({ ...q, policiais: q.policiais.filter(p =>
+      !p._ini || (t >= p._ini.getTime() - 1 && t <= (p._fim||p._ini).getTime() + 86400000)) })).filter(q=>q.policiais.length) }))
+      .filter(e=>e.equipes.length);
+  }
 
   // filtro por batalhão (mantém só as equipes do(s) batalhão(ões) marcado(s))
   if(EC_BAT_SEL.size){

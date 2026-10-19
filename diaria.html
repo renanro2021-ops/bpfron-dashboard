@@ -781,7 +781,7 @@ function epLines(items){
       if(c && it.x - (c.x + c.w) < h*0.6){
         c.s += (/\s$/.test(c.s) || /^\s/.test(it.s) ? '' : ' ') + it.s;
         c.w = (it.x + it.w) - c.x;
-      } else cells.push({ x:it.x, w:it.w||0, h, s:it.s });
+      } else cells.push({ x:it.x, y:it.y, w:it.w||0, h, s:it.s });
     }
     cells.forEach(c=>{ c.s=epClean(c.s); });
     /* Layout em que as colunas Matrícula e Nome ficam coladas e viram UMA célula
@@ -792,7 +792,7 @@ function epLines(items){
       const m = c.s.match(/^(\d{5,9})\s+([A-ZÀ-Ú][^\d]{3,})$/i);
       if(m){
         const wRe = c.w * (m[1].length / c.s.length);
-        part.push({ x:c.x, w:wRe, h:c.h, s:m[1] }, { x:c.x + wRe + 2, w:Math.max(1, c.w - wRe - 2), h:c.h, s:epClean(m[2]) });
+        part.push({ x:c.x, y:c.y, w:wRe, h:c.h, s:m[1] }, { x:c.x + wRe + 2, y:c.y, w:Math.max(1, c.w - wRe - 2), h:c.h, s:epClean(m[2]) });
       } else part.push(c);
     }
     L.cells = part.filter(c=>c.s);
@@ -804,6 +804,51 @@ function epLines(items){
 function epIsNoise(t){
   return /^(GOVERNO DO ESTADO|POL[IÍ]CIA MILITAR|BATALH[AÃ]O DE (FRONTEIRA|POL[IÍ]CIA)|COMANDO DE POLICIAMENTO|DIVIS[AÃ]O OPERACIONAL|ESCALA$|QUARTEL\b|RUA\b|E-?MAIL|CEP\b|DOCUMENTO ASSINADO|FUNDAMENTO NO|A AUTENTICIDADE|REFER[EÊ]NCIA|COMANDANTE DO)/i.test(t)
     || /\/\s*pg\.?\s*\d+\s*$/i.test(t);
+}
+
+/* Células altas (Ordem de Serviço SEI 77673832, 19/10/2026): o nome vem em 3–5 linhas
+   ("FELIPE / SANTOS / [linha do RE] / DAS / CHAGAS") e o posto em 2 ("1º SGT / QPPM").
+   O RE fica no MEIO da célula. Dentro de uma célula as linhas ficam a ~12,6 de distância;
+   de uma célula para a próxima o vão é maior (~14,4). Então: junta os pedaços da coluna
+   NOME em blocos pelo vão e entrega o bloco ao único policial cuja linha do RE cai dentro
+   dele. Bloco com 2+ policiais (tabela de linhas simples, vão sempre igual) = não mexe. */
+function epCelulasAltas(e){
+  const frags = e._frag || [];
+  const pags = [...new Set(frags.map(f=>f.p))];
+  for(const pg of pags){
+    const pols = e.policiais.filter(p=>p._p===pg);
+    if(!pols.length) continue;
+    const nm = frags.filter(f=>f.p===pg && f.k==='nome').sort((a,b)=>a.y-b.y);
+    const gaps = [];
+    for(let k=1;k<nm.length;k++){ const g = nm[k].y - nm[k-1].y; if(g > 3) gaps.push(g); }
+    if(gaps.length){
+      const thr = Math.min(...gaps) * 1.08;
+      const blocos = []; let cur = [];
+      for(const f of nm){
+        if(cur.length && f.y - cur[cur.length-1].y > thr){ blocos.push(cur); cur = []; }
+        cur.push(f);
+      }
+      if(cur.length) blocos.push(cur);
+      for(const b of blocos){
+        if(b.length < 2) continue;
+        const y0 = b[0].y - 8, y1 = b[b.length-1].y + 8;
+        const donos = pols.filter(p=>p._y >= y0 && p._y <= y1);
+        if(donos.length !== 1) continue;
+        donos[0].nome = epClean(b.map(f=>f.s).join(' '));
+      }
+    }
+    // posto em 2 linhas: cada pedaço vai para o policial mais próximo (até 10 de distância)
+    const porPol = new Map();
+    for(const f of frags.filter(f=>f.p===pg && f.k==='posto')){
+      let best=null, bd=11;
+      for(const p of pols){ const d = Math.abs(p._y - f.y); if(d < bd){ bd=d; best=p; } }
+      if(best){ if(!porPol.has(best)) porPol.set(best, []); porPol.get(best).push(f); }
+    }
+    porPol.forEach((fs, p)=>{
+      const txt = epClean(fs.sort((a,b)=>a.y-b.y).map(f=>f.s).join(' '));
+      if(txt.length > String(p.posto||'').length) p.posto = txt;
+    });
+  }
 }
 
 function parseEscalaItems(items, opts){
@@ -834,13 +879,22 @@ function parseEscalaItems(items, opts){
   };
   const novaEscala = ()=>{
     esc = { evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null,
-            processo, sei_doc, equipes:[], policiais:[], avisos:[] };
+            processo, sei_doc, equipes:[], policiais:[], avisos:[], _frag:[] };
     escalas.push(esc); team=null; cols=null;
   };
   novaEscala();
+  /* Ordem de Serviço (SEI 77673832, 19/10/2026): a tabela do SEI repete o cabeçalho da 1ª
+     guarnição no topo de cada página ("BPFRON 01 ... DATA: 13/10"). Não é guarnição nova:
+     o policial seguinte continua na guarnição que vinha da página anterior. */
+  let prevP = 0, repetido = false;
+  // coluna LOCALIDADE sem título (tabela do NI): o que fica à direita da FUNÇÃO é localidade
+  const colLocX = ()=> !cols ? Infinity : cols.loc!=null ? cols.loc - 25
+    : (cols.funcao!=null && cols.tel==null && cols.opm==null ? cols.funcao + 45 : Infinity);
 
   for(let i=0;i<lines.length;i++){
     const L=lines[i], t=L.text, T=t.toUpperCase();
+    const novaPag = L.p !== prevP;
+    if(!epIsNoise(t)) prevP = L.p;
     if(/^EVENTO\s*:/i.test(t)){
       if(esc.policiais.length || esc.evento) novaEscala();
       esc.evento = epClean(t.replace(/^EVENTO\s*:/i,''));
@@ -907,18 +961,38 @@ function parseEscalaItems(items, opts){
          "DIVISAS/MACHADINHO D'OESTE - BPFRON EQUIPE 01 (VIATURA - ...) DATA: 01 A 08/07"
        O último (HTML do SEI) traz área, equipe e a data na mesma linha. Nunca é linha de
        policial: aqui não há RE (inteiro ou tarjado) nem posto. */
-    if(/^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t) ||
+    /* 4º formato (Ordem de Serviço): "BPFRON 01 -BPFRON COMANDO- MAJ QOPM FELIPE SANTOS",
+       "BPFRON 02 - CAP QOAPM RENÊ", "NÚCLEO DE INTELIGÊNCIA - VTR A CARGO DO NI" — sem a
+       palavra EQUIPE e com posto no meio (por isso não cai na regra de baixo). */
+    const hdrOS = t.length < 120 && !/\d{5}|[*•]{2,}\s*\d/.test(t)
+      && (/^BPFRON\s*[-–]?\s*\d{1,2}\b/i.test(t) || /^N[ÚU]CLEO\s+DE\s+INTELIG/i.test(t));
+    if(hdrOS || /^(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t) ||
        (t.length < 170 && /\b(EQUIPE|GUARNI[ÇC][AÃ]O)\b/i.test(t)
         && !/\d{5}|[*•]{2,}\s*\d/.test(t) && !EP_RANK.test(t))){
       flushPend();
       const dataM = t.match(/DATA\s*:\s*([^()]+)$/i);
       const semData = epClean(t.replace(/\s*DATA\s*:.*$/i, '').replace(/\(.*$/, ''));
-      team = { nome: semData || epClean(t.replace(/\(.*$/,'')), area: lastArea, localidade:'',
-               periodo: dataM ? epPeriodo(dataM[1], ano) : null, _loc:[] };
+      const nomeEq = semData || epClean(t.replace(/\(.*$/,''));
+      // cabeçalho repetido no topo da página: ignora ele e a VIATURA/DATA que vêm junto
+      if(novaPag && esc.equipes.some(q=>q.nome===nomeEq && q._nPol)){ repetido = true; continue; }
+      repetido = false;
+      team = { nome: nomeEq, area: lastArea, localidade:'',
+               periodo: dataM ? epPeriodo(dataM[1], ano) : null, _loc:[], _nPol:0 };
       esc.equipes.push(team); lastArea='';
       continue;
     }
-    if(/^DATA\s*:/i.test(t)){ if(team) team.periodo = epPeriodo(t.replace(/^DATA\s*:/i,''), ano); continue; }
+    // "(VIATURA - A CARGO DA DIVISÃO DE TRANSPORTES)" na linha de baixo do cabeçalho
+    if(/^\(?\s*(VIATURA|VTR)\b/i.test(t)) continue;
+    if(/^DATA\s*:/i.test(t)){
+      if(repetido || !team) continue;
+      const per = epPeriodo(t.replace(/^DATA\s*:/i,''), ano);
+      /* 2ª "DATA:" no meio da guarnição (BPFRON 01: três de 13/10 e o VALMIR de 16/10):
+         quem já foi lido fica com a data anterior; a nova vale daqui pra frente. */
+      if(team._nPol && team.periodo)
+        esc.policiais.forEach(p=>{ if(p._team===team && !p._per) p._per = team.periodo; });
+      team.periodo = per;
+      continue;
+    }
     // linha de títulos da tabela -> guarda a posição das colunas
     if(/\bNOME\b/.test(T) && (/\bRE\b/.test(T) || /POST/.test(T))){
       cols = {};
@@ -934,6 +1008,21 @@ function parseEscalaItems(items, opts){
       });
       continue;
     }
+    repetido = false;
+    /* Pedaços de nome/posto de células altas (nome quebrado em 3–5 linhas, posto em 2):
+       guarda tudo com a posição e remonta no fim (ver "células altas" no pós-processamento). */
+    if(cols && team && cols.re!=null){
+      // a coluna NOME acaba onde começa a próxima (OPM, FUNÇÃO, CONTATO ou LOCALIDADE)
+      const nomeHi = Math.min(...[cols.opm, cols.funcao, cols.tel].filter(v=>v!=null).map(v=>v - 25), colLocX());
+      for(const c of L.cells){
+        if(epIsRE(c.s) || epREMasc(c.s)) continue;
+        // fora: telefone, OPM e a linha "CMT da Operação - DIVISA LESTE - 1º SGT QPPM LUÍZ"
+        if(c.x > cols.re + 10 && c.x < nomeHi && !/\d{3,}/.test(c.s) && !EP_OPM.test(c.s)
+           && !/\s[-–]\s|\bCMT\b|QPPM|QOPM|QOAPM/i.test(c.s)) esc._frag.push({ k:'nome', p:L.p, y:c.y!=null?c.y:L.y, s:c.s });
+        else if(c.x < cols.re - 5 && /^[0-9ºª°A-Z\s.]{1,14}$/i.test(c.s)) esc._frag.push({ k:'posto', p:L.p, y:c.y!=null?c.y:L.y, s:c.s });
+        else if(c.x >= colLocX()) (team._locF = team._locF || []).push({ y:c.y!=null?c.y:L.y, s:c.s });   // localidade colada no posto
+      }
+    }
     const masc = L.cells.find(c=>epREMasc(c.s));              // RE tarjado pelo SEI
     const reCell = L.cells.find(c=>epIsRE(c.s)) || masc;
     const temRank = L.cells.some(c=>epRankOnly(c.s) || EP_RANK.test(c.s));
@@ -945,13 +1034,16 @@ function parseEscalaItems(items, opts){
         pol.re_full = epDigits(reCell.s);
         pol.re = pol.re_full.length>5 ? pol.re_full.slice(-5) : pol.re_full;
       }
-      const locX = cols && cols.loc!=null ? cols.loc - 25 : Infinity;
+      if(team) team._nPol = (team._nPol||0) + 1;
+      const locX = colLocX();
       for(const c of L.cells){
         if(c===reCell) continue;
         const s=c.s;
         if(c.x < reCell.x){ pol.posto = epClean(pol.posto+' '+s); continue; }
         if(epIsPhone(s)){ pol.tel = epClean(pol.tel+' '+s); continue; }
         if(EP_FUNC.test(s)){ pol.funcao = s.toUpperCase(); continue; }
+        // função "NI" (Núcleo de Inteligência) só quando está debaixo do título FUNÇÃO
+        if(/^(NI|P2)$/i.test(s) && !pol.funcao && cols && cols.funcao!=null && Math.abs(c.x - cols.funcao) < 45){ pol.funcao = s.toUpperCase(); continue; }
         if(c.x >= locX){ pol.localidade = epClean(pol.localidade+' '+s); if(team && team._loc) team._loc.push({ y:L.y, s }); continue; }
         if(!pol.nome){ pol.nome=s; continue; }
         if(!pol.opm && (EP_OPM.test(s) || (cols && cols.opm!=null && c.x >= cols.opm-25))){ pol.opm=s; continue; }
@@ -970,7 +1062,7 @@ function parseEscalaItems(items, opts){
     }
     // linha solta dentro da tabela: localidade (célula mesclada) ou continuação de nome
     if(cols){
-      const locX = cols.loc!=null ? cols.loc - 25 : Infinity;
+      const locX = colLocX();
       const locCells = L.cells.filter(c=>c.x >= locX);
       if(locCells.length === L.cells.length){ if(team){ team.localidade = epClean((team.localidade?team.localidade+' ':'')+t); if(team._loc) team._loc.push({ y:L.y, s:t }); } else lastArea=''; continue; }
       // continuação de nome quebrado em 2 linhas: vai para o policial mais próximo em y.
@@ -1023,15 +1115,27 @@ function parseEscalaItems(items, opts){
        localidade diferente por policial não é sobrescrita. 11/09/2026. */
     for(const q of (e.equipes||[])){
       if(!q._loc || !q._loc.length) continue;
-      const txt = epClean(q._loc.slice().sort((a,b)=>a.y-b.y).map(f=>f.s).join(' '));
+      // mesma localidade repetida em cada linha (célula NÃO mesclada) conta uma vez só
+      const pedacos = q._loc.slice().sort((a,b)=>a.y-b.y).map(f=>epClean(f.s));
+      const txt = epClean((new Set(pedacos).size === 1 ? [pedacos[0]] : pedacos).join(' '));
       if(txt.length > String(q.localidade||'').length) q.localidade = txt;
     }
+    (e.equipes||[]).forEach(q=>{ const rep = String(q.localidade||'').match(/^(.+?)(?:\s+\1)+$/); if(rep) q.localidade = rep[1]; });
+    // guarnição que ficou sem localidade: usa os pedaços da coluna LOCALIDADE que vieram
+    // colados em linha de posto ("2º SGT | NOVA" / "QPPM | MUTUM" — BPFRON 04 da OS 28)
+    for(const q of (e.equipes||[])){
+      if(q.localidade || !q._locF || !q._locF.length) continue;
+      const vistos = new Set();
+      q.localidade = epClean(q._locF.slice().sort((a,b)=>a.y-b.y)
+        .filter(f=>!vistos.has(f.s) && vistos.add(f.s)).map(f=>f.s).join(' '));
+    }
+    epCelulasAltas(e);
     for(const p of e.policiais){
       const tm = p._team || {};
       const tl = String(tm.localidade || '');
       if(!p.localidade) p.localidade = tl;
       else if(tl.length > p.localidade.length && norm(tl).includes(norm(p.localidade))) p.localidade = tl;
-      const per = tm.periodo || e.periodo || {};
+      const per = p._per || tm.periodo || e.periodo || {};
       p.ini = per.ini || ''; p.fim = per.fim || '';
       // linha "DATA:" da guarnição com término antes do início (erro de digitação do documento)
       if (p.ini && p.fim && p.fim < p.ini){
@@ -1066,10 +1170,18 @@ function parseEscalaItems(items, opts){
       if(!p.opm && e.opm_doc) p.opm = e.opm_doc;
       p.posto = p.posto.replace(/\s+/g,' ').toUpperCase();
       p.nome = p.nome.toUpperCase();
-      delete p._team; delete p._y; delete p._p;
+      delete p._team; delete p._y; delete p._p; delete p._per;
     }
-    (e.equipes||[]).forEach(q=>{ delete q._loc; });
-    delete e._seiOwn; delete e._ef;
+    /* Guarnição sem ninguém = frase do corpo da Ordem de Serviço que tinha a palavra
+       "equipe" ("...para próxima equipe."). Sai da lista. A guarnição com duas datas fica
+       com o período inteiro (menor início → maior término). */
+    e.equipes = (e.equipes||[]).filter(q=>q._nPol);
+    e.equipes.forEach(q=>{
+      const ps = e.policiais.filter(p=>p.equipe===q.nome && p.ini);
+      if(ps.length) q.periodo = { ini: ps.map(p=>p.ini).sort()[0], fim: ps.map(p=>p.fim||p.ini).sort().pop() };
+      delete q._loc; delete q._locF; delete q._nPol;
+    });
+    delete e._seiOwn; delete e._ef; delete e._frag;
     const corr = e.policiais.filter(p=>p.fim_pdf);
     if(corr.length){
       const quais = [...new Set(corr.map(p=>`${isoToBR(p.fim_pdf)} → ${isoToBR(p.fim)}`))].join(', ');
