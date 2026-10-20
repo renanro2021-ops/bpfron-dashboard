@@ -1,6 +1,11 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 22, nome: '1.5', data: '2026-10-20', notas: [
+    'Mapa que gira com a bússola: toque na bússola para alternar entre "norte para cima" e "mapa gira com o rumo" (o rumo do celular fica sempre para cima, como no Avenza)',
+    'A escolha fica guardada; no modo que gira, o N da bússola mostra onde está o norte',
+    'O seu marcador, as fotos e as setas de direção continuam em pé e corretos com o mapa girado'
+  ] },
   { v: 21, nome: '1.4', data: '2026-10-20', notas: [
     'Bússola na tela: a seta mostra para onde o celular aponta, e fica grande com borda vermelha enquanto grava a trilha',
     'O marcador da sua posição ganha um cone de direção, que gira com a bússola mesmo parado',

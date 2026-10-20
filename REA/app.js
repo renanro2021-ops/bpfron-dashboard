@@ -14,7 +14,7 @@ const state = {
 // ---------- Mapa base ----------
 const tk = Theme.token;            // lê um token de cor (--rec, --me…) do tema atual
 const MR = Motion.reduced;         // redução de movimento: desliga as animações do próprio Leaflet
-const map = L.map('map', { zoomControl: false, attributionControl: true, zoomAnimation: !MR, fadeAnimation: !MR, markerZoomAnimation: !MR }).setView([-15.78, -47.93], 5);
+const map = L.map('map', { zoomControl: false, attributionControl: true, zoomAnimation: !MR, fadeAnimation: !MR, markerZoomAnimation: !MR, ...MapRot.options }).setView([-15.78, -47.93], 5);
 // iPhone: o tamanho da tela muda ao abrir/girar; sem recalcular, o mapa fica descentralizado (a posição aparece fora do lugar)
 const fixMapSize = () => map.invalidateSize({ pan: false });
 window.addEventListener('resize', fixMapSize); window.addEventListener('orientationchange', () => { fixMapSize(); setTimeout(fixMapSize, 300); setTimeout(fixMapSize, 1000); });
@@ -29,6 +29,7 @@ tiles.on('loading', () => document.body.classList.add('busy'))
     toast(navigator.onLine ? 'Parte do mapa base não carregou' : 'Sem internet: só o que já foi visto e os mapas importados aparecem');
   });
 tiles.addTo(map);
+MapRot.attach(map);
 const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me-wrap"><div class="me-cone"></div><div class="me"></div></div>', iconSize: [64, 64] }), interactive: false, keyboard: false });
 const meAcc = L.circle([0, 0], { radius: 0, weight: 1, color: tk('--me'), fillOpacity: .12, interactive: false });
 const measureLayer = L.layerGroup().addTo(map);
@@ -360,7 +361,7 @@ function drawFeatures() {
       const ic = hasPhotos(f)
         ? L.divIcon({
           className: '', iconSize: [80, 80], iconAnchor: [40, 40],
-          html: `<div class="photo-wrap${isNew ? ' new' : ''}">${dir != null ? `<div class="photo-dir" style="transform:rotate(${dir}deg)"></div>` : ''}` +
+          html: `<div class="photo-wrap${isNew ? ' new' : ''}">${dir != null ? `<div class="photo-dir" style="transform:rotate(calc(${dir}deg + var(--bearing,0deg)))"></div>` : ''}` +
             `<div class="photo-pin" style="background-image:url(${thumbUrl(f.photos[0])})"></div>` +
             `${f.photos.length > 1 ? `<span class="photo-count" style="${badgePos(dir)}">${f.photos.length}</span>` : ''}</div>`
         })
@@ -687,6 +688,7 @@ const compassText = v => `${Math.round(v.v)}° ${cardinal(v.v)}`;
 const compassNorth = v => v.src === 'gps' ? 'rumo do GPS (norte verdadeiro)' : v.calibrated ? 'norte verdadeiro (calibrado pelo GPS)' : 'norte magnético (ainda sem calibração pelo GPS)';
 function renderCompass() {
   const v = Compass.value();
+  if (v) MapRot.follow(v.v);   // modo "mapa gira": bearing = −rumo
   if (v) state.heading = { v: v.v, t: Date.now() };   // usado pela foto da câmera quando o EXIF não traz direção
   const wrap = meMarker.getElement()?.firstElementChild;   // cone de direção do marcador da posição
   if (wrap) { wrap.classList.toggle('has-h', !!v); if (v) wrap.style.setProperty('--h', v.v.toFixed(1) + 'deg'); }
@@ -695,7 +697,7 @@ function renderCompass() {
   btn.hidden = !v && !ask;
   btn.classList.toggle('ask', ask);
   if (v) {
-    $('#cmp-needle').style.transform = `rotate(${v.v.toFixed(1)}deg)`;
+    $('#cmp-needle').style.transform = `rotate(calc(${v.v.toFixed(1)}deg + var(--bearing,0deg)))`;
     $('#cmp-deg').textContent = compassText(v) + (v.calibrated ? '' : '*');
     btn.setAttribute('aria-label', `Bússola: ${compassText(v)}, ${compassNorth(v)}. Toque para detalhes`);
   } else if (ask) {
@@ -710,7 +712,9 @@ $('#compass').onclick = () => {
   const v = Compass.value();
   if (!v && Compass.perm === 'denied') return openSheet('Bússola bloqueada', '<p>O acesso ao sensor de movimento foi negado. No iPhone: Ajustes → Safari → ative <b>Movimento e orientação</b> (ou o equivalente do app instalado) e abra o MapaCampo de novo.</p>');
   if (!v) return Compass.start();   // dentro do toque: é o que o iOS exige para pedir a permissão
-  toast(`Rumo ${compassText(v)} · ${compassNorth(v)}`);
+  const heading = MapRot.mode === 'north';   // toque alterna: norte para cima ↔ mapa gira com o rumo
+  MapRot.setMode(heading ? 'heading' : 'north'); if (heading) MapRot.follow(v.v, { animate: true });
+  toast(`${heading ? 'Mapa gira com o rumo' : 'Norte para cima'} · ${compassText(v)} · ${compassNorth(v)}`);
 };
 
 // Plota fotos: usa GPS, hora e direção do EXIF. Na câmera do app, se faltar GPS, usa o do aparelho.

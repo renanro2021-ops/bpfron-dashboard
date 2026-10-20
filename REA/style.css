@@ -127,7 +127,7 @@ input[type=range]{width:100%;accent-color:var(--g)}
 .me-wrap{position:relative;width:64px;height:64px}
 .me{position:absolute;left:23px;top:23px;width:18px;height:18px;border-radius:50%;background:var(--me);border:3px solid #fff;box-shadow:0 0 0 2px color-mix(in srgb,var(--me) 35%,transparent),0 1px 4px #0007}
 /* cone de direção: aparece quando há bússola/rumo; gira com a variável --h (graus) */
-.me-cone{position:absolute;inset:0;border-radius:50%;opacity:0;transform:rotate(var(--h,0deg));transition:opacity var(--d-ui) var(--ease);
+.me-cone{position:absolute;inset:0;border-radius:50%;opacity:0;transform:rotate(calc(var(--h,0deg) + var(--bearing,0deg)));transition:opacity var(--d-ui) var(--ease);
   background:conic-gradient(from -32deg at 50% 50%,transparent 0deg,color-mix(in srgb,var(--me) 70%,transparent) 32deg,transparent 64deg,transparent 360deg);
   -webkit-mask:radial-gradient(circle,transparent 10px,#000 11px);mask:radial-gradient(circle,transparent 10px,#000 11px)}
 .me-wrap.has-h .me-cone{opacity:1}
@@ -141,7 +141,8 @@ input[type=range]{width:100%;accent-color:var(--g)}
 .cmp-ring{fill:none;stroke:var(--line2);stroke-width:4}
 .cmp-n{fill:var(--rec);font:800 18px system-ui,sans-serif}
 .cmp-pn{fill:var(--g)}
-#cmp-needle{transform-origin:0 0}
+#cmp-needle,#cmp-dial{transform-origin:0 0}
+#cmp-dial{transform:rotate(var(--bearing,0deg))}
 #cmp-deg{position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:700;padding:0 7px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-variant-numeric:tabular-nums}
 #compass.rec{width:88px;height:88px;border:3px solid var(--rec)}
 #compass.rec #cmp-deg{font-size:14px;bottom:-24px}
