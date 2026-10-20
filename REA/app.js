@@ -312,13 +312,32 @@ function editFeature(id) {
 // ---------- Compartilhar (WhatsApp, Salvar na galeria, AirDrop…) ----------
 const safeName = s => String(s || 'item').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').slice(0, 40);
 const mapsLink = (la, lo) => `https://maps.google.com/?q=${la.toFixed(6)},${lo.toFixed(6)}`;
-// Abre a folha de compartilhar do aparelho (no iPhone tem 'Salvar imagem'); sem suporte, baixa o arquivo.
+// Abre a folha de compartilhar do aparelho (no iPhone tem 'Salvar imagem'). Se falhar, mostra o motivo e oferece outra saída.
 async function shareFile(file, title, text) {
-  try {
-    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title, text }); return; }
-  } catch (e) { if (e.name === 'AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('Arquivo baixado (compartilhar não é suportado aqui)');
+  let err = null;
+  if (!navigator.share) err = new Error('este navegador não tem compartilhamento');
+  else for (const data of [{ files: [file], title, text }, { files: [file] }]) {   // 2ª tentativa só com o arquivo
+    try {
+      if (navigator.canShare && !navigator.canShare(data)) { err = new Error('tipo de arquivo não aceito'); continue; }
+      await navigator.share(data); return;
+    } catch (e) { if (e.name === 'AbortError') return; err = e; }
+  }
+  const why = err ? (err.name + ': ' + err.message) : '';
+  if (file.type.startsWith('image/')) return showImageFallback(file, why);
+  alert('Não foi possível abrir o compartilhamento (' + why + '). O arquivo será baixado.');
+  const l = document.createElement('a'); l.href = URL.createObjectURL(file); l.download = file.name; l.click();
+  setTimeout(() => URL.revokeObjectURL(l.href), 5000);
+}
+// Última saída para foto: mostra a imagem grande; no iPhone, segurar o dedo nela abre "Salvar em Fotos" / "Compartilhar"
+function showImageFallback(file, why) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:3000;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;color:#fff;text-align:center';
+  d.innerHTML = '<div style="font-size:15px">Segure o dedo sobre a foto e escolha <b>Salvar em Fotos</b> ou <b>Compartilhar</b></div>'
+    + '<img style="max-width:100%;max-height:68%;object-fit:contain;-webkit-touch-callout:default;-webkit-user-select:auto"><div style="font-size:11px;opacity:.7"></div><button class="btn">Fechar</button>';
+  const img = d.querySelector('img'); img.src = URL.createObjectURL(file);
+  d.querySelector('div:nth-of-type(2)').textContent = 'Compartilhar direto falhou: ' + why;
+  d.querySelector('button').onclick = () => { URL.revokeObjectURL(img.src); d.remove(); };
+  document.body.appendChild(d);
 }
 async function sharePhoto(f, p) {
   const ext = (p.blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
@@ -332,8 +351,9 @@ async function shareTrack(f) {
 }
 function sharePoint(f) {
   const text = [f.name, f.notes, `${f.lat.toFixed(6)}, ${f.lon.toFixed(6)}`, mapsLink(f.lat, f.lon)].filter(Boolean).join('\n');
-  if (navigator.share) navigator.share({ title: f.name, text }).catch(() => { });
-  else navigator.clipboard?.writeText(text).then(() => toast('Local copiado'));
+  const copy = () => navigator.clipboard?.writeText(text).then(() => alert('Local copiado. Cole no WhatsApp.'), () => prompt('Copie o texto:', text));
+  if (!navigator.share) return copy();
+  navigator.share({ title: f.name, text }).catch(e => { if (e.name !== 'AbortError') { alert('Compartilhar falhou (' + e.name + ': ' + e.message + ')'); copy(); } });
 }
 
 // Galeria de fotos do marcador: foto grande, dados da foto selecionada e miniaturas.
