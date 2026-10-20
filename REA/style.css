@@ -1,4 +1,4 @@
-:root{--tb:calc(60px + env(safe-area-inset-bottom))}
+:root{--sab:min(env(safe-area-inset-bottom,0px),16px);--tb:calc(56px + var(--sab))}   /* margem do iPhone limitada: alguns aparelhos informam um valor enorme */
 :root{--g:#14439c;--g2:#1d5bd6;--y:#F5C518;--bg:#fff;--fg:#1c2421;--mut:#6b7772;--line:#dfe5e2}
 @media(prefers-color-scheme:dark){:root{--g:#4b86f0;--g2:#6c9cf5;--bg:#1a201e;--fg:#e8eeeb;--mut:#93a09a;--line:#2e3835}}
 *{box-sizing:border-box}
@@ -13,7 +13,7 @@ html,body{margin:0;height:100%;font:15px/1.4 system-ui,sans-serif;color:var(--fg
 #fabs button.on{background:var(--g);color:#fff}
 #measure-info{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tb) + 16px);z-index:1000;background:var(--g);color:#fff;
   padding:8px 14px;border-radius:20px;font-weight:600;box-shadow:0 2px 8px #0005}
-#toolbar{position:fixed;left:0;right:0;bottom:0;height:var(--tb);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;z-index:1001;display:flex;
+#toolbar{position:fixed;left:0;right:0;bottom:0;height:var(--tb);padding-bottom:var(--sab);box-sizing:border-box;z-index:1001;display:flex;
   background:var(--bg);border-top:1px solid var(--line)}
 #toolbar button{flex:1;border:0;background:none;color:var(--mut);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 #toolbar button i{font-style:normal;font-size:20px}

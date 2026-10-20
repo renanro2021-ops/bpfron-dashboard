@@ -1,4 +1,4 @@
-// build 14
+// build 15
 // Cache do app (offline) e dos tiles já vistos.
 importScripts('changelog.js');
 const APP = 'mapacampo-v' + CHANGELOG[0].v, TILES = 'mapacampo-tiles';
