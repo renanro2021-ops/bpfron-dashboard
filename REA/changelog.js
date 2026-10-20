@@ -1,6 +1,12 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 20, nome: '1.3', data: '2026-10-20', notas: [
+    'Painel de GPS: toque no indicador do GPS na barra de cima para ver precisão, altitude (com o ±), velocidade, rumo e há quanto tempo veio a última leitura',
+    'Gráfico das últimas leituras de precisão, com o limite de 20 m tracejado',
+    'Coordenadas nos três formatos (graus decimais, graus/min/seg e UTM), com botão Copiar',
+    'Atalho para marcar com média de leituras direto do painel'
+  ] },
   { v: 19, nome: '1.2', data: '2026-10-20', notas: [
     'Marcar na minha posição agora faz a média das melhores leituras do GPS (até 15, no máximo 30 s) e mostra a precisão',
     'Também dá para marcar na hora, sem média ("Marcar agora")',

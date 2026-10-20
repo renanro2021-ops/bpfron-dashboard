@@ -60,9 +60,63 @@ function gpsInfo() {
 function renderGps() {
   const [k, g, t] = gpsInfo(), el = $('#gps');
   el.className = k; el.firstChild.textContent = g; el.lastChild.textContent = t;
+  el.setAttribute('aria-label', `${t}. Toque para ver detalhes`);
   $('#btn-locate').classList.toggle('busy', k === 'wait'); $('#btn-locate').setAttribute('aria-busy', k === 'wait');
 }
 setInterval(renderGps, 5000);
+
+// ---------- Painel de GPS (toque no chip da barra superior) ----------
+const accHist = [];   // últimas precisões (m), para o gráfico
+const copyText = (t, msg = 'Copiado') => navigator.clipboard ? navigator.clipboard.writeText(t).then(() => toast(msg), () => toast(t)) : toast(t);
+function showGps() {
+  const fmtRow = (k, label) => `<div class="row"><div class="grow"><div class="s">${label}</div><div class="t gv" id="g-${k}">—</div></div>
+    <button type="button" class="btn ghost sm" data-copy="${k}" aria-label="Copiar ${label}">Copiar</button></div>`;
+  openSheet('GPS', `<div id="gps-panel">
+    <div class="gp-big" id="g-acc">—</div>
+    <div class="s" id="g-q" aria-live="polite"></div>
+    <svg id="g-spark" class="spark" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Histórico da precisão"></svg>
+    <div class="s" id="g-sparktxt"></div>
+    <div class="gp-grid">
+      <div><div class="s">Altitude</div><div class="t" id="g-alt">—</div></div>
+      <div><div class="s">Última leitura</div><div class="t" id="g-age">—</div></div>
+      <div><div class="s">Velocidade</div><div class="t" id="g-spd">—</div></div>
+      <div><div class="s">Rumo</div><div class="t" id="g-hdg">—</div></div>
+    </div>
+    ${fmtRow('dd', 'Graus decimais')}${fmtRow('dms', 'Graus, minutos e segundos')}${fmtRow('utm', 'UTM')}
+    <div class="s" id="g-src" style="margin-top:8px"></div>
+    <div class="actions"><button type="button" class="btn" id="g-avg">Marcar com média de leituras</button></div>
+    <p class="s">A altitude do GPS costuma ser menos precisa que a posição: confira o ± ao lado do valor. Velocidade e rumo só aparecem em movimento.</p>
+  </div>`, b => {
+    b.querySelectorAll('[data-copy]').forEach(x => x.onclick = () => copyText(b.querySelector('#g-' + x.dataset.copy).textContent, 'Coordenadas copiadas'));
+    b.querySelector('#g-avg').onclick = markAveraged;
+  });
+  renderGpsPanel();
+}
+function renderGpsPanel() {
+  const P = $('#gps-panel'); if (!P) return;
+  const q = s => P.querySelector(s), me = state.me, [, g, t] = gpsInfo();
+  const a = me ? Math.round(me.acc) : null;
+  q('#g-acc').textContent = a != null ? `±${a} m` : '—';
+  const word = a == null ? t : a <= 10 ? 'Boa' : a <= Geo.WARN_ACC ? 'Regular' : a <= 50 ? 'Precisão ruim' : 'Sinal fraco';
+  q('#g-q').textContent = `${g} ${word}` + (a > Geo.WARN_ACC ? ' · acima de 20 m: o app só avisa, não bloqueia' : '');
+  const fin = v => v != null && Number.isFinite(v);
+  q('#g-alt').textContent = me && fin(me.alt) ? `${Math.round(me.alt)} m` + (fin(me.altAcc) ? ` (±${Math.round(me.altAcc)} m)` : ' (sem precisão informada)') : 'indisponível';
+  q('#g-spd').textContent = me && fin(me.speed) ? `${(me.speed * 3.6).toFixed(1)} km/h` : '—';
+  q('#g-hdg').textContent = me && fin(me.hdg) && me.speed > 0.5 ? `${Math.round(me.hdg)}° ${cardinal(me.hdg)}` : '—';
+  q('#g-age').textContent = me ? `há ${Math.max(0, Math.round((Date.now() - me.t) / 1000))} s` : '—';
+  for (const f of Geo.FORMATS) q('#g-' + f).textContent = me ? Geo.fmtCoord(me.ll[0], me.ll[1], f) : '—';
+  q('#g-src').textContent = `Fonte: ${bgWatch ? 'serviço de GPS em segundo plano (app)' : NATIVE ? 'GPS do app' : 'GPS do navegador'} · ${state.fixes || 0} leituras desde que o app abriu`;
+  const h = accHist, sp = q('#g-spark');
+  if (h.length > 1) {   // gráfico das últimas leituras; a linha tracejada marca o limite de 20 m
+    const max = Math.max(40, ...h), X = i => i / (h.length - 1) * 120, Y = v => 38 - v / max * 36;
+    sp.innerHTML = `<line class="spark-lim" x1="0" x2="120" y1="${Y(Geo.WARN_ACC).toFixed(1)}" y2="${Y(Geo.WARN_ACC).toFixed(1)}"/>` +
+      `<polyline class="spark-line" points="${h.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}"/>`;
+    q('#g-sparktxt').textContent = `Últimas ${h.length} leituras: de ±${Math.round(Math.min(...h))} a ±${Math.round(Math.max(...h))} m · tracejado = 20 m`;
+  } else { sp.innerHTML = ''; q('#g-sparktxt').textContent = 'Aguardando leituras…'; }
+}
+setInterval(renderGpsPanel, 1000);   // mantém "última leitura" andando mesmo sem GPS novo
+$('#gps').onclick = showGps;
+$('#gps').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showGps(); } };
 function setTool(t) {
   state.tool = state.tool === t ? null : t;
   document.querySelectorAll('#toolbar button').forEach(b => {
@@ -136,8 +190,11 @@ navigator.permissions?.query({ name: 'geolocation' }).then(s => { s.onchange = (
 function onPos(p) {
   const ll = [p.coords.latitude, p.coords.longitude];
   const first = !state.me;
-  state.me = { ll, acc: p.coords.accuracy, alt: p.coords.altitude, t: p.timestamp };
-  state.gpsErr = null;
+  const c = p.coords;
+  state.me = { ll, acc: c.accuracy, alt: c.altitude, altAcc: c.altitudeAccuracy, speed: c.speed, hdg: c.heading, t: p.timestamp };
+  state.gpsErr = null; state.fixes = (state.fixes || 0) + 1;
+  accHist.push(c.accuracy); if (accHist.length > 30) accHist.shift();
+  renderGpsPanel();
   if (first) { hideGate(); map.setView(ll, 16); }
   meMarker.setLatLng(ll).addTo(map); meAcc.setLatLng(ll).setRadius(p.coords.accuracy).addTo(map);
   if (state.follow) map.panTo(ll, { animate: !MR });   // só acompanha se o modo "seguir" estiver ligado
@@ -732,7 +789,7 @@ async function startBgTrack() {
     const BG = Capacitor.registerPlugin('BackgroundGeolocation');
     bgWatch = await BG.addWatcher({ backgroundTitle: 'MapaCampo gravando trilha', backgroundMessage: 'Toque para voltar ao mapa', requestPermissions: true, stale: false, distanceFilter: 3 }, (l, e) => {
       if (e) { if (e.code === 'NOT_AUTHORIZED') toast('Permita a localização "o tempo todo" para gravar com a tela apagada'); return; }
-      onPos({ coords: { latitude: l.latitude, longitude: l.longitude, accuracy: l.accuracy, altitude: l.altitude }, timestamp: l.time || Date.now() });
+      onPos({ coords: { latitude: l.latitude, longitude: l.longitude, accuracy: l.accuracy, altitude: l.altitude, altitudeAccuracy: l.altitudeAccuracy, speed: l.speed, heading: l.bearing }, timestamp: l.time || Date.now() });
     });
   } catch { toast('Gravação em segundo plano indisponível neste aparelho'); }
 }
