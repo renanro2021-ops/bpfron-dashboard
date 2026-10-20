@@ -121,6 +121,8 @@ input.ocr,select.ocr,textarea.ocr{border-color:rgba(167,139,250,.7);background:r
 .chip.y{color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
 .chip.o{color:var(--orange);border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.1)}
 .chip.n{color:#cbd5e1;border-color:#334155;background:rgba(148,163,184,.08)}
+tr.cl.dest td{background:rgba(248,113,113,.16)}
+tr.cl.dest td:first-child{box-shadow:inset 3px 0 0 #f87171}
 .rk-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .rk-per{display:flex;gap:4px;background:#0b1220;border:1px solid var(--border);border-radius:999px;padding:3px}
 .rk-per button{background:none;border:0;color:var(--muted);font:700 12px Inter,sans-serif;padding:5px 12px;border-radius:999px;cursor:pointer}
@@ -392,11 +394,12 @@ html,body{overflow-x:hidden}
     <section data-p="check" class="hidden">
       <div class="toolbar">
         <div class="fg grow"><label>Buscar</label><input id="ck-q" placeholder="Motorista, comandante, local, texto…" oninput="PG.ck=0;renderCheck()"></div>
-        <div class="fg"><label>Viatura</label><select id="ck-v" onchange="PG.ck=0;renderCheck()"></select></div>
+        <div class="fg"><label>Viatura</label><select id="ck-v" onchange="PG.ck=0;CK_DEST='';renderCheck()"></select></div>
         <div class="fg"><label>Momento</label><select id="ck-m" onchange="PG.ck=0;renderCheck()"><option value="">Todos</option><option>Início de uso</option><option>Término de uso</option></select></div>
         <div class="fg"><label>De</label><input type="date" id="ck-de" onchange="PG.ck=0;renderCheck()"></div>
         <div class="fg"><label>Até</label><input type="date" id="ck-ate" onchange="PG.ck=0;renderCheck()"></div>
         <div class="fg"><label>Filtro</label><select id="ck-f" onchange="PG.ck=0;renderCheck()"><option value="">—</option><option value="alt">Com alteração</option><option value="suja">Viatura suja</option><option value="km">Km divergente</option><option value="ext">Outra unidade</option></select></div>
+        <button class="btn gray" id="ck-ord" onclick="CK_ASC=!CK_ASC;PG.ck=0;renderCheck()"></button>
         <button class="btn gray" onclick="exportCheck()">⬇️ CSV</button>
       </div>
       <div class="tbl-wrap"><table class="t" id="ck-tbl"></table></div>
@@ -763,10 +766,10 @@ function renderErrosCheck(){
   const ig = D.ignorados || [];
   $('erros-ign').innerHTML = ERR_VER_IGN ? ig.filter(i => todos.some(x => x.c.id === i.id)).map(i => `<div class="al b"><span class="ic">🙈</span>
     <span><b>${esc(i.prefixo)}</b> · ${esc(D.checklists.find(c => c.id === i.id) ? fDH(D.checklists.find(c => c.id === i.id).data) : '')} — ignorado por <b>${esc(i.quem)}</b> em ${fDH(i.quando)}${i.motivo ? ': ' + esc(i.motivo) : ''}</span>
-    <span class="act"><button class="btn sm gray" onclick="verCheck('${i.id}')">Ver</button>${CAN ? `<button class="btn sm gray" onclick="reabrirErro('${i.id}')">Reabrir</button>` : ''}</span></div>`).join('') : '';
+    <span class="act"><button class="btn sm gray" onclick="verNaLista('${i.id}')">Ver</button>${CAN ? `<button class="btn sm gray" onclick="reabrirErro('${i.id}')">Reabrir</button>` : ''}</span></div>`).join('') : '';
   $('erros-list').innerHTML = E.slice(0, 12).map(x => `<div class="al ${x.tipo === 'salto' ? 'r' : 'y'}"><span class="ic">${x.tipo === 'salto' ? '📈' : '📉'}</span>
     <span><b>${esc(x.c.prefixo)}</b> · ${fDH(x.c.data)} · ${esc(x.c.motorista)}: ${x.tipo === 'salto' ? `km <b>${fN(x.c.km)}</b> está <b>+${fN(x.d)}</b> acima do checklist anterior (${fN(x.ref)}).` : `km <b>${fN(x.c.km)}</b> voltou <b>${fN(-x.d)}</b> em relação ao anterior (${fN(x.ref)}).`}${x.c.ciente_km === 'Sim' ? ' O motorista confirmou "ciente".' : ''}</span>
-    <span class="act"><button class="btn sm gray" onclick="verCheck('${x.c.id}')">Ver</button>${CAN ? `<button class="btn sm" onclick="editarCheck('${x.c.id}')">✏️ Corrigir</button>` : ''}${CAN ? `<button class="btn sm gray" onclick="ignorarErro('${x.c.id}')">Ignorar</button>` : ''}</span></div>`).join('')
+    <span class="act"><button class="btn sm gray" onclick="verNaLista('${x.c.id}')" title="Abre os checklists dessa viatura em ordem cronológica">Ver</button>${CAN ? `<button class="btn sm" onclick="editarCheck('${x.c.id}')">✏️ Corrigir</button>` : ''}${CAN ? `<button class="btn sm gray" onclick="ignorarErro('${x.c.id}')">Ignorar</button>` : ''}</span></div>`).join('')
     + (E.length > 12 ? `<div class="muted" style="margin-top:6px">… e mais ${E.length - 12}.</div>` : '');
 }
 // "Ignorar" vale para todos os gestores (fica na aba ERROS_IGNORADOS da planilha); "Reabrir" desfaz
@@ -1037,16 +1040,35 @@ function filtraCheck(){
     && (!f || (f === 'alt' ? c.itens.length : f === 'suja' ? c.condicao === 'Suja' : f === 'ext' ? c.externo : c.ciente_km === 'Sim'))
     && (!q || norm([c.prefixo, c.motorista, c.comandante, c.local, c.alteracoes, c.itens.join(' '), c.externo ? [c.externo.unidade, c.externo.finalidade, c.externo.autorizado_por].join(' ') : ''].join(' ')).includes(q)));
 }
+// ordem da lista (mais recentes primeiro, ou cronológica) e linha em destaque quando se chega pela caixa de possíveis erros
+let CK_ASC = false, CK_DEST = '';
 function renderCheck(){
   if (!D) return;
-  const L = filtraCheck(), por = 50, pag = Math.min(PG.ck, Math.max(0, Math.ceil(L.length / por) - 1));
+  const L = filtraCheck(); if (CK_ASC) L.reverse();
+  const por = 50, pag = Math.min(PG.ck, Math.max(0, Math.ceil(L.length / por) - 1));
   const P = L.slice(pag*por, pag*por + por);
+  $('ck-ord').textContent = CK_ASC ? '↓ Ordem: mais antigos primeiro' : '↑ Ordem: mais recentes primeiro';
   $('ck-tbl').innerHTML = `<thead><tr><th>Data/hora</th><th>Viatura</th><th>Momento</th><th>Motorista</th><th class="num">Km</th><th>Comandante</th><th>Local</th><th>Condição</th><th>Alterações</th></tr></thead><tbody>
-    ${P.map(c => `<tr class="cl" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td><b>${esc(c.prefixo)}</b>${c.editado ? ' <span class="chip y" title="Corrigido pelo gestor — abra para ver o que mudou">✏️ editado</span>' : ''}</td><td>${c.momento === 'Início de uso' ? '🚦 Início' : '🏁 Término'}</td><td>${esc(c.motorista)}${c.externo ? ' <span class="chip y" title="Policial de outra unidade">🏷️ outra unidade</span>' : ''}</td>
+    ${P.map(c => `<tr class="cl ${c.id === CK_DEST ? 'dest' : ''}" id="ck-${c.id}" onclick="verCheck('${c.id}')"><td>${fDH(c.data)}</td><td><b>${esc(c.prefixo)}</b>${c.editado ? ' <span class="chip y" title="Corrigido pelo gestor — abra para ver o que mudou">✏️ editado</span>' : ''}</td><td>${c.momento === 'Início de uso' ? '🚦 Início' : '🏁 Término'}</td><td>${esc(c.motorista)}${c.externo ? ' <span class="chip y" title="Policial de outra unidade">🏷️ outra unidade</span>' : ''}</td>
       <td class="num">${c.km ? fN(c.km) : ''}${c.ciente_km === 'Sim' ? ' <span title="Km divergente confirmado">⚠️</span>' : ''}</td><td>${esc(c.comandante)}</td><td>${esc(c.local)}</td>
       <td>${c.condicao === 'Suja' ? '<span class="chip o">Suja</span>' : esc(c.condicao)}</td><td>${c.itens.length ? `<span class="chip y">${esc(c.itens.join(', '))}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Nenhum checklist.</td></tr>'}</tbody>`;
   const tot = Math.ceil(L.length / por) || 1;
   $('ck-pag').innerHTML = `<span class="muted">${fN(L.length)} checklists</span><button class="btn sm gray" ${pag <= 0 ? 'disabled' : ''} onclick="PG.ck=${pag-1};renderCheck()">‹</button><span>${pag+1} / ${tot}</span><button class="btn sm gray" ${pag >= tot-1 ? 'disabled' : ''} onclick="PG.ck=${pag+1};renderCheck()">›</button>`;
+}
+// "Ver" da caixa de possíveis erros: abre a aba Checklists só com a viatura (como se tivesse escolhido no filtro),
+// em ordem cronológica, na página certa e com a linha suspeita em destaque
+function verNaLista(id){
+  const c = D.checklists.find(x => x.id === id); if (!c) return;
+  fecharModal();
+  ['ck-q','ck-m','ck-de','ck-ate','ck-f'].forEach(i => $(i).value = '');
+  $('ck-v').value = c.prefixo;
+  CK_ASC = true; CK_DEST = id;
+  irAba('check');
+  const L = filtraCheck(); L.reverse();
+  PG.ck = Math.max(0, Math.floor(L.findIndex(x => x.id === id) / 50));
+  renderCheck();
+  const tr = $('ck-' + id); if (tr) tr.scrollIntoView({ block:'center', behavior:'smooth' });
+  toast(`📋 ${c.prefixo}: histórico em ordem cronológica — a linha em vermelho é o checklist suspeito.`);
 }
 function verCheck(id){
   const c = D.checklists.find(x => x.id === id); if (!c) return;
@@ -1614,6 +1636,10 @@ async function nfSalvar(){
    Toda mudança na ferramenta entra AQUI (a mais nova primeiro, com id novo): quem abrir a
    página vê o aviso uma vez; "🆕 Novidades" no topo reabre quando quiser. */
 const NOVIDADES = [
+  { id:'2026-10-21', titulo:'21/10/2026', itens:[
+    '🔎 <b>"Ver" nos possíveis erros</b> agora abre a aba Checklists só com aquela viatura, em <b>ordem cronológica</b>, direto na página certa e com o checklist suspeito em destaque.',
+    '↕️ Novo botão <b>Ordem</b> na aba Checklists para alternar entre mais recentes primeiro e mais antigos primeiro.',
+  ] },
   { id:'2026-10-20c', titulo:'20/10/2026 (noite)', itens:[
     '🙈 <b>Ignorar alerta agora vale para todos os gestores</b> (com motivo opcional) e dá para reabrir em "Ver ignorados".',
     '✏️ <b>Checklist corrigido fica marcado</b> na lista ("editado") e, ao abrir, mostra quem corrigiu, quando, o motivo e o que mudou (antes → depois).',
