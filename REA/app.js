@@ -106,6 +106,7 @@ function onPos(p) {
     if (!last || Geo.dist(last, ll) >= Math.max(3, Math.min(p.coords.accuracy / 2, 15))) {
       state.rec.pts.push([ll[0], ll[1], p.timestamp, p.coords.altitude]);
       recLine.setLatLngs(state.rec.pts.map(q => [q[0], q[1]]));
+      saveDraft();
     }
   }
   updateStatus();
@@ -325,7 +326,7 @@ function renderPhotos(box, f, sel) {
     ${p ? '<button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
   box.querySelectorAll('.g').forEach(g => g.onclick = () => renderPhotos(box, f, +g.dataset.i));
   box.querySelectorAll('[data-add]').forEach(a => a.onclick = () => {
-    state.photoTarget = f.id; startGps(); startCompass();
+    state.photoTarget = f.id; startGps();
     $(a.dataset.add === 'cam' ? '#file-photo-cam' : '#file-photo-gal').click();
   });
   box.querySelector('#ph-del')?.addEventListener('click', async () => {
@@ -353,6 +354,8 @@ async function makeThumb(file, size = 160) {
 // Plota fotos: usa o GPS e a hora do EXIF; na câmera do app, cai para o GPS do aparelho.
 const GROUP_M = 10;   // fotos a menos de 10 m uma da outra ficam no mesmo marcador
 
+// iOS: o pedido de bússola abre um aviso que engole o toque da câmera; por isso vai no 1º toque na barra.
+document.addEventListener('pointerup', e => { if (e.target.closest('#toolbar')) startCompass(); }, { once: false, capture: true });
 // Bússola do aparelho: só serve de alternativa quando a foto não traz direção no EXIF.
 let compassOn = false;
 function startCompass() {
@@ -408,7 +411,7 @@ function noGpsHelp(n) {
     <p>${order.join('<br><br>')}</p>
     <p>Ou use <b>Tirar foto</b> aqui no app: ele usa a posição do seu GPS.</p>
     <button class="btn" id="nh-cam">📷 Tirar foto agora</button>`, b => {
-    b.querySelector('#nh-cam').onclick = () => { state.photoTarget = null; startCompass(); $('#file-photo-cam').click(); };
+    b.querySelector('#nh-cam').onclick = () => { state.photoTarget = null; $('#file-photo-cam').click(); };
   });
 }
 for (const [id, cam] of [['#file-photo-cam', true], ['#file-photo-gal', false]])
@@ -420,7 +423,7 @@ function markHere() {
     <p><button class="btn" id="m-cam">📷 Tirar foto</button>
     <button class="btn ghost" id="m-gal">🖼 Plotar fotos da galeria</button></p>
     <p class="s">Fotos com GPS no EXIF vão direto para as coordenadas onde foram tiradas. Toque e segure no mapa para marcar um ponto.</p>`, b => {
-    b.querySelector('#m-cam').onclick = () => { state.photoTarget = null; startGps(); startCompass(); $('#file-photo-cam').click(); };
+    b.querySelector('#m-cam').onclick = () => { state.photoTarget = null; startGps(); $('#file-photo-cam').click(); };
     b.querySelector('#m-gal').onclick = () => { state.photoTarget = null; $('#file-photo-gal').click(); };
     b.querySelector('#m-center').onclick = () => addPoint(map.getCenter());
     b.querySelector('#m-gps').onclick = () => state.me ? addPoint({ lat: state.me.ll[0], lng: state.me.ll[1] }) : (startGps(), toast('Aguardando GPS…'));
@@ -429,14 +432,38 @@ function markHere() {
 map.on('contextmenu', e => addPoint(e.latlng));
 
 // ---------- Trilha ----------
+// Navegador não grava GPS com a tela apagada: mantém a tela acesa e guarda rascunho se o app for fechado.
+let wake = null, hiddenAt = 0;
+async function holdScreen() { try { wake = await navigator.wakeLock?.request('screen'); } catch { wake = null; } }
+function releaseScreen() { try { wake?.release(); } catch { } wake = null; }
+function saveDraft() { try { localStorage.setItem('mc-draft', JSON.stringify(state.rec.pts)); } catch { } }
+function clearDraft() { try { localStorage.removeItem('mc-draft'); } catch { } }
+document.addEventListener('visibilitychange', () => {
+  if (!state.rec) return;
+  if (document.hidden) hiddenAt = Date.now();
+  else { holdScreen(); if (hiddenAt && Date.now() - hiddenAt > 20000) toast('Tela ficou apagada: a trilha pode ter falhas nesse trecho'); hiddenAt = 0; }
+});
+function setRecUi(on) {
+  const btn = document.querySelector('[data-tool=track]');
+  btn.classList.toggle('rec', on); btn.lastChild.textContent = on ? 'Parar' : 'Trilha';
+}
+function resumeDraft() {
+  let pts; try { pts = JSON.parse(localStorage.getItem('mc-draft') || 'null'); } catch { }
+  if (!Array.isArray(pts) || !pts.length) return;
+  if (!confirm('Há uma trilha que estava sendo gravada quando o app foi fechado. Continuar gravando?')) {
+    if (pts.length > 1) saveFeature({ id: uid(), type: 'track', name: 'Trilha recuperada ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() });
+    return clearDraft();
+  }
+  state.rec = { pts }; setRecUi(true); recLine.setLatLngs(pts.map(q => [q[0], q[1]])); holdScreen(); updateStatus();
+}
 function toggleTrack() {
   startGps();
-  const btn = document.querySelector('[data-tool=track]');
   if (!state.rec) {
-    state.rec = { pts: [] }; btn.classList.add('rec'); btn.lastChild.textContent = 'Parar'; toast('Gravando trilha');
+    state.rec = { pts: [] }; setRecUi(true); holdScreen(); toast('Gravando trilha — mantenha a tela acesa');
     if (state.me) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
+    saveDraft();
   } else {
-    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); btn.classList.remove('rec'); btn.lastChild.textContent = 'Trilha';
+    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); clearDraft();
     if (pts.length < 2) return toast('Trilha muito curta, descartada');
     const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() };
     saveFeature(f).then(() => editFeature(f.id));
@@ -600,7 +627,7 @@ document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
 // ---------- Início ----------
 (async () => {
   startGps();   // sem GPS o app fica bloqueado pela tela #gps-gate
-  await loadMaps(); await loadFeatures();
+  await loadMaps(); await loadFeatures(); resumeDraft();
   const last = JSON.parse(localStorage.view || 'null'); if (last && !state.me) map.setView(last.c, last.z);
   map.on('moveend', () => localStorage.view = JSON.stringify({ c: map.getCenter(), z: map.getZoom() }));
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });

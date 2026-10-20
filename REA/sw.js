@@ -1,5 +1,5 @@
 // Cache do app (offline) e dos tiles já vistos.
-const APP = 'mapacampo-v6', TILES = 'mapacampo-tiles';
+const APP = 'mapacampo-v7', TILES = 'mapacampo-tiles';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'geo.js', 'db.js', 'exif.js', 'zip.js', 'geotiff.js', 'geopdf.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.js','manifest.webmanifest', 'icon.svg',
   'vendor/leaflet.js', 'vendor/leaflet.css', 'vendor/images/layers.png', 'vendor/images/marker-icon.png', 'vendor/images/marker-shadow.png'];
 
