@@ -1,6 +1,10 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 13, data: '2026-10-19', notas: [
+    'Botão Salvar na galeria: abre a foto original em tela cheia (segure o dedo para Salvar em Fotos)',
+    'Foto compartilhada pelo WhatsApp agora sai reduzida (até 2000 px), mais leve e rápida de enviar'
+  ] },
   { v: 12, data: '2026-10-19', notas: [
     'Compartilhar foto/local/trilha mostra o motivo se falhar e oferece saída alternativa (segurar a foto para salvar)'
   ] },

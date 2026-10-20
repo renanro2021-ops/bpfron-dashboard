@@ -333,15 +333,41 @@ function showImageFallback(file, why) {
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;z-index:3000;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;color:#fff;text-align:center';
   d.innerHTML = '<div style="font-size:15px">Segure o dedo sobre a foto e escolha <b>Salvar em Fotos</b> ou <b>Compartilhar</b></div>'
-    + '<img style="max-width:100%;max-height:68%;object-fit:contain;-webkit-touch-callout:default;-webkit-user-select:auto"><div style="font-size:11px;opacity:.7"></div><button class="btn">Fechar</button>';
+    + '<img style="max-width:100%;max-height:62%;object-fit:contain;-webkit-touch-callout:default;-webkit-user-select:auto"><div style="font-size:11px;opacity:.7"></div>'
+    + '<div><button class="btn" id="fb-menu">Abrir menu de salvar</button> <button class="btn ghost" id="fb-x" style="color:#fff">Fechar</button></div>';
   const img = d.querySelector('img'); img.src = URL.createObjectURL(file);
-  d.querySelector('div:nth-of-type(2)').textContent = 'Compartilhar direto falhou: ' + why;
-  d.querySelector('button').onclick = () => { URL.revokeObjectURL(img.src); d.remove(); };
+  d.querySelector('div:nth-of-type(2)').textContent = why ? 'Compartilhar direto falhou: ' + why : file.name;
+  d.querySelector('#fb-menu').onclick = () => navigator.share?.({ files: [file] }).catch(() => { });
+  d.querySelector('#fb-menu').hidden = !navigator.share;
+  d.querySelector('#fb-x').onclick = () => { URL.revokeObjectURL(img.src); d.remove(); };
   document.body.appendChild(d);
 }
-async function sharePhoto(f, p) {
+const photoBase = (f, p) => safeName(f.name) + '_' + new Date(p.t).toISOString().slice(0, 16).replace(/[-:T]/g, '');
+// Foto original, como foi tirada (para salvar na galeria)
+function photoFile(f, p) {
   const ext = (p.blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-  const file = new File([p.blob], safeName(f.name) + '_' + new Date(p.t).toISOString().slice(0, 16).replace(/[-:T]/g, '') + '.' + ext, { type: p.blob.type || 'image/jpeg' });
+  return new File([p.blob], photoBase(f, p) + '.' + ext, { type: p.blob.type || 'image/jpeg' });
+}
+// Para WhatsApp: lado maior até 2000 px, JPEG. Se não der para reduzir, manda a original.
+async function smallPhotoFile(f, p, max = 2000) {
+  try {
+    const img = await createImageBitmap(p.blob), k = Math.min(1, max / Math.max(img.width, img.height));
+    if (k === 1 && p.blob.type === 'image/jpeg') { img.close?.(); return photoFile(f, p); }
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); img.close?.();
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', .85));
+    return blob ? new File([blob], photoBase(f, p) + '.jpg', { type: 'image/jpeg' }) : photoFile(f, p);
+  } catch { return photoFile(f, p); }
+}
+// Prepara a foto reduzida ao abrir a marcação: o iPhone só abre o compartilhar se for logo após o toque, sem esperar processamento
+const smallCache = new WeakMap();
+function prepShare(f, p) {
+  if (smallCache.has(p)) return;
+  const e = { file: null }; smallCache.set(p, e);
+  smallPhotoFile(f, p).then(x => { e.file = x; });
+}
+async function sharePhoto(f, p) {
+  const file = smallCache.get(p)?.file || await smallPhotoFile(f, p);
   const text = [f.name, fmtTime(p.t), `${f.lat.toFixed(6)}, ${f.lon.toFixed(6)}`, p.dir != null ? `direção ${Math.round(p.dir)}° ${cardinal(p.dir)}` : null, f.notes, mapsLink(f.lat, f.lon)].filter(Boolean).join('\n');
   await shareFile(file, f.name, text);
 }
@@ -371,8 +397,10 @@ function renderPhotos(box, f, sel) {
   box.innerHTML = `${p ? `<img class="photo-full" src="${full}" alt=""><div class="s" style="margin-bottom:6px">${info}</div>` : ''}
     <div class="gallery">${ps.map((q, i) => `<div class="g ${i === sel ? 'sel' : ''}" data-i="${i}" style="background-image:url(${thumbUrl(q)})"></div>`).join('')}
       <button class="add" data-add="cam" title="Tirar foto">📷</button><button class="add" data-add="gal" title="Adicionar da galeria">🖼</button></div>
-    ${p ? '<button class="btn sm" id="ph-share" style="margin-bottom:10px">📤 Compartilhar / salvar foto</button> <button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
+    ${p ? '<button class="btn sm" id="ph-share" style="margin-bottom:10px">📤 Compartilhar</button> <button class="btn ghost sm" id="ph-save" style="margin-bottom:10px">💾 Salvar na galeria</button><button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
+  if (p) prepShare(f, p);
   box.querySelector('#ph-share')?.addEventListener('click', () => sharePhoto(f, p));
+  box.querySelector('#ph-save')?.addEventListener('click', () => showImageFallback(photoFile(f, p), ''));
   box.querySelectorAll('.g').forEach(g => g.onclick = () => renderPhotos(box, f, +g.dataset.i));
   box.querySelectorAll('[data-add]').forEach(a => a.onclick = () => {
     state.photoTarget = f.id; startGps();
