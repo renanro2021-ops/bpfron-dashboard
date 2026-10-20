@@ -1,6 +1,14 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 14, nome: '1.0', data: '2026-10-19', notas: [
+    'Versão 1.0 — lançamento no batalhão',
+    'Novo ícone e cores do BPFRON, com o brasão na tela inicial',
+    'Mapas offline em PDF georreferenciado, GeoTIFF e imagem',
+    'Marcas, trilhas, medição e fotos com localização',
+    'Compartilhar ou salvar na galeria a foto da marcação; exportar trilha em GPX',
+    'Aviso automático quando sai versão nova, com o que mudou'
+  ] },
   { v: 13, data: '2026-10-19', notas: [
     'Botão Salvar na galeria: abre a foto original em tela cheia (segure o dedo para Salvar em Fotos)',
     'Foto compartilhada pelo WhatsApp agora sai reduzida (até 2000 px), mais leve e rápida de enviar'

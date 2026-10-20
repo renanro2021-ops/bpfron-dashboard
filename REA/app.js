@@ -675,7 +675,7 @@ function showMore() {
     <label>Exportar todos os itens</label>
     <div><button class="btn sm" data-x="geojson">GeoJSON</button> <button class="btn sm" data-x="gpx">GPX</button> <button class="btn sm" data-x="kml">KML</button>
       <button class="btn sm" id="o-zip">ZIP + fotos</button></div>
-    <p><button class="btn ghost" id="o-news">Novidades (versão ${VERSION})</button></p>
+    <p><button class="btn ghost" id="o-news">Novidades (versão ${VERSION_NAME})</button></p>
     <p><button class="btn ghost" id="o-imp">Importar GeoJSON / GPX / KML</button></p>
     <p class="s">Os dados ficam só neste aparelho (IndexedDB). Funciona offline após o primeiro carregamento; os mapas importados não precisam de internet.</p>`, b => {
     b.querySelector('#o-fmt').value = state.fmt; b.querySelector('#o-units').value = state.units;
@@ -693,12 +693,14 @@ function showMore() {
 
 // ---------- Versões / atualização ----------
 const VERSION = CHANGELOG[0].v;
-const notesHtml = list => list.map(c => `<h3 style="margin:12px 0 4px">Versão ${c.v} <span class="s">${c.data}</span></h3><ul>${c.notas.map(n => '<li>' + esc(n) + '</li>').join('')}</ul>`).join('');
+const vname = c => c.nome ?? c.v;   // nome mostrado ao usuário (ex.: 1.0); v é o número usado para comparar
+const VERSION_NAME = vname(CHANGELOG[0]);
+const notesHtml = list => list.map(c => `<h3 style="margin:12px 0 4px">Versão ${vname(c)} <span class="s">${c.data}</span></h3><ul>${c.notas.map(n => '<li>' + esc(n) + '</li>').join('')}</ul>`).join('');
 function showChangelog(list = CHANGELOG, title = 'Novidades') { openSheet(title, notesHtml(list)); }
 function checkWhatsNew() {   // 1ª abertura depois de atualizar: mostra o que mudou
   let seen;
   try { seen = +localStorage.getItem('mc-ver') || 0; localStorage.setItem('mc-ver', VERSION); } catch { return; }
-  if (seen && seen < VERSION) showChangelog(CHANGELOG.filter(c => c.v > seen), 'App atualizado para a versão ' + VERSION);
+  if (seen && seen < VERSION) showChangelog(CHANGELOG.filter(c => c.v > seen), 'App atualizado para a versão ' + VERSION_NAME);
 }
 let pendingReg = null, reloading = false, wantUpdate = false;
 function updateBanner() {
@@ -716,13 +718,13 @@ async function remoteNotes() {
 async function offerUpdate(reg) {
   pendingReg = reg; updateBanner();
   const nw = await remoteNotes();
-  if (nw) { reg.notes = nw; $('#upd-txt').textContent = 'Nova versão ' + (nw[0]?.v ?? '') + ' disponível'; }
+  if (nw) { reg.notes = nw; $('#upd-txt').textContent = 'Nova versão ' + (nw[0] ? vname(nw[0]) : '') + ' disponível'; }
 }
 // Plano B: o iPhone nem sempre percebe sozinho que há versão nova, então confere a versão publicada
 async function checkRemote() {
   if (pendingReg) return;
   const nw = await remoteNotes();
-  if (nw?.length) { pendingReg = { notes: nw, remote: true }; $('#upd-txt').textContent = 'Nova versão ' + nw[0].v + ' disponível'; updateBanner(); }
+  if (nw?.length) { pendingReg = { notes: nw, remote: true }; $('#upd-txt').textContent = 'Nova versão ' + vname(nw[0]) + ' disponível'; updateBanner(); }
 }
 // Sem service worker novo à espera: limpa o cache do app e recarrega (marcas, trilhas e mapas ficam no IndexedDB)
 async function hardRefresh() {
