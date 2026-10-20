@@ -294,6 +294,7 @@ html,body{overflow-x:hidden}
     <button class="tab" data-t="man">🛠️ Manutenção</button>
     <button class="tab" data-t="cad">🗂️ Cadastros</button>
     <button class="tab" data-t="hist">🕘 Histórico</button>
+    <button class="btn sm gray" type="button" onclick="abrirNovidades()" style="margin-left:auto;white-space:nowrap" title="O que mudou na ferramenta">🆕 Novidades</button>
   </nav>
 </div>
 
@@ -318,6 +319,11 @@ html,body{overflow-x:hidden}
     <!-- VISÃO GERAL -->
     <section data-p="geral">
       <div class="kpis" id="kpis"></div>
+      <div class="card hidden" id="erros-card" style="margin-top:14px;border-color:rgba(248,113,113,.45)">
+        <div class="sec" style="margin-top:0">🔎 Possíveis erros de checklist <span class="chip o" id="erros-n"></span></div>
+        <div class="muted" style="margin-bottom:8px">Km que pulou mais de 10.000 ou voltou em relação ao checklist anterior da mesma viatura (últimos 120 dias). Corrigir o checklist (✏️) tira da lista; "Ignorar" esconde só neste navegador.</div>
+        <div class="alerts" id="erros-list"></div>
+      </div>
       <div class="cols" style="margin-top:14px">
         <div class="card">
           <div class="sec" style="margin-top:0">🚨 Precisa de atenção</div>
@@ -336,6 +342,15 @@ html,body{overflow-x:hidden}
           </div>
         </div>
         <div id="rk-gasto"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="rk-hd">
+          <div class="sec" style="margin:0;flex:1">🛣️ Viaturas que mais andaram</div>
+          <div class="rk-per" id="rkm-per">
+            <button data-p="7d">7 dias</button><button data-p="30d" class="on">30 dias</button><button data-p="90d">90 dias</button><button data-p="ano">Ano</button><button data-p="tudo">Tudo</button>
+          </div>
+        </div>
+        <div id="rk-km"></div>
       </div>
       <div class="charts" style="margin-top:14px">
         <div class="card chart-card"><h3>💰 Gasto com manutenção por mês (notas fiscais)</h3><div class="chart-box"><canvas id="ch-gasto-mes"></canvas></div></div>
@@ -536,7 +551,7 @@ async function carregar(silencioso){
   preencherSelects();
   $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta' && pendDeFrota(p)).length || '';
   renderTudo();
-  if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(innerWidth > 700 && (ab === null ? innerWidth > 1500 : ab === '1')); }
+  if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(innerWidth > 700 && (ab === null ? innerWidth > 1500 : ab === '1')); abrirNovidades(true); }
 }
 function preencherSelects(){
   const opts = '<option value="">Todas</option>' + D.viaturas.map(v => `<option value="${esc(v.prefixo)}">${esc(v.prefixo)} · ${esc(v.modelo)}</option>`).join('');
@@ -652,7 +667,9 @@ function renderGeral(){
       <span class="act">${a.liberar && CAN ? `<button class="btn sm gray" onclick="encerrarUso(${a.v._i})">Encerrar uso</button>` : ''}${a.v ? `<button class="btn sm gray" onclick="abrirFicha(${a.v._i})">Ver</button>` : ''}</span></div>`).join('')
     : '<div class="empty">✅ Nada pendente de atenção agora.</div>';
 
+  renderErrosCheck();
   renderRanking();
+  renderRankingKm();
 
   // gráficos
   const cont = {}; at.forEach(v => v.itens_bloqueados.forEach(i => cont[i] = (cont[i]||0) + 1));
@@ -707,6 +724,69 @@ function renderRanking(){
       <div class="val">${fR(e.v)}<small>${k ? fN(k) + ' km rodados' : '&nbsp;'}</small></div>
     </div>`; }).join('')
     + `<div class="rk-foot">${L.length} viatura(s) com gasto ${nomePer} · total ${fR(tot)}${L.length > 10 ? ' · mostrando as 10 que mais gastaram' : ''}</div>`;
+}
+
+// possíveis erros de digitação de km: compara cada checklist com o último km "aceito" da mesma viatura.
+// Um pico isolado (ex.: um dígito a mais) não vira referência — o checklist seguinte, normal, não é acusado de "voltar".
+const KM_SALTO = 10000, LS_ERR_IGN = 'bp_gar_err_ign';
+function acharErrosCheck(){
+  const desde = diasAtras(120), por = {}, E = [];
+  D.checklists.slice().sort((a,b) => a.data < b.data ? -1 : 1).forEach(c => { if (c.km) (por[c.prefixo] || (por[c.prefixo] = [])).push(c); });
+  Object.entries(por).forEach(([p, L]) => {
+    let ref = null;
+    L.forEach((c, i) => {
+      if (ref != null){
+        const d = c.km - ref;
+        if (d > KM_SALTO){
+          if (c.data >= desde) E.push({ c, tipo:'salto', d, ref });
+          const prox = L[i+1];
+          if (prox && Math.abs(prox.km - c.km) <= KM_SALTO) ref = c.km;   // o seguinte confirma: salto real, não erro de digitação
+          return;
+        }
+        if (d < 0){ if (c.data >= desde) E.push({ c, tipo:'volta', d, ref }); return; }
+      }
+      ref = c.km;
+    });
+  });
+  return E.sort((a,b) => a.c.data < b.c.data ? 1 : -1);
+}
+function renderErrosCheck(){
+  let ign = []; try{ ign = JSON.parse(localStorage.getItem(LS_ERR_IGN) || '[]'); }catch(e){}
+  const E = acharErrosCheck().filter(x => !ign.includes(x.c.id));
+  show('erros-card', E.length > 0); $('erros-n').textContent = E.length;
+  $('erros-list').innerHTML = E.slice(0, 12).map(x => `<div class="al ${x.tipo === 'salto' ? 'r' : 'y'}"><span class="ic">${x.tipo === 'salto' ? '📈' : '📉'}</span>
+    <span><b>${esc(x.c.prefixo)}</b> · ${fDH(x.c.data)} · ${esc(x.c.motorista)}: ${x.tipo === 'salto' ? `km <b>${fN(x.c.km)}</b> está <b>+${fN(x.d)}</b> acima do checklist anterior (${fN(x.ref)}).` : `km <b>${fN(x.c.km)}</b> voltou <b>${fN(-x.d)}</b> em relação ao anterior (${fN(x.ref)}).`}${x.c.ciente_km === 'Sim' ? ' O motorista confirmou "ciente".' : ''}</span>
+    <span class="act"><button class="btn sm gray" onclick="verCheck('${x.c.id}')">Ver</button>${CAN ? `<button class="btn sm" onclick="editarCheck('${x.c.id}')">✏️ Corrigir</button>` : ''}<button class="btn sm gray" onclick="ignorarErro('${x.c.id}')">Ignorar</button></span></div>`).join('')
+    + (E.length > 12 ? `<div class="muted" style="margin-top:6px">… e mais ${E.length - 12}.</div>` : '');
+}
+function ignorarErro(id){
+  let ign = []; try{ ign = JSON.parse(localStorage.getItem(LS_ERR_IGN) || '[]'); }catch(e){}
+  ign.push(id); try{ localStorage.setItem(LS_ERR_IGN, JSON.stringify(ign.slice(-300))); }catch(e){}
+  renderErrosCheck();
+}
+
+// ranking das viaturas que mais andaram (km = soma dos saltos entre checklists, igual ao KPI de 30 dias)
+let RKM_PER = '30d';
+function renderRankingKm(){
+  const ano = hojeISO().slice(0,4);
+  const desde = { '7d': diasAtras(7), '30d': diasAtras(30), '90d': diasAtras(90), ano: ano + '-01-01', tudo: '' }[RKM_PER];
+  const nomePer = { '7d':'nos últimos 7 dias', '30d':'nos últimos 30 dias', '90d':'nos últimos 90 dias', ano:`em ${ano}`, tudo:'desde o início' }[RKM_PER];
+  $('rkm-per').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.p === RKM_PER); b.onclick = () => { RKM_PER = b.dataset.p; renderRankingKm(); }; });
+  const por = kmRodado(desde);
+  const saidas = {}; D.checklists.forEach(c => { if (c.momento === 'Início de uso' && (!desde || c.data >= desde)) saidas[c.prefixo] = (saidas[c.prefixo]||0) + 1; });
+  const L = Object.entries(por).map(([p,e]) => ({ p, km:e.km, s:saidas[p]||0 })).filter(e => e.km > 0).sort((a,b) => b.km - a.km);
+  if (!L.length){ $('rk-km').innerHTML = `<div class="empty">Nenhum km rodado registrado ${nomePer}.</div>`; return; }
+  const tot = L.reduce((a,e) => a + e.km, 0), max = L[0].km;
+  $('rk-km').innerHTML = L.slice(0, 10).map((e,i) => {
+    const v = VMAP[e.p], pct = e.km / tot * 100;
+    return `<div class="rk ${i < 3 ? 'p' + (i+1) : ''}" ${v ? `onclick="abrirFicha(${v._i})" title="Abrir a ficha da viatura"` : ''}>
+      <div class="pos">${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1) + 'º'}</div>
+      <div><div class="pf">${esc(e.p)}</div><div class="md">${v ? esc(v.modelo) + ' · ' + esc(v.placa) : 'viatura fora do cadastro'}</div></div>
+      <div class="mid"><div class="md">${e.s} saída${e.s === 1 ? '' : 's'} · ${pct.toLocaleString('pt-BR',{ maximumFractionDigits:1 })}% do km da frota${e.s ? ` · ${fN(Math.round(e.km / e.s))} km/saída` : ''}</div>
+        <div class="bar"><div style="width:${(e.km / max * 100).toFixed(1)}%;background:${i === 0 ? '#34d399' : '#F5C518'}"></div></div></div>
+      <div class="val">${fN(e.km)} km<small>&nbsp;</small></div>
+    </div>`; }).join('')
+    + `<div class="rk-foot">${L.length} viatura(s) com km ${nomePer} · total ${fN(tot)} km${L.length > 10 ? ' · mostrando as 10 que mais andaram' : ''}</div>`;
 }
 
 /* ── frota ── */
@@ -953,7 +1033,38 @@ function verCheck(id){
   const L = [['Data/hora', fDH(c.data)], ['Viatura', c.prefixo], ['Momento', c.momento], ['Motorista', c.motorista + ' (RE ' + c.motorista_re + ')'], ['Hodômetro', c.km ? fN(c.km) + ' km' + (c.ciente_km === 'Sim' ? ' — ⚠️ divergente, confirmado pelo motorista' : '') : '—'],
     ['Comandante', c.comandante], ['Local', c.local], ['Condição', c.condicao + (c.justificativa ? ' — ' + c.justificativa : '')], ['Itens alterados', c.itens.join(', ') || 'nenhum'], ['Descrição', c.alteracoes]];
   if (c.externo) L.splice(4, 0, ['Unidade do motorista', '🏷️ ' + (c.externo.unidade || 'outra unidade')], ['Finalidade do uso', c.externo.finalidade], ['Quem autorizou', c.externo.autorizado_por]);
-  modal('📋 Checklist ' + esc(c.prefixo), `<table class="t">${L.map(([k,v]) => `<tr><td class="muted" style="width:160px">${k}</td><td style="white-space:pre-line">${esc(v || '—')}</td></tr>`).join('')}</table>`, '<button class="btn gray" onclick="fecharModal()">Fechar</button>', true);
+  modal('📋 Checklist ' + esc(c.prefixo), `<table class="t">${L.map(([k,v]) => `<tr><td class="muted" style="width:160px">${k}</td><td style="white-space:pre-line">${esc(v || '—')}</td></tr>`).join('')}</table>`,
+    (CAN ? `<button class="btn" onclick="editarCheck('${c.id}')">✏️ Editar</button>` : '') + '<button class="btn gray" onclick="fecharModal()">Fechar</button>', true);
+}
+// edição de checklist: só o gestor com permissão, e sempre com a senha de quem está logado (antes→depois vai pro Histórico)
+function editarCheck(id){
+  const c = D.checklists.find(x => x.id === id); if (!c || !CAN) return;
+  modal('✏️ Editar checklist ' + esc(c.prefixo), `<div class="muted" style="margin-bottom:10px">${fDH(c.data)} · ${esc(c.momento)} · ${esc(c.motorista)}. Mudar os itens aqui corrige só o registro — não abre nem fecha alteração (use a aba Alterações).</div>
+    <div class="grid">
+      <div class="fg"><label>Hodômetro (km)</label><input id="ec-km" inputmode="numeric" value="${c.km || ''}"></div>
+      <div class="fg"><label>Condição</label><select id="ec-cond"><option ${c.condicao === 'Limpa' ? 'selected' : ''}>Limpa</option><option ${c.condicao === 'Suja' ? 'selected' : ''}>Suja</option></select></div>
+      <div class="fg"><label>Comandante</label><input id="ec-cmt" value="${esc(c.comandante)}"></div>
+      <div class="fg"><label>Local</label><input id="ec-loc" value="${esc(c.local)}"></div>
+    </div>
+    <div class="fg"><label>Justificativa (se suja)</label><input id="ec-just" value="${esc(c.justificativa)}"></div>
+    <div class="fg"><label>Itens alterados</label><div id="ec-it">${D.itens.map(i => `<label class="chk" style="display:inline-flex;margin:4px 14px 4px 0"><input type="checkbox" value="${esc(i)}" ${c.itens.includes(i) ? 'checked' : ''}>${esc(i)}</label>`).join('')}</div></div>
+    <div class="fg"><label>Descrição</label><textarea id="ec-desc" rows="3">${esc(c.alteracoes)}</textarea></div>
+    <div class="fg"><label>Motivo da correção (opcional)</label><input id="ec-mot" maxlength="300" placeholder="Ex.: km digitado errado"></div>
+    <div class="fg"><label>Sua senha${AUTH && AUTH.user ? ' (' + esc(AUTH.user) + ')' : ''} — confirma a edição</label><input id="ec-senha" type="password" autocomplete="current-password"></div>
+    <div id="ec-err" style="color:#fca5a5;font-size:13px;min-height:18px"></div>`,
+    `<button class="btn" id="ec-ok" onclick="salvarCheck('${c.id}')">Salvar alteração</button><button class="btn gray" onclick="verCheck('${c.id}')">Cancelar</button>`);
+  setTimeout(() => $('ec-km').focus(), 30);
+}
+async function salvarCheck(id){
+  const senha = $('ec-senha').value, err = $('ec-err');
+  if (!senha){ err.textContent = 'Digite sua senha para confirmar.'; $('ec-senha').focus(); return; }
+  const itens = [...$('ec-it').querySelectorAll('input:checked')].map(x => x.value);
+  $('ec-ok').disabled = true; $('ec-ok').textContent = 'Salvando…'; err.textContent = '';
+  try{
+    await apiPost('/api/garagem/gestao/save', { op:'checklist_editar', id, senha, motivo:$('ec-mot').value.trim(),
+      checklist:{ km:$('ec-km').value, condicao:$('ec-cond').value, comandante:$('ec-cmt').value, local:$('ec-loc').value, justificativa:$('ec-just').value, itens, alteracoes:$('ec-desc').value } });
+    fecharModal(); toast('✅ Checklist atualizado.'); await carregar(true);
+  }catch(x){ $('ec-ok').disabled = false; $('ec-ok').textContent = 'Salvar alteração'; err.textContent = (x && x.message) || 'Erro ao salvar.'; $('ec-senha').value = ''; $('ec-senha').focus(); }
 }
 function baixarCSV(nome, linhas){
   const csv = linhas.map(r => r.map(v => { const s = String(v == null ? '' : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }).join(';')).join('\r\n');
@@ -1476,6 +1587,30 @@ async function nfSalvar(){
     await carregar(true);
   }catch(e){ toast('⚠️ ' + e.message, true); }
   finally{ ovl(''); if ($('nf-ok')) $('nf-ok').disabled = false; }
+}
+
+/* ── aviso de novidades ──
+   Toda mudança na ferramenta entra AQUI (a mais nova primeiro, com id novo): quem abrir a
+   página vê o aviso uma vez; "🆕 Novidades" no topo reabre quando quiser. */
+const NOVIDADES = [
+  { id:'2026-10-20b', titulo:'20/10/2026 (tarde)', itens:[
+    '🔎 <b>Possíveis erros de checklist</b>: caixa na Visão geral que lista km que pulou mais de 10.000 ou voltou. Tem botão para corrigir (com senha) ou ignorar.',
+    '⛔ O motorista agora recebe <b>aviso acima de 10.000 km</b> de diferença (início e término) e fica <b>impedido de enviar acima de 50.000 km</b>.',
+  ] },
+  { id:'2026-10-20', titulo:'20/10/2026', itens:[
+    '🛣️ <b>Ranking de viaturas que mais andaram</b> na Visão geral (7, 30, 90 dias, ano ou tudo).',
+    '✏️ <b>Editar checklist</b>: abra um checklist e clique em Editar. Pede a sua senha e a correção (antes → depois) fica no Histórico.',
+    '🆕 <b>Aviso de novidades</b> sempre que a ferramenta mudar — aqui na Gestão e no Checklist do motorista.',
+  ] },
+];
+const LS_NOV = 'bp_gar_nov_gestao';
+function abrirNovidades(soNovas){
+  let visto = ''; try{ visto = localStorage.getItem(LS_NOV) || ''; }catch(e){}
+  const L = soNovas ? NOVIDADES.filter(n => n.id > visto) : NOVIDADES;
+  if (!L.length) return;
+  modal('🆕 Novidades na Garagem', L.map(n => `<div style="margin-bottom:12px"><div class="muted" style="font-weight:700;margin-bottom:4px">${n.titulo}</div><ul style="margin:0;padding-left:20px;line-height:1.7">${n.itens.map(i => `<li>${i}</li>`).join('')}</ul></div>`).join(''),
+    '<button class="btn" onclick="fecharModal()">Entendi</button>', true);
+  try{ localStorage.setItem(LS_NOV, NOVIDADES[0].id); }catch(e){}
 }
 
 /* ── exclusão com senha (mesma função do index/diaria/intel) ── */

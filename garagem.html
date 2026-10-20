@@ -157,6 +157,7 @@ textarea{min-height:92px;resize:vertical}
       <div class="hdr-sub">BPFRON/RO — início e término de uso</div>
     </div>
     <button id="btn-instalar" class="btn hidden" style="margin-left:auto;padding:8px 12px;font-size:13px" onclick="instalarApp()">📲 Instalar app</button>
+    <button class="btn" type="button" style="margin-left:auto;padding:8px 12px;font-size:13px" onclick="abrirNovidades()">🆕 Novidades</button>
   </div>
 </div>
 
@@ -379,6 +380,37 @@ function montar(dados){
   mostrarQuem();
   renderViaturas();
   if (SEL) abrirForm(false);
+  if (!_novVisto){ _novVisto = true; abrirNovidades(true); }
+}
+
+/* ─── aviso de novidades ───
+   Toda mudança na ferramenta entra em NOVIDADES (a mais nova primeiro, com id novo): quem abrir
+   o app vê o aviso uma vez; o botão "🆕 Novidades" reabre quando quiser. */
+const NOVIDADES = [
+  { id:'2026-10-20b', titulo:'20/10/2026 (tarde)', itens:[
+    '⚠️ <b>Cuidado com o km:</b> se o valor estiver mais de 10.000 km acima do último registro (início ou término), o app pede confirmação.',
+    '⛔ Acima de 50.000 km de diferença o app <b>não deixa enviar</b> — confira o painel e corrija o número.',
+  ] },
+  { id:'2026-10-20', titulo:'20/10/2026', itens:[
+    '🆕 Agora o app avisa aqui sempre que tiver função nova.',
+    '✏️ O gestor pode corrigir um checklist já enviado (km, local, itens…). Se algo seu foi corrigido, ele registra o motivo.',
+  ] },
+];
+const LS_NOV = 'bp_gar_nov_motorista';
+let _novVisto = false;
+function abrirNovidades(soNovas){
+  let visto = ''; try{ visto = localStorage.getItem(LS_NOV) || ''; }catch(e){}
+  const L = soNovas ? NOVIDADES.filter(n => n.id > visto) : NOVIDADES;
+  if (!L.length) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.8);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `<div style="background:#0d1322;border:1px solid rgba(245,197,24,.45);border-radius:18px;padding:20px 22px;max-width:420px;width:100%;max-height:85vh;overflow:auto;color:#e2e8f0;font:14.5px/1.6 Inter,system-ui,sans-serif">
+    <div style="font-weight:800;font-size:17px;color:#F5C518;margin-bottom:10px">🆕 Novidades no app</div>
+    ${L.map(n => `<div style="margin-bottom:10px"><div style="color:#94a3b8;font-size:12.5px;font-weight:700">${n.titulo}</div><ul style="margin:4px 0 0;padding-left:20px">${n.itens.map(i => `<li>${i}</li>`).join('')}</ul></div>`).join('')}
+    <button style="margin-top:12px;width:100%;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:12px;font:800 15px Inter,system-ui,sans-serif;color:#141414;cursor:pointer">Entendi</button></div>`;
+  ov.onclick = (e) => { if (e.target === ov || e.target.tagName === 'BUTTON') ov.remove(); };
+  document.body.appendChild(ov);
+  try{ localStorage.setItem(LS_NOV, NOVIDADES[0].id); }catch(e){}
 }
 
 /* ─── navegação e situação da frota ─── */
@@ -626,10 +658,17 @@ function kmRef(){
   const doUltimo = u && u.km === max;
   return { max, onde: doUltimo ? `do último checklist (${u.momento === 'Término de uso' ? 'término' : 'início'} em ${fData(u.data)}, ${fN(max)} km)` : `do maior km já registrado nesta viatura (${fN(max)} km)` };
 }
+const KM_AVISO = 10000, KM_BLOQUEIO = 50000;   // iguais aos do Worker (GAR_KM_AVISO / GAR_KM_BLOQUEIO)
+function kmBloqueio(){
+  const km = Number($('km').value.replace(/\D/g,'')) || 0, { max } = kmRef();
+  return km && max && km - max > KM_BLOQUEIO ? `⛔ <b>Km impossível de enviar!</b> O valor (<b>${fN(km)}</b>) está <b>${fN(km - max)} km ACIMA</b> do maior já registrado (${fN(max)} km). Provavelmente sobrou um dígito — confira o painel e corrija. Se estiver mesmo certo, fale com o gestor.` : '';
+}
 function kmAviso(){
   const km = Number($('km').value.replace(/\D/g,'')) || 0;
   const { max, onde } = kmRef();
   if (!km || !max) return '';
+  const bloq = kmBloqueio(); if (bloq) return bloq;
+  if (km - max > KM_AVISO && F.momento !== 'Início de uso') return `🔴⚠️ <b>ATENÇÃO!</b> O km informado (<b>${fN(km)}</b>) está <b>${fN(km - max)} km ACIMA</b> ${onde}. Confira se não digitou algum número a mais!`;
   if (km < max) return `🔴⚠️ <b>ATENÇÃO!</b> O km informado (<b>${fN(km)}</b>) está <b>${fN(max - km)} km ABAIXO</b> ${onde}. O hodômetro não volta — confira o painel!`;
   if (F.momento === 'Início de uso' && km - max > 1000) return `🔴⚠️ <b>ATENÇÃO!</b> Você está pegando a viatura com <b>${fN(km)} km</b>, uma diferença de <b>+${fN(km - max)} km</b> ${onde}. Alguém pode ter usado a viatura sem checklist — confira o painel!`;
   return '';
@@ -638,12 +677,12 @@ function cienteTexto(){
   const km = Number($('km').value.replace(/\D/g,'')) || 0, { max } = kmRef(), dif = km - max;
   return dif < 0
     ? `Estou ciente de que estou registrando a viatura com <b>${fN(-dif)} km a menos</b> que o último checklist e confirmo que o valor está correto.`
-    : `Estou ciente de que estou pegando esta viatura com uma diferença de <b>+${fN(dif)} km</b> do último checklist e confirmo que o valor está correto.`;
+    : `Estou ciente de que estou ${F.momento === 'Início de uso' ? 'pegando' : 'devolvendo'} esta viatura com uma diferença de <b>+${fN(dif)} km</b> do último checklist e confirmo que o valor está correto.`;
 }
 function kmInput(){
   renderVtrInfo();
   const a = kmAviso();
-  $('km-aviso').innerHTML = a; show('km-aviso', !!a); show('km-ciente', !!a);
+  $('km-aviso').innerHTML = a; show('km-aviso', !!a); show('km-ciente', !!a && !kmBloqueio());
   if (a) $('ciente-txt').innerHTML = cienteTexto() + ' <span style="color:var(--err)">*</span>';
   if (!a){ F.ciente = ''; }
   $('ck-sim').classList.toggle('on', F.ciente === 'Sim');
@@ -681,6 +720,7 @@ async function enviar(){
   const km = Number($('km').value.replace(/\D/g,'')) || 0;
   const faltas = [];
   if (!km) faltas.push('hodômetro');
+  if (kmBloqueio()) return erroEnvio(kmBloqueio());
   if (kmAviso() && F.ciente !== 'Sim') faltas.push('confirmação do km (ou corrija o valor)');
   if (!$('cmt').value.trim()) faltas.push('comandante');
   if (!$('local').value.trim()) faltas.push('local de atuação');
@@ -707,6 +747,7 @@ async function enviar(){
     mostrarSucesso(body, d);
   }catch(e){
     if (e.code === 'km_divergente'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('O km diverge do maior já registrado (' + fN(e.data.km_max) + ' km). Confira e confirme.'); }
+    else if (e.code === 'km_absurdo'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('⛔ ' + esc(e.message)); }
     else if (e.code === 'externo_dados'){
       // o servidor diz que este RE é de outra unidade (o celular tinha a informação antiga)
       const x = e.data || {};
