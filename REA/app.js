@@ -38,9 +38,9 @@ const recLine = L.polyline([], { color: tk('--rec'), weight: 4 }).addTo(map);
 // ---------- Utilidades de UI ----------
 // O painel inferior (arrastável) mora em ui.js; infoId marca quando o painel aberto é o de informações de um item.
 let infoId = null;
-function openSheet(title, html, after) { infoId = null; Sheet.show(title, html, after); }
+function openSheet(title, html, after) { if (sampling && !sampling.own) stopSampling(); infoId = null; Sheet.show(title, html, after); }   // outro painel cancela a coleta em andamento
 const closeSheet = () => Sheet.close();
-Sheet.onClose = () => { infoId = null; setSelected(null); };
+Sheet.onClose = () => { infoId = null; stopSampling(); setSelected(null); };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const toast = t => { $('#status').textContent = t; clearTimeout(toast.t); toast.t = setTimeout(updateStatus, 2500); };
 function updateStatus() {
@@ -54,7 +54,8 @@ function gpsInfo() {
   if (!state.me) return ['wait', '…', 'Buscando GPS…'];
   if (Date.now() - state.me.t > 90000) return ['warn', '!', 'Sinal GPS antigo'];
   const a = Math.round(state.me.acc);
-  return a <= 15 ? ['ok', '●', `GPS ±${a} m`] : a <= 50 ? ['fair', '◐', `GPS ±${a} m`] : ['warn', '▲', `Sinal fraco ±${a} m`];
+  // acima de 20 m só avisa (nunca bloqueia)
+  return a <= 10 ? ['ok', '●', `GPS ±${a} m`] : a <= Geo.WARN_ACC ? ['fair', '◐', `GPS ±${a} m`] : a <= 50 ? ['warn', '▲', `Precisão ruim ±${a} m`] : ['warn', '▲', `Sinal fraco ±${a} m`];
 }
 function renderGps() {
   const [k, g, t] = gpsInfo(), el = $('#gps');
@@ -140,9 +141,14 @@ function onPos(p) {
   if (first) { hideGate(); map.setView(ll, 16); }
   meMarker.setLatLng(ll).addTo(map); meAcc.setLatLng(ll).setRadius(p.coords.accuracy).addTo(map);
   if (state.follow) map.panTo(ll, { animate: !MR });   // só acompanha se o modo "seguir" estiver ligado
+  feedSample(p);
   if (state.rec) {
-    const last = state.rec.pts.at(-1);
-    if (!last || Geo.dist(last, ll) >= Math.max(3, Math.min(p.coords.accuracy / 2, 15))) {
+    const last = state.rec.pts.at(-1), r = state.rec;
+    // filtro da trilha: ignora leitura com precisão ruim e saltos impossíveis; após 3 saltos seguidos aceita (pode ter sido deslocamento real)
+    const v = Geo.trackFix(last, ll, p.coords.accuracy, p.timestamp);
+    r.jumps = v === 'jump' ? (r.jumps || 0) + 1 : 0;
+    if (v === 'acc' || (v === 'jump' && r.jumps <= 3)) r.dropped = (r.dropped || 0) + 1;
+    else if (!last || Geo.dist(last, ll) >= Math.max(3, Math.min(p.coords.accuracy / 2, 15))) {
       state.rec.pts.push([ll[0], ll[1], p.timestamp, p.coords.altitude]);
       recLine.setLatLngs(state.rec.pts.map(q => [q[0], q[1]]));
       saveDraft();
@@ -358,7 +364,7 @@ const fmtTime = t => new Date(t).toLocaleString('pt-BR');
 function featureSummary(f) {
   if (f.type === 'point') return Geo.fmtCoord(f.lat, f.lon, state.fmt) + (hasPhotos(f) ? ` · ${f.photos.length} foto${f.photos.length > 1 ? 's' : ''}` : '');
   if (f.type === 'area') return Geo.fmtArea(Geo.area(f.pts), state.units) + ' · ' + Geo.fmtDist(Geo.pathLength([...f.pts, f.pts[0]]), state.units);
-  return Geo.fmtDist(Geo.pathLength(f.pts), state.units) + ` · ${f.pts.length} pts`;
+  return Geo.fmtDist(Geo.pathLength(f.pts), state.units) + ` · ${f.pts.length} pts` + (f.dropped ? ` · ${f.dropped} descartados` : '');
 }
 const icon = { point: '📍', track: '〰', line: '📏', area: '▱' };
 
@@ -382,6 +388,7 @@ function showInfo(f) {
   const thumbs = hasPhotos(f) ? `<div class="gallery">${f.photos.map(p => `<div class="g" style="background-image:url(${thumbUrl(p)})"></div>`).join('')}</div>` : '';
   openSheet(f.name, `${isP ? `<div class="info-coord">${esc(Geo.fmtCoord(f.lat, f.lon, state.fmt))}</div>` : ''}
     <div class="s">${hasPhotos(f) ? '📷' : icon[f.type]} ${esc(sum)} · ${fmtTime(f.t)}</div>
+    ${f.acc != null ? `<div class="s">Precisão ±${f.acc} m · ${f.nfix > 1 ? `média de ${f.nfix} leituras` : 'leitura única'}${f.acc > Geo.WARN_ACC ? ' · ⚠ acima de 20 m' : ''}</div>` : ''}
     ${f.notes ? `<div class="info-notes">${esc(f.notes)}</div>` : ''}${thumbs}
     <div class="actions"><button type="button" class="btn" data-a="edit">Editar</button>
       ${isP ? '<button type="button" class="btn ghost" data-a="copy">Copiar coordenadas</button>' : ''}
@@ -549,10 +556,55 @@ function renderPhotos(box, f, sel) {
 }
 
 // ---------- Marcar ----------
-function addPoint(ll, name) {
+function addPoint(ll, name, extra = {}) {
   const n = state.features.filter(f => f.type === 'point').length + 1;
-  const f = { id: uid(), type: 'point', name: name || `Marca ${n}`, notes: '', lat: ll.lat, lon: ll.lng, t: Date.now() };
-  saveFeature(f).then(() => { toast('Marca salva'); editFeature(f.id); });
+  const f = { id: uid(), type: 'point', name: name || `Marca ${n}`, notes: '', lat: ll.lat, lon: ll.lng, t: Date.now(), ...extra };
+  saveFeature(f).then(() => {
+    toast(extra.acc != null ? `Marca salva · média de ${extra.nfix} leituras · ±${extra.acc} m` : 'Marca salva');
+    editFeature(f.id);
+  });
+}
+
+// ---------- Marcar com média de leituras do GPS ----------
+const SAMPLES = 15, SAMPLE_MAX_MS = 30000;
+let sampling = null;
+function feedSample(p) {
+  const s = sampling; if (!s || s.seen.has(p.timestamp)) return;
+  s.seen.add(p.timestamp); s.pts.push({ lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy });
+  s.render(); if (s.pts.length >= SAMPLES) s.finish();
+}
+function stopSampling() { if (sampling) { clearInterval(sampling.timer); sampling = null; } }
+function markAveraged() {
+  if (!state.me) { startGps(); return toast('Aguardando GPS…'); }
+  const s = sampling = { pts: [], seen: new Set(), t0: Date.now() };
+  s.finish = () => {
+    if (!s.pts.length && state.me) s.pts.push({ lat: state.me.ll[0], lon: state.me.ll[1], acc: state.me.acc });   // GPS parado: usa a última posição
+    const r = Geo.avgFix(s.pts); stopSampling(); closeSheet();
+    if (!r) return toast('Sem leituras do GPS');
+    addPoint({ lat: r.lat, lng: r.lon }, null, { acc: Math.round(r.acc * 10) / 10, nfix: r.n });
+  };
+  s.render = () => {
+    const body = $('#sheet-body'), n = s.pts.length; if (!body.querySelector('#sm-bar')) return;
+    const acc = state.me ? Math.round(state.me.acc) : null;
+    body.querySelector('#sm-bar').style.width = Math.round(Math.min(1, n / SAMPLES) * 100) + '%';
+    body.querySelector('#sm-txt').textContent = `Leitura ${n} de ${SAMPLES}` + (acc != null ? ` · agora ±${acc} m` : '');
+    body.querySelector('#sm-warn').hidden = !(acc != null && acc > Geo.WARN_ACC);
+    if (acc != null) body.querySelector('#sm-warn').textContent = `⚠ Precisão ruim (±${acc} m). Vá para céu aberto ou aguarde; você pode salvar mesmo assim.`;
+    body.querySelector('#sm-save').disabled = n === 0;
+  };
+  s.own = true;
+  openSheet('Coletando posição…', `<div class="s">Fique parado, com o celular firme. O app faz a média das melhores leituras.</div>
+    <div class="meter" role="progressbar" aria-label="Leituras coletadas"><i id="sm-bar"></i></div>
+    <div id="sm-txt" class="info-coord" aria-live="polite"></div>
+    <div id="sm-warn" class="cal-hint" hidden></div>
+    <div class="actions"><button type="button" class="btn" id="sm-save" disabled>Salvar agora</button>
+      <button type="button" class="btn ghost" id="sm-cancel">Cancelar</button></div>`, b => {
+    b.querySelector('#sm-save').onclick = () => s.finish();
+    b.querySelector('#sm-cancel').onclick = () => { stopSampling(); closeSheet(); };
+  });
+  s.own = false;
+  s.timer = setInterval(() => { if (Date.now() - s.t0 > SAMPLE_MAX_MS) s.finish(); }, 1000);   // limite de 30 s
+  s.render();
 }
 // ---------- Fotos com coordenadas ----------
 async function makeThumb(file, size = 160) {
@@ -586,7 +638,7 @@ function startCompass() {
 // Plota fotos: usa GPS, hora e direção do EXIF. Na câmera do app, se faltar GPS, usa o do aparelho.
 // `targetId`: acrescenta as fotos a um marcador existente, sem exigir GPS.
 async function addPhotos(files, fromCamera, targetId) {
-  let ok = 0, noGps = 0, bad = 0, last;
+  let ok = 0, noGps = 0, bad = 0, weak = 0, last;
   const target = targetId && state.features.find(x => x.id === targetId);
   for (const [i, file] of [...files].entries()) {
     Busy.set(files.length > 1 ? `Processando foto ${i + 1} de ${files.length}…` : 'Processando foto…');
@@ -594,7 +646,7 @@ async function addPhotos(files, fromCamera, targetId) {
     try { thumb = await makeThumb(file); } catch { bad++; continue; }
     const ex = await Exif.read(file);
     let lat = ex?.lat, lon = ex?.lon, srcGps = false;
-    if (lat == null && fromCamera && state.me) { [lat, lon] = state.me.ll; srcGps = true; }
+    if (lat == null && fromCamera && state.me) { [lat, lon] = state.me.ll; srcGps = true; if (state.me.acc > Geo.WARN_ACC) weak++; }
     if (target && lat == null) { lat = target.lat; lon = target.lon; }
     if (lat == null) { noGps++; continue; }
     const t = ex?.time || (fromCamera ? Date.now() : file.lastModified);
@@ -610,6 +662,7 @@ async function addPhotos(files, fromCamera, targetId) {
   const parts = [`${ok} foto(s) plotada(s)`];
   if (noGps) parts.push(`${noGps} sem GPS (ignorada${noGps > 1 ? 's' : ''})`);
   if (bad) parts.push(`${bad} ilegível(is)`);
+  if (weak) parts.push(`⚠ GPS impreciso (±${Math.round(state.me.acc)} m)`);
   toast(parts.join(' · '));
   if (last) { focusFeature(last); if (ok === 1 || target) editFeature(last.id); else closeSheet(); }
   if (noGps && !last) noGpsHelp(noGps);
@@ -635,14 +688,20 @@ for (const [id, cam] of [['#file-photo-cam', true], ['#file-photo-gal', false]])
 
 function markHere() {
   openSheet('Nova marca', `<button class="btn" id="m-center">No centro do mapa</button>
-    <button class="btn" id="m-gps">Na minha posição</button>
+    <button class="btn" id="m-gps">Na minha posição (média de leituras)</button>
+    <button class="btn ghost" id="m-fast">Marcar agora, sem média</button>
     <p><button class="btn" id="m-cam">📷 Tirar foto</button>
     <button class="btn ghost" id="m-gal">🖼 Plotar fotos da galeria</button></p>
     <p class="s">Fotos com GPS no EXIF vão direto para as coordenadas onde foram tiradas. Toque e segure no mapa para marcar um ponto.</p>`, b => {
     b.querySelector('#m-cam').onclick = () => { state.photoTarget = null; startGps(); $('#file-photo-cam').click(); };
     b.querySelector('#m-gal').onclick = () => { state.photoTarget = null; $('#file-photo-gal').click(); };
     b.querySelector('#m-center').onclick = () => addPoint(map.getCenter());
-    b.querySelector('#m-gps').onclick = () => state.me ? addPoint({ lat: state.me.ll[0], lng: state.me.ll[1] }) : (startGps(), toast('Aguardando GPS…'));
+    b.querySelector('#m-gps').onclick = markAveraged;
+    b.querySelector('#m-fast').onclick = () => {
+      if (!state.me) return (startGps(), toast('Aguardando GPS…'));
+      addPoint({ lat: state.me.ll[0], lng: state.me.ll[1] }, null, { acc: Math.round(state.me.acc * 10) / 10, nfix: 1 });
+      if (state.me.acc > Geo.WARN_ACC) setTimeout(() => toast(`Atenção: precisão ruim (±${Math.round(state.me.acc)} m)`), 50);
+    };
   });
 }
 map.on('contextmenu', e => addPoint(e.latlng));
@@ -695,13 +754,13 @@ function toggleTrack() {
   startGps();
   if (!state.rec) {
     state.rec = { pts: [] }; setRecUi(true); holdScreen(); startBgTrack(); toast(NATIVE ? 'Gravando trilha (continua com a tela apagada)' : 'Gravando trilha — mantenha a tela acesa');
-    if (state.me) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
+    if (state.me && state.me.acc <= Geo.TRACK_MAX_ACC) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
     saveDraft();
   } else {
-    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); stopBgTrack(); clearDraft(); setTimeout(updateBanner);
+    const { pts, dropped } = state.rec; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); stopBgTrack(); clearDraft(); setTimeout(updateBanner);
     if (pts.length < 2) return toast('Trilha muito curta, descartada');
-    const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() };
-    saveFeature(f).then(() => editFeature(f.id));
+    const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now(), dropped: dropped || undefined };
+    saveFeature(f).then(() => { editFeature(f.id); if (dropped) toast(`${dropped} leitura(s) descartada(s): precisão ruim ou salto`); });
   }
   updateStatus();
 }
@@ -742,7 +801,7 @@ const Export = {
   geojson: (fs, names) => JSON.stringify({
     type: 'FeatureCollection', features: fs.map(f => ({
       type: 'Feature', properties: {
-        name: f.name, notes: f.notes, kind: f.type, times: f.type === 'track' ? f.pts.map(p => p[2]) : undefined,
+        name: f.name, notes: f.notes, kind: f.type, accuracy: f.acc ?? undefined, readings: f.acc != null ? f.nfix : undefined, times: f.type === 'track' ? f.pts.map(p => p[2]) : undefined,
         photos: names && hasPhotos(f) ? f.photos.map(p => ({ file: names[p.id], time: new Date(p.t).toISOString(), direction: p.dir ?? undefined, directionRef: p.dirRef ?? undefined, altitude: p.alt ?? undefined })) : undefined,
       },
       geometry: f.type === 'point' ? { type: 'Point', coordinates: [f.lon, f.lat] }

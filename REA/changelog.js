@@ -1,6 +1,12 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 19, nome: '1.2', data: '2026-10-20', notas: [
+    'Marcar na minha posição agora faz a média das melhores leituras do GPS (até 15, no máximo 30 s) e mostra a precisão',
+    'Também dá para marcar na hora, sem média ("Marcar agora")',
+    'Aviso de "Precisão ruim" quando o GPS está pior que 20 m (só avisa, não bloqueia); o painel do marcador mostra a precisão',
+    'Trilha ignora leituras com precisão pior que 50 m e saltos impossíveis do GPS, e informa quantas foram descartadas'
+  ] },
   { v: 18, nome: '1.1.1', data: '2026-10-20', notas: [
     'Tela de carregamento ao importar mapa (imagem, GeoTIFF, PDF), importar itens, plotar fotos e exportar (ZIP, GPX, KML, GeoJSON)',
     'Mostra o que está sendo feito, como "Processando foto 2 de 5", e bloqueia toques até terminar'

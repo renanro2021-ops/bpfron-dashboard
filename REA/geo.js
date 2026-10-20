@@ -67,5 +67,34 @@ const Geo = (() => {
     return `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
   }
 
-  return { dist, pathLength, area, bearing, fmtDist, fmtArea, fmtCoord, FORMATS };
+  // ---- Qualidade do GPS ----
+  const WARN_ACC = 20;        // acima disso (m) o app só avisa "precisão ruim"; nunca bloqueia
+  const TRACK_MAX_ACC = 50;   // leituras piores que isso não entram na trilha
+  const MAX_SPEED = 55;       // m/s (~200 km/h): acima disso entre duas leituras é salto de GPS, não movimento
+
+  // Média ponderada (peso 1/precisão²) das melhores leituras. s = [{lat, lon, acc}].
+  // A precisão devolvida é a mediana das precisões usadas (conservadora: não finge dividir o erro por √n,
+  // porque o erro de GPS é correlacionado entre leituras seguidas). `spread` = maior distância de uma leitura à média.
+  function avgFix(s) {
+    const ok = s.filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lon) && x.acc > 0);
+    if (!ok.length) return null;
+    const use = [...ok].sort((a, b) => a.acc - b.acc).slice(0, Math.max(1, Math.ceil(ok.length * .7)));   // descarta os ~30% piores
+    let w = 0, la = 0, lo = 0;
+    for (const x of use) { const k = 1 / (x.acc * x.acc); w += k; la += x.lat * k; lo += x.lon * k; }
+    const lat = la / w, lon = lo / w, accs = use.map(x => x.acc).sort((a, b) => a - b);
+    return { lat, lon, acc: accs[Math.floor(accs.length / 2)], n: use.length, total: ok.length, spread: Math.max(...use.map(x => dist([lat, lon], [x.lat, x.lon]))) };
+  }
+
+  // Decide se uma leitura entra na trilha. last = [lat, lon, tempoMs] do último ponto aceito (ou null).
+  // Devolve 'ok', 'acc' (precisão ruim) ou 'jump' (salto impossível desde o último ponto).
+  function trackFix(last, ll, acc, t) {
+    if (acc > TRACK_MAX_ACC) return 'acc';
+    if (last && last[2] && t > last[2]) {
+      const d = dist(last, ll);
+      if (d > Math.max(30, acc * 2) && d / ((t - last[2]) / 1000) > MAX_SPEED) return 'jump';
+    }
+    return 'ok';
+  }
+
+  return { dist, pathLength, area, bearing, fmtDist, fmtArea, fmtCoord, FORMATS, avgFix, trackFix, WARN_ACC, TRACK_MAX_ACC, MAX_SPEED };
 })();
