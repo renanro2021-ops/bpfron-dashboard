@@ -165,6 +165,51 @@ table.lotes td:nth-child(2){min-width:320px}
 .acao.op{background:rgba(245,197,24,.14);color:#fcd34d}
 .empty{text-align:center;color:var(--muted);padding:26px}
 
+/* modo manual (sem PDF) */
+.manbox{border:1px dashed rgba(245,197,24,.45);background:rgba(245,197,24,.04);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.manbox h4{font:800 14px 'Inter',sans-serif;color:var(--yellow);margin-bottom:4px}
+.manbox textarea{background:var(--bg);border:1px solid #273244;border-radius:9px;padding:9px 11px;color:#e2e8f0;font:13px 'Inter',sans-serif;outline:none;width:100%;min-height:62px;resize:vertical}
+.manbox textarea:focus{border-color:rgba(245,197,24,.6)}
+.manual-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+
+/* ② em duas colunas: conferência à esquerda, painel de possíveis erros à direita */
+.rev-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.rev-side{position:sticky;top:96px;max-height:calc(100vh - 116px);overflow:auto;border:1px solid var(--line);border-radius:14px;background:rgba(6,9,18,.7);padding:14px}
+.side-h{font:700 13px 'Rajdhani',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);margin-bottom:8px}
+.side-sum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.side-sum span{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
+.side-sum .e{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.45);color:#fca5a5}
+.side-sum .w{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:var(--warn)}
+.side-sum .o{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:var(--ok)}
+.sg{border-left:3px solid var(--warn);background:rgba(148,163,184,.05);border-radius:0 9px 9px 0;padding:7px 10px;margin-bottom:8px;font-size:12.5px}
+.sg.err{border-left-color:var(--err)}
+.sg b{display:block;color:#e2e8f0;margin-bottom:3px}
+.sg a{display:inline-block;color:var(--blue);text-decoration:none;margin:1px 8px 1px 0;font-size:12px;cursor:pointer}
+.sg a:hover{text-decoration:underline}
+.side-empty{font-size:12.5px;color:var(--muted)}
+table.pol tr.rerr td:first-child{box-shadow:inset 4px 0 0 var(--err)}
+table.pol tr.rwar td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
+
+/* dashboard de valores */
+.dash{margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.kpi small{display:block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi b{font:700 22px 'Rajdhani',sans-serif;color:#fff;white-space:nowrap}
+.kpi.main b{color:var(--yellow)}
+.bars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.bars h5{font:700 11px 'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.bar-l{display:grid;grid-template-columns:minmax(80px,1.1fr) 2fr auto;gap:8px;align-items:center;font-size:12px;margin-bottom:4px}
+.bar-l span.n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cbd5e1}
+.bar-l span.t{height:9px;background:#111827;border-radius:99px;overflow:hidden}
+.bar-l span.t i{display:block;height:100%;background:linear-gradient(90deg,#F5C518,#e0a800);border-radius:99px}
+.bar-l span.v{color:#fff;font-weight:700;white-space:nowrap}
+
+@media(max-width:1100px){
+  .rev-grid{grid-template-columns:1fr}
+  .rev-side{position:static;max-height:none}
+}
 @media(max-width:760px){
   .grid .wide{grid-column:auto}
   .hdr-sub{display:none}
@@ -180,7 +225,7 @@ table.lotes td:nth-child(2){min-width:320px}
       <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
       <div>
         <div class="hdr-title">Diária por Policial <em>· Lançar escala</em></div>
-        <div class="hdr-sub">Envie o PDF da escala do SEI — a página lê e preenche sozinha. Você confere e lança.</div>
+        <div class="hdr-sub">Envie o PDF da escala do SEI — a página lê e preenche sozinha — ou lance manualmente. Você confere e lança.</div>
       </div>
     </div>
     <div class="hdr-right">
@@ -228,16 +273,35 @@ table.lotes td:nth-child(2){min-width:320px}
       </div>
       <div id="read-status" class="muted"></div>
       <div class="prog" id="prog"><div></div></div>
+      <div class="manual-row">
+        <button class="btn gray" onclick="iniciarManual()">✍️ Lançar manualmente (sem PDF)</button>
+        <span class="hint">Preencha a missão e adicione os policiais à mão ou colando uma lista de REs — as mesmas conferências do PDF valem aqui.</span>
+      </div>
     </div>
 
     <div id="rev" style="display:none">
       <div class="sec">② Conferir e completar</div>
       <div class="card">
+       <div class="rev-grid"><div class="rev-main">
         <div class="pills" id="pills"></div>
         <div class="lote-bar" id="lote-bar" style="display:none"></div>
         <div class="lote" id="lote-box" style="display:none"></div>
         <div class="doc-strip" id="doc-strip"></div>
+        <div class="manbox" id="man-box" style="display:none">
+          <h4>✍️ Lançamento manual</h4>
+          <div class="hint" style="margin:0 0 10px">Sem documento para ler: preencha abaixo. Tudo é opcional, mas SEI e efetivo previsto ativam a conferência e o aviso de relançamento.</div>
+          <div class="grid">
+            <div class="fg"><label>SEI nº</label><input id="man-sei" oninput="onManual()" placeholder="Ex.: 75833966"></div>
+            <div class="fg"><label>Efetivo previsto</label><input id="man-efet" type="number" min="0" oninput="onManual()" placeholder="Total esperado"></div>
+            <div class="fg"><label>Patrulhamento / local</label><input id="man-local" oninput="onManual()" placeholder="Ex.: FRONTEIRA/NOVA MUTUM"></div>
+            <div class="fg"><label>Equipe das novas linhas</label><input id="man-eq" placeholder="Ex.: EQUIPE 01"></div>
+          </div>
+          <div class="fg" style="margin-top:10px"><label>Colar lista de REs (um por linha ou separados por espaço/vírgula)</label>
+            <textarea id="man-res" placeholder="Ex.:&#10;94040&#10;92531&#10;200094233"></textarea></div>
+          <div style="margin-top:8px"><button class="btn sm" onclick="addREs()">➕ Adicionar REs do cadastro</button> <span class="hint" id="man-st"></span></div>
+        </div>
         <div id="conf-box" class="conf na"></div>
+        <div class="dash" id="dash"></div>
         <div class="avisos" id="avisos"></div>
 
         <div class="grid">
@@ -260,8 +324,8 @@ table.lotes td:nth-child(2){min-width:320px}
         </div>
 
         <div class="tools">
-          <div class="fg"><label>Início (todos)</label><input type="date" id="t-ini"></div>
-          <div class="fg"><label>Término (todos)</label><input type="date" id="t-fim"></div>
+          <div class="fg"><label>Início (todos)</label><input type="date" id="t-ini" oninput="onManual()"></div>
+          <div class="fg"><label>Término (todos)</label><input type="date" id="t-fim" oninput="onManual()"></div>
           <button class="btn gray sm" onclick="aplicarPeriodoTodos()">🗓️ Aplicar período a todos</button>
           <div class="fg"><label>Localidade (vazios)</label><input id="t-loc" list="dl-locs" placeholder="Ex.: NOVA MUTUM"></div>
           <button class="btn gray sm" onclick="aplicarLocalVazios()">📍 Preencher vazios</button>
@@ -298,11 +362,15 @@ table.lotes td:nth-child(2){min-width:320px}
         </div>
         <div id="pdf-view"></div>
         <pre id="raw-view"></pre>
+       </div>
+       <aside class="rev-side" id="side"></aside>
+       </div>
       </div>
     </div>
 
     <div class="sec">③ Escalas já lançadas <small class="muted" id="lotes-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
     <div class="card">
+      <div class="dash" id="dash-geral"></div>
       <div class="tbl-wrap" style="border:none"><div id="lotes"><div class="empty">Carregando…</div></div></div>
       <div class="hint" style="margin-top:10px">Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
     </div>
@@ -545,6 +613,7 @@ function renderLotes(){
     return ib - ia || tsBR(b.fim) - tsBR(a.fim) || tsBR(b.lancado_em) - tsBR(a.lancado_em);
   });
   $('lotes-count').textContent = lotes.length ? `(${lotes.length})` : '';
+  renderDashGeral(lotes);
   const sid = DATA.missoes_sheet_id;
   if (!lotes.length){
     $('lotes').innerHTML = sid
@@ -1519,11 +1588,8 @@ function conflitos(r){
   return p ? (p.missoes||[]).filter(m=>(!EDIT || m.id_lote !== EDIT.id_lote) && sobrepoem(r.ini, r.fim, m.data_inicio, m.data_fim)) : [];
 }
 
-function renderEscala(){
+function renderDocStrip(){
   const e = ESCALAS[CUR]; if (!e) return;
-  // abas quando o PDF tem mais de um EVENTO
-  $('pills').innerHTML = ESCALAS.length > 1 ? ESCALAS.map((x,j)=>
-    `<span class="pill${j===CUR?' on':''}${x.lancado?' done':''}" onclick="trocarEscala(${j})">${x.lancado?'✅ ':''}${j+1}. ${esc((x.evento||'Escala').slice(0,60))} (${x.rows.length})</span>`).join('') : '';
   const per = e.periodo ? `${isoToBR(e.periodo.ini)} a ${isoToBR(e.periodo.fim)}` : '—';
   const decl = e.efetivo_declarado;
   $('doc-strip').innerHTML = [
@@ -1532,8 +1598,63 @@ function renderEscala(){
     e.evento ? `Evento: <b>${esc(e.evento)}</b>` : '',
     `Período: <b>${esc(per)}</b>`,
     e.local ? `Patrulhamento: <b>${esc(e.local)}</b>` : '',
-    `Lidos: <b>${e.rows.length}</b>${decl!=null ? ` de <b>${decl}</b> declarados ${decl===e.rows.length?'✅':'⚠️'}` : ''}`,
+    `${e.manual ? 'Lançados à mão' : 'Lidos'}: <b>${e.rows.length}</b>${decl!=null ? ` de <b>${decl}</b> ${e.manual ? 'previstos' : 'declarados'} ${decl===e.rows.length?'✅':'⚠️'}` : ''}`,
   ].filter(Boolean).map(s=>`<span>${s}</span>`).join('');
+}
+
+/* ─────────────── ✍️ lançamento manual (sem PDF) ─────────────── */
+function iniciarManual(){
+  if (ESCALAS.some(e=>!e.lancado && e.rows.length) && !window.confirm('Há uma escala aberta e ainda não lançada. Descartar e começar um lançamento manual?')) return;
+  EDIT = null; LOTE_ON = false; PDF_DOC = null; RAW_TEXT = '';
+  $('pdf-view').style.display = 'none'; $('pdf-view').innerHTML = ''; $('raw-view').style.display = 'none';
+  PDF_META = { arquivo:'(lançamento manual)', hash:'' };
+  ESCALAS = [{ evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null, processo:'', sei_doc:'',
+    equipes:[], policiais:[], avisos:[], rows:[], form:null, lancado:false, manual:true }];
+  CUR = 0; DUP_OK = false;
+  setStatus('✍️ Lançamento manual aberto. Preencha a missão, o período e adicione os policiais (➕ Policial ou colando REs).', 'ok');
+  $('btn-ver-pdf').style.display = 'none';
+  renderEscala();
+  $('rev').style.display = '';
+  $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+// campos extras do modo manual → escala aberta (período vem de "Início/Término (todos)")
+function onManual(){
+  const e = ESCALAS[CUR]; if (!e || !e.manual) return;
+  e.sei_doc = $('man-sei').value.trim();
+  const n = parseInt($('man-efet').value, 10); e.efetivo_declarado = isNaN(n) ? null : n;
+  e.local = $('man-local').value.trim();
+  const ini = $('t-ini').value, fim = $('t-fim').value;
+  e.periodo = ini && fim ? { ini, fim } : null;
+  DUP_OK = false; resetSaveBtn();
+  renderDocStrip(); renderAvisos(); renderConf();
+}
+function addREs(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  const res = [...new Set((($('man-res').value).match(/\d{5,9}/g) || []).map(shortRE))];
+  if (!res.length){ $('man-st').textContent = 'Nenhum RE encontrado no texto.'; return; }
+  const tem = new Set(e.rows.map(r=>shortRE(r.re)));
+  const eq = $('man-eq').value.trim().toUpperCase() || 'LANÇADO À MÃO';
+  let add = 0, rep = 0, fora = 0;
+  res.forEach(re=>{
+    if (tem.has(re)){ rep++; return; }
+    const r = novaLinha({ re, equipe:eq, ini:$('t-ini').value, fim:$('t-fim').value, localidade:($('t-loc').value||'').trim().toUpperCase() });
+    if (!regDe(r)) fora++;
+    e.rows.push(r); add++;
+  });
+  $('man-res').value = '';
+  $('man-st').textContent = `${add} adicionado(s)${rep ? ` · ${rep} já estavam na lista` : ''}${fora ? ` · ${fora} fora do cadastro (digite o nome)` : ''}.`;
+  DUP_OK = false; resetSaveBtn(); renderTabela(); renderAvisos(); renderDocStrip();
+}
+
+function renderEscala(){
+  const e = ESCALAS[CUR]; if (!e) return;
+  // abas quando o PDF tem mais de um EVENTO
+  $('pills').innerHTML = ESCALAS.length > 1 ? ESCALAS.map((x,j)=>
+    `<span class="pill${j===CUR?' on':''}${x.lancado?' done':''}" onclick="trocarEscala(${j})">${x.lancado?'✅ ':''}${j+1}. ${esc((x.evento||'Escala').slice(0,60))} (${x.rows.length})</span>`).join('') : '';
+  renderDocStrip();
+  const mb = $('man-box');
+  mb.style.display = e.manual ? '' : 'none';
+  if (e.manual){ $('man-sei').value = e.sei_doc || ''; $('man-efet').value = e.efetivo_declarado != null ? e.efetivo_declarado : ''; $('man-local').value = e.local || ''; }
 
   // formulário da missão: restaura o que o gestor já mexeu, senão vem do PDF
   const f = e.form || {};
@@ -1668,7 +1789,10 @@ function atualizaStatus(i){
   if (r.fimPdf && r.fim !== r.fimPdf) partes.push(`<span class="warn">⚠️ no documento o término é <b>${esc(isoToBR(r.fimPdf))}</b> (antes do início) — ajustado para ${esc(isoToBR(r.fim))}, confira</span>`);
   conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn">⚠️ já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
   el.innerHTML = partes.join('<br>');
-  if (tr) tr.className = (r.on ? '' : 'off') + (isDivergente(r) ? ' div' : '');
+  if (tr){
+    const ps = probsLinha(e, r, contRE(e));
+    tr.className = (r.on ? '' : 'off') + (isDivergente(r) ? ' div' : '') + (ps.some(p=>p.sev==='err') ? ' rerr' : ps.length ? ' rwar' : '');
+  }
 }
 
 function onCell(el){
@@ -1695,9 +1819,10 @@ function onCell(el){
 function rmLinha(i){ ESCALAS[CUR].rows.splice(i,1); DUP_OK=false; resetSaveBtn(); renderTabela(); renderAvisos(); }
 function addLinha(){
   const e = ESCALAS[CUR];
-  e.rows.push({ on:true, equipe:'LANÇADO À MÃO', posto:'', re:'', re_full:'', nome:'', guerra:'', opm:'', funcao:'', localidade:'',
+  const eq = e.manual ? ($('man-eq').value.trim().toUpperCase() || 'LANÇADO À MÃO') : 'LANÇADO À MÃO';
+  e.rows.push({ on:true, equipe:eq, posto:'', re:'', re_full:'', nome:'', guerra:'', opm:'', funcao:'', localidade: e.manual ? ($('t-loc').value||'').trim().toUpperCase() : '',
     ini:$('t-ini').value, fim:$('t-fim').value, diarias:calcDiarias($('t-ini').value, $('t-fim').value), diasManual:false });
-  renderTabela();
+  renderTabela(); renderDocStrip();
   const ult = document.querySelector(`input[data-i="${e.rows.length-1}"][data-k="re"]`); if (ult) ult.focus();
 }
 function aplicarPeriodoTodos(){
@@ -1739,6 +1864,7 @@ function renderConf(){
   const eqs = new Set(e.rows.map(r=>r.equipe)).size;
   let cls = 'na', msg;
   if (EDIT) msg = '✏️ Editando uma escala já lançada — a conferência com o documento não se aplica; confira pela tabela.';
+  else if (e.manual && decl == null) msg = '✍️ Lançamento manual — não há documento para conferir. Informe o "Efetivo previsto" se quiser que a página confira a contagem.';
   else if (decl == null) msg = '⚠️ O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
   else if (decl === marc) { cls = 'ok'; msg = `✅ Os números batem: o documento declara ${decl} e serão lançados ${marc}.`; }
   else { cls = 'bad'; msg = `⛔ Não bate: o documento declara ${decl}, a leitura achou ${lidos}${marc!==lidos ? ` e estão marcados ${marc}` : ''}. Confira quem falta ou sobra antes de lançar.`; }
@@ -1770,6 +1896,121 @@ function renderAvisos(){
   if (conf) av.push(`<div class="aviso">⚠️ ${conf} policial(is) já têm outra missão lançada em período que cruza com este (2+ dias).</div>`);
   if (!av.length && on.length) av.push('<div class="aviso ok">✅ Tudo conferido: todos no cadastro, sem período sobreposto.</div>');
   $('avisos').innerHTML = av.join('');
+  renderSide(e);
+  renderDash(e);
+}
+
+/* ─────────────── painel lateral de possíveis erros ───────────────
+   Reúne num só lugar o que travaria o lançamento (⛔) e o que pede atenção (⚠️), com link
+   que leva direto à linha. Os problemas de linha são os mesmos que pintam a lateral da
+   tabela (vermelho = trava, amarelo = confira). */
+function contRE(e){
+  const c = {};
+  e.rows.forEach(x=>{ if (x.on && x.re){ const k = shortRE(x.re); c[k] = (c[k]||0) + 1; } });
+  return c;
+}
+function probsLinha(e, r, cont){
+  const p = [];
+  if (!r.on) return p;
+  if (!r.re && r.reMasc) p.push({ sev:'err', k:'RE tarjado e sem correspondência no cadastro' });
+  else if (!r.re && !r.guerra && !r.nome) p.push({ sev:'err', k:'Linha sem RE e sem nome' });
+  else if (!r.re) p.push({ sev:'warn', k:'Sem RE' });
+  else if (!regDe(r)) p.push({ sev:'warn', k:'Fora do cadastro (digite o nome de guerra)' });
+  else if (isDivergente(r)) p.push({ sev:'err', k:'RE é de outra pessoa no cadastro' });
+  else if (r.reAchado) p.push({ sev:'warn', k:'RE veio do cadastro pelo nome — confira' });
+  if (r.re && cont[shortRE(r.re)] > 1) p.push({ sev:'err', k:'RE repetido na escala' });
+  if (!r.ini || !r.fim) p.push({ sev:'err', k:'Sem início ou término' });
+  else if (dpParse(r.fim) < dpParse(r.ini)) p.push({ sev:'err', k:'Término antes do início' });
+  else if (!(parseFloat(String(r.diarias).replace(',','.')) > 0)) p.push({ sev:'err', k:'Nº de diárias inválido' });
+  if (!String(r.localidade||'').trim()) p.push({ sev:'warn', k:'Sem localidade' });
+  if (r.fimPdf && r.fim !== r.fimPdf) p.push({ sev:'warn', k:'Término ajustado (estava errado no PDF)' });
+  if (conflitos(r).length) p.push({ sev:'warn', k:'Período cruza outra missão já lançada' });
+  return p;
+}
+function renderSide(e){
+  const side = $('side'); if (!side) return;
+  const on = e.rows.filter(r=>r.on);
+  const form = [];
+  const F = (sev, txt) => form.push({ sev, txt });
+  if (!$('m-op').value.trim()) F('err', 'Operação não escolhida');
+  if (!$('m-orgao').value.trim()) F('err', 'Órgão não informado');
+  if (!$('m-tipo').value) F('err', 'Tipo de diária não escolhido');
+  if ((parseFloat(String($('m-valor').value).replace(',','.')) || 0) <= 0) F('err', 'Valor da diária zerado');
+  if (!on.length) F('err', 'Nenhum policial marcado para lançar');
+  const jaLote = EDIT ? null : jaLancado(e);
+  if (jaLote) F('err', `SEI ${jaLote.sei_doc} já lançado em ${jaLote.lancado_em}`);
+  if (!EDIT && e.efetivo_declarado != null && on.length && e.efetivo_declarado !== on.length)
+    F('warn', `${e.manual ? 'Previsto' : 'Documento declara'} ${e.efetivo_declarado} e serão lançados ${on.length}`);
+  const cont = contRE(e), grupos = {};
+  e.rows.forEach((r,i)=>probsLinha(e, r, cont).forEach(p=>{
+    const g = grupos[p.k] || (grupos[p.k] = { sev:p.sev, k:p.k, itens:[] });
+    g.itens.push(i);
+  }));
+  const gl = Object.values(grupos).sort((a,b)=> (a.sev===b.sev ? b.itens.length - a.itens.length : a.sev==='err' ? -1 : 1));
+  const nErr = form.filter(x=>x.sev==='err').length + gl.filter(g=>g.sev==='err').reduce((a,g)=>a+g.itens.length, 0);
+  const nWar = form.filter(x=>x.sev==='warn').length + gl.filter(g=>g.sev==='warn').reduce((a,g)=>a+g.itens.length, 0);
+  const nome = i => { const r = e.rows[i]; return esc(r.guerra || r.nome || ('RE ' + (r.re || '?'))); };
+  let h = `<div class="side-h">⚠️ Possíveis erros</div><div class="side-sum">`
+    + (nErr ? `<span class="e">⛔ ${nErr} travam</span>` : '') + (nWar ? `<span class="w">⚠️ ${nWar} atenção</span>` : '')
+    + (!nErr && !nWar ? '<span class="o">✅ nada a corrigir</span>' : '') + '</div>';
+  form.forEach(x=>{ h += `<div class="sg ${x.sev==='err'?'err':''}">${x.sev==='err'?'⛔':'⚠️'} ${esc(x.txt)}</div>`; });
+  gl.forEach(g=>{
+    h += `<div class="sg ${g.sev==='err'?'err':''}"><b>${g.sev==='err'?'⛔':'⚠️'} ${esc(g.k)} (${g.itens.length})</b>`
+      + g.itens.slice(0, 8).map(i=>`<a onclick="irLinha(${i})">${nome(i)}</a>`).join('')
+      + (g.itens.length > 8 ? `<span class="muted">+${g.itens.length - 8}</span>` : '') + '</div>';
+  });
+  if (!form.length && !gl.length) h += '<div class="side-empty">Todas as linhas marcadas passaram nas conferências.</div>';
+  side.innerHTML = h;
+}
+function irLinha(i){
+  const tr = $('r-' + i); if (!tr) return;
+  tr.scrollIntoView({ behavior:'smooth', block:'center' });
+  tr.classList.add('flash'); setTimeout(()=>tr.classList.remove('flash'), 1800);
+}
+
+/* ─────────────── dashboard de valores ─────────────── */
+function barrasHTML(titulo, mapa, max){
+  const ent = Object.entries(mapa).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if (!ent.length) return '';
+  const topo = ent[0][1], vis = ent.slice(0, max || 8);
+  const resto = ent.slice(max || 8).reduce((a,[,v])=>a+v, 0);
+  if (resto > 0) vis.push(['Outros (' + (ent.length - (max || 8)) + ')', resto]);
+  return `<div class="bars"><h5>${esc(titulo)}</h5>` + vis.map(([k,v])=>
+    `<div class="bar-l"><span class="n" title="${esc(k)}">${esc(k)}</span><span class="t"><i style="width:${Math.max(2, Math.round(v / topo * 100))}%"></i></span><span class="v">${fR(v)}</span></div>`).join('') + '</div>';
+}
+function kpiHTML(rot, val, cls){ return `<div class="kpi ${cls||''}"><small>${esc(rot)}</small><b>${val}</b></div>`; }
+function renderDash(e){
+  const box = $('dash'); if (!box) return;
+  const on = e.rows.filter(r=>r.on);
+  const valor = parseFloat(String($('m-valor').value).replace(',','.')) || 0;
+  if (!on.length){ box.innerHTML = ''; return; }
+  let dd = 0; const eq = {}, loc = {};
+  on.forEach(r=>{
+    const d = parseFloat(String(r.diarias).replace(',','.')) || 0, v = d * valor; dd += d;
+    const ke = r.equipe || 'Sem equipe', kl = String(r.localidade||'').trim().toUpperCase() || 'Sem localidade';
+    eq[ke] = (eq[ke]||0) + v; loc[kl] = (loc[kl]||0) + v;
+  });
+  const tot = dd * valor;
+  box.innerHTML = `<div class="sec" style="margin:4px 0 8px">💰 Valores desta escala</div><div class="kpis">`
+    + kpiHTML('Valor total', valor ? fR(tot) : '—', 'main') + kpiHTML('Policiais', fN(on.length)) + kpiHTML('Diárias', fN(dd))
+    + kpiHTML('Valor da diária', valor ? fR(valor) : '—') + kpiHTML('Média por policial', valor ? fR(tot / on.length) : '—') + '</div>'
+    + (valor ? `<div class="bars-grid">${barrasHTML('Por guarnição', eq)}${barrasHTML('Por localidade', loc)}</div>`
+             : '<div class="hint">Escolha o <b>tipo de diária</b> (ou digite o valor) para ver os valores por guarnição e localidade.</div>');
+}
+// painel geral do ③: tudo que já foi lançado
+function renderDashGeral(lotes){
+  const box = $('dash-geral'); if (!box) return;
+  if (!lotes.length){ box.innerHTML = ''; return; }
+  let val = 0, pol = 0, dd = 0; const tipo = {}, op = {};
+  lotes.forEach(l=>{
+    const v = Number(l.valor_total) || 0; val += v; pol += Number(l.policiais) || 0; dd += Number(l.diarias) || 0;
+    const kt = l.tipo_diaria || 'Sem tipo', ko = l.operacao || 'Sem operação';
+    tipo[kt] = (tipo[kt]||0) + v; op[ko] = (op[ko]||0) + v;
+  });
+  box.innerHTML = `<div class="kpis">`
+    + kpiHTML('Total lançado', fR(val), 'main') + kpiHTML('Escalas', fN(lotes.length)) + kpiHTML('Lançamentos (policiais)', fN(pol))
+    + kpiHTML('Diárias', fN(dd)) + kpiHTML('Valor médio por escala', fR(val / lotes.length)) + '</div>'
+    + `<div class="bars-grid">${barrasHTML('Por operação', op, 6)}${barrasHTML('Por tipo de diária', tipo, 6)}</div>`;
 }
 function jaLancado(e){ return e ? loteJaLancado(e.sei_doc, $('m-id').value) : null; }
 function loteJaLancado(sei, idMissao){
