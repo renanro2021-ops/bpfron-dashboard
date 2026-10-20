@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b6e4f">
+<title>MapaCampo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map"></div>
+
+<header id="topbar">
+  <div id="coord" title="Toque para trocar o formato">—</div>
+  <div id="status"></div>
+</header>
+
+<div id="fabs">
+  <button id="btn-locate" title="Minha posição">◎</button>
+  <button id="btn-follow" title="Seguir posição">➤</button>
+</div>
+
+<div id="measure-info" hidden></div>
+
+<nav id="toolbar">
+  <button data-tool="maps"><i>🗺</i>Mapas</button>
+  <button data-tool="mark"><i>📍</i>Marcar</button>
+  <button data-tool="track"><i>〰</i>Trilha</button>
+  <button data-tool="measure"><i>📏</i>Medir</button>
+  <button data-tool="features"><i>☰</i>Itens</button>
+  <button data-tool="more"><i>⋯</i>Mais</button>
+</nav>
+
+<section id="sheet" hidden>
+  <div id="sheet-head"><h2 id="sheet-title"></h2><button id="sheet-close">✕</button></div>
+  <div id="sheet-body"></div>
+</section>
+
+<div id="gps-gate">
+  <div class="gate-box">
+    <div id="gate-icon"></div>
+    <h1 id="gate-title"></h1>
+    <div id="gate-text"></div>
+    <button class="btn" id="gate-retry" hidden>Tentar novamente</button>
+  </div>
+</div>
+
+<input type="file" id="file-map" accept="image/*,.tif,.tiff,.pdf,application/pdf" hidden>
+<input type="file" id="file-import" accept=".geojson,.json,.gpx,.kml" hidden>
+<input type="file" id="file-photo-cam" accept="image/*" capture="environment" hidden>
+<input type="file" id="file-photo-gal" accept="image/*" multiple hidden>
+
+<script src="vendor/leaflet.js"></script>
+<script src="geo.js"></script>
+<script src="db.js"></script>
+<script src="exif.js"></script>
+<script src="zip.js"></script>
+<script src="geotiff.js"></script>
+<script src="geopdf.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

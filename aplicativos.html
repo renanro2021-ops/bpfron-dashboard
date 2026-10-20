@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loja de Aplicativos · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060912;--bg2:#0b0f1a;--yellow:#F5C518;--text:#dde3f0;--muted:#94a3b8;--border:rgba(245,197,24,.12);--card:rgba(12,17,30,.85);--green:#34d399}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15.5px;line-height:1.5;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12),transparent 60%);background-attachment:fixed}
+.hdr{background:linear-gradient(100deg,#05070d,#0b0f1a 55%,#0d1220);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:10}
+.hdr-inner{max-width:1100px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.back{font-size:13px;color:var(--muted);text-decoration:none}.back:hover{color:var(--yellow)}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 16px 70px}
+.intro{color:var(--muted);margin-bottom:22px;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.app{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.app-top{display:flex;gap:14px;align-items:center}
+.app-ic{width:64px;height:64px;border-radius:15px;flex-shrink:0;background:#0b3d2e center/cover}
+.app h2{font-family:'Rajdhani',sans-serif;font-size:22px;color:#fff;line-height:1.1}
+.app .tag{font-size:12px;color:var(--muted)}
+.app p{font-size:14px;color:#c3cbdb}
+.feat{list-style:none;font-size:13px;color:var(--muted);display:grid;gap:3px}
+.feat li::before{content:"✓ ";color:var(--green);font-weight:700}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.btn{border:1px solid rgba(245,197,24,.45);background:rgba(245,197,24,.14);color:var(--yellow);font:700 14px 'Inter',sans-serif;padding:10px 16px;border-radius:10px;text-decoration:none;cursor:pointer}
+.btn:hover{background:rgba(245,197,24,.24)}
+.btn.ghost{background:none;border-color:rgba(148,163,184,.3);color:var(--muted)}
+details{font-size:13px;color:var(--muted)}summary{cursor:pointer;color:var(--text);font-weight:600}
+details ol{margin:8px 0 0 20px;display:grid;gap:4px}
+.soon{border-style:dashed;opacity:.6;justify-content:center;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-inner">
+  <div><div class="hdr-title">Loja de <em>Aplicativos</em></div><div class="hdr-sub">BPFRON/RO · aplicativos de apoio à operação</div></div>
+  <a class="back" href="sistemas.html">← Sistemas</a>
+</div></header>
+
+<main class="wrap">
+  <p class="intro">Aplicativos que funcionam direto no navegador do celular e podem ser instalados na tela inicial, sem loja de aplicativos. Depois da primeira abertura com internet, eles funcionam também sem sinal.</p>
+  <div class="grid">
+    <article class="app">
+      <div class="app-top">
+        <div class="app-ic" style="background-image:url(REA/icon.svg)"></div>
+        <div><h2>MapaCampo</h2><div class="tag">Mapas offline · GPS · fotos · versão de teste</div></div>
+      </div>
+      <p>Mapas para uso em campo, no estilo Avenza: abre seu mapa em PDF ou GeoTIFF, mostra onde você está e registra pontos, trilhas e fotos com localização.</p>
+      <ul class="feat">
+        <li>Importa PDF georreferenciado, GeoTIFF e imagens</li>
+        <li>GPS com precisão, marcas, trilha e medição de distância/área</li>
+        <li>Fotos plotadas no mapa, com direção</li>
+        <li>Exporta ZIP, GeoJSON, GPX e KML</li>
+        <li>Os dados ficam só no aparelho</li>
+      </ul>
+      <div class="btns">
+        <a class="btn" href="REA/" target="_blank" rel="noopener">Abrir aplicativo</a>
+        <button class="btn ghost" id="copy" type="button">Copiar link</button>
+      </div>
+      <details>
+        <summary>Como instalar no celular</summary>
+        <ol>
+          <li><b>Android (Chrome):</b> abra o aplicativo, toque nos três pontos e em “Instalar aplicativo” / “Adicionar à tela inicial”.</li>
+          <li><b>iPhone (Safari):</b> abra o aplicativo, toque em Compartilhar e em “Adicionar à Tela de Início”.</li>
+          <li>Permita o acesso à localização quando o aplicativo pedir: sem GPS ele não abre.</li>
+        </ol>
+      </details>
+    </article>
+    <article class="app soon"><div style="font-size:30px">➕</div><div>Novos aplicativos aparecerão aqui.</div></article>
+  </div>
+</main>
+<script>
+document.getElementById('copy').onclick = async e => {
+  const url = new URL('REA/', location.href).href;
+  try { await navigator.clipboard.writeText(url); e.target.textContent = 'Link copiado ✓'; }
+  catch { prompt('Copie o link:', url); }
+};
+</script>
+</body>
+</html>
