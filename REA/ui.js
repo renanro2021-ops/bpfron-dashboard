@@ -13,6 +13,27 @@ document.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'mouse' && e.target.closest?.('button:not(:disabled)')) Haptic.tap();
 }, { passive: true });
 
+// Tela de carregamento: bloqueia toques e mostra o que está sendo feito. `run` garante que ela apareça
+// (espera a pintura) antes de começar o trabalho pesado e que fique visível por um tempo mínimo.
+const Busy = (() => {
+  const el = document.querySelector('#busy'), txt = document.querySelector('#busy-text');
+  let n = 0;
+  const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 30)));
+  async function run(msg, fn, { delay = 0, min = 400 } = {}) {
+    let shown = false, t0 = 0, timer = 0;
+    n++; txt.textContent = msg;
+    const open = () => { if (shown) return; shown = true; t0 = Date.now(); el.hidden = false; document.body.setAttribute('aria-busy', 'true'); };
+    if (delay) timer = setTimeout(open, delay); else { open(); await paint(); }
+    try { return await fn(); }
+    finally {
+      clearTimeout(timer);
+      if (shown) { const rest = min - (Date.now() - t0); if (rest > 0) await new Promise(r => setTimeout(r, rest)); }
+      if (!--n) { el.hidden = true; document.body.removeAttribute('aria-busy'); }
+    }
+  }
+  return { run, set: msg => { if (n) txt.textContent = msg; }, get active() { return n > 0; } };
+})();
+
 // Só o cabeçalho do painel recebe o gesto de arrastar; o corpo rola normalmente e o mapa fica livre.
 const Sheet = (() => {
   const q = s => document.querySelector(s);

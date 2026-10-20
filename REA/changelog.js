@@ -1,6 +1,10 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 18, nome: '1.1.1', data: '2026-10-20', notas: [
+    'Tela de carregamento ao importar mapa (imagem, GeoTIFF, PDF), importar itens, plotar fotos e exportar (ZIP, GPX, KML, GeoJSON)',
+    'Mostra o que está sendo feito, como "Processando foto 2 de 5", e bloqueia toques até terminar'
+  ] },
   { v: 17, nome: '1.1', data: '2026-10-20', notas: [
     'Visual novo: ícones limpos, botões de zoom (+ e −) e painel inferior que sobe e desce arrastando',
     'Tema claro, escuro ou automático (Mais > Aparência), lembrado na próxima vez',

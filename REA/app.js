@@ -216,19 +216,17 @@ $('#file-map').onchange = async e => {
   let def, blob = f, geoHint = '';
   if (/\.tiff?$/i.test(f.name)) {
     try {
-      toast('Lendo GeoTIFF…');
-      const g = await GeoTiff.read(f);
+      const g = await Busy.run('Lendo GeoTIFF…', () => GeoTiff.read(f));
       blob = g.blob; def = g.bounds; geoHint = `Limites lidos do GeoTIFF (EPSG:${g.epsg}). Confira e salve.`;
     } catch (err) { return toast('GeoTIFF: ' + err.message); }
   } else if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
     try {
-      toast('Lendo PDF…');
-      const g = await GeoPdf.read(f);
+      const g = await Busy.run('Lendo PDF do mapa…', () => GeoPdf.read(f));
       blob = g.blob; def = g.bounds; geoHint = 'Limites lidos da georreferência do PDF' + (g.pages > 1 ? ' (só a 1ª página)' : '') + '. Confira e salve.';
     } catch (err) { return toast('PDF: ' + err.message); }
   } else {
     let img;
-    try { img = await createImageBitmap(f); } catch { return toast('Imagem inválida ou formato não suportado'); }
+    try { img = await Busy.run('Abrindo imagem…', () => createImageBitmap(f)); } catch { return toast('Imagem inválida ou formato não suportado'); }
     const b = map.getBounds(), c = map.getCenter();
     // Posiciona na vista atual mantendo a proporção da imagem
     const ratio = img.width / img.height;
@@ -252,7 +250,8 @@ $('#file-map').onchange = async e => {
       const v = read(); if (!valid(v)) return toast('Limites inválidos');
       prev.remove();
       const m = { id: uid(), name: bd.querySelector('#c-name').value || f.name, blob, ...v, opacity: 1, visible: true };
-      await DB.put('maps', m); state.maps.push(m); addOverlay(m); map.fitBounds([[v.s, v.w], [v.n, v.e]]); closeSheet();
+      await Busy.run('Salvando mapa no aparelho…', async () => { await DB.put('maps', m); state.maps.push(m); addOverlay(m); });
+      map.fitBounds([[v.s, v.w], [v.n, v.e]]); closeSheet(); toast('Mapa importado');
     };
   });
 };
@@ -589,7 +588,8 @@ function startCompass() {
 async function addPhotos(files, fromCamera, targetId) {
   let ok = 0, noGps = 0, bad = 0, last;
   const target = targetId && state.features.find(x => x.id === targetId);
-  for (const file of files) {
+  for (const [i, file] of [...files].entries()) {
+    Busy.set(files.length > 1 ? `Processando foto ${i + 1} de ${files.length}…` : 'Processando foto…');
     let thumb;
     try { thumb = await makeThumb(file); } catch { bad++; continue; }
     const ex = await Exif.read(file);
@@ -628,7 +628,10 @@ function noGpsHelp(n) {
   });
 }
 for (const [id, cam] of [['#file-photo-cam', true], ['#file-photo-gal', false]])
-  $(id).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) addPhotos(fs, cam, state.photoTarget); else state.photoTarget = null; };
+  $(id).onchange = e => {
+    const fs = [...e.target.files]; e.target.value = '';
+    if (fs.length) Busy.run('Processando fotos…', () => addPhotos(fs, cam, state.photoTarget), { min: 300 }); else state.photoTarget = null;
+  };
 
 function markHere() {
   openSheet('Nova marca', `<button class="btn" id="m-center">No centro do mapa</button>
@@ -776,6 +779,7 @@ async function exportZip() {
     ? { ...f, notes: [f.notes, 'Fotos: ' + f.photos.map(p => names[p.id]).join(', ')].filter(Boolean).join('\n') } : f);
   files.unshift({ name: 'items.geojson', data: Export.geojson(state.features, names) },
     { name: 'items.kml', data: Export.kml(withNotes) }, { name: 'items.gpx', data: Export.gpx(withNotes) });
+  Busy.set(`Compactando ${Object.keys(names).length} foto(s)…`);
   download('mapacampo.zip', await Zip.build(files), 'application/zip');
   toast(`ZIP com ${Object.keys(names).length} foto(s)`);
 }
@@ -814,8 +818,11 @@ function parseImport(name, text) {
 $('#file-import').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try {
-    const items = parseImport(f.name, await f.text());
-    for (const it of items) await saveFeature(it);
+    const items = await Busy.run('Importando itens…', async () => {
+      const list = parseImport(f.name, await f.text());
+      for (const [i, it] of list.entries()) { Busy.set(`Importando item ${i + 1} de ${list.length}…`); await saveFeature(it); }
+      return list;
+    });
     toast(`${items.length} itens importados`); if (items.length) focusFeature(items[0]);
   } catch (err) { toast('Falha ao importar: ' + err.message); }
 };
@@ -849,9 +856,9 @@ function showMore() {
     b.querySelector('#o-units').onchange = e => { state.units = localStorage.units = e.target.value; };
     b.querySelectorAll('[data-x]').forEach(x => x.onclick = () => {
       if (!state.features.length) return toast('Nada para exportar');
-      download(`mapacampo.${x.dataset.x}`, Export[x.dataset.x](state.features), MIME[x.dataset.x]);
+      Busy.run(`Exportando ${x.dataset.x.toUpperCase()}…`, async () => download(`mapacampo.${x.dataset.x}`, Export[x.dataset.x](state.features), MIME[x.dataset.x]));
     });
-    b.querySelector('#o-zip').onclick = () => state.features.length ? exportZip() : toast('Nada para exportar');
+    b.querySelector('#o-zip').onclick = () => state.features.length ? Busy.run('Gerando ZIP com as fotos…', exportZip) : toast('Nada para exportar');
     b.querySelector('#o-news').onclick = () => showChangelog();
     b.querySelector('#o-imp').onclick = () => $('#file-import').click();
   });
@@ -933,7 +940,8 @@ document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
 (async () => {
   startGps();   // sem GPS o app fica bloqueado pela tela #gps-gate
   renderGps();
-  await loadMaps(); await loadFeatures(); resumeDraft();
+  await Busy.run('Carregando mapas e itens…', async () => { await loadMaps(); await loadFeatures(); }, { delay: 250, min: 0 });   // só aparece se demorar
+  resumeDraft();
   const last = JSON.parse(localStorage.view || 'null'); if (last && !state.me) map.setView(last.c, last.z);
   map.on('moveend', () => localStorage.view = JSON.stringify({ c: map.getCenter(), z: map.getZoom() }));
   checkWhatsNew();

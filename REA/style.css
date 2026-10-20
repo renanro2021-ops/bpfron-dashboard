@@ -151,6 +151,15 @@ input[type=range]{width:100%;accent-color:var(--g)}
 .cal-hint{background:var(--hint-bg);color:var(--hint-fg);padding:8px 10px;border-radius:var(--r-s);margin:6px 0}
 .gate-logo{display:block;height:110px;margin:0 auto 8px}
 
+/* ---------- Tela de carregamento (importar / exportar) ---------- */
+#busy{position:fixed;inset:0;z-index:6000;background:rgba(6,9,18,.62);display:flex;align-items:center;justify-content:center;padding:24px;animation:busyIn var(--d-ui) var(--ease) both}
+#busy[hidden]{display:none}
+@keyframes busyIn{from{opacity:0}to{opacity:1}}
+.busy-box{background:var(--bg);color:var(--fg);border-radius:var(--r-l);padding:22px 26px;min-width:220px;max-width:320px;text-align:center;box-shadow:0 6px 24px #0007}
+.busy-spin{width:42px;height:42px;margin:0 auto 14px;border-radius:50%;border:4px solid var(--line2);border-top-color:var(--g);animation:spin .9s linear infinite}
+#busy-text{font-weight:700;font-size:16px}
+.busy-sub{color:var(--mut);font-size:13px;margin-top:4px}
+
 /* ---------- Aviso de atualização ---------- */
 #upd{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top) + 46px);z-index:1100;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   background:#060912;border:1px solid var(--y);color:#fff;padding:10px 12px;border-radius:var(--r-m);box-shadow:0 4px 16px #0006;font-size:14px}
