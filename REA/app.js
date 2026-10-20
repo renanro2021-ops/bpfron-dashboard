@@ -630,5 +630,10 @@ document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
   await loadMaps(); await loadFeatures(); resumeDraft();
   const last = JSON.parse(localStorage.view || 'null'); if (last && !state.me) map.setView(last.c, last.z);
   map.on('moveend', () => localStorage.view = JSON.stringify({ c: map.getCenter(), z: map.getZoom() }));
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+  if ('serviceWorker' in navigator) {
+    // Nova versão assumiu o controle: recarrega para usá-la (menos no meio de uma gravação de trilha)
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !state.rec) location.reload(); });
+    navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => { });
+  }
 })();
