@@ -296,7 +296,8 @@ function editFeature(id) {
     <div class="s">${hasPhotos(f) ? '📷' : icon[f.type]} ${featureSummary(f)}</div>
     <label>Nome</label><input type="text" id="f-name" value="${esc(f.name)}">
     <label>Notas</label><textarea id="f-notes" rows="3">${esc(f.notes)}</textarea>
-    <button class="btn" id="f-save">Salvar</button> <button class="btn danger" id="f-del">Excluir</button>`, b => {
+    <button class="btn" id="f-save">Salvar</button> <button class="btn ghost" id="f-share">📤 ${f.type === 'point' ? 'Compartilhar local' : 'Compartilhar trilha (GPX)'}</button> <button class="btn danger" id="f-del">Excluir</button>`, b => {
+    b.querySelector('#f-share').onclick = () => f.type === 'point' ? sharePoint(f) : shareTrack(f);
     if (f.type === 'point') renderPhotos(b.querySelector('#ph'), f, 0);
     b.querySelector('#f-save').onclick = async () => { f.name = b.querySelector('#f-name').value || f.name; f.notes = b.querySelector('#f-notes').value; await saveFeature(f); closeSheet(); };
     b.querySelector('#f-del').onclick = async () => {
@@ -306,6 +307,33 @@ function editFeature(id) {
       drawFeatures(); closeSheet();
     };
   });
+}
+
+// ---------- Compartilhar (WhatsApp, Salvar na galeria, AirDrop…) ----------
+const safeName = s => String(s || 'item').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').slice(0, 40);
+const mapsLink = (la, lo) => `https://maps.google.com/?q=${la.toFixed(6)},${lo.toFixed(6)}`;
+// Abre a folha de compartilhar do aparelho (no iPhone tem 'Salvar imagem'); sem suporte, baixa o arquivo.
+async function shareFile(file, title, text) {
+  try {
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title, text }); return; }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('Arquivo baixado (compartilhar não é suportado aqui)');
+}
+async function sharePhoto(f, p) {
+  const ext = (p.blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+  const file = new File([p.blob], safeName(f.name) + '_' + new Date(p.t).toISOString().slice(0, 16).replace(/[-:T]/g, '') + '.' + ext, { type: p.blob.type || 'image/jpeg' });
+  const text = [f.name, fmtTime(p.t), `${f.lat.toFixed(6)}, ${f.lon.toFixed(6)}`, p.dir != null ? `direção ${Math.round(p.dir)}° ${cardinal(p.dir)}` : null, f.notes, mapsLink(f.lat, f.lon)].filter(Boolean).join('\n');
+  await shareFile(file, f.name, text);
+}
+async function shareTrack(f) {
+  const file = new File([Export.gpx([f])], safeName(f.name) + '.gpx', { type: 'application/gpx+xml' });
+  await shareFile(file, f.name, f.name + (f.notes ? '\n' + f.notes : ''));
+}
+function sharePoint(f) {
+  const text = [f.name, f.notes, `${f.lat.toFixed(6)}, ${f.lon.toFixed(6)}`, mapsLink(f.lat, f.lon)].filter(Boolean).join('\n');
+  if (navigator.share) navigator.share({ title: f.name, text }).catch(() => { });
+  else navigator.clipboard?.writeText(text).then(() => toast('Local copiado'));
 }
 
 // Galeria de fotos do marcador: foto grande, dados da foto selecionada e miniaturas.
@@ -323,7 +351,8 @@ function renderPhotos(box, f, sel) {
   box.innerHTML = `${p ? `<img class="photo-full" src="${full}" alt=""><div class="s" style="margin-bottom:6px">${info}</div>` : ''}
     <div class="gallery">${ps.map((q, i) => `<div class="g ${i === sel ? 'sel' : ''}" data-i="${i}" style="background-image:url(${thumbUrl(q)})"></div>`).join('')}
       <button class="add" data-add="cam" title="Tirar foto">📷</button><button class="add" data-add="gal" title="Adicionar da galeria">🖼</button></div>
-    ${p ? '<button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
+    ${p ? '<button class="btn sm" id="ph-share" style="margin-bottom:10px">📤 Compartilhar / salvar foto</button> <button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
+  box.querySelector('#ph-share')?.addEventListener('click', () => sharePhoto(f, p));
   box.querySelectorAll('.g').forEach(g => g.onclick = () => renderPhotos(box, f, +g.dataset.i));
   box.querySelectorAll('[data-add]').forEach(a => a.onclick = () => {
     state.photoTarget = f.id; startGps();
