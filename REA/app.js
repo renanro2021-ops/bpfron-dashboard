@@ -10,6 +10,11 @@ const state = {
 
 // ---------- Mapa base ----------
 const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.78, -47.93], 5);
+// iPhone: o tamanho da tela muda ao abrir/girar; sem recalcular, o mapa fica descentralizado (a posição aparece fora do lugar)
+const fixMapSize = () => map.invalidateSize({ pan: false });
+window.addEventListener('resize', fixMapSize); window.addEventListener('orientationchange', () => { fixMapSize(); setTimeout(fixMapSize, 300); setTimeout(fixMapSize, 1000); });
+window.visualViewport?.addEventListener('resize', fixMapSize);
+window.addEventListener('pageshow', fixMapSize); window.addEventListener('load', () => [100, 600, 1500].forEach(t => setTimeout(fixMapSize, t)));
 const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), interactive: false });

@@ -1,6 +1,7 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 16, nome: '1.0.2', data: '2026-10-19', notas: ['iPhone na vertical: barra de baixo volta ao tamanho normal', 'Mapa se ajusta ao girar o celular e a posição não fica mais fora do centro'] },
   { v: 15, nome: '1.0.1', data: '2026-10-19', notas: ['Barra de baixo menor no iPhone (sobrava espaço em branco embaixo)'] },
   { v: 14, nome: '1.0', data: '2026-10-19', notas: [
     'Versão 1.0 — lançamento no batalhão',
