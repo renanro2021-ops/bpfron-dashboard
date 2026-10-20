@@ -1,6 +1,9 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 11, data: '2026-10-19', notas: [
+    'Corrigido o aviso de nova versão no iPhone'
+  ] },
   { v: 10, data: '2026-10-19', notas: [
     'Compartilhar foto: toque na marcação, depois em Compartilhar / salvar foto (WhatsApp, Salvar imagem na galeria, AirDrop)',
     'Compartilhar local da marcação com link do mapa e coordenadas',

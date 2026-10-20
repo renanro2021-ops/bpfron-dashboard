@@ -658,19 +658,35 @@ function updateBanner() {
   bar.hidden = false; const rec = !!state.rec;
   $('#upd-go').disabled = rec; $('#upd-go').textContent = rec ? 'Pare a trilha para atualizar' : 'Atualizar agora';
 }
+// Histórico publicado agora (o cache do app ainda tem o antigo): só as versões mais novas que esta
+async function remoteNotes() {
+  try {
+    const t = await (await fetch('changelog.js?n=' + Date.now(), { cache: 'no-store' })).text();
+    return new Function(t + ';return CHANGELOG')().filter(c => c.v > VERSION);
+  } catch { return null; }
+}
 async function offerUpdate(reg) {
   pendingReg = reg; updateBanner();
-  try {   // lê o histórico novo direto da rede (o cache ainda tem o antigo)
-    const t = await (await fetch('changelog.js?n=' + Date.now(), { cache: 'no-store' })).text();
-    const nw = new Function(t + ';return CHANGELOG')().filter(c => c.v > VERSION);
-    reg.notes = nw; $('#upd-txt').textContent = 'Nova versão ' + (nw[0]?.v ?? '') + ' disponível';
-  } catch { /* sem rede para o histórico: o aviso continua valendo */ }
+  const nw = await remoteNotes();
+  if (nw) { reg.notes = nw; $('#upd-txt').textContent = 'Nova versão ' + (nw[0]?.v ?? '') + ' disponível'; }
+}
+// Plano B: o iPhone nem sempre percebe sozinho que há versão nova, então confere a versão publicada
+async function checkRemote() {
+  if (pendingReg) return;
+  const nw = await remoteNotes();
+  if (nw?.length) { pendingReg = { notes: nw, remote: true }; $('#upd-txt').textContent = 'Nova versão ' + nw[0].v + ' disponível'; updateBanner(); }
+}
+// Sem service worker novo à espera: limpa o cache do app e recarrega (marcas, trilhas e mapas ficam no IndexedDB)
+async function hardRefresh() {
+  try { for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch { }
+  try { for (const k of await caches.keys()) if (k.startsWith('mapacampo-v')) await caches.delete(k); } catch { }
+  location.reload();
 }
 function watchUpdates() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (wantUpdate && !reloading) { reloading = true; location.reload(); } });
   navigator.serviceWorker.register('sw.js').then(reg => {
-    const check = () => reg.update().catch(() => { });
+    const check = () => { reg.update().catch(() => { }); checkRemote(); };
     const track = w => w?.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(reg); });
     if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg);
     reg.addEventListener('updatefound', () => track(reg.installing));
@@ -678,7 +694,10 @@ function watchUpdates() {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
   }).catch(() => { });
 }
-$('#upd-go').onclick = () => { wantUpdate = true; pendingReg?.waiting?.postMessage('skip'); };
+$('#upd-go').onclick = () => {
+  wantUpdate = true;
+  if (pendingReg?.waiting) pendingReg.waiting.postMessage('skip'); else hardRefresh();
+};
 $('#upd-more').onclick = () => showChangelog(pendingReg?.notes?.length ? pendingReg.notes : CHANGELOG, 'O que mudou');
 $('#upd-x').onclick = () => { $('#upd').hidden = true; };
 
