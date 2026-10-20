@@ -106,6 +106,6 @@ const Sheet = (() => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   window.addEventListener('resize', refit);
 
-  const api = { onClose: null, show, close, refit, snapTo, get isOpen() { return isOpen; }, get target() { return isOpen ? snaps[idx] : 0; } };
+  const api = { onClose: null, show, close, refit, snapTo, snapMax() { snapTo(snaps.length - 1); }, get isOpen() { return isOpen; }, get target() { return isOpen ? snaps[idx] : 0; } };
   return api;
 })();

@@ -66,8 +66,10 @@ const Compass = (() => {
     if (raw != null && now - rawT < 3000) return { v: norm(raw + (off || 0)), src: 'bussola', calibrated: off != null };
     return null;
   }
+  // só o sensor do aparelho (sem o rumo do GPS): é o "rumo" do painel Tracking, que mostra o trajeto do GPS à parte
+  function sensor() { return raw != null && Date.now() - rawT < 3000 ? { v: norm(raw + (off || 0)), calibrated: off != null } : null; }
   return {
-    start, feedGps, value, onChange: fn => subs.push(fn),
+    start, feedGps, value, sensor, onChange: fn => subs.push(fn),
     get perm() { return perm; },
     get offset() { return off; },
     reset() { off = null; diffs = []; try { localStorage.removeItem('mc-decl'); } catch { } notify(); },

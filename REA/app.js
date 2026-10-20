@@ -204,7 +204,7 @@ function onPos(p) {
   Compass.feedGps(c.heading, c.speed, p.timestamp); renderCompass();   // rumo do GPS (em movimento) + reaplica o cone no marcador
   if (state.follow) map.panTo(ll, { animate: !MR });   // só acompanha se o modo "seguir" estiver ligado
   feedSample(p);
-  if (state.rec) {
+  if (state.rec && !state.rec.paused) {
     const last = state.rec.pts.at(-1), r = state.rec;
     // filtro da trilha: ignora leitura com precisão ruim e saltos impossíveis; após 3 saltos seguidos aceita (pode ter sido deslocamento real)
     const v = Geo.trackFix(last, ll, p.coords.accuracy, p.timestamp);
@@ -704,7 +704,7 @@ function renderCompass() {
     $('#cmp-deg').textContent = Compass.perm === 'denied' ? 'bloqueada' : 'ativar';
     btn.setAttribute('aria-label', Compass.perm === 'denied' ? 'Bússola bloqueada. Toque para ver como liberar' : 'Ativar a bússola');
   }
-  renderGpsPanel();
+  renderGpsPanel(); renderTrackPanel();
 }
 Compass.onChange(renderCompass);
 setInterval(renderCompass, 1500);   // sensor parado há >3 s: o widget percebe e esconde a seta
@@ -712,6 +712,7 @@ $('#compass').onclick = () => {
   const v = Compass.value();
   if (!v && Compass.perm === 'denied') return openSheet('Bússola bloqueada', '<p>O acesso ao sensor de movimento foi negado. No iPhone: Ajustes → Safari → ative <b>Movimento e orientação</b> (ou o equivalente do app instalado) e abra o MapaCampo de novo.</p>');
   if (!v) return Compass.start();   // dentro do toque: é o que o iOS exige para pedir a permissão
+  if (state.rec) return showTrackPanel();   // gravando: o toque abre o painel Tracking
   const heading = MapRot.mode === 'north';   // toque alterna: norte para cima ↔ mapa gira com o rumo
   MapRot.setMode(heading ? 'heading' : 'north'); if (heading) MapRot.follow(v.v, { animate: true });
   toast(`${heading ? 'Mapa gira com o rumo' : 'Norte para cima'} · ${compassText(v)} · ${compassNorth(v)}`);
@@ -831,22 +832,81 @@ function resumeDraft() {
     if (pts.length > 1) saveFeature({ id: uid(), type: 'track', name: 'Trilha recuperada ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() });
     return clearDraft();
   }
-  state.rec = { pts }; setRecUi(true); recLine.setLatLngs(pts.map(q => [q[0], q[1]])); holdScreen(); startBgTrack(); updateStatus();
+  state.rec = { pts, ms: Math.max(0, Date.now() - (pts[0]?.[2] || Date.now())), since: Date.now(), paused: false }; setRecUi(true); recLine.setLatLngs(pts.map(q => [q[0], q[1]])); holdScreen(); startBgTrack(); updateStatus();
 }
 function toggleTrack() {
   startGps();
   if (!state.rec) {
-    state.rec = { pts: [] }; setRecUi(true); holdScreen(); startBgTrack(); toast(NATIVE ? 'Gravando trilha (continua com a tela apagada)' : 'Gravando trilha — mantenha a tela acesa');
+    state.rec = { pts: [], ms: 0, since: Date.now(), paused: false }; setRecUi(true); holdScreen(); startBgTrack(); toast(NATIVE ? 'Gravando trilha (continua com a tela apagada)' : 'Gravando trilha — mantenha a tela acesa');
     if (state.me && state.me.acc <= Geo.TRACK_MAX_ACC) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
-    saveDraft();
+    saveDraft(); showTrackPanel();
   } else {
-    const { pts, dropped } = state.rec; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); stopBgTrack(); clearDraft(); setTimeout(updateBanner);
+    const { pts, dropped } = state.rec; state.rec = null; if ($('#trk-panel')) closeSheet(); recLine.setLatLngs([]); setRecUi(false); releaseScreen(); stopBgTrack(); clearDraft(); setTimeout(updateBanner);
     if (pts.length < 2) return toast('Trilha muito curta, descartada');
     const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now(), dropped: dropped || undefined };
     saveFeature(f).then(() => { editFeature(f.id); if (dropped) toast(`${dropped} leitura(s) descartada(s): precisão ruim ou salto`); });
   }
   updateStatus();
 }
+
+// ---------- Painel Tracking (abre ao gravar; toque na bússola reabre) ----------
+const recMs = () => { const r = state.rec; return r ? r.ms + (r.paused ? 0 : Date.now() - r.since) : 0; };
+const fmtDur = ms => { const s = Math.floor(ms / 1000), z = n => String(n).padStart(2, '0'); return `${z(Math.floor(s / 3600))}:${z(Math.floor(s / 60) % 60)}:${z(s % 60)}`; };
+function trackDial() {
+  let t = '';
+  for (let a = 0; a < 360; a += 10) t += `<line class="td-tick" x1="0" x2="0" y1="${a % 30 ? -74 : -70}" y2="-80" transform="rotate(${a})"/>`;
+  for (let a = 30; a < 360; a += 30) if (a % 90) t += `<text class="td-deg" transform="rotate(${a}) translate(0,-90)" text-anchor="middle" dominant-baseline="middle">${a}</text>`;
+  const L = [['N', 0], ['E', 90], ['S', 180], ['W', 270]].map(([c, a]) => `<text class="td-card${c === 'N' ? ' n' : ''}" x="${(Math.sin(a * Math.PI / 180) * 46).toFixed(1)}" y="${(-Math.cos(a * Math.PI / 180) * 46).toFixed(1)}" text-anchor="middle" dominant-baseline="middle">${c}</text>`).join('');
+  return `<svg id="t-dial" viewBox="-100 -100 200 200" role="img" aria-label="Bússola de gravação"><circle class="td-ring" r="75"/>${t}${L}
+    <g id="t-brg" hidden><path class="td-mk b" d="M0 -62 L9 -80 L-9 -80Z"/></g><g id="t-crs" hidden><path class="td-mk c" d="M0 -62 L9 -80 L-9 -80Z"/></g><circle class="td-dot" r="3"/></svg>`;
+}
+function showTrackPanel() {
+  if (!state.rec) return;
+  openSheet('Tracking', `<div id="trk-panel">
+    <div class="trk-state" id="t-state" aria-live="polite"></div><div class="s" id="t-sub"></div>
+    <div class="trk-mid">
+      <div class="trk-side b"><div class="trk-n" id="t-brgv">—</div><div class="s">Rumo<br>(bússola)</div></div>
+      ${trackDial()}
+      <div class="trk-side c"><div class="trk-n" id="t-crsv">—</div><div class="s">Trajeto<br>(GPS)</div></div>
+    </div>
+    <div class="gp-grid trk-grid">
+      <div><div class="trk-n sm" id="t-spd">—</div><div class="s">Velocidade</div></div>
+      <div><div class="trk-n sm" id="t-dst">—</div><div class="s">Distância</div></div>
+      <div><div class="trk-n sm" id="t-avg">—</div><div class="s">Velocidade média</div></div>
+      <div><div class="trk-n sm" id="t-dur">—</div><div class="s">Duração</div></div>
+    </div>
+    <div class="trk-btns"><button type="button" class="btn danger-fill" id="t-stop">Parar</button><button type="button" class="btn" id="t-pause">Pausar</button></div>
+    <div class="row"><div class="grow"><div class="s">Mapa</div><div class="t" id="t-rotv"></div></div><button type="button" class="btn ghost sm" id="t-rot">Alternar</button></div>
+  </div>`, b => {
+    b.querySelector('#t-stop').onclick = () => toggleTrack();
+    b.querySelector('#t-pause').onclick = () => {
+      const r = state.rec; if (!r) return;
+      if (r.paused) { r.paused = false; r.since = Date.now(); } else { r.ms += Date.now() - r.since; r.paused = true; }
+      toast(r.paused ? 'Gravação pausada' : 'Gravação retomada'); renderTrackPanel();
+    };
+    b.querySelector('#t-rot').onclick = () => { MapRot.setMode(MapRot.mode === 'north' ? 'heading' : 'north'); const v = Compass.value(); if (v) MapRot.follow(v.v, { animate: true }); renderTrackPanel(); };
+  });
+  renderTrackPanel(); Sheet.snapMax();   // abre inteiro para mostrar a bússola e os números; arraste para baixo para ver o mapa
+}
+function renderTrackPanel() {
+  const P = $('#trk-panel'), r = state.rec; if (!P || !r) return;
+  const q = s => P.querySelector(s), me = state.me, fin = v => v != null && Number.isFinite(v);
+  const dist = Geo.pathLength(r.pts), ms = recMs(), cv = Compass.sensor();
+  q('#t-state').textContent = r.paused ? 'Pausada' : 'Gravando';
+  q('#t-sub').textContent = !me ? 'Aguardando o GPS…' : r.paused ? 'Os pontos não estão sendo gravados' : `GPS ±${Math.round(me.acc)} m · ${r.pts.length} pontos`;
+  q('#t-pause').textContent = r.paused ? 'Retomar' : 'Pausar';
+  const moving = me && fin(me.hdg) && me.speed > 0.5;
+  q('#t-brgv').textContent = cv ? Math.round(cv.v) : '—';
+  q('#t-crsv').textContent = moving ? Math.round(me.hdg) : '—';
+  const mk = (id, v) => { const g = q(id); g.hidden = v == null; if (v != null) g.setAttribute('transform', `rotate(${v.toFixed(1)})`); };
+  mk('#t-brg', cv ? cv.v : null); mk('#t-crs', moving ? me.hdg : null);
+  q('#t-spd').textContent = me && fin(me.speed) ? (me.speed * 3.6).toFixed(2) + ' km/h' : '—';
+  q('#t-dst').textContent = Geo.fmtDist(dist, state.units);
+  q('#t-avg').textContent = ms > 5000 ? (dist / (ms / 1000) * 3.6).toFixed(2) + ' km/h' : '—';
+  q('#t-dur').textContent = fmtDur(ms);
+  q('#t-rotv').textContent = MapRot.mode === 'heading' ? 'Gira com o rumo do celular' : 'Norte para cima';
+}
+setInterval(renderTrackPanel, 1000);
 
 // ---------- Medir ----------
 map.on('click', e => {
