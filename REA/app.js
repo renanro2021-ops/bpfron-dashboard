@@ -29,7 +29,7 @@ tiles.on('loading', () => document.body.classList.add('busy'))
     toast(navigator.onLine ? 'Parte do mapa base não carregou' : 'Sem internet: só o que já foi visto e os mapas importados aparecem');
   });
 tiles.addTo(map);
-const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), interactive: false, keyboard: false });
+const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me-wrap"><div class="me-cone"></div><div class="me"></div></div>', iconSize: [64, 64] }), interactive: false, keyboard: false });
 const meAcc = L.circle([0, 0], { radius: 0, weight: 1, color: tk('--me'), fillOpacity: .12, interactive: false });
 const measureLayer = L.layerGroup().addTo(map);
 const featureLayer = L.layerGroup().addTo(map);
@@ -83,6 +83,7 @@ function showGps() {
       <div><div class="s">Rumo</div><div class="t" id="g-hdg">—</div></div>
     </div>
     ${fmtRow('dd', 'Graus decimais')}${fmtRow('dms', 'Graus, minutos e segundos')}${fmtRow('utm', 'UTM')}
+    <div class="row"><div class="grow"><div class="s">Bússola</div><div class="t gv" id="g-cmp">—</div></div></div>
     <div class="s" id="g-src" style="margin-top:8px"></div>
     <div class="actions"><button type="button" class="btn" id="g-avg">Marcar com média de leituras</button></div>
     <p class="s">A altitude do GPS costuma ser menos precisa que a posição: confira o ± ao lado do valor. Velocidade e rumo só aparecem em movimento.</p>
@@ -104,6 +105,8 @@ function renderGpsPanel() {
   q('#g-spd').textContent = me && fin(me.speed) ? `${(me.speed * 3.6).toFixed(1)} km/h` : '—';
   q('#g-hdg').textContent = me && fin(me.hdg) && me.speed > 0.5 ? `${Math.round(me.hdg)}° ${cardinal(me.hdg)}` : '—';
   q('#g-age').textContent = me ? `há ${Math.max(0, Math.round((Date.now() - me.t) / 1000))} s` : '—';
+  const cv = Compass.value();
+  q('#g-cmp').textContent = cv ? `${compassText(cv)} · ${compassNorth(cv)}` : Compass.perm === 'unsupported' ? 'este aparelho não tem sensor de bússola' : IOS && Compass.perm !== 'granted' ? 'desativada (toque na bússola para ativar)' : 'sem leitura do sensor';
   for (const f of Geo.FORMATS) q('#g-' + f).textContent = me ? Geo.fmtCoord(me.ll[0], me.ll[1], f) : '—';
   q('#g-src').textContent = `Fonte: ${bgWatch ? 'serviço de GPS em segundo plano (app)' : NATIVE ? 'GPS do app' : 'GPS do navegador'} · ${state.fixes || 0} leituras desde que o app abriu`;
   const h = accHist, sp = q('#g-spark');
@@ -197,6 +200,7 @@ function onPos(p) {
   renderGpsPanel();
   if (first) { hideGate(); map.setView(ll, 16); }
   meMarker.setLatLng(ll).addTo(map); meAcc.setLatLng(ll).setRadius(p.coords.accuracy).addTo(map);
+  Compass.feedGps(c.heading, c.speed, p.timestamp); renderCompass();   // rumo do GPS (em movimento) + reaplica o cone no marcador
   if (state.follow) map.panTo(ll, { animate: !MR });   // só acompanha se o modo "seguir" estiver ligado
   feedSample(p);
   if (state.rec) {
@@ -675,22 +679,39 @@ async function makeThumb(file, size = 160) {
 // Plota fotos: usa o GPS e a hora do EXIF; na câmera do app, cai para o GPS do aparelho.
 const GROUP_M = 10;   // fotos a menos de 10 m uma da outra ficam no mesmo marcador
 
-// iOS: o pedido de bússola abre um aviso que engole o toque da câmera; por isso vai no 1º toque na barra.
-document.addEventListener('pointerup', e => { if (e.target.closest('#toolbar')) startCompass(); }, { once: false, capture: true });
-// Bússola do aparelho: só serve de alternativa quando a foto não traz direção no EXIF.
-let compassOn = false;
-function startCompass() {
-  if (compassOn || !window.DeviceOrientationEvent) return;
-  const on = e => {
-    const h = e.webkitCompassHeading ?? (e.absolute && e.alpha != null ? (360 - e.alpha) % 360 : null);
-    if (h != null) state.heading = { v: h, t: Date.now() };
-  };
-  compassOn = true;
-  window.addEventListener('deviceorientationabsolute', on, true);
-  window.addEventListener('deviceorientation', on, true);
-  // iOS só envia eventos depois que o usuário autoriza (precisa vir de um toque)
-  try { DeviceOrientationEvent.requestPermission?.().catch(() => { }); } catch { /* sem bússola */ }
+// ---------- Bússola: cone no marcador da posição + widget (compass.js junta sensor e rumo do GPS) ----------
+// iOS: o pedido de permissão abre um aviso que engole o toque da câmera; por isso vai no 1º toque na barra (ou no widget).
+document.addEventListener('pointerup', e => { if (e.target.closest('#toolbar')) Compass.start(); }, { capture: true });
+Compass.start();   // Android/desktop começam direto; no iOS o pedido sem toque é recusado e o widget oferece "ativar"
+const compassText = v => `${Math.round(v.v)}° ${cardinal(v.v)}`;
+const compassNorth = v => v.src === 'gps' ? 'rumo do GPS (norte verdadeiro)' : v.calibrated ? 'norte verdadeiro (calibrado pelo GPS)' : 'norte magnético (ainda sem calibração pelo GPS)';
+function renderCompass() {
+  const v = Compass.value();
+  if (v) state.heading = { v: v.v, t: Date.now() };   // usado pela foto da câmera quando o EXIF não traz direção
+  const wrap = meMarker.getElement()?.firstElementChild;   // cone de direção do marcador da posição
+  if (wrap) { wrap.classList.toggle('has-h', !!v); if (v) wrap.style.setProperty('--h', v.v.toFixed(1) + 'deg'); }
+  // "ativar/bloqueada" só no iPhone (lá a permissão é obrigatória); nos demais a bússola aparece quando o sensor envia leituras
+  const btn = $('#compass'), ask = !v && IOS && (Compass.perm === 'prompt' || Compass.perm === 'denied');
+  btn.hidden = !v && !ask;
+  btn.classList.toggle('ask', ask);
+  if (v) {
+    $('#cmp-needle').style.transform = `rotate(${v.v.toFixed(1)}deg)`;
+    $('#cmp-deg').textContent = compassText(v) + (v.calibrated ? '' : '*');
+    btn.setAttribute('aria-label', `Bússola: ${compassText(v)}, ${compassNorth(v)}. Toque para detalhes`);
+  } else if (ask) {
+    $('#cmp-deg').textContent = Compass.perm === 'denied' ? 'bloqueada' : 'ativar';
+    btn.setAttribute('aria-label', Compass.perm === 'denied' ? 'Bússola bloqueada. Toque para ver como liberar' : 'Ativar a bússola');
+  }
+  renderGpsPanel();
 }
+Compass.onChange(renderCompass);
+setInterval(renderCompass, 1500);   // sensor parado há >3 s: o widget percebe e esconde a seta
+$('#compass').onclick = () => {
+  const v = Compass.value();
+  if (!v && Compass.perm === 'denied') return openSheet('Bússola bloqueada', '<p>O acesso ao sensor de movimento foi negado. No iPhone: Ajustes → Safari → ative <b>Movimento e orientação</b> (ou o equivalente do app instalado) e abra o MapaCampo de novo.</p>');
+  if (!v) return Compass.start();   // dentro do toque: é o que o iOS exige para pedir a permissão
+  toast(`Rumo ${compassText(v)} · ${compassNorth(v)}`);
+};
 
 // Plota fotos: usa GPS, hora e direção do EXIF. Na câmera do app, se faltar GPS, usa o do aparelho.
 // `targetId`: acrescenta as fotos a um marcador existente, sem exigir GPS.
@@ -779,6 +800,7 @@ function setRecUi(on) {
   const btn = document.querySelector('[data-tool=track]');
   btn.classList.toggle('rec', on); btn.querySelector('.tl').textContent = on ? 'Parar' : 'Trilha';
   btn.querySelector('use').setAttribute('href', on ? '#i-stop' : '#i-track'); btn.setAttribute('aria-pressed', on);
+  $('#compass').classList.toggle('rec', on);   // bússola grande enquanto grava
 }
 // App Android (Capacitor): GPS em segundo plano com notificação fixa, assim a trilha continua com a tela apagada
 const NATIVE = !!window.Capacitor?.isNativePlatform?.();

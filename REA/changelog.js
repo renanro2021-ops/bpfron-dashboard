@@ -1,6 +1,13 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 21, nome: '1.4', data: '2026-10-20', notas: [
+    'Bússola na tela: a seta mostra para onde o celular aponta, e fica grande com borda vermelha enquanto grava a trilha',
+    'O marcador da sua posição ganha um cone de direção, que gira com a bússola mesmo parado',
+    'Em movimento (acima de 7 km/h) usa o rumo do GPS e aprende a diferença entre o norte magnético e o verdadeiro; o asterisco (*) indica norte ainda sem calibração',
+    'No iPhone, toque na bússola tracejada para ativar o sensor de movimento',
+    'O painel do GPS mostra a leitura da bússola e qual norte está sendo usado'
+  ] },
   { v: 20, nome: '1.3', data: '2026-10-20', notas: [
     'Painel de GPS: toque no indicador do GPS na barra de cima para ver precisão, altitude (com o ±), velocidade, rumo e há quanto tempo veio a última leitura',
     'Gráfico das últimas leituras de precisão, com o limite de 20 m tracejado',

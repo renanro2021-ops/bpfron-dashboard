@@ -1,8 +1,8 @@
-// build 20
+// build 21
 // Cache do app (offline) e dos tiles já vistos.
 importScripts('changelog.js');
 const APP = 'mapacampo-v' + CHANGELOG[0].v, TILES = 'mapacampo-tiles';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ui.js', 'changelog.js', 'geo.js', 'db.js', 'exif.js', 'zip.js', 'geotiff.js', 'geopdf.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.js','manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'brasao.png',
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ui.js', 'compass.js', 'changelog.js', 'geo.js', 'db.js', 'exif.js', 'zip.js', 'geotiff.js', 'geopdf.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.js','manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'brasao.png',
   'vendor/leaflet.js', 'vendor/leaflet.css', 'vendor/images/layers.png', 'vendor/images/marker-icon.png', 'vendor/images/marker-shadow.png'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(APP).then(c => c.addAll(SHELL))));
