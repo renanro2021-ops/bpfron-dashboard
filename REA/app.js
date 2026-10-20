@@ -463,7 +463,7 @@ function toggleTrack() {
     if (state.me) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
     saveDraft();
   } else {
-    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); clearDraft();
+    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); clearDraft(); setTimeout(updateBanner);
     if (pts.length < 2) return toast('Trilha muito curta, descartada');
     const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() };
     saveFeature(f).then(() => editFeature(f.id));
@@ -598,6 +598,7 @@ function showMore() {
     <label>Exportar todos os itens</label>
     <div><button class="btn sm" data-x="geojson">GeoJSON</button> <button class="btn sm" data-x="gpx">GPX</button> <button class="btn sm" data-x="kml">KML</button>
       <button class="btn sm" id="o-zip">ZIP + fotos</button></div>
+    <p><button class="btn ghost" id="o-news">Novidades (versão ${VERSION})</button></p>
     <p><button class="btn ghost" id="o-imp">Importar GeoJSON / GPX / KML</button></p>
     <p class="s">Os dados ficam só neste aparelho (IndexedDB). Funciona offline após o primeiro carregamento; os mapas importados não precisam de internet.</p>`, b => {
     b.querySelector('#o-fmt').value = state.fmt; b.querySelector('#o-units').value = state.units;
@@ -608,9 +609,49 @@ function showMore() {
       download(`mapacampo.${x.dataset.x}`, Export[x.dataset.x](state.features), MIME[x.dataset.x]);
     });
     b.querySelector('#o-zip').onclick = () => state.features.length ? exportZip() : toast('Nada para exportar');
+    b.querySelector('#o-news').onclick = () => showChangelog();
     b.querySelector('#o-imp').onclick = () => $('#file-import').click();
   });
 }
+
+// ---------- Versões / atualização ----------
+const VERSION = CHANGELOG[0].v;
+const notesHtml = list => list.map(c => `<h3 style="margin:12px 0 4px">Versão ${c.v} <span class="s">${c.data}</span></h3><ul>${c.notas.map(n => '<li>' + esc(n) + '</li>').join('')}</ul>`).join('');
+function showChangelog(list = CHANGELOG, title = 'Novidades') { openSheet(title, notesHtml(list)); }
+function checkWhatsNew() {   // 1ª abertura depois de atualizar: mostra o que mudou
+  let seen;
+  try { seen = +localStorage.getItem('mc-ver') || 0; localStorage.setItem('mc-ver', VERSION); } catch { return; }
+  if (seen && seen < VERSION) showChangelog(CHANGELOG.filter(c => c.v > seen), 'App atualizado para a versão ' + VERSION);
+}
+let pendingReg = null, reloading = false, wantUpdate = false;
+function updateBanner() {
+  const bar = $('#upd'); if (!pendingReg) return bar.hidden = true;
+  bar.hidden = false; const rec = !!state.rec;
+  $('#upd-go').disabled = rec; $('#upd-go').textContent = rec ? 'Pare a trilha para atualizar' : 'Atualizar agora';
+}
+async function offerUpdate(reg) {
+  pendingReg = reg; updateBanner();
+  try {   // lê o histórico novo direto da rede (o cache ainda tem o antigo)
+    const t = await (await fetch('changelog.js?n=' + Date.now(), { cache: 'no-store' })).text();
+    const nw = new Function(t + ';return CHANGELOG')().filter(c => c.v > VERSION);
+    reg.notes = nw; $('#upd-txt').textContent = 'Nova versão ' + (nw[0]?.v ?? '') + ' disponível';
+  } catch { /* sem rede para o histórico: o aviso continua valendo */ }
+}
+function watchUpdates() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (wantUpdate && !reloading) { reloading = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    const check = () => reg.update().catch(() => { });
+    const track = w => w?.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(reg); });
+    if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg);
+    reg.addEventListener('updatefound', () => track(reg.installing));
+    check(); setInterval(check, 30 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  }).catch(() => { });
+}
+$('#upd-go').onclick = () => { wantUpdate = true; pendingReg?.waiting?.postMessage('skip'); };
+$('#upd-more').onclick = () => showChangelog(pendingReg?.notes?.length ? pendingReg.notes : CHANGELOG, 'O que mudou');
+$('#upd-x').onclick = () => { $('#upd').hidden = true; };
 
 // ---------- Barra de ferramentas ----------
 document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
@@ -630,10 +671,6 @@ document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
   await loadMaps(); await loadFeatures(); resumeDraft();
   const last = JSON.parse(localStorage.view || 'null'); if (last && !state.me) map.setView(last.c, last.z);
   map.on('moveend', () => localStorage.view = JSON.stringify({ c: map.getCenter(), z: map.getZoom() }));
-  if ('serviceWorker' in navigator) {
-    // Nova versão assumiu o controle: recarrega para usá-la (menos no meio de uma gravação de trilha)
-    const had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !state.rec) location.reload(); });
-    navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => { });
-  }
+  checkWhatsNew();
+  watchUpdates();
 })();
