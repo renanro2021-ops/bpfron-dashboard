@@ -1,6 +1,15 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 17, nome: '1.1', data: '2026-10-20', notas: [
+    'Visual novo: ícones limpos, botões de zoom (+ e −) e painel inferior que sobe e desce arrastando',
+    'Tema claro, escuro ou automático (Mais > Aparência), lembrado na próxima vez',
+    'Toque num marcador ou trilha: destaca no mapa e abre o painel com nome, coordenadas e ações',
+    'Barra superior mostra o estado do GPS (buscando, bom, sinal fraco, perdido ou negado)',
+    'Legenda dos símbolos e opção de ocultar marcas, fotos, trilhas, linhas e áreas (Mais > Legenda e camadas)',
+    'Marcadores novos aparecem com animação; vibração leve ao tocar no Android',
+    'Respeita a opção de reduzir animações do aparelho'
+  ] },
   { v: 16, nome: '1.0.2', data: '2026-10-19', notas: ['iPhone na vertical: barra de baixo volta ao tamanho normal', 'Mapa se ajusta ao girar o celular e a posição não fica mais fora do centro'] },
   { v: 15, nome: '1.0.1', data: '2026-10-19', notas: ['Barra de baixo menor no iPhone (sobrava espaço em branco embaixo)'] },
   { v: 14, nome: '1.0', data: '2026-10-19', notas: [

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -11,29 +11,49 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 </head>
 <body>
-<div id="map"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.800 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-track" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 17.2C15 17.500 9 8 15.800 7.800"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1.500"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.100" fill="currentColor"/><circle cx="4" cy="12" r="1.100" fill="currentColor"/><circle cx="4" cy="18" r="1.100" fill="currentColor"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.800" fill="currentColor"/><circle cx="12" cy="12" r="1.800" fill="currentColor"/><circle cx="19" cy="12" r="1.800" fill="currentColor"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-follow" viewBox="0 0 24 24"><path d="M12 3l7 17-7-4-7 4z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"/><path d="m3 13 9 5 9-5"/></symbol>
+</svg>
+
+<div id="map" role="application" aria-label="Mapa"></div>
 
 <header id="topbar">
-  <div id="coord" title="Toque para trocar o formato">—</div>
-  <div id="status"></div>
+  <div id="coord" role="button" tabindex="0" aria-label="Coordenadas do centro do mapa. Toque para trocar o formato">—</div>
+  <div id="gps" class="wait" role="status" aria-live="polite"><b aria-hidden="true">…</b><span>Buscando GPS…</span></div>
+  <div id="status" role="status" aria-live="polite"></div>
 </header>
 
 <div id="fabs">
-  <button id="btn-locate" title="Minha posição">◎</button>
-  <button id="btn-follow" title="Seguir posição">➤</button>
+  <button id="btn-zin" type="button" aria-label="Aproximar"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+  <button id="btn-zout" type="button" aria-label="Afastar"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
+  <button id="btn-locate" type="button" aria-label="Centralizar na minha posição"><svg class="ic" aria-hidden="true"><use href="#i-locate"/></svg></button>
+  <button id="btn-follow" type="button" aria-label="Seguir minha posição" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-follow"/></svg></button>
 </div>
 
 <div id="measure-info" hidden></div>
 
-<nav id="toolbar">
-  <button data-tool="maps"><i>🗺</i>Mapas</button>
-  <button data-tool="mark"><i>📍</i>Marcar</button>
-  <button data-tool="track"><i>〰</i>Trilha</button>
-  <button data-tool="measure"><i>📏</i>Medir</button>
-  <button data-tool="features"><i>☰</i>Itens</button>
-  <button data-tool="more"><i>⋯</i>Mais</button>
+<nav id="toolbar" aria-label="Ferramentas">
+  <button type="button" data-tool="maps"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="tl">Mapas</span></button>
+  <button type="button" data-tool="mark"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span><span class="tl">Marcar</span></button>
+  <button type="button" data-tool="track"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-track"/></svg></span><span class="tl">Trilha</span></button>
+  <button type="button" data-tool="measure" aria-pressed="false"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-ruler"/></svg></span><span class="tl">Medir</span></button>
+  <button type="button" data-tool="features"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span><span class="tl">Itens</span></button>
+  <button type="button" data-tool="more"><span class="ti"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></span><span class="tl">Mais</span></button>
 </nav>
 
 <div id="upd" hidden>
@@ -42,8 +62,12 @@
   <button id="upd-go" type="button">Atualizar agora</button>
   <button id="upd-x" type="button" aria-label="Fechar">✕</button>
 </div>
-<section id="sheet" hidden>
-  <div id="sheet-head"><h2 id="sheet-title"></h2><button id="sheet-close">✕</button></div>
+<section id="sheet" role="dialog" aria-labelledby="sheet-title" hidden>
+  <div id="sheet-head">
+    <button id="sheet-grip" type="button" aria-label="Expandir ou recolher o painel"></button>
+    <h2 id="sheet-title"></h2>
+    <button id="sheet-close" type="button" aria-label="Fechar painel"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
   <div id="sheet-body"></div>
 </section>
 
@@ -70,6 +94,7 @@
 <script src="zip.js"></script>
 <script src="geotiff.js"></script>
 <script src="geopdf.js"></script>
+<script src="ui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

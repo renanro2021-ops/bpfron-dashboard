@@ -4,42 +4,70 @@ const state = {
   fmt: localStorage.fmt || 'dd', units: localStorage.units || 'metric',
   maps: [], features: [], overlays: {}, layers: {},
   me: null, follow: false, tool: null,
+  sel: null,            // id do item selecionado (destacado no mapa)
+  gpsErr: null,         // 'denied' | 'lost' | null
+  hiddenTypes: new Set((() => { try { return JSON.parse(localStorage.getItem('mc-hidden') || '[]'); } catch { return []; } })()),   // camadas ocultas (legenda)
   rec: null,            // trilha em gravação
   measure: [],          // pontos da medição atual
 };
 
 // ---------- Mapa base ----------
-const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.78, -47.93], 5);
+const tk = Theme.token;            // lê um token de cor (--rec, --me…) do tema atual
+const MR = Motion.reduced;         // redução de movimento: desliga as animações do próprio Leaflet
+const map = L.map('map', { zoomControl: false, attributionControl: true, zoomAnimation: !MR, fadeAnimation: !MR, markerZoomAnimation: !MR }).setView([-15.78, -47.93], 5);
 // iPhone: o tamanho da tela muda ao abrir/girar; sem recalcular, o mapa fica descentralizado (a posição aparece fora do lugar)
 const fixMapSize = () => map.invalidateSize({ pan: false });
 window.addEventListener('resize', fixMapSize); window.addEventListener('orientationchange', () => { fixMapSize(); setTimeout(fixMapSize, 300); setTimeout(fixMapSize, 1000); });
 window.visualViewport?.addEventListener('resize', fixMapSize);
 window.addEventListener('pageshow', fixMapSize); window.addEventListener('load', () => [100, 600, 1500].forEach(t => setTimeout(fixMapSize, t)));
-const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), interactive: false });
-const meAcc = L.circle([0, 0], { radius: 0, weight: 1, color: '#1a73e8', fillOpacity: .12 });
+const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
+let tileErrAt = 0;
+tiles.on('loading', () => document.body.classList.add('busy'))
+  .on('load remove', () => document.body.classList.remove('busy'))
+  .on('tileerror', () => {   // avisa uma vez por minuto, sem travar a interface
+    if (Date.now() - tileErrAt < 60000) return; tileErrAt = Date.now();
+    toast(navigator.onLine ? 'Parte do mapa base não carregou' : 'Sem internet: só o que já foi visto e os mapas importados aparecem');
+  });
+tiles.addTo(map);
+const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), interactive: false, keyboard: false });
+const meAcc = L.circle([0, 0], { radius: 0, weight: 1, color: tk('--me'), fillOpacity: .12, interactive: false });
 const measureLayer = L.layerGroup().addTo(map);
 const featureLayer = L.layerGroup().addTo(map);
-const recLine = L.polyline([], { color: '#c62828', weight: 4 }).addTo(map);
+const recLine = L.polyline([], { color: tk('--rec'), weight: 4 }).addTo(map);
 
 // ---------- Utilidades de UI ----------
-const sheet = $('#sheet');
-function openSheet(title, html, after) {
-  $('#sheet-title').textContent = title; $('#sheet-body').innerHTML = html;
-  sheet.hidden = false; after && after($('#sheet-body'));
-}
-function closeSheet() { sheet.hidden = true; }
-$('#sheet-close').onclick = closeSheet;
+// O painel inferior (arrastável) mora em ui.js; infoId marca quando o painel aberto é o de informações de um item.
+let infoId = null;
+function openSheet(title, html, after) { infoId = null; Sheet.show(title, html, after); }
+const closeSheet = () => Sheet.close();
+Sheet.onClose = () => { infoId = null; setSelected(null); };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const toast = t => { $('#status').textContent = t; clearTimeout(toast.t); toast.t = setTimeout(updateStatus, 2500); };
 function updateStatus() {
-  $('#status').textContent = state.rec ? `● REC ${Geo.fmtDist(Geo.pathLength(state.rec.pts), state.units)}`
-    : state.me ? `±${Math.round(state.me.acc)} m` : '';
+  $('#status').textContent = state.rec ? `● REC ${Geo.fmtDist(Geo.pathLength(state.rec.pts), state.units)}` : '';
+  renderGps();
 }
+// Estado do GPS na barra superior: sempre ícone + texto (não depende só da cor)
+function gpsInfo() {
+  if (state.gpsErr === 'denied') return ['bad', '✕', 'GPS negado'];
+  if (state.gpsErr === 'lost') return ['warn', '!', 'Sinal GPS perdido'];
+  if (!state.me) return ['wait', '…', 'Buscando GPS…'];
+  if (Date.now() - state.me.t > 90000) return ['warn', '!', 'Sinal GPS antigo'];
+  const a = Math.round(state.me.acc);
+  return a <= 15 ? ['ok', '●', `GPS ±${a} m`] : a <= 50 ? ['fair', '◐', `GPS ±${a} m`] : ['warn', '▲', `Sinal fraco ±${a} m`];
+}
+function renderGps() {
+  const [k, g, t] = gpsInfo(), el = $('#gps');
+  el.className = k; el.firstChild.textContent = g; el.lastChild.textContent = t;
+  $('#btn-locate').classList.toggle('busy', k === 'wait'); $('#btn-locate').setAttribute('aria-busy', k === 'wait');
+}
+setInterval(renderGps, 5000);
 function setTool(t) {
   state.tool = state.tool === t ? null : t;
-  document.querySelectorAll('#toolbar button').forEach(b => b.classList.toggle('active', b.dataset.tool === state.tool));
+  document.querySelectorAll('#toolbar button').forEach(b => {
+    const on = b.dataset.tool === state.tool; b.classList.toggle('active', on);
+    if (b.dataset.tool === 'measure') b.setAttribute('aria-pressed', on);
+  });
   $('#measure-info').hidden = state.tool !== 'measure';
   if (state.tool !== 'measure') { state.measure = []; measureLayer.clearLayers(); }
   else renderMeasure();
@@ -52,6 +80,7 @@ $('#coord').onclick = () => {
   state.fmt = Geo.FORMATS[(Geo.FORMATS.indexOf(state.fmt) + 1) % Geo.FORMATS.length];
   localStorage.fmt = state.fmt; showCoord(map.getCenter());
 };
+$('#coord').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#coord').click(); } };
 showCoord(map.getCenter());
 
 // ---------- GPS ----------
@@ -86,10 +115,14 @@ function startGps() {
 }
 function onGpsError(e) {
   if (e.code === 1) {   // permissão negada (também se for revogada com o app aberto): bloqueia de novo
-    state.me = null; meMarker.remove(); meAcc.remove(); showGate('denied');
+    state.me = null; state.gpsErr = 'denied'; meMarker.remove(); meAcc.remove(); showGate('denied');
     navigator.geolocation.clearWatch(watchId); watchId = null;
-  } else if (!state.me) showGate('unavailable');   // sem 1ª posição ainda
-  else toast('GPS: ' + e.message);                   // já tinha posição: só avisa
+  } else {
+    state.gpsErr = 'lost';
+    if (!state.me) showGate('unavailable');          // sem 1ª posição ainda
+    else toast('GPS: ' + e.message);                 // já tinha posição: só avisa
+  }
+  renderGps();
 }
 function retryGps() {
   if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
@@ -103,9 +136,10 @@ function onPos(p) {
   const ll = [p.coords.latitude, p.coords.longitude];
   const first = !state.me;
   state.me = { ll, acc: p.coords.accuracy, alt: p.coords.altitude, t: p.timestamp };
+  state.gpsErr = null;
   if (first) { hideGate(); map.setView(ll, 16); }
   meMarker.setLatLng(ll).addTo(map); meAcc.setLatLng(ll).setRadius(p.coords.accuracy).addTo(map);
-  if (state.follow) map.panTo(ll);
+  if (state.follow) map.panTo(ll, { animate: !MR });   // só acompanha se o modo "seguir" estiver ligado
   if (state.rec) {
     const last = state.rec.pts.at(-1);
     if (!last || Geo.dist(last, ll) >= Math.max(3, Math.min(p.coords.accuracy / 2, 15))) {
@@ -116,15 +150,23 @@ function onPos(p) {
   }
   updateStatus();
 }
+function setFollow(on) {
+  state.follow = on; const b = $('#btn-follow'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+}
 $('#btn-locate').onclick = () => {
   startGps();
-  if (state.me) map.setView(state.me.ll, Math.max(map.getZoom(), 16)); else toast('Aguardando GPS…');
+  if (state.me) map.setView(state.me.ll, Math.max(map.getZoom(), 16), { animate: !MR }); else toast('Aguardando GPS…');
 };
-$('#btn-follow').onclick = e => {
-  startGps(); state.follow = !state.follow; e.currentTarget.classList.toggle('on', state.follow);
-  if (state.follow && state.me) map.panTo(state.me.ll);
+$('#btn-follow').onclick = () => {
+  startGps(); setFollow(!state.follow);
+  if (state.follow && state.me) map.panTo(state.me.ll, { animate: !MR });
+  toast(state.follow ? 'Seguindo sua posição' : 'Exploração livre');
 };
-map.on('dragstart', () => { state.follow = false; $('#btn-follow').classList.remove('on'); });
+map.on('dragstart', () => { if (state.follow) { setFollow(false); toast('Exploração livre'); } });   // arrastar o mapa desliga o "seguir"
+$('#btn-zin').onclick = () => map.zoomIn();
+$('#btn-zout').onclick = () => map.zoomOut();
+const syncZoomBtns = () => { $('#btn-zin').disabled = map.getZoom() >= map.getMaxZoom(); $('#btn-zout').disabled = map.getZoom() <= map.getMinZoom(); };
+map.on('zoomend', syncZoomBtns); syncZoomBtns();
 
 // ---------- Mapas importados (imagem georreferenciada por limites) ----------
 async function loadMaps() {
@@ -142,13 +184,14 @@ function showMaps() {
   const rows = state.maps.map(m => `
     <div class="row" data-id="${m.id}">
       <input type="checkbox" ${state.overlays[m.id] ? 'checked' : ''} data-act="vis">
-      <div class="grow"><div class="t">${esc(m.name)}</div><div class="s">${m.n.toFixed(4)}, ${m.w.toFixed(4)} → ${m.s.toFixed(4)}, ${m.e.toFixed(4)}</div>
+      <div class="grow"><div class="t">${esc(m.name)}</div><div class="s">✓ no aparelho (offline) · ${m.n.toFixed(4)}, ${m.w.toFixed(4)} → ${m.s.toFixed(4)}, ${m.e.toFixed(4)}</div>
         <input type="range" min="10" max="100" value="${Math.round((m.opacity ?? 1) * 100)}" data-act="op"></div>
       <button class="btn ghost sm" data-act="go">Ir</button>
       <button class="btn danger sm" data-act="rm">✕</button>
     </div>`).join('') || '<p class="s">Nenhum mapa importado.</p>';
   openSheet('Mapas', `<button class="btn" id="add-map">+ Importar imagem de mapa</button>
-    <label style="display:block;margin-top:10px"><input type="checkbox" id="base-vis" ${map.hasLayer(tiles) ? 'checked' : ''}> Mapa base online (OSM)</label>${rows}`, b => {
+    <label style="display:block;margin-top:10px"><input type="checkbox" id="base-vis" ${map.hasLayer(tiles) ? 'checked' : ''}> Mapa base online (OSM)</label>
+    <div class="s">Precisa de internet; só as áreas já vistas ficam no cache. Os mapas importados abaixo funcionam sem internet.</div>${rows}`, b => {
     b.querySelector('#add-map').onclick = () => $('#file-map').click();
     b.querySelector('#base-vis').onchange = e => e.target.checked ? tiles.addTo(map) : tiles.remove();
     b.querySelectorAll('.row').forEach(r => {
@@ -217,6 +260,7 @@ $('#file-map').onchange = async e => {
 // ---------- Itens (marcas, trilhas, medições) ----------
 async function loadFeatures() {
   state.features = await DB.all('features');
+  for (const f of state.features) animated.add(f.id);   // itens já salvos aparecem direto, sem animação de entrada
   // migração: versão anterior guardava uma única foto em f.photo/f.thumb
   for (const f of state.features) if (f.photo) {
     f.photos = [{ id: uid(), blob: f.photo, thumb: f.thumb, t: f.t, dir: null, dirRef: null, alt: f.alt ?? null, srcGps: !!f.srcGps }];
@@ -233,30 +277,72 @@ const badgePos = dir => {
 };
 const hasPhotos = f => f.type === 'point' && f.photos?.length > 0;
 const photoDir = f => f.photos.find(p => p.dir != null)?.dir ?? null;
+// Os itens guardam coordenadas reais (lat/lon); a camada visual é só uma representação e é refeita a partir delas.
+const featLayers = new Map();   // id -> camada do Leaflet (destaca o selecionado sem redesenhar tudo)
+const animated = new Set();     // ids que já fizeram a animação de entrada
+const typeKey = f => f.type === 'point' ? (hasPhotos(f) ? 'photo' : 'point') : f.type;
+const colorOf = f => tk(f.type === 'track' ? '--rec' : f.type === 'area' ? '--area' : '--meas');
+const lineStyle = (f, sel) => ({ color: colorOf(f), weight: (f.type === 'area' ? 3 : 4) + (sel ? 4 : 0) });
 function drawFeatures() {
-  featureLayer.clearLayers();
+  featureLayer.clearLayers(); featLayers.clear();
   for (const f of state.features) {
-    if (f.hidden) continue;
+    if (f.hidden || state.hiddenTypes.has(typeKey(f))) continue;
+    const isNew = !animated.has(f.id); animated.add(f.id);
+    let layer;
     if (f.type === 'point') {
       const dir = hasPhotos(f) ? photoDir(f) : null;
       const ic = hasPhotos(f)
         ? L.divIcon({
           className: '', iconSize: [80, 80], iconAnchor: [40, 40],
-          html: `<div class="photo-wrap">${dir != null ? `<div class="photo-dir" style="transform:rotate(${dir}deg)"></div>` : ''}` +
+          html: `<div class="photo-wrap${isNew ? ' new' : ''}">${dir != null ? `<div class="photo-dir" style="transform:rotate(${dir}deg)"></div>` : ''}` +
             `<div class="photo-pin" style="background-image:url(${thumbUrl(f.photos[0])})"></div>` +
             `${f.photos.length > 1 ? `<span class="photo-count" style="${badgePos(dir)}">${f.photos.length}</span>` : ''}</div>`
         })
-        : L.divIcon({ className: '', html: '<div class="pin"></div>', iconSize: [26, 26], iconAnchor: [4, 26] });
-      L.marker([f.lat, f.lon], { icon: ic })
-        .bindTooltip(esc(f.name)).on('click', () => editFeature(f.id)).addTo(featureLayer);
-    } else if (f.type === 'track' || f.type === 'line') {
-      L.polyline(f.pts.map(p => [p[0], p[1]]), { color: f.type === 'track' ? '#c62828' : '#6a1b9a', weight: 4 })
-        .bindTooltip(esc(f.name)).on('click', () => editFeature(f.id)).addTo(featureLayer);
-    } else if (f.type === 'area') {
-      L.polygon(f.pts.map(p => [p[0], p[1]]), { color: '#ef6c00', weight: 3 }).bindTooltip(esc(f.name)).on('click', () => editFeature(f.id)).addTo(featureLayer);
+        : L.divIcon({ className: '', html: `<div class="pin${isNew ? ' new' : ''}"></div>`, iconSize: [26, 26], iconAnchor: [4, 26] });
+      layer = L.marker([f.lat, f.lon], { icon: ic, alt: f.name, keyboard: false });
+    } else {
+      const pts = f.pts.map(p => [p[0], p[1]]);
+      layer = f.type === 'area' ? L.polygon(pts, lineStyle(f, false)) : L.polyline(pts, lineStyle(f, false));
     }
+    layer.bindTooltip(esc(f.name)).on('click', e => { L.DomEvent.stopPropagation(e); selectFeature(f.id); }).addTo(featureLayer);
+    featLayers.set(f.id, layer);
   }
+  if (state.sel) { const id = state.sel; state.sel = null; setSelected(id); }   // mantém o destaque após redesenhar
 }
+document.addEventListener('animationend', e => {   // a classe .new só serve à animação de entrada
+  if (/^(pin|pop)In(Sel)?$/.test(e.animationName)) e.target.classList.remove('new');
+});
+function setSelected(id) {
+  const paint = (fid, on) => {
+    const f = state.features.find(x => x.id === fid), l = featLayers.get(fid); if (!f || !l) return;
+    if (f.type === 'point') { const el = l.getElement()?.firstElementChild; if (el) el.classList.toggle('sel', on); }
+    else { l.setStyle(lineStyle(f, on)); if (on) l.bringToFront(); }
+  };
+  if (state.sel) paint(state.sel, false);
+  state.sel = id;
+  if (id) paint(id, true);
+}
+// Toque num item: destaca, abre o painel de informações e garante que ele fique visível acima do painel.
+// `far`: vem da lista de itens (o item pode estar fora da tela), então centraliza na área livre.
+function selectFeature(id, far) {
+  const f = state.features.find(x => x.id === id); if (!f) return;
+  setSelected(id); Haptic.tap(10); showInfo(f);
+  if (far) reveal(f);
+  else if (f.type === 'point') map.panInside([f.lat, f.lon], { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + 40], animate: !MR });
+}
+function reveal(f) {
+  if (f.type === 'point') {
+    const z = Math.max(map.getZoom(), 17), p = map.project([f.lat, f.lon], z);
+    p.y += Sheet.target / 2;   // desloca o centro para o ponto cair no meio da área livre, acima do painel
+    map.setView(map.unproject(p, z), z, { animate: !MR });
+  } else map.fitBounds(f.pts.map(q => [q[0], q[1]]), { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + 40], animate: !MR });
+}
+map.on('click', () => { if (infoId && state.tool !== 'measure') closeSheet(); });   // toque no mapa vazio fecha o painel de informações
+Theme.onChange(() => {   // troca de tema só repinta: o mapa, a posição e os dados não são tocados
+  meAcc.setStyle({ color: tk('--me') }); recLine.setStyle({ color: tk('--rec') });
+  for (const [id, l] of featLayers) { const f = state.features.find(x => x.id === id); if (f && f.type !== 'point') l.setStyle(lineStyle(f, id === state.sel)); }
+  if (state.tool === 'measure') renderMeasure();
+});
 async function saveFeature(f) {
   await DB.put('features', f);
   const i = state.features.findIndex(x => x.id === f.id);
@@ -287,8 +373,56 @@ function showFeatures() {
   openSheet('Itens', rows, b => b.querySelectorAll('.row').forEach(r => {
     const f = state.features.find(x => x.id === r.dataset.id);
     r.querySelector('input').onchange = async e => { f.hidden = !e.target.checked; await saveFeature(f); };
-    r.querySelector('[data-act=go]').onclick = () => { focusFeature(f); editFeature(f.id); };
+    r.querySelector('[data-act=go]').onclick = () => selectFeature(f.id, true);
   }));
+}
+// Painel de informações de um item (aberto ao tocar nele no mapa ou em "Ver"); a edição completa fica em "Editar".
+function showInfo(f) {
+  const isP = f.type === 'point';
+  const sum = isP ? (hasPhotos(f) ? `${f.photos.length} foto${f.photos.length > 1 ? 's' : ''}` : 'Marca') : featureSummary(f);
+  const thumbs = hasPhotos(f) ? `<div class="gallery">${f.photos.map(p => `<div class="g" style="background-image:url(${thumbUrl(p)})"></div>`).join('')}</div>` : '';
+  openSheet(f.name, `${isP ? `<div class="info-coord">${esc(Geo.fmtCoord(f.lat, f.lon, state.fmt))}</div>` : ''}
+    <div class="s">${hasPhotos(f) ? '📷' : icon[f.type]} ${esc(sum)} · ${fmtTime(f.t)}</div>
+    ${f.notes ? `<div class="info-notes">${esc(f.notes)}</div>` : ''}${thumbs}
+    <div class="actions"><button type="button" class="btn" data-a="edit">Editar</button>
+      ${isP ? '<button type="button" class="btn ghost" data-a="copy">Copiar coordenadas</button>' : ''}
+      <button type="button" class="btn ghost" data-a="go">Centralizar</button>
+      <button type="button" class="btn danger" data-a="del">Excluir</button></div>`, b => {
+    const on = (a, fn) => b.querySelector(`[data-a=${a}]`)?.addEventListener('click', fn);
+    on('edit', () => editFeature(f.id));
+    on('go', () => reveal(f));
+    on('del', () => deleteFeature(f));
+    on('copy', () => {
+      const t = `${f.lat.toFixed(6)}, ${f.lon.toFixed(6)}`;
+      navigator.clipboard ? navigator.clipboard.writeText(t).then(() => toast('Coordenadas copiadas'), () => toast(t)) : toast(t);
+    });
+    b.querySelectorAll('.gallery .g').forEach(g => g.onclick = () => editFeature(f.id));
+  });
+  infoId = f.id;
+}
+async function deleteFeature(f) {
+  if (!confirm(`Excluir "${f.name}"?`)) return;
+  await DB.del('features', f.id); state.features = state.features.filter(x => x !== f);
+  for (const p of f.photos || []) dropUrls(p);
+  if (state.sel === f.id) state.sel = null;
+  drawFeatures(); closeSheet(); toast('Item excluído');
+}
+// Legenda dos símbolos; cada tipo também liga/desliga a camada correspondente.
+function showLegend() {
+  const R = (k, sw, label) => `<div class="row"><div class="sw">${sw}</div><div class="grow t">${label}</div>` +
+    (k ? `<input type="checkbox" data-k="${k}" aria-label="Mostrar ${label}" ${state.hiddenTypes.has(k) ? '' : 'checked'}>` : '') + '</div>';
+  openSheet('Legenda e camadas',
+    R('point', '<div class="pin" style="margin-left:2px"></div>', 'Marcas') +
+    R('photo', '<span style="width:22px;height:22px;border-radius:5px;border:3px solid var(--mut);background:var(--bg2)"></span>', 'Marcas com foto') +
+    R('track', '<i></i>', 'Trilhas gravadas') + R('line', '<i class="dash"></i>', 'Linhas medidas') + R('area', '<i class="area"></i>', 'Áreas') +
+    R(null, '<div class="me" style="margin:0"></div>', 'Minha posição') +
+    '<p class="s">O círculo claro em volta da sua posição é a precisão do GPS. A seta azul numa foto mostra a direção em que ela foi tirada; o número é a quantidade de fotos no marcador.</p>', b => {
+    b.querySelectorAll('[data-k]').forEach(c => c.onchange = () => {
+      c.checked ? state.hiddenTypes.delete(c.dataset.k) : state.hiddenTypes.add(c.dataset.k);
+      try { localStorage.setItem('mc-hidden', JSON.stringify([...state.hiddenTypes])); } catch { }
+      drawFeatures();
+    });
+  });
 }
 function focusFeature(f) {
   if (f.type === 'point') map.setView([f.lat, f.lon], Math.max(map.getZoom(), 17));
@@ -296,6 +430,7 @@ function focusFeature(f) {
 }
 function editFeature(id) {
   const f = state.features.find(x => x.id === id); if (!f) return;
+  setSelected(id);
   openSheet('Editar item', `
     ${f.type === 'point' ? '<div id="ph"></div>' : ''}
     <div class="s">${hasPhotos(f) ? '📷' : icon[f.type]} ${featureSummary(f)}</div>
@@ -305,12 +440,7 @@ function editFeature(id) {
     b.querySelector('#f-share').onclick = () => f.type === 'point' ? sharePoint(f) : shareTrack(f);
     if (f.type === 'point') renderPhotos(b.querySelector('#ph'), f, 0);
     b.querySelector('#f-save').onclick = async () => { f.name = b.querySelector('#f-name').value || f.name; f.notes = b.querySelector('#f-notes').value; await saveFeature(f); closeSheet(); };
-    b.querySelector('#f-del').onclick = async () => {
-      if (!confirm('Excluir este item?')) return;
-      await DB.del('features', f.id); state.features = state.features.filter(x => x !== f);
-      for (const p of f.photos || []) dropUrls(p);
-      drawFeatures(); closeSheet();
-    };
+    b.querySelector('#f-del').onclick = () => deleteFeature(f);
   });
 }
 
@@ -404,6 +534,7 @@ function renderPhotos(box, f, sel) {
       <button class="add" data-add="cam" title="Tirar foto">📷</button><button class="add" data-add="gal" title="Adicionar da galeria">🖼</button></div>
     ${p ? '<button class="btn sm" id="ph-share" style="margin-bottom:10px">📤 Compartilhar</button> <button class="btn ghost sm" id="ph-save" style="margin-bottom:10px">💾 Salvar na galeria</button><button class="btn danger sm" id="ph-del" style="margin-bottom:10px">Remover esta foto</button>' : ''}`;
   if (p) prepShare(f, p);
+  box.querySelector('.photo-full')?.addEventListener('load', () => Sheet.refit());   // a foto muda a altura do conteúdo
   box.querySelector('#ph-share')?.addEventListener('click', () => sharePhoto(f, p));
   box.querySelector('#ph-save')?.addEventListener('click', () => showImageFallback(photoFile(f, p), ''));
   box.querySelectorAll('.g').forEach(g => g.onclick = () => renderPhotos(box, f, +g.dataset.i));
@@ -527,7 +658,26 @@ document.addEventListener('visibilitychange', () => {
 });
 function setRecUi(on) {
   const btn = document.querySelector('[data-tool=track]');
-  btn.classList.toggle('rec', on); btn.lastChild.textContent = on ? 'Parar' : 'Trilha';
+  btn.classList.toggle('rec', on); btn.querySelector('.tl').textContent = on ? 'Parar' : 'Trilha';
+  btn.querySelector('use').setAttribute('href', on ? '#i-stop' : '#i-track'); btn.setAttribute('aria-pressed', on);
+}
+// App Android (Capacitor): GPS em segundo plano com notificação fixa, assim a trilha continua com a tela apagada
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+let bgWatch = null;
+async function startBgTrack() {
+  if (!NATIVE || bgWatch) return;
+  try {
+    const BG = Capacitor.registerPlugin('BackgroundGeolocation');
+    bgWatch = await BG.addWatcher({ backgroundTitle: 'MapaCampo gravando trilha', backgroundMessage: 'Toque para voltar ao mapa', requestPermissions: true, stale: false, distanceFilter: 3 }, (l, e) => {
+      if (e) { if (e.code === 'NOT_AUTHORIZED') toast('Permita a localização "o tempo todo" para gravar com a tela apagada'); return; }
+      onPos({ coords: { latitude: l.latitude, longitude: l.longitude, accuracy: l.accuracy, altitude: l.altitude }, timestamp: l.time || Date.now() });
+    });
+  } catch { toast('Gravação em segundo plano indisponível neste aparelho'); }
+}
+async function stopBgTrack() {
+  if (!bgWatch) return;
+  try { await Capacitor.registerPlugin('BackgroundGeolocation').removeWatcher({ id: bgWatch }); } catch { }
+  bgWatch = null;
 }
 function resumeDraft() {
   let pts; try { pts = JSON.parse(localStorage.getItem('mc-draft') || 'null'); } catch { }
@@ -536,16 +686,16 @@ function resumeDraft() {
     if (pts.length > 1) saveFeature({ id: uid(), type: 'track', name: 'Trilha recuperada ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() });
     return clearDraft();
   }
-  state.rec = { pts }; setRecUi(true); recLine.setLatLngs(pts.map(q => [q[0], q[1]])); holdScreen(); updateStatus();
+  state.rec = { pts }; setRecUi(true); recLine.setLatLngs(pts.map(q => [q[0], q[1]])); holdScreen(); startBgTrack(); updateStatus();
 }
 function toggleTrack() {
   startGps();
   if (!state.rec) {
-    state.rec = { pts: [] }; setRecUi(true); holdScreen(); toast('Gravando trilha — mantenha a tela acesa');
+    state.rec = { pts: [] }; setRecUi(true); holdScreen(); startBgTrack(); toast(NATIVE ? 'Gravando trilha (continua com a tela apagada)' : 'Gravando trilha — mantenha a tela acesa');
     if (state.me) state.rec.pts.push([...state.me.ll, state.me.t, state.me.alt]);
     saveDraft();
   } else {
-    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); clearDraft(); setTimeout(updateBanner);
+    const pts = state.rec.pts; state.rec = null; recLine.setLatLngs([]); setRecUi(false); releaseScreen(); stopBgTrack(); clearDraft(); setTimeout(updateBanner);
     if (pts.length < 2) return toast('Trilha muito curta, descartada');
     const f = { id: uid(), type: 'track', name: 'Trilha ' + new Date(pts[0][2] || Date.now()).toLocaleString('pt-BR'), notes: '', pts, t: Date.now() };
     saveFeature(f).then(() => editFeature(f.id));
@@ -561,8 +711,8 @@ map.on('click', e => {
 function renderMeasure() {
   measureLayer.clearLayers();
   const p = state.measure;
-  p.forEach(q => L.circleMarker(q, { radius: 5, color: '#fff', fillColor: '#6a1b9a', fillOpacity: 1, weight: 2 }).addTo(measureLayer));
-  if (p.length > 1) L.polyline(p, { color: '#6a1b9a', weight: 3, dashArray: '6 6' }).addTo(measureLayer);
+  p.forEach(q => L.circleMarker(q, { radius: 5, color: '#fff', fillColor: tk('--meas'), fillOpacity: 1, weight: 2 }).addTo(measureLayer));
+  if (p.length > 1) L.polyline(p, { color: tk('--meas'), weight: 3, dashArray: '6 6' }).addTo(measureLayer);
   const info = $('#measure-info');
   const len = Geo.fmtDist(Geo.pathLength(p), state.units);
   const closed = p.length > 2 ? ` · área ${Geo.fmtArea(Geo.area(p), state.units)}` : '';
@@ -673,6 +823,11 @@ $('#file-import').onchange = async e => {
 // ---------- Mais ----------
 function showMore() {
   openSheet('Mais', `
+    <label>Aparência</label>
+    <div class="seg" id="o-theme" role="group" aria-label="Tema">
+      <button type="button" data-v="auto">Automático</button><button type="button" data-v="light">Claro</button><button type="button" data-v="dark">Escuro</button></div>
+    <label style="display:flex;gap:10px;align-items:center;margin:0 0 12px"><input type="checkbox" id="o-haptic"> Vibração leve ao tocar (Android)</label>
+    <p><button type="button" class="btn ghost" id="o-leg">Legenda e camadas</button></p>
     <label>Formato de coordenadas</label>
     <select id="o-fmt"><option value="dd">Graus decimais</option><option value="dms">Graus/min/seg</option><option value="utm">UTM</option></select>
     <label>Unidades</label>
@@ -683,6 +838,12 @@ function showMore() {
     <p><button class="btn ghost" id="o-news">Novidades (versão ${VERSION_NAME})</button></p>
     <p><button class="btn ghost" id="o-imp">Importar GeoJSON / GPX / KML</button></p>
     <p class="s">Os dados ficam só neste aparelho (IndexedDB). Funciona offline após o primeiro carregamento; os mapas importados não precisam de internet.</p>`, b => {
+    const seg = b.querySelectorAll('#o-theme button');
+    const markTheme = () => seg.forEach(x => x.setAttribute('aria-pressed', x.dataset.v === Theme.pref));
+    seg.forEach(x => x.onclick = () => { Theme.set(x.dataset.v); markTheme(); });
+    markTheme();
+    b.querySelector('#o-haptic').checked = Haptic.on; b.querySelector('#o-haptic').onchange = e => { Haptic.on = e.target.checked; Haptic.tap(20); };
+    b.querySelector('#o-leg').onclick = showLegend;
     b.querySelector('#o-fmt').value = state.fmt; b.querySelector('#o-units').value = state.units;
     b.querySelector('#o-fmt').onchange = e => { state.fmt = localStorage.fmt = e.target.value; showCoord(map.getCenter()); };
     b.querySelector('#o-units').onchange = e => { state.units = localStorage.units = e.target.value; };
@@ -738,7 +899,7 @@ async function hardRefresh() {
   location.reload();
 }
 function watchUpdates() {
-  if (!('serviceWorker' in navigator)) return;
+  if (NATIVE || !('serviceWorker' in navigator)) return;   // no APK a versão vem junto com o app
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (wantUpdate && !reloading) { reloading = true; location.reload(); } });
   navigator.serviceWorker.register('sw.js').then(reg => {
     const check = () => { reg.update().catch(() => { }); checkRemote(); };
@@ -771,6 +932,7 @@ document.querySelectorAll('#toolbar button').forEach(b => b.onclick = () => {
 // ---------- Início ----------
 (async () => {
   startGps();   // sem GPS o app fica bloqueado pela tela #gps-gate
+  renderGps();
   await loadMaps(); await loadFeatures(); resumeDraft();
   const last = JSON.parse(localStorage.view || 'null'); if (last && !state.me) map.setView(last.c, last.z);
   map.on('moveend', () => localStorage.view = JSON.stringify({ c: map.getCenter(), z: map.getZoom() }));
