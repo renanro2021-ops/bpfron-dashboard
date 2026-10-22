@@ -10,6 +10,10 @@ const Theme = (() => {
     root.setAttribute('data-theme', resolved());
     subs.forEach(fn => fn(resolved()));
   }
+  // Menus de vidro (transparência + desfoque) ou sólidos. A classe "solid" no <html> desliga o vidro (aparelho fraco ou gosto).
+  let glass = true;
+  try { glass = localStorage.getItem('mc-glass') !== '0'; } catch { }
+  root.classList.toggle('solid', !glass);
   const onSystem = () => pref === 'auto' && apply(true);
   mq.addEventListener ? mq.addEventListener('change', onSystem) : mq.addListener(onSystem);
   apply(false);
@@ -21,6 +25,13 @@ const Theme = (() => {
       pref = p;
       try { p === 'auto' ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, p); } catch { }
       apply(true);
+    },
+    get glass() { return glass; },
+    set glass(v) {
+      glass = !!v;
+      try { localStorage.setItem('mc-glass', glass ? '1' : '0'); } catch { }
+      root.classList.add('theme-anim'); clearTimeout(apply.t); apply.t = setTimeout(() => root.classList.remove('theme-anim'), 350);
+      root.classList.toggle('solid', !glass);
     },
     onChange: fn => subs.push(fn),
     token: n => getComputedStyle(root).getPropertyValue(n).trim(),

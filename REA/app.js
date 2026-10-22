@@ -15,20 +15,53 @@ const state = {
 const tk = Theme.token;            // lê um token de cor (--rec, --me…) do tema atual
 const MR = Motion.reduced;         // redução de movimento: desliga as animações do próprio Leaflet
 const map = L.map('map', { zoomControl: false, attributionControl: true, zoomAnimation: !MR, fadeAnimation: !MR, markerZoomAnimation: !MR, ...MapRot.options }).setView([-15.78, -47.93], 5);
+map.attributionControl.setPosition('bottomleft');   // crédito do mapa à esquerda: à direita ficam os botões
 // iPhone: o tamanho da tela muda ao abrir/girar; sem recalcular, o mapa fica descentralizado (a posição aparece fora do lugar)
 const fixMapSize = () => map.invalidateSize({ pan: false });
 window.addEventListener('resize', fixMapSize); window.addEventListener('orientationchange', () => { fixMapSize(); setTimeout(fixMapSize, 300); setTimeout(fixMapSize, 1000); });
 window.visualViewport?.addEventListener('resize', fixMapSize);
 window.addEventListener('pageshow', fixMapSize); window.addEventListener('load', () => [100, 600, 1500].forEach(t => setTimeout(fixMapSize, t)));
-const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
+// Mapa de fundo: Mapa (OSM), Satélite e Híbrido (Esri World Imagery + nomes/vias da Esri) e Relevo (OpenTopoMap).
+// crossOrigin: o pedido sai com CORS e o sw.js consegue guardar o tile para uso offline (sem isso a resposta é opaca e não era guardada).
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const tileOpts = o => ({ maxZoom: 19, crossOrigin: 'anonymous', ...o });
+const satL = L.tileLayer(ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', tileOpts({ maxNativeZoom: 18, zIndex: 1, attribution: 'Imagens © Esri, Maxar, Earthstar Geographics' }));
+const BASES = {
+  osm: { nome: 'Mapa', layers: [L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', tileOpts({ attribution: '© OpenStreetMap' }))],
+    thumb: (z, x, y) => [`https://tile.openstreetmap.org/${z}/${x}/${y}.png`] },
+  sat: { nome: 'Satélite', layers: [satL], thumb: (z, x, y) => [`${ESRI}World_Imagery/MapServer/tile/${z}/${y}/${x}`] },
+  hib: { nome: 'Híbrido', layers: [satL,
+      L.tileLayer(ESRI + 'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', tileOpts({ maxNativeZoom: 18, zIndex: 2 })),
+      L.tileLayer(ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', tileOpts({ maxNativeZoom: 18, zIndex: 3, attribution: 'Nomes e vias © Esri' }))],
+    thumb: (z, x, y) => [`${ESRI}World_Imagery/MapServer/tile/${z}/${y}/${x}`, `${ESRI}Reference/World_Transportation/MapServer/tile/${z}/${y}/${x}`, `${ESRI}Reference/World_Boundaries_and_Places/MapServer/tile/${z}/${y}/${x}`] },
+  topo: { nome: 'Relevo', layers: [L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', tileOpts({ subdomains: 'abc', maxNativeZoom: 17, attribution: '© OpenStreetMap, SRTM · estilo © OpenTopoMap (CC-BY-SA)' }))],
+    thumb: (z, x, y) => [`https://a.tile.opentopomap.org/${z}/${x}/${y}.png`] },
+  none: { nome: 'Sem fundo', layers: [], thumb: () => [] },
+};
+let baseKey = 'osm';
+try { const v = localStorage.getItem('mc-base'); if (BASES[v]) baseKey = v; } catch { }
 let tileErrAt = 0;
-tiles.on('loading', () => document.body.classList.add('busy'))
-  .on('load remove', () => document.body.classList.remove('busy'))
-  .on('tileerror', () => {   // avisa uma vez por minuto, sem travar a interface
-    if (Date.now() - tileErrAt < 60000) return; tileErrAt = Date.now();
-    toast(navigator.onLine ? 'Parte do mapa base não carregou' : 'Sem internet: só o que já foi visto e os mapas importados aparecem');
-  });
-tiles.addTo(map);
+const loadingTiles = new Set();
+const busyTiles = () => document.body.classList.toggle('busy', loadingTiles.size > 0);
+for (const l of new Set(Object.values(BASES).flatMap(b => b.layers))) {
+  l.on('loading', () => { loadingTiles.add(l); busyTiles(); })
+    .on('load remove', () => { loadingTiles.delete(l); busyTiles(); })
+    .on('tileerror', () => {   // avisa uma vez por minuto, sem travar a interface
+      if (Date.now() - tileErrAt < 60000) return; tileErrAt = Date.now();
+      toast(navigator.onLine ? 'Parte do mapa de fundo não carregou' : 'Sem internet: só o que já foi visto e os mapas importados aparecem');
+    });
+}
+function setBase(k) {
+  if (!BASES[k]) return;
+  const keep = new Set(BASES[k].layers);
+  for (const b of Object.values(BASES)) for (const l of b.layers) if (!keep.has(l) && map.hasLayer(l)) l.remove();
+  for (const l of keep) if (!map.hasLayer(l)) l.addTo(map);
+  baseKey = k;
+  document.documentElement.dataset.base = k;   // o CSS ajusta detalhes conforme o fundo (ex.: crédito sobre a foto de satélite)
+  try { localStorage.setItem('mc-base', k); } catch { }
+  document.querySelectorAll('.bp-card').forEach(c => c.setAttribute('aria-pressed', c.dataset.base === k));
+}
+setBase(baseKey);
 MapRot.attach(map);
 const meMarker = L.marker([0, 0], { icon: L.divIcon({ className: '', html: '<div class="me-wrap"><div class="me-cone"></div><div class="me"></div></div>', iconSize: [64, 64] }), interactive: false, keyboard: false });
 const meAcc = L.circle([0, 0], { radius: 0, weight: 1, color: tk('--me'), fillOpacity: .12, interactive: false });
@@ -41,6 +74,7 @@ const recLine = L.polyline([], { color: tk('--rec'), weight: 4 }).addTo(map);
 let infoId = null;
 function openSheet(title, html, after) { if (sampling && !sampling.own) stopSampling(); infoId = null; Sheet.show(title, html, after); }   // outro painel cancela a coleta em andamento
 const closeSheet = () => Sheet.close();
+const tbH = () => $('#toolbar').offsetHeight;   // o mapa passa por baixo da barra de ferramentas (vidro): enquadramentos descontam a altura dela
 Sheet.onClose = () => { infoId = null; stopSampling(); setSelected(null); };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const toast = t => { $('#status').textContent = t; clearTimeout(toast.t); toast.t = setTimeout(updateStatus, 2500); };
@@ -248,6 +282,37 @@ function addOverlay(m) {
 }
 function removeOverlay(m) { state.overlays[m.id]?.remove(); delete state.overlays[m.id]; }
 
+// ---------- Seletor do mapa de fundo (botão de camadas e aba Mapas) ----------
+// As miniaturas mostram o tile do lugar que está no centro do mapa, em cada tipo de fundo.
+function centerTile() {
+  const c = map.getCenter(), z = Math.max(3, Math.min(16, Math.round(map.getZoom()) - 1)), n = 2 ** z;
+  const r = Math.max(-85, Math.min(85, c.lat)) * Math.PI / 180;
+  const x = Math.floor((c.lng + 180) / 360 * n), y = Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n);
+  return [z, ((x % n) + n) % n, Math.max(0, Math.min(n - 1, y))];
+}
+function baseCards(withNone) {
+  const t = centerTile();
+  return Object.entries(BASES).filter(([k]) => withNone || k !== 'none').map(([k, b]) => `
+    <button type="button" class="bp-card" data-base="${k}" aria-pressed="${k === baseKey}">
+      <span class="bp-img bp-${k}">${b.thumb(...t).map(u => `<img src="${u}" alt="" crossorigin="anonymous" draggable="false">`).join('')}</span>
+      <span class="bp-name">${b.nome}</span></button>`).join('');
+}
+function wireBaseCards(root) {
+  root.querySelectorAll('.bp-img img').forEach(i => { i.onerror = () => i.remove(); });   // sem internet: fica a cor de fundo do cartão
+  root.querySelectorAll('.bp-card').forEach(c => c.onclick = () => {
+    setBase(c.dataset.base); toast('Fundo: ' + BASES[c.dataset.base].nome);
+    if (root === basePick) setTimeout(() => toggleBasePick(false), Motion.reduced ? 0 : 220);
+  });
+}
+const basePick = $('#basepick'), layersBtn = $('#btn-layers');
+function toggleBasePick(open = basePick.hidden) {
+  if (open) { basePick.querySelector('.bp-grid').innerHTML = baseCards(false); wireBaseCards(basePick); }
+  basePick.hidden = !open; layersBtn.setAttribute('aria-expanded', open);
+}
+layersBtn.onclick = () => toggleBasePick();
+document.addEventListener('pointerdown', e => { if (!basePick.hidden && !e.target.closest('#basepick,#btn-layers')) toggleBasePick(false); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !basePick.hidden) toggleBasePick(false); });
+
 function showMaps() {
   const rows = state.maps.map(m => `
     <div class="row" data-id="${m.id}">
@@ -257,11 +322,12 @@ function showMaps() {
       <button class="btn ghost sm" data-act="go">Ir</button>
       <button class="btn danger sm" data-act="rm">✕</button>
     </div>`).join('') || '<p class="s">Nenhum mapa importado.</p>';
-  openSheet('Mapas', `<button class="btn" id="add-map">+ Importar imagem de mapa</button>
-    <label style="display:block;margin-top:10px"><input type="checkbox" id="base-vis" ${map.hasLayer(tiles) ? 'checked' : ''}> Mapa base online (OSM)</label>
-    <div class="s">Precisa de internet; só as áreas já vistas ficam no cache. Os mapas importados abaixo funcionam sem internet.</div>${rows}`, b => {
+  openSheet('Mapas', `<label>Mapa de fundo</label>
+    <div class="bp-grid wide">${baseCards(true)}</div>
+    <div class="s">Precisa de internet; as áreas já vistas ficam guardadas no aparelho. Os mapas importados abaixo funcionam sem internet.</div>
+    <p><button class="btn" id="add-map">+ Importar imagem de mapa</button></p>${rows}`, b => {
     b.querySelector('#add-map').onclick = () => $('#file-map').click();
-    b.querySelector('#base-vis').onchange = e => e.target.checked ? tiles.addTo(map) : tiles.remove();
+    wireBaseCards(b);
     b.querySelectorAll('.row').forEach(r => {
       const m = state.maps.find(x => x.id === r.dataset.id);
       r.querySelector('[data-act=vis]').onchange = async e => {
@@ -395,14 +461,14 @@ function selectFeature(id, far) {
   const f = state.features.find(x => x.id === id); if (!f) return;
   setSelected(id); Haptic.tap(10); showInfo(f);
   if (far) reveal(f);
-  else if (f.type === 'point') map.panInside([f.lat, f.lon], { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + 40], animate: !MR });
+  else if (f.type === 'point') map.panInside([f.lat, f.lon], { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + tbH() + 40], animate: !MR });
 }
 function reveal(f) {
   if (f.type === 'point') {
     const z = Math.max(map.getZoom(), 17), p = map.project([f.lat, f.lon], z);
-    p.y += Sheet.target / 2;   // desloca o centro para o ponto cair no meio da área livre, acima do painel
+    p.y += (Sheet.target + tbH()) / 2;   // desloca o centro para o ponto cair no meio da área livre, acima do painel e da barra de ferramentas
     map.setView(map.unproject(p, z), z, { animate: !MR });
-  } else map.fitBounds(f.pts.map(q => [q[0], q[1]]), { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + 40], animate: !MR });
+  } else map.fitBounds(f.pts.map(q => [q[0], q[1]]), { paddingTopLeft: [40, 70], paddingBottomRight: [40, Sheet.target + tbH() + 40], animate: !MR });
 }
 map.on('click', () => { if (infoId && state.tool !== 'measure') closeSheet(); });   // toque no mapa vazio fecha o painel de informações
 Theme.onChange(() => {   // troca de tema só repinta: o mapa, a posição e os dados não são tocados
@@ -494,7 +560,7 @@ function showLegend() {
 }
 function focusFeature(f) {
   if (f.type === 'point') map.setView([f.lat, f.lon], Math.max(map.getZoom(), 17));
-  else map.fitBounds(f.pts.map(p => [p[0], p[1]]), { padding: [40, 40] });
+  else map.fitBounds(f.pts.map(p => [p[0], p[1]]), { paddingTopLeft: [40, 70], paddingBottomRight: [40, tbH() + 40] });
 }
 function editFeature(id) {
   const f = state.features.find(x => x.id === id); if (!f) return;
@@ -1035,6 +1101,9 @@ function showMore() {
     <label>Aparência</label>
     <div class="seg" id="o-theme" role="group" aria-label="Tema">
       <button type="button" data-v="auto">Automático</button><button type="button" data-v="light">Claro</button><button type="button" data-v="dark">Escuro</button></div>
+    <label>Menus</label>
+    <div class="seg" id="o-glass" role="group" aria-label="Estilo dos menus">
+      <button type="button" data-v="1">Vidro (transparente)</button><button type="button" data-v="0">Sólido</button></div>
     <label style="display:flex;gap:10px;align-items:center;margin:0 0 12px"><input type="checkbox" id="o-haptic"> Vibração leve ao tocar (Android)</label>
     <p><button type="button" class="btn ghost" id="o-leg">Legenda e camadas</button></p>
     <label>Formato de coordenadas</label>
@@ -1051,6 +1120,10 @@ function showMore() {
     const markTheme = () => seg.forEach(x => x.setAttribute('aria-pressed', x.dataset.v === Theme.pref));
     seg.forEach(x => x.onclick = () => { Theme.set(x.dataset.v); markTheme(); });
     markTheme();
+    const segG = b.querySelectorAll('#o-glass button');
+    const markGlass = () => segG.forEach(x => x.setAttribute('aria-pressed', (x.dataset.v === '1') === Theme.glass));
+    segG.forEach(x => x.onclick = () => { Theme.glass = x.dataset.v === '1'; markGlass(); });
+    markGlass();
     b.querySelector('#o-haptic').checked = Haptic.on; b.querySelector('#o-haptic').onchange = e => { Haptic.on = e.target.checked; Haptic.tap(20); };
     b.querySelector('#o-leg').onclick = showLegend;
     b.querySelector('#o-fmt').value = state.fmt; b.querySelector('#o-units').value = state.units;

@@ -1,6 +1,13 @@
 // Histórico de versões. A cada atualização do app: acrescente uma entrada NO TOPO.
 // A versão (v) também nomeia o cache offline em sw.js e dispara o aviso de atualização.
 var CHANGELOG = [
+  { v: 24, nome: '1.7', data: '2026-10-22', notas: [
+    'Mapa de satélite: novo botão de camadas (acima do +) para trocar o fundo entre Mapa, Satélite, Híbrido (satélite com nomes de ruas e cidades) e Relevo',
+    'As miniaturas mostram o próprio lugar onde você está em cada tipo de fundo; a escolha fica guardada',
+    'Menus com efeito de vidro: barra de baixo, painel, botões e bússola ficam transparentes com o mapa desfocado por trás',
+    'Prefere o visual antigo ou o celular ficou lento? Mais > Menus > Sólido',
+    'As áreas já vistas (mapa, satélite e relevo) agora ficam guardadas de verdade no aparelho para uso sem internet'
+  ] },
   { v: 23, nome: '1.6', data: '2026-10-20', notas: [
     'Painel Tracking ao gravar a trilha, como no Avenza: bússola grande com o rumo do celular (verde) e o trajeto do GPS (laranja), velocidade, distância, velocidade média e duração',
     'Botões Parar e Pausar: pausada, a trilha não grava pontos nem conta o tempo',
