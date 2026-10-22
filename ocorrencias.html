@@ -266,7 +266,9 @@ a{color:var(--yellow)}
   .pr-cx td{padding:1pt 0;border-bottom:.4pt dotted #bbb;vertical-align:top}
   .pr-cx tr:last-child td{border-bottom:0}
   .pr-cx .pr-q{text-align:right;white-space:nowrap;font-weight:700;padding-left:6pt}
-  .pr-cx .pr-oc{font-weight:400;font-size:.9em}
+  .pr-cx .pr-n{text-align:right;white-space:nowrap;padding-left:6pt;width:1%}
+  .pr-cx .pr-cab td{font-size:7pt;font-weight:700;text-transform:uppercase;color:#555;border-bottom:.6pt solid #999}
+  .pr-cx .pr-nota{font-size:7pt;color:#555;margin-top:2pt}
   .pr-cx .pr-tot td{border-top:.8pt solid #000;font-weight:700}
   .pr-cx .pr-sem{margin:0}
   /* relatório RESUMIDO: tabela corrida, uma linha por ocorrência, sem quebra de página */
@@ -1858,7 +1860,7 @@ function quadroConteudo(lista){
     g.set(k, { rot, un: un || '', q: (g.get(k)?.q || 0) + q, bos });
   };
   const pessoas = new Map(), papeis = new Map(), situacoes = new Map();
-  let boAtual = -1, semEnv = 0, kgRel = 0, comDroga = 0;   // kgRel: droga total, BO a BO (banco novo ou coluna "Drogas TOTAL")
+  let boAtual = -1, semEnv = 0, kgRel = 0, comDroga = 0, semTipo = 0;   // kgRel: droga total, BO a BO (banco novo ou coluna "Drogas TOTAL")
   const nats = new Map(), muns = new Map();
   const conta = (m, k) => { if (k) m.set(k, (m.get(k) || 0) + 1); };
 
@@ -1881,6 +1883,9 @@ function quadroConteudo(lista){
     const kgApre = o._apre ? o._apre.filter(it => it.categoria === 'Droga' && it.unidade === 'kg').reduce((a,it) => a + (+it.qtd || 0), 0) : 0;
     kgRel += o._apre ? kgApre : (o.n_drogas || 0);
     if (o._apre ? o._apre.some(it => it.categoria === 'Droga') : (o.n_drogas > 0)) comDroga++;
+    // BO só com "Drogas TOTAL" maior que a soma dos tipos → entra em "Tipo não informado"
+    if (!o._apre && (o.n_drogas || 0) - ['maconha','cocaina','pastabase','crack','oxi','meta','folhacoca']
+          .reduce((a, f) => a + (o['n_'+f] || 0), 0) > 0.0005) semTipo++;
     if (o._apre){
       o._apre.forEach(it => {
         const rot = String(it.item || it.codigo).replace(/\s*\(R\$\)\s*$/,'');
@@ -1928,23 +1933,29 @@ function quadroConteudo(lista){
     if (semEnv) pes.push(['Ocorrências sem envolvido qualificado', fN(semEnv)]);
   }
   // quantidade de cada tipo e em quantas ocorrências ele aparece
+  // tabela de 3 colunas (tipo | quantidade | nº de ocorrências com o tipo)
   const drogas = soma.has('Drogas')
-    ? [...soma.get('Drogas').values()].sort((a,b) => b.q - a.q)
-        .map(x => [x.rot, fq(x.q, x.un) + ' <span class="pr-oc">(' + fN(x.bos.size) + ' ocorr.)</span>']) : [];
+    ? [...soma.get('Drogas').values()].sort((a,b) => b.q - a.q).map(x => [x.rot, fq(x.q, x.un), fN(x.bos.size)]) : [];
   const kgTipos = soma.has('Drogas') ? [...soma.get('Drogas').values()].filter(x => x.un === 'kg').reduce((a,x) => a + x.q, 0) : 0;
   // a coluna "Drogas TOTAL" às vezes tem mais do que a soma dos tipos (BO sem o tipo
   // preenchido): a diferença aparece, em vez de o total não bater com as linhas
-  if (kgRel - kgTipos > 0.0005) drogas.push(['Tipo não informado', fq(kgRel - kgTipos, 'kg')]);
+  if (kgRel - kgTipos > 0.0005) drogas.push(['Tipo não informado', fq(kgRel - kgTipos, 'kg'), semTipo ? fN(semTipo) : '']);
   const kgTot = Math.max(kgRel, kgTipos);
-  if (drogas.length > 1 && kgTot > 0) drogas.push(['Total em kg', fq(kgTot, 'kg'), 'pr-tot']);
-  if (comDroga) drogas.unshift(['Ocorrências com droga', fN(comDroga) + ' <span class="pr-oc">de ' + fN(lista.length) + '</span>']);
+  if (drogas.length > 1 && kgTot > 0) drogas.push(['Total', fq(kgTot, 'kg'), fN(comDroga), 'pr-tot']);
+  const linhasDroga = drogas.length
+    ? '<tr class="pr-cab"><td>Tipo</td><td class="pr-q">Quantidade</td><td class="pr-n">Ocorr.</td></tr>' +
+      drogas.map(([r, v, n, cls]) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(r) + '</td><td class="pr-q">' + v +
+        '</td><td class="pr-n">' + n + '</td></tr>').join('')
+    : '';
+  const notaDroga = comDroga
+    ? '<div class="pr-nota">Droga em ' + fN(comDroga) + ' de ' + fN(lista.length) + ' ocorrências. Uma ocorrência com mais de um tipo conta em cada tipo.</div>' : '';
 
   // armas "de verdade" (sem munição), para a faixa de números de cima bater com o quadro
   const armas = soma.has('Armas e munições')
     ? [...soma.get('Armas e munições').values()].filter(x => x.rot !== 'Munições').reduce((a,x) => a + x.q, 0) : 0;
   const html = '<div class="pr-cont-t">O que consta neste relatório</div><div class="pr-cont">' +
     caixa('Pessoas', linhas(pes), extraPes) +
-    caixa('Drogas', linhas(drogas)) +
+    caixa('Drogas', linhasDroga, notaDroga) +
     caixa('Armas e munições', linhas(doGrupo('Armas e munições'))) +
     caixa('Veículos e embarcações', linhas(doGrupo('Veículos e embarcações'))) +
     caixa('Outras apreensões', linhas(doGrupo('Outras apreensões'))) +
