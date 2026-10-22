@@ -1059,6 +1059,82 @@ function envolvidosDe(o){
   return out;
 }
 
+/* ── VEÍCULOS ──────────────────────────────────────────────────────────────
+   Aba VEÍCULOS (/api/veiculos, protegida como a de envolvidos): uma linha por
+   veículo, ligada pelo Nº BO. A BASE só tem a QUANTIDADE apreendida; o tipo
+   (carro, moto, caminhão…) vem daqui. Só o necessário fica em memória. */
+let VEI_POR_BO = null;      // Map: Nº BO normalizado → [{tipo, modelo, situacao}]
+let VEI_FALHOU = false;
+
+async function carregarVeiculos(){
+  if (VEI_POR_BO) return VEI_POR_BO;
+  const r = await fetch(API_BASE + '/api/veiculos?_nc=' + Date.now(), {
+    headers:{ 'Authorization':'Bearer ' + AUTH.token }
+  });
+  if (r.status === 401){ ocLogout(); throw new Error('Sessão expirada.'); }
+  if (!r.ok) throw new Error('Erro ' + r.status + ' ao carregar os veículos.');
+  const linhas = parseCSV(await r.text()).filter(l => l.some(c => String(c).trim()));
+  if (!linhas.length) throw new Error('A aba VEÍCULOS voltou vazia.');
+  let hi = 0;
+  for (let i = 0; i < Math.min(linhas.length, 6); i++){
+    const ks = linhas[i].map(nk);
+    if (ks.some(k => k.includes('placa') || k.includes('modelo')) || ks.some(k => k === 'n_bo' || k === 'no_bo')) { hi = i; break; }
+  }
+  const cab = linhas[hi].map(nk);
+  const mapa = new Map();
+  for (let i = hi + 1; i < linhas.length; i++){
+    const p = {};
+    cab.forEach((h, j) => { p[h] = String(linhas[i][j] ?? '').trim(); });
+    const bo = p.n_bo || p.no_bo || p.bo || p[cab.find(h => h.includes('bo')) || ''] || '';
+    const k = boChave(bo);
+    if (!k) continue;
+    if (!mapa.has(k)) mapa.set(k, []);
+    mapa.get(k).push({
+      tipo:     p.tipo || p.tipo_veiculo || p.tipo_de_veiculo || p.especie || p.categoria || '',
+      modelo:   p.marca_modelo || [p.marca, p.modelo].filter(Boolean).join(' '),
+      situacao: p.situacao || p.status || '',
+    });
+  }
+  VEI_POR_BO = mapa;
+  VEI_FALHOU = false;
+  console.log('[BPFRON] Veículos carregados: ' + mapa.size + ' BOs');
+  return mapa;
+}
+function veiculosDe(o){
+  if (!VEI_POR_BO) return null;
+  const out = [];
+  bosDaOcorrencia(o).forEach(k => (VEI_POR_BO.get(k) || []).forEach(v => out.push(v)));
+  return out;
+}
+/* Tipo padronizado: a coluna Tipo vem escrita de vários jeitos ("AUTOMOVEL",
+   "Motocicleta", "CAMINHONETE"…); sem ela, tenta pelo modelo ("Honda CG 160"
+   é moto, "Toyota Hilux" é caminhonete). O que não der para saber fica
+   "Tipo não informado" — melhor do que chutar. */
+const TIPOS_VEI = [
+  [/moto|ciclomotor|scooter/,                               'Motocicleta'],
+  [/quadriciclo|triciclo/,                                  'Quadriciclo / triciclo'],
+  [/caminhonete|camionete|caminhoneta|pick ?up|picape/,     'Caminhonete'],
+  [/caminhao|carreta|cavalo mec|semi.?reboque|reboque|bitrem|truck/, 'Caminhão / carreta'],
+  [/onibus|micro.?onibus/,                                  'Ônibus / micro-ônibus'],
+  [/\bvan\b|furgao|utilitario|kombi/,                       'Van / utilitário'],
+  [/bicicleta/,                                             'Bicicleta'],
+  [/trator|maquina|retroescavadeira|escavadeira|pa carregadeira/, 'Trator / máquina'],
+  [/automovel|carro|passeio|sedan|hatch/,                   'Automóvel'],
+];
+const MODELOS_VEI = [
+  [/\b(cg|titan|fan|bros|biz|xre|pop|factor|twister|nxr|fazer|crosser|falcon|lander|ybr|cb ?\d|xt ?\d|nmax|pcx|start|dafra|shineray|traxx)\b/, 'Motocicleta'],
+  [/\b(hilux|s10|ranger|l200|triton|frontier|amarok|toro|saveiro|strada|montana|oroch|rampage|maverick|d20|f1000|f250)\b/, 'Caminhonete'],
+  [/\b(scania|volvo|iveco|axor|actros|atego|accelo|constellation|cargo|f4000|f350|delivery|worker|vm ?\d+|fh ?\d+)\b/, 'Caminhão / carreta'],
+  [/\b(gol|uno|palio|siena|corsa|celta|onix|prisma|hb20|ka|fiesta|fox|polo|voyage|virtus|corolla|civic|fit|city|sandero|logan|kwid|duster|ecosport|spin|cobalt|argo|cronos|mobi|tracker|compass|renegade|creta|kicks|versa|march|etios|yaris|focus|astra|vectra|celta|clio|208|207|206|c3)\b/, 'Automóvel'],
+];
+function tipoVeiculo(v){
+  const t = norm(v.tipo);
+  for (const [re, rot] of TIPOS_VEI) if (re.test(t)) return rot;
+  const m = norm(v.modelo);
+  for (const [re, rot] of MODELOS_VEI) if (re.test(m)) return rot;
+  return t ? v.tipo.trim().charAt(0).toUpperCase() + v.tipo.trim().slice(1).toLowerCase() : 'Tipo não informado';
+}
+
 function montarIndice(csv){
   const linhas = parseCSV(csv);
   if (!linhas.length) throw new Error('A planilha voltou vazia.');
@@ -1860,7 +1936,7 @@ function quadroConteudo(lista){
     g.set(k, { rot, un: un || '', q: (g.get(k)?.q || 0) + q, bos });
   };
   const pessoas = new Map(), papeis = new Map(), situacoes = new Map();
-  let boAtual = -1, semEnv = 0, kgRel = 0, comDroga = 0, semTipo = 0;   // kgRel: droga total, BO a BO (banco novo ou coluna "Drogas TOTAL")
+  let boAtual = -1, semEnv = 0, kgRel = 0, comDroga = 0, semTipo = 0, veiTot = 0, veiRec = 0;   // kgRel: droga total, BO a BO (banco novo ou coluna "Drogas TOTAL")
   const nats = new Map(), muns = new Map();
   const conta = (m, k) => { if (k) m.set(k, (m.get(k) || 0) + 1); };
 
@@ -1899,8 +1975,24 @@ function quadroConteudo(lista){
       add('Armas e munições', 'Armas (tipo não informado)', o.n_armas);
     }
     add('Armas e munições', 'Munições', o.n_municoes);
-    [['veiculos','Veículos'],['embarcacoes','Embarcações'],['motorpopa','Motores de popa']]
-      .forEach(([f, rot]) => add('Veículos e embarcações', rot, o['n_'+f]));
+    // Veículos por tipo (aba VEÍCULOS). Conta o que a lista marca como apreendido
+    // e, dos sem situação, só até o nº da BASE — senão um carro só abordado
+    // entraria como apreensão. O que a BASE tem a mais vira "Tipo não informado".
+    const vs = veiculosDe(o), nVei = o.n_veiculos || 0;
+    if (vs){
+      const sit = v => norm(v.situacao);
+      const expl = vs.filter(v => /apreen/.test(sit(v)));
+      const vaz  = vs.filter(v => !sit(v)).slice(0, Math.max(0, nVei - expl.length));
+      [...expl, ...vaz].forEach(v => add('Veículos', tipoVeiculo(v), 1));
+      add('Veículos', 'Tipo não informado', nVei - expl.length - vaz.length);
+      veiTot += Math.max(nVei, expl.length);
+      veiRec += vs.filter(v => /recuper/.test(sit(v))).length;
+    } else {
+      add('Veículos', 'Veículos (tipo não carregado)', nVei);
+      veiTot += nVei;
+    }
+    [['embarcacoes','Embarcações'],['motorpopa','Motores de popa']]
+      .forEach(([f, rot]) => add('Embarcações', rot, o['n_'+f]));
     [['madeira','Madeira','m³'],['cigarros','Cigarros','maços'],['gasolina','Gasolina','L'],['diesel','Diesel','L'],
      ['glp','GLP','botijas'],['celulares','Celulares',''],['eletronicos','Eletrônicos',''],['roupas','Roupas',''],
      ['ouro','Ouro','g'],['dinheiro','Dinheiro em espécie','R$'],['merc','Mercadorias de descaminho','R$'],
@@ -1942,13 +2034,25 @@ function quadroConteudo(lista){
   if (kgRel - kgTipos > 0.0005) drogas.push(['Tipo não informado', fq(kgRel - kgTipos, 'kg'), semTipo ? fN(semTipo) : '']);
   const kgTot = Math.max(kgRel, kgTipos);
   if (drogas.length > 1 && kgTot > 0) drogas.push(['Total', fq(kgTot, 'kg'), fN(comDroga), 'pr-tot']);
-  const linhasDroga = drogas.length
+  const tabela3 = rows => rows.length
     ? '<tr class="pr-cab"><td>Tipo</td><td class="pr-q">Quantidade</td><td class="pr-n">Ocorr.</td></tr>' +
-      drogas.map(([r, v, n, cls]) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(r) + '</td><td class="pr-q">' + v +
+      rows.map(([r, v, n, cls]) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(r) + '</td><td class="pr-q">' + v +
         '</td><td class="pr-n">' + n + '</td></tr>').join('')
     : '';
+  const linhasDroga = tabela3(drogas);
   const notaDroga = comDroga
     ? '<div class="pr-nota">Droga em ' + fN(comDroga) + ' de ' + fN(lista.length) + ' ocorrências. Uma ocorrência com mais de um tipo conta em cada tipo.</div>' : '';
+
+  // veículos por tipo ("Tipo não informado" sempre por último), depois embarcações
+  const porQtd = g => soma.has(g) ? [...soma.get(g).values()]
+    .sort((a,b) => (a.rot === 'Tipo não informado') - (b.rot === 'Tipo não informado') || b.q - a.q) : [];
+  const veis = porQtd('Veículos').map(x => [x.rot, fN(x.q), fN(x.bos.size)]);
+  const comVei = soma.has('Veículos') ? new Set([...soma.get('Veículos').values()].flatMap(x => [...x.bos])).size : 0;
+  if (veis.length > 1) veis.push(['Total de veículos', fN(veiTot), fN(comVei), 'pr-tot']);
+  const embs = porQtd('Embarcações').map(x => [x.rot, fN(x.q), fN(x.bos.size)]);
+  const linhasVei = tabela3(veis.concat(embs));
+  const notaVei = (VEI_FALHOU ? '<div class="pr-sem">lista de veículos não carregada — sem o tipo</div>' : '') +
+    (veiRec ? '<div class="pr-nota">Fora da conta: ' + fN(veiRec) + ' veículo(s) recuperado(s) (furto/roubo) nessas ocorrências.</div>' : '');
 
   // armas "de verdade" (sem munição), para a faixa de números de cima bater com o quadro
   const armas = soma.has('Armas e munições')
@@ -1957,12 +2061,12 @@ function quadroConteudo(lista){
     caixa('Pessoas', linhas(pes), extraPes) +
     caixa('Drogas', linhasDroga, notaDroga) +
     caixa('Armas e munições', linhas(doGrupo('Armas e munições'))) +
-    caixa('Veículos e embarcações', linhas(doGrupo('Veículos e embarcações'))) +
+    caixa('Veículos e embarcações', linhasVei, notaVei) +
     caixa('Outras apreensões', linhas(doGrupo('Outras apreensões'))) +
     caixa('Naturezas (ocorrências)', linhas(ranking(nats, 8))) +
     caixa('Municípios (ocorrências)', linhas(ranking(muns, 8))) +
   '</div>';
-  return { html, kgDroga: kgTot, armas };
+  return { html, kgDroga: kgTot, armas, veiculos: veiTot };
 }
 
 let REL_MODO = 'completo';   // último modelo pedido (o Ctrl+P usa o mesmo)
@@ -1973,7 +2077,7 @@ function montarRelatorio(lista, modo){
   const quadro = quadroConteudo(lista);
   const resumo = [
     [fN(lista.length), 'ocorrências'], [fN(soma('presos')), 'presos'],
-    [fD(quadro.kgDroga,1), 'kg de droga'], [fN(soma('veiculos')), 'veículos'],
+    [fD(quadro.kgDroga,1), 'kg de droga'], [fN(quadro.veiculos), 'veículos'],
     [fN(quadro.armas), 'armas'], [fR(soma('prejuizo')), 'prejuízo estimado'],
   ];
   const agora = new Date().toLocaleString('pt-BR');
@@ -2036,6 +2140,11 @@ async function imprimir(modo){
     aviso('Buscando os envolvidos…');
     try { await carregarEnvolvidos(); }
     catch(e){ ENV_FALHOU = true; aviso('Sem a lista de envolvidos: ' + e.message); }
+  }
+  // tipo dos veículos apreendidos (quadro da 1ª página); sem ela o quadro avisa
+  if (!VEI_POR_BO){
+    try { await carregarVeiculos(); }
+    catch(e){ VEI_FALHOU = true; console.warn('[BPFRON] Veículos não carregaram:', e.message); }
   }
   montarRelatorio(lista, REL_MODO);
   window.print();
@@ -2120,6 +2229,7 @@ function ocLogout(){
   AUTH.token = ''; AUTH.user = '';
   DADOS = []; RES = []; ABERTOS = new Set(); SELECIONADOS = new Set();
   ENV_POR_BO = null; ENV_FALHOU = false;    // PII de envolvidos não fica em memória após sair
+  VEI_POR_BO = null; VEI_FALHOU = false;
   document.getElementById('lista').innerHTML = '';
   document.getElementById('print-area').innerHTML = '';   // não deixa PII no DOM após sair
   mostrar();
