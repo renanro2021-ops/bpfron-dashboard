@@ -346,7 +346,7 @@ async function apiFetchJSON(path){
 /* Portal do Policial: o RE vem do portal. Quem já entrou nas Tarefas com senha manda o
    token junto e o Worker dispensa o CPF (só para o RE da própria sessão). */
 const PORTAL_RE = (() => { try { const q = new URLSearchParams(location.search); return q.has('portal') ? (q.get('re') || '').replace(/\D/g, '').slice(-5) : ''; } catch(e){ return ''; } })();
-const tokenPortal = () => { try { return PORTAL_RE ? (localStorage.getItem('tar_token') || '') : ''; } catch(e){ return ''; } };
+const tokenPortal = () => { try { return PORTAL_RE ? (localStorage.getItem('tar_token') || localStorage.getItem('bp_token') || '') : ''; } catch(e){ return ''; } };
 async function apiPostJSONPublic(path, body){
   const h = { 'Content-Type':'application/json' }, tk = tokenPortal();
   if (tk) h.Authorization = 'Bearer ' + tk;

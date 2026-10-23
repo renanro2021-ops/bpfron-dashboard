@@ -99,6 +99,15 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 .achou .bts{display:flex;gap:8px;margin-top:12px}
 .achou .bts .btn{flex:1}
 .nota{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:14px;text-align:center}
+.msg.info{color:var(--tx-info)}
+/* duas formas de entrar: pelo RE (sem senha) ou com o login do dashboard */
+.seg{display:flex;gap:4px;padding:4px;margin-bottom:14px;border-radius:12px;background:rgba(148,163,184,.08);border:1px solid var(--border)}
+.seg button{flex:1;min-width:0;border:0;background:none;border-radius:9px;padding:9px 6px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button.on{background:rgba(245,197,24,.14);color:var(--yellow)}
+.seg #sg-dash{flex:1.45}
+@media (max-width:420px){ .seg button{padding:9px 3px;font-size:12.5px} }
+.achou.ja{margin:0 0 14px;background:rgba(57,135,229,.08);border-color:rgba(57,135,229,.32)}
+.dica{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:10px}
 
 /* ---------- início ---------- */
 .ola h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:var(--t1);line-height:1.15}
@@ -184,18 +193,36 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
       <h1>Portal do <em>Policial</em></h1>
       <p class="lead">Suas <b style="color:var(--t2)">tarefas</b>, o <b style="color:var(--t2)">checklist da viatura</b> e a sua <b style="color:var(--t2)">ficha da P1</b> num lugar só.</p>
       <div class="box">
-        <label class="lb" for="re">Seu RE</label>
-        <input class="inp" id="re" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ex.: 12345">
-        <button class="btn w" id="bt-re" style="margin-top:12px">Continuar</button>
-        <div class="msg err" id="re-msg"></div>
-        <div class="achou hide" id="achou">
-          <small>É você?</small>
-          <b id="achou-nm"></b>
-          <small id="achou-sub"></small>
-          <div class="bts"><button class="btn" id="bt-sou">✔ Sou eu</button><button class="btn sec" id="bt-nao">Não sou</button></div>
+        <div class="achou ja hide" id="ja-dash">
+          <small>Você já entrou no dashboard neste aparelho</small>
+          <b id="ja-nm"></b>
+          <small id="ja-sub"></small>
+          <div class="bts"><button class="btn" id="bt-ja">Continuar</button><button class="btn sec" id="bt-ja-nao">Não sou eu</button></div>
         </div>
+        <div class="seg"><button id="sg-re" class="on">🪪 Pelo RE</button><button id="sg-dash">🔑 Login do dashboard</button></div>
+        <div id="ent-re">
+          <label class="lb" for="re">Seu RE</label>
+          <input class="inp" id="re" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ex.: 12345">
+          <button class="btn w" id="bt-re" style="margin-top:12px">Continuar</button>
+          <div class="msg err" id="re-msg"></div>
+          <div class="achou hide" id="achou">
+            <small>É você?</small>
+            <b id="achou-nm"></b>
+            <small id="achou-sub"></small>
+            <div class="bts"><button class="btn" id="bt-sou">✔ Sou eu</button><button class="btn sec" id="bt-nao">Não sou</button></div>
+          </div>
+        </div>
+        <form id="ent-dash" class="hide" onsubmit="return false">
+          <label class="lb" for="dl-user">Usuário</label>
+          <input class="inp" id="dl-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false">
+          <label class="lb" for="dl-pass" style="margin-top:12px">Senha</label>
+          <input class="inp" id="dl-pass" name="password" type="password" autocomplete="current-password">
+          <button type="button" class="btn w" id="bt-dash" style="margin-top:12px">Entrar</button>
+          <div class="msg err" id="dl-msg"></div>
+          <p class="dica">Mesmo usuário e senha do dashboard. Assim as <b>Tarefas</b> já abrem direto, sem outra senha.</p>
+        </form>
       </div>
-      <p class="nota">Não precisa de senha: o RE fica lembrado neste aparelho. Só as <b>Tarefas</b> pedem a senha delas.</p>
+      <p class="nota">Pelo RE não precisa de senha: ele fica lembrado neste aparelho. Só as <b>Tarefas</b> pedem a senha delas.</p>
       <p class="manual"><a href="manual-portal.html" target="_blank" rel="noopener">📖 Como usar o portal (manual)</a></p>
     </div>
   </section>
@@ -258,7 +285,7 @@ const tokenTar = () => ls.get('tar_token') || ls.get('bp_token') || '';
 let ACHADO = null;
 async function procurarRE(){
   const re = $('re').value.replace(/\D/g, '');
-  $('re-msg').textContent = ''; vis('achou', false); ACHADO = null;
+  $('re-msg').className = 'msg err'; $('re-msg').textContent = ''; vis('achou', false); ACHADO = null;
   if (re.length < 4){ $('re-msg').textContent = 'Digite o seu RE.'; $('re').focus(); return; }
   $('bt-re').disabled = true; $('bt-re').textContent = 'Procurando…';
   try {
@@ -281,6 +308,61 @@ $('bt-sou').onclick = () => {
   EU = ACHADO; ls.set(LS_EU, JSON.stringify(EU));
   iniciar();
 };
+
+/* ============================== entrar com o login do dashboard ==============================
+   O RE vem da Central de Tarefas (o administrador liga o login ao RE na Designação).
+   Login sem RE ligado: entra, mas confirma o RE na aba de cima. */
+function abaEntrada(dash){
+  $('sg-re').classList.toggle('on', !dash); $('sg-dash').classList.toggle('on', dash);
+  vis('ent-re', !dash); vis('ent-dash', dash);
+  setTimeout(() => $(dash ? 'dl-user' : 're').focus(), 30);
+}
+$('sg-re').onclick = () => abaEntrada(false);
+$('sg-dash').onclick = () => abaEntrada(true);
+const euDoPortal = (d) => (d && d.re && d.pol) ? { re: d.pol.re || d.re, nome: d.pol.nome || '', posto: d.pol.posto_grad || '', guerra: d.pol.guerra || '', login: d.login || '' } : null;
+async function entrarDash(){
+  const user = $('dl-user').value.trim(), pass = $('dl-pass').value, m = $('dl-msg');
+  m.textContent = '';
+  if (!user || !pass){ m.textContent = 'Informe usuário e senha.'; return; }
+  const b = $('bt-dash'); b.disabled = true; b.textContent = 'Entrando…';
+  try {
+    let d;
+    try { d = await getJ('/api/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ user, pass }) }); }
+    catch(e){ throw new Error(e.code === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : (e.message || 'Falha no login.')); }
+    if (!d.token) throw new Error('Falha no login.');
+    // mesma sessão do dashboard (vale nas outras páginas); sai do acesso pelo RE das Tarefas
+    ls.set('tar_token', null); ls.set('tar_user', null);
+    ls.set('bp_token', d.token); ls.set('bp_user', d.user);
+    if (d.perms) ls.set('bp_perms', JSON.stringify({ user: d.user, nome: d.nome, admin: !!d.admin, perms: d.perms, bloqueios: d.bloqueios || [] }));
+    $('dl-pass').value = '';
+    const eu = euDoPortal(await getJ('/api/portal/eu', { headers: { Authorization: 'Bearer ' + d.token } }).catch(() => null));
+    if (eu){ EU = eu; ls.set(LS_EU, JSON.stringify(EU)); iniciar(); return; }
+    abaEntrada(false);
+    $('re-msg').className = 'msg info';
+    $('re-msg').textContent = `Você entrou como ${d.nome || d.user}, mas esse login ainda não está ligado a um RE. Digite o seu RE para continuar.`;
+  } catch(e){ m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { b.disabled = false; b.textContent = 'Entrar'; }
+}
+$('bt-dash').onclick = entrarDash;
+$('dl-user').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('dl-pass').focus(); });
+$('dl-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') entrarDash(); });
+/* já entrou no dashboard neste aparelho (mesmo site): oferece continuar com esse login */
+let JA = null;
+async function jaLogadoDash(){
+  vis('ja-dash', false); JA = null;
+  const tk = ls.get('bp_token'); if (!tk) return;
+  try {
+    const d = await getJ('/api/portal/eu', { headers: { Authorization: 'Bearer ' + tk } });
+    const eu = euDoPortal(d);
+    if (EU || !eu) return;
+    JA = eu;
+    $('ja-nm').textContent = nomeCurto(eu);
+    $('ja-sub').textContent = `login ${d.login} · RE ${re5(eu.re)}`;
+    vis('ja-dash', true);
+  } catch(e){}
+}
+$('bt-ja').onclick = () => { if (!JA) return; EU = JA; ls.set('tar_token', null); ls.set(LS_EU, JSON.stringify(EU)); iniciar(); };
+$('bt-ja-nao').onclick = () => { vis('ja-dash', false); JA = null; };
 
 /* trocar de policial: limpa o RE e também sai das Tarefas e do checklist neste aparelho */
 $('bt-trocar').onclick = () => {
@@ -380,7 +462,8 @@ async function carregarTarefas(){
   try {
     const d = await getJ('/api/tarefas', { headers: { Authorization: 'Bearer ' + tk } });
     const me = d.eu && d.eu.login;
-    if (/^re\d+$/.test(me || '') && me !== 're' + re5(EU.re)) return { estado: 'outro', quem: (d.eu && d.eu.nome) || me };
+    const reSessao = /^re\d+$/.test(me || '') ? me.slice(2) : ((d.eu && d.eu.re) || '');
+    if (reSessao && re5(reSessao) !== re5(EU.re)) return { estado: 'outro', quem: (d.eu && d.eu.nome) || me };
     const minhas = (d.tarefas || []).filter(t => t.ativo !== 'NAO' && (t.responsaveis || []).includes(me));
     const abertas = minhas.filter(t => t.status !== 'CONCLUIDA');
     const novas = abertas.filter(t => !((t.ciencia || {})[me] || {}).ciente);
@@ -402,7 +485,7 @@ async function carregarViatura(){
   } catch(e){ return { estado: 'erro', msg: e.message }; }
 }
 async function carregarFicha(){
-  const tk = ls.get('tar_token');
+  const tk = tokenTar();
   if (!tk) return { estado: 'cpf' };
   try {
     const d = await getJ('/api/p1/identificar', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tk }, body: JSON.stringify({ re: re5(EU.re) }) });
@@ -509,7 +592,7 @@ function iniciar(){
   vis('eu', !!EU); vis('tabs', !!EU); vis('v-entrar', !EU); vis('v-inicio', false);
   ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, false));
   vis('main', true);
-  if (!EU){ $('re').value = ''; vis('achou', false); setTimeout(() => $('re').focus(), 60); return; }
+  if (!EU){ $('re').value = ''; vis('achou', false); $('re-msg').textContent = ''; abaEntrada(false); jaLogadoDash(); return; }
   $('eu-nm').textContent = nomeCurto(EU);
   $('eu-av').textContent = (EU.guerra || EU.nome || 'PM').trim().slice(0, 2).toUpperCase();
   const h = (location.hash || '').slice(1);
