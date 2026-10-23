@@ -604,6 +604,75 @@ input[type=range]{width:100%;accent-color:#3987e5}
 .vivo-chip.off{background:rgba(148,163,184,.08);border-color:var(--border);color:var(--dim)}
 .vivo-chip.off i{background:#64748b;box-shadow:none}
 @media (max-width:560px){ .vivo-chip span{display:none} }
+/* celular: rótulos curtos na barra de baixo; o título encolhe em vez de ficar por baixo dos botões */
+@media (max-width:600px){
+  .nb{font-size:0;min-width:0;padding:6px 2px}
+  .nb::after{content:attr(data-c);font-size:10.5px;white-space:nowrap}
+  .hdr-in{gap:8px}
+  .brand{flex:1 1 auto;gap:8px}.brand img{height:34px}
+  .brand div{min-width:0;overflow:hidden}
+  .brand b{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis}
+  .hdr .sp{display:none}
+}
+/* links de acesso direto */
+.lks{display:flex;flex-direction:column;gap:8px}
+.lkw{display:flex;align-items:center;gap:6px}
+.lk{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;border:1px solid rgba(57,135,229,.35);background:rgba(57,135,229,.08);color:var(--t1);text-decoration:none;transition:.15s}
+.lk:hover{background:rgba(57,135,229,.16);border-color:rgba(57,135,229,.6);transform:translateY(-1px)}
+.lk .ic{font-size:20px;flex-shrink:0}
+.lk .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.lk .tx b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk .tx small{font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk .ab{font-weight:800;color:var(--tx-info);font-size:15px}
+.lkw .x{border:0;background:none;color:var(--dim);font-size:15px;width:32px;height:32px;border-radius:8px;cursor:pointer}
+.lkw .x:hover{background:rgba(230,103,103,.15);color:var(--tx-crit)}
+.addlk{display:grid;grid-template-columns:1fr 170px auto;gap:6px;margin-top:8px}
+@media (max-width:560px){ .addlk{grid-template-columns:1fr auto} .addlk .rot{grid-column:1 / -1;order:2} }
+.lks-ed .it{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;font-size:13.5px;color:var(--t2)}
+.lks-ed .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lks-ed .it small{color:var(--dim)}
+.lks-ed .it button{border:0;background:none;color:var(--dim);cursor:pointer;font-size:14px}
+/* pontuação */
+.pt-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.podio{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;margin:6px 0 18px}
+.podio .pd{text-align:center;padding:16px 10px 14px;border-radius:16px;border:1px solid var(--border);background:var(--glass2,rgba(148,163,184,.06));position:relative}
+.podio .pd.p1{border-color:rgba(245,197,24,.55);background:linear-gradient(180deg,rgba(245,197,24,.16),rgba(245,197,24,.03));padding-top:22px}
+.podio .pd.p2{border-color:rgba(203,213,225,.45)}
+.podio .pd.p3{border-color:rgba(217,119,6,.45)}
+.podio .md{font-size:30px;line-height:1}
+.podio .pd.p1 .md{font-size:38px}
+.podio .av{margin:8px auto 6px;width:46px;height:46px;font-size:16px}
+.podio .nm{font-weight:800;color:var(--t1);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podio .ps{font-size:22px;font-weight:800;color:var(--yellow);margin-top:4px}
+.podio .ps small{font-size:11px;color:var(--muted);font-weight:600;margin-left:3px}
+.podio .vz{opacity:.35}
+.pr-lin{display:grid;grid-template-columns:40px 34px minmax(0,1fr) minmax(90px,200px) 70px;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border2,rgba(148,163,184,.1))}
+.pr-lin:last-child{border-bottom:0}
+.pr-lin.eu{background:rgba(245,197,24,.08);border-radius:12px}
+.pr-lin .pos{font-weight:800;color:var(--muted);font-size:15px;text-align:center}
+.pr-lin .nm{min-width:0}
+.pr-lin .nm b{display:block;font-size:14px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-lin .nm small{font-size:11.5px;color:var(--dim)}
+.pr-lin .ks{display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--t3);margin-top:3px}
+.pr-lin .pts{text-align:right;font-weight:800;font-size:18px;color:var(--t1)}
+.pr-lin .pts small{display:block;font-size:10.5px;color:var(--dim);font-weight:600}
+.stk2{display:flex;height:10px;border-radius:999px;overflow:hidden;background:rgba(148,163,184,.12);gap:2px}
+.stk2 i{display:block;height:100%}
+.pt-leg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--t3);margin:4px 0 10px}
+.pt-leg span{display:inline-flex;align-items:center;gap:6px}
+.pt-leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.regra{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.regra div{padding:10px 12px;border-radius:12px;background:rgba(148,163,184,.07);border:1px solid var(--border);font-size:13px;color:var(--t3)}
+.regra b{display:block;font-size:20px;color:var(--t1)}
+.ptcard{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;margin:0 0 16px;border:1px solid rgba(245,197,24,.35);background:linear-gradient(90deg,rgba(245,197,24,.12),rgba(245,197,24,.02));cursor:pointer;width:100%;text-align:left;color:var(--t2);font-size:14px}
+.ptcard:hover{border-color:rgba(245,197,24,.6)}
+.ptcard .tr{font-size:30px}
+.ptcard b.big{font-size:22px;color:var(--yellow)}
+@media (max-width:560px){
+  .pr-lin{grid-template-columns:30px 30px minmax(0,1fr) 56px;gap:8px;padding:10px 6px}
+  .pr-lin .bar{grid-column:3 / 5;grid-row:2}
+  .podio{gap:6px}.podio .nm{font-size:12px}.podio .ps{font-size:18px}
+}
 /* boas-vindas (igual ao painel principal) */
 #welcome-ov{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;
   background:radial-gradient(circle at 50% 45%,rgba(10,14,24,.86),rgba(4,7,14,.96));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -688,12 +757,13 @@ input[type=range]{width:100%;accent-color:#3987e5}
 <div class="lay hide" id="app">
   <nav class="nav" id="nav">
     <button class="novo" id="bt-novo" title="Nova tarefa (N)">＋ Nova tarefa</button>
-    <button class="nb" data-v="mesa"><span class="i">🏠</span>Minha mesa<span class="c hide" id="c-mesa"></span></button>
-    <button class="nb" data-v="quadro"><span class="i">🗂️</span>Quadro</button>
-    <button class="nb" data-v="calendario"><span class="i">📅</span>Calendário</button>
-    <button class="nb hide" data-v="proc" id="nb-proc"><span class="i">⚖️</span>Procedimentos<span class="c hide" id="c-proc"></span></button>
-    <button class="nb hide" data-v="painel" id="nb-painel"><span class="i">📊</span>Painel da chefia</button>
-    <button class="nb hide" data-v="config" id="nb-config"><span class="i">⚙️</span>Designação</button>
+    <button class="nb" data-v="mesa" data-c="Mesa"><span class="i">🏠</span>Minha mesa<span class="c hide" id="c-mesa"></span></button>
+    <button class="nb" data-v="quadro" data-c="Quadro"><span class="i">🗂️</span>Quadro</button>
+    <button class="nb" data-v="calendario" data-c="Agenda"><span class="i">📅</span>Calendário</button>
+    <button class="nb" data-v="pontos" data-c="Pontos"><span class="i">🏆</span>Pontuação</button>
+    <button class="nb hide" data-v="proc" id="nb-proc" data-c="Proced."><span class="i">⚖️</span>Procedimentos<span class="c hide" id="c-proc"></span></button>
+    <button class="nb hide" data-v="painel" id="nb-painel" data-c="Painel"><span class="i">📊</span>Painel da chefia</button>
+    <button class="nb hide" data-v="config" id="nb-config" data-c="Designar"><span class="i">⚙️</span>Designação</button>
     <div class="rod">Atalhos: <b>N</b> nova tarefa · <b>/</b> buscar<br>Atualiza sozinho a cada minuto.</div>
   </nav>
   <main class="main">
@@ -701,6 +771,7 @@ input[type=range]{width:100%;accent-color:#3987e5}
     <section class="view" id="v-mesa"></section>
     <section class="view" id="v-quadro"></section>
     <section class="view" id="v-calendario"></section>
+    <section class="view" id="v-pontos"></section>
     <section class="view" id="v-proc"></section>
     <section class="view" id="v-painel"></section>
     <section class="view" id="v-config"></section>
@@ -886,6 +957,31 @@ function partesDe(t){
   const feitos = rs.filter(l => (ci[l] || {}).feito);
   return { total: rs.length, feitos: feitos.length, quem: feitos, faltam: rs.filter(l => !feitos.includes(l)) };
 }
+/* Links de acesso direto (mesma regra do Worker: só http/https). */
+function urlValida(s){ try { const u = new URL(String(s || '').trim()); return (u.protocol === 'https:' || u.protocol === 'http:') ? u : null; } catch(e){ return null; } }
+function rotuloLink(u){
+  const h = u.hostname.toLowerCase(), s = u.href.toLowerCase();
+  if (/(^|\.)sei\./.test(h) || s.includes('/sei/')) return 'Processo SEI';
+  if (h === 'forms.gle' || (h === 'docs.google.com' && s.includes('/forms/')) || h.endsWith('forms.office.com')) return 'Formulário';
+  if (h === 'docs.google.com' && s.includes('/spreadsheets/')) return 'Planilha';
+  if (h === 'docs.google.com' && s.includes('/document/')) return 'Documento';
+  if (h === 'docs.google.com' && s.includes('/presentation/')) return 'Apresentação';
+  if (h === 'drive.google.com') return 'Google Drive';
+  if (h.endsWith('whatsapp.com') || h === 'wa.me') return 'WhatsApp';
+  return h.replace(/^www\./, '');
+}
+function icoLink(url){
+  const u = urlValida(url); if (!u) return '🌐';
+  const r = rotuloLink(u);
+  return ({ 'Processo SEI':'📄', 'Formulário':'📝', 'Planilha':'📊', 'Documento':'📃', 'Apresentação':'📽️', 'Google Drive':'📁', 'WhatsApp':'💬' })[r] || '🌐';
+}
+const linksDe = (t) => ((t.extra || {}).links || []).filter(l => urlValida(l.u));
+function htmlLink(l, i, podeTirar){
+  const u = urlValida(l.u);
+  return `<div class="lkw"><a class="lk" href="${esc(u.href)}" target="_blank" rel="noopener noreferrer" title="Abrir ${esc(u.href)}" data-stop>
+    <span class="ic">${icoLink(u.href)}</span><span class="tx"><b>${esc(l.r || rotuloLink(u))}</b><small>${esc(u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? u.pathname : ''))}</small></span><span class="ab">↗</span></a>
+    ${podeTirar ? `<button class="x" data-lkdel="${i}" data-lku="${esc(l.u)}" title="Tirar este link">✕</button>` : ''}</div>`;
+}
 /* Presença ao vivo (WebSocket): login → { nome, vendo:[ids], ativo } */
 const ONLINE = new Map();
 const ehProc = (t) => t.tipo && t.tipo !== 'TAREFA';
@@ -1028,7 +1124,7 @@ async function carregar(silencioso, primeira){
   if (CARREGANDO) return; CARREGANDO = true;
   if (primeira && !D) esqueleto();
   try {
-    const d = await api('/api/tarefas' + (VIEW === 'config' ? '?config=1' : ''));
+    const d = await api('/api/tarefas' + (VIEW === 'config' ? '?config=1' : VIEW === 'pontos' ? '?pontos=1' : ''));
     RELOGIO = Date.parse(d.agora) - Date.now();
     const antes = D;
     D = d; ULTIMA = Date.now();
@@ -1108,6 +1204,7 @@ function irPara(v){
   VIEW = v; lembrar('tar_view', v);
   qsa('.nb').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   render(); window.scrollTo({ top:0, behavior:'smooth' });
+  if (v === 'pontos' && !(D && D.pontos && D.pontos.entregas)) carregar(true);
 }
 
 function render(){
@@ -1115,7 +1212,7 @@ function render(){
   // a atualização automática não pode roubar o foco de quem está digitando na busca
   const ae = document.activeElement, focoId = ae && ae.id, cur = ae && ae.selectionStart;
   qsa('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + VIEW));
-  ({ mesa:renderMesa, quadro:renderQuadro, calendario:renderCal, proc:renderProc, painel:renderPainel, config:renderConfig }[VIEW] || renderMesa)();
+  ({ mesa:renderMesa, quadro:renderQuadro, calendario:renderCal, pontos:renderPontos, proc:renderProc, painel:renderPainel, config:renderConfig }[VIEW] || renderMesa)();
   animarNumeros();
   if (focoId && focoId !== 'busca' && $(focoId) && document.activeElement !== $(focoId) && $('v-' + VIEW).contains($(focoId))){
     $(focoId).focus(); try { $(focoId).setSelectionRange(cur, cur); } catch(e){}
@@ -1174,7 +1271,8 @@ function cartao(t, i){
       ${nCheck ? `<span class="mi">☑️ ${nOk}/${nCheck}</span>` : ''}
       ${t.n_andamentos ? `<span class="mi">💬 ${t.n_andamentos}</span>` : ''}
       ${t.n_anexos ? `<span class="mi">📎 ${t.n_anexos}</span>` : ''}
-      ${(t.extra || {}).validar ? `<span class="mi" title="Exige validação de quem delegou">🛡️</span>` : ''}
+      ${linksDe(t).length ? `<span class="mi" title="${esc(linksDe(t).map(l => l.r).join(', '))}">🔗 ${linksDe(t).length}</span>` : ''}
+      ${(t.extra || {}).validar ?`<span class="mi" title="Exige validação de quem delegou">🛡️</span>` : ''}
       ${t.visibilidade === 'SECAO' ? `<span class="mi" title="Visível para toda a seção">👥</span>` : `<span class="mi" title="Reservada: só envolvidos e chefia">🔒</span>`}
     </div>
     <div class="cf">${avsResp(t)}${barra(pct, t.status === 'CONCLUIDA' ? 'done' : (pz && pz.atrasada ? 'late' : ''))}<span class="pct">${pct}%</span></div>
@@ -1274,6 +1372,7 @@ function renderMesa(){
       <div><h1>${saud}, ${esc(eu.nome)}</h1><p style="text-transform:capitalize;color:var(--muted);font-size:13px;margin-top:2px">${esc(dataLonga)}</p><p>${frase}</p></div>
     </div>
     ${cartaoAvisos()}
+    ${cartaoPontos()}
     <div class="kpis">
       ${kpi('Com você', abertas.length, 'em aberto', '#3987e5', 'k1', 'minhas')}
       ${kpi('Chegaram', chegou.length, 'aguardando sua ciência', '#c98500', 'k2', 'chegou')}
@@ -1293,6 +1392,7 @@ function renderMesa(){
       <div><div class="sec">📤 Que você delegou <small>acompanhe se já recebeu e o andamento</small></div>
         ${deleguei.length ? `<div class="lst">${deleguei.slice(0, 12).map(t => itemLista(t, true)).join('')}</div>` : `<div class="box vazio"><span class="big">📭</span>${possoDelegarAlgo() ? 'Você não tem tarefas delegadas em aberto.<br><button class="btn" style="margin-top:12px" onclick="abrirForm()">＋ Delegar uma tarefa</button>' : 'Delegar é coisa do chefe da seção — mas você pode criar tarefas para você mesmo.'}</div>`}</div>
     </div>`;
+  const bpt = $('bt-ptcard'); if (bpt) bpt.onclick = () => irPara('pontos');
   const anel = $('v-mesa').querySelector('circle.f');
   requestAnimationFrame(() => requestAnimationFrame(() => { anel.style.strokeDashoffset = anel.dataset.off; }));
   qsa('[data-kpi]', $('v-mesa')).forEach(b => b.addEventListener('click', () => {
@@ -1492,6 +1592,115 @@ function renderCal(){
 }
 
 /* ============================== PROCEDIMENTOS (P6) ============================== */
+/* ============================== pontuação ==============================
+   O Worker manda cada ENTREGA (quem, quando, A/D/T/S, pontos); aqui só soma por
+   período e seção. A = antes do dia do prazo, D = no dia, T = atrasada, S = sem prazo. */
+let PT_PER = lido('tar_pt_per') || 'mes', PT_SEC = '';
+const PT_PERIODOS = [['mes', 'Este mês'], ['ant', 'Mês passado'], ['ano', 'Este ano'], ['tudo', 'Desde o início']];
+const PT_K = {
+  A: { nome:'Antes do prazo', curto:'antes', cor:'#199e70', ic:'🚀' },
+  D: { nome:'No dia do prazo', curto:'no dia', cor:'#3987e5', ic:'🎯' },
+  T: { nome:'Depois do prazo', curto:'atrasada', cor:'#e66767', ic:'⏰' },
+  S: { nome:'Sem prazo', curto:'sem prazo', cor:'#94a3b8', ic:'📌' },
+};
+const horaRO = (iso) => { const t = Date.parse(iso); return Number.isFinite(t) ? new Date(t - 4 * 3600e3).toISOString() : ''; };
+function ptPeriodo(per){
+  const hoje = horaRO(new Date(agora()).toISOString()), mes = hoje.slice(0, 7), ano = hoje.slice(0, 4);
+  const d = new Date(mes + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1);
+  const ant = d.toISOString().slice(0, 7);
+  const nomeMes = (m) => new Date(m + '-15T12:00:00Z').toLocaleDateString('pt-BR', { month:'long', year:'numeric', timeZone:'UTC' });
+  if (per === 'mes') return { ok: (q) => horaRO(q).slice(0, 7) === mes, txt: nomeMes(mes) };
+  if (per === 'ant') return { ok: (q) => horaRO(q).slice(0, 7) === ant, txt: nomeMes(ant) };
+  if (per === 'ano') return { ok: (q) => horaRO(q).slice(0, 4) === ano, txt: 'ano de ' + ano };
+  return { ok: () => true, txt: 'desde o início' };
+}
+const nomePt = (l) => (D.pontos && D.pontos.nomes && D.pontos.nomes[l]) || nomeDe(l);
+function rankingPontos(per, sec){
+  const P = D.pontos || {}, f = ptPeriodo(per);
+  const m = new Map();
+  for (const x of P.entregas || []){
+    if (!f.ok(x.q)) continue;
+    if (sec){ const mb = D.membros.find(y => y.login === x.l); if (!mb || !mb.secoes.includes(sec)) continue; }
+    const r = m.get(x.l) || { l: x.l, pts: 0, n: 0, A: 0, D: 0, T: 0, S: 0 };
+    r.pts += x.pts; r.n++; r[x.k]++;
+    m.set(x.l, r);
+  }
+  const lista = [...m.values()].sort((a, b) => b.pts - a.pts || b.A - a.A || b.n - a.n || nomePt(a.l).localeCompare(nomePt(b.l), 'pt-BR'));
+  let pos = 0, ant = null;
+  lista.forEach((r, i) => { if (!ant || r.pts !== ant.pts) pos = i + 1; r.pos = pos; ant = r; });
+  return { lista, txt: f.txt };
+}
+function cartaoPontos(){
+  const e = D.pontos && D.pontos.eu; if (!e) return '';
+  const txt = e.mes > 0
+    ? `Você tem <b class="big">${e.mes}</b> ponto${e.mes === 1 ? '' : 's'} este mês${e.pos_mes ? ` · <b style="color:var(--t1)">${e.pos_mes}º lugar</b> de ${e.de}` : ''}${e.total > e.mes ? ` <span style="color:var(--dim)">· ${e.total} no total</span>` : ''}`
+    : `Entregue antes do prazo e ganhe mais pontos${e.total ? ` <span style="color:var(--dim)">· ${e.total} no total</span>` : ''}`;
+  return `<button class="ptcard" id="bt-ptcard"><span class="tr">🏆</span><span style="flex:1">${txt}</span><span style="color:var(--yellow);font-weight:800">Ver ranking ›</span></button>`;
+}
+function renderPontos(){
+  const v = $('v-pontos'), P = D.pontos || {};
+  if (!P.entregas){ v.innerHTML = `<div class="skel" style="height:90px;margin-bottom:16px"></div><div class="skel" style="height:300px"></div>`; return; }
+  const me = EU().login, rg = P.regra || {};
+  const { lista, txt } = rankingPontos(PT_PER, PT_SEC);
+  const secs = D.secoes.filter(s => D.membros.some(m => m.secoes.includes(s.id)));
+  const top = lista.slice(0, 3);
+  const pd = (r, cls, md) => r ? `<div class="pd ${cls}"><div class="md">${md}</div>${av(r.l, 'lg')}<div class="nm" title="${esc(nomePt(r.l))}">${esc(nomePt(r.l))}</div><div class="ps">${r.pts}<small>pts</small></div><div style="font-size:11.5px;color:var(--dim)">${r.n} entrega${r.n === 1 ? '' : 's'} · 🚀 ${r.A}</div></div>`
+    : `<div class="pd ${cls} vz"><div class="md">${md}</div><div style="height:60px"></div><div class="nm">—</div></div>`;
+  const eu = lista.find(r => r.l === me);
+  const tot = { A: 0, D: 0, T: 0, S: 0 }; lista.forEach(r => { for (const k in tot) tot[k] += r[k]; });
+  const nTot = tot.A + tot.D + tot.T + tot.S;
+  v.innerHTML = `
+    <div class="sec" style="margin-top:0">🏆 Pontuação <small>quem mais entregou — ${esc(txt)}</small></div>
+    <div class="pt-top">
+      ${PT_PERIODOS.map(([k, n]) => `<button class="pill ${PT_PER === k ? 'on' : ''}" data-ptper="${k}">${n}</button>`).join('')}
+      <select class="sel" id="pt-sec" aria-label="Seção"><option value="">Todas as seções</option>${secs.map(s => `<option value="${esc(s.id)}" ${PT_SEC === s.id ? 'selected' : ''}>${esc(s.icone || '')} ${esc(s.nome)}</option>`).join('')}</select>
+    </div>
+    ${lista.length ? `
+      <div class="podio">${pd(top[1], 'p2', '🥈')}${pd(top[0], 'p1', '🥇')}${pd(top[2], 'p3', '🥉')}</div>
+      ${eu ? `<div style="font-size:13.5px;color:var(--t3);margin:-6px 0 12px">Você: <b style="color:var(--yellow)">${eu.pos}º lugar</b> com <b style="color:var(--t1)">${eu.pts} pontos</b> (${eu.n} entrega${eu.n === 1 ? '' : 's'}).</div>` : `<div style="font-size:13.5px;color:var(--dim);margin:-6px 0 12px">Você ainda não pontuou neste período.</div>`}
+      <div class="box" style="padding:8px 8px 4px">
+        <div class="pt-leg" style="padding:6px 8px 0">${Object.entries(PT_K).map(([k, x]) => `<span><i style="background:${x.cor}"></i>${x.ic} ${x.nome}: <b style="color:var(--t1)">${tot[k]}</b></span>`).join('')}<span style="margin-left:auto;color:var(--dim)">${nTot} entrega${nTot === 1 ? '' : 's'}</span></div>
+        ${lista.map(r => `<div class="pr-lin ${r.l === me ? 'eu' : ''}" data-ptl="${esc(r.l)}">
+          <span class="pos">${r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º'}</span>${av(r.l, '')}
+          <div class="nm"><b>${esc(nomePt(r.l))}${r.l === me ? ' <span style="color:var(--dim);font-weight:600">(você)</span>' : ''}</b>
+            <div class="ks">${['A', 'D', 'T', 'S'].filter(k => r[k]).map(k => `<span title="${PT_K[k].nome}">${PT_K[k].ic} ${r[k]} ${PT_K[k].curto}</span>`).join('')}</div></div>
+          <div class="bar" title="${['A', 'D', 'T', 'S'].map(k => PT_K[k].nome + ': ' + r[k]).join(' · ')}"><div class="stk2">${['A', 'D', 'T', 'S'].filter(k => r[k]).map(k => `<i style="background:${PT_K[k].cor};width:${r[k] / r.n * 100}%"></i>`).join('')}</div></div>
+          <div class="pts">${r.pts}<small>pontos</small></div></div>`).join('')}
+      </div>` : `<div class="box vazio"><span class="big">🏁</span>Ninguém pontuou ${PT_PER === 'tudo' ? 'ainda' : 'neste período'}${PT_SEC ? ' nesta seção' : ''}.<br><span style="font-size:13px">Os pontos entram quando o responsável entrega a tarefa (conclui ou manda para validação).</span></div>`}
+    <div class="sec">📏 Como funciona <small>pontos de cada entrega${rg.em ? ` · regra mudada por ${esc(nomeDe(rg.por))} em ${esc(fQuando(rg.em))}` : ''}</small>${EU().admin ? `<span class="sp"></span><button class="btn sec2 sm" id="pt-regra">✏️ Mudar os pontos</button>` : ''}</div>
+    <div class="regra">
+      <div>🚀 Antes do prazo<b>+${rg.antes}</b>entregou antes do dia do prazo</div>
+      <div>🎯 No dia do prazo<b>+${rg.nodia}</b>entregou no próprio dia (até a hora limite)</div>
+      <div>⏰ Depois do prazo<b>+${rg.atrasada}</b>entregou atrasado — ainda vale, mas menos</div>
+      <div>📌 Sem prazo<b>+${rg.semprazo}</b>tarefa que não tinha prazo</div>
+      <div>🚨 Urgente / 🔺 Alta<b>+${rg.urgente} / +${rg.alta}</b>bônus da prioridade (não vale para atrasada)</div>
+    </div>
+    <div style="font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6">
+      • Pontua cada responsável, na hora em que <b>entrega</b>: conclui ou manda para a validação. Na tarefa “cada um responde a sua parte”, conta a hora da resposta de cada um.<br>
+      • Se a tarefa for <b>devolvida</b>, a entrega sai do ranking até ser entregue de novo (com a nova data).<br>
+      • ${rg.proprias ? 'Tarefa criada para si mesmo <b>também conta</b>.' : 'Tarefa que a pessoa criou <b>para si mesma não conta</b> — só o que foi delegado por outra pessoa.'} Tarefa arquivada não conta.
+    </div>`;
+  qsa('[data-ptper]', v).forEach(b => b.onclick = () => { PT_PER = b.dataset.ptper; lembrar('tar_pt_per', PT_PER); renderPontos(); });
+  $('pt-sec').onchange = () => { PT_SEC = $('pt-sec').value; renderPontos(); };
+  const br = $('pt-regra'); if (br) br.onclick = () => editarRegraPontos(rg);
+}
+function editarRegraPontos(rg){
+  const campo = (k, n) => `<div class="fg"><label>${n}</label><input class="inp" type="number" min="-50" max="100" step="1" id="rg-${k}" value="${esc(rg[k])}"></div>`;
+  modalSimples('🏆 Pontos de cada entrega', `<p style="color:var(--muted);font-size:14px;margin-bottom:12px">Vale para todo o ranking, inclusive as entregas já feitas (o ranking é recalculado).</p>
+    <div class="fgr">${campo('antes', '🚀 Antes do prazo')}${campo('nodia', '🎯 No dia do prazo')}</div>
+    <div class="fgr">${campo('atrasada', '⏰ Depois do prazo')}${campo('semprazo', '📌 Sem prazo')}</div>
+    <div class="fgr">${campo('urgente', '🚨 Bônus Urgente')}${campo('alta', '🔺 Bônus Alta')}</div>
+    <label class="tog" style="margin-top:6px"><input type="checkbox" id="rg-proprias" ${rg.proprias ? 'checked' : ''}>Contar também a tarefa que a pessoa criou para si mesma</label>
+    <div class="msg" id="rg-msg"></div>`,
+    [{ txt:'Salvar', cls:'btn', fn: async (btn) => {
+      const regra = { proprias: $('rg-proprias').checked };
+      for (const k of ['antes', 'nodia', 'atrasada', 'semprazo', 'urgente', 'alta']) regra[k] = $('rg-' + k).value;
+      btn.disabled = true;
+      try { await apiPost('/api/tarefas/config', { op:'pontos', regra }); fecharMd2(); toast('🏆 Pontos atualizados — o ranking já foi recalculado.', { cor:'#199e70' }); await carregar(true); }
+      catch(e){ $('rg-msg').className = 'msg err'; $('rg-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+}
+
 let FP = { tipo:'', sit:'' };
 function renderProc(){
   const ps = secoesProc();
@@ -2037,6 +2246,12 @@ function renderGaveta(t, det){
       ${precisaCiencia ? `<div style="margin-top:16px"><button class="btn ciente-bt" id="dw-ciente">✔ Recebi — dar ciência</button><div style="font-size:12.5px;color:var(--muted);text-align:center;margin-top:6px">${esc(nomeDe(t.criado_por))} vai ver na hora que você recebeu.</div></div>` : ''}
       ${botoes ? `<div class="acoes">${botoes}</div>` : ''}
 
+      ${(() => { const ls = linksDe(t); if (!ls.length && !mexe) return '';
+        return `<div class="bloco lks-bl" id="dw-links"><h5>🔗 Links de acesso${ls.length ? ` <span style="letter-spacing:0">(${ls.length})</span>` : ''}</h5>
+          ${ls.length ? `<div class="lks">${ls.map((l, i) => htmlLink(l, i, gerir || (resp && l.por === me))).join('')}</div>` : `<div style="color:var(--dim);font-size:13.5px">Nenhum link. Inclua o processo SEI, um formulário ou uma planilha — abre com um toque.</div>`}
+          ${mexe && ls.length < 10 ? `<div class="addlk"><input class="inp" id="lk-url" placeholder="Cole o link (https://…)" inputmode="url" autocomplete="off"><input class="inp rot" id="lk-rot" placeholder="Nome (opcional)" maxlength="60"><button class="btn sec2" id="lk-add">＋ Link</button></div>` : ''}
+        </div>`; })()}
+
       <div class="bloco"><h5>📈 Progresso<span class="sp"></span><b style="color:var(--t1);font-size:15px;letter-spacing:0">${t.progresso}%</b></h5>
         ${barra(t.progresso, t.status === 'CONCLUIDA' ? 'done' : (pz && pz.atrasada ? 'late' : ''))}
         ${ind ? `<div style="font-size:12px;color:var(--dim);margin-top:6px">Anda sozinho: cada resposta conta ${pt.total ? Math.round(100 / pt.total) : 0}%.</div>` : ''}
@@ -2135,6 +2350,25 @@ function ligarGaveta(t){
   const addCk = async () => { const v = novo.value.trim(); if (!v) return; novo.value = ''; try { await acao(t.id, 'check', { sub:'add', texto:v }); await recarregarDetalhe(true); carregar(true); setTimeout(() => $('ck-novo') && $('ck-novo').focus(), 50); } catch(err){ toast(err.message, { cor:'#e66767' }); } };
   if (novo){ novo.onkeydown = (e) => { if (e.key === 'Enter') addCk(); }; $('ck-add').onclick = addCk; }
   const fase = $('dw-fase'); if (fase) fase.onchange = async () => { try { await acao(t.id, 'fase', { fase: fase.value }); toast('⚖️ Fase atualizada.', { cor:'#e66767' }); recarregarDetalhe(true); carregar(true); } catch(e){ toast(e.message, { cor:'#e66767' }); } };
+  const lkAdd = $('lk-add');
+  if (lkAdd){
+    const enviar = async () => {
+      const url = $('lk-url').value.trim(), rot = $('lk-rot').value.trim();
+      if (!urlValida(url)){ toast('Cole o endereço completo do link, começando com https://', { cor:'#c98500', ic:'🔗' }); $('lk-url').focus(); return; }
+      lkAdd.disabled = true;
+      try { await acao(t.id, 'link', { url, rotulo: rot }); toast('🔗 Link incluído — todos da tarefa já podem abrir.', { cor:'#3987e5' }); await recarregarDetalhe(true); carregar(true); }
+      catch(e){ toast(e.message, { cor:'#e66767' }); lkAdd.disabled = false; }
+    };
+    lkAdd.onclick = enviar;
+    $('lk-url').onkeydown = (e) => { if (e.key === 'Enter') enviar(); };
+    $('lk-rot').onkeydown = (e) => { if (e.key === 'Enter') enviar(); };
+    $('lk-url').oninput = () => { const u = urlValida($('lk-url').value); $('lk-rot').placeholder = u ? 'Nome: ' + rotuloLink(u) : 'Nome (opcional)'; };
+  }
+  qsa('[data-lkdel]', pn).forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { await acao(t.id, 'link', { sub:'del', i: Number(b.dataset.lkdel), u: b.dataset.lku }); toast('Link removido.', { cor:'#c98500' }); await recarregarDetalhe(true); carregar(true); }
+    catch(e){ toast(e.message, { cor:'#e66767' }); b.disabled = false; }
+  });
   const mpOk = $('mp-ok');
   if (mpOk) mpOk.onclick = async () => {
     mpOk.disabled = true; mpOk.textContent = 'Enviando…';
@@ -2262,6 +2496,7 @@ function abrirForm(t, preset){
     verTodos: false, prazoManual: ed || !!pre.prazo, ck: [],
     envMais: new Set(ed ? ((t.extra || {}).secoes_env || []) : []), envMenos: new Set(),
     ind: ed ? !!(t.extra || {}).individual : false, indManual: ed,
+    links: ed ? linksDe(t).map(l => Object.assign({}, l)) : [],
   };
   if (!ed && !FORM.resps.length && !possoDelegarEm(secIni)) FORM.resps = [EU().login];
   const e = ed ? (t.extra || {}) : {};
@@ -2281,6 +2516,10 @@ function abrirForm(t, preset){
       <div class="fg hide" style="margin-bottom:14px" id="fm-env-wrap"><label>Seções envolvidas <span style="text-transform:none;letter-spacing:0;font-weight:500">— a tarefa aparece no quadro e no calendário delas também</span></label><div class="envs" id="fm-env"></div></div>
       <div class="fg hide" style="margin-bottom:14px" id="fm-obs-wrap"><label>Quem mais acompanha (observadores)</label><div class="pick" id="fm-obs"></div></div>
       <div class="fg" style="margin-bottom:14px"><label>Descrição</label><textarea class="inp" id="fm-desc" maxlength="6000" placeholder="Detalhes, documento de origem, orientações…">${ed ? esc(t.descricao) : ''}</textarea></div>
+      <div class="fg" style="margin-bottom:14px"><label>🔗 Links de acesso direto <span style="text-transform:none;letter-spacing:0;font-weight:500">— processo SEI, formulário, planilha… quem recebe abre com um toque</span></label>
+        <div class="lks-ed" id="fm-lk-lista"></div>
+        <div class="addlk" style="margin-top:0"><input class="inp" id="fm-lk-url" placeholder="Cole o link (https://…)" inputmode="url" autocomplete="off"><input class="inp rot" id="fm-lk-rot" placeholder="Nome (opcional)" maxlength="60"><button type="button" class="btn sec2" id="fm-lk-add">＋ Link</button></div>
+        <small id="fm-lk-msg" style="margin-top:6px"></small></div>
       ${ed ? `<div class="fg" style="margin-bottom:14px"><label>☑️ Etapas (checklist)</label><small>As etapas desta tarefa se mudam dentro dela: abra a tarefa → ☑️ Etapas.</small></div>` : `<div class="fg" style="margin-bottom:14px"><label>☑️ Etapas (checklist) <span style="text-transform:none;letter-spacing:0;font-weight:500">— quem recebe marca cada etapa feita; você e a chefia acompanham</span></label>
         <div class="cked" id="fm-ck-lista"></div>
         <div class="addck" style="margin-top:0"><input class="inp" id="fm-ck-novo" placeholder="Escreva uma etapa e tecle Enter…" maxlength="300"><button type="button" class="btn sec2" id="fm-ck-add">＋ Etapa</button></div>
@@ -2302,7 +2541,7 @@ function abrirForm(t, preset){
   $('fm-ind').checked = FORM.ind;
   $('fm-ind').onchange = () => { FORM.ind = $('fm-ind').checked; FORM.indManual = true; };
   $('fm-salvar').onclick = salvarForm;
-  formTipos(); formPessoas(); formProc(e); ligarCkForm();
+  formTipos(); formPessoas(); formProc(e); ligarCkForm(); ligarLkForm();
   setTimeout(() => $('fm-tit').focus(), 80);
 }
 /* Editor das etapas (checklist) na criação: uma por vez, com sugestões. */
@@ -2325,6 +2564,32 @@ function ligarCkForm(){
   inp.onkeydown = (e) => { if (e.key === 'Enter'){ e.preventDefault(); add(); } };
   $('fm-ck-add').onclick = add;
   renderCkForm();
+}
+/* Editor de links no formulário. */
+function renderLkForm(){
+  const l = $('fm-lk-lista'); if (!l) return;
+  l.innerHTML = FORM.links.map((x, i) => `<div class="it"><span>${icoLink(x.u)}</span><span class="t"><b>${esc(x.r)}</b> <small>${esc(x.u)}</small></span><button type="button" data-lkx="${i}" title="Tirar">✕</button></div>`).join('');
+  qsa('[data-lkx]', l).forEach(b => b.onclick = () => { FORM.links.splice(Number(b.dataset.lkx), 1); renderLkForm(); });
+}
+/* Lê o que está digitado; true se incluiu (ou se não havia nada). */
+function addLkForm(silencioso){
+  const url = $('fm-lk-url').value.trim(), msg = $('fm-lk-msg');
+  if (!url) return true;
+  const u = urlValida(url);
+  if (!u){ if (!silencioso){ msg.style.color = 'var(--tx-crit)'; msg.textContent = 'Link inválido — cole o endereço completo, começando com https://'; } return false; }
+  if (FORM.links.length >= 10){ msg.style.color = 'var(--tx-warn)'; msg.textContent = 'Máximo de 10 links.'; return false; }
+  if (!FORM.links.some(x => x.u === u.href)) FORM.links.push({ r: $('fm-lk-rot').value.trim() || rotuloLink(u), u: u.href });
+  $('fm-lk-url').value = ''; $('fm-lk-rot').value = ''; $('fm-lk-rot').placeholder = 'Nome (opcional)';
+  msg.style.color = ''; msg.textContent = '';
+  renderLkForm();
+  return true;
+}
+function ligarLkForm(){
+  if (!$('fm-lk-url')) return;
+  $('fm-lk-add').onclick = () => { addLkForm(); $('fm-lk-url').focus(); };
+  ['fm-lk-url', 'fm-lk-rot'].forEach(id => $(id).onkeydown = (e) => { if (e.key === 'Enter'){ e.preventDefault(); addLkForm(); } });
+  $('fm-lk-url').oninput = () => { const u = urlValida($('fm-lk-url').value); $('fm-lk-rot').placeholder = u ? 'Nome: ' + rotuloLink(u) : 'Nome (opcional)'; };
+  renderLkForm();
 }
 function fecharForm(){ $('md').classList.remove('on'); FORM = null; }
 function formTipos(){
@@ -2444,9 +2709,10 @@ async function salvarForm(){
   const tit = $('fm-tit').value.trim();
   if (!tit){ m.className = 'msg err'; m.textContent = 'Dê um título.'; $('fm-tit').focus(); return; }
   if (!FORM.resps.length){ m.className = 'msg err'; m.textContent = 'Escolha quem vai executar.'; return; }
+  if (!addLkForm()){ m.className = 'msg err'; m.textContent = 'O link digitado não é válido — corrija ou apague antes de salvar.'; $('fm-lk-url').focus(); return; }
   const prazo = $('fm-prazo').value ? $('fm-prazo').value + ($('fm-hora').value ? 'T' + $('fm-hora').value : '') : '';
   const extra = { validar: $('fm-val').checked && FORM.resps.some(l => l !== EU().login),
-    individual: FORM.resps.length > 1 && $('fm-ind').checked, secoes_env: envFinal() };
+    individual: FORM.resps.length > 1 && $('fm-ind').checked, secoes_env: envFinal(), links: FORM.links };
   if (FORM.tipo !== 'TAREFA'){
     Object.assign(extra, { numero:$('pc-num').value, portaria:$('pc-port').value, sei:$('pc-sei').value, instauracao:$('pc-inst').value, prazo_dias:$('pc-dias').value,
       preso: !!($('pc-preso') && $('pc-preso').checked), autoridade:$('pc-aut').value, escrivao:$('pc-esc').value, objeto:$('pc-obj').value, envolvidos:$('pc-env').value });
@@ -2492,7 +2758,7 @@ $('dw').querySelector('.bg').addEventListener('click', fecharGaveta);
 
 /* ============================== NOTIFICAÇÕES ============================== */
 const NOVAS_TAREFAS = new Set();
-const ICONE_NOTIF = { atribuida:'📌', ciente:'✅', status:'🔄', concluida:'🏁', validacao:'🛡️', devolvida:'↩️', prazo:'📅', prioridade:'🚨', comentario:'💬', andamento:'📍', mencao:'📣', observador:'👁️', retirada:'↩️', fase:'⚖️', arquivada:'🗄️', config:'⚙️', etapa:'☑️', acesso:'🔐' };
+const ICONE_NOTIF = { atribuida:'📌', ciente:'✅', status:'🔄', concluida:'🏁', validacao:'🛡️', devolvida:'↩️', prazo:'📅', prioridade:'🚨', comentario:'💬', andamento:'📍', link:'🔗', parte:'👥', mencao:'📣', observador:'👁️', retirada:'↩️', fase:'⚖️', arquivada:'🗄️', config:'⚙️', etapa:'☑️', acesso:'🔐' };
 function processarNotificacoes(antes){
   const n = D.notificacoes;
   if (NOTIF_VISTAS === null){
