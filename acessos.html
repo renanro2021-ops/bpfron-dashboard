@@ -152,14 +152,87 @@ tr:last-child td{border-bottom:none}
 .pill.zero{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
 .vazio{text-align:center;color:var(--muted);padding:34px 12px;font-size:14.5px}
 
-.rel-plat{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:12px;padding:18px 22px;margin-bottom:16px}
-.rel-plat h3{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff;letter-spacing:.4px;margin-bottom:3px}
-.rel-plat .qt{font-size:13px;color:#fca5a5;font-weight:600;margin-bottom:14px}
-.rel-plat ol{margin:0;padding-left:22px}
-.rel-plat li{font-size:14.5px;color:#cbd5e1;line-height:1.75;padding-left:4px;margin-bottom:6px}
-.rel-plat li .nm{color:#fff;font-weight:700}
-.rel-plat li .dt{color:var(--muted);font-size:13px}
+/* ---------- gestor: barra de ações (fica no topo, sempre à vista) ---------- */
+.acoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(11,15,26,.97);border:1px solid rgba(245,197,24,.35);border-radius:14px;padding:12px 14px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+@media(min-width:700px){.acoes{position:sticky;top:calc(var(--hdr-h,76px) + 10px);z-index:50;backdrop-filter:blur(12px)}}
+.btn-print{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:13px 22px;color:#1a1a1a;font-size:15.5px;font-weight:800;cursor:pointer;min-height:48px;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(245,197,24,.25)}
+.btn-print:hover{filter:brightness(1.07)}
+.btn-print:disabled{opacity:.4;cursor:not-allowed}
+.acoes .sp{flex:1}
+.acoes .upd{font-size:12.5px;color:var(--muted)}
+@media(max-width:699px){.acoes .btn-print{width:100%;justify-content:center}.acoes .sp{display:none}}
+
+/* ---------- gestor: passo a passo ---------- */
+.passos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+@media(max-width:700px){.passos{grid-template-columns:1fr}}
+.passo{display:flex;gap:12px;align-items:flex-start;background:rgba(148,163,184,.06);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--muted);line-height:1.5}
+.passo .nb{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.45);color:var(--yellow);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center}
+.passo b{color:#e2e8f0}
+
+/* ---------- gestor: números do resumo ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-align:left;font-family:'Inter',sans-serif;color:inherit;cursor:pointer;transition:border-color .13s,background .13s}
+.kpi:hover{border-color:rgba(245,197,24,.4)}
+.kpi .n{display:block;font-family:'Rajdhani',sans-serif;font-size:38px;font-weight:700;color:#fff;line-height:1}
+.kpi .t{display:block;font-size:13.5px;font-weight:600;color:#cbd5e1;margin-top:6px;line-height:1.35}
+.kpi .d{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.kpi.red .n{color:#f87171}
+.kpi.green .n{color:var(--green)}
+.kpi.amber .n{color:#fbbf24}
+
+/* ---------- gestor: um cartão por sistema ---------- */
+.sisgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:760px){.sisgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:430px){.sisgrid{grid-template-columns:1fr}}
+.sg{display:block;background:var(--card);border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:15px 16px;text-align:left;font-family:'Inter',sans-serif;color:inherit;cursor:pointer;transition:border-color .13s,transform .13s}
+.sg:hover{transform:translateY(-1px)}
+.sg .nm{display:block;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;letter-spacing:.3px}
+.sg .q{display:block;font-size:13.5px;margin-top:4px}
+.sg .q b{font-family:'Rajdhani',sans-serif;font-size:24px;margin-right:4px}
+.sg .bar{display:block;height:7px;background:rgba(148,163,184,.15);border-radius:4px;margin-top:10px;overflow:hidden}
+.sg .bar i{display:block;height:100%;background:var(--red);border-radius:4px}
+.sg .go{display:block;font-size:12.5px;color:var(--yellow);margin-top:9px;font-weight:600}
+.sg.pend{border-color:rgba(239,68,68,.45)}
+.sg.pend .q{color:#fca5a5}
+.sg.pend .q b{color:#fff}
+.sg.ok{border-color:rgba(52,211,153,.3);cursor:default}
+.sg.ok:hover{transform:none}
+.sg.ok .q{color:#6ee7b7}
+
+/* ---------- gestor: lista por sistema (o que vai para o pedido) ---------- */
+.rel-plat{background:var(--card);border:1px solid var(--border);border-left:5px solid var(--red);border-radius:12px;padding:18px 20px;margin-bottom:16px;scroll-margin-top:calc(var(--hdr-h,76px) + 90px)}
+.rel-plat.piscar{animation:piscar 1.4s ease}
+@keyframes piscar{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px rgba(245,197,24,.6)}}
+.rp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.rel-plat h3{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:.4px}
+.rel-plat .fin{font-size:12.5px;color:var(--muted);line-height:1.5;max-width:560px;margin-top:2px}
+.rel-plat .qt{font-size:13.5px;color:#fca5a5;font-weight:700;white-space:nowrap;background:var(--redsoft);border:1px solid rgba(239,68,68,.4);border-radius:999px;padding:4px 12px}
+.rp-tbl td{font-size:13.5px;white-space:nowrap}
+.rp-tbl td.nm{white-space:normal;min-width:180px}
+.rp-tbl td.nm{color:#fff;font-weight:600}
+.rp-tbl td.nm small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.rp-tbl td.num{color:var(--muted);width:30px}
+.rp-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rel-cab{display:none}
+
+/* ---------- gestor: quadro geral ---------- */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filtros input{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:14.5px;outline:none;min-height:42px}
+.filtros input:focus{border-color:rgba(245,197,24,.6)}
+.chip{background:rgba(148,163,184,.08);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.chip.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--yellow)}
+.legenda{font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap}
+.mx{text-align:center;font-weight:800;font-size:15px}
+.mx.sim{color:#34d399}
+.mx.nao{color:#fff;background:rgba(239,68,68,.22)}
+th.mxh{text-align:center;font-size:11px;letter-spacing:.5px}
+#tbl td small{display:block;color:var(--muted);font-size:12px}
+tr.oculto{display:none}
+.wrap.larga{max-width:1120px}
+#tbl td:first-child{min-width:190px}
+#tbl td:nth-child(2),#tbl td:nth-child(3){white-space:nowrap}
+#tbl{scroll-margin-top:calc(var(--hdr-h,76px) + 150px)}
 
 @media(max-width:640px){
   .sis-mark{width:70px}
@@ -187,9 +260,25 @@ tr:last-child td{border-bottom:none}
   .rel-cab p{font-size:11pt;color:#333}
   .rel-plat{background:#fff;border:1px solid #999;border-left:4px solid #123a63;page-break-inside:avoid;margin-bottom:14px}
   .rel-plat h3{color:#123a63}
-  .rel-plat li .nm{color:#000}
-  .rel-plat .qt{color:#333}
-  .rel-plat li,.rel-plat li .dt{color:#111}
+  .rel-plat .qt{color:#000;background:#fff;border:1px solid #666}
+  .rel-plat .fin{color:#333}
+  .rp-tbl td.nm,.rp-tbl td.nm small,.rp-tbl td.num{color:#000}
+  /* números do resumo: caixas simples no papel */
+  .kpis{grid-template-columns:repeat(4,1fr);gap:8px}
+  .kpi{background:#fff;border:1px solid #999;padding:8px 10px}
+  .kpi .n,.kpi.red .n,.kpi.green .n,.kpi.amber .n{color:#123a63;font-size:22pt}
+  .kpi .t{color:#000}
+  .kpi .d{display:none}
+  /* quadro geral: sempre sai completo, mesmo se houver filtro na tela */
+  .g-quadro{page-break-before:always}
+  tr.oculto{display:table-row!important}
+  .mx.sim{color:#000}
+  .mx.nao{color:#000;background:#ddd}
+  #tbl td small{color:#333}
+  .legenda{color:#000}
+  /* "Imprimir só este sistema": esconde todo o resto */
+  body.print-um .g-resumo,body.print-um .g-quadro,body.print-um .g-rel > .sec,
+  body.print-um .rel-plat:not(.alvo){display:none!important}
 }
 </style>
 </head>
@@ -329,36 +418,56 @@ tr:last-child td{border-bottom:none}
         <p id="rel-data"></p>
       </div>
 
-      <div class="hero no-print">
-        <h1>Consolidação do levantamento</h1>
-        <p>Dados vindos direto da planilha. Cada policial conta pelo <b>envio mais recente</b> que fez.</p>
+      <!-- Barra de ações: o botão de imprimir fica sempre à vista. -->
+      <div class="acoes no-print">
+        <button class="btn-print" id="btn-imprimir" title="Na janela de impressão dá para escolher &quot;Salvar como PDF&quot;">🖨 Imprimir relatório</button>
+        <button class="btn ghost small" id="btn-csv" title="Abre no Excel">⬇ Planilha (CSV)</button>
+        <button class="btn ghost small" id="btn-copiar-rel" title="Para colar no WhatsApp ou no SEI">📋 Copiar texto</button>
+        <span class="sp"></span>
+        <span class="upd" id="upd"></span>
+        <button class="btn ghost small" id="btn-atualizar">↻ Atualizar</button>
+        <button class="btn ghost small" id="btn-sair">Sair</button>
+      </div>
+      <div class="msg no-print" id="msg-gestor" style="margin:-8px 0 14px"></div>
+
+      <div class="passos no-print">
+        <div class="passo"><span class="nb">1</span><span><b>Veja o resumo</b> — quantos responderam e quantos ainda precisam de acesso.</span></div>
+        <div class="passo"><span class="nb">2</span><span><b>Clique em um sistema</b> para ver a lista de quem precisa pedir acesso nele.</span></div>
+        <div class="passo"><span class="nb">3</span><span><b>Imprima ou salve em PDF</b> tudo pelo botão amarelo, ou só um sistema pelo botão dentro dele.</span></div>
       </div>
 
-      <div class="sec">Policiais que responderam <small id="cont-pol"></small>
-        <button class="btn ghost small no-print" id="btn-atualizar" style="margin-left:auto">↻ Atualizar</button>
-      </div>
-      <div class="box">
-        <div class="tbl-wrap">
-          <table id="tbl">
-            <thead>
-              <tr><th>Nome completo</th><th>Guerra</th><th>RE</th><th>E-mail institucional</th><th>CPF</th><th>Nascimento</th><th>Sem acesso</th></tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-        <div class="vazio" id="vazio">Carregando…</div>
+      <div class="g-resumo">
+        <div class="sec">Resumo do levantamento</div>
+        <div class="kpis" id="kpis"></div>
+
+        <div class="sec no-print">Situação por sistema <small>quantos policiais estão SEM acesso em cada um</small></div>
+        <div class="sisgrid no-print" id="sisgrid"></div>
       </div>
 
-      <div class="sec">Relatório por plataforma <small>para instruir a solicitação de acesso</small></div>
-      <div class="box">
+      <div class="g-rel">
+        <div class="sec">Quem precisa de acesso — por sistema <small>é esta lista que instrui o pedido de acesso</small></div>
         <div id="rel"></div>
-        <div class="btnrow no-print">
-          <button class="btn" id="btn-imprimir">🖨 Imprimir / Salvar PDF</button>
-          <button class="btn ghost" id="btn-csv">⬇ Exportar CSV</button>
-          <button class="btn ghost" id="btn-copiar-rel">📋 Copiar relatório</button>
-          <button class="btn ghost" id="btn-sair" style="margin-left:auto">Sair</button>
+      </div>
+
+      <div class="g-quadro">
+        <div class="sec">Quadro geral — todos que responderam <small id="cont-pol"></small></div>
+        <div class="box">
+          <div class="filtros no-print">
+            <input id="f-busca" type="search" placeholder="🔎 Buscar por nome, guerra, RE ou CPF…" autocomplete="off">
+            <button class="chip on" data-f="todos">Todos</button>
+            <button class="chip" data-f="pend">Precisam de acesso</button>
+            <button class="chip" data-f="ok">Têm todos</button>
+            <button class="chip" data-f="sememail">Sem e-mail</button>
+          </div>
+          <div class="legenda"><span><b class="mx sim">✔</b> tem acesso</span><span><b class="mx nao" style="padding:0 6px;border-radius:4px">✘</b> NÃO tem acesso (precisa pedir)</span></div>
+          <div class="tbl-wrap">
+            <table id="tbl">
+              <thead id="thead"></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <div class="vazio" id="vazio">Carregando…</div>
         </div>
-        <div class="msg" id="msg-gestor"></div>
       </div>
 
     </div>
@@ -412,17 +521,17 @@ function temPerm(id, listaFixa){ const p = permsSessao(); return p ? p.perms.inc
 /* Mesma lista do worker.js (ACESSOS_SISTEMAS) — MANTER OS DOIS EM SINCRONIA.
    Fonte: tabela_sistemas_finalidades (PDF oficial, 20/08/2026). */
 const SISTEMAS = [
-  { id:'INFOSEG', nome:'INFOSEG',
+  { id:'INFOSEG', nome:'INFOSEG', curto:'INFOSEG',
     fin:'CNH; CNPJ; armas; Mandados de Prisão; ocorrências policiais.' },
-  { id:'SEISP', nome:'SEISP — Rondônia',
+  { id:'SEISP', nome:'SEISP — Rondônia', curto:'SEISP',
     fin:'Pesquisas nominais; consulta de números telefônicos vinculados a PF ou PJ; NFE; inquéritos e outras informações relacionadas.' },
-  { id:'DETRANET', nome:'DETRANET',
+  { id:'DETRANET', nome:'DETRANET', curto:'DETRANET',
     fin:'Pesquisas de CNH; endereços atuais; veículos; pesquisa fracionada de placas veiculares; prontuário de CNH e outras informações relacionadas à habilitação e veículos.' },
-  { id:'APOLO', nome:'APOLO — Acre',
+  { id:'APOLO', nome:'APOLO — Acre', curto:'APOLO',
     fin:'Aplicativo da SEJUSP/AC destinado a pesquisas nominais e de veículos; cadastramento de abordagens com fotos; registro dos detalhes da abordagem; anexação de fotos atuais das pessoas abordadas e demais informações da ocorrência.' },
-  { id:'SENTRY', nome:'SENTRY (MURALHA)',
+  { id:'SENTRY', nome:'SENTRY (MURALHA)', curto:'SENTRY',
     fin:'Sistema de cercamento eletrônico implantado em Rondônia e em outros estados, destinado à pesquisa e monitoramento de placas veiculares; direcionamento de abordagens a alvos específicos; verificação de rotas e horários percorridos; cadastramento de placas para geração de alertas em dispositivos móveis quando determinados alvos passam pelas câmeras.' },
-  { id:'CORTEX', nome:'CÓRTEX',
+  { id:'CORTEX', nome:'CÓRTEX', curto:'CÓRTEX',
     fin:'Pesquisas de placas veiculares; consultas relacionadas a PF e PJ; levantamento de rotas de veículos por meio de sistemas de cercamento eletrônico em outros estados.' }
 ];
 
@@ -468,6 +577,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
     Array.prototype.forEach.call(document.querySelectorAll('.pane'), function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     $('pane-' + t.dataset.pane).classList.add('on');
+    document.querySelector('.wrap').classList.toggle('larga', t.dataset.pane === 'gestor');
     window.scrollTo(0,0);
     if (t.dataset.pane === 'gestor') abrirGestor();
   });
@@ -743,52 +853,175 @@ async function carregar(){
 
 $('btn-atualizar').addEventListener('click', carregar);
 
-function render(){
+function plural(n, um, varios){ return n + ' ' + (n === 1 ? um : varios); }
+
+/* Lista por sistema montada aqui a partir dos policiais, na ordem oficial.
+   Sistemas sem ninguém pendente também entram (aparecem verdes no resumo). */
+function porSistema(){
   var pol = (dados && dados.policiais) || [];
-
-  var html = '';
-  pol.forEach(function(r){
-    var n = (r.sistemas || []).length;
-    html += '<tr>'
-          +   '<td>' + esc(r.nome) + '</td>'
-          +   '<td>' + esc(r.guerra) + '</td>'
-          +   '<td>' + esc(r.re) + '</td>'
-          +   '<td>' + emailCel(r.email) + '</td>'
-          +   '<td>' + cpfFmt(r.cpf) + '</td>'
-          +   '<td>' + dataBR(r.nascimento) + '</td>'
-          +   '<td><span class="pill' + (n ? '' : ' zero') + '">' + (n ? n + ' sistema' + (n>1?'s':'') : 'nenhum') + '</span></td>'
-          + '</tr>';
+  return SISTEMAS.map(function(s){
+    return { s: s, policiais: pol.filter(function(p){ return (p.sistemas || []).indexOf(s.nome) !== -1; }) };
   });
-  $('tbody').innerHTML = html;
-  $('vazio').style.display = pol.length ? 'none' : 'block';
-  if (!pol.length) $('vazio').textContent = 'Nenhum policial respondeu ainda.';
-  $('cont-pol').textContent = pol.length ? pol.length + ' policial(is)' : '';
-
-  var rel = '';
-  ((dados && dados.por_sistema) || []).forEach(function(s){
-    rel += '<div class="rel-plat">'
-         +   '<h3>' + esc(s.sistema) + '</h3>'
-         +   '<div class="qt">' + s.policiais.length + ' policial(is) sem acesso</div>'
-         +   '<ol>';
-    s.policiais.forEach(function(p){
-      rel += '<li><span class="nm">' + esc(p.nome) + '</span> (' + esc(p.guerra) + ')<br>'
-           + '<span class="dt">RE ' + esc(p.re) + ' · CPF ' + cpfFmt(p.cpf) + ' · nasc. ' + dataBR(p.nascimento) + '<br>'
-           + 'E-mail: ' + (semEmailStr(p.email) ? '<b>SEM E-MAIL INSTITUCIONAL</b>' : esc(p.email)) + '</span></li>';
-    });
-    rel += '</ol></div>';
-  });
-  $('rel').innerHTML = rel || '<div class="vazio">Nenhuma pendência de acesso registrada até aqui.</div>';
-  var semEm = (dados && dados.sem_email) || 0;
-  $('rel-data').textContent = 'Emitido em ' + new Date().toLocaleDateString('pt-BR')
-    + ' · ' + (dados ? dados.total_policiais : 0) + ' policiais · '
-    + (dados ? dados.total_pendencias : 0) + ' pendências de acesso'
-    + (semEm ? ' · ' + semEm + ' sem e-mail institucional' : '');
 }
 
-function relatorioTexto(){
+var filtroQuadro = 'todos';
+
+function render(){
+  var pol = (dados && dados.policiais) || [];
+  var lista = porSistema();
+  var comPend = pol.filter(function(p){ return (p.sistemas || []).length; }).length;
+  var semEm   = pol.filter(function(p){ return semEmailStr(p.email); }).length;
+  var totPend = pol.reduce(function(a, p){ return a + (p.sistemas || []).length; }, 0);
+
+  /* ---- resumo ---- */
+  $('kpis').innerHTML =
+      '<button class="kpi" data-f="todos"><span class="n">' + pol.length + '</span><span class="t">responderam</span><span class="d">policiais com levantamento enviado</span></button>'
+    + '<button class="kpi ' + (comPend ? 'red' : 'green') + '" data-f="pend"><span class="n">' + comPend + '</span><span class="t">precisam de acesso</span><span class="d">' + plural(totPend, 'pedido', 'pedidos') + ' de acesso no total</span></button>'
+    + '<button class="kpi green" data-f="ok"><span class="n">' + (pol.length - comPend) + '</span><span class="t">já têm todos</span><span class="d">nada a pedir para eles</span></button>'
+    + '<button class="kpi ' + (semEm ? 'amber' : 'green') + '" data-f="sememail"><span class="n">' + semEm + '</span><span class="t">sem e-mail institucional</span><span class="d">' + (semEm ? 'criar o e-mail antes de pedir o acesso' : 'todos informaram o e-mail') + '</span></button>';
+  Array.prototype.forEach.call($('kpis').querySelectorAll('.kpi'), function(b){
+    b.addEventListener('click', function(){ filtrarQuadro(b.dataset.f); $('tbl').scrollIntoView({ behavior:'smooth', block:'start' }); });
+  });
+
+  /* ---- cartões por sistema ---- */
+  var maior = Math.max(1, pol.length);
+  $('sisgrid').innerHTML = lista.map(function(x){
+    var n = x.policiais.length;
+    if (!n) return '<div class="sg ok"><span class="nm">' + esc(x.s.nome) + '</span>'
+                 + '<span class="q">✔ ninguém sem acesso</span></div>';
+    return '<button class="sg pend" data-id="' + x.s.id + '"><span class="nm">' + esc(x.s.nome) + '</span>'
+         + '<span class="q"><b>' + n + '</b>' + (n === 1 ? 'policial sem acesso' : 'policiais sem acesso') + '</span>'
+         + '<span class="bar"><i style="width:' + Math.round(n / maior * 100) + '%"></i></span>'
+         + '<span class="go">Ver a lista ↓</span></button>';
+  }).join('');
+  Array.prototype.forEach.call($('sisgrid').querySelectorAll('.sg.pend'), function(b){
+    b.addEventListener('click', function(){
+      var alvo = $('rel-' + b.dataset.id);
+      if (!alvo) return;
+      alvo.scrollIntoView({ behavior:'smooth', block:'start' });
+      alvo.classList.remove('piscar'); void alvo.offsetWidth; alvo.classList.add('piscar');
+    });
+  });
+
+  /* ---- lista por sistema (o que vai no pedido) ---- */
+  var rel = '';
+  lista.forEach(function(x){
+    if (!x.policiais.length) return;
+    rel += '<div class="rel-plat" id="rel-' + x.s.id + '">'
+         +   '<div class="rp-top"><div><h3>' + esc(x.s.nome) + '</h3><div class="fin">' + esc(x.s.fin) + '</div></div>'
+         +   '<span class="qt">' + plural(x.policiais.length, 'policial sem acesso', 'policiais sem acesso') + '</span></div>'
+         +   '<div class="tbl-wrap"><table class="rp-tbl"><thead><tr><th>#</th><th>Policial</th><th>RE</th><th>CPF</th><th>Nascimento</th><th>E-mail institucional</th></tr></thead><tbody>';
+    x.policiais.forEach(function(p, i){
+      rel += '<tr><td class="num">' + (i+1) + '</td>'
+           + '<td class="nm">' + esc(p.nome) + '<small>' + esc(p.guerra) + '</small></td>'
+           + '<td>' + esc(p.re) + '</td><td>' + cpfFmt(p.cpf) + '</td><td>' + dataBR(p.nascimento) + '</td>'
+           + '<td>' + emailCel(p.email) + '</td></tr>';
+    });
+    rel += '</tbody></table></div>'
+         + '<div class="rp-acoes no-print">'
+         +   '<button class="btn small" data-print="' + x.s.id + '">🖨 Imprimir só ' + esc(x.s.curto) + '</button>'
+         +   '<button class="btn ghost small" data-copy="' + x.s.id + '">📋 Copiar só ' + esc(x.s.curto) + '</button>'
+         + '</div></div>';
+  });
+  $('rel').innerHTML = rel || '<div class="box"><div class="vazio">✅ Nenhuma pendência — todos que responderam têm acesso a todos os sistemas.</div></div>';
+  Array.prototype.forEach.call($('rel').querySelectorAll('[data-print]'), function(b){
+    b.addEventListener('click', function(){ imprimir(b.dataset.print); });
+  });
+  Array.prototype.forEach.call($('rel').querySelectorAll('[data-copy]'), function(b){
+    b.addEventListener('click', function(){ copiar(relatorioTexto(b.dataset.copy), b); });
+  });
+
+  /* ---- quadro geral: uma coluna por sistema ---- */
+  $('thead').innerHTML = '<tr><th>Policial</th><th>RE</th><th>CPF / nasc.</th>'
+    + SISTEMAS.map(function(s){ return '<th class="mxh">' + esc(s.curto) + '</th>'; }).join('')
+    + '<th>E-mail institucional</th></tr>';
+  $('tbody').innerHTML = pol.map(function(r){
+    var sis = r.sistemas || [];
+    var busca = [r.nome, r.guerra, r.re, String(r.cpf || '').replace(/\D/g,'')].join(' ').toLowerCase();
+    return '<tr data-busca="' + esc(busca) + '" data-pend="' + (sis.length ? 1 : 0) + '" data-sememail="' + (semEmailStr(r.email) ? 1 : 0) + '">'
+         + '<td>' + esc(r.nome) + '<small>' + esc(r.guerra) + '</small></td>'
+         + '<td>' + esc(r.re) + '</td>'
+         + '<td>' + cpfFmt(r.cpf) + '<small>' + dataBR(r.nascimento) + '</small></td>'
+         + SISTEMAS.map(function(s){
+             return sis.indexOf(s.nome) !== -1
+               ? '<td class="mx nao" title="NÃO tem acesso ao ' + esc(s.nome) + '">✘</td>'
+               : '<td class="mx sim" title="Tem acesso ao ' + esc(s.nome) + '">✔</td>';
+           }).join('')
+         + '<td>' + emailCel(r.email) + '</td></tr>';
+  }).join('');
+  $('cont-pol').textContent = pol.length ? plural(pol.length, 'policial', 'policiais') : '';
+  aplicarFiltro();
+
+  /* ---- cabeçalho da folha impressa e hora da atualização ---- */
+  cabBase = 'Emitido em ' + new Date().toLocaleDateString('pt-BR')
+    + ' · ' + plural(pol.length, 'policial respondeu', 'policiais responderam')
+    + ' · ' + plural(totPend, 'pedido de acesso', 'pedidos de acesso')
+    + (semEm ? ' · ' + semEm + ' sem e-mail institucional' : '');
+  $('rel-data').textContent = cabBase;
+  $('upd').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  $('btn-imprimir').disabled = !pol.length;
+}
+
+/* ---------------------------- filtro do quadro ---------------------------- */
+function filtrarQuadro(f){
+  filtroQuadro = f;
+  Array.prototype.forEach.call(document.querySelectorAll('.filtros .chip'), function(c){
+    c.classList.toggle('on', c.dataset.f === f);
+  });
+  aplicarFiltro();
+}
+function aplicarFiltro(){
+  var q = $('f-busca').value.trim().toLowerCase(), qDig = q.replace(/\D/g,'');
+  var vis = 0, linhas = $('tbody').querySelectorAll('tr');
+  Array.prototype.forEach.call(linhas, function(tr){
+    var ok = (filtroQuadro === 'todos')
+          || (filtroQuadro === 'pend'     && tr.dataset.pend === '1')
+          || (filtroQuadro === 'ok'       && tr.dataset.pend === '0')
+          || (filtroQuadro === 'sememail' && tr.dataset.sememail === '1');
+    if (ok && q) ok = tr.dataset.busca.indexOf(q) !== -1 || (qDig.length >= 3 && tr.dataset.busca.indexOf(qDig) !== -1);
+    tr.classList.toggle('oculto', !ok);
+    if (ok) vis++;
+  });
+  var v = $('vazio');
+  if (!linhas.length){ v.style.display = 'block'; v.textContent = 'Nenhum policial respondeu ainda.'; }
+  else if (!vis){ v.style.display = 'block'; v.textContent = 'Ninguém encontrado com esse filtro.'; }
+  else v.style.display = 'none';
+}
+Array.prototype.forEach.call(document.querySelectorAll('.filtros .chip'), function(c){
+  c.addEventListener('click', function(){ filtrarQuadro(c.dataset.f); });
+});
+$('f-busca').addEventListener('input', aplicarFiltro);
+
+/* ---------------------------- impressão ----------------------------
+   Sem argumento: relatório completo. Com o id: só aquele sistema. */
+var cabBase = '';
+function limparImpressao(){
+  document.body.classList.remove('print-um');
+  Array.prototype.forEach.call(document.querySelectorAll('.rel-plat.alvo'), function(e){ e.classList.remove('alvo'); });
+  $('rel-data').textContent = cabBase;
+}
+window.addEventListener('afterprint', limparImpressao);
+function imprimir(id){
+  var cab = $('rel-data');
+  limparImpressao();   // caso a impressão anterior não tenha disparado afterprint
+  if (id){
+    var x = porSistema().filter(function(y){ return y.s.id === id; })[0];
+    var alvo = $('rel-' + id);
+    if (!x || !alvo) return;
+    document.body.classList.add('print-um');
+    alvo.classList.add('alvo');
+    cab.textContent = 'Sistema: ' + x.s.nome + ' · ' + plural(x.policiais.length, 'policial sem acesso', 'policiais sem acesso')
+                    + ' · Emitido em ' + new Date().toLocaleDateString('pt-BR');
+  }
+  window.print();
+}
+
+function relatorioTexto(soId){
   var linhas = ['SOLICITAÇÃO DE ACESSO A SISTEMAS — BPFRON/RO',
                 'Emitido em ' + new Date().toLocaleDateString('pt-BR'), ''];
-  ((dados && dados.por_sistema) || []).forEach(function(s){
+  porSistema().filter(function(x){ return x.policiais.length && (!soId || x.s.id === soId); })
+    .map(function(x){ return { sistema: x.s.nome, policiais: x.policiais }; })
+    .forEach(function(s){
     linhas.push(s.sistema.toUpperCase() + ' — ' + s.policiais.length + ' policial(is) sem acesso');
     s.policiais.forEach(function(p, i){
       linhas.push('  ' + (i+1) + '. ' + p.nome + ' (' + p.guerra + ') · RE ' + p.re
@@ -821,7 +1054,7 @@ function copiar(texto, botao){
 }
 
 $('btn-copiar-rel').addEventListener('click', function(){ copiar(relatorioTexto(), this); });
-$('btn-imprimir').addEventListener('click', function(){ window.print(); });
+$('btn-imprimir').addEventListener('click', function(){ imprimir(); });
 
 $('btn-csv').addEventListener('click', function(){
   var linhas = [['Nome completo','Nome de guerra','RE','E-mail institucional','CPF','Nascimento','Sistema sem acesso']];
@@ -850,6 +1083,17 @@ $('btn-csv').addEventListener('click', function(){
 montarLista();
 atualizarContador();
 renderUserChip();
+
+/* Altura do cabeçalho fixo — a barra de ações do gestor gruda logo abaixo dele. */
+function medirHdr(){ document.documentElement.style.setProperty('--hdr-h', document.querySelector('.hdr').offsetHeight + 'px'); }
+medirHdr();
+window.addEventListener('resize', medirHdr);
+
+/* Gestor já logado (ou link com #gestor) abre direto na Área do Gestor.
+   Quem não tem login continua caindo no formulário do policial. */
+if (location.hash === '#gestor' || (podeGerir() && location.hash !== '#policial')){
+  document.querySelector('.tab[data-pane="gestor"]').click();
+}
 </script>
 
 </body>
