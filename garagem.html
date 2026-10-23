@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist VTR">
 <title>Checklist da Viatura · Garagem BPFRON</title>
+<script>/* aberta dentro do Portal do Policial (policial.html) */ try{ if (new URLSearchParams(location.search).has('portal')) document.documentElement.classList.add('portal'); }catch(e){}</script>
+<style>html.portal .hdr{display:none} html.portal #quem-ok a{display:none}</style>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -326,7 +328,14 @@ textarea{min-height:92px;resize:vertical}
 <div id="load-ovl"><div class="load-card"><div class="spin"></div><div id="load-msg" style="font-weight:700;color:var(--yellow)">Enviando…</div></div></div>
 
 <script>
-const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+/* ?api= só aceita localhost (testes) */
+const API_BASE = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
 const LS_KEY = 'bp_gar_motorista';
 
 let APP = null;           // resposta de /api/garagem/app
@@ -376,6 +385,12 @@ function montar(dados){
   $('termo').textContent = APP.termo;
   if (SEL) SEL = APP.viaturas.find(v => v.prefixo === SEL.prefixo) || null;
   try{ EU = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); }catch(e){ EU = null; }
+  // Portal do Policial: o RE vem do portal; se o salvo aqui for de outra pessoa, identifica de novo
+  const reP = (() => { try { const q = new URLSearchParams(location.search); return q.has('portal') ? (q.get('re') || '').replace(/\D/g, '') : ''; } catch(e){ return ''; } })();
+  if (reP && (!EU || String(EU.re).replace(/\D/g, '').slice(-5) !== reP.slice(-5))){
+    EU = null; try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    $('re').value = reP; setTimeout(identificar, 0);
+  }
   reconferirEU();
   mostrarQuem();
   renderViaturas();

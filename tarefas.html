@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Tarefas BPFRON">
 <title>Central de Tarefas · BPFRON/RO</title>
 <link rel="icon" id="favicon" href="LOGOS/bpfron_transp.png">
+<script>/* aberta dentro do Portal do Policial (policial.html) */try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
 <script>/* tema antes de pintar (sem piscar) */try{var t=localStorage.getItem('tar_tema')||'escuro';if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'claro':'escuro';document.documentElement.dataset.tema=t}catch(e){}</script>
 <script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -606,6 +607,17 @@ input[type=range]{width:100%;accent-color:#3987e5}
 .vivo-chip.off{background:rgba(148,163,184,.08);border-color:var(--border);color:var(--dim)}
 .vivo-chip.off i{background:#64748b;box-shadow:none}
 @media (max-width:560px){ .vivo-chip span{display:none} }
+/* Portal do Policial: o portal já tem cabeçalho e barra de baixo — aqui some a marca e,
+   no celular, a barra de seções da Central sobe para o alto (não empilha com a do portal) */
+html.portal .brand{display:none}
+html.portal .hdr .sp{display:block!important}
+@media (max-width:900px){
+  /* sem backdrop-filter: com ele a barra vira a referência do botão "+" fixo e ele subia junto */
+  html.portal .nav{position:sticky;top:62px;bottom:auto;border-top:0;border-bottom:1px solid var(--border2);padding:4px 6px;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--navbg2)}
+  html.portal .nav .novo{bottom:calc(16px + env(safe-area-inset-bottom))}
+  html.portal .main{padding-bottom:90px}
+  html.portal .toasts{bottom:calc(16px + env(safe-area-inset-bottom))}
+}
 /* celular: rótulos curtos na barra de baixo; o título encolhe em vez de ficar por baixo dos botões */
 @media (max-width:600px){
   .nb{font-size:0;min-width:0;padding:6px 2px}
@@ -618,6 +630,18 @@ input[type=range]{width:100%;accent-color:#3987e5}
 }
 /* links de acesso direto */
 .lks{display:flex;flex-direction:column;gap:8px}
+.ini-bl{border-color:rgba(245,197,24,.4)!important;background:linear-gradient(135deg,rgba(245,197,24,.09),transparent 65%)!important}
+.ini-bl.ok{border-color:rgba(25,158,112,.45)!important;background:linear-gradient(135deg,rgba(25,158,112,.1),transparent 65%)!important}
+.ini-bl.nao{border-color:rgba(230,103,103,.4)!important;background:linear-gradient(135deg,rgba(230,103,103,.08),transparent 65%)!important}
+.ini-bl .ini-or{font-size:13.5px;color:var(--t3);line-height:1.55;overflow-wrap:anywhere}
+.ini-bl .ini-or b{color:var(--t1)}
+.ini-bl .ini-or small{color:var(--dim)}
+.ini-bl .ini-st{margin-top:8px;font-size:13px;color:var(--t3)}
+.ini-bl .ini-st .ok{color:var(--tx-good);font-weight:700}
+.ini-bl .ini-st .dv{color:var(--tx-crit);font-weight:700}
+.ini-bl .ini-bts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mi.ini{color:var(--yellow);font-weight:800}
+.mi.ini.nao{color:var(--dim)}
 .lkw{display:flex;align-items:center;gap:6px}
 .lk{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;border:1px solid rgba(57,135,229,.35);background:rgba(57,135,229,.08);color:var(--t1);text-decoration:none;transition:.15s}
 .lk:hover{background:rgba(57,135,229,.16);border-color:rgba(57,135,229,.6);transform:translateY(-1px)}
@@ -1095,6 +1119,9 @@ $('f-re').addEventListener('keydown', e => { if (e.key === 'Enter') LG_MODO ? $(
 ['f-resenha','f-nova2'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') entrarRE(false); }));
 $('f-confirma').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-nova').focus(); });
 abaLogin(lido('tar_lg_aba') !== 'dash');
+// Portal do Policial: entra pela aba do RE, com o RE do portal já preenchido
+(() => { try { const q = new URLSearchParams(location.search); const re = q.has('portal') ? (q.get('re') || '').replace(/\D/g, '').slice(-5) : '';
+  if (re){ abaLogin(true); $('f-re').value = re; } } catch(e){} })();
 
 function sair(silencioso){
   pushAoSair(); vivoDesligar(); fimBoasVindas();
@@ -1183,6 +1210,13 @@ const ehChefia = () => EU().ve_tudo || EU().chefia.length > 0 || EU().ve.length 
 const secoesProc = () => D.secoes.filter(s => s.procedimentos).map(s => s.id);
 const temProcVisivel = () => { const ps = secoesProc(); return D.tarefas.some(t => ps.includes(t.secao)) || secoesQuePossoCriar().some(id => ps.includes(id)); };
 const minha = (t) => (t.responsaveis || []).includes(EU().login);
+/* ⚡ Iniciativa: demanda que chegou por fora e a pessoa registrou para si (pontua com bônus
+   depois que a chefia confirma — a regra vem do Worker em D.pontos.ini). */
+const iniDe = (t) => { const i = (t.extra || {}).iniciativa; return i && typeof i === 'object' ? i : null; };
+const iniConfirma = () => !(D.pontos && D.pontos.ini && D.pontos.ini.confirma === false);
+const iniBonus = () => (D.pontos && D.pontos.ini && D.pontos.ini.bonus != null) ? D.pontos.ini.bonus : 3;
+const iniPend = (t) => { const i = iniDe(t); return !!i && !i.ok && !i.nao && iniConfirma(); };
+const iniTitulo = (t) => { const i = iniDe(t); return !i ? '' : 'Iniciativa — ' + (i.ok ? 'confirmada pela chefia' : i.nao ? 'não confirmada' : iniPend(t) ? 'aguardando a chefia confirmar' : 'vale pontos'); };
 
 function montarNav(){
   vis('nb-painel', ehChefia());
@@ -1275,6 +1309,7 @@ function cartao(t, i){
       ${t.n_andamentos ? `<span class="mi">💬 ${t.n_andamentos}</span>` : ''}
       ${t.n_anexos ? `<span class="mi">📎 ${t.n_anexos}</span>` : ''}
       ${linksDe(t).length ? `<span class="mi" title="${esc(linksDe(t).map(l => l.r).join(', '))}">🔗 ${linksDe(t).length}</span>` : ''}
+      ${iniDe(t) ? `<span class="mi ini ${iniPend(t) ? 'pend' : iniDe(t).nao ? 'nao' : 'ok'}" title="${esc(iniTitulo(t))}">⚡${iniPend(t) ? ' ⏳' : iniDe(t).nao ? ' ✘' : ''}</span>` : ''}
       ${(t.extra || {}).validar ?`<span class="mi" title="Exige validação de quem delegou">🛡️</span>` : ''}
       ${t.visibilidade === 'SECAO' ? `<span class="mi" title="Visível para toda a seção">👥</span>` : `<span class="mi" title="Reservada: só envolvidos e chefia">🔒</span>`}
     </div>
@@ -1354,6 +1389,7 @@ function renderMesa(){
   const pct = total ? Math.round(conclMes.length / total * 100) : 0;
   const deleguei = ativas.filter(t => t.criado_por === me && (t.responsaveis || []).some(l => l !== me) && t.status !== 'CONCLUIDA').sort(ordenaUrg);
   const validar = ativas.filter(t => t.status === 'REVISAO' && t.pode.gerir && !minha(t));
+  const confIni = ativas.filter(t => t.pode.conf_ini && iniPend(t));
   const proximas = abertas.filter(t => t.prazo && (t.ciencia[me] || {}).ciente).sort((a, b) => fimPrazo(a.prazo) - fimPrazo(b.prazo)).slice(0, 8);
   const semPrazo = abertas.filter(t => !t.prazo && (t.ciencia[me] || {}).ciente).slice(0, 5);
   const h = Number(new Date(agora() - 4*3600e3).toISOString().slice(11,13));
@@ -1389,6 +1425,8 @@ function renderMesa(){
         <button class="btn verde" data-stop data-ciente="${esc(t.id)}">✔ Dar ciência</button></div>`; }).join('')}` : ''}
     ${validar.length ? `<div class="sec">🛡️ Aguardando a sua validação <small>o responsável terminou — confira e conclua ou devolva</small></div>
       <div class="lst">${validar.map(itemLista).join('')}</div>` : ''}
+    ${confIni.length ? `<div class="sec" id="sec-confini">⚡ Iniciativas para confirmar <small>demandas que chegaram por fora e alguém registrou — confirme para valer pontos</small></div>
+      <div class="lst">${confIni.map(itemLista).join('')}</div>` : ''}
     <div class="grid2" style="margin-top:6px">
       <div><div class="sec">⏳ Seus próximos prazos</div>
         ${proximas.length || semPrazo.length ? `<div class="lst">${[...proximas, ...semPrazo].map(itemLista).join('')}</div>` : `<div class="box vazio"><span class="big">🌤️</span>Nada com prazo por perto.</div>`}</div>
@@ -1624,8 +1662,8 @@ function rankingPontos(per, sec){
   for (const x of P.entregas || []){
     if (!f.ok(x.q)) continue;
     if (sec){ const mb = D.membros.find(y => y.login === x.l); if (!mb || !mb.secoes.includes(sec)) continue; }
-    const r = m.get(x.l) || { l: x.l, pts: 0, n: 0, A: 0, D: 0, T: 0, S: 0 };
-    r.pts += x.pts; r.n++; r[x.k]++;
+    const r = m.get(x.l) || { l: x.l, pts: 0, n: 0, A: 0, D: 0, T: 0, S: 0, I: 0 };
+    r.pts += x.pts; r.n++; r[x.k]++; if (x.i) r.I++;
     m.set(x.l, r);
   }
   const lista = [...m.values()].sort((a, b) => b.pts - a.pts || b.A - a.A || b.n - a.n || nomePt(a.l).localeCompare(nomePt(b.l), 'pt-BR'));
@@ -1638,7 +1676,9 @@ function cartaoPontos(){
   const txt = e.mes > 0
     ? `Você tem <b class="big">${e.mes}</b> ponto${e.mes === 1 ? '' : 's'} este mês${e.pos_mes ? ` · <b style="color:var(--t1)">${e.pos_mes}º lugar</b> de ${e.de}` : ''}${e.total > e.mes ? ` <span style="color:var(--dim)">· ${e.total} no total</span>` : ''}`
     : `Entregue antes do prazo e ganhe mais pontos${e.total ? ` <span style="color:var(--dim)">· ${e.total} no total</span>` : ''}`;
-  return `<button class="ptcard" id="bt-ptcard"><span class="tr">🏆</span><span style="flex:1">${txt}</span><span style="color:var(--yellow);font-weight:800">Ver ranking ›</span></button>`;
+  const pend = D.tarefas.filter(t => t.ativo !== 'NAO' && iniPend(t) && iniDe(t).por === EU().login).length;
+  const txtPend = pend ? ` <span style="color:var(--tx-warn)" id="pt-inipend">· ⚡ ${pend} iniciativa${pend > 1 ? 's' : ''} aguardando a chefia confirmar</span>` : '';
+  return `<button class="ptcard" id="bt-ptcard"><span class="tr">🏆</span><span style="flex:1">${txt}${txtPend}</span><span style="color:var(--yellow);font-weight:800">Ver ranking ›</span></button>`;
 }
 function renderPontos(){
   const v = $('v-pontos'), P = D.pontos || {};
@@ -1651,6 +1691,7 @@ function renderPontos(){
     : `<div class="pd ${cls} vz"><div class="md">${md}</div><div style="height:60px"></div><div class="nm">—</div></div>`;
   const eu = lista.find(r => r.l === me);
   const tot = { A: 0, D: 0, T: 0, S: 0 }; lista.forEach(r => { for (const k in tot) tot[k] += r[k]; });
+  const totI = lista.reduce((s, r) => s + r.I, 0);
   const nTot = tot.A + tot.D + tot.T + tot.S;
   v.innerHTML = `
     <div class="sec" style="margin-top:0">🏆 Pontuação <small>quem mais entregou — ${esc(txt)}</small></div>
@@ -1662,11 +1703,11 @@ function renderPontos(){
       <div class="podio">${pd(top[1], 'p2', '🥈')}${pd(top[0], 'p1', '🥇')}${pd(top[2], 'p3', '🥉')}</div>
       ${eu ? `<div style="font-size:13.5px;color:var(--t3);margin:-6px 0 12px">Você: <b style="color:var(--yellow)">${eu.pos}º lugar</b> com <b style="color:var(--t1)">${eu.pts} pontos</b> (${eu.n} entrega${eu.n === 1 ? '' : 's'}).</div>` : `<div style="font-size:13.5px;color:var(--dim);margin:-6px 0 12px">Você ainda não pontuou neste período.</div>`}
       <div class="box" style="padding:8px 8px 4px">
-        <div class="pt-leg" style="padding:6px 8px 0">${Object.entries(PT_K).map(([k, x]) => `<span><i style="background:${x.cor}"></i>${x.ic} ${x.nome}: <b style="color:var(--t1)">${tot[k]}</b></span>`).join('')}<span style="margin-left:auto;color:var(--dim)">${nTot} entrega${nTot === 1 ? '' : 's'}</span></div>
+        <div class="pt-leg" style="padding:6px 8px 0">${Object.entries(PT_K).map(([k, x]) => `<span><i style="background:${x.cor}"></i>${x.ic} ${x.nome}: <b style="color:var(--t1)">${tot[k]}</b></span>`).join('')}${totI ? `<span>⚡ Por iniciativa: <b style="color:var(--t1)">${totI}</b></span>` : ''}<span style="margin-left:auto;color:var(--dim)">${nTot} entrega${nTot === 1 ? '' : 's'}</span></div>
         ${lista.map(r => `<div class="pr-lin ${r.l === me ? 'eu' : ''}" data-ptl="${esc(r.l)}">
           <span class="pos">${r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º'}</span>${av(r.l, '')}
           <div class="nm"><b>${esc(nomePt(r.l))}${r.l === me ? ' <span style="color:var(--dim);font-weight:600">(você)</span>' : ''}</b>
-            <div class="ks">${['A', 'D', 'T', 'S'].filter(k => r[k]).map(k => `<span title="${PT_K[k].nome}">${PT_K[k].ic} ${r[k]} ${PT_K[k].curto}</span>`).join('')}</div></div>
+            <div class="ks">${['A', 'D', 'T', 'S'].filter(k => r[k]).map(k => `<span title="${PT_K[k].nome}">${PT_K[k].ic} ${r[k]} ${PT_K[k].curto}</span>`).join('')}${r.I ? `<span title="Demandas que chegaram por fora e a pessoa registrou">⚡ ${r.I} por iniciativa</span>` : ''}</div></div>
           <div class="bar" title="${['A', 'D', 'T', 'S'].map(k => PT_K[k].nome + ': ' + r[k]).join(' · ')}"><div class="stk2">${['A', 'D', 'T', 'S'].filter(k => r[k]).map(k => `<i style="background:${PT_K[k].cor};width:${r[k] / r.n * 100}%"></i>`).join('')}</div></div>
           <div class="pts">${r.pts}<small>pontos</small></div></div>`).join('')}
       </div>` : `<div class="box vazio"><span class="big">🏁</span>Ninguém pontuou ${PT_PER === 'tudo' ? 'ainda' : 'neste período'}${PT_SEC ? ' nesta seção' : ''}.<br><span style="font-size:13px">Os pontos entram quando o responsável entrega a tarefa (conclui ou manda para validação).</span></div>`}
@@ -1677,11 +1718,13 @@ function renderPontos(){
       <div>⏰ Depois do prazo<b>+${rg.atrasada}</b>entregou atrasado — ainda vale, mas menos</div>
       <div>📌 Sem prazo<b>+${rg.semprazo}</b>tarefa que não tinha prazo</div>
       <div>🚨 Urgente / 🔺 Alta<b>+${rg.urgente} / +${rg.alta}</b>bônus da prioridade (não vale para atrasada)</div>
+      <div>⚡ Iniciativa<b>+${rg.iniciativa}</b>bônus para a demanda que chegou por fora e a pessoa registrou${rg.ini_confirma ? ' — vale depois que a chefia confirma' : ''}</div>
     </div>
     <div style="font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6">
       • Pontua cada responsável, na hora em que <b>entrega</b>: conclui ou manda para a validação. Na tarefa “cada um responde a sua parte”, conta a hora da resposta de cada um.<br>
       • Se a tarefa for <b>devolvida</b>, a entrega sai do ranking até ser entregue de novo (com a nova data).<br>
-      • ${rg.proprias ? 'Tarefa criada para si mesmo <b>também conta</b>.' : 'Tarefa que a pessoa criou <b>para si mesma não conta</b> — só o que foi delegado por outra pessoa.'} Tarefa arquivada não conta.
+      • ${rg.proprias ? 'Tarefa criada para si mesmo <b>também conta</b>.' : 'Tarefa que a pessoa criou <b>para si mesma não conta</b> — só o que foi delegado por outra pessoa.'} Tarefa arquivada não conta.<br>
+      • <b>⚡ Iniciativa:</b> recebeu uma demanda de fora (ex.: processo no SEI de outra unidade) e ninguém delegou? Crie a tarefa para você, marque “⚡ Demanda que chegou por fora” e diga de onde veio. Ela pontua pelo prazo + o bônus de iniciativa${rg.ini_confirma ? ', depois que o chefe da seção (ou o comando) confirma' : ''}.
     </div>`;
   qsa('[data-ptper]', v).forEach(b => b.onclick = () => { PT_PER = b.dataset.ptper; lembrar('tar_pt_per', PT_PER); renderPontos(); });
   $('pt-sec').onchange = () => { PT_SEC = $('pt-sec').value; renderPontos(); };
@@ -1693,11 +1736,13 @@ function editarRegraPontos(rg){
     <div class="fgr">${campo('antes', '🚀 Antes do prazo')}${campo('nodia', '🎯 No dia do prazo')}</div>
     <div class="fgr">${campo('atrasada', '⏰ Depois do prazo')}${campo('semprazo', '📌 Sem prazo')}</div>
     <div class="fgr">${campo('urgente', '🚨 Bônus Urgente')}${campo('alta', '🔺 Bônus Alta')}</div>
-    <label class="tog" style="margin-top:6px"><input type="checkbox" id="rg-proprias" ${rg.proprias ? 'checked' : ''}>Contar também a tarefa que a pessoa criou para si mesma</label>
+    <div class="fgr">${campo('iniciativa', '⚡ Bônus Iniciativa')}<div></div></div>
+    <label class="tog" style="margin-top:6px"><input type="checkbox" id="rg-iniconf" ${rg.ini_confirma !== false ? 'checked' : ''}>⚡ A iniciativa só vale depois que a chefia confirmar</label>
+    <label class="tog" style="margin-top:6px"><input type="checkbox" id="rg-proprias" ${rg.proprias ? 'checked' : ''}>Contar também a tarefa que a pessoa criou para si mesma (sem ser iniciativa)</label>
     <div class="msg" id="rg-msg"></div>`,
     [{ txt:'Salvar', cls:'btn', fn: async (btn) => {
-      const regra = { proprias: $('rg-proprias').checked };
-      for (const k of ['antes', 'nodia', 'atrasada', 'semprazo', 'urgente', 'alta']) regra[k] = $('rg-' + k).value;
+      const regra = { proprias: $('rg-proprias').checked, ini_confirma: $('rg-iniconf').checked };
+      for (const k of ['antes', 'nodia', 'atrasada', 'semprazo', 'urgente', 'alta', 'iniciativa']) regra[k] = $('rg-' + k).value;
       btn.disabled = true;
       try { await apiPost('/api/tarefas/config', { op:'pontos', regra }); fecharMd2(); toast('🏆 Pontos atualizados — o ranking já foi recalculado.', { cor:'#199e70' }); await carregar(true); }
       catch(e){ $('rg-msg').className = 'msg err'; $('rg-msg').textContent = e.message; btn.disabled = false; }
@@ -2249,6 +2294,16 @@ function renderGaveta(t, det){
       ${precisaCiencia ? `<div style="margin-top:16px"><button class="btn ciente-bt" id="dw-ciente">✔ Recebi — dar ciência</button><div style="font-size:12.5px;color:var(--muted);text-align:center;margin-top:6px">${esc(nomeDe(t.criado_por))} vai ver na hora que você recebeu.</div></div>` : ''}
       ${botoes ? `<div class="acoes">${botoes}</div>` : ''}
 
+      ${(() => { const i = iniDe(t); if (!i) return '';
+        const st = i.ok ? `<span class="ok">✅ Confirmada por ${esc(nomeDe(i.ok.por))} ${esc(fQuando(i.ok.em))} — vale +${iniBonus()} de bônus</span>`
+          : i.nao ? `<span class="dv">✘ Não confirmada por ${esc(nomeDe(i.nao.por))}${i.nao.motivo ? ': ' + esc(i.nao.motivo) : ''}</span> — não pontua como iniciativa`
+          : iniConfirma() ? `⏳ Aguardando o chefe da seção (ou o comando) confirmar — só então vale pontos` : `✅ Vale pontos (+${iniBonus()} de bônus)`;
+        const bts = !t.pode.conf_ini ? '' : (i.ok || i.nao) ? `<button class="linkbtn" id="ini-desf">↺ Desfazer</button>`
+          : `<button class="btn verde sm" id="ini-ok">✅ Confirmar iniciativa</button><button class="btn sec2 sm" id="ini-nao">✘ Não confirmar</button>`;
+        return `<div class="bloco ini-bl ${i.ok ? 'ok' : i.nao ? 'nao' : 'pend'}" id="dw-ini"><h5>⚡ Iniciativa</h5>
+          <div class="ini-or">Veio de: <b>${esc(i.origem)}</b><br><small>registrada por ${esc(nomeDe(i.por))}${i.em ? ' · ' + esc(fQuando(i.em)) : ''}</small></div>
+          <div class="ini-st">${st}</div>${bts ? `<div class="ini-bts">${bts}</div>` : ''}</div>`; })()}
+
       ${(() => { const ls = linksDe(t); if (!ls.length && !mexe) return '';
         return `<div class="bloco lks-bl" id="dw-links"><h5>🔗 Links de acesso${ls.length ? ` <span style="letter-spacing:0">(${ls.length})</span>` : ''}</h5>
           ${ls.length ? `<div class="lks">${ls.map((l, i) => htmlLink(l, i, gerir || (resp && l.por === me))).join('')}</div>` : `<div style="color:var(--dim);font-size:13.5px">Nenhum link. Inclua o processo SEI, um formulário ou uma planilha — abre com um toque.</div>`}
@@ -2367,6 +2422,18 @@ function ligarGaveta(t){
     $('lk-rot').onkeydown = (e) => { if (e.key === 'Enter') enviar(); };
     $('lk-url').oninput = () => { const u = urlValida($('lk-url').value); $('lk-rot').placeholder = u ? 'Nome: ' + rotuloLink(u) : 'Nome (opcional)'; };
   }
+  // ⚡ a chefia confirma (ou não) a iniciativa
+  const iniAc = async (b, sub, motivo, msg) => {
+    b.disabled = true;
+    try { await acao(t.id, 'iniciativa', { sub, motivo }); toast(msg, { cor:'#c98500', ic:'⚡' }); await recarregarDetalhe(true); carregar(true); return true; }
+    catch(e){ toast(e.message, { cor:'#e66767' }); b.disabled = false; return false; }
+  };
+  const iok = $('ini-ok'), inao = $('ini-nao'), idf = $('ini-desf');
+  if (iok) iok.onclick = () => iniAc(iok, 'ok', '', 'Iniciativa confirmada — os pontos já entraram no ranking.');
+  if (idf) idf.onclick = () => iniAc(idf, 'desfazer', '', 'Confirmação desfeita — voltou a aguardar.');
+  if (inao) inao.onclick = () => modalSimples('✘ Não confirmar a iniciativa', `<p style="color:var(--muted);font-size:14px;margin-bottom:12px">A tarefa continua normalmente, mas <b style="color:var(--t2)">não pontua como iniciativa</b>. ${esc(nomeDe(iniDe(t).por))} é avisado.</p>
+    <div class="fg"><label>Motivo (opcional)</label><input class="inp" id="ini-mot" maxlength="300" autocomplete="off" placeholder="Ex.: não é demanda da seção / já estava delegada"></div>`,
+    [{ txt:'Não confirmar', cls:'btn perigo', fn: async (b) => { if (await iniAc(b, 'nao', $('ini-mot').value, 'Iniciativa não confirmada — quem registrou foi avisado.')) fecharMd2(); } }]);
   qsa('[data-lkdel]', pn).forEach(b => b.onclick = async () => {
     b.disabled = true;
     try { await acao(t.id, 'link', { sub:'del', i: Number(b.dataset.lkdel), u: b.dataset.lku }); toast('Link removido.', { cor:'#c98500' }); await recarregarDetalhe(true); carregar(true); }
@@ -2500,6 +2567,7 @@ function abrirForm(t, preset){
     envMais: new Set(ed ? ((t.extra || {}).secoes_env || []) : []), envMenos: new Set(),
     ind: ed ? !!(t.extra || {}).individual : false, indManual: ed,
     links: ed ? linksDe(t).map(l => Object.assign({}, l)) : [],
+    criador: ed ? t.criado_por : EU().login,
   };
   if (!ed && !FORM.resps.length && !possoDelegarEm(secIni)) FORM.resps = [EU().login];
   const e = ed ? (t.extra || {}) : {};
@@ -2531,6 +2599,10 @@ function abrirForm(t, preset){
         <div class="fg"><label>Etiquetas</label><input class="inp" id="fm-etq" value="${ed ? esc((t.etiquetas || []).join(', ')) : ''}" placeholder="Ex.: ofício, operação Fronteira"></div></div>
       <label class="tog" style="margin-bottom:8px"><input type="checkbox" id="fm-vis" ${ed ? (t.visibilidade === 'SECAO' ? 'checked' : '') : 'checked'}>👥 Toda a seção vê (no quadro e no calendário). Desmarcado = reservada: só envolvidos e chefia</label>
       <label class="tog hide" id="fm-val-wrap"><input type="checkbox" id="fm-val" ${ed ? (e.validar ? 'checked' : '') : 'checked'}>🛡️ Exigir a minha validação antes de concluir</label>
+      <div class="hide ini-fm" id="fm-ini-wrap">
+        <label class="tog ind" style="margin:8px 0 0"><input type="checkbox" id="fm-inic" ${e.iniciativa ? 'checked' : ''}><span>⚡ <b style="color:var(--t1)">Demanda que chegou por fora — iniciativa</b><br><small style="color:var(--muted);font-size:12.5px">Ex.: processo no SEI vindo de outra unidade, ofício, pedido do MP. Ninguém delegou: você registrou e vai dar andamento. Vale os pontos do prazo <b>+${iniBonus()} de bônus</b>${iniConfirma() ? ', depois que a chefia confirmar' : ''}.</small></span></label>
+        <div class="fg ${e.iniciativa ? '' : 'hide'}" id="fm-ini-or-wrap" style="margin:10px 0 4px"><label>De onde veio? <i>*</i></label><input class="inp" id="fm-ini-or" maxlength="200" autocomplete="off" value="${esc((e.iniciativa || {}).origem || '')}" placeholder="Ex.: SEI 0035.123456/2026-11 — 2º BPM / Ofício nº 45 do MP"><small>Dica: cole também o link do processo em 🔗 Links, para a chefia conferir com um toque.</small></div>
+      </div>
       <div class="msg" id="fm-msg"></div>
     </div>
     <div class="mdf"><button class="btn sec2" data-fecha="md">Cancelar</button><button class="btn" id="fm-salvar">${ed ? 'Salvar alterações' : (FORM.resps.length === 1 && FORM.resps[0] === EU().login && !possoDelegarEm(secIni) ? 'Criar tarefa' : 'Criar e delegar')}</button></div>`;
@@ -2543,6 +2615,7 @@ function abrirForm(t, preset){
   $('fm-vis').onchange = () => { FORM.visManual = true; };
   $('fm-ind').checked = FORM.ind;
   $('fm-ind').onchange = () => { FORM.ind = $('fm-ind').checked; FORM.indManual = true; };
+  $('fm-inic').onchange = () => { vis('fm-ini-or-wrap', $('fm-inic').checked); if ($('fm-inic').checked) $('fm-ini-or').focus(); };
   $('fm-salvar').onclick = salvarForm;
   formTipos(); formPessoas(); formProc(e); ligarCkForm(); ligarLkForm();
   setTimeout(() => $('fm-tit').focus(), 80);
@@ -2675,6 +2748,8 @@ function formPessoas(){
   vis('fm-ind-wrap', FORM.resps.length > 1);
   if ($('fm-ind')) $('fm-ind').checked = FORM.ind && FORM.resps.length > 1;
   renderEnvForm();
+  // ⚡ iniciativa: só quando quem registrou a tarefa está entre os responsáveis
+  vis('fm-ini-wrap', FORM.resps.includes(FORM.criador));
   const bs = $('fm-salvar'); if (bs && !FORM.ed) bs.textContent = FORM.resps.some(l => l !== me) ? 'Criar e delegar' : 'Criar tarefa';
 }
 /* Seções envolvidas: as dos responsáveis entram sozinhas (a chefia, ou a seção de quem
@@ -2713,9 +2788,13 @@ async function salvarForm(){
   if (!tit){ m.className = 'msg err'; m.textContent = 'Dê um título.'; $('fm-tit').focus(); return; }
   if (!FORM.resps.length){ m.className = 'msg err'; m.textContent = 'Escolha quem vai executar.'; return; }
   if (!addLkForm()){ m.className = 'msg err'; m.textContent = 'O link digitado não é válido — corrija ou apague antes de salvar.'; $('fm-lk-url').focus(); return; }
+  const iniOn = $('fm-inic').checked && !$('fm-ini-wrap').classList.contains('hide');
+  const iniOr = iniOn ? $('fm-ini-or').value.trim() : '';
+  if (iniOn && !iniOr){ m.className = 'msg err'; m.textContent = 'Diga de onde veio a demanda (nº do SEI, ofício…) — é o que a chefia confere para confirmar a iniciativa.'; $('fm-ini-or').focus(); return; }
   const prazo = $('fm-prazo').value ? $('fm-prazo').value + ($('fm-hora').value ? 'T' + $('fm-hora').value : '') : '';
   const extra = { validar: $('fm-val').checked && FORM.resps.some(l => l !== EU().login),
     individual: FORM.resps.length > 1 && $('fm-ind').checked, secoes_env: envFinal(), links: FORM.links };
+  if (iniOn) extra.iniciativa = { origem: iniOr };
   if (FORM.tipo !== 'TAREFA'){
     Object.assign(extra, { numero:$('pc-num').value, portaria:$('pc-port').value, sei:$('pc-sei').value, instauracao:$('pc-inst').value, prazo_dias:$('pc-dias').value,
       preso: !!($('pc-preso') && $('pc-preso').checked), autoridade:$('pc-aut').value, escrivao:$('pc-esc').value, objeto:$('pc-obj').value, envolvidos:$('pc-env').value });
@@ -2734,7 +2813,7 @@ async function salvarForm(){
     const r = await apiPost('/api/tarefas/salvar', corpo);
     const ed = FORM.ed, ehDeleg = FORM.resps.some(l => l !== EU().login);
     fecharForm();
-    toast(ed ? '✔ Alterações salvas.' : (ehDeleg ? `📤 Tarefa #${r.num} delegada — os responsáveis já foram avisados.` : `✔ Tarefa #${r.num} criada.`), { cor:'#199e70' });
+    toast(ed ? '✔ Alterações salvas.' : (ehDeleg ? `📤 Tarefa #${r.num} delegada — os responsáveis já foram avisados.` : iniOn && iniConfirma() ? `⚡ Tarefa #${r.num} registrada como iniciativa — a chefia foi avisada para confirmar.` : `✔ Tarefa #${r.num} criada.`), { cor:'#199e70' });
     NOVAS_TAREFAS.add(r.id);
     await carregar(true);
     if (ed && ABERTA) recarregarDetalhe(true);
@@ -2761,7 +2840,7 @@ $('dw').querySelector('.bg').addEventListener('click', fecharGaveta);
 
 /* ============================== NOTIFICAÇÕES ============================== */
 const NOVAS_TAREFAS = new Set();
-const ICONE_NOTIF = { atribuida:'📌', ciente:'✅', status:'🔄', concluida:'🏁', validacao:'🛡️', devolvida:'↩️', prazo:'📅', prioridade:'🚨', comentario:'💬', andamento:'📍', link:'🔗', parte:'👥', mencao:'📣', observador:'👁️', retirada:'↩️', fase:'⚖️', arquivada:'🗄️', config:'⚙️', etapa:'☑️', acesso:'🔐' };
+const ICONE_NOTIF = { atribuida:'📌', ciente:'✅', status:'🔄', concluida:'🏁', validacao:'🛡️', devolvida:'↩️', prazo:'📅', prioridade:'🚨', comentario:'💬', andamento:'📍', link:'🔗', parte:'👥', iniciativa:'⚡', mencao:'📣', observador:'👁️', retirada:'↩️', fase:'⚖️', arquivada:'🗄️', config:'⚙️', etapa:'☑️', acesso:'🔐' };
 function processarNotificacoes(antes){
   const n = D.notificacoes;
   if (NOTIF_VISTAS === null){
@@ -3196,6 +3275,8 @@ document.addEventListener('keydown', (e) => {
 });
 /* tarefas.html#t=ID abre a tarefa (link mandado por WhatsApp, por exemplo). */
 function abrirPeloEndereco(){ const m = location.hash.match(/#t=([A-Z0-9]+)/i); if (m) abrirTarefa(m[1]); }
+/* Portal do Policial: abre a tarefa tocada no Início do portal (false = ainda carregando) */
+window.portalAbrir = (id) => { if (!D || !AUTH.logged) return false; abrirTarefa(id); return true; };
 window.addEventListener('hashchange', () => { if (D) abrirPeloEndereco(); });
 
 boot();

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P1 · Seção Pessoal · BPFRON/RO</title>
+<script>/* aberta dentro do Portal do Policial (policial.html) */ try{ if (new URLSearchParams(location.search).has('portal')) document.documentElement.classList.add('portal'); }catch(e){}</script>
 <script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -86,6 +87,8 @@ body{
 .p1-aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 16px;font-size:13.5px;color:#fcd34d;margin-top:14px}
 
 #p1-form{display:none}
+/* Portal do Policial: dentro do portal o cabeçalho é o dele */
+html.portal .hdr{display:none}
 
 .p1-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .p1-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
@@ -267,7 +270,14 @@ body{
 </div>
 
 <script>
-const API_BASE = "https://bpfron-api.bpfron.workers.dev";
+/* ?api= só aceita localhost (testes) */
+const API_BASE = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
 
 const AUTH = {
   get token(){ return localStorage.getItem('bp_token') || ''; },
@@ -333,8 +343,14 @@ async function apiFetchJSON(path){
   if (!r.ok) throw new Error('Erro ' + r.status + ' ao buscar dados.');
   return await r.json();
 }
+/* Portal do Policial: o RE vem do portal. Quem já entrou nas Tarefas com senha manda o
+   token junto e o Worker dispensa o CPF (só para o RE da própria sessão). */
+const PORTAL_RE = (() => { try { const q = new URLSearchParams(location.search); return q.has('portal') ? (q.get('re') || '').replace(/\D/g, '').slice(-5) : ''; } catch(e){ return ''; } })();
+const tokenPortal = () => { try { return PORTAL_RE ? (localStorage.getItem('tar_token') || '') : ''; } catch(e){ return ''; } };
 async function apiPostJSONPublic(path, body){
-  const r = await fetch(API_BASE + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) });
+  const h = { 'Content-Type':'application/json' }, tk = tokenPortal();
+  if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, { method:'POST', headers:h, body: JSON.stringify(body || {}) });
   const d = await r.json().catch(()=>({}));
   if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.code = d.error; throw e; }
   return d;
@@ -917,6 +933,11 @@ renderCursos();
 renderSistemas();
 p1CarregarSistemasConhecidos();
 p1CarregarCursosConhecidos();
+// Portal: RE já preenchido; com o login das Tarefas, abre a ficha direto (sem CPF)
+if (PORTAL_RE){
+  document.getElementById('p1-re').value = PORTAL_RE;
+  if (tokenPortal()) p1Continuar(); else p1LookupRE();
+}
 </script>
 </body>
 </html>

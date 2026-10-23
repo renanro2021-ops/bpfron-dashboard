@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<link rel="manifest" href="policial.webmanifest">
+<link rel="apple-touch-icon" href="policial-icon-192.png">
+<link rel="icon" type="image/png" href="policial-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Portal PM">
+<title>Portal do Policial · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   policial.html — Portal do Policial (23/10/2026)
+   Tudo num lugar só: tarefas designadas (Central de Tarefas), checklist da
+   viatura (Garagem) e ficha da P1. O portal NÃO tem senha: identifica pelo RE
+   e lembra neste aparelho. As Tarefas continuam pedindo a senha delas.
+   Cada aba abre a página de sempre dentro do portal (?portal=1&re=…), então
+   as regras de cada sistema continuam no Worker, sem cópia aqui.
+   ===================================================================== */
+:root{
+  --bg:#060912; --bg2:#0b1120; --card:rgba(148,163,184,.06); --card2:rgba(148,163,184,.1);
+  --border:rgba(148,163,184,.14); --border2:rgba(148,163,184,.22);
+  --t1:#f8fafc; --t2:#e2e8f0; --t3:#cbd5e1; --muted:#94a3b8; --dim:#64748b;
+  --yellow:#F5C518; --good:#22c55e; --tx-good:#4ade80; --warn:#f59e0b; --tx-warn:#fbbf24; --crit:#e66767; --tx-crit:#f87171; --info:#3987e5; --tx-info:#7cb4f5;
+  --hdr:56px; --tabs:64px; --safe:env(safe-area-inset-bottom);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--t2);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:radial-gradient(1200px 600px at 80% -10%,rgba(245,197,24,.07),transparent 60%),radial-gradient(900px 500px at -10% 10%,rgba(57,135,229,.08),transparent 60%),var(--bg)}
+button{font:inherit;cursor:pointer;color:inherit}
+.hide{display:none!important}
+
+/* ---------- cabeçalho ---------- */
+.top{position:sticky;top:0;z-index:50;height:var(--hdr);display:flex;align-items:center;gap:10px;padding:0 14px;background:rgba(6,9,18,.94);border-bottom:1px solid var(--border2)}
+.top img{height:36px;width:auto}
+.top .tt{min-width:0;flex:1}
+.top .tt b{display:block;font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .tt b em{font-style:normal;color:var(--yellow)}
+.top .tt small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eu{display:flex;align-items:center;gap:8px;min-width:0}
+.eu .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:#0b1120;background:linear-gradient(135deg,#F5C518,#e0a800);flex:none}
+.eu .nm{font-size:13px;font-weight:700;color:var(--t1);max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eu button{border:1px solid var(--border2);background:none;border-radius:999px;padding:5px 10px;font-size:12px;color:var(--muted)}
+.eu button:hover{color:var(--t1);border-color:var(--muted)}
+
+/* ---------- abas: embaixo no celular, no alto no computador ---------- */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;background:#090d18;border-top:1px solid var(--border2);padding:6px 6px calc(6px + var(--safe))}
+.tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:12px;padding:6px 2px;font-size:11px;font-weight:700;color:var(--muted);position:relative}
+.tabs button .i{font-size:20px;line-height:1.1}
+.tabs button.on{color:var(--yellow);background:rgba(245,197,24,.1)}
+.tabs .bd{position:absolute;top:2px;right:calc(50% - 22px);min-width:18px;height:18px;border-radius:9px;background:var(--crit);color:#fff;font-size:10.5px;font-style:normal;font-weight:800;display:grid;place-items:center;padding:0 5px}
+.tabs .bd.az{background:var(--info)}
+
+main{padding:16px 14px calc(var(--tabs) + 28px + var(--safe));max-width:980px;margin:0 auto}
+.fr{position:fixed;left:0;right:0;top:var(--hdr);bottom:calc(var(--tabs) + var(--safe));z-index:10;background:var(--bg)}
+.fr iframe{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+.fr .carr{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px;pointer-events:none}
+
+@media (min-width:900px){
+  :root{--hdr:64px}
+  .top{padding:0 24px}
+  .top img{height:42px}
+  .top .tt b{font-size:22px}
+  .tabs{position:sticky;top:var(--hdr);bottom:auto;z-index:45;border-top:0;border-bottom:1px solid var(--border);padding:8px 24px;gap:6px;justify-content:center;background:#090d18}
+  .tabs button{flex:none;flex-direction:row;gap:8px;padding:9px 18px;font-size:14px}
+  .tabs button .i{font-size:17px}
+  .tabs .bd{position:static;margin-left:2px}
+  .fr{top:calc(var(--hdr) + 57px);bottom:0}
+  main{padding:24px 24px 40px}
+}
+
+/* ---------- entrar pelo RE ---------- */
+.entrar{max-width:440px;margin:6vh auto 0;text-align:center}
+.entrar .brasao{width:96px;height:auto;margin-bottom:10px;filter:drop-shadow(0 6px 24px rgba(245,197,24,.25))}
+.entrar h1{font-family:'Rajdhani',sans-serif;font-size:30px;color:var(--t1);letter-spacing:.3px}
+.entrar h1 em{font-style:normal;color:var(--yellow)}
+.entrar p.lead{color:var(--muted);font-size:14.5px;line-height:1.6;margin:8px 0 20px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.entrar .box{text-align:left;padding:18px}
+label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;background:rgba(148,163,184,.08);border:1px solid var(--border2);border-radius:12px;padding:13px 14px;font-size:18px;color:var(--t1);outline:none;letter-spacing:1px}
+.inp:focus{border-color:rgba(245,197,24,.6);background:rgba(148,163,184,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1300}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.sec{background:rgba(148,163,184,.12);color:var(--t2);border:1px solid var(--border2)}
+.btn.sm{padding:8px 12px;font-size:13px;border-radius:10px}
+.btn.w{width:100%}
+.msg{font-size:13.5px;margin-top:10px;line-height:1.5}
+.msg.err{color:var(--tx-crit)}
+.achou{margin-top:14px;padding:14px;border-radius:12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3)}
+.achou b{display:block;font-size:17px;color:var(--t1);margin:2px 0 2px}
+.achou small{color:var(--muted);font-size:12.5px}
+.achou .bts{display:flex;gap:8px;margin-top:12px}
+.achou .bts .btn{flex:1}
+.nota{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:14px;text-align:center}
+
+/* ---------- início ---------- */
+.ola h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:var(--t1);line-height:1.15}
+.ola p{color:var(--muted);font-size:13px;margin-top:2px;text-transform:capitalize}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 6px}
+.cd{position:relative;text-align:left;border:1px solid var(--border);background:var(--card);border-radius:16px;padding:12px;min-height:118px;display:flex;flex-direction:column;gap:4px;overflow:hidden;transition:.15s}
+.cd:hover{border-color:var(--border2);background:var(--card2)}
+.cd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--yellow))}
+.cd .ic{font-size:20px}
+.cd .v{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--t1);line-height:1}
+.cd .v.txt{font-size:18px;line-height:1.15;overflow-wrap:anywhere}
+.cd .l{font-size:12px;font-weight:700;color:var(--t3)}
+.cd .s{font-size:11.5px;color:var(--muted);line-height:1.35}
+.cd .s.w{color:var(--tx-warn)} .cd .s.c{color:var(--tx-crit)} .cd .s.g{color:var(--tx-good)}
+.sect{display:flex;align-items:center;gap:8px;margin:22px 0 10px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--yellow)}
+.sect small{font-family:'Inter',sans-serif;letter-spacing:0;text-transform:none;font-size:12.5px;font-weight:500;color:var(--muted);white-space:nowrap}
+.sect .btn{font-family:'Inter',sans-serif;letter-spacing:0;text-transform:none;white-space:nowrap}
+.sect .sp{flex:1}
+.lst{display:flex;flex-direction:column;gap:8px}
+.it{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--border);background:var(--card);border-radius:14px;padding:12px 14px;width:100%}
+.it:hover{border-color:var(--border2);background:var(--card2)}
+.it .tx{flex:1;min-width:0}
+.it .tx b{display:block;font-size:14px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .tx small{display:block;font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{flex:none;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 9px;background:rgba(148,163,184,.12);color:var(--t3);white-space:nowrap}
+.chip.late{background:rgba(230,103,103,.18);color:var(--tx-crit)}
+.chip.soon{background:rgba(245,158,11,.18);color:var(--tx-warn)}
+.chip.new{background:rgba(57,135,229,.2);color:var(--tx-info)}
+.painel{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.painel .tx{flex:1;min-width:200px;font-size:14px;color:var(--t3);line-height:1.55}
+.painel .tx b{color:var(--t1)}
+.painel .ic2{font-size:30px}
+.skel{border-radius:14px;background:linear-gradient(90deg,rgba(148,163,184,.06),rgba(148,163,184,.12),rgba(148,163,184,.06));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.inst{margin-top:24px;text-align:center}
+.inst .btn{font-size:14px}
+.inst p{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.55}
+.manual{text-align:center;margin-top:18px;font-size:13.5px}
+.manual a{color:var(--yellow);text-decoration:none;font-weight:600}
+.manual a:hover{text-decoration:underline}
+
+/* ---------- janela simples ---------- */
+.md{position:fixed;inset:0;z-index:100;background:rgba(2,4,10,.72);display:none;align-items:center;justify-content:center;padding:16px}
+.md.on{display:flex}
+.md .cx{max-width:400px;width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:20px}
+.md h3{font-family:'Rajdhani',sans-serif;font-size:21px;color:var(--t1);margin-bottom:8px}
+.md p{font-size:14px;color:var(--muted);line-height:1.55}
+.md .bts{display:flex;gap:8px;margin-top:16px}
+.md .bts .btn{flex:1}
+
+@media (max-width:420px){
+  .cards{gap:8px}
+  .cd{padding:10px;min-height:112px}
+  .cd .v{font-size:24px}
+  .cd .v.txt{font-size:15px}
+  .eu .nm{max-width:96px}
+  .top .tt small{display:none}
+  .sect small{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .skel{animation:none} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+  <div class="tt"><b>Portal do <em>Policial</em></b><small>BPFRON · tarefas, viatura e ficha</small></div>
+  <div class="eu hide" id="eu"><span class="av" id="eu-av"></span><span class="nm" id="eu-nm"></span><button id="bt-trocar" title="Outra pessoa vai usar este aparelho">Trocar</button></div>
+</header>
+
+<nav class="tabs hide" id="tabs" aria-label="Seções do portal">
+  <button data-aba="inicio" class="on"><span class="i">🏠</span><span>Início</span></button>
+  <button data-aba="tarefas"><span class="i">📋</span><span>Tarefas</span><i class="bd hide" id="bd-tar"></i></button>
+  <button data-aba="viatura"><span class="i">🚓</span><span>Viatura</span><i class="bd az hide" id="bd-vtr"></i></button>
+  <button data-aba="ficha"><span class="i">👤</span><span>Minha ficha</span></button>
+</nav>
+
+<main id="main">
+  <!-- quem é você (sem senha: só o RE) -->
+  <section id="v-entrar" class="hide">
+    <div class="entrar">
+      <img class="brasao" src="LOGOS/bpfron_transp.avif" alt="">
+      <h1>Portal do <em>Policial</em></h1>
+      <p class="lead">Suas <b style="color:var(--t2)">tarefas</b>, o <b style="color:var(--t2)">checklist da viatura</b> e a sua <b style="color:var(--t2)">ficha da P1</b> num lugar só.</p>
+      <div class="box">
+        <label class="lb" for="re">Seu RE</label>
+        <input class="inp" id="re" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ex.: 12345">
+        <button class="btn w" id="bt-re" style="margin-top:12px">Continuar</button>
+        <div class="msg err" id="re-msg"></div>
+        <div class="achou hide" id="achou">
+          <small>É você?</small>
+          <b id="achou-nm"></b>
+          <small id="achou-sub"></small>
+          <div class="bts"><button class="btn" id="bt-sou">✔ Sou eu</button><button class="btn sec" id="bt-nao">Não sou</button></div>
+        </div>
+      </div>
+      <p class="nota">Não precisa de senha: o RE fica lembrado neste aparelho. Só as <b>Tarefas</b> pedem a senha delas.</p>
+      <p class="manual"><a href="manual-portal.html" target="_blank" rel="noopener">📖 Como usar o portal (manual)</a></p>
+    </div>
+  </section>
+
+  <!-- início: resumo das três áreas -->
+  <section id="v-inicio" class="hide">
+    <div class="ola"><h1 id="ola"></h1><p id="hoje"></p></div>
+    <div class="cards" id="cards"></div>
+    <div id="res-tar"></div>
+    <div id="res-vtr"></div>
+    <div id="res-p1"></div>
+    <div class="inst hide" id="inst">
+      <button class="btn sec" id="bt-inst">📲 Instalar o portal no celular</button>
+      <p id="inst-txt">Fica como um aplicativo na tela inicial — abre direto, sem procurar o link.</p>
+    </div>
+    <p class="manual"><a href="manual-portal.html" target="_blank" rel="noopener">📖 Como usar o portal (manual)</a></p>
+  </section>
+</main>
+
+<!-- cada aba é a página de sempre, aberta dentro do portal -->
+<div class="fr hide" id="v-tarefas"><div class="carr">Carregando as tarefas…</div></div>
+<div class="fr hide" id="v-viatura"><div class="carr">Carregando a frota…</div></div>
+<div class="fr hide" id="v-ficha"><div class="carr">Carregando a sua ficha…</div></div>
+
+<div class="md" id="md"><div class="cx" id="md-cx"></div></div>
+
+<script>
+/* ?api= só aceita localhost (testes) — e é repassado às abas */
+const API_Q = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return '';
+})();
+const API = API_Q || 'https://bpfron-api.bpfron.workers.dev';
+
+const $ = (id) => document.getElementById(id);
+const qsa = (s, el) => [...(el || document).querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+const vis = (id, on) => { const el = typeof id === 'string' ? $(id) : id; if (el) el.classList.toggle('hide', !on); };
+const ls = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} } };
+const re5 = (v) => String(v || '').replace(/\D/g, '').slice(-5);
+
+/* quem está usando o aparelho: { re, nome, posto, guerra } */
+const LS_EU = 'bp_portal';
+let EU = null;
+try { EU = JSON.parse(ls.get(LS_EU) || 'null'); } catch(e){ EU = null; }
+if (EU && !re5(EU.re)) EU = null;
+
+async function getJ(path, opt){
+  const r = await fetch(API + path, opt || {});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+const tokenTar = () => ls.get('tar_token') || ls.get('bp_token') || '';
+
+/* ============================== entrar pelo RE ============================== */
+let ACHADO = null;
+async function procurarRE(){
+  const re = $('re').value.replace(/\D/g, '');
+  $('re-msg').textContent = ''; vis('achou', false); ACHADO = null;
+  if (re.length < 4){ $('re-msg').textContent = 'Digite o seu RE.'; $('re').focus(); return; }
+  $('bt-re').disabled = true; $('bt-re').textContent = 'Procurando…';
+  try {
+    const d = await getJ('/api/p1/policial?re=' + encodeURIComponent(re));
+    if (!d.encontrado){ $('re-msg').textContent = 'Esse RE não está no cadastro do BPFRON. Confira o número.'; return; }
+    ACHADO = { re, nome: d.nome || '', posto: d.posto_grad || '', guerra: d.guerra || '' };
+    $('achou-nm').textContent = nomeCurto(ACHADO);
+    $('achou-sub').textContent = `RE ${re5(re)}${d.nome && d.guerra ? ' · ' + d.nome : ''}`;
+    vis('achou', true); $('bt-sou').focus();
+  } catch(e){ $('re-msg').textContent = e.message || 'Não consegui procurar agora. Tente de novo.'; }
+  finally { $('bt-re').disabled = false; $('bt-re').textContent = 'Continuar'; }
+}
+function nomeCurto(p){ return [p.posto, p.guerra || p.nome].filter(Boolean).join(' ').trim() || ('RE ' + re5(p.re)); }
+$('bt-re').onclick = procurarRE;
+$('re').addEventListener('keydown', (e) => { if (e.key === 'Enter') procurarRE(); });
+$('re').addEventListener('input', () => { vis('achou', false); ACHADO = null; $('re-msg').textContent = ''; });
+$('bt-nao').onclick = () => { vis('achou', false); ACHADO = null; $('re').value = ''; $('re').focus(); };
+$('bt-sou').onclick = () => {
+  if (!ACHADO) return;
+  EU = ACHADO; ls.set(LS_EU, JSON.stringify(EU));
+  iniciar();
+};
+
+/* trocar de policial: limpa o RE e também sai das Tarefas e do checklist neste aparelho */
+$('bt-trocar').onclick = () => {
+  $('md-cx').innerHTML = `<h3>Trocar de policial</h3><p>Use quando outra pessoa for usar este aparelho. Isso também <b style="color:var(--t2)">sai das Tarefas</b> e do checklist da viatura aqui.</p>
+    <div class="bts"><button class="btn sec" id="md-nao">Cancelar</button><button class="btn" id="md-sim">Trocar</button></div>`;
+  $('md').classList.add('on');
+  $('md-nao').onclick = () => $('md').classList.remove('on');
+  $('md-sim').onclick = () => {
+    ['tar_token', 'bp_token', 'bp_user', 'bp_perms', 'bp_gar_motorista', LS_EU].forEach(k => ls.set(k, null));
+    EU = null; DADOS = {}; ['tarefas', 'viatura', 'ficha'].forEach(a => { $('v-' + a).querySelector('iframe')?.remove(); });
+    $('md').classList.remove('on');
+    iniciar();
+  };
+};
+$('md').addEventListener('click', (e) => { if (e.target === $('md')) $('md').classList.remove('on'); });
+
+/* ============================== abas ============================== */
+const ABAS = ['inicio', 'tarefas', 'viatura', 'ficha'];
+let ABA = 'inicio';
+const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', ficha: 'p1.html' };
+function srcDe(aba){ return `${PAGINA[aba]}?portal=1&re=${encodeURIComponent(re5(EU.re))}${API_Q ? '&api=' + encodeURIComponent(API_Q) : ''}`; }
+function quadro(aba){
+  const box = $('v-' + aba);
+  let f = box.querySelector('iframe');
+  if (!f){
+    f = document.createElement('iframe');
+    f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', ficha:'Minha ficha (P1)' }[aba];
+    f.src = srcDe(aba);
+    f.addEventListener('load', () => { const c = box.querySelector('.carr'); if (c) c.remove(); });
+    box.appendChild(f);
+  }
+  return f;
+}
+function irAba(aba, opt){
+  if (!EU) return;
+  if (!ABAS.includes(aba)) aba = 'inicio';
+  ABA = aba;
+  qsa('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.aba === aba));
+  vis('main', aba === 'inicio');
+  ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, a === aba));
+  if (aba === 'inicio'){ vis('v-inicio', true); if (Date.now() - (DADOS.em || 0) > 45e3) carregarInicio(); }
+  else {
+    const f = quadro(aba);
+    // a ficha recarrega se a pessoa entrou nas Tarefas depois (aí não pede mais o CPF)
+    if (aba === 'ficha' && f.dataset.tok !== tokenTar()){ if (f.dataset.tok !== undefined) f.src = srcDe('ficha'); }
+    f.dataset.tok = tokenTar();
+    if (opt && opt.abrir) abrirNaCentral(f, opt.abrir);
+  }
+  try { history.replaceState(null, '', aba === 'inicio' ? location.pathname + location.search : '#' + aba); } catch(e){}
+  window.scrollTo(0, 0);
+}
+qsa('#tabs button').forEach(b => b.onclick = () => irAba(b.dataset.aba));
+/* abre uma tarefa dentro da Central (espera ela carregar) */
+function abrirNaCentral(f, id){
+  let n = 0;
+  const tenta = () => {
+    const w = f.contentWindow;
+    try { if (w && typeof w.portalAbrir === 'function' && w.portalAbrir(id)) return; } catch(e){ return; }
+    if (++n < 80) setTimeout(tenta, 200);
+  };
+  tenta();
+}
+
+/* ============================== início ============================== */
+let DADOS = {};
+const agora = () => Date.now();
+const diaRO = (t = agora()) => new Date(t - 4 * 3600e3).toISOString().slice(0, 10);
+function fimPrazo(p){
+  if (!p) return null;
+  const t = p.length > 10 ? Date.parse(p.slice(0, 16) + ':00-04:00') : Date.parse(p.slice(0, 10) + 'T23:59:59-04:00');
+  return Number.isFinite(t) ? t : null;
+}
+function prazoChip(t){
+  const f = fimPrazo(t.prazo); if (!f) return '<span class="chip">sem prazo</span>';
+  const dias = Math.round((Date.parse(t.prazo.slice(0, 10) + 'T12:00:00Z') - Date.parse(diaRO() + 'T12:00:00Z')) / 864e5);
+  if (f < agora()) return `<span class="chip late">⏰ atrasada${dias < 0 ? ' ' + (-dias) + 'd' : ''}</span>`;
+  if (dias === 0) return '<span class="chip soon">vence hoje</span>';
+  if (dias === 1) return '<span class="chip soon">vence amanhã</span>';
+  return `<span class="chip">${t.prazo.slice(8, 10)}/${t.prazo.slice(5, 7)}</span>`;
+}
+/* data do checklist: a Garagem manda "2026-10-23T14:10:00" (hora de RO) ou "23/10/2026 14:10:00" */
+const fDH = (s) => {
+  s = String(s || '');
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}:\d{2})/), d, h;
+  if (m) { d = `${m[1]}-${m[2]}-${m[3]}`; h = m[4]; }
+  else if ((m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}:\d{2})/))) { d = `${m[3]}-${m[2]}-${m[1]}`; h = m[4]; }
+  else return s.slice(0, 16);
+  if (d === diaRO()) return `hoje às ${h}`;
+  if (d === diaRO(agora() - 864e5)) return `ontem às ${h}`;
+  return `${d.slice(8, 10)}/${d.slice(5, 7)} às ${h}`;
+};
+const fN = (n) => Number(n || 0).toLocaleString('pt-BR');
+
+async function carregarTarefas(){
+  const tk = tokenTar();
+  if (!tk) return { estado: 'sem_login' };
+  try {
+    const d = await getJ('/api/tarefas', { headers: { Authorization: 'Bearer ' + tk } });
+    const me = d.eu && d.eu.login;
+    if (/^re\d+$/.test(me || '') && me !== 're' + re5(EU.re)) return { estado: 'outro', quem: (d.eu && d.eu.nome) || me };
+    const minhas = (d.tarefas || []).filter(t => t.ativo !== 'NAO' && (t.responsaveis || []).includes(me));
+    const abertas = minhas.filter(t => t.status !== 'CONCLUIDA');
+    const novas = abertas.filter(t => !((t.ciencia || {})[me] || {}).ciente);
+    const atrasadas = abertas.filter(t => { const f = fimPrazo(t.prazo); return f && f < agora(); });
+    const ord = abertas.slice().sort((a, b) => (fimPrazo(a.prazo) || 9e15) - (fimPrazo(b.prazo) || 9e15));
+    return { estado: 'ok', me, abertas, novas, atrasadas, ord, pontos: (d.pontos && d.pontos.eu) || null, nao_lidas: (d.notificacoes && d.notificacoes.nao_lidas) || 0 };
+  } catch(e){
+    if (e.status === 401) return { estado: 'sem_login' };
+    if (e.status === 403) return { estado: 'sem_acesso', msg: e.message };
+    return { estado: 'erro', msg: e.message };
+  }
+}
+async function carregarViatura(){
+  try {
+    const d = await getJ('/api/garagem/app');
+    const vs = d.viaturas || [];
+    const minhas = vs.filter(v => v.em_uso && v.ultimo && re5(v.ultimo.motorista_re) === re5(EU.re));
+    return { estado: 'ok', minhas, livres: vs.filter(v => !v.em_uso && !/devolvid|baixad/i.test(v.status_geral || '')).length };
+  } catch(e){ return { estado: 'erro', msg: e.message }; }
+}
+async function carregarFicha(){
+  const tk = ls.get('tar_token');
+  if (!tk) return { estado: 'cpf' };
+  try {
+    const d = await getJ('/api/p1/identificar', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tk }, body: JSON.stringify({ re: re5(EU.re) }) });
+    if (d.precisa_cpf4) return { estado: 'cpf' };
+    return { estado: 'ok', ficha: d.ficha, cursos: (d.cursos || []).length, acessos: (d.acessos || []).length };
+  } catch(e){ return { estado: 'cpf' }; }
+}
+
+function cartao(c){
+  return `<button class="cd" data-ir="${c.ir}" style="--c:${c.cor}"><span class="ic">${c.ic}</span><span class="v ${c.txt ? 'txt' : ''}">${c.v}</span><span class="l">${c.l}</span>${c.s ? `<span class="s ${c.sc || ''}">${c.s}</span>` : ''}</button>`;
+}
+function renderInicio(){
+  const T = DADOS.tar, V = DADOS.vtr, P = DADOS.p1;
+  const h = Number(new Date(agora() - 4 * 3600e3).toISOString().slice(11, 13));
+  $('ola').textContent = `${h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'}, ${nomeCurto(EU)}`;
+  $('hoje').textContent = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho', weekday: 'long', day: 'numeric', month: 'long' });
+  const sk = '<div class="skel" style="height:118px"></div>';
+  const cT = !T ? sk : T.estado === 'ok'
+    ? cartao({ ir:'tarefas', ic:'📋', v:T.abertas.length, l:`tarefa${T.abertas.length === 1 ? '' : 's'} com você`, cor:'#3987e5',
+        s: T.atrasadas.length ? `⏰ ${T.atrasadas.length} atrasada${T.atrasadas.length > 1 ? 's' : ''}` : T.novas.length ? `📥 ${T.novas.length} nova${T.novas.length > 1 ? 's' : ''}` : T.pontos && T.pontos.mes ? `🏆 ${T.pontos.mes} pts no mês` : 'tudo em dia',
+        sc: T.atrasadas.length ? 'c' : T.novas.length ? 'w' : 'g' })
+    : cartao({ ir:'tarefas', ic:'🔒', v:'Tarefas', txt:true, l:'entre com a senha', cor:'#3987e5', s: T.estado === 'outro' ? 'entrou outra pessoa' : 'toque para entrar' });
+  const cV = !V ? sk : V.estado === 'ok' && V.minhas.length
+    ? cartao({ ir:'viatura', ic:'🚓', v:esc(V.minhas[0].prefixo), txt:true, l:'em uso com você', cor:'#F5C518', s:'dê o término ao devolver', sc:'w' })
+    : cartao({ ir:'viatura', ic:'🚓', v:'Viatura', txt:true, l:'nenhuma com você', cor:'#F5C518', s: V.estado === 'ok' ? `${V.livres} disponíve${V.livres === 1 ? 'l' : 'is'}` : 'fazer checklist' });
+  const cP = !P ? sk : P.estado === 'ok'
+    ? cartao({ ir:'ficha', ic:'👤', v:'Ficha', txt:true, l: P.ficha ? 'P1 preenchida' : 'P1 não preenchida', cor:'#199e70',
+        s: P.ficha ? `${P.cursos} curso${P.cursos === 1 ? '' : 's'} · ${P.acessos} sistema${P.acessos === 1 ? '' : 's'}` : 'preencha os seus dados', sc: P.ficha ? '' : 'w' })
+    : cartao({ ir:'ficha', ic:'👤', v:'Ficha', txt:true, l:'P1 · seção pessoal', cor:'#199e70', s:'conferir e atualizar' });
+  $('cards').innerHTML = cT + cV + cP;
+  qsa('[data-ir]', $('cards')).forEach(b => b.onclick = () => irAba(b.dataset.ir));
+
+  // tarefas
+  let ht = '';
+  if (T){
+    if (T.estado === 'ok'){
+      const l = T.ord.slice(0, 6);
+      ht = `<div class="sect">📋 Suas tarefas <small>${T.abertas.length ? 'as que vencem primeiro' : ''}</small><span class="sp"></span><button class="btn sec sm" data-ir2="tarefas">Abrir tudo ›</button></div>
+        ${l.length ? `<div class="lst">${l.map(t => `<button class="it" data-tar="${esc(t.id)}"><div class="tx"><b>${esc(t.titulo)}</b><small>#${t.num} · ${esc(t.secao)}${((t.ciencia || {})[T.me] || {}).ciente ? '' : ' · 📥 chegou para você'}</small></div>${prazoChip(t)}</button>`).join('')}</div>`
+          : `<div class="box painel"><span class="ic2">🌤️</span><div class="tx">Nenhuma tarefa em aberto com você. ${T.pontos && T.pontos.mes ? `Você tem <b>${T.pontos.mes} pontos</b> este mês.` : ''}</div></div>`}`;
+    } else if (T.estado === 'sem_acesso'){
+      ht = `<div class="sect">📋 Tarefas</div><div class="box painel"><span class="ic2">🙋</span><div class="tx">${esc(T.msg || 'Você ainda não está liberado na Central de Tarefas.')} Fale com o chefe da sua seção.</div></div>`;
+    } else {
+      ht = `<div class="sect">📋 Tarefas</div><div class="box painel"><span class="ic2">🔒</span><div class="tx">${T.estado === 'outro' ? `As Tarefas deste aparelho estão abertas com <b>${esc(T.quem)}</b>. Entre com a sua senha.` : 'As tarefas pedem a <b>sua senha</b>. No 1º acesso você cria a senha ali mesmo.'}</div><button class="btn" data-ir2="tarefas">Entrar nas tarefas</button></div>`;
+    }
+  }
+  $('res-tar').innerHTML = ht;
+  // viatura
+  let hv = '';
+  if (V){
+    const m = V.estado === 'ok' ? V.minhas[0] : null;
+    hv = `<div class="sect">🚓 Viatura</div><div class="box painel"><span class="ic2">${m ? '🚓' : '🅿️'}</span>
+      <div class="tx">${m ? `Você está com a <b>${esc(m.prefixo)}</b>${m.modelo ? ' (' + esc(m.modelo) + ')' : ''} desde <b>${esc(fDH(m.ultimo.data))}</b>${m.ultimo.km ? `, saiu com ${fN(m.ultimo.km)} km` : ''}. Ao devolver, registre o término.`
+        : V.estado === 'ok' ? `Nenhuma viatura com você agora. ${V.livres} disponíve${V.livres === 1 ? 'l' : 'is'} na frota.` : 'Não consegui ver a frota agora.'}</div>
+      <button class="btn" data-ir2="viatura">${m ? 'Registrar o término' : 'Fazer checklist'}</button></div>`;
+  }
+  $('res-vtr').innerHTML = hv;
+  // ficha P1
+  let hp = '';
+  if (P){
+    hp = `<div class="sect">👤 Minha ficha (P1)</div><div class="box painel"><span class="ic2">${P.estado === 'ok' && P.ficha ? '✅' : '📝'}</span>
+      <div class="tx">${P.estado === 'ok'
+        ? (P.ficha ? `Ficha preenchida${P.ficha.atualizado_em ? ' — atualizada em <b>' + esc(String(P.ficha.atualizado_em).slice(0, 10)) + '</b>' : ''}: ${P.cursos} curso(s) e ${P.acessos} sistema(s). Mantenha em dia.` : 'A sua ficha ainda <b>não foi preenchida</b>: dados pessoais, cursos feitos na PM e sistemas a que você tem acesso.')
+        : 'Confira e atualize os seus dados, cursos e sistemas. Pede os 4 últimos dígitos do CPF — <b>se entrar nas Tarefas antes, não pede</b>.'}</div>
+      <button class="btn" data-ir2="ficha">${P.estado === 'ok' && P.ficha ? 'Ver a minha ficha' : 'Preencher a ficha'}</button></div>`;
+  }
+  $('res-p1').innerHTML = hp;
+  qsa('[data-ir2]', $('main')).forEach(b => b.onclick = () => irAba(b.dataset.ir2));
+  qsa('[data-tar]', $('main')).forEach(b => b.onclick = () => irAba('tarefas', { abrir: b.dataset.tar }));
+  // marcadores nas abas
+  const nT = T && T.estado === 'ok' ? T.novas.length + T.atrasadas.filter(t => !T.novas.includes(t)).length : 0;
+  $('bd-tar').textContent = nT; vis('bd-tar', nT > 0);
+  const emUso = V && V.estado === 'ok' && V.minhas.length;
+  $('bd-vtr').textContent = '1'; vis('bd-vtr', !!emUso);
+}
+let _carr = 0;
+async function carregarInicio(){
+  const n = ++_carr;
+  DADOS.em = Date.now();
+  renderInicio();
+  const [tar, vtr, p1] = await Promise.all([carregarTarefas(), carregarViatura(), carregarFicha()]);
+  if (n !== _carr || !EU) return;
+  Object.assign(DADOS, { tar, vtr, p1 });
+  renderInicio();
+}
+// voltou para o portal (ou entrou/saiu das Tarefas em uma aba): atualiza o resumo
+document.addEventListener('visibilitychange', () => { if (!document.hidden && EU && ABA === 'inicio' && Date.now() - (DADOS.em || 0) > 45e3) carregarInicio(); });
+window.addEventListener('storage', (e) => { if (EU && (e.key === 'tar_token' || e.key === 'bp_token')) { DADOS.em = 0; if (ABA === 'inicio') carregarInicio(); } });
+
+/* ============================== app instalável ============================== */
+let PEDIDO_INST = null;
+const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); PEDIDO_INST = e; vis('inst', true); });
+$('bt-inst').onclick = async () => {
+  if (PEDIDO_INST){ PEDIDO_INST.prompt(); try { await PEDIDO_INST.userChoice; } catch(e){} PEDIDO_INST = null; vis('inst', false); return; }
+  $('inst-txt').innerHTML = 'No iPhone: toque em <b>Compartilhar</b> (o quadrado com a seta) e depois em <b>Adicionar à Tela de Início</b>.';
+};
+if (ehIOS && !instalado()) vis('inst', true);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw-policial.js', { scope: './policial' }).catch(() => {});
+
+/* ============================== começo ============================== */
+function iniciar(){
+  vis('eu', !!EU); vis('tabs', !!EU); vis('v-entrar', !EU); vis('v-inicio', false);
+  ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, false));
+  vis('main', true);
+  if (!EU){ $('re').value = ''; vis('achou', false); setTimeout(() => $('re').focus(), 60); return; }
+  $('eu-nm').textContent = nomeCurto(EU);
+  $('eu-av').textContent = (EU.guerra || EU.nome || 'PM').trim().slice(0, 2).toUpperCase();
+  const h = (location.hash || '').slice(1);
+  DADOS = {};
+  irAba(ABAS.includes(h) ? h : 'inicio');
+}
+iniciar();
+</script>
+</body>
+</html>
