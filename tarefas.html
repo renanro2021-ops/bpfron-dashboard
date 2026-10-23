@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Central de Tarefas · BPFRON/RO</title>
+<link rel="icon" id="favicon" href="LOGOS/bpfron_transp.png">
+<script src="conta.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --surf:#0c111e; --surf2:#111829; --surf3:#172036;
+  --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8; --dim:#64748b;
+  --border:rgba(148,163,184,.12); --border2:rgba(245,197,24,.18);
+  --glass:rgba(17,24,41,.72);
+  /* 4 estados do quadro — ordem validada para daltonismo no fundo escuro */
+  --st-afazer:#3987e5; --st-andamento:#d95926; --st-revisao:#9085e9; --st-concluida:#199e70;
+  --crit:#e66767; --warn:#c98500; --good:#199e70;
+  --r:14px; --sh:0 10px 40px rgba(0,0,0,.45);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 70% 45% at 15% -10%,rgba(57,135,229,.14) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 100% 0%,rgba(245,197,24,.07) 0%,transparent 60%);background-attachment:fixed;overflow-x:hidden}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:6px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+.hide{display:none!important}
+
+/* ---------- cabeçalho ---------- */
+.hdr{position:sticky;top:0;z-index:60;background:linear-gradient(100deg,rgba(5,7,13,.92),rgba(11,15,26,.92));border-bottom:1px solid var(--border2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.hdr-in{display:flex;align-items:center;gap:14px;padding:10px clamp(14px,2.5vw,26px);min-height:62px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:0}
+.brand img{height:40px;mix-blend-mode:screen}
+.brand b{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff;letter-spacing:.3px;white-space:nowrap}
+.brand b em{font-style:normal;color:var(--yellow)}
+.brand small{display:block;font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap}
+.hdr .sp{flex:1}
+.busca{position:relative;flex:0 1 360px;min-width:0}
+.busca input{width:100%;background:rgba(148,163,184,.08);border:1px solid var(--border);border-radius:12px;padding:10px 12px 10px 36px;color:#e2e8f0;font-size:14.5px;outline:none;transition:.2s}
+.busca input:focus{border-color:rgba(245,197,24,.5);background:rgba(148,163,184,.12)}
+.busca::before{content:'🔎';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7}
+.busca kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--dim);border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+.icobtn{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:rgba(148,163,184,.07);color:#e2e8f0;font-size:19px;display:grid;place-items:center;transition:.15s;flex-shrink:0}
+.icobtn:hover{background:rgba(148,163,184,.15)}
+.badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--crit);color:#fff;font-size:11.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--bg);animation:pop .35s var(--ease)}
+.shake{animation:shake .8s ease}
+@keyframes shake{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(9deg)}60%{transform:rotate(-6deg)}75%{transform:rotate(3deg)}}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.userchip{display:flex;align-items:center;gap:9px;font-size:13.5px;color:#cbd5e1;font-weight:600;white-space:nowrap}
+.linkbtn{background:none;border:0;color:var(--muted);font-size:13px}
+.linkbtn:hover{color:var(--yellow)}
+
+/* ---------- avatar ---------- */
+.av{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:11.5px;font-weight:800;color:#fff;flex-shrink:0;border:2px solid var(--surf);position:relative;letter-spacing:.3px}
+.av.sm{width:24px;height:24px;font-size:10px}
+.av.lg{width:40px;height:40px;font-size:14px}
+.avs{display:flex}.avs .av+.av{margin-left:-8px}
+.av .tk{position:absolute;right:-5px;bottom:-4px;font-size:9.5px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--surf);font-weight:900}
+.tk.env{background:#334155;color:#cbd5e1}.tk.vis{background:#3987e5;color:#fff}.tk.cie{background:var(--good);color:#fff}
+
+/* ---------- layout ---------- */
+.lay{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 62px)}
+.nav{position:sticky;top:62px;height:calc(100vh - 62px);padding:18px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px;background:rgba(6,9,18,.5)}
+.nav .novo{margin-bottom:14px;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1300;border:0;border-radius:12px;padding:12px 14px;font-size:14.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 24px rgba(245,197,24,.25);transition:.2s}
+.nav .novo:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,197,24,.35)}
+.nb{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;border:0;background:none;color:var(--muted);font-size:14.5px;font-weight:600;text-align:left;transition:.15s;position:relative}
+.nb .i{font-size:17px;width:22px;text-align:center}
+.nb .c{margin-left:auto;font-size:11.5px;background:rgba(148,163,184,.14);color:#cbd5e1;border-radius:999px;padding:1px 8px}
+.nb .c.r{background:rgba(230,103,103,.2);color:#fca5a5}
+.nb:hover{background:rgba(148,163,184,.08);color:#e2e8f0}
+.nb.on{background:linear-gradient(90deg,rgba(245,197,24,.14),rgba(245,197,24,.02));color:var(--yellow)}
+.nb.on::before{content:'';position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--yellow)}
+.nav .rod{margin-top:auto;font-size:12px;color:var(--dim);line-height:1.5;padding:8px}
+.main{padding:clamp(16px,2.6vw,28px);min-width:0}
+.view{display:none;animation:fadeUp .35s var(--ease)}
+.view.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.ttl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.ttl h1{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,3vw,30px);color:#fff;font-weight:700;letter-spacing:.2px;line-height:1.1}
+.ttl p{color:var(--muted);font-size:14px;width:100%;margin-top:-6px}
+.ttl .sp{flex:1}
+.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.sec small{font-family:'Inter';letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500;font-size:12.5px}
+.sec .sp{flex:1}
+
+.btn{border:0;border-radius:11px;padding:10px 16px;font-size:14px;font-weight:700;background:var(--yellow);color:#1a1300;transition:.15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn.sec2{background:rgba(148,163,184,.12);color:#e2e8f0;border:1px solid var(--border)}
+.btn.sec2:hover{background:rgba(148,163,184,.2)}
+.btn.verde{background:var(--good);color:#fff}
+.btn.roxo{background:var(--st-revisao);color:#fff}
+.btn.lar{background:var(--st-andamento);color:#fff}
+.btn.perigo{background:rgba(230,103,103,.14);color:#fca5a5;border:1px solid rgba(230,103,103,.35)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.btn.xl{padding:14px 22px;font-size:16px;border-radius:14px}
+
+.box{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:18px;backdrop-filter:blur(10px)}
+.vazio{text-align:center;color:var(--muted);padding:34px 16px;font-size:14.5px;line-height:1.7}
+.vazio .big{font-size:40px;display:block;margin-bottom:8px;animation:flutua 3s ease-in-out infinite}
+@keyframes flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;text-align:left;color:inherit;transition:.2s}
+button.kpi:hover{transform:translateY(-2px);border-color:rgba(245,197,24,.35)}
+.kpi .l{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.kpi .v{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:#fff;line-height:1.1;margin-top:4px}
+.kpi .s{font-size:12.5px;color:var(--muted)}
+.kpi::after{content:'';position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:var(--kc,#3987e5);opacity:.12;filter:blur(4px)}
+.kpi.crit .v{color:#fca5a5}
+
+/* ---------- barra de progresso ---------- */
+.pb{height:7px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden;position:relative}
+.pb>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#3987e5,#5aa2f0);width:0;transition:width .9s var(--ease);position:relative;overflow:hidden}
+.pb>i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-100%);animation:brilho 2.4s ease-in-out infinite}
+.pb.done>i{background:linear-gradient(90deg,#199e70,#2fc28e)}
+.pb.late>i{background:linear-gradient(90deg,#e66767,#f08a8a)}
+@keyframes brilho{to{transform:translateX(100%)}}
+.pbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+
+/* ---------- chips ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(148,163,184,.12);color:#cbd5e1;white-space:nowrap;line-height:1.5}
+.chip.sec{background:color-mix(in srgb,var(--c) 18%,transparent);color:color-mix(in srgb,var(--c) 65%,#fff)}
+.chip.prazo.far{background:rgba(148,163,184,.12);color:#cbd5e1}
+.chip.prazo.soon{background:rgba(201,133,0,.18);color:#fcd34d}
+.chip.prazo.hoje{background:rgba(217,89,38,.22);color:#fdba74}
+.chip.prazo.late{background:rgba(230,103,103,.2);color:#fca5a5}
+.chip.prazo.late::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--crit);animation:pulso 1.4s infinite}
+.chip.prazo.ok{background:rgba(25,158,112,.18);color:#6ee7b7}
+.chip.prazo.tarde{background:rgba(201,133,0,.18);color:#fcd34d}
+.chip.proc{background:rgba(230,103,103,.14);color:#fecaca;letter-spacing:.3px}
+.chip.ag{background:rgba(144,133,233,.18);color:#c4b5fd}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(230,103,103,.7)}70%{box-shadow:0 0 0 7px rgba(230,103,103,0)}100%{box-shadow:0 0 0 0 rgba(230,103,103,0)}}
+
+/* ---------- filtros ---------- */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.pill{border:1px solid var(--border);background:rgba(148,163,184,.06);color:var(--muted);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.pill:hover{color:#e2e8f0;background:rgba(148,163,184,.12)}
+.pill.on{background:color-mix(in srgb,var(--c,#F5C518) 18%,transparent);border-color:color-mix(in srgb,var(--c,#F5C518) 50%,transparent);color:#fff}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--c,#F5C518)}
+.sel{background:rgba(148,163,184,.08);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:#e2e8f0;font-size:13px;outline:none}
+.sel option{background:#0b0f1a}
+.seg{display:inline-flex;background:rgba(148,163,184,.08);border:1px solid var(--border);border-radius:11px;padding:3px}
+.seg button{border:0;background:none;color:var(--muted);font-size:13px;font-weight:700;padding:6px 12px;border-radius:8px}
+.seg button.on{background:rgba(245,197,24,.16);color:var(--yellow)}
+
+/* ---------- quadro ---------- */
+.board{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:14px;align-items:start;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}
+.col{background:rgba(11,15,26,.6);border:1px solid var(--border);border-radius:16px;padding:12px;min-height:200px;scroll-snap-align:start;transition:background .2s,border-color .2s;display:flex;flex-direction:column}
+.col.alvo{background:color-mix(in srgb,var(--c) 10%,rgba(11,15,26,.6));border-color:color-mix(in srgb,var(--c) 55%,transparent)}
+.colh{display:flex;align-items:center;gap:9px;padding:2px 4px 10px;font-weight:800;font-size:14px;color:#fff}
+.colh .dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c)}
+.colh .n{background:rgba(148,163,184,.14);color:#cbd5e1;font-size:12px;border-radius:999px;padding:0 8px}
+.colh .sp{flex:1}
+.colh .add{border:0;background:rgba(148,163,184,.1);color:#cbd5e1;width:28px;height:28px;border-radius:8px;font-size:17px;line-height:1}
+.colh .add:hover{background:rgba(245,197,24,.2);color:var(--yellow)}
+.cards{display:flex;flex-direction:column;gap:10px;min-height:60px;flex:1}
+.col .vz{font-size:13px;color:var(--dim);text-align:center;padding:18px 6px;border:1.5px dashed var(--border);border-radius:12px}
+
+.card{background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--border);border-radius:13px;padding:12px 12px 11px 15px;position:relative;cursor:pointer;transition:transform .18s var(--ease),box-shadow .18s,border-color .18s;animation:entra .4s var(--ease) both;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.card::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--pc)}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh);border-color:rgba(148,163,184,.25)}
+.card.novo-n{box-shadow:0 0 0 2px rgba(245,197,24,.55)}
+.card.dragging{opacity:.35;transform:scale(.98)}
+.card.urg{background:linear-gradient(180deg,rgba(230,103,103,.10),var(--surf))}
+@keyframes entra{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.ghost{position:fixed;z-index:9999;pointer-events:none;transform:rotate(3deg) scale(1.04);box-shadow:0 24px 60px rgba(0,0,0,.6);opacity:.96;transition:none;animation:none}
+.ct{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px}
+.ct .num{font-size:11.5px;color:var(--dim);font-weight:700;margin-left:auto}
+.card h4{font-size:14.5px;font-weight:700;color:#f1f5f9;line-height:1.35;margin-bottom:8px;word-break:break-word}
+.cm{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.cm .mi{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:3px}
+.cf{display:flex;align-items:center;gap:8px;margin-top:9px}
+.cf .pb{flex:1}
+.cf .pct{font-size:12px;font-weight:800;color:#cbd5e1;min-width:34px;text-align:right}
+.pede{margin-top:9px;font-size:12.5px;font-weight:700;color:#fcd34d;background:rgba(201,133,0,.14);border-radius:9px;padding:6px 9px;display:flex;align-items:center;gap:6px}
+.pede.roxo{color:#c4b5fd;background:rgba(144,133,233,.14)}
+
+/* lista */
+.tab{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+.tab th{text-align:left;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
+.tab td{padding:10px;border-bottom:1px solid rgba(148,163,184,.07);vertical-align:middle}
+.tab tr.lin{cursor:pointer;transition:background .15s}
+.tab tr.lin:hover td{background:rgba(148,163,184,.06)}
+.tabwrap{overflow-x:auto;background:var(--glass);border:1px solid var(--border);border-radius:var(--r)}
+.stdot{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.stdot::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--c)}
+
+/* ---------- mesa ---------- */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;background:linear-gradient(120deg,rgba(57,135,229,.16),rgba(245,197,24,.06) 60%,rgba(17,24,41,.6));border:1px solid var(--border);border-radius:20px;padding:22px 24px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,3.2vw,32px);color:#fff;line-height:1.1}
+.hero p{color:#cbd5e1;font-size:14.5px;margin-top:6px}
+.anel{position:relative;width:108px;height:108px}
+.anel svg{transform:rotate(-90deg)}
+.anel .t{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-family:'Rajdhani';font-size:26px;font-weight:700;color:#fff;line-height:1}
+.anel .t small{display:block;font-family:'Inter';font-size:10.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.anel circle.f{transition:stroke-dashoffset 1.2s var(--ease)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.grid2>*{min-width:0}
+.lst{display:flex;flex-direction:column;gap:8px}
+.li{display:flex;align-items:center;gap:12px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:11px 13px;cursor:pointer;transition:.18s;animation:entra .4s var(--ease) both}
+.li:hover{border-color:rgba(245,197,24,.35);transform:translateX(3px)}
+.li .bar{width:4px;align-self:stretch;border-radius:4px;background:var(--pc)}
+.li .tx{flex:1;min-width:0}
+.li .tx b{display:block;font-size:14px;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .tx small{font-size:12.5px;color:var(--muted)}
+.chegou{background:linear-gradient(120deg,rgba(201,133,0,.16),rgba(17,24,41,.7));border:1px solid rgba(201,133,0,.4);border-radius:16px;padding:14px;display:flex;gap:14px;align-items:center;animation:entra .45s var(--ease) both}
+.chegou+.chegou{margin-top:10px}
+.chegou .tx{flex:1;min-width:0}
+.chegou .tx b{display:block;color:#fff;font-size:15px}
+.chegou .tx small{color:#fcd34d;font-size:12.5px}
+.recibo{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+
+/* ---------- gaveta (detalhe) ---------- */
+.dw{position:fixed;inset:0;z-index:80;display:none}
+.dw.on{display:block}
+.dw .bg{position:absolute;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(3px);animation:fade .25s}
+.dw .pn{position:absolute;right:0;top:0;bottom:0;width:min(620px,100%);background:linear-gradient(180deg,#0e1424,#0a0f1c);border-left:1px solid var(--border2);box-shadow:-20px 0 60px rgba(0,0,0,.5);overflow-y:auto;animation:desliza .35s var(--ease)}
+@keyframes desliza{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.dwh{position:sticky;top:0;z-index:2;background:rgba(14,20,36,.94);backdrop-filter:blur(12px);padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dwh .sp{flex:1}
+.dwb{padding:18px}
+.dwb h2{font-size:21px;color:#fff;line-height:1.3;margin-bottom:10px;word-break:break-word}
+.bloco{background:rgba(148,163,184,.05);border:1px solid var(--border);border-radius:13px;padding:14px;margin-top:14px}
+.bloco h5{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.bloco h5 .sp{flex:1}
+.desc{white-space:pre-wrap;font-size:14.5px;color:#cbd5e1;line-height:1.6;word-break:break-word}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kv div small{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.kv div b{font-size:14px;color:#e2e8f0;font-weight:600;word-break:break-word}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.passos{display:flex;gap:4px;margin:6px 0 4px}
+.passos .p{flex:1;height:6px;border-radius:4px;background:rgba(148,163,184,.15);transition:.4s}
+.passos .p.on{background:var(--c)}
+.passos-l{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);gap:4px}
+.passos-l span{flex:1;text-align:center}
+.passos-l span.on{color:#e2e8f0;font-weight:700}
+.rec{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(148,163,184,.12)}
+.rec:last-child{border-bottom:0}
+.rec .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#e2e8f0}
+.rec .stp{display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px}
+.rec .stp span{padding:2px 8px;border-radius:999px;background:rgba(148,163,184,.1);color:var(--dim)}
+.rec .stp span.on{background:rgba(57,135,229,.18);color:#93c5fd}
+.rec .stp span.on.c{background:rgba(25,158,112,.2);color:#6ee7b7}
+.ck{display:flex;align-items:center;gap:10px;padding:7px 4px;border-radius:9px;transition:.15s}
+.ck:hover{background:rgba(148,163,184,.06)}
+.ck input{display:none}
+.ck .bx{width:22px;height:22px;border-radius:7px;border:2px solid #334155;display:grid;place-items:center;flex-shrink:0;transition:.2s;cursor:pointer}
+.ck.ok .bx{background:var(--good);border-color:var(--good);animation:pop .3s}
+.ck .bx svg{width:13px;height:13px;stroke:#fff;stroke-width:3.2;fill:none;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s .05s}
+.ck.ok .bx svg{stroke-dashoffset:0}
+.ck .tx{flex:1;font-size:14px;color:#e2e8f0}
+.ck.ok .tx{color:var(--muted)}
+.ck.ok .tx .tt{text-decoration:line-through}
+.ck .x{opacity:0;border:0;background:none;color:var(--dim);font-size:15px;padding:2px 6px}
+.ck:hover .x{opacity:1}
+.addck{display:flex;gap:8px;margin-top:8px}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#e2e8f0;font-size:14.5px;outline:none;transition:.15s}
+.inp:focus{border-color:rgba(245,197,24,.55)}
+textarea.inp{resize:vertical;min-height:72px;line-height:1.5}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:rgba(148,163,184,.14);border-radius:2px}
+.ev{position:relative;margin-bottom:14px;animation:entra .35s var(--ease) both}
+.ev::before{content:attr(data-ic);position:absolute;left:-23px;top:0;width:20px;height:20px;border-radius:50%;background:var(--surf3);display:grid;place-items:center;font-size:11px;border:2px solid #0b0f1a}
+.ev .eh{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ev .eh b{color:#e2e8f0}
+.ev .eb{margin-top:5px;background:rgba(148,163,184,.07);border:1px solid var(--border);border-radius:4px 12px 12px 12px;padding:10px 12px;font-size:14px;white-space:pre-wrap;word-break:break-word;color:#dbe3ef}
+.ev.andamento .eb{border-color:rgba(57,135,229,.35);background:rgba(57,135,229,.08)}
+.ev.devolucao .eb{border-color:rgba(230,103,103,.4);background:rgba(230,103,103,.08)}
+.ev .anx{display:inline-flex;align-items:center;gap:6px;margin-top:7px;border:1px solid var(--border);background:rgba(148,163,184,.08);color:#e2e8f0;border-radius:9px;padding:6px 10px;font-size:13px}
+.ev .anx:hover{border-color:rgba(245,197,24,.45)}
+.mencao{color:var(--yellow);font-weight:700}
+.comp{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(10,15,28,0),#0a0f1c 30%);padding:14px 18px 18px}
+.comp .bx2{background:var(--surf2);border:1px solid var(--border);border-radius:14px;padding:10px}
+.comp textarea{width:100%;border:0;background:none;color:#e2e8f0;font-size:14.5px;resize:none;outline:none;min-height:46px;max-height:160px}
+.comp .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.comp .row .sp{flex:1}
+.anexo-nome{font-size:12.5px;color:#93c5fd}
+.hist{font-size:12.5px;color:var(--muted);border-left:2px solid rgba(148,163,184,.14);padding:3px 0 3px 10px;margin-bottom:6px}
+.hist b{color:#cbd5e1}
+.ciente-bt{width:100%;justify-content:center;font-size:16px;padding:15px;border-radius:14px;background:linear-gradient(135deg,#199e70,#2fc28e);color:#fff;box-shadow:0 8px 28px rgba(25,158,112,.3);animation:respira 2.2s ease-in-out infinite}
+@keyframes respira{0%,100%{box-shadow:0 8px 28px rgba(25,158,112,.25)}50%{box-shadow:0 8px 40px rgba(25,158,112,.55)}}
+input[type=range]{width:100%;accent-color:#3987e5}
+
+/* ---------- modal (formulário) ---------- */
+.md{position:fixed;inset:0;z-index:90;display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow-y:auto;background:rgba(2,6,23,.72);backdrop-filter:blur(4px)}
+.md.on{display:flex;animation:fade .2s}
+.md .cx{width:100%;max-width:760px;background:linear-gradient(180deg,#0f1628,#0b1120);border:1px solid var(--border2);border-radius:20px;box-shadow:var(--sh);animation:sobe .35s var(--ease)}
+.md .cx.p{max-width:440px}
+@keyframes sobe{from{transform:translateY(24px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.mdh{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.mdh h3{font-family:'Rajdhani';font-size:22px;color:#fff;flex:1}
+.mdb{padding:18px 20px}
+.mdf{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);flex-wrap:wrap}
+.fg{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fg>label{font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.fg>label i{font-style:normal;color:#fca5a5}
+.fg small{font-size:12px;color:var(--dim)}
+.fgr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.fgr.t3{grid-template-columns:1fr 1fr 1fr}
+.fgr .s2{grid-column:span 2}
+.fgr .s3{grid-column:1/-1}
+.prios{display:flex;gap:6px;flex-wrap:wrap}
+.prios button{flex:1;min-width:90px;border:1.5px solid var(--border);background:rgba(148,163,184,.06);color:var(--muted);border-radius:10px;padding:9px 8px;font-size:13px;font-weight:700;transition:.15s}
+.prios button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,transparent);color:#fff}
+.pick{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow-y:auto;padding:2px}
+.pick button{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--border);background:rgba(148,163,184,.06);color:#cbd5e1;border-radius:999px;padding:4px 11px 4px 4px;font-size:13px;font-weight:600;transition:.15s}
+.pick button.on{border-color:var(--yellow);background:rgba(245,197,24,.14);color:#fff}
+.pick button:disabled{opacity:.6;cursor:default}
+.tog{display:flex;align-items:center;gap:10px;font-size:14px;color:#cbd5e1;cursor:pointer;user-select:none}
+.tog input{width:18px;height:18px;accent-color:var(--yellow)}
+.procbox{border:1px solid rgba(230,103,103,.3);background:rgba(230,103,103,.05);border-radius:14px;padding:14px;margin-bottom:14px}
+.procbox h6{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#fecaca;margin-bottom:12px}
+.msg{font-size:13.5px;margin-top:10px;min-height:18px}
+.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
+
+/* ---------- notificações ---------- */
+.np{position:fixed;top:66px;right:clamp(8px,2vw,22px);width:min(410px,calc(100vw - 16px));max-height:min(620px,calc(100vh - 80px));background:linear-gradient(180deg,#0f1628,#0b1120);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--sh);z-index:85;display:none;flex-direction:column;overflow:hidden;animation:sobe .25s var(--ease)}
+.np.on{display:flex}
+.nph{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.nph b{flex:1;font-family:'Rajdhani';font-size:19px;color:#fff}
+.npl{overflow-y:auto;flex:1}
+.ni{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid rgba(148,163,184,.07);cursor:pointer;transition:.15s;position:relative}
+.ni:hover{background:rgba(148,163,184,.06)}
+.ni.nova{background:rgba(245,197,24,.05)}
+.ni.nova::after{content:'';position:absolute;right:14px;top:16px;width:8px;height:8px;border-radius:50%;background:var(--yellow)}
+.ni .tx{flex:1;font-size:13.5px;color:#dbe3ef;line-height:1.45;padding-right:12px}
+.ni .tx small{display:block;color:var(--dim);font-size:12px;margin-top:2px}
+.ni.alta .tx{color:#fff}
+.npf{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);flex-wrap:wrap}
+.toasts{position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none}
+.toast{pointer-events:auto;max-width:380px;background:linear-gradient(135deg,#131c31,#0e1526);border:1px solid var(--border2);border-left:4px solid var(--c,#F5C518);border-radius:14px;padding:12px 14px;box-shadow:var(--sh);display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e2e8f0;animation:toastIn .45s var(--ease);cursor:pointer}
+.toast.sai{animation:toastOut .35s ease forwards}
+.toast .x{border:0;background:none;color:var(--dim);font-size:16px;margin-left:4px}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes toastOut{to{transform:translateX(110%);opacity:0}}
+#confete{position:fixed;inset:0;pointer-events:none;z-index:300}
+
+/* ---------- calendário ---------- */
+.calh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.calh b{font-family:'Rajdhani';font-size:22px;color:#fff;min-width:200px;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .dn{font-size:11.5px;color:var(--muted);text-transform:uppercase;font-weight:700;text-align:center;padding:4px}
+.cal .d{min-height:108px;background:rgba(11,15,26,.6);border:1px solid var(--border);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cal .d.fora{opacity:.35}
+.cal .d.hj{border-color:var(--yellow);box-shadow:inset 0 0 0 1px rgba(245,197,24,.4)}
+.cal .d .n{font-size:12.5px;font-weight:800;color:#cbd5e1}
+.cal .d.hj .n{color:var(--yellow)}
+.cal .ev2{font-size:11.5px;font-weight:600;padding:3px 6px;border-radius:6px;background:color-mix(in srgb,var(--c) 22%,transparent);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--c)}
+.cal .ev2.cc{opacity:.5;text-decoration:line-through}
+.cal .ev2.lt{box-shadow:inset 0 0 0 1px rgba(230,103,103,.7)}
+.cal .mais{font-size:11.5px;color:var(--muted);cursor:pointer}
+
+/* ---------- painel ---------- */
+.secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.sc{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:15px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
+.sc h4{display:flex;align-items:center;gap:8px;font-size:15px;color:#fff;margin-bottom:10px}
+.sc h4 .sp{flex:1}
+.stk{display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px;background:rgba(148,163,184,.1)}
+.stk i{display:block;height:100%;transition:width .9s var(--ease);min-width:0}
+.stk i:first-child{border-radius:999px 0 0 999px}.stk i:last-child{border-radius:0 999px 999px 0}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.leg span::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--c)}
+.carga{display:flex;flex-direction:column;gap:9px}
+.cg{display:grid;grid-template-columns:minmax(120px,190px) 1fr 70px;gap:10px;align-items:center;font-size:13.5px}
+.cg .nm{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0}
+.cg .br{display:flex;height:14px;gap:2px}
+.cg .br i{display:block;height:100%;border-radius:4px;transition:width .9s var(--ease)}
+.cg .vl{font-size:12.5px;color:var(--muted);text-align:right}
+.dica{position:fixed;z-index:400;pointer-events:none;background:#0b1120;border:1px solid var(--border2);border-radius:9px;padding:7px 10px;font-size:12.5px;color:#e2e8f0;box-shadow:var(--sh);display:none;max-width:260px}
+
+/* ---------- procedimentos ---------- */
+.procs{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.pc{background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--border);border-radius:16px;padding:15px;cursor:pointer;transition:.2s;animation:entra .4s var(--ease) both;position:relative}
+.pc:hover{transform:translateY(-2px);box-shadow:var(--sh);border-color:rgba(230,103,103,.35)}
+.pc h4{font-size:15px;color:#fff;margin:8px 0 4px;line-height:1.35}
+.pc .sub{font-size:12.5px;color:var(--muted)}
+.pc .linha{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:10px 0 5px}
+.pc .linha b{color:#e2e8f0}
+.fases{display:flex;align-items:center;margin:12px 0 4px}
+.fases .f{width:14px;height:14px;border-radius:50%;background:rgba(148,163,184,.18);flex-shrink:0;transition:.3s;position:relative}
+.fases .f.on{background:var(--crit);box-shadow:0 0 10px rgba(230,103,103,.6)}
+.fases .f.at{outline:3px solid rgba(230,103,103,.3)}
+.fases .ln{flex:1;height:2px;background:rgba(148,163,184,.18)}
+.fases .ln.on{background:var(--crit)}
+
+/* ---------- config ---------- */
+.mbr{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid rgba(148,163,184,.08);flex-wrap:wrap}
+.mbr .tx{flex:1;min-width:180px}
+.mbr .tx b{color:#fff;font-size:14.5px}
+.mbr .tx small{display:block;color:var(--dim);font-size:12px}
+.matriz{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+.matriz th,.matriz td{padding:8px 6px;border-bottom:1px solid rgba(148,163,184,.08);text-align:center}
+.matriz th:first-child,.matriz td:first-child{text-align:left}
+.matriz input{width:18px;height:18px;accent-color:var(--yellow)}
+
+/* ---------- login ---------- */
+.login{max-width:430px;margin:8vh auto 0;padding:0 16px;animation:fadeUp .5s var(--ease)}
+.login .box{padding:26px}
+.login h2{font-family:'Rajdhani';font-size:28px;color:#fff;text-align:center}
+.login p{color:var(--muted);font-size:14px;text-align:center;margin:6px 0 20px;line-height:1.6}
+.login .logo{display:block;margin:0 auto 10px;height:84px;mix-blend-mode:screen;animation:flutua 4s ease-in-out infinite}
+.skel{background:linear-gradient(90deg,rgba(148,163,184,.06),rgba(148,163,184,.14),rgba(148,163,184,.06));background-size:200% 100%;animation:sk 1.3s infinite;border-radius:12px}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* ---------- celular ---------- */
+@media (max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr)}
+  .nav{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;z-index:70;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--border2);background:rgba(6,9,18,.95);backdrop-filter:blur(16px);overflow-x:auto;gap:2px}
+  .nav .novo{position:fixed;right:16px;bottom:calc(74px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;padding:0;font-size:0;margin:0;z-index:71}
+  .nav .novo::before{content:'+';font-size:30px;font-weight:600;line-height:1}
+  .nb{flex-direction:column;gap:2px;font-size:10.5px;padding:6px 8px;flex:1;min-width:62px;justify-content:center;text-align:center}
+  .nb .i{font-size:19px}
+  .nb .c{position:absolute;top:2px;right:6px;margin:0;font-size:10px;padding:0 5px}
+  .nb.on::before{display:none}
+  .nav .rod{display:none}
+  .main{padding:14px 12px 100px}
+  .busca{display:none}
+  .brand small,.userchip .nmu{display:none}
+  .grid2,.fgr,.fgr.t3{grid-template-columns:minmax(0,1fr)}
+  .fgr .s2{grid-column:auto}
+  .board{grid-template-columns:repeat(4,86%);gap:10px}
+  .hero{grid-template-columns:1fr;text-align:center;justify-items:center}
+  .cal .d{min-height:70px;padding:4px}
+  .cal .ev2{font-size:0;padding:0;height:6px;border-left:0}
+  .cg{grid-template-columns:110px 1fr 54px}
+  .toasts{left:12px;right:84px;bottom:calc(80px + env(safe-area-inset-bottom));align-items:stretch}
+  .toast{max-width:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- impressão ---------- */
+#relatorio{display:none}
+@media print{
+  body{background:#fff!important;color:#000}
+  body>*:not(#relatorio){display:none!important}
+  #relatorio{display:block;font-family:Arial,sans-serif;color:#000;font-size:11pt}
+  #relatorio .rc{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px}
+  #relatorio .rc img{height:60px}
+  #relatorio h1{font-size:15pt;margin:0}
+  #relatorio .meta{font-size:9.5pt;color:#333}
+  #relatorio table{width:100%;border-collapse:collapse;font-size:9.5pt}
+  #relatorio th,#relatorio td{border:1px solid #888;padding:4px 6px;text-align:left;vertical-align:top}
+  #relatorio th{background:#eee;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #relatorio .res{display:flex;gap:18px;margin:8px 0 12px;font-size:10pt;flex-wrap:wrap}
+  #relatorio .ass{margin-top:40px;text-align:center;font-size:10pt}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="sistemas.html" title="Todos os sistemas">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div><b>Central de <em>Tarefas</em></b><small>BPFRON · delegação, prazos e andamento</small></div>
+    </a>
+    <div class="sp"></div>
+    <label class="busca hide" id="busca-wrap"><input id="busca" placeholder="Buscar tarefa, nº, SEI, pessoa…" autocomplete="off"><kbd>/</kbd></label>
+    <button class="icobtn hide" id="bt-sino" title="Notificações" aria-label="Notificações">🔔</button>
+    <div class="userchip hide" id="userchip"></div>
+    <button class="linkbtn hide" id="bt-sair">Sair</button>
+  </div>
+</header>
+
+<!-- ============================== LOGIN ============================== -->
+<div class="login hide" id="login-box">
+  <div class="box">
+    <img class="logo" src="LOGOS/bpfron_transp.avif" alt="">
+    <h2>Central de Tarefas</h2>
+    <p>Mesmo usuário e senha do dashboard.<br>Cada um vê só a própria seção — o acesso é liberado pelo administrador.</p>
+    <div class="fg"><label>Usuário</label><input class="inp" id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+    <div class="fg" style="margin-top:12px"><label>Senha</label><input class="inp" id="f-pass" type="password" autocomplete="current-password"></div>
+    <button class="btn xl" id="btn-entrar" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
+    <div class="msg" id="msg-login"></div>
+  </div>
+</div>
+
+<!-- ============================== APP ============================== -->
+<div class="lay hide" id="app">
+  <nav class="nav" id="nav">
+    <button class="novo" id="bt-novo" title="Nova tarefa (N)">＋ Nova tarefa</button>
+    <button class="nb" data-v="mesa"><span class="i">🏠</span>Minha mesa<span class="c hide" id="c-mesa"></span></button>
+    <button class="nb" data-v="quadro"><span class="i">🗂️</span>Quadro</button>
+    <button class="nb" data-v="calendario"><span class="i">📅</span>Calendário</button>
+    <button class="nb hide" data-v="proc" id="nb-proc"><span class="i">⚖️</span>Procedimentos<span class="c hide" id="c-proc"></span></button>
+    <button class="nb hide" data-v="painel" id="nb-painel"><span class="i">📊</span>Painel da chefia</button>
+    <button class="nb hide" data-v="config" id="nb-config"><span class="i">⚙️</span>Configurar</button>
+    <div class="rod">Atalhos: <b>N</b> nova tarefa · <b>/</b> buscar<br>Atualiza sozinho a cada minuto.</div>
+  </nav>
+  <main class="main">
+    <div id="estado" class="hide"></div>
+    <section class="view" id="v-mesa"></section>
+    <section class="view" id="v-quadro"></section>
+    <section class="view" id="v-calendario"></section>
+    <section class="view" id="v-proc"></section>
+    <section class="view" id="v-painel"></section>
+    <section class="view" id="v-config"></section>
+  </main>
+</div>
+
+<div class="dw" id="dw"><div class="bg" data-fecha="dw"></div><div class="pn" id="dw-pn"></div></div>
+<div class="md" id="md"><div class="cx" id="md-cx"></div></div>
+<div class="md" id="md2"><div class="cx p" id="md2-cx"></div></div>
+<div class="np" id="np"></div>
+<div class="toasts" id="toasts"></div>
+<div class="dica" id="dica"></div>
+<canvas id="confete"></canvas>
+<div id="relatorio"></div>
+
+<script>
+/* =====================================================================
+   tarefas.html — Central de Tarefas do BPFRON (23/10/2026)
+
+   Só a casca: vai pro GitHub Pages (público), então nenhum dado mora aqui.
+   Tudo vem do Worker com login; QUEM VÊ O QUÊ é decidido lá (por seção).
+   Esta página só esconde botão que o login não pode usar.
+   ===================================================================== */
+
+/* ?api= só aceita localhost (testes): a página manda token e senha. */
+const API_BASE = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+  get logged(){ return !!this.token; }
+};
+function salvarPerms(d){ try{ if (d && d.perms) localStorage.setItem('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); }catch(e){} }
+function lembrar(k, v){ try{ localStorage.setItem(k, v == null ? '' : v); }catch(e){} }
+function lido(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+
+const $ = (id) => document.getElementById(id);
+const qsa = (sel, el) => Array.from((el || document).querySelectorAll(sel));
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const vis = (el, on) => { (typeof el === 'string' ? $(el) : el).classList.toggle('hide', !on); };
+
+/* ---------- constantes ---------- */
+const ST = [
+  { id:'AFAZER',    nome:'A fazer',      cor:'var(--st-afazer)',    hex:'#3987e5', ic:'📥' },
+  { id:'ANDAMENTO', nome:'Em andamento', cor:'var(--st-andamento)', hex:'#d95926', ic:'⚙️' },
+  { id:'REVISAO',   nome:'Em validação', cor:'var(--st-revisao)',   hex:'#9085e9', ic:'🛡️' },
+  { id:'CONCLUIDA', nome:'Concluída',    cor:'var(--st-concluida)', hex:'#199e70', ic:'🏁' },
+];
+const STm = Object.fromEntries(ST.map(s => [s.id, s]));
+const PRIO = {
+  BAIXA:   { nome:'Baixa',   cor:'#64748b', ic:'▽' },
+  NORMAL:  { nome:'Normal',  cor:'#3987e5', ic:'◆' },
+  ALTA:    { nome:'Alta',    cor:'#c98500', ic:'▲' },
+  URGENTE: { nome:'Urgente', cor:'#e66767', ic:'🚨' },
+};
+const PRIO_PESO = { URGENTE:0, ALTA:1, NORMAL:2, BAIXA:3 };
+const TIPOS_PROC = {
+  IPM:         { nome:'IPM',                       longo:'Inquérito Policial Militar', dias:40, diasPreso:20,
+    passos:['Portaria de instauração publicada','Escrivão designado e compromissado','Oitiva do ofendido','Oitiva das testemunhas','Interrogatório do indiciado','Perícias e exames requisitados','Juntada de documentos','Relatório final do encarregado','Remessa à autoridade delegante'] },
+  SINDICANCIA: { nome:'Sindicância',               longo:'Sindicância',
+    passos:['Portaria publicada','Notificação do sindicado','Oitivas','Defesa do sindicado','Relatório','Solução publicada'] },
+  PAD:         { nome:'PAD',                       longo:'Processo Administrativo Disciplinar',
+    passos:['Portaria publicada','Citação do acusado','Defesa prévia','Instrução (oitivas e provas)','Alegações finais','Relatório','Decisão publicada'] },
+  CONSELHO:    { nome:'Conselho de Disciplina',    longo:'Conselho de Disciplina',
+    passos:['Nomeação do conselho','Libelo acusatório','Citação','Defesa prévia','Instrução','Alegações finais','Sessão de julgamento','Remessa da decisão'] },
+  AVERIGUACAO: { nome:'Averiguação',               longo:'Averiguação / Investigação Preliminar',
+    passos:['Coleta de informações','Oitivas preliminares','Relatório','Encaminhamento'] },
+  PERICIA:     { nome:'Perícia',                   longo:'Perícia / Laudo',
+    passos:['Requisição expedida','Material encaminhado','Laudo recebido','Laudo juntado aos autos'] },
+  PRECATORIA:  { nome:'Carta Precatória',          longo:'Carta Precatória',
+    passos:['Recebimento','Cumprimento das diligências','Devolução ao juízo/autoridade'] },
+  OUTRO_PROC:  { nome:'Outro procedimento',        longo:'Outro procedimento', passos:[] },
+};
+const FASES = [
+  { id:'INSTAURADO', nome:'Instaurado' }, { id:'INSTRUCAO', nome:'Instrução' }, { id:'PERICIA', nome:'Perícia/Laudo' },
+  { id:'RELATORIO', nome:'Relatório' }, { id:'REMETIDO', nome:'Remetido' }, { id:'CONCLUIDO', nome:'Solucionado' },
+];
+const REC = { '':'Não repete', DIARIA:'Todo dia', SEMANAL:'Toda semana', QUINZENAL:'A cada 15 dias', MENSAL:'Todo mês' };
+const CORES_AV = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767'];
+
+/* ---------- tempo (Rondônia, UTC-4) ---------- */
+let RELOGIO = 0;                                    // diferença p/ o relógio do Worker
+const agora = () => Date.now() + RELOGIO;
+const diaRO = (ms) => new Date((ms == null ? agora() : ms) - 4*3600e3).toISOString().slice(0,10);
+function fimPrazo(p){ if (!p) return null; return Date.parse(p.length > 10 ? p + ':00-04:00' : p + 'T23:59:59-04:00'); }
+function fData(s, ano){
+  const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}:\d{2}))?/);
+  if (!m) return '';
+  return `${m[3]}/${m[2]}${ano ? '/' + m[1] : ''}${m[4] ? ' ' + m[4] : ''}`;
+}
+function fQuando(s){
+  const d = new Date(s); if (isNaN(d)) return '';
+  return d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function rel(s){
+  const t = Date.parse(s); if (isNaN(t)) return '';
+  const d = (agora() - t) / 1000;
+  if (d < 60) return 'agora';
+  if (d < 3600) return `há ${Math.floor(d/60)} min`;
+  if (d < 86400) return `há ${Math.floor(d/3600)} h`;
+  if (diaRO(t) === diaRO(agora() - 86400e3)) return 'ontem';
+  return fQuando(s);
+}
+function somaDias(iso, n){ if (!iso) return ''; const d = new Date(iso.slice(0,10) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); }
+
+function prazoInfo(t){
+  const f = fimPrazo(t.prazo); if (!f) return null;
+  if (t.status === 'CONCLUIDA'){
+    const c = Date.parse(t.concluida_em);
+    const ok = !c || c <= f;
+    return { cls: ok ? 'ok' : 'tarde', txt: ok ? 'Entregue no prazo' : 'Entregue com atraso', ic: ok ? '✔' : '⚠' };
+  }
+  const d = f - agora();
+  const hora = t.prazo.length > 10 ? ' ' + t.prazo.slice(11) : '';
+  if (d < 0){
+    const h = -d / 36e5;
+    return { cls:'late', atrasada:true, txt: h < 24 ? `Atrasada há ${Math.max(1, Math.round(h))}h` : `Atrasada há ${Math.floor(h/24)} dia${Math.floor(h/24) > 1 ? 's' : ''}`, ic:'' };
+  }
+  const dia = t.prazo.slice(0,10);
+  if (dia === diaRO()) return { cls:'hoje', hoje:true, logo:true, txt:'Vence hoje' + hora, ic:'⏰' };
+  if (dia === diaRO(agora() + 86400e3)) return { cls:'soon', logo:true, txt:'Vence amanhã' + hora, ic:'⏳' };
+  const dias = Math.ceil(d / 864e5);
+  if (dias <= 7) return { cls: dias <= 3 ? 'soon' : 'far', logo: dias <= 2, txt:`Vence em ${dias} dias`, ic:'📅' };
+  return { cls:'far', txt:'Prazo ' + fData(t.prazo), ic:'📅' };
+}
+const agendada = (t) => t.inicio && t.inicio.slice(0,10) > diaRO() && t.status === 'AFAZER';
+
+/* ---------- pessoas ---------- */
+const PATENTES = /^(SD|CB|SGT|ST|SUBTEN|ASP|TEN|CAP|MAJ|TC|CEL|QPPM|QOPM|QOA|QOPMS|PM|CMT|SUB|1º|2º|3º|1°|2°|3°|1ºTEN|2ºTEN|TENENTE|CAPITÃO|CAPITAO|MAJOR|SARGENTO|CABO|SOLDADO|CORONEL|DE|DA|DO|DOS|DAS|E)$/i;
+function nomeDe(login){
+  if (!D) return login;
+  if (D.eu && D.eu.login === login) return D.eu.nome || login;
+  const m = D.membros.find(x => x.login === login);
+  return (m && m.nome) || login;
+}
+function iniciais(nome){
+  const p = String(nome || '?').replace(/[^\p{L}\p{N}º° ]/gu, ' ').split(/\s+/).filter(w => w && !PATENTES.test(w));
+  if (!p.length) return String(nome || '?').slice(0,2).toUpperCase();
+  return ((p[0][0] || '') + (p.length > 1 ? p[p.length-1][0] : (p[0][1] || ''))).toUpperCase();
+}
+function corDe(login){ let h = 0; for (const c of String(login)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return CORES_AV[h % CORES_AV.length]; }
+function av(login, cls, tick){
+  const nm = nomeDe(login);
+  return `<span class="av ${cls||''}" style="background:${corDe(login)}" title="${esc(nm)}">${esc(iniciais(nm))}${tick || ''}</span>`;
+}
+function estadoCiencia(t, login){
+  const c = (t.ciencia || {})[login] || {};
+  if (c.ciente) return { k:'cie', txt:'Ciente ' + fQuando(c.ciente), ic:'✔' };
+  if (c.visto) return { k:'vis', txt:'Visualizou ' + fQuando(c.visto), ic:'👁' };
+  return { k:'env', txt:'Enviado — ainda não abriu', ic:'✓' };
+}
+function avsResp(t, max){
+  const l = t.responsaveis || [];
+  const mostra = l.slice(0, max || 4);
+  const sobra = l.length - mostra.length;
+  return `<span class="avs">${mostra.map(lg => { const e = estadoCiencia(t, lg); return av(lg, 'sm', `<span class="tk ${e.k}" title="${esc(e.txt)}">${e.ic}</span>`); }).join('')}${sobra > 0 ? `<span class="av sm" style="background:#334155">+${sobra}</span>` : ''}</span>`;
+}
+const secaoDe = (id) => (D && D.secoes.find(s => s.id === id)) || { id, nome:id, cor:'#94a3b8', icone:'📁' };
+const chipSec = (id) => { const s = secaoDe(id); return `<span class="chip sec" style="--c:${esc(s.cor)}">${esc(s.icone || '')} ${esc(s.id)}</span>`; };
+const ehProc = (t) => t.tipo && t.tipo !== 'TAREFA';
+const nomeTipo = (t) => ehProc(t) ? ((TIPOS_PROC[t.tipo] || {}).nome || t.tipo) : 'Tarefa';
+
+/* ---------- API ---------- */
+function cab(extra){ const h = Object.assign({}, extra || {}); if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token; return h; }
+async function api(path, opt){
+  const r = await fetch(API_BASE + path, Object.assign({ headers: cab() }, opt || {}));
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ sair(true); const e = new Error('Sessão encerrada — entre de novo.'); e.status = 401; throw e; }
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.dados = d; throw e; }
+  return d;
+}
+const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
+const apiForm = (path, form) => api(path, { method:'POST', headers: cab(), body: form });
+const acao = (id, op, extra) => apiPost('/api/tarefas/acao', Object.assign({ id, op }, extra || {}));
+
+/* ============================== login ============================== */
+async function entrar(){
+  const btn = $('btn-entrar'), m = $('msg-login');
+  const user = $('f-user').value.trim(), pass = $('f-pass').value;
+  if (!user || !pass){ m.className = 'msg err'; m.textContent = 'Informe usuário e senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; m.className = 'msg'; m.textContent = '';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, pass }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : (d.detail || 'Falha no login.'));
+    AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('f-pass').value = '';
+    boot();
+  } catch(e){ m.className = 'msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+function sair(silencioso){
+  AUTH.token = ''; AUTH.user = ''; D = null; NOTIF_VISTAS = null; clearTimeout(TIMER);
+  fecharTudo(); boot();
+  if (silencioso === true) toast('Sua sessão terminou. Entre de novo.', { cor:'#c98500', ic:'🔒' });
+}
+$('btn-entrar').addEventListener('click', entrar);
+$('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+$('f-user').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-pass').focus(); });
+$('bt-sair').addEventListener('click', () => sair());
+
+function boot(){
+  vis('login-box', !AUTH.logged);
+  vis('app', AUTH.logged);
+  ['busca-wrap','bt-sino','userchip','bt-sair'].forEach(id => vis(id, AUTH.logged));
+  atualizarTitulo();
+  if (AUTH.logged) carregar(false, true);
+}
+
+/* ============================== dados ============================== */
+let D = null;
+let VIEW = lido('tar_view') || 'mesa';
+let TIMER = null, ULTIMA = 0, CARREGANDO = false;
+let ABERTA = null, DET = null;                      // tarefa aberta na gaveta
+let NOTIF_VISTAS = null;                            // ids já mostrados (toast) nesta aba
+const F = { secao: lido('tar_f_secao'), busca:'', resp:'', prio:'', prazo:'', minhas: lido('tar_f_minhas') === '1', modo: lido('tar_modo') || 'quadro', ord:'prazo' };
+
+async function carregar(silencioso, primeira){
+  if (CARREGANDO) return; CARREGANDO = true;
+  if (primeira && !D) esqueleto();
+  try {
+    const d = await api('/api/tarefas');
+    RELOGIO = Date.parse(d.agora) - Date.now();
+    const antes = D;
+    D = d; ULTIMA = Date.now();
+    vis('estado', false);
+    processarNotificacoes(antes);
+    montarNav();
+    render();
+    if (ABERTA && $('dw').classList.contains('on') && silencioso) recarregarDetalhe(true);
+    if (primeira){ alertasDePrazo(); abrirPeloEndereco(); }
+  } catch(e){
+    if (e.status === 401) return;
+    if (!D || e.status === 403){
+      qsa('.view').forEach(v => v.classList.remove('on'));
+      $('estado').className = 'vazio';
+      $('estado').innerHTML = e.status === 403
+        ? `<span class="big">🔒</span><b style="color:#fff;font-size:17px">Acesso ainda não liberado</b><br>${esc(e.message)}<br><br><span style="font-size:13px">Por segurança, cada policial vê só a própria seção — quem cadastra é o administrador da Central.</span>`
+        : `<span class="big">⚠️</span>${esc(e.message)}<br><br><button class="btn sec2" onclick="carregar()">Tentar de novo</button>`;
+      vis('estado', true);
+    } else if (!silencioso) toast('Não consegui atualizar: ' + e.message, { cor:'#e66767', ic:'⚠️' });
+  } finally { CARREGANDO = false; agendar(); }
+}
+/* Consulta periódica: 1 min com a aba aberta, 3 min escondida (o título e o
+   ícone da aba continuam avisando). */
+function agendar(){
+  clearTimeout(TIMER);
+  if (!AUTH.logged) return;
+  TIMER = setTimeout(() => carregar(true), document.hidden ? 180000 : 60000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden){ pararPisca(); if (AUTH.logged && Date.now() - ULTIMA > 20000) carregar(true); else agendar(); }
+});
+
+function esqueleto(){
+  vis('estado', false);
+  qsa('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + VIEW));
+  const v = $('v-' + VIEW);
+  v.innerHTML = `<div class="skel" style="height:120px;margin-bottom:16px"></div><div class="kpis">${'<div class="skel" style="height:96px"></div>'.repeat(4)}</div><div class="skel" style="height:260px;margin-top:16px"></div>`;
+}
+
+/* ---------- permissões (espelho do Worker — só para esconder botão) ---------- */
+const EU = () => D.eu;
+function secoesQuePossoCriar(){
+  const eu = EU();
+  const todas = D.secoes.map(s => s.id);
+  if (eu.delega_tudo) return todas;
+  return todas.filter(id => eu.secoes.includes(id) || eu.chefia.includes(id));
+}
+const possoDelegarEm = (sec) => EU().delega_tudo || EU().chefia.includes(sec);
+const ehChefia = () => EU().ve_tudo || EU().chefia.length > 0 || EU().ve.length > 0;
+const secoesProc = () => D.secoes.filter(s => s.procedimentos).map(s => s.id);
+const temProcVisivel = () => { const ps = secoesProc(); return D.tarefas.some(t => ps.includes(t.secao)) || secoesQuePossoCriar().some(id => ps.includes(id)); };
+const minha = (t) => (t.responsaveis || []).includes(EU().login);
+
+function montarNav(){
+  vis('nb-painel', ehChefia());
+  vis('nb-proc', temProcVisivel());
+  vis('nb-config', EU().admin);
+  vis('bt-novo', secoesQuePossoCriar().length > 0);
+  $('userchip').innerHTML = av(EU().login, '') + `<span class="nmu">${esc(EU().nome)}</span>`;
+  const pend = D.tarefas.filter(t => minha(t) && t.status !== 'CONCLUIDA' && (!(t.ciencia[EU().login] || {}).ciente || (prazoInfo(t) || {}).atrasada)).length;
+  const c = $('c-mesa'); c.textContent = pend; c.className = 'c r' + (pend ? '' : ' hide');
+  const ps = secoesProc();
+  const venc = D.tarefas.filter(t => ps.includes(t.secao) && ehProc(t) && t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada).length;
+  const cp = $('c-proc'); cp.textContent = venc; cp.className = 'c r' + (venc ? '' : ' hide');
+  if ((VIEW === 'painel' && !ehChefia()) || (VIEW === 'config' && !EU().admin) || (VIEW === 'proc' && !temProcVisivel())) VIEW = 'mesa';
+  qsa('.nb').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW));
+}
+qsa('.nb').forEach(b => b.addEventListener('click', () => irPara(b.dataset.v)));
+function irPara(v){
+  VIEW = v; lembrar('tar_view', v);
+  qsa('.nb').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  render(); window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function render(){
+  if (!D) return;
+  qsa('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + VIEW));
+  ({ mesa:renderMesa, quadro:renderQuadro, calendario:renderCal, proc:renderProc, painel:renderPainel, config:renderConfig }[VIEW] || renderMesa)();
+  animarNumeros();
+}
+
+/* Números contam até o valor, barras crescem do zero na primeira vez. */
+const NUM_ANT = {};
+function animarNumeros(){
+  qsa('[data-num]').forEach(el => {
+    const alvo = Number(el.dataset.num) || 0, k = el.dataset.k || '', suf = el.dataset.suf || '';
+    const de = k in NUM_ANT ? NUM_ANT[k] : 0; NUM_ANT[k] = alvo;
+    if (de === alvo){ el.textContent = alvo + suf; return; }
+    const t0 = performance.now(), dur = 700;
+    const passo = (t) => { const p = Math.min(1, (t - t0) / dur); const e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(de + (alvo - de) * e) + suf; if (p < 1) requestAnimationFrame(passo); };
+    requestAnimationFrame(passo);
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => qsa('[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; })));
+}
+const barra = (pct, cls) => `<div class="pb ${cls||''}"><i data-w="${Math.max(0, Math.min(100, pct))}"></i></div>`;
+
+/* ============================== cartão ============================== */
+function cartao(t, i){
+  const p = PRIO[t.prioridade] || PRIO.NORMAL;
+  const pz = prazoInfo(t);
+  const meCi = minha(t) && !(t.ciencia[EU().login] || {}).ciente && t.status !== 'CONCLUIDA';
+  const aguardaMinhaValid = t.status === 'REVISAO' && t.pode.gerir && !minha(t);
+  const nCheck = (t.checklist || []).length, nOk = (t.checklist || []).filter(c => c.ok).length;
+  const pct = t.progresso || 0;
+  const arrasta = t.pode.gerir || t.pode.resp;
+  return `<div class="card ${t.prioridade === 'URGENTE' && t.status !== 'CONCLUIDA' ? 'urg' : ''} ${NOVAS_TAREFAS.has(t.id) ? 'novo-n' : ''}" data-id="${esc(t.id)}" ${arrasta ? 'data-arrasta="1"' : ''} style="--pc:${p.cor};animation-delay:${Math.min(i||0, 12) * 28}ms">
+    <div class="ct">${chipSec(t.secao)}${ehProc(t) ? `<span class="chip proc">⚖️ ${esc(nomeTipo(t))}</span>` : ''}${t.prioridade === 'URGENTE' || t.prioridade === 'ALTA' ? `<span class="chip" style="background:color-mix(in srgb,${p.cor} 18%,transparent);color:#fff">${p.ic} ${p.nome}</span>` : ''}<span class="num">#${t.num}</span></div>
+    <h4>${esc(t.titulo)}</h4>
+    <div class="cm">
+      ${pz ? `<span class="chip prazo ${pz.cls}">${pz.ic ? pz.ic + ' ' : ''}${esc(pz.txt)}</span>` : ''}
+      ${agendada(t) ? `<span class="chip ag">🗓️ Começa ${fData(t.inicio)}</span>` : ''}
+      ${t.recorrencia ? `<span class="mi" title="${esc(REC[t.recorrencia])}">🔁</span>` : ''}
+      ${nCheck ? `<span class="mi">☑️ ${nOk}/${nCheck}</span>` : ''}
+      ${t.n_andamentos ? `<span class="mi">💬 ${t.n_andamentos}</span>` : ''}
+      ${t.n_anexos ? `<span class="mi">📎 ${t.n_anexos}</span>` : ''}
+      ${(t.extra || {}).validar ? `<span class="mi" title="Exige validação de quem delegou">🛡️</span>` : ''}
+      ${t.visibilidade === 'SECAO' ? `<span class="mi" title="Visível para toda a seção">👥</span>` : `<span class="mi" title="Reservada: só envolvidos e chefia">🔒</span>`}
+    </div>
+    <div class="cf">${avsResp(t)}${barra(pct, t.status === 'CONCLUIDA' ? 'done' : (pz && pz.atrasada ? 'late' : ''))}<span class="pct">${pct}%</span></div>
+    ${meCi ? `<div class="pede">📥 Chegou para você — abra e dê ciência</div>` : ''}
+    ${aguardaMinhaValid ? `<div class="pede roxo">🛡️ Aguarda a sua validação</div>` : ''}
+  </div>`;
+}
+function ligarCartoes(root){
+  qsa('.card[data-id], .li[data-id], .pc[data-id], tr.lin[data-id], .ev2[data-id], .chegou[data-id]', root).forEach(el => {
+    el.addEventListener('click', (e) => { if (ARRASTOU) return; if (e.target.closest('[data-stop]')) return; abrirTarefa(el.dataset.id); });
+  });
+}
+
+/* ============================== filtros ============================== */
+function filtrar(lista, ignoraSecao){
+  const b = F.busca.trim().toLowerCase();
+  return lista.filter(t => {
+    if (!ignoraSecao && F.secao && t.secao !== F.secao) return false;
+    if (F.minhas && !minha(t) && t.criado_por !== EU().login) return false;
+    if (F.resp && !(t.responsaveis || []).includes(F.resp)) return false;
+    if (F.prio && t.prioridade !== F.prio) return false;
+    if (F.prazo){
+      const pz = prazoInfo(t) || {};
+      if (F.prazo === 'atrasadas' && !pz.atrasada) return false;
+      if (F.prazo === 'hoje' && !(pz.hoje || pz.atrasada)) return false;
+      if (F.prazo === 'semana'){ const f = fimPrazo(t.prazo); if (!f || t.status === 'CONCLUIDA' || f - agora() > 7*864e5) return false; }
+      if (F.prazo === 'sem' && t.prazo) return false;
+    }
+    if (b){
+      const txt = [t.titulo, t.descricao, '#' + t.num, t.num, t.secao, (t.etiquetas || []).join(' '), (t.responsaveis || []).map(nomeDe).join(' '),
+        nomeDe(t.criado_por), (t.extra || {}).numero, (t.extra || {}).sei, (t.extra || {}).portaria, nomeTipo(t)].join(' ').toLowerCase();
+      if (!txt.includes(b)) return false;
+    }
+    return true;
+  });
+}
+function barraFiltros(opts){
+  const secs = D.secoes.filter(s => D.tarefas.some(t => t.secao === s.id) || secoesQuePossoCriar().includes(s.id));
+  const pessoas = [...new Set(D.tarefas.flatMap(t => t.responsaveis || []))].sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
+  return `<div class="filtros">
+    ${opts && opts.semSecao ? '' : `<button class="pill ${!F.secao ? 'on' : ''}" data-fsec="">Todas</button>${secs.map(s => `<button class="pill ${F.secao === s.id ? 'on' : ''}" data-fsec="${esc(s.id)}" style="--c:${esc(s.cor)}"><span class="dot"></span>${esc(s.nome)}</button>`).join('')}`}
+  </div>
+  <div class="filtros">
+    <button class="pill ${F.minhas ? 'on' : ''}" id="f-minhas">🙋 Só as minhas</button>
+    <select class="sel" id="f-resp"><option value="">Todos os responsáveis</option>${pessoas.map(l => `<option value="${esc(l)}" ${F.resp === l ? 'selected' : ''}>${esc(nomeDe(l))}</option>`).join('')}</select>
+    <select class="sel" id="f-prio"><option value="">Toda prioridade</option>${Object.entries(PRIO).map(([k, p]) => `<option value="${k}" ${F.prio === k ? 'selected' : ''}>${p.ic} ${p.nome}</option>`).join('')}</select>
+    <select class="sel" id="f-prazo">${[['','Qualquer prazo'],['atrasadas','⏰ Atrasadas'],['hoje','Vencem hoje'],['semana','Próximos 7 dias'],['sem','Sem prazo']].map(([k, n]) => `<option value="${k}" ${F.prazo === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    ${F.busca ? `<span class="chip" style="background:rgba(245,197,24,.15);color:#fde68a">🔎 “${esc(F.busca)}” <button data-stop class="linkbtn" id="f-limpa-busca" style="color:#fde68a">✕</button></span>` : ''}
+    ${(F.resp || F.prio || F.prazo || F.minhas || F.busca) ? `<button class="linkbtn" id="f-limpar">Limpar filtros</button>` : ''}
+  </div>`;
+}
+function ligarFiltros(root){
+  qsa('[data-fsec]', root).forEach(b => b.addEventListener('click', () => { F.secao = b.dataset.fsec; lembrar('tar_f_secao', F.secao); render(); }));
+  const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+  on('f-minhas', 'click', () => { F.minhas = !F.minhas; lembrar('tar_f_minhas', F.minhas ? '1' : ''); render(); });
+  on('f-resp', 'change', e => { F.resp = e.target.value; render(); });
+  on('f-prio', 'change', e => { F.prio = e.target.value; render(); });
+  on('f-prazo', 'change', e => { F.prazo = e.target.value; render(); });
+  on('f-limpar', 'click', () => { Object.assign(F, { resp:'', prio:'', prazo:'', minhas:false, busca:'' }); $('busca').value = ''; lembrar('tar_f_minhas', ''); render(); });
+  on('f-limpa-busca', 'click', () => { F.busca = ''; $('busca').value = ''; render(); });
+}
+const ordena = (a, b) => (a.ordem - b.ordem) || ((fimPrazo(a.prazo) || 9e15) - (fimPrazo(b.prazo) || 9e15)) || (PRIO_PESO[a.prioridade] - PRIO_PESO[b.prioridade]) || (b.num - a.num);
+
+/* ============================== MINHA MESA ============================== */
+function renderMesa(){
+  const eu = EU(), me = eu.login;
+  const ativas = D.tarefas.filter(t => t.ativo !== 'NAO');
+  const minhas = ativas.filter(minha);
+  const abertas = minhas.filter(t => t.status !== 'CONCLUIDA');
+  const atrasadas = abertas.filter(t => (prazoInfo(t) || {}).atrasada);
+  const logo = abertas.filter(t => { const f = fimPrazo(t.prazo); return f && f >= agora() && f - agora() <= 48 * 36e5; });
+  const chegou = abertas.filter(t => !(t.ciencia[me] || {}).ciente).sort(ordenaUrg);
+  const inicioMes = diaRO().slice(0,7);
+  const conclMes = minhas.filter(t => t.status === 'CONCLUIDA' && diaRO(Date.parse(t.concluida_em)).slice(0,7) === inicioMes);
+  const total = conclMes.length + abertas.length;
+  const pct = total ? Math.round(conclMes.length / total * 100) : 0;
+  const deleguei = ativas.filter(t => t.criado_por === me && (t.responsaveis || []).some(l => l !== me) && t.status !== 'CONCLUIDA').sort(ordenaUrg);
+  const validar = ativas.filter(t => t.status === 'REVISAO' && t.pode.gerir && !minha(t));
+  const proximas = abertas.filter(t => t.prazo && (t.ciencia[me] || {}).ciente).sort((a, b) => fimPrazo(a.prazo) - fimPrazo(b.prazo)).slice(0, 8);
+  const semPrazo = abertas.filter(t => !t.prazo && (t.ciencia[me] || {}).ciente).slice(0, 5);
+  const h = Number(new Date(agora() - 4*3600e3).toISOString().slice(11,13));
+  const saud = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  const C = 2 * Math.PI * 46;
+  const dataLonga = new Date(agora()).toLocaleDateString('pt-BR', { timeZone:'America/Porto_Velho', weekday:'long', day:'numeric', month:'long' });
+  const frase = atrasadas.length ? `Você tem <b style="color:#fca5a5">${atrasadas.length} tarefa${atrasadas.length > 1 ? 's' : ''} atrasada${atrasadas.length > 1 ? 's' : ''}</b>. Vamos resolver?`
+    : chegou.length ? `Chegaram <b style="color:#fde68a">${chegou.length} nova${chegou.length > 1 ? 's' : ''}</b> para você. Abra e dê ciência para quem delegou saber que recebeu.`
+    : abertas.length ? `Tudo em dia. ${abertas.length} tarefa${abertas.length > 1 ? 's' : ''} em aberto com você.` : 'Nenhuma pendência com você. Bom serviço! 🎖️';
+
+  $('v-mesa').innerHTML = `
+    <div class="hero">
+      <div class="anel" title="Concluídas no mês ÷ (concluídas no mês + em aberto)">
+        <svg width="108" height="108"><circle cx="54" cy="54" r="46" stroke="rgba(148,163,184,.15)" stroke-width="10" fill="none"/>
+        <circle class="f" cx="54" cy="54" r="46" stroke="url(#gr)" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C * (1 - pct / 100)}"/>
+        <defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#199e70"/><stop offset="1" stop-color="#F5C518"/></linearGradient></defs></svg>
+        <div class="t"><div><span data-num="${pct}" data-k="anel" data-suf="%">0%</span><small>no mês</small></div></div>
+      </div>
+      <div><h1>${saud}, ${esc(eu.nome)}</h1><p style="text-transform:capitalize;color:var(--muted);font-size:13px;margin-top:2px">${esc(dataLonga)}</p><p>${frase}</p></div>
+    </div>
+    <div class="kpis">
+      ${kpi('Com você', abertas.length, 'em aberto', '#3987e5', 'k1', 'minhas')}
+      ${kpi('Chegaram', chegou.length, 'aguardando sua ciência', '#c98500', 'k2', 'chegou')}
+      ${kpi('Vencem em 48h', logo.length, 'não deixe passar', '#d95926', 'k3', 'logo')}
+      ${kpi('Atrasadas', atrasadas.length, atrasadas.length ? 'precisam de atenção' : 'nenhuma 👏', '#e66767', 'k4', 'atrasadas', atrasadas.length > 0)}
+      ${kpi('Concluídas no mês', conclMes.length, 'por você', '#199e70', 'k5', 'feitas')}
+    </div>
+    ${chegou.length ? `<div class="sec">📥 Chegou para você <small>dê ciência: quem delegou vê na hora que você recebeu</small></div>
+      ${chegou.map(t => { const pz = prazoInfo(t); return `<div class="chegou" data-id="${esc(t.id)}">
+        ${av(t.criado_por, 'lg')}<div class="tx"><b>${esc(t.titulo)}</b><small>${esc(nomeDe(t.criado_por))} · ${esc(secaoDe(t.secao).nome)}${pz ? ' · ' + esc(pz.txt) : ''}${t.prioridade === 'URGENTE' ? ' · 🚨 URGENTE' : ''}</small></div>
+        <button class="btn verde" data-stop data-ciente="${esc(t.id)}">✔ Dar ciência</button></div>`; }).join('')}` : ''}
+    ${validar.length ? `<div class="sec">🛡️ Aguardando a sua validação <small>o responsável terminou — confira e conclua ou devolva</small></div>
+      <div class="lst">${validar.map(itemLista).join('')}</div>` : ''}
+    <div class="grid2" style="margin-top:6px">
+      <div><div class="sec">⏳ Seus próximos prazos</div>
+        ${proximas.length || semPrazo.length ? `<div class="lst">${[...proximas, ...semPrazo].map(itemLista).join('')}</div>` : `<div class="box vazio"><span class="big">🌤️</span>Nada com prazo por perto.</div>`}</div>
+      <div><div class="sec">📤 Que você delegou <small>acompanhe se já recebeu e o andamento</small></div>
+        ${deleguei.length ? `<div class="lst">${deleguei.slice(0, 12).map(t => itemLista(t, true)).join('')}</div>` : `<div class="box vazio"><span class="big">📭</span>${possoDelegarAlgo() ? 'Você não tem tarefas delegadas em aberto.<br><button class="btn" style="margin-top:12px" onclick="abrirForm()">＋ Delegar uma tarefa</button>' : 'Delegar é coisa do chefe da seção — mas você pode criar tarefas para você mesmo.'}</div>`}</div>
+    </div>`;
+  const anel = $('v-mesa').querySelector('circle.f');
+  requestAnimationFrame(() => requestAnimationFrame(() => { anel.style.strokeDashoffset = anel.dataset.off; }));
+  qsa('[data-kpi]', $('v-mesa')).forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.kpi;
+    Object.assign(F, { secao:'', resp:'', prio:'', prazo:'', busca:'', minhas:true });
+    if (k === 'atrasadas') F.prazo = 'atrasadas';
+    if (k === 'logo') F.prazo = 'hoje';
+    if (k === 'chegou'){ if (chegou[0]) return abrirTarefa(chegou[0].id); }
+    F.modo = k === 'feitas' ? 'lista' : 'quadro';
+    irPara('quadro');
+  }));
+  qsa('[data-ciente]', $('v-mesa')).forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); darCiencia(b.dataset.ciente, b); }));
+  ligarCartoes($('v-mesa'));
+}
+const ordenaUrg = (a, b) => (PRIO_PESO[a.prioridade] - PRIO_PESO[b.prioridade]) || ((fimPrazo(a.prazo) || 9e15) - (fimPrazo(b.prazo) || 9e15));
+const possoDelegarAlgo = () => EU().delega_tudo || EU().chefia.length > 0;
+function kpi(l, v, s, cor, k, acao, crit){
+  return `<button class="kpi ${crit ? 'crit' : ''}" style="--kc:${cor}" data-kpi="${acao}"><div class="l"><span style="width:8px;height:8px;border-radius:50%;background:${cor}"></span>${l}</div><div class="v" data-num="${v}" data-k="${k}">0</div><div class="s">${s}</div></button>`;
+}
+function itemLista(t, recibo){
+  const p = PRIO[t.prioridade] || PRIO.NORMAL;
+  const pz = prazoInfo(t);
+  const resps = (t.responsaveis || []).filter(l => l !== EU().login || !recibo);
+  const rec = recibo ? `<div class="recibo">${resps.map(l => { const e = estadoCiencia(t, l); return `${av(l, 'sm', `<span class="tk ${e.k}">${e.ic}</span>`)}<span style="margin-right:8px">${esc(e.k === 'cie' ? 'ciente' : e.k === 'vis' ? 'viu' : 'não abriu')}</span>`; }).join('')}</div>` : '';
+  return `<div class="li" data-id="${esc(t.id)}" style="--pc:${p.cor}"><span class="bar"></span>
+    <div class="tx"><b>${esc(t.titulo)}</b><small>${chipSec(t.secao)} ${pz ? `<span class="chip prazo ${pz.cls}">${esc(pz.txt)}</span>` : '<span class="chip">sem prazo</span>'} <span class="stdot" style="--c:${STm[t.status].cor};margin-left:4px">${STm[t.status].nome}</span></small>${rec}</div>
+    <div style="width:84px;text-align:right"><div style="font-size:12px;font-weight:800;color:#cbd5e1;margin-bottom:4px">${t.progresso}%</div>${barra(t.progresso, t.status === 'CONCLUIDA' ? 'done' : (pz && pz.atrasada ? 'late' : ''))}</div></div>`;
+}
+
+/* ============================== QUADRO ============================== */
+function renderQuadro(){
+  const lista = filtrar(D.tarefas.filter(t => t.ativo !== 'NAO'));
+  const podeCriar = secoesQuePossoCriar().length > 0;
+  let html = `<div class="ttl"><h1>🗂️ Quadro</h1><span class="sp"></span>
+    <div class="seg"><button data-modo="quadro" class="${F.modo === 'quadro' ? 'on' : ''}">▦ Quadro</button><button data-modo="lista" class="${F.modo === 'lista' ? 'on' : ''}">☰ Lista</button></div>
+    <button class="btn sec2" id="bt-imp-q">🖨️ Imprimir</button></div>${barraFiltros()}`;
+  if (F.modo === 'lista'){
+    const cols = [['num','Nº'],['titulo','Tarefa'],['secao','Seção'],['status','Situação'],['prioridade','Prioridade'],['prazo','Prazo'],['resp','Responsáveis'],['progresso','%']];
+    const val = (t, k) => k === 'resp' ? (t.responsaveis || []).map(nomeDe).join(', ') : k === 'prazo' ? (fimPrazo(t.prazo) || 9e15) : k === 'prioridade' ? PRIO_PESO[t.prioridade] : k === 'status' ? ST.findIndex(s => s.id === t.status) : t[k];
+    const dir = F.ordDir || 1;
+    const ord = [...lista].sort((a, b) => { const x = val(a, F.ord), y = val(b, F.ord); return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'pt-BR')) * dir; });
+    html += ord.length ? `<div class="tabwrap"><table class="tab"><thead><tr>${cols.map(([k, n]) => `<th data-ord="${k}">${n}${F.ord === k ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>
+      ${ord.map(t => { const pz = prazoInfo(t); const p = PRIO[t.prioridade]; return `<tr class="lin" data-id="${esc(t.id)}"><td style="color:var(--dim);font-weight:700">#${t.num}</td>
+        <td style="font-weight:600;color:#f1f5f9;min-width:220px">${esc(t.titulo)}${ehProc(t) ? ` <span class="chip proc">${esc(nomeTipo(t))}</span>` : ''}</td><td>${chipSec(t.secao)}</td>
+        <td><span class="stdot" style="--c:${STm[t.status].cor}">${STm[t.status].nome}</span></td><td><span style="color:${p.cor};font-weight:700">${p.ic} ${p.nome}</span></td>
+        <td>${pz ? `<span class="chip prazo ${pz.cls}">${esc(pz.txt)}</span>` : '<span style="color:var(--dim)">—</span>'}</td><td>${avsResp(t, 5)}</td>
+        <td style="min-width:90px"><div style="font-size:12px;font-weight:800;margin-bottom:3px">${t.progresso}%</div>${barra(t.progresso, t.status === 'CONCLUIDA' ? 'done' : '')}</td></tr>`; }).join('')}
+      </tbody></table></div>` : vazioFiltro();
+  } else {
+    html += `<div class="board" id="board">${ST.map(s => {
+      const cs = lista.filter(t => t.status === s.id).sort(s.id === 'CONCLUIDA' ? ((a, b) => String(b.concluida_em).localeCompare(String(a.concluida_em))) : ordena);
+      const mostra = s.id === 'CONCLUIDA' && !F.verTodasConcl ? cs.slice(0, 15) : cs;
+      return `<div class="col" data-st="${s.id}" style="--c:${s.cor}">
+        <div class="colh"><span class="dot"></span>${s.nome}<span class="n">${cs.length}</span><span class="sp"></span>${podeCriar && s.id !== 'CONCLUIDA' && s.id !== 'REVISAO' ? `<button class="add" data-novo-st="${s.id}" title="Nova tarefa em ${s.nome}">＋</button>` : ''}</div>
+        <div class="cards">${mostra.map((t, i) => cartao(t, i)).join('') || `<div class="vz">${s.id === 'AFAZER' ? 'Nada a fazer por aqui 🎉' : 'Arraste um cartão para cá'}</div>`}
+        ${cs.length > mostra.length ? `<button class="btn sec2 sm" id="bt-mais-concl" style="justify-content:center">Ver mais ${cs.length - mostra.length} concluídas</button>` : ''}</div></div>`;
+    }).join('')}</div>`;
+    if (!lista.length && D.tarefas.length) html += vazioFiltro();
+  }
+  $('v-quadro').innerHTML = html;
+  ligarFiltros($('v-quadro'));
+  qsa('[data-modo]', $('v-quadro')).forEach(b => b.addEventListener('click', () => { F.modo = b.dataset.modo; lembrar('tar_modo', F.modo); render(); }));
+  qsa('[data-ord]', $('v-quadro')).forEach(th => th.addEventListener('click', () => { if (F.ord === th.dataset.ord) F.ordDir = -(F.ordDir || 1); else { F.ord = th.dataset.ord; F.ordDir = 1; } render(); }));
+  qsa('[data-novo-st]', $('v-quadro')).forEach(b => b.addEventListener('click', () => abrirForm(null, { status: b.dataset.novoSt, secao: F.secao })));
+  const mais = $('bt-mais-concl'); if (mais) mais.addEventListener('click', () => { F.verTodasConcl = true; render(); });
+  $('bt-imp-q').addEventListener('click', () => imprimirLista('Relação de tarefas', lista));
+  ligarCartoes($('v-quadro'));
+  if (F.modo !== 'lista') ligarArrastar($('board'));
+}
+const vazioFiltro = () => `<div class="box vazio"><span class="big">🔍</span>Nenhuma tarefa com esses filtros.</div>`;
+
+/* ---------- arrastar e soltar (mouse e dedo) ---------- */
+let ARRASTOU = false;
+function ligarArrastar(board){
+  qsa('.card[data-arrasta]', board).forEach(card => {
+    card.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('[data-stop]')) return;
+      const x0 = e.clientX, y0 = e.clientY, toque = e.pointerType !== 'mouse';
+      let ghost = null, timer = null, pronto = !toque, alvoCol = null;
+      const ret = card.getBoundingClientRect();
+      const comeca = () => {
+        ghost = card.cloneNode(true); ghost.classList.add('ghost');
+        ghost.style.width = ret.width + 'px'; ghost.style.left = ret.left + 'px'; ghost.style.top = ret.top + 'px';
+        document.body.appendChild(ghost); card.classList.add('dragging'); ARRASTOU = true;
+        if (navigator.vibrate && toque) navigator.vibrate(15);
+      };
+      if (toque) timer = setTimeout(() => { pronto = true; comeca(); }, 280);
+      const move = (ev) => {
+        const dx = ev.clientX - x0, dy = ev.clientY - y0;
+        if (!ghost){
+          if (toque){ if (Math.hypot(dx, dy) > 10){ clearTimeout(timer); fim(); } return; }
+          if (Math.hypot(dx, dy) < 6) return;
+          comeca();
+        }
+        ev.preventDefault();
+        ghost.style.left = (ret.left + dx) + 'px'; ghost.style.top = (ret.top + dy) + 'px';
+        const sob = document.elementFromPoint(ev.clientX, ev.clientY);
+        const col = sob && sob.closest('.col');
+        qsa('.col', board).forEach(c => c.classList.toggle('alvo', c === col));
+        alvoCol = col;
+        if (col){
+          const lista = col.querySelector('.cards');
+          const outros = qsa('.card:not(.dragging)', lista);
+          const depois = outros.find(c => { const r = c.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
+          const vz = lista.querySelector('.vz'); if (vz) vz.remove();
+          if (depois) lista.insertBefore(card, depois); else lista.appendChild(card);
+        }
+        // rola a página/quadro perto da borda
+        if (ev.clientX > innerWidth - 60) board.scrollLeft += 18; else if (ev.clientX < 60) board.scrollLeft -= 18;
+        if (ev.clientY > innerHeight - 60) window.scrollBy(0, 14); else if (ev.clientY < 90) window.scrollBy(0, -14);
+      };
+      const fim = () => {
+        clearTimeout(timer);
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', solta); window.removeEventListener('pointercancel', solta);
+      };
+      const solta = () => {
+        fim();
+        if (!ghost){ return; }
+        ghost.remove(); card.classList.remove('dragging'); qsa('.col', board).forEach(c => c.classList.remove('alvo'));
+        setTimeout(() => { ARRASTOU = false; }, 60);
+        if (alvoCol) soltouCartao(card, alvoCol);
+        else render();
+      };
+      window.addEventListener('pointermove', move, { passive:false });
+      window.addEventListener('pointerup', solta); window.addEventListener('pointercancel', solta);
+    });
+  });
+}
+async function soltouCartao(card, col){
+  const t = D.tarefas.find(x => x.id === card.dataset.id); if (!t) return;
+  const novo = col.dataset.st;
+  const irmaos = qsa('.card', col).map(c => D.tarefas.find(x => x.id === c.dataset.id)).filter(Boolean);
+  const i = irmaos.findIndex(x => x.id === t.id);
+  const ant = irmaos[i - 1], dep = irmaos[i + 1];
+  let ordem = ant && dep ? (ant.ordem + dep.ordem) / 2 : ant ? ant.ordem + 1 : dep ? dep.ordem - 1 : 0;
+  if (novo === t.status && Math.abs(ordem - t.ordem) < 1e-9){ render(); return; }
+  if (novo === 'REVISAO' && !t.pode.gerir && !t.pode.resp){ render(); return; }
+  const velho = { status:t.status, ordem:t.ordem };
+  t.status = novo; t.ordem = ordem;
+  if (novo === 'CONCLUIDA' && (t.extra || {}).validar && !t.pode.gerir) t.status = 'REVISAO';
+  render();
+  try {
+    const r = await acao(t.id, 'status', { status: novo, ordem });
+    if (r.validacao) toast(`🛡️ “${t.titulo}” foi para validação de ${nomeDe(t.criado_por)}.`, { cor:'#9085e9' });
+    else if (r.status === 'CONCLUIDA' && velho.status !== 'CONCLUIDA'){ confete(); toast(`🏁 Concluída: “${t.titulo}”`, { cor:'#199e70' }); }
+    if (r.proxima) toast('🔁 Tarefa repetida: a próxima rodada já está no quadro.', { cor:'#3987e5' });
+    carregar(true);
+  } catch(e){ Object.assign(t, velho); render(); toast(e.message, { cor:'#e66767', ic:'⚠️' }); }
+}
+
+/* ============================== CALENDÁRIO ============================== */
+let CAL = lido('tar_cal') || diaRO().slice(0,7);
+function renderCal(){
+  const [y, m] = CAL.split('-').map(Number);
+  const prim = new Date(Date.UTC(y, m - 1, 1, 12));
+  const ini = new Date(prim); ini.setUTCDate(1 - prim.getUTCDay());
+  const lista = filtrar(D.tarefas.filter(t => t.ativo !== 'NAO' && t.prazo));
+  const porDia = {};
+  lista.forEach(t => { (porDia[t.prazo.slice(0,10)] ||= []).push(t); });
+  const hoje = diaRO();
+  const nomeMes = prim.toLocaleDateString('pt-BR', { month:'long', year:'numeric', timeZone:'UTC' });
+  let cel = '';
+  for (let i = 0; i < 42; i++){
+    const d = new Date(ini); d.setUTCDate(ini.getUTCDate() + i);
+    const iso = d.toISOString().slice(0,10);
+    const ts = (porDia[iso] || []).sort(ordenaUrg);
+    cel += `<div class="d ${d.getUTCMonth() !== m - 1 ? 'fora' : ''} ${iso === hoje ? 'hj' : ''}"><span class="n">${d.getUTCDate()}</span>
+      ${ts.slice(0, 3).map(t => `<div class="ev2 ${t.status === 'CONCLUIDA' ? 'cc' : ''} ${(prazoInfo(t) || {}).atrasada ? 'lt' : ''}" data-id="${esc(t.id)}" style="--c:${esc(secaoDe(t.secao).cor)}" title="${esc(t.titulo)} · ${esc(STm[t.status].nome)}">${t.prioridade === 'URGENTE' ? '🚨 ' : ''}${esc(t.titulo)}</div>`).join('')}
+      ${ts.length > 3 ? `<span class="mais" data-dia="${iso}">+${ts.length - 3} mais</span>` : ''}</div>`;
+    if (i === 34 && d.getUTCMonth() !== m - 1) break;
+  }
+  $('v-calendario').innerHTML = `<div class="ttl"><h1>📅 Calendário de prazos</h1></div>${barraFiltros()}
+    <div class="calh"><button class="btn sec2 sm" id="cal-a">‹</button><b>${esc(nomeMes)}</b><button class="btn sec2 sm" id="cal-p">›</button><button class="btn sec2 sm" id="cal-h">Hoje</button></div>
+    <div class="cal">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(n => `<div class="dn">${n}</div>`).join('')}${cel}</div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:10px">Cada tarefa aparece no dia do prazo, na cor da seção. Riscada = concluída · contorno vermelho = atrasada.</p>`;
+  ligarFiltros($('v-calendario'));
+  const muda = (n) => { const d = new Date(Date.UTC(y, m - 1 + n, 1)); CAL = d.toISOString().slice(0,7); lembrar('tar_cal', CAL); render(); };
+  $('cal-a').onclick = () => muda(-1); $('cal-p').onclick = () => muda(1); $('cal-h').onclick = () => { CAL = hoje.slice(0,7); render(); };
+  qsa('[data-dia]', $('v-calendario')).forEach(s => s.addEventListener('click', () => {
+    const ts = porDia[s.dataset.dia];
+    modalSimples(`📅 Prazos de ${fData(s.dataset.dia, true)}`, `<div class="lst">${ts.map(t => itemLista(t)).join('')}</div>`);
+    ligarCartoes($('md2-cx'));
+  }));
+  ligarCartoes($('v-calendario'));
+}
+
+/* ============================== PROCEDIMENTOS (P6) ============================== */
+let FP = { tipo:'', sit:'' };
+function renderProc(){
+  const ps = secoesProc();
+  const todos = D.tarefas.filter(t => t.ativo !== 'NAO' && ps.includes(t.secao) && ehProc(t));
+  const emCurso = todos.filter(t => t.status !== 'CONCLUIDA');
+  const venc = emCurso.filter(t => (prazoInfo(t) || {}).atrasada);
+  const venc10 = emCurso.filter(t => { const f = fimPrazo(t.prazo); return f && f >= agora() && f - agora() <= 10 * 864e5; });
+  const ano = diaRO().slice(0,4);
+  const concl = todos.filter(t => t.status === 'CONCLUIDA' && String(t.concluida_em).slice(0,4) === ano);
+  let lista = filtrar(todos, ps.length <= 1);
+  if (FP.tipo) lista = lista.filter(t => t.tipo === FP.tipo);
+  if (FP.sit === 'curso') lista = lista.filter(t => t.status !== 'CONCLUIDA');
+  if (FP.sit === 'vencidos') lista = lista.filter(t => t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada);
+  if (FP.sit === 'vencendo') lista = lista.filter(t => venc10.includes(t));
+  if (FP.sit === 'concluidos') lista = lista.filter(t => t.status === 'CONCLUIDA');
+  lista.sort((a, b) => (a.status === 'CONCLUIDA') - (b.status === 'CONCLUIDA') || ((fimPrazo(a.prazo) || 9e15) - (fimPrazo(b.prazo) || 9e15)));
+  const tiposUsados = [...new Set(todos.map(t => t.tipo))];
+  const podeNovo = secoesQuePossoCriar().some(id => ps.includes(id));
+  $('v-proc').innerHTML = `<div class="ttl"><h1>⚖️ Procedimentos</h1><span class="sp"></span>
+      <button class="btn sec2" id="bt-imp-p">🖨️ Relatório</button>${podeNovo ? `<button class="btn" id="bt-novo-p">＋ Novo procedimento</button>` : ''}
+      <p>IPM, sindicâncias, PAD, perícias e cartas precatórias. O encarregado lança o andamento; o chefe acompanha prazo legal, fase e prorrogações.</p></div>
+    <div class="kpis">
+      ${kpiF('Em curso', emCurso.length, 'procedimentos abertos', '#3987e5', 'p1', 'curso')}
+      ${kpiF('Vencendo', venc10.length, 'prazo em até 10 dias', '#c98500', 'p2', 'vencendo')}
+      ${kpiF('Prazo vencido', venc.length, venc.length ? 'pedir prorrogação ou concluir' : 'nenhum 👏', '#e66767', 'p3', 'vencidos', venc.length > 0)}
+      ${kpiF('Solucionados ' + ano, concl.length, 'concluídos no ano', '#199e70', 'p4', 'concluidos')}
+    </div>
+    <div class="filtros" style="margin-top:16px"><button class="pill ${!FP.tipo ? 'on' : ''}" data-ftipo="">Todos os tipos</button>${tiposUsados.map(k => `<button class="pill ${FP.tipo === k ? 'on' : ''}" data-ftipo="${k}" style="--c:#e66767">${esc((TIPOS_PROC[k] || {}).nome || k)}</button>`).join('')}
+      ${FP.sit ? `<button class="linkbtn" id="fp-limpa">Mostrar todas as situações</button>` : ''}</div>
+    ${ps.length > 1 ? barraFiltros() : ''}
+    ${lista.length ? `<div class="procs">${lista.map((t, i) => cartaoProc(t, i)).join('')}</div>` : `<div class="box vazio"><span class="big">⚖️</span>${todos.length ? 'Nenhum procedimento com esses filtros.' : 'Nenhum procedimento lançado ainda.' + (podeNovo ? '<br><button class="btn" style="margin-top:12px" onclick="novoProc()">＋ Lançar o primeiro</button>' : '')}</div>`}`;
+  qsa('[data-ftipo]', $('v-proc')).forEach(b => b.addEventListener('click', () => { FP.tipo = b.dataset.ftipo; render(); }));
+  qsa('[data-kpi]', $('v-proc')).forEach(b => b.addEventListener('click', () => { FP.sit = FP.sit === b.dataset.kpi ? '' : b.dataset.kpi; render(); }));
+  const lp = $('fp-limpa'); if (lp) lp.onclick = () => { FP.sit = ''; render(); };
+  if (ps.length > 1) ligarFiltros($('v-proc'));
+  const np = $('bt-novo-p'); if (np) np.onclick = novoProc;
+  $('bt-imp-p').onclick = () => imprimirProc(lista);
+  ligarCartoes($('v-proc'));
+}
+function novoProc(){ const ps = secoesProc().filter(id => secoesQuePossoCriar().includes(id)); abrirForm(null, { secao: ps[0], tipo:'IPM' }); }
+function kpiF(l, v, s, cor, k, acao, crit){
+  return `<button class="kpi ${crit ? 'crit' : ''}" style="--kc:${cor};${FP.sit === acao ? 'border-color:' + cor : ''}" data-kpi="${acao}"><div class="l"><span style="width:8px;height:8px;border-radius:50%;background:${cor}"></span>${l}</div><div class="v" data-num="${v}" data-k="${k}">0</div><div class="s">${s}</div></button>`;
+}
+function cartaoProc(t, i){
+  const e = t.extra || {};
+  const pz = prazoInfo(t);
+  const ini = e.instauracao ? Date.parse(e.instauracao + 'T00:00:00-04:00') : Date.parse(t.criado_em);
+  const fim = fimPrazo(t.prazo);
+  let tempo = 0, tempoTxt = '';
+  if (fim && ini && fim > ini){
+    tempo = Math.max(0, Math.min(100, Math.round((agora() - ini) / (fim - ini) * 100)));
+    const rest = Math.ceil((fim - agora()) / 864e5);
+    tempoTxt = t.status === 'CONCLUIDA' ? 'Concluído' : rest >= 0 ? `${rest} dia${rest === 1 ? '' : 's'} restantes` : `vencido há ${-rest} dia${rest === -1 ? '' : 's'}`;
+  }
+  const fi = FASES.findIndex(f => f.id === e.fase);
+  const pr = (e.prorrogacoes || []).length;
+  return `<div class="pc" data-id="${esc(t.id)}" style="animation-delay:${Math.min(i, 12) * 30}ms">
+    <div class="ct"><span class="chip proc">⚖️ ${esc(nomeTipo(t))}</span>${e.numero ? `<span class="chip">Nº ${esc(e.numero)}</span>` : ''}${pz ? `<span class="chip prazo ${pz.cls}">${esc(pz.txt)}</span>` : ''}<span class="num" style="font-size:11.5px;color:var(--dim);margin-left:auto;font-weight:700">#${t.num}</span></div>
+    <h4>${esc(t.titulo)}</h4>
+    <div class="sub">Encarregado: <b style="color:#e2e8f0">${esc((t.responsaveis || []).map(nomeDe).join(', ') || '—')}</b>${e.instauracao ? ` · instaurado ${fData(e.instauracao, true)}` : ''}${pr ? ` · ${pr} prorrogação${pr > 1 ? 'ões' : ''}` : ''}</div>
+    <div class="fases" title="Fase: ${esc(fi >= 0 ? FASES[fi].nome : '—')}">${FASES.map((f, j) => `${j ? `<span class="ln ${j <= fi ? 'on' : ''}"></span>` : ''}<span class="f ${j <= fi ? 'on' : ''} ${j === fi ? 'at' : ''}" title="${f.nome}"></span>`).join('')}</div>
+    <div style="font-size:12px;color:#fecaca;font-weight:700">${fi >= 0 ? esc(FASES[fi].nome) : ''}</div>
+    ${fim ? `<div class="linha"><span>⏱️ Tempo do prazo</span><b>${esc(tempoTxt)}</b></div>${barra(tempo, t.status === 'CONCLUIDA' ? 'done' : tempo >= 100 ? 'late' : tempo >= 75 ? '' : '')}` : ''}
+    <div class="linha"><span>☑️ Diligências</span><b>${t.progresso}%</b></div>${barra(t.progresso, t.status === 'CONCLUIDA' ? 'done' : '')}
+  </div>`;
+}
+
+/* ============================== PAINEL DA CHEFIA ============================== */
+let FPN = lido('tar_fpn') || '';
+function renderPainel(){
+  const eu = EU();
+  const secsVer = D.secoes.filter(s => eu.ve_tudo || eu.chefia.includes(s.id) || eu.ve.includes(s.id));
+  const base = D.tarefas.filter(t => t.ativo !== 'NAO' && secsVer.some(s => s.id === t.secao) && (!FPN || t.secao === FPN));
+  const abertas = base.filter(t => t.status !== 'CONCLUIDA');
+  const atr = abertas.filter(t => (prazoInfo(t) || {}).atrasada);
+  const v48 = abertas.filter(t => { const f = fimPrazo(t.prazo); return f && f >= agora() && f - agora() <= 48 * 36e5; });
+  const d30 = agora() - 30 * 864e5;
+  const c30 = base.filter(t => t.status === 'CONCLUIDA' && Date.parse(t.concluida_em) >= d30);
+  const comPrazo = c30.filter(t => t.prazo);
+  const noPrazo = comPrazo.filter(t => Date.parse(t.concluida_em) <= fimPrazo(t.prazo));
+  const taxa = comPrazo.length ? Math.round(noPrazo.length / comPrazo.length * 100) : 0;
+  const semCi = abertas.filter(t => (t.responsaveis || []).some(l => !(t.ciencia[l] || {}).ciente) && agora() - Date.parse(t.criado_em) > 24 * 36e5);
+  const emVal = abertas.filter(t => t.status === 'REVISAO');
+  const pessoas = {};
+  abertas.forEach(t => (t.responsaveis || []).forEach(l => { const p = pessoas[l] ||= { l, ab:0, at:0 }; p.ab++; if ((prazoInfo(t) || {}).atrasada) p.at++; }));
+  const carga = Object.values(pessoas).sort((a, b) => b.ab - a.ab || b.at - a.at);
+  const maxC = Math.max(1, ...carga.map(p => p.ab));
+
+  $('v-painel').innerHTML = `<div class="ttl"><h1>📊 Painel da chefia</h1><span class="sp"></span><button class="btn sec2" id="bt-imp-pn">🖨️ Imprimir resumo</button>
+    <p>Visão das seções que você chefia ou acompanha. Clique em qualquer item para abrir.</p></div>
+    <div class="filtros"><button class="pill ${!FPN ? 'on' : ''}" data-fpn="">Todas as seções</button>${secsVer.map(s => `<button class="pill ${FPN === s.id ? 'on' : ''}" data-fpn="${esc(s.id)}" style="--c:${esc(s.cor)}"><span class="dot"></span>${esc(s.nome)}</button>`).join('')}</div>
+    <div class="kpis">
+      ${kpi('Em aberto', abertas.length, 'tarefas e procedimentos', '#3987e5', 'c1', 'x')}
+      ${kpi('Atrasadas', atr.length, atr.length ? 'cobrar o responsável' : 'nenhuma 👏', '#e66767', 'c2', 'x', atr.length > 0)}
+      ${kpi('Vencem em 48h', v48.length, 'acompanhar de perto', '#d95926', 'c3', 'x')}
+      ${kpi('No prazo', taxa, comPrazo.length ? `${noPrazo.length} de ${comPrazo.length} entregues no prazo (30 dias)` : 'sem entregas com prazo em 30 dias', '#199e70', 'c4', 'x').replace('data-k="c4">0', 'data-k="c4" data-suf="%">0')}
+      ${kpi('Sem ciência +24h', semCi.length, 'delegadas e ainda não recebidas', '#c98500', 'c5', 'x', semCi.length > 0)}
+    </div>
+    <div class="sec">🏢 Por seção <small>situação das tarefas</small></div>
+    <div class="secs">${(FPN ? secsVer.filter(s => s.id === FPN) : secsVer).map(s => cartaoSecao(s)).join('')}</div>
+    <div class="leg" style="margin-top:10px">${ST.map(s => `<span style="--c:${s.cor}">${s.nome}</span>`).join('')}</div>
+    <div class="grid2">
+      <div><div class="sec">👮 Carga por policial <small>em aberto · parte vermelha = atrasadas</small></div>
+        <div class="box">${carga.length ? `<div class="carga">${carga.slice(0, 20).map(p => `<div class="cg" data-dica="${esc(nomeDe(p.l))}: ${p.ab} em aberto, ${p.at} atrasada(s)"><span class="nm">${av(p.l, 'sm')}${esc(nomeDe(p.l))}</span>
+          <span class="br"><i style="background:var(--st-afazer)" data-w="${(p.ab - p.at) / maxC * 100}"></i>${p.at ? `<i style="background:var(--crit)" data-w="${p.at / maxC * 100}"></i>` : ''}</span><span class="vl">${p.ab}${p.at ? ` · <b style="color:#fca5a5">${p.at}⏰</b>` : ''}</span></div>`).join('')}</div>
+          <div class="leg"><span style="--c:var(--st-afazer)">Em aberto no prazo</span><span style="--c:var(--crit)">Atrasadas</span></div>` : '<div class="vazio">Ninguém com tarefa em aberto.</div>'}</div></div>
+      <div><div class="sec">⏰ Atrasadas</div>${atr.length ? `<div class="lst">${atr.sort((a, b) => fimPrazo(a.prazo) - fimPrazo(b.prazo)).slice(0, 15).map(t => itemLista(t, true)).join('')}</div>` : '<div class="box vazio"><span class="big">🏆</span>Nada atrasado.</div>'}</div>
+    </div>
+    ${semCi.length ? `<div class="sec">📭 Delegadas e ainda sem ciência <small>há mais de 24 h</small></div><div class="lst">${semCi.slice(0, 15).map(t => itemLista(t, true)).join('')}</div>` : ''}
+    ${emVal.length ? `<div class="sec">🛡️ Em validação</div><div class="lst">${emVal.map(t => itemLista(t, true)).join('')}</div>` : ''}`;
+  qsa('[data-fpn]', $('v-painel')).forEach(b => b.addEventListener('click', () => { FPN = b.dataset.fpn; lembrar('tar_fpn', FPN); render(); }));
+  qsa('[data-kpi]', $('v-painel')).forEach(b => b.style.cursor = 'default');
+  qsa('[data-secq]', $('v-painel')).forEach(b => b.addEventListener('click', () => { F.secao = b.dataset.secq; Object.assign(F, { minhas:false, resp:'', prio:'', prazo:'' }); irPara('quadro'); }));
+  ligarDicas($('v-painel'));
+  $('bt-imp-pn').onclick = () => imprimirPainel(secsVer, base);
+  ligarCartoes($('v-painel'));
+}
+function cartaoSecao(s){
+  const ts = D.tarefas.filter(t => t.ativo !== 'NAO' && t.secao === s.id);
+  const n = ts.length || 1;
+  const c = Object.fromEntries(ST.map(x => [x.id, ts.filter(t => t.status === x.id).length]));
+  const atr = ts.filter(t => t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada).length;
+  const pct = ts.length ? Math.round(c.CONCLUIDA / ts.length * 100) : 0;
+  return `<div class="sc" style="--c:${esc(s.cor)}"><h4>${esc(s.icone || '')} ${esc(s.nome)}<span class="sp"></span><button class="linkbtn" data-secq="${esc(s.id)}">abrir ›</button></h4>
+    <div class="stk">${ST.map(x => c[x.id] ? `<i style="background:${x.cor}" data-w="${c[x.id] / n * 100}" data-dica="${x.nome}: ${c[x.id]}"></i>` : '').join('')}</div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--muted)"><span><b style="color:#fff;font-size:18px;font-family:Rajdhani" data-num="${ts.length}" data-k="sc${s.id}">0</b> tarefas</span>
+    <span>${atr ? `<b style="color:#fca5a5">⏰ ${atr} atrasada${atr > 1 ? 's' : ''}</b>` : '<span style="color:#6ee7b7">✔ em dia</span>'}</span><span><b style="color:#fff">${pct}%</b> concluídas</span></div></div>`;
+}
+function ligarDicas(root){
+  const d = $('dica');
+  qsa('[data-dica]', root).forEach(el => {
+    el.addEventListener('pointerenter', () => { d.textContent = el.dataset.dica; d.style.display = 'block'; });
+    el.addEventListener('pointermove', (e) => { d.style.left = Math.min(innerWidth - 270, e.clientX + 14) + 'px'; d.style.top = (e.clientY + 14) + 'px'; });
+    el.addEventListener('pointerleave', () => { d.style.display = 'none'; });
+  });
+}
+
+/* ============================== CONFIGURAR (administrador) ============================== */
+function renderConfig(){
+  const cfg = D.config || { membros:[], secoes:[], usuarios:[] };
+  const secs = cfg.secoes.slice().sort((a, b) => a.ordem - b.ordem);
+  const ativas = secs.filter(s => s.ativo !== 'NAO');
+  const jaMembro = new Set(cfg.membros.map(m => m.login));
+  const livres = cfg.usuarios.filter(u => !jaMembro.has(u.login));
+  const lst = (s) => String(s || '').split(',').filter(Boolean);
+  $('v-config').innerHTML = `<div class="ttl"><h1>⚙️ Configurar a Central</h1>
+      <p>Quem vê o quê é decidido aqui. Regra: cada um vê as próprias tarefas; o <b>chefe</b> vê toda a seção dele; quem <b>acompanha</b> vê sem mexer; <b>vê todas</b> e <b>delega em todas</b> são para o comando.</p></div>
+    <div class="aviso box" style="border-color:rgba(201,133,0,.4);background:rgba(201,133,0,.08);color:#fcd34d;font-size:13.5px;line-height:1.6">
+      🔐 O login e a senha continuam sendo criados no <b>Painel de Controle</b> (admin.html). Aqui você só diz em que seção cada login trabalha. Para outra pessoa administrar esta tela, marque nela a permissão <b>“Central de Tarefas (administrador)”</b> no Painel de Controle.</div>
+    <div class="sec">👥 Membros <small>${cfg.membros.filter(m => m.ativo !== 'NAO').length} ativos</small></div>
+    <div class="box">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+        <select class="sel" id="cf-novo" style="flex:1;min-width:220px"><option value="">＋ Incluir login…</option>${livres.map(u => `<option value="${esc(u.login)}">${esc(u.nome)} (${esc(u.login)})</option>`).join('')}</select>
+        <button class="btn" id="cf-incluir">Incluir</button>
+      </div>
+      ${cfg.membros.length ? cfg.membros.slice().sort((a, b) => (a.ativo === 'NAO') - (b.ativo === 'NAO') || String(a.nome).localeCompare(String(b.nome), 'pt-BR')).map(m => {
+        const ch = [...lst(m.chefia).map(id => `<span class="chip sec" style="--c:${esc(secaoDe(id).cor)}">👑 chefe ${esc(id)}</span>`),
+          ...lst(m.secoes).filter(id => !lst(m.chefia).includes(id)).map(id => `<span class="chip sec" style="--c:${esc(secaoDe(id).cor)}">${esc(id)}</span>`),
+          ...lst(m.ve_secoes).map(id => `<span class="chip">👁 ${esc(id)}</span>`),
+          m.ve_tudo === 'SIM' ? '<span class="chip" style="background:rgba(245,197,24,.18);color:#fde68a">🌐 vê todas</span>' : '',
+          m.delega_tudo === 'SIM' ? '<span class="chip" style="background:rgba(245,197,24,.18);color:#fde68a">📤 delega em todas</span>' : ''].join(' ');
+        return `<div class="mbr" style="${m.ativo === 'NAO' ? 'opacity:.45' : ''}">${av(m.login, '')}<div class="tx"><b>${esc(m.nome || m.login)}</b><small>${esc(m.login)}${m.ativo === 'NAO' ? ' · DESATIVADO' : ''}</small></div><div style="flex:2;min-width:200px;display:flex;gap:5px;flex-wrap:wrap">${ch}</div><button class="btn sec2 sm" data-edmbr="${esc(m.login)}">Editar</button></div>`;
+      }).join('') : '<div class="vazio">Nenhum membro ainda. Inclua os logins acima — comece pelos chefes de seção.</div>'}
+    </div>
+    <div class="sec">🏢 Seções <small>a seção com “procedimentos” ganha a área de IPM/perícias</small><span class="sp"></span><button class="btn sec2 sm" id="cf-nova-sec">＋ Nova seção</button></div>
+    <div class="box">${secs.map(s => `<div class="mbr" style="${s.ativo === 'NAO' ? 'opacity:.45' : ''}"><span class="av" style="background:${esc(s.cor)};font-size:16px">${esc(s.icone)}</span><div class="tx"><b>${esc(s.nome)}</b><small>${esc(s.id)}${s.procedimentos === 'SIM' ? ' · ⚖️ procedimentos' : ''}${s.ativo === 'NAO' ? ' · DESATIVADA' : ''}</small></div><button class="btn sec2 sm" data-edsec="${esc(s.id)}">Editar</button></div>`).join('')}</div>`;
+  $('cf-incluir').onclick = () => { const l = $('cf-novo').value; if (!l) return toast('Escolha o login na lista.', { cor:'#c98500' }); editarMembro(l, true); };
+  qsa('[data-edmbr]', $('v-config')).forEach(b => b.onclick = () => editarMembro(b.dataset.edmbr));
+  qsa('[data-edsec]', $('v-config')).forEach(b => b.onclick = () => editarSecao(b.dataset.edsec));
+  $('cf-nova-sec').onclick = () => editarSecao('');
+  void ativas;
+}
+function editarMembro(login, novo){
+  const cfg = D.config;
+  const m = cfg.membros.find(x => x.login === login) || { login, nome:(cfg.usuarios.find(u => u.login === login) || {}).nome || login, secoes:'', chefia:'', ve_secoes:'', ve_tudo:'NAO', delega_tudo:'NAO', ativo:'SIM' };
+  const lst = (s) => String(s || '').split(',').filter(Boolean);
+  const secs = cfg.secoes.filter(s => s.ativo !== 'NAO').sort((a, b) => a.ordem - b.ordem);
+  const ehDev = login === 'desousa';
+  modalSimples(`${novo ? '＋ Incluir' : '✏️ Acesso de'} ${esc(m.nome)}`, `
+    <div class="fg" style="margin-bottom:12px"><label>Nome que aparece</label><input class="inp" id="mb-nome" value="${esc(m.nome)}"></div>
+    <table class="matriz"><thead><tr><th>Seção</th><th title="Trabalha nela: vê as próprias tarefas e as marcadas 'visível para a seção'">Membro</th><th title="Vê TODA a seção e delega nela">Chefe</th><th title="Vê toda a seção, sem mexer">Acompanha</th></tr></thead>
+    <tbody>${secs.map(s => `<tr><td>${esc(s.icone)} ${esc(s.nome)}</td><td><input type="checkbox" data-mb="secoes" value="${esc(s.id)}" ${lst(m.secoes).includes(s.id) ? 'checked' : ''}></td><td><input type="checkbox" data-mb="chefia" value="${esc(s.id)}" ${lst(m.chefia).includes(s.id) ? 'checked' : ''}></td><td><input type="checkbox" data-mb="ve_secoes" value="${esc(s.id)}" ${lst(m.ve_secoes).includes(s.id) ? 'checked' : ''}></td></tr>`).join('')}</tbody></table>
+    <label class="tog" style="margin-top:10px"><input type="checkbox" id="mb-vt" ${m.ve_tudo === 'SIM' ? 'checked' : ''}>🌐 Vê <b>todas</b> as seções (comandante, subcomandante)</label>
+    <label class="tog" style="margin-top:8px"><input type="checkbox" id="mb-dt" ${m.delega_tudo === 'SIM' ? 'checked' : ''}>📤 Delega em <b>todas</b> as seções</label>
+    <label class="tog" style="margin-top:8px"><input type="checkbox" id="mb-at" ${m.ativo !== 'NAO' ? 'checked' : ''} ${ehDev ? 'disabled' : ''}>✅ Ativo na Central</label>
+    <div class="msg" id="mb-msg"></div>`,
+    [{ txt:'Salvar', cls:'btn', fn: async (btn) => {
+      const pega = (k) => qsa(`[data-mb="${k}"]:checked`, $('md2-cx')).map(i => i.value);
+      btn.disabled = true;
+      try {
+        await apiPost('/api/tarefas/config', { op:'membro', login, nome: $('mb-nome').value, secoes: pega('secoes'), chefia: pega('chefia'), ve_secoes: pega('ve_secoes'),
+          ve_tudo: $('mb-vt').checked, delega_tudo: $('mb-dt').checked, ativo: $('mb-at').checked });
+        fecharMd2(); toast('✔ Acesso salvo.', { cor:'#199e70' }); carregar(true);
+      } catch(e){ $('mb-msg').className = 'msg err'; $('mb-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+}
+function editarSecao(id){
+  const s = (D.config.secoes.find(x => x.id === id)) || { id:'', nome:'', cor:'#38bdf8', icone:'📁', procedimentos:'NAO', ordem:0, ativo:'SIM' };
+  modalSimples(id ? '✏️ Seção ' + esc(s.nome) : '＋ Nova seção', `
+    <div class="fgr"><div class="fg s2"><label>Nome</label><input class="inp" id="sc-nome" value="${esc(s.nome)}" placeholder="Ex.: 2ª Companhia"></div>
+    <div class="fg"><label>Ícone</label><input class="inp" id="sc-ic" value="${esc(s.icone)}" maxlength="4"></div><div class="fg"><label>Cor</label><input class="inp" type="color" id="sc-cor" value="${esc(s.cor)}" style="height:44px;padding:4px"></div></div>
+    <label class="tog"><input type="checkbox" id="sc-proc" ${s.procedimentos === 'SIM' ? 'checked' : ''}>⚖️ Trabalha com procedimentos (IPM, sindicância, perícia…)</label>
+    ${id ? `<label class="tog" style="margin-top:8px"><input type="checkbox" id="sc-at" ${s.ativo !== 'NAO' ? 'checked' : ''}>✅ Seção ativa</label>` : ''}
+    <div class="msg" id="sc-msg"></div>`,
+    [{ txt:'Salvar', cls:'btn', fn: async (btn) => {
+      btn.disabled = true;
+      try {
+        await apiPost('/api/tarefas/config', { op:'secao', id, nome: $('sc-nome').value, icone: $('sc-ic').value, cor: $('sc-cor').value, procedimentos: $('sc-proc').checked, ordem: s.ordem, ativo: id ? $('sc-at').checked : true });
+        fecharMd2(); toast('✔ Seção salva.', { cor:'#199e70' }); carregar(true);
+      } catch(e){ $('sc-msg').className = 'msg err'; $('sc-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+}
+
+/* ============================== GAVETA (detalhe da tarefa) ============================== */
+async function abrirTarefa(id){
+  const t = D && D.tarefas.find(x => x.id === id);
+  if (!t){ toast('Essa tarefa não está mais disponível para você.', { cor:'#c98500' }); return; }
+  ABERTA = id; DET = null;
+  NOVAS_TAREFAS.delete(id);
+  try { history.replaceState(null, '', '#t=' + id); } catch(e){}
+  $('dw').classList.add('on'); document.body.style.overflow = 'hidden';
+  renderGaveta(t, null);
+  if (minha(t) && !(t.ciencia[EU().login] || {}).visto){
+    t.ciencia[EU().login] = Object.assign({}, t.ciencia[EU().login], { visto: new Date(agora()).toISOString() });
+    acao(id, 'visto').catch(() => {});
+  }
+  recarregarDetalhe();
+}
+async function recarregarDetalhe(silencioso){
+  const id = ABERTA; if (!id) return;
+  try {
+    const d = await api('/api/tarefas/detalhe?id=' + encodeURIComponent(id));
+    if (ABERTA !== id) return;
+    DET = d;
+    const i = D.tarefas.findIndex(x => x.id === id);
+    if (i >= 0) D.tarefas[i] = Object.assign({}, D.tarefas[i], d.tarefa, { n_andamentos: d.andamentos.length, n_anexos: d.andamentos.filter(a => a.url).length });
+    const rascunho = $('cp-txt') ? $('cp-txt').value : '';
+    const sc = $('dw-pn').scrollTop;
+    renderGaveta(D.tarefas[i] || d.tarefa, d);
+    if (rascunho && $('cp-txt')) $('cp-txt').value = rascunho;
+    if (silencioso) $('dw-pn').scrollTop = sc;
+  } catch(e){
+    if (e.status === 404){ fecharGaveta(); toast(e.message, { cor:'#c98500' }); carregar(true); }
+    else if (!silencioso) toast(e.message, { cor:'#e66767', ic:'⚠️' });
+  }
+}
+function fecharGaveta(){
+  $('dw').classList.remove('on'); document.body.style.overflow = ''; ABERTA = null; DET = null;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+  render();
+}
+function renderGaveta(t, det){
+  const eu = EU(), me = eu.login;
+  const p = PRIO[t.prioridade] || PRIO.NORMAL;
+  const pz = prazoInfo(t);
+  const sec = secaoDe(t.secao);
+  const e = t.extra || {};
+  const gerir = t.pode.gerir, resp = t.pode.resp, mexe = gerir || resp;
+  const ci = (t.ciencia || {})[me] || {};
+  const precisaCiencia = resp && !ci.ciente && t.status !== 'CONCLUIDA';
+  const idx = ST.findIndex(s => s.id === t.status);
+  const proc = ehProc(t);
+  const fi = FASES.findIndex(f => f.id === e.fase);
+
+  let botoes = '';
+  if (mexe){
+    if (t.status === 'AFAZER') botoes += `<button class="btn lar" data-st="ANDAMENTO">▶ Iniciar</button>`;
+    if (t.status === 'AFAZER' || t.status === 'ANDAMENTO'){
+      botoes += (e.validar && !gerir) ? `<button class="btn roxo" data-st="CONCLUIDA">🛡️ Enviar para validação</button>` : `<button class="btn verde" data-st="CONCLUIDA">✔ Concluir</button>`;
+    }
+    if (t.status === 'REVISAO' && gerir) botoes += `<button class="btn verde" data-op="aprovar">✅ Validar e concluir</button><button class="btn perigo" data-op="devolver">↩ Devolver para ajuste</button>`;
+    if (t.status === 'REVISAO' && !gerir) botoes += `<span class="chip ag" style="padding:8px 12px">🛡️ Aguardando validação de ${esc(nomeDe(t.criado_por))}</span>`;
+    if (t.status === 'CONCLUIDA') botoes += `<button class="btn sec2" data-st="ANDAMENTO">↺ Reabrir</button>`;
+  }
+
+  const recibos = (t.responsaveis || []).map(l => {
+    const c = (t.ciencia || {})[l] || {};
+    return `<div class="rec">${av(l, '')}<span class="nm">${esc(nomeDe(l))}${l === me ? ' <span style="color:var(--dim)">(você)</span>' : ''}</span>
+      <span class="stp"><span class="on">✓ Enviado ${esc(fQuando(t.criado_em))}</span><span class="${c.visto ? 'on' : ''}">👁 ${c.visto ? 'Viu ' + esc(fQuando(c.visto)) : 'Não abriu'}</span><span class="${c.ciente ? 'on c' : ''}">✔ ${c.ciente ? 'Ciente ' + esc(fQuando(c.ciente)) : 'Sem ciência'}</span></span></div>`;
+  }).join('');
+
+  const checklist = (t.checklist || []);
+  const ckHtml = checklist.map(c => `<label class="ck ${c.ok ? 'ok' : ''}" data-ck="${esc(c.id)}"><span class="bx"><svg viewBox="0 0 16 16"><polyline points="3,8.5 6.5,12 13,4.5"/></svg></span><span class="tx"><span class="tt">${esc(c.t)}</span>${c.ok && c.feito_por ? ` <small style="color:var(--dim)">· ${esc(nomeDe(c.feito_por))} ${esc(fQuando(c.feito_em))}</small>` : ''}</span>${(gerir || c.por === me) ? `<button class="x" data-ckdel="${esc(c.id)}" title="Remover">✕</button>` : ''}</label>`).join('');
+
+  const andamentos = det ? det.andamentos : null;
+  const tl = andamentos == null ? `<div class="skel" style="height:60px"></div>` : andamentos.length ? andamentos.map(a => `
+    <div class="ev ${esc(a.tipo)}" data-ic="${a.tipo === 'andamento' ? '📍' : a.tipo === 'devolucao' ? '↩' : '💬'}">
+      <div class="eh">${av(a.quem, 'sm')}<b>${esc(nomeDe(a.quem))}</b>${a.tipo === 'andamento' ? '<span class="chip" style="background:rgba(57,135,229,.18);color:#93c5fd">andamento</span>' : a.tipo === 'devolucao' ? '<span class="chip prazo late">devolvida</span>' : ''}<span>${esc(rel(a.quando))}</span></div>
+      ${a.texto ? `<div class="eb">${realcar(a.texto)}</div>` : ''}
+      ${a.url ? `<button class="anx" data-anx="${esc(a.url)}" data-nome="${esc(a.arq_nome)}">📎 ${esc(a.arq_nome)} <span style="color:var(--dim)">${fTam(a.arq_tam)}</span></button>` : ''}
+    </div>`).join('') : `<div style="color:var(--dim);font-size:13.5px;padding:4px 0 10px">Nenhum andamento ainda. ${resp ? 'Registre aqui cada passo — quem delegou acompanha em tempo real.' : ''}</div>`;
+
+  $('dw-pn').innerHTML = `
+    <div class="dwh">${chipSec(t.secao)}${proc ? `<span class="chip proc">⚖️ ${esc((TIPOS_PROC[t.tipo] || {}).longo || t.tipo)}</span>` : ''}<span class="chip" style="color:#fff;background:color-mix(in srgb,${p.cor} 22%,transparent)">${p.ic} ${p.nome}</span><span style="color:var(--dim);font-weight:700;font-size:13px">#${t.num}</span>
+      <span class="sp"></span>${gerir ? `<button class="btn sec2 sm" id="dw-ed">✏️ Editar</button>` : ''}<button class="icobtn" style="width:36px;height:36px;font-size:16px" data-fecha="dw" title="Fechar (Esc)">✕</button></div>
+    <div class="dwb">
+      <h2>${esc(t.titulo)}</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="stdot" style="--c:${STm[t.status].cor};background:rgba(148,163,184,.08);padding:4px 10px;border-radius:999px">${STm[t.status].nome}</span>
+        ${pz ? `<span class="chip prazo ${pz.cls}" style="padding:4px 10px">${pz.ic ? pz.ic + ' ' : ''}${esc(pz.txt)}</span>` : ''}
+        ${agendada(t) ? `<span class="chip ag" style="padding:4px 10px">🗓️ Começa ${fData(t.inicio, true)}</span>` : ''}
+        ${t.recorrencia ? `<span class="chip" style="padding:4px 10px">🔁 ${esc(REC[t.recorrencia])}</span>` : ''}
+        ${t.visibilidade === 'SECAO' ? '<span class="chip" style="padding:4px 10px">👥 Visível para a seção</span>' : '<span class="chip" style="padding:4px 10px">🔒 Reservada</span>'}
+        ${(t.etiquetas || []).map(x => `<span class="chip" style="padding:4px 10px">🏷️ ${esc(x)}</span>`).join('')}
+      </div>
+      <div class="passos">${ST.map((s, i) => `<span class="p ${i <= idx ? 'on' : ''}" style="--c:${STm[t.status].cor}"></span>`).join('')}</div>
+      <div class="passos-l">${ST.map((s, i) => `<span class="${i === idx ? 'on' : ''}">${s.nome}</span>`).join('')}</div>
+      ${precisaCiencia ? `<div style="margin-top:16px"><button class="btn ciente-bt" id="dw-ciente">✔ Recebi — dar ciência</button><div style="font-size:12.5px;color:var(--muted);text-align:center;margin-top:6px">${esc(nomeDe(t.criado_por))} vai ver na hora que você recebeu.</div></div>` : ''}
+      ${botoes ? `<div class="acoes">${botoes}</div>` : ''}
+
+      <div class="bloco"><h5>📈 Progresso<span class="sp"></span><b style="color:#fff;font-size:15px;letter-spacing:0">${t.progresso}%</b></h5>
+        ${barra(t.progresso, t.status === 'CONCLUIDA' ? 'done' : (pz && pz.atrasada ? 'late' : ''))}
+        ${!checklist.length && mexe && t.status !== 'CONCLUIDA' ? `<input type="range" min="0" max="100" step="5" value="${t.progresso}" id="dw-prog" style="margin-top:12px"><div style="font-size:12px;color:var(--dim)">Arraste para informar quanto já foi feito — ou crie etapas abaixo e o progresso se calcula sozinho.</div>` : ''}
+      </div>
+
+      ${proc ? `<div class="bloco" style="border-color:rgba(230,103,103,.3)"><h5>⚖️ Procedimento<span class="sp"></span>${gerir && t.prazo && t.status !== 'CONCLUIDA' ? `<button class="btn sec2 sm" id="dw-prorr">📅 Prorrogar prazo</button>` : ''}</h5>
+        <div class="fases" style="margin:4px 0 6px">${FASES.map((f, j) => `${j ? `<span class="ln ${j <= fi ? 'on' : ''}"></span>` : ''}<span class="f ${j <= fi ? 'on' : ''} ${j === fi ? 'at' : ''}" title="${f.nome}"></span>`).join('')}</div>
+        ${mexe ? `<select class="sel" id="dw-fase" style="width:100%;margin-bottom:12px">${FASES.map(f => `<option value="${f.id}" ${f.id === e.fase ? 'selected' : ''}>Fase: ${f.nome}</option>`).join('')}</select>` : `<div style="font-weight:700;color:#fecaca;margin-bottom:12px">${fi >= 0 ? esc(FASES[fi].nome) : ''}</div>`}
+        <div class="kv">
+          ${kv('Número', e.numero)}${kv('Portaria', e.portaria)}${kv('Nº SEI', e.sei)}${kv('Instauração', fData(e.instauracao, true))}
+          ${kv('Prazo legal', e.prazo_dias ? e.prazo_dias + ' dias' + (e.preso ? ' (indiciado preso)' : '') : '')}${kv('Autoridade delegante', e.autoridade)}${kv('Escrivão', e.escrivao)}
+        </div>
+        ${e.objeto ? `<div style="margin-top:12px"><small style="font-size:11px;color:var(--dim);text-transform:uppercase;font-weight:700">Objeto / fato</small><div class="desc">${esc(e.objeto)}</div></div>` : ''}
+        ${e.envolvidos ? `<div style="margin-top:10px"><small style="font-size:11px;color:var(--dim);text-transform:uppercase;font-weight:700">Envolvidos</small><div class="desc">${esc(e.envolvidos)}</div></div>` : ''}
+        ${(e.prorrogacoes || []).length ? `<div style="margin-top:12px"><small style="font-size:11px;color:var(--dim);text-transform:uppercase;font-weight:700">Prorrogações</small>${e.prorrogacoes.map(x => `<div class="hist">+${x.dias} dia(s): ${esc(fData(x.de, true))} → <b>${esc(fData(x.para, true))}</b>${x.doc ? ' · ' + esc(x.doc) : ''} <span>(${esc(nomeDe(x.por))}, ${esc(fQuando(x.em))})</span></div>`).join('')}</div>` : ''}
+      </div>` : ''}
+
+      ${t.descricao ? `<div class="bloco"><h5>📝 Descrição</h5><div class="desc">${realcar(t.descricao)}</div></div>` : ''}
+
+      <div class="bloco"><h5>📬 Recebimento <span style="text-transform:none;letter-spacing:0;font-weight:500">— delegado por <b style="color:#e2e8f0">${esc(nomeDe(t.criado_por))}</b></span></h5>${recibos}
+        ${(t.observadores || []).length ? `<div style="margin-top:8px;font-size:12.5px;color:var(--muted)">👁️ Acompanham: ${(t.observadores || []).map(nomeDe).map(esc).join(', ')}</div>` : ''}</div>
+
+      <div class="kv bloco">
+        ${kv('Início', t.inicio ? fData(t.inicio, true) : '')}${kv('Prazo', t.prazo ? fData(t.prazo, true) : 'Sem prazo')}${kv('Criada em', fQuando(t.criado_em))}${kv('Concluída em', t.concluida_em ? fQuando(t.concluida_em) : '')}
+      </div>
+
+      <div class="bloco"><h5>☑️ Etapas ${checklist.length ? `<span style="letter-spacing:0">${checklist.filter(c => c.ok).length}/${checklist.length}</span>` : ''}</h5>
+        ${ckHtml || '<div style="color:var(--dim);font-size:13.5px">Sem etapas. Quebre o serviço em passos para o progresso andar sozinho.</div>'}
+        ${mexe && t.status !== 'CONCLUIDA' ? `<div class="addck"><input class="inp" id="ck-novo" placeholder="Nova etapa… (Enter)" maxlength="300"><button class="btn sec2" id="ck-add">＋</button></div>` : ''}
+      </div>
+
+      <div class="bloco"><h5>🧭 Andamento</h5><div class="tl">${tl}</div></div>
+
+      ${det && det.historico.length ? `<details class="bloco"><summary style="cursor:pointer;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700">🕘 Histórico (${det.historico.length})</summary><div style="margin-top:10px">${det.historico.map(h => `<div class="hist"><b>${esc(nomeDe(h.quem))}</b> ${esc(h.acao)} · ${esc(fQuando(h.quando))}<br>${esc(h.resumo)}</div>`).join('')}</div></details>` : ''}
+      ${gerir ? `<div style="margin-top:18px;text-align:right"><button class="btn perigo sm" id="dw-arq">🗄️ Arquivar tarefa</button></div>` : ''}
+    </div>
+    <div class="comp"><div class="bx2">
+      <textarea id="cp-txt" placeholder="${resp ? 'Registre o andamento… (use @login para chamar alguém)' : 'Escreva um comentário… (use @login para chamar alguém)'}" maxlength="5000"></textarea>
+      <div class="row">
+        <div class="seg"><button data-cptipo="andamento" class="${resp || proc ? 'on' : ''}">📍 Andamento</button><button data-cptipo="comentario" class="${resp || proc ? '' : 'on'}">💬 Comentário</button></div>
+        <label class="btn sec2 sm" style="cursor:pointer">📎 Anexar<input type="file" id="cp-arq" hidden accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.txt"></label>
+        <span class="anexo-nome" id="cp-arq-nome"></span><span class="sp"></span>
+        <button class="btn" id="cp-env">Enviar</button>
+      </div></div></div>`;
+  ligarGaveta(t);
+}
+const kv = (k, v) => v ? `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>` : '';
+function realcar(txt){ return esc(txt).replace(/@([a-z0-9._-]{2,40})/gi, (m, l) => `<span class="mencao" title="${esc(nomeDe(l.toLowerCase()))}">@${esc(l)}</span>`); }
+function fTam(b){ b = Number(b) || 0; if (!b) return ''; if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(0) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
+
+function ligarGaveta(t){
+  const pn = $('dw-pn');
+  qsa('[data-fecha="dw"]', pn).forEach(b => b.onclick = fecharGaveta);
+  const ed = $('dw-ed'); if (ed) ed.onclick = () => abrirForm(t);
+  const ci = $('dw-ciente'); if (ci) ci.onclick = () => darCiencia(t.id, ci);
+  qsa('[data-st]', pn).forEach(b => b.onclick = () => mudarStatus(t, b.dataset.st, b));
+  qsa('[data-op]', pn).forEach(b => b.onclick = () => b.dataset.op === 'aprovar' ? aprovar(t, b) : devolver(t));
+  const pr = $('dw-prog');
+  if (pr){ let tm; pr.oninput = () => { pn.querySelector('.bloco h5 b').textContent = pr.value + '%'; pn.querySelector('.bloco .pb i').style.width = pr.value + '%'; clearTimeout(tm); tm = setTimeout(async () => { try { await acao(t.id, 'progresso', { valor:Number(pr.value) }); t.progresso = Number(pr.value); carregar(true); } catch(e){ toast(e.message, { cor:'#e66767' }); } }, 600); }; }
+  qsa('[data-ck]', pn).forEach(l => l.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-ckdel]')) return;
+    e.preventDefault();
+    if (!(t.pode.gerir || t.pode.resp) || t.status === 'CONCLUIDA') return;
+    l.classList.toggle('ok');
+    const c = t.checklist.find(x => x.id === l.dataset.ck); if (c) c.ok = l.classList.contains('ok');
+    const pct = Math.round(t.checklist.filter(x => x.ok).length / t.checklist.length * 100);
+    pn.querySelector('.bloco h5 b').textContent = pct + '%'; pn.querySelector('.bloco .pb i').style.width = pct + '%';
+    try { const r = await acao(t.id, 'check', { sub:'toggle', item:l.dataset.ck, ok: l.classList.contains('ok') }); t.progresso = r.progresso; if (r.progresso === 100) { confete(60); toast('Todas as etapas feitas! Conclua a tarefa quando quiser.', { cor:'#199e70', ic:'🎯' }); } recarregarDetalhe(true); carregar(true); }
+    catch(err){ toast(err.message, { cor:'#e66767' }); recarregarDetalhe(true); }
+  }));
+  qsa('[data-ckdel]', pn).forEach(b => b.addEventListener('click', async (e) => { e.preventDefault(); e.stopPropagation(); try { await acao(t.id, 'check', { sub:'del', item:b.dataset.ckdel }); recarregarDetalhe(true); carregar(true); } catch(err){ toast(err.message, { cor:'#e66767' }); } }));
+  const novo = $('ck-novo');
+  const addCk = async () => { const v = novo.value.trim(); if (!v) return; novo.value = ''; try { await acao(t.id, 'check', { sub:'add', texto:v }); await recarregarDetalhe(true); carregar(true); setTimeout(() => $('ck-novo') && $('ck-novo').focus(), 50); } catch(err){ toast(err.message, { cor:'#e66767' }); } };
+  if (novo){ novo.onkeydown = (e) => { if (e.key === 'Enter') addCk(); }; $('ck-add').onclick = addCk; }
+  const fase = $('dw-fase'); if (fase) fase.onchange = async () => { try { await acao(t.id, 'fase', { fase: fase.value }); toast('⚖️ Fase atualizada.', { cor:'#e66767' }); recarregarDetalhe(true); carregar(true); } catch(e){ toast(e.message, { cor:'#e66767' }); } };
+  const prr = $('dw-prorr'); if (prr) prr.onclick = () => prorrogar(t);
+  const arq = $('dw-arq'); if (arq) arq.onclick = () => arquivar(t);
+  qsa('[data-anx]', pn).forEach(b => b.onclick = () => baixarAnexo(b.dataset.anx, b.dataset.nome, b));
+  let tipo = qsa('[data-cptipo].on', pn)[0].dataset.cptipo;
+  qsa('[data-cptipo]', pn).forEach(b => b.onclick = () => { tipo = b.dataset.cptipo; qsa('[data-cptipo]', pn).forEach(x => x.classList.toggle('on', x === b)); });
+  const arqIn = $('cp-arq');
+  arqIn.onchange = () => { $('cp-arq-nome').textContent = arqIn.files[0] ? '📎 ' + arqIn.files[0].name : ''; };
+  const txt = $('cp-txt');
+  txt.oninput = () => { txt.style.height = 'auto'; txt.style.height = Math.min(160, txt.scrollHeight) + 'px'; };
+  txt.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('cp-env').click(); };
+  $('cp-env').onclick = async () => {
+    const f = arqIn.files[0];
+    if (!txt.value.trim() && !f) return txt.focus();
+    if (f && f.size > 15 * 1048576) return toast('Arquivo maior que 15 MB.', { cor:'#e66767' });
+    const btn = $('cp-env'); btn.disabled = true; btn.textContent = f ? 'Enviando anexo…' : 'Enviando…';
+    const fd = new FormData(); fd.append('tarefa_id', t.id); fd.append('texto', txt.value); fd.append('tipo', tipo); if (f) fd.append('arquivo', f);
+    try { await apiForm('/api/tarefas/andamento', fd); txt.value = ''; arqIn.value = ''; $('cp-arq-nome').textContent = ''; await recarregarDetalhe(true); const tl = pn.querySelector('.tl'); if (tl) tl.lastElementChild && tl.lastElementChild.scrollIntoView({ behavior:'smooth', block:'center' }); carregar(true); }
+    catch(e){ toast(e.message, { cor:'#e66767', ic:'⚠️' }); }
+    finally { btn.disabled = false; btn.textContent = 'Enviar'; }
+  };
+}
+
+async function baixarAnexo(url, nome, btn){
+  const velho = btn.innerHTML; btn.innerHTML = '⏳ Abrindo…';
+  try {
+    const r = await fetch(API_BASE + url, { headers: cab() });
+    if (!r.ok) throw new Error('Não consegui abrir o anexo (' + r.status + ').');
+    const blob = await r.blob();
+    const u = URL.createObjectURL(blob);
+    const w = window.open(u, '_blank');
+    if (!w){ const a = document.createElement('a'); a.href = u; a.download = nome || 'anexo'; a.click(); }
+    setTimeout(() => URL.revokeObjectURL(u), 60000);
+  } catch(e){ toast(e.message, { cor:'#e66767' }); }
+  finally { btn.innerHTML = velho; }
+}
+
+async function darCiencia(id, btn){
+  const t = D.tarefas.find(x => x.id === id); if (!t) return;
+  if (btn){ btn.disabled = true; btn.innerHTML = '✔ Ciente!'; }
+  try {
+    await acao(id, 'ciente');
+    t.ciencia[EU().login] = Object.assign({}, t.ciencia[EU().login], { ciente: new Date(agora()).toISOString() });
+    toast(`✅ Ciência registrada — ${nomeDe(t.criado_por)} foi avisado.`, { cor:'#199e70' });
+    confete(40);
+    if (ABERTA === id) recarregarDetalhe(true);
+    carregar(true); render();
+  } catch(e){ toast(e.message, { cor:'#e66767' }); if (btn) btn.disabled = false; }
+}
+async function mudarStatus(t, st, btn){
+  btn.disabled = true;
+  try {
+    const r = await acao(t.id, 'status', { status: st });
+    if (r.validacao) toast(`🛡️ Enviada para validação de ${nomeDe(t.criado_por)}.`, { cor:'#9085e9' });
+    else if (r.status === 'CONCLUIDA'){ confete(); toast(`🏁 Concluída: “${t.titulo}”`, { cor:'#199e70' }); }
+    else toast(`🔄 ${STm[r.status].nome}`, { cor: STm[r.status].hex });
+    if (r.proxima) toast('🔁 A próxima rodada desta tarefa já foi criada.', { cor:'#3987e5' });
+    await carregar(true); recarregarDetalhe(true);
+  } catch(e){ toast(e.message, { cor:'#e66767' }); btn.disabled = false; }
+}
+async function aprovar(t, btn){
+  btn.disabled = true;
+  try { const r = await acao(t.id, 'aprovar'); confete(); toast('✅ Validada e concluída.', { cor:'#199e70' }); if (r.proxima) toast('🔁 Próxima rodada criada.', { cor:'#3987e5' }); await carregar(true); recarregarDetalhe(true); }
+  catch(e){ toast(e.message, { cor:'#e66767' }); btn.disabled = false; }
+}
+function devolver(t){
+  modalSimples('↩ Devolver para ajuste', `<p style="color:var(--muted);font-size:14px;margin-bottom:10px">Diga o que falta. Vai como andamento para ${esc((t.responsaveis || []).map(nomeDe).join(', '))} e a tarefa volta para “Em andamento”.</p><textarea class="inp" id="dv-mot" placeholder="Ex.: falta anexar o laudo assinado"></textarea><div class="msg" id="dv-msg"></div>`,
+    [{ txt:'Devolver', cls:'btn perigo', fn: async (btn) => {
+      btn.disabled = true;
+      try { await acao(t.id, 'devolver', { motivo: $('dv-mot').value }); fecharMd2(); toast('↩ Devolvida ao responsável.', { cor:'#d95926' }); await carregar(true); recarregarDetalhe(true); }
+      catch(e){ $('dv-msg').className = 'msg err'; $('dv-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+  setTimeout(() => $('dv-mot') && $('dv-mot').focus(), 80);
+}
+function prorrogar(t){
+  modalSimples('📅 Registrar prorrogação', `<div class="fgr"><div class="fg"><label>Dias a mais <i>*</i></label><input class="inp" id="pr-dias" type="number" min="1" max="365" value="20"></div>
+    <div class="fg"><label>Novo prazo</label><input class="inp" id="pr-novo" disabled></div><div class="fg s2"><label>Documento que autorizou</label><input class="inp" id="pr-doc" placeholder="Ex.: Despacho nº 12/2026 – SEI 0021.000…"></div></div>
+    <small style="color:var(--dim)">No IPM, o CPPM (art. 20, §1º) admite prorrogação por até 20 dias, pela autoridade militar superior — confira o despacho.</small><div class="msg" id="pr-msg"></div>`,
+    [{ txt:'Prorrogar', cls:'btn', fn: async (btn) => {
+      btn.disabled = true;
+      try { await acao(t.id, 'prorrogar', { dias: Number($('pr-dias').value), doc: $('pr-doc').value }); fecharMd2(); toast('📅 Prazo prorrogado.', { cor:'#3987e5' }); await carregar(true); recarregarDetalhe(true); }
+      catch(e){ $('pr-msg').className = 'msg err'; $('pr-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+  const at = () => { $('pr-novo').value = fData(somaDias(t.prazo, Number($('pr-dias').value) || 0), true); };
+  $('pr-dias').oninput = at; at();
+}
+function arquivar(t){
+  modalSimples('🗄️ Arquivar tarefa', `<p style="color:var(--muted);font-size:14px;margin-bottom:12px">“${esc(t.titulo)}” sai dos quadros, mas <b style="color:#e2e8f0">nada é apagado</b>: a linha e o histórico continuam guardados. Por segurança, confirme com a <b style="color:#e2e8f0">sua senha</b>.</p>
+    <div class="fg"><label>Sua senha <i>*</i></label><input class="inp" type="password" id="aq-senha" autocomplete="current-password"></div>
+    <div class="fg" style="margin-top:10px"><label>Motivo (opcional)</label><input class="inp" id="aq-mot" maxlength="300"></div><div class="msg" id="aq-msg"></div>`,
+    [{ txt:'Arquivar', cls:'btn perigo', fn: async (btn) => {
+      btn.disabled = true;
+      try { await acao(t.id, 'arquivar', { senha: $('aq-senha').value, motivo: $('aq-mot').value }); fecharMd2(); fecharGaveta(); toast('🗄️ Tarefa arquivada.', { cor:'#64748b' }); carregar(true); }
+      catch(e){ $('aq-msg').className = 'msg err'; $('aq-msg').textContent = e.message; btn.disabled = false; }
+    } }]);
+  setTimeout(() => $('aq-senha') && $('aq-senha').focus(), 80);
+}
+
+/* ============================== FORMULÁRIO (nova / editar) ============================== */
+let FORM = null;
+function abrirForm(t, preset){
+  if (!D) return;
+  const podeSec = secoesQuePossoCriar();
+  if (!t && !podeSec.length) return toast('Você ainda não está em nenhuma seção da Central.', { cor:'#c98500' });
+  const ed = !!t;
+  const pre = preset || {};
+  const secIni = ed ? t.secao : (pre.secao && podeSec.includes(pre.secao) ? pre.secao : (F.secao && podeSec.includes(F.secao) ? F.secao : (EU().secoes.find(s => podeSec.includes(s)) || podeSec[0])));
+  FORM = {
+    ed, id: ed ? t.id : '', versao: ed ? t.versao : 0, status: pre.status || 'AFAZER',
+    secao: secIni, tipo: ed ? t.tipo : (pre.tipo || 'TAREFA'), prioridade: ed ? t.prioridade : 'NORMAL',
+    resps: ed ? [...t.responsaveis] : (possoDelegarEm(secIni) ? [] : [EU().login]), obs: ed ? [...(t.observadores || [])] : [],
+    verTodos: false, prazoManual: ed,
+  };
+  if (!ed && !FORM.resps.length && !possoDelegarEm(secIni)) FORM.resps = [EU().login];
+  const e = ed ? (t.extra || {}) : {};
+  $('md-cx').innerHTML = `
+    <div class="mdh"><h3>${ed ? '✏️ Editar' : '＋ Nova'} ${'tarefa'}</h3><button class="icobtn" style="width:36px;height:36px;font-size:16px" data-fecha="md">✕</button></div>
+    <div class="mdb">
+      <div class="fgr"><div class="fg"><label>Seção <i>*</i></label><select class="inp" id="fm-sec">${D.secoes.filter(s => podeSec.includes(s.id) || s.id === secIni).map(s => `<option value="${esc(s.id)}" ${s.id === secIni ? 'selected' : ''}>${esc(s.icone)} ${esc(s.nome)}</option>`).join('')}</select></div>
+        <div class="fg" id="fm-tipo-wrap"><label>Tipo</label><select class="inp" id="fm-tipo"></select></div></div>
+      <div class="fg" style="margin-bottom:14px"><label>Título <i>*</i></label><input class="inp" id="fm-tit" maxlength="200" value="${ed ? esc(t.titulo) : ''}" placeholder="O que precisa ser feito? Ex.: Levantar o efetivo apto para a operação"></div>
+      <div id="fm-proc"></div>
+      <div class="fg" style="margin-bottom:14px"><label>Prioridade</label><div class="prios" id="fm-prio">${Object.entries(PRIO).map(([k, p]) => `<button type="button" data-prio="${k}" style="--c:${p.cor}" class="${FORM.prioridade === k ? 'on' : ''}">${p.ic} ${p.nome}</button>`).join('')}</div></div>
+      <div class="fgr t3"><div class="fg"><label>Começa em</label><input class="inp" type="date" id="fm-ini" value="${ed ? esc((t.inicio || '').slice(0,10)) : ''}"><small>vazio = já</small></div>
+        <div class="fg"><label>Prazo</label><input class="inp" type="date" id="fm-prazo" value="${ed ? esc((t.prazo || '').slice(0,10)) : ''}"></div>
+        <div class="fg"><label>Hora limite</label><input class="inp" type="time" id="fm-hora" value="${ed && t.prazo && t.prazo.length > 10 ? esc(t.prazo.slice(11)) : ''}"><small>opcional</small></div></div>
+      <div class="fg" style="margin-bottom:14px"><label>Responsável(eis) <i>*</i> <span id="fm-resp-dica" style="text-transform:none;letter-spacing:0;font-weight:500"></span></label><div class="pick" id="fm-resp"></div></div>
+      <div class="fg hide" style="margin-bottom:14px" id="fm-obs-wrap"><label>Quem mais acompanha (observadores)</label><div class="pick" id="fm-obs"></div></div>
+      <div class="fg" style="margin-bottom:14px"><label>Descrição</label><textarea class="inp" id="fm-desc" maxlength="6000" placeholder="Detalhes, documento de origem, orientações…">${ed ? esc(t.descricao) : ''}</textarea></div>
+      ${ed ? '' : `<div class="fg" style="margin-bottom:14px"><label>Etapas (uma por linha)</label><textarea class="inp" id="fm-ck" placeholder="Ex.:&#10;Levantar dados&#10;Montar o relatório&#10;Enviar ao comando"></textarea><small>Cada etapa marcada faz a barra de progresso andar sozinha.</small></div>`}
+      <div class="fgr"><div class="fg"><label>Repetir</label><select class="inp" id="fm-rec">${Object.entries(REC).map(([k, n]) => `<option value="${k}" ${ed && t.recorrencia === k ? 'selected' : ''}>${n}</option>`).join('')}</select><small>ao concluir, cria a próxima com o prazo seguinte</small></div>
+        <div class="fg"><label>Etiquetas</label><input class="inp" id="fm-etq" value="${ed ? esc((t.etiquetas || []).join(', ')) : ''}" placeholder="Ex.: ofício, operação Fronteira"></div></div>
+      <label class="tog" style="margin-bottom:8px"><input type="checkbox" id="fm-vis" ${ed && t.visibilidade === 'SECAO' ? 'checked' : ''}>👥 Toda a seção pode ver (desmarcado = reservada: só envolvidos e chefia)</label>
+      <label class="tog hide" id="fm-val-wrap"><input type="checkbox" id="fm-val" ${ed ? (e.validar ? 'checked' : '') : 'checked'}>🛡️ Exigir a minha validação antes de concluir</label>
+      <div class="msg" id="fm-msg"></div>
+    </div>
+    <div class="mdf"><button class="btn sec2" data-fecha="md">Cancelar</button><button class="btn" id="fm-salvar">${ed ? 'Salvar alterações' : (FORM.resps.length === 1 && FORM.resps[0] === EU().login && !possoDelegarEm(secIni) ? 'Criar tarefa' : 'Criar e delegar')}</button></div>`;
+  $('md').classList.add('on');
+  qsa('[data-fecha="md"]', $('md-cx')).forEach(b => b.onclick = fecharForm);
+  $('fm-sec').onchange = () => { FORM.secao = $('fm-sec').value; if (!possoDelegarEm(FORM.secao)) { FORM.resps = [EU().login]; FORM.obs = []; } const s = secaoDe(FORM.secao); if (!s.procedimentos) FORM.tipo = 'TAREFA'; formTipos(); formPessoas(); formProc(e); };
+  $('fm-tipo').onchange = () => { const antes = FORM.tipo; FORM.tipo = $('fm-tipo').value; formProc(e, antes); };
+  qsa('[data-prio]', $('md-cx')).forEach(b => b.onclick = () => { FORM.prioridade = b.dataset.prio; qsa('[data-prio]', $('md-cx')).forEach(x => x.classList.toggle('on', x === b)); });
+  $('fm-prazo').oninput = () => { FORM.prazoManual = true; };
+  $('fm-salvar').onclick = salvarForm;
+  formTipos(); formPessoas(); formProc(e);
+  setTimeout(() => $('fm-tit').focus(), 80);
+}
+function fecharForm(){ $('md').classList.remove('on'); FORM = null; }
+function formTipos(){
+  const s = secaoDe(FORM.secao);
+  vis('fm-tipo-wrap', !!s.procedimentos);
+  $('fm-tipo').innerHTML = `<option value="TAREFA">📌 Tarefa</option>` + (s.procedimentos ? Object.entries(TIPOS_PROC).map(([k, p]) => `<option value="${k}" ${FORM.tipo === k ? 'selected' : ''}>⚖️ ${p.longo}</option>`).join('') : '');
+  $('fm-tipo').value = FORM.tipo;
+}
+function formProc(e, tipoAntes){
+  const box = $('fm-proc');
+  if (FORM.tipo === 'TAREFA'){ box.innerHTML = ''; return; }
+  const tp = TIPOS_PROC[FORM.tipo] || {};
+  const v = (k) => esc(e[k] || '');
+  box.innerHTML = `<div class="procbox"><h6>⚖️ Dados do procedimento — ${esc(tp.longo || '')}</h6>
+    <div class="fgr t3"><div class="fg"><label>Número</label><input class="inp" id="pc-num" value="${v('numero')}" placeholder="012/2026"></div>
+      <div class="fg"><label>Portaria</label><input class="inp" id="pc-port" value="${v('portaria')}"></div>
+      <div class="fg"><label>Nº SEI</label><input class="inp" id="pc-sei" value="${v('sei')}"></div></div>
+    <div class="fgr t3"><div class="fg"><label>Instauração</label><input class="inp" type="date" id="pc-inst" value="${v('instauracao')}"></div>
+      <div class="fg"><label>Prazo legal (dias)</label><input class="inp" type="number" min="0" max="999" id="pc-dias" value="${e.prazo_dias || (tp.dias || '')}"></div>
+      <div class="fg">${FORM.tipo === 'IPM' ? `<label>Indiciado</label><label class="tog" style="min-height:44px"><input type="checkbox" id="pc-preso" ${e.preso ? 'checked' : ''}>preso (20 dias)</label>` : ''}</div></div>
+    ${FORM.tipo === 'IPM' ? `<small style="display:block;margin:-6px 0 12px;color:var(--dim)">CPPM, art. 20: 20 dias com indiciado preso, 40 dias solto, prorrogável por até 20. O prazo da tarefa é calculado sozinho — confira com a portaria.</small>` : `<small style="display:block;margin:-6px 0 12px;color:var(--dim)">Informe o prazo que consta na portaria/regulamento; o prazo da tarefa é calculado sozinho a partir da instauração.</small>`}
+    <div class="fgr"><div class="fg"><label>Autoridade delegante</label><input class="inp" id="pc-aut" value="${v('autoridade')}"></div><div class="fg"><label>Escrivão</label><input class="inp" id="pc-esc" value="${v('escrivao')}"></div></div>
+    <div class="fg" style="margin-bottom:12px"><label>Objeto / fato apurado</label><textarea class="inp" id="pc-obj" maxlength="1500">${v('objeto')}</textarea></div>
+    <div class="fg"><label>Envolvidos (investigado, ofendido…)</label><textarea class="inp" id="pc-env" maxlength="800" style="min-height:52px">${v('envolvidos')}</textarea><small>🔒 Só quem vê o procedimento enxerga.</small></div>
+  </div>`;
+  const recalc = () => {
+    if (FORM.prazoManual && FORM.ed) return;
+    const inst = $('pc-inst').value, dias = Number($('pc-dias').value) || 0;
+    if (inst && dias){ $('fm-prazo').value = somaDias(inst, dias); FORM.prazoManual = false; }
+  };
+  const preso = $('pc-preso');
+  if (preso) preso.onchange = () => { $('pc-dias').value = preso.checked ? tp.diasPreso : tp.dias; recalc(); };
+  $('pc-inst').oninput = () => { FORM.prazoManual = false; recalc(); };
+  $('pc-dias').oninput = () => { FORM.prazoManual = false; recalc(); };
+  if (!FORM.ed && !$('pc-inst').value){ $('pc-inst').value = diaRO(); recalc(); }
+  const ck = $('fm-ck');
+  if (ck && (!ck.value.trim() || tipoAntes)) ck.value = (tp.passos || []).join('\n');
+  if (!$('fm-tit').value && FORM.tipo !== 'TAREFA') $('fm-tit').placeholder = `${tp.nome} nº … — fato apurado`;
+}
+function formPessoas(){
+  const sec = FORM.secao, delega = possoDelegarEm(sec), me = EU().login;
+  const daSecao = D.membros.filter(m => m.secoes.includes(sec));
+  const outros = D.membros.filter(m => !m.secoes.includes(sec));
+  const lista = delega ? (FORM.verTodos ? [...daSecao, ...outros] : daSecao) : D.membros.filter(m => m.login === me);
+  FORM.resps.forEach(l => { if (!lista.some(m => m.login === l)) { const m = D.membros.find(x => x.login === l); if (m) lista.push(m); } });
+  if (!lista.some(m => m.login === me) && D.membros.some(m => m.login === me) && (EU().secoes.includes(sec) || delega)) lista.unshift(D.membros.find(m => m.login === me));
+  const botao = (m, sel, alvo) => `<button type="button" data-${alvo}="${esc(m.login)}" class="${sel ? 'on' : ''}" ${!delega && alvo === 'pr' ? 'disabled' : ''}>${av(m.login, 'sm')}${esc(m.nome)}${m.login === me ? ' (você)' : ''}${m.chefia.includes(sec) ? ' 👑' : ''}</button>`;
+  $('fm-resp').innerHTML = lista.map(m => botao(m, FORM.resps.includes(m.login), 'pr')).join('') + (delega && outros.length && !FORM.verTodos ? `<button type="button" id="fm-todos" style="border-style:dashed">＋ outras seções (${outros.length})</button>` : '') || '<span style="color:var(--dim);font-size:13px">Ninguém cadastrado nesta seção ainda.</span>';
+  $('fm-resp-dica').textContent = delega ? '— quem vai executar' : '— só o chefe da seção delega para outra pessoa';
+  qsa('[data-pr]', $('fm-resp')).forEach(b => b.onclick = () => { const l = b.dataset.pr; FORM.resps = FORM.resps.includes(l) ? FORM.resps.filter(x => x !== l) : [...FORM.resps, l]; FORM.obs = FORM.obs.filter(x => x !== l); formPessoas(); });
+  const tod = $('fm-todos'); if (tod) tod.onclick = () => { FORM.verTodos = true; formPessoas(); };
+  vis('fm-obs-wrap', delega);
+  if (delega){
+    $('fm-obs').innerHTML = D.membros.filter(m => !FORM.resps.includes(m.login)).map(m => botao(m, FORM.obs.includes(m.login), 'po')).join('');
+    qsa('[data-po]', $('fm-obs')).forEach(b => b.onclick = () => { const l = b.dataset.po; FORM.obs = FORM.obs.includes(l) ? FORM.obs.filter(x => x !== l) : [...FORM.obs, l]; formPessoas(); });
+  }
+  vis('fm-val-wrap', FORM.resps.some(l => l !== me));
+  const bs = $('fm-salvar'); if (bs && !FORM.ed) bs.textContent = FORM.resps.some(l => l !== me) ? 'Criar e delegar' : 'Criar tarefa';
+}
+async function salvarForm(){
+  const m = $('fm-msg'); m.className = 'msg'; m.textContent = '';
+  const tit = $('fm-tit').value.trim();
+  if (!tit){ m.className = 'msg err'; m.textContent = 'Dê um título.'; $('fm-tit').focus(); return; }
+  if (!FORM.resps.length){ m.className = 'msg err'; m.textContent = 'Escolha quem vai executar.'; return; }
+  const prazo = $('fm-prazo').value ? $('fm-prazo').value + ($('fm-hora').value ? 'T' + $('fm-hora').value : '') : '';
+  const extra = { validar: $('fm-val').checked && FORM.resps.some(l => l !== EU().login) };
+  if (FORM.tipo !== 'TAREFA'){
+    Object.assign(extra, { numero:$('pc-num').value, portaria:$('pc-port').value, sei:$('pc-sei').value, instauracao:$('pc-inst').value, prazo_dias:$('pc-dias').value,
+      preso: !!($('pc-preso') && $('pc-preso').checked), autoridade:$('pc-aut').value, escrivao:$('pc-esc').value, objeto:$('pc-obj').value, envolvidos:$('pc-env').value });
+    const t = FORM.ed && D.tarefas.find(x => x.id === FORM.id);
+    if (t && t.extra && t.extra.fase) extra.fase = t.extra.fase;
+  }
+  const corpo = {
+    id: FORM.id, versao: FORM.versao, secao: FORM.secao, tipo: FORM.tipo, titulo: tit, descricao: $('fm-desc').value,
+    prioridade: FORM.prioridade, inicio: $('fm-ini').value, prazo, responsaveis: FORM.resps, observadores: FORM.obs,
+    visibilidade: $('fm-vis').checked ? 'SECAO' : 'RESERVADA', etiquetas: $('fm-etq').value, recorrencia: $('fm-rec').value, extra,
+    status: FORM.status,
+  };
+  if (!FORM.ed && $('fm-ck')) corpo.checklist = $('fm-ck').value.split('\n').map(s => s.trim()).filter(Boolean).map(t => ({ t }));
+  const btn = $('fm-salvar'); btn.disabled = true; const txtBtn = btn.textContent; btn.textContent = 'Salvando…';
+  try {
+    const r = await apiPost('/api/tarefas/salvar', corpo);
+    const ed = FORM.ed, ehDeleg = FORM.resps.some(l => l !== EU().login);
+    fecharForm();
+    toast(ed ? '✔ Alterações salvas.' : (ehDeleg ? `📤 Tarefa #${r.num} delegada — os responsáveis já foram avisados.` : `✔ Tarefa #${r.num} criada.`), { cor:'#199e70' });
+    NOVAS_TAREFAS.add(r.id);
+    await carregar(true);
+    if (ed && ABERTA) recarregarDetalhe(true);
+  } catch(e){
+    m.className = 'msg err'; m.textContent = e.message;
+    if (e.status === 409){ m.innerHTML += ' <button class="linkbtn" style="color:#fde68a" id="fm-rel">Recarregar a tarefa</button>'; $('fm-rel').onclick = async () => { fecharForm(); await carregar(true); if (ABERTA) recarregarDetalhe(); }; }
+    btn.disabled = false; btn.textContent = txtBtn;
+  }
+}
+
+/* ---------- modal simples (confirmações, prorrogação, config) ---------- */
+function modalSimples(titulo, corpo, botoes){
+  $('md2-cx').innerHTML = `<div class="mdh"><h3>${titulo}</h3><button class="icobtn" style="width:36px;height:36px;font-size:16px" data-fecha="md2">✕</button></div>
+    <div class="mdb">${corpo}</div>${botoes ? `<div class="mdf"><button class="btn sec2" data-fecha="md2">Cancelar</button>${botoes.map((b, i) => `<button class="${b.cls}" data-bt="${i}">${b.txt}</button>`).join('')}</div>` : ''}`;
+  $('md2').classList.add('on');
+  qsa('[data-fecha="md2"]', $('md2-cx')).forEach(b => b.onclick = fecharMd2);
+  (botoes || []).forEach((b, i) => { $('md2-cx').querySelector(`[data-bt="${i}"]`).onclick = (e) => b.fn(e.currentTarget); });
+}
+function fecharMd2(){ $('md2').classList.remove('on'); }
+function fecharTudo(){ fecharMd2(); $('md').classList.remove('on'); $('dw').classList.remove('on'); $('np').classList.remove('on'); document.body.style.overflow = ''; ABERTA = null; }
+$('md').addEventListener('click', (e) => { if (e.target === $('md')) fecharForm(); });
+$('md2').addEventListener('click', (e) => { if (e.target === $('md2')) fecharMd2(); });
+$('dw').querySelector('.bg').addEventListener('click', fecharGaveta);
+
+/* ============================== NOTIFICAÇÕES ============================== */
+const NOVAS_TAREFAS = new Set();
+const ICONE_NOTIF = { atribuida:'📌', ciente:'✅', status:'🔄', concluida:'🏁', validacao:'🛡️', devolvida:'↩️', prazo:'📅', prioridade:'🚨', comentario:'💬', andamento:'📍', mencao:'📣', observador:'👁️', retirada:'↩️', fase:'⚖️', arquivada:'🗄️', config:'⚙️' };
+function processarNotificacoes(antes){
+  const n = D.notificacoes;
+  if (NOTIF_VISTAS === null){
+    NOTIF_VISTAS = new Set(n.itens.map(x => x.id));
+    if (n.nao_lidas) setTimeout(() => toast(`🔔 Você tem ${n.nao_lidas} notificaç${n.nao_lidas > 1 ? 'ões' : 'ão'} não lida${n.nao_lidas > 1 ? 's' : ''}.`, { cor:'#F5C518', fn: abrirNotif }), 600);
+  } else {
+    const novas = n.itens.filter(x => !NOTIF_VISTAS.has(x.id) && !x.lida).reverse();
+    novas.forEach(x => NOTIF_VISTAS.add(x.id));
+    if (novas.length){
+      novas.slice(-4).forEach((x, i) => setTimeout(() => toast(x.texto, { cor: x.nivel === 'alta' ? '#e66767' : '#F5C518', fn: () => x.tarefa_id && abrirTarefa(x.tarefa_id), dur: x.nivel === 'alta' ? 9000 : 6000 }), i * 400));
+      if (novas.length > 4) toast(`+${novas.length - 4} outras notificações`, { cor:'#F5C518', fn: abrirNotif });
+      novas.forEach(x => { if (x.tarefa_id && (x.tipo === 'atribuida')) NOVAS_TAREFAS.add(x.tarefa_id); });
+      som(novas.some(x => x.nivel === 'alta'));
+      const sino = $('bt-sino'); sino.classList.remove('shake'); void sino.offsetWidth; sino.classList.add('shake');
+      if (document.hidden){ piscarTitulo(novas.length); avisoSistema(novas); }
+    }
+  }
+  if ($('np').classList.contains('on')) renderNotif();
+  atualizarTitulo();
+}
+function atualizarTitulo(){
+  const n = D && AUTH.logged ? D.notificacoes.nao_lidas : 0;
+  const sino = $('bt-sino');
+  sino.innerHTML = '🔔' + (n ? `<span class="badge">${n > 99 ? '99+' : n}</span>` : '');
+  if (!PISCA) document.title = (n ? `(${n}) ` : '') + 'Central de Tarefas · BPFRON';
+  desenharFavicon(n);
+}
+/* Ícone da aba com o número de notificações (desenhado na hora). */
+const FAV_IMG = new Image(); FAV_IMG.src = 'LOGOS/bpfron_transp.png';
+function desenharFavicon(n){
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d');
+    if (FAV_IMG.complete && FAV_IMG.naturalWidth) g.drawImage(FAV_IMG, 0, 0, 64, 64);
+    else { g.fillStyle = '#F5C518'; g.beginPath(); g.arc(32, 32, 28, 0, 7); g.fill(); }
+    if (n){
+      g.fillStyle = '#e11d48'; g.beginPath(); g.arc(44, 20, 19, 0, 7); g.fill();
+      g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
+      g.fillStyle = '#fff'; g.font = 'bold 24px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(n > 9 ? '9+' : String(n), 44, 21);
+    }
+    $('favicon').href = c.toDataURL('image/png');
+  } catch(e){}
+}
+FAV_IMG.onload = () => atualizarTitulo();
+let PISCA = null;
+function piscarTitulo(qtd){
+  pararPisca();
+  let on = false;
+  PISCA = setInterval(() => { on = !on; document.title = on ? `🔔 ${qtd} nova${qtd > 1 ? 's' : ''} — Central de Tarefas` : `(${D.notificacoes.nao_lidas}) Central de Tarefas · BPFRON`; }, 1300);
+}
+function pararPisca(){ if (PISCA){ clearInterval(PISCA); PISCA = null; } atualizarTitulo(); }
+function somLigado(){ return lido('tar_som') !== '0'; }
+let AUDIO = null;
+function som(alto){
+  if (!somLigado()) return;
+  try {
+    AUDIO = AUDIO || new (window.AudioContext || window.webkitAudioContext)();
+    const notas = alto ? [880, 1174.7, 880] : [659.3, 987.8];
+    notas.forEach((f, i) => {
+      const o = AUDIO.createOscillator(), g = AUDIO.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      const t0 = AUDIO.currentTime + i * .14;
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.18, t0 + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + .28);
+      o.connect(g); g.connect(AUDIO.destination); o.start(t0); o.stop(t0 + .3);
+    });
+  } catch(e){}
+}
+function avisoSistema(novas){
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const x = novas[novas.length - 1];
+    const nt = new Notification(novas.length > 1 ? `${novas.length} novas na Central de Tarefas` : 'Central de Tarefas', { body: x.texto, icon:'LOGOS/bpfron_transp.png', tag:'tarefas-bpfron' });
+    nt.onclick = () => { window.focus(); if (x.tarefa_id) abrirTarefa(x.tarefa_id); nt.close(); };
+  } catch(e){}
+}
+$('bt-sino').addEventListener('click', (e) => { e.stopPropagation(); $('np').classList.contains('on') ? $('np').classList.remove('on') : abrirNotif(); });
+document.addEventListener('click', (e) => { if (!e.target.closest('#np') && !e.target.closest('#bt-sino')) $('np').classList.remove('on'); });
+function abrirNotif(){ $('np').classList.add('on'); renderNotif(); marcarLidas(); }
+async function marcarLidas(){
+  const n = D && D.notificacoes; if (!n || !n.nao_lidas) return;
+  const ate = n.itens[0] && n.itens[0].quando;
+  n.nao_lidas = 0; atualizarTitulo();
+  try { const r = await apiPost('/api/tarefas/notif/lida', { ate }); n.lido_ate = r.lido_ate; } catch(e){}
+}
+function renderNotif(){
+  const n = D.notificacoes;
+  const perm = 'Notification' in window ? Notification.permission : 'denied';
+  $('np').innerHTML = `<div class="nph"><b>🔔 Notificações</b><button class="linkbtn" id="np-som">${somLigado() ? '🔊 Som ligado' : '🔇 Som desligado'}</button></div>
+    <div class="npl">${n.itens.length ? n.itens.map(x => `<div class="ni ${x.quando > (NOTIF_LIDO_ANTES || '') ? 'nova' : ''} ${x.nivel === 'alta' ? 'alta' : ''}" data-nt="${esc(x.tarefa_id)}">
+      ${x.de ? av(x.de, '') : `<span class="av" style="background:#334155">${ICONE_NOTIF[x.tipo] || '🔔'}</span>`}<div class="tx">${esc(x.texto)}<small>${ICONE_NOTIF[x.tipo] || ''} ${esc(rel(x.quando))}</small></div></div>`).join('')
+      : '<div class="vazio"><span class="big">🔕</span>Nenhuma notificação ainda.<br>Quando delegarem algo para você, aparece aqui.</div>'}</div>
+    <div class="npf">${perm === 'default' ? '<button class="btn sm" id="np-perm">🖥️ Avisar também no computador</button>' : perm === 'granted' ? '<span style="font-size:12px;color:#6ee7b7">🖥️ Alerta no computador ligado</span>' : ''}<span style="flex:1"></span><span style="font-size:12px;color:var(--dim)">últimas ${n.itens.length}</span></div>`;
+  qsa('[data-nt]', $('np')).forEach(el => el.onclick = () => { if (el.dataset.nt){ $('np').classList.remove('on'); abrirTarefa(el.dataset.nt); } });
+  $('np-som').onclick = () => { lembrar('tar_som', somLigado() ? '0' : '1'); if (somLigado()) som(false); renderNotif(); };
+  const pb = $('np-perm'); if (pb) pb.onclick = async () => { try { await Notification.requestPermission(); } catch(e){} renderNotif(); };
+}
+let NOTIF_LIDO_ANTES = '';
+const _abrirNotif = abrirNotif;
+abrirNotif = function(){ NOTIF_LIDO_ANTES = (D && D.notificacoes.lido_ate) || ''; _abrirNotif(); };
+
+/* Alerta de prazo: uma vez por dia, por tarefa, ao abrir a página. */
+function alertasDePrazo(){
+  const chave = 'tar_alerta_' + diaRO();
+  let ja = {}; try { ja = JSON.parse(lido(chave) || '{}'); } catch(e){}
+  const mins = D.tarefas.filter(t => minha(t) && t.status !== 'CONCLUIDA' && t.ativo !== 'NAO');
+  const avisar = mins.filter(t => { const pz = prazoInfo(t) || {}; return (pz.atrasada || pz.hoje) && !ja[t.id]; }).slice(0, 3);
+  avisar.forEach((t, i) => { ja[t.id] = 1; const pz = prazoInfo(t); setTimeout(() => toast(`${pz.atrasada ? '⏰ Atrasada' : '⏳ Vence hoje'}: “${t.titulo}”`, { cor: pz.atrasada ? '#e66767' : '#d95926', fn: () => abrirTarefa(t.id), dur: 9000 }), 1400 + i * 500); });
+  try { localStorage.setItem(chave, JSON.stringify(ja)); } catch(e){}
+}
+
+/* ---------- toast ---------- */
+function toast(txt, o){
+  o = o || {};
+  const el = document.createElement('div');
+  el.className = 'toast'; el.style.setProperty('--c', o.cor || '#F5C518');
+  el.innerHTML = `${o.ic ? `<span>${o.ic}</span>` : ''}<span style="flex:1">${esc(txt)}</span><button class="x" aria-label="Fechar">✕</button>`;
+  const fora = () => { el.classList.add('sai'); setTimeout(() => el.remove(), 350); };
+  el.querySelector('.x').onclick = (e) => { e.stopPropagation(); fora(); };
+  el.onclick = () => { if (o.fn) o.fn(); fora(); };
+  $('toasts').appendChild(el);
+  while ($('toasts').children.length > 5) $('toasts').firstChild.remove();
+  setTimeout(fora, o.dur || 5000);
+}
+
+/* ---------- confete (conclusão) ---------- */
+function confete(qtd){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = $('confete'), g = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cores = ['#F5C518','#199e70','#3987e5','#d95926','#9085e9','#e66767'];
+  const ps = Array.from({ length: qtd || 140 }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .45, vx: (Math.random() - .5) * 16, vy: -Math.random() * 15 - 5, r: Math.random() * 6 + 4, c: cores[Math.random() * cores.length | 0], a: Math.random() * 6, va: (Math.random() - .5) * .4 }));
+  const t0 = performance.now();
+  const f = (t) => {
+    g.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => { p.vy += .45; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.c; g.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); g.restore(); });
+    if (t - t0 < 2200) requestAnimationFrame(f); else g.clearRect(0, 0, cv.width, cv.height);
+  };
+  requestAnimationFrame(f);
+}
+
+/* ============================== IMPRESSÃO ============================== */
+function cabecalhoRel(titulo, extra){
+  return `<div class="rc"><img src="LOGOS/bpfron_transp.avif" alt=""><div><h1>${esc(titulo)}</h1><div class="meta">BPFRON/RO · Central de Tarefas · emitido em ${esc(new Date(agora()).toLocaleString('pt-BR', { timeZone:'America/Porto_Velho' }))} por ${esc(EU().nome)}${extra ? ' · ' + esc(extra) : ''}</div></div></div>`;
+}
+function imprimir(html){ $('relatorio').innerHTML = html; setTimeout(() => window.print(), 250); }
+function imprimirLista(titulo, lista){
+  const l = [...lista].sort(ordenaUrg);
+  imprimir(cabecalhoRel(titulo, F.secao ? secaoDe(F.secao).nome : 'todas as seções visíveis') +
+    `<div class="res">${ST.map(s => `<span><b>${l.filter(t => t.status === s.id).length}</b> ${s.nome}</span>`).join('')}<span><b>${l.filter(t => (prazoInfo(t) || {}).atrasada).length}</b> atrasadas</span></div>
+    <table><thead><tr><th>Nº</th><th>Tarefa</th><th>Seção</th><th>Responsáveis</th><th>Prioridade</th><th>Prazo</th><th>Situação</th><th>%</th><th>Ciência</th></tr></thead><tbody>
+    ${l.map(t => { const pz = prazoInfo(t); return `<tr><td>${t.num}</td><td>${esc(t.titulo)}${ehProc(t) ? ' (' + esc(nomeTipo(t)) + ')' : ''}</td><td>${esc(t.secao)}</td><td>${esc((t.responsaveis || []).map(nomeDe).join(', '))}</td><td>${esc(PRIO[t.prioridade].nome)}</td><td>${t.prazo ? esc(fData(t.prazo, true)) : '—'}${pz && pz.atrasada ? ' ⚠ ATRASADA' : ''}</td><td>${esc(STm[t.status].nome)}</td><td>${t.progresso}%</td><td>${esc((t.responsaveis || []).map(r => { const c = (t.ciencia || {})[r] || {}; return c.ciente ? 'ciente' : c.visto ? 'viu' : 'não abriu'; }).join(', '))}</td></tr>`; }).join('')}
+    </tbody></table>`);
+}
+function imprimirProc(lista){
+  imprimir(cabecalhoRel('Relatório de procedimentos', FP.tipo ? (TIPOS_PROC[FP.tipo] || {}).longo : 'todos os tipos') +
+    `<div class="res"><span><b>${lista.filter(t => t.status !== 'CONCLUIDA').length}</b> em curso</span><span><b>${lista.filter(t => t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada).length}</b> com prazo vencido</span><span><b>${lista.filter(t => t.status === 'CONCLUIDA').length}</b> solucionados</span></div>
+    <table><thead><tr><th>Tipo / Nº</th><th>Objeto</th><th>Encarregado</th><th>Instauração</th><th>Prazo</th><th>Prorrog.</th><th>Fase</th><th>Diligências</th><th>Situação</th></tr></thead><tbody>
+    ${lista.map(t => { const e = t.extra || {}; const pz = prazoInfo(t); const fi = FASES.find(f => f.id === e.fase); return `<tr><td>${esc(nomeTipo(t))}${e.numero ? ' ' + esc(e.numero) : ''}${e.sei ? '<br>SEI ' + esc(e.sei) : ''}</td><td>${esc(t.titulo)}</td><td>${esc((t.responsaveis || []).map(nomeDe).join(', '))}</td><td>${esc(fData(e.instauracao, true))}</td><td>${esc(fData(t.prazo, true))}${pz && pz.atrasada ? ' ⚠ VENCIDO' : ''}</td><td>${(e.prorrogacoes || []).length || '—'}</td><td>${esc(fi ? fi.nome : '')}</td><td>${t.progresso}%</td><td>${esc(STm[t.status].nome)}</td></tr>`; }).join('')}
+    </tbody></table><div class="ass">______________________________________<br>Chefe da Seção</div>`);
+}
+function imprimirPainel(secs, base){
+  imprimir(cabecalhoRel('Resumo da chefia', FPN ? secaoDe(FPN).nome : 'seções acompanhadas') +
+    `<table><thead><tr><th>Seção</th>${ST.map(s => `<th>${s.nome}</th>`).join('')}<th>Atrasadas</th><th>Total</th></tr></thead><tbody>
+    ${(FPN ? secs.filter(s => s.id === FPN) : secs).map(s => { const ts = base.filter(t => t.secao === s.id); return `<tr><td>${esc(s.nome)}</td>${ST.map(x => `<td>${ts.filter(t => t.status === x.id).length}</td>`).join('')}<td>${ts.filter(t => t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada).length}</td><td>${ts.length}</td></tr>`; }).join('')}
+    </tbody></table><h3 style="margin:16px 0 6px;font-size:12pt">Tarefas atrasadas</h3>
+    <table><thead><tr><th>Nº</th><th>Tarefa</th><th>Seção</th><th>Responsáveis</th><th>Prazo</th><th>%</th></tr></thead><tbody>
+    ${base.filter(t => t.status !== 'CONCLUIDA' && (prazoInfo(t) || {}).atrasada).map(t => `<tr><td>${t.num}</td><td>${esc(t.titulo)}</td><td>${esc(t.secao)}</td><td>${esc((t.responsaveis || []).map(nomeDe).join(', '))}</td><td>${esc(fData(t.prazo, true))}</td><td>${t.progresso}%</td></tr>`).join('') || '<tr><td colspan="6">Nenhuma.</td></tr>'}
+    </tbody></table>`);
+}
+
+/* ============================== atalhos, busca, link ============================== */
+$('busca').addEventListener('input', (e) => {
+  F.busca = e.target.value;
+  if (VIEW !== 'quadro' && VIEW !== 'calendario' && VIEW !== 'proc') VIEW = 'quadro';
+  clearTimeout(window._tb); window._tb = setTimeout(() => { qsa('.nb').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW)); render(); }, 180);
+});
+$('bt-novo').addEventListener('click', () => VIEW === 'proc' ? novoProc() : abrirForm());
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape'){
+    if ($('md2').classList.contains('on')) return fecharMd2();
+    if ($('md').classList.contains('on')) return fecharForm();
+    if ($('np').classList.contains('on')) return $('np').classList.remove('on');
+    if ($('dw').classList.contains('on')) return fecharGaveta();
+  }
+  const digitando = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (digitando || !D || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === '/'){ e.preventDefault(); $('busca').focus(); }
+  if (e.key === 'n' || e.key === 'N'){ if (secoesQuePossoCriar().length){ e.preventDefault(); abrirForm(); } }
+});
+/* tarefas.html#t=ID abre a tarefa (link mandado por WhatsApp, por exemplo). */
+function abrirPeloEndereco(){ const m = location.hash.match(/#t=([A-Z0-9]+)/i); if (m) abrirTarefa(m[1]); }
+window.addEventListener('hashchange', () => { if (D) abrirPeloEndereco(); });
+
+boot();
+</script>
+</body>
+</html>
