@@ -84,6 +84,8 @@ input,select,textarea{font-family:inherit}
 .hdr .sp{flex:1}
 .busca{position:relative;flex:0 1 360px;min-width:0}
 .busca input{width:100%;background:rgba(148,163,184,.08);border:1px solid var(--border);border-radius:12px;padding:10px 12px 10px 36px;color:var(--t2);font-size:14.5px;outline:none;transition:.2s}
+.busca input{-webkit-appearance:none;appearance:none}
+.busca input::-webkit-search-cancel-button,.busca input::-webkit-search-decoration{-webkit-appearance:none;display:none}
 .busca input:focus{border-color:rgba(245,197,24,.5);background:rgba(148,163,184,.12)}
 .busca::before{content:'🔎';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7}
 .busca kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--dim);border:1px solid var(--border);border-radius:6px;padding:1px 6px}
@@ -703,7 +705,8 @@ input[type=range]{width:100%;accent-color:#3987e5}
       <div><b>Central de <em>Tarefas</em></b><small>BPFRON · delegação, prazos e andamento</small></div>
     </a>
     <div class="sp"></div>
-    <label class="busca hide" id="busca-wrap"><input id="busca" placeholder="Buscar tarefa, nº, SEI, pessoa…" autocomplete="off"><kbd>/</kbd></label>
+    <!-- form próprio: sem ele o Chrome junta a busca com os campos de senha e preenche o usuário salvo aqui -->
+    <form role="search" onsubmit="return false" autocomplete="off" style="display:contents"><label class="busca hide" id="busca-wrap"><input id="busca" type="search" name="busca_tarefas" placeholder="Buscar tarefa, nº, SEI, pessoa…" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"><kbd>/</kbd></label></form>
     <button class="icobtn" id="bt-tema" title="Tema (claro, escuro, colorido…)" aria-label="Escolher o tema">🎨</button>
     <span class="vivo-chip off hide" id="vivo-chip" title="Ao vivo"><i></i><span id="vivo-n">—</span></span>
     <button class="icobtn hide" id="bt-sino" title="Notificações" aria-label="Notificações">🔔</button>
@@ -731,7 +734,7 @@ input[type=range]{width:100%;accent-color:#3987e5}
     <h2>Central de Tarefas</h2>
     <p>Cada um vê só a própria seção — o acesso é liberado pelo administrador.</p>
     <div class="seg" style="display:flex;margin-bottom:16px"><button id="lg-tab-re" class="on" style="flex:1">🪪 Entrar com RE</button><button id="lg-tab-dash" style="flex:1">🔑 Login do dashboard</button></div>
-    <div id="lg-re">
+    <form id="lg-re" onsubmit="return false">
       <div class="fg"><label>RE (5 dígitos)</label><input class="inp" id="f-re" inputmode="numeric" autocomplete="username" maxlength="9" placeholder="Ex.: 12345"></div>
       <div class="fg" style="margin-top:12px" id="lg-re-senha-wrap"><label>Senha</label><input class="inp" id="f-resenha" type="password" autocomplete="current-password"></div>
       <div id="lg-pa" class="hide" style="margin-top:12px">
@@ -740,15 +743,15 @@ input[type=range]{width:100%;accent-color:#3987e5}
         <div class="fg" style="margin-top:12px"><label>Crie sua senha (mín. 6)</label><input class="inp" id="f-nova" type="password" autocomplete="new-password"></div>
         <div class="fg" style="margin-top:12px"><label>Repita a senha</label><input class="inp" id="f-nova2" type="password" autocomplete="new-password"></div>
       </div>
-      <button class="btn xl" id="btn-entrar-re" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
-      <button class="linkbtn" id="lg-primeiro" style="display:block;margin:12px auto 0">Primeiro acesso? Toque aqui</button>
-    </div>
-    <div id="lg-dash" class="hide">
-      <div class="fg"><label>Usuário</label><input class="inp" id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
-      <div class="fg" style="margin-top:12px"><label>Senha</label><input class="inp" id="f-pass" type="password" autocomplete="current-password"></div>
-      <button class="btn xl" id="btn-entrar" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
+      <button type="button" class="btn xl" id="btn-entrar-re" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
+      <button type="button" class="linkbtn" id="lg-primeiro" style="display:block;margin:12px auto 0">Primeiro acesso? Toque aqui</button>
+    </form>
+    <form id="lg-dash" class="hide" onsubmit="return false">
+      <div class="fg"><label>Usuário</label><input class="inp" id="f-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="fg" style="margin-top:12px"><label>Senha</label><input class="inp" id="f-pass" name="password" type="password" autocomplete="current-password"></div>
+      <button type="button" class="btn xl" id="btn-entrar" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
       <p style="font-size:12.5px;margin:10px 0 0">Quem já tem usuário do dashboard entra aqui, com a mesma senha.</p>
-    </div>
+    </form>
     <div class="msg" id="msg-login"></div>
   </div>
 </div>
@@ -1222,9 +1225,9 @@ function render(){
 /* Quem entra pelo RE troca a própria senha aqui. */
 function trocarMinhaSenha(){
   modalSimples('🔐 Trocar a minha senha', `
-    <div class="fg"><label>Senha atual</label><input class="inp" type="password" id="ms-atual" autocomplete="current-password"></div>
+    <form onsubmit="return false"><div class="fg"><label>Senha atual</label><input class="inp" type="password" id="ms-atual" autocomplete="current-password"></div>
     <div class="fg" style="margin-top:10px"><label>Senha nova (mín. 6)</label><input class="inp" type="password" id="ms-nova" autocomplete="new-password"></div>
-    <div class="fg" style="margin-top:10px"><label>Repita a senha nova</label><input class="inp" type="password" id="ms-nova2" autocomplete="new-password"></div>
+    <div class="fg" style="margin-top:10px"><label>Repita a senha nova</label><input class="inp" type="password" id="ms-nova2" autocomplete="new-password"></div></form>
     <div class="msg" id="ms-msg"></div>`,
     [{ txt:'Trocar', cls:'btn', fn: async (b) => {
       const m = $('ms-msg'); m.className = 'msg err';
@@ -2470,8 +2473,8 @@ function prorrogar(t){
 }
 function arquivar(t){
   modalSimples('🗄️ Arquivar tarefa', `<p style="color:var(--muted);font-size:14px;margin-bottom:12px">“${esc(t.titulo)}” sai dos quadros, mas <b style="color:var(--t2)">nada é apagado</b>: a linha e o histórico continuam guardados. Por segurança, confirme com a <b style="color:var(--t2)">sua senha</b>.</p>
-    <div class="fg"><label>Sua senha <i>*</i></label><input class="inp" type="password" id="aq-senha" autocomplete="current-password"></div>
-    <div class="fg" style="margin-top:10px"><label>Motivo (opcional)</label><input class="inp" id="aq-mot" maxlength="300"></div><div class="msg" id="aq-msg"></div>`,
+    <form onsubmit="return false"><div class="fg"><label>Sua senha <i>*</i></label><input class="inp" type="password" id="aq-senha" autocomplete="current-password"></div>
+    <div class="fg" style="margin-top:10px"><label>Motivo (opcional)</label><input class="inp" id="aq-mot" maxlength="300" autocomplete="off"></div></form><div class="msg" id="aq-msg"></div>`,
     [{ txt:'Arquivar', cls:'btn perigo', fn: async (btn) => {
       btn.disabled = true;
       try { await acao(t.id, 'arquivar', { senha: $('aq-senha').value, motivo: $('aq-mot').value }); fecharMd2(); fecharGaveta(); toast('🗄️ Tarefa arquivada.', { cor:'#64748b' }); carregar(true); }
@@ -3168,7 +3171,12 @@ function imprimirPainel(secs, base){
 }
 
 /* ============================== atalhos, busca, link ============================== */
+/* Se o navegador preencher a busca sozinho (usuário salvo), apaga e não filtra. */
+function buscaAutopreenchida(el){ try { return el.matches(':-webkit-autofill') || el.matches(':autofill'); } catch(e){ try { return el.matches(':-webkit-autofill'); } catch(e2){ return false; } } }
+function limpaBuscaAuto(){ const b = $('busca'); if (b.value && buscaAutopreenchida(b)){ b.value = ''; if (F.busca){ F.busca = ''; render(); } } }
+[300, 1200, 3000].forEach(ms => setTimeout(limpaBuscaAuto, ms));
 $('busca').addEventListener('input', (e) => {
+  if (buscaAutopreenchida(e.target)){ e.target.value = ''; if (!F.busca) return; }
   F.busca = e.target.value;
   if (VIEW !== 'quadro' && VIEW !== 'calendario' && VIEW !== 'proc') VIEW = 'quadro';
   clearTimeout(window._tb); window._tb = setTimeout(() => { qsa('.nb').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW)); render(); }, 180);
