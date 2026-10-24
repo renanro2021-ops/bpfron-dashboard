@@ -211,6 +211,16 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
             <small id="achou-sub"></small>
             <div class="bts"><button class="btn" id="bt-sou">✔ Sou eu</button><button class="btn sec" id="bt-nao">Não sou</button></div>
           </div>
+          <!-- login do dashboard sem RE: o próprio policial liga, confirmando com o CPF (uma vez só) -->
+          <div class="achou ja hide" id="ligar">
+            <small>Ligar o seu login do dashboard ao RE</small>
+            <b id="lg-quem"></b>
+            <p class="dica" id="lg-txt" style="margin-top:4px"></p>
+            <div id="lg-campo"><label class="lb" for="lg-conf" id="lg-lbl" style="margin-top:10px">4 últimos dígitos do CPF</label>
+              <input class="inp" id="lg-conf" autocomplete="off"></div>
+            <div class="msg err" id="lg-msg"></div>
+            <div class="bts"><button class="btn" id="bt-ligar">Ligar e entrar</button><button class="btn sec" id="bt-ligar-nao">Agora não</button></div>
+          </div>
         </div>
         <form id="ent-dash" class="hide" onsubmit="return false">
           <label class="lb" for="dl-user">Usuário</label>
@@ -301,13 +311,57 @@ async function procurarRE(){
 function nomeCurto(p){ return [p.posto, p.guerra || p.nome].filter(Boolean).join(' ').trim() || ('RE ' + re5(p.re)); }
 $('bt-re').onclick = procurarRE;
 $('re').addEventListener('keydown', (e) => { if (e.key === 'Enter') procurarRE(); });
-$('re').addEventListener('input', () => { vis('achou', false); ACHADO = null; $('re-msg').textContent = ''; });
-$('bt-nao').onclick = () => { vis('achou', false); ACHADO = null; $('re').value = ''; $('re').focus(); };
+$('re').addEventListener('input', () => { vis('achou', false); vis('ligar', false); ACHADO = null; $('re-msg').textContent = ''; });
+$('bt-nao').onclick = () => { vis('achou', false); vis('ligar', false); ACHADO = null; $('re').value = ''; $('re').focus(); };
 $('bt-sou').onclick = () => {
   if (!ACHADO) return;
+  if (LIGAR && ls.get('bp_token')) return pedirLigacao();
   EU = ACHADO; ls.set(LS_EU, JSON.stringify(EU));
   iniciar();
 };
+
+/* login do dashboard ainda sem RE (LIGAR = {login, nome}): depois do "Sou eu",
+   confirma com o CPF (ou nascimento) e liga para sempre — /api/portal/ligar */
+let LIGAR = null;
+const postLigar = (corpo) => fetch(API + '/api/portal/ligar', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (ls.get('bp_token') || '') }, body: JSON.stringify(corpo) })
+  .then(async (r) => ({ st: r.status, d: await r.json().catch(() => ({})) }));
+function entrarComo(eu){ EU = eu; LIGAR = null; ls.set(LS_EU, JSON.stringify(EU)); vis('ligar', false); iniciar(); }
+async function pedirLigacao(){
+  vis('achou', false); $('lg-msg').textContent = ''; $('lg-conf').value = '';
+  $('lg-quem').textContent = `${LIGAR.login} → ${nomeCurto(ACHADO)}`;
+  vis('lg-campo', true); vis('bt-ligar', true); $('bt-ligar-nao').textContent = 'Agora não';
+  $('lg-txt').textContent = 'Carregando…'; vis('ligar', true);
+  const { d } = await postLigar({ re: ACHADO.re }).catch(() => ({ d: { detail: 'Não foi possível conectar ao servidor.' } }));
+  if (d.ligado) return entrarComo(euDoPortal({ ...d, login: LIGAR.login }) || ACHADO);
+  if (d.precisa){
+    const cpf = d.precisa === 'cpf4';
+    $('lg-lbl').textContent = cpf ? '4 últimos dígitos do CPF' : 'Sua data de nascimento';
+    $('lg-conf').placeholder = cpf ? 'Ex.: 1234' : 'dd/mm/aaaa';
+    $('lg-conf').inputMode = cpf ? 'numeric' : 'text';
+    $('lg-txt').textContent = `É uma vez só: confirme com ${cpf ? 'os 4 últimos dígitos do seu CPF' : 'a sua data de nascimento'} e, nas próximas vezes, o login ${LIGAR.login} já entra como você — com a ficha sem pedir o CPF.`;
+    setTimeout(() => { $('lg-conf').focus(); $('ligar').scrollIntoView({ block: 'center' }); }, 30);
+    return;
+  }
+  // não dá para ligar por aqui (RE já ligado a outro acesso, cadastro sem CPF…): entra assim mesmo
+  $('lg-txt').textContent = d.detail || 'Não foi possível ligar agora.';
+  vis('lg-campo', false); vis('bt-ligar', false); $('bt-ligar-nao').textContent = 'Entrar assim mesmo';
+}
+async function confirmarLigacao(){
+  const conf = $('lg-conf').value.trim(), m = $('lg-msg');
+  m.textContent = '';
+  if (!conf){ m.textContent = 'Preencha a confirmação.'; $('lg-conf').focus(); return; }
+  const b = $('bt-ligar'); b.disabled = true; b.textContent = 'Ligando…';
+  try {
+    const { d } = await postLigar({ re: ACHADO.re, confirma: conf });
+    if (d.ligado) return entrarComo(euDoPortal({ ...d, login: LIGAR.login }) || ACHADO);
+    m.textContent = d.detail || 'Não foi possível ligar.';
+  } catch(e){ m.textContent = 'Não foi possível conectar ao servidor.'; }
+  finally { b.disabled = false; b.textContent = 'Ligar e entrar'; }
+}
+$('bt-ligar').onclick = confirmarLigacao;
+$('lg-conf').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarLigacao(); });
+$('lg-conf').addEventListener('input', () => { $('lg-msg').textContent = ''; });
+$('bt-ligar-nao').onclick = () => { if (ACHADO) entrarComo(ACHADO); };
 
 /* ============================== entrar com o login do dashboard ==============================
    O RE vem da Central de Tarefas (o administrador liga o login ao RE na Designação).
@@ -337,9 +391,10 @@ async function entrarDash(){
     $('dl-pass').value = '';
     const eu = euDoPortal(await getJ('/api/portal/eu', { headers: { Authorization: 'Bearer ' + d.token } }).catch(() => null));
     if (eu){ EU = eu; ls.set(LS_EU, JSON.stringify(EU)); iniciar(); return; }
+    LIGAR = { login: d.user, nome: d.nome || d.user };
     abaEntrada(false);
     $('re-msg').className = 'msg info';
-    $('re-msg').textContent = `Você entrou como ${d.nome || d.user}, mas esse login ainda não está ligado a um RE. Digite o seu RE para continuar.`;
+    $('re-msg').textContent = `Você entrou como ${d.nome || d.user}. Falta ligar esse login ao seu RE (é uma vez só): digite o seu RE.`;
   } catch(e){ m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
   finally { b.disabled = false; b.textContent = 'Entrar'; }
 }
@@ -592,7 +647,7 @@ function iniciar(){
   vis('eu', !!EU); vis('tabs', !!EU); vis('v-entrar', !EU); vis('v-inicio', false);
   ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, false));
   vis('main', true);
-  if (!EU){ $('re').value = ''; vis('achou', false); $('re-msg').textContent = ''; abaEntrada(false); jaLogadoDash(); return; }
+  if (!EU){ $('re').value = ''; vis('achou', false); vis('ligar', false); LIGAR = null; $('re-msg').textContent = ''; abaEntrada(false); jaLogadoDash(); return; }
   $('eu-nm').textContent = nomeCurto(EU);
   $('eu-av').textContent = (EU.guerra || EU.nome || 'PM').trim().slice(0, 2).toUpperCase();
   const h = (location.hash || '').slice(1);
