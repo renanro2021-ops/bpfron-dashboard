@@ -773,9 +773,11 @@ const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;' + FONT
 function celula(txt, extra, attrs){ return `<td style="${TD}${extra || ''}"${attrs ? ' ' + attrs : ''}>${txt}</td>`; }
 function larg(px){ return [`width:${px}px;`, `width="${px}"`]; }
 function tabela(cols){
-  // align="center" é o que o próprio SEI grava ao centralizar pelo "Formatar Tabela";
-  // o margin auto sozinho o editor do SEI descarta ao colar (tabela ia para a esquerda).
-  return `<table align="center" border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;margin-left:auto;margin-right:auto;${FONTE}">`
+  // Centraliza SÓ com align="center" (o que o "Formatar Tabela" do SEI grava).
+  // NUNCA pôr margin-left/right:auto: o filtro de colagem do SEI (pastefromword)
+  // troca "auto" por "0px", e esse estilo vence o align — a tabela ia para a
+  // esquerda. Conferido colando de verdade no editor do SEI em 26/10/2026.
+  return `<table align="center" border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;${FONTE}">`
     + '<colgroup>' + cols.map(w => `<col width="${w}" style="width:${w}px">`).join('') + '</colgroup>';
 }
 function linhasEsquerda(){
