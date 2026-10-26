@@ -143,7 +143,7 @@ a.btn{text-decoration:none}
 <script>
 /* ======================================================================
    Sala de reunião — front. Esta página é só o lançador: login, lista de salas
-   e link de convidado. A reunião em si roda no meet.jit.si, em outra aba.
+   e link de convidado. A reunião em si roda no meet.ffmuc.net, em outra aba.
    Backend: backend/sala.js. ?api=http://127.0.0.1:8787 aponta pra Worker local.
    ====================================================================== */
 const API_BASE = (function(){
@@ -320,13 +320,15 @@ $('lb-salas').addEventListener('click', async ev => {
 });
 
 /* ======================== ABRIR A REUNIÃO (Jitsi) ========================
-   O áudio/vídeo roda no meet.jit.si, em aba própria — de propósito, não
-   embutido: desde 18/05/2023 o meet.jit.si corta em 5 minutos a reunião que
-   está dentro do site de outro. Esta página é o lançador — cuida do login,
-   das salas e do link de convidado. O nome da sala no Jitsi é sorteado pelo
-   Worker (18 caracteres), então ninguém de fora cai na reunião por acaso.
+   O áudio/vídeo roda num servidor Jitsi público, em aba própria. Esta página é
+   o lançador — cuida do login, das salas e do link de convidado. O nome da
+   sala no Jitsi é sorteado pelo Worker (18 caracteres), então ninguém de fora
+   cai na reunião por acaso.
+   Servidor: meet.ffmuc.net (Freifunk München, grátis, sem conta, até 70 por
+   sala). Saímos do meet.jit.si em 26/10/2026 porque ele corta toda reunião em
+   95 min desde 09/10/2026. Para trocar de servidor, mude só a linha abaixo.
    ======================================================================== */
-const JITSI = 'https://meet.jit.si/';
+const JITSI = 'https://meet.ffmuc.net/';
 
 function urlJitsi(d){
   // Os parâmetros depois do # são valores JavaScript: texto precisa das aspas.
@@ -348,9 +350,7 @@ function entrarNaSala(d){
   $('ab-tit').textContent = d.sala.nome;
   $('ab-txt').textContent = 'Você entra como ' + d.eu.nome + '. A reunião abre em outra aba, com câmera e microfone desligados.';
   $('ab-ir').href = urlJitsi(d);
-  $('ab-dica').textContent = d.eu.mod
-    ? 'Na primeira vez o Jitsi pede login com conta Google — isso vale só para quem abre a sala. Os convidados entram direto pelo link.'
-    : 'Se aparecer "aguardando o organizador", é porque o moderador ainda não abriu a sala.';
+  $('ab-dica').textContent = 'Não precisa de conta nem de aplicativo: entra direto pelo navegador. Para mostrar a tela, use o botão do monitor na barra de baixo.';
   $('ab-voltar').classList.toggle('hidden', d.eu.tipo === 'convidado');
   view('v-abrir');
 }
