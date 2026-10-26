@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Conceito · BPFRON/RO</title>
+<script src="conta.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --gold:#c9a030;
+  --text:#dde3f0; --muted:#94a3b8; --border:rgba(245,197,24,.12);
+  --card:rgba(12,17,30,.88); --line:#1e2535; --ok:#4ade80; --bad:#f87171; --no:#a78bfa;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12) 0%,transparent 60%),linear-gradient(180deg,rgba(245,197,24,.03) 0%,transparent 40%);background-attachment:fixed}
+button{font-family:inherit}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff}
+.hdr-title em{font-style:normal;color:var(--yellow)}
+.hdr-sub{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+#chip{font-size:13.5px;color:var(--yellow);font-weight:600}
+.lnk{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline}
+
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px 120px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.msg{font-size:14px;margin-top:10px;min-height:18px}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+
+/* login */
+#tela-login{max-width:400px;margin:40px auto}
+#tela-login h2{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;margin-bottom:6px}
+#tela-login p{color:var(--muted);font-size:14px;margin-bottom:14px}
+.campo{display:block;margin-top:10px}
+.campo span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{font-family:inherit;font-size:16px;background:#020617;border:1px solid #334155;border-radius:9px;color:#f1f5f9;padding:9px 11px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
+.bt{border:0;border-radius:10px;padding:11px 16px;font-size:14.5px;font-weight:700;cursor:pointer;background:#1e293b;color:#e2e8f0;white-space:nowrap}
+.bt:hover{filter:brightness(1.15)}
+.bt.pri{background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.bt.ok{background:#16a34a;color:#fff}
+.bt.perigo{background:transparent;border:1px solid rgba(248,113,113,.5);color:var(--bad)}
+.bt:disabled{opacity:.5;cursor:default}
+.bt.sm{padding:7px 11px;font-size:13px;border-radius:8px}
+
+/* barra do quadrimestre */
+.barra{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.barra .campo{margin:0}
+.barra .prog{margin-left:auto;font-size:14px;color:var(--muted)}
+.barra .prog b{color:var(--yellow);font-size:18px}
+#aviso{display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.35);color:#fde68a;font-size:14px}
+
+.cols{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+.cols>*{min-width:0}
+/* lista */
+#lista-box{position:sticky;top:84px;max-height:calc(100vh - 100px);display:flex;flex-direction:column}
+.pilulas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.pil{border:1px solid #334155;background:transparent;color:var(--muted);border-radius:99px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.pil.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.6);color:var(--yellow)}
+#lista{overflow:auto;flex:1;margin:0 -6px;padding:0 6px}
+.pes{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:10px;padding:9px 10px;color:var(--text);cursor:pointer;margin-bottom:3px}
+.pes:hover{background:rgba(255,255,255,.04)}
+.pes.sel{background:rgba(245,197,24,.1);border-color:rgba(245,197,24,.45)}
+.pes .q{flex:1;min-width:0}
+.pes .n1{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pes .n2{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:12px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:99px}
+.st.feita{background:rgba(74,222,128,.13);color:var(--ok)}
+.st.meio{background:rgba(245,197,24,.13);color:var(--yellow)}
+.st.falta{color:#64748b}
+.sep{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:#64748b;margin:12px 4px 6px}
+
+/* editor */
+#vazio{text-align:center;padding:60px 20px;color:var(--muted)}
+#vazio .ic{font-size:42px;margin-bottom:8px}
+.voltar{display:none;margin-bottom:10px}
+.ident{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}
+.ident .campo{margin:0}
+.ident .largo{grid-column:1/-1}
+.ident .meio2{grid-column:span 2}
+.cab-ficha{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cab-ficha h2{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;line-height:1.15}
+.cab-ficha .sub{font-size:13px;color:var(--muted)}
+#rasc{display:none;font-size:12.5px;color:#fde68a;margin-top:4px}
+.rapido{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px dashed #334155;border-radius:10px;font-size:13.5px;color:var(--muted)}
+.rapido input{width:80px;text-align:center;padding:7px}
+
+.grupos{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.grupo{background:rgba(2,6,23,.5);border:1px solid var(--line);border-radius:12px;padding:12px 12px 6px}
+.grupo h3{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--yellow);margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
+.grupo h3 small{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);font-weight:500}
+.grupo h4{font-size:13px;color:#cbd5e1;margin:10px 0 4px;font-weight:700}
+.item{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(30,37,53,.7)}
+.item:last-child{border-bottom:0}
+.item label{flex:1;font-size:13.5px;min-width:0}
+.item input{width:66px;text-align:center;padding:6px 4px;font-size:16px;font-weight:700}
+.item input.inval{border-color:var(--bad);background:rgba(248,113,113,.08)}
+.item input.ehno{color:var(--no);border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.08)}
+.item.falta label{color:#fca5a5}
+.nob{border:1px solid #334155;background:transparent;color:#64748b;border-radius:7px;padding:6px 7px;font-size:11.5px;font-weight:800;cursor:pointer;width:38px}
+.nob.on{background:rgba(167,139,250,.18);border-color:var(--no);color:var(--no)}
+.just{margin-top:14px}
+.just textarea{min-height:130px;resize:vertical;font-size:15px;line-height:1.5}
+
+/* resumo fixo */
+#resumo{position:fixed;left:0;right:0;bottom:0;z-index:90;background:rgba(5,7,13,.96);border-top:2px solid rgba(245,197,24,.45);backdrop-filter:blur(10px);display:none}
+#resumo .in{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#resumo .final{display:flex;flex-direction:column;line-height:1.1}
+#resumo .final small{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+#resumo .final b{font-family:'Rajdhani',sans-serif;font-size:32px;color:var(--yellow)}
+#resumo .cont{font-size:13px;color:var(--muted)}
+#resumo .cont b{color:var(--text)}
+#resumo .acoes{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+/* prévia (como fica no SEI) */
+.previa-tit{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:22px 0 8px;flex-wrap:wrap}
+.previa-tit h3{font-family:'Rajdhani',sans-serif;font-size:18px;color:#fff}
+.papel{background:#fff;color:#000;border-radius:6px;padding:22px;overflow:auto;font-family:Calibri,Arial,sans-serif}
+
+/* modal */
+.ovl{position:fixed;inset:0;background:rgba(2,6,23,.8);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.ovl.on{display:flex}
+.ovl .card{max-width:400px;width:100%}
+.ovl h3{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff;margin-bottom:6px}
+.ovl p{font-size:14px;color:var(--muted)}
+.ovl .bts{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#0f172a;border:1px solid rgba(74,222,128,.5);color:#e2e8f0;padding:11px 18px;border-radius:12px;font-size:14px;z-index:300;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px);text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(248,113,113,.6)}
+
+@media(max-width:1100px){.grupos{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .papel{padding:10px}
+  .papel table{min-width:560px}
+  #lista-box{position:static;max-height:none}
+  body.editando #lista-box{display:none}
+  body:not(.editando) #editor{display:none}
+  .voltar{display:inline-block}
+  .ident{grid-template-columns:1fr 1fr}
+  .ident .meio2{grid-column:1/-1}
+  #resumo .final b{font-size:26px}
+  #resumo .acoes{margin-left:0;width:100%}
+  #resumo .acoes .bt{flex:1}
+  .barra .prog{margin-left:0;width:100%}
+  .hdr-sub{display:none}
+  #toast{bottom:auto;top:76px;transform:translateX(-50%) translateY(-20px)}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-brand">
+      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <div>
+        <div class="hdr-title">Ficha de <em>Conceito</em></div>
+        <div class="hdr-sub">Graduados · 3º SGT em diante · BPFRON/RO</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+      <span id="chip"></span>
+      <button class="lnk" id="bt-sair" style="display:none" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- login -->
+  <div class="card" id="tela-login" style="display:none">
+    <h2>🔐 Entrar</h2>
+    <p>Use o mesmo login do dashboard. Esta ferramenta é exclusiva do Comandante do Batalhão.</p>
+    <label class="campo"><span>Usuário</span><input id="lg-user" autocomplete="username" autocapitalize="off"></label>
+    <label class="campo"><span>Senha</span><input id="lg-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"></label>
+    <button class="bt pri" id="lg-bt" style="width:100%;margin-top:14px" onclick="entrar()">Entrar</button>
+    <div class="msg err" id="lg-msg"></div>
+  </div>
+
+  <!-- sem permissão -->
+  <div class="card" id="tela-negado" style="display:none;max-width:480px;margin:40px auto;text-align:center">
+    <div style="font-size:40px">⛔</div>
+    <h2 style="font-family:Rajdhani,sans-serif;color:#fff;margin:6px 0">Acesso restrito</h2>
+    <p style="color:var(--muted)">A Ficha de Conceito é de uso exclusivo do Comandante do Batalhão. O login <b id="neg-user"></b> não tem acesso.</p>
+    <button class="bt" style="margin-top:14px" onclick="sair()">Entrar com outro login</button>
+  </div>
+
+  <!-- ferramenta -->
+  <div id="tela-app" style="display:none">
+    <div class="barra">
+      <label class="campo"><span>Quadrimestre</span>
+        <select id="f-quad" onchange="trocarQuad()" style="width:auto">
+          <option value="1">1º quadrimestre</option>
+          <option value="2">2º quadrimestre</option>
+          <option value="3">3º quadrimestre</option>
+        </select>
+      </label>
+      <label class="campo"><span>Ano</span><input id="f-ano" type="number" min="2020" max="2099" style="width:100px" onchange="trocarQuad()"></label>
+      <button class="bt sm" onclick="iniciar()" title="Buscar de novo">🔄 Atualizar</button>
+      <div class="prog" id="prog"></div>
+    </div>
+    <div id="aviso"></div>
+
+    <div class="cols">
+      <div class="card" id="lista-box">
+        <input id="busca" placeholder="🔎 Buscar por nome, guerra ou RE" oninput="desenharLista()">
+        <div class="pilulas" id="pilulas"></div>
+        <div id="lista"><div style="color:var(--muted);padding:12px">Carregando o efetivo…</div></div>
+      </div>
+
+      <div id="editor">
+        <div class="card" id="vazio">
+          <div class="ic">📋</div>
+          <div>Selecione um graduado na lista para lançar o conceito.</div>
+        </div>
+        <div class="card" id="ficha" style="display:none">
+          <button class="bt sm voltar" onclick="fecharFicha()">⬅ Voltar à lista</button>
+          <div class="cab-ficha">
+            <div>
+              <h2 id="fx-tit"></h2>
+              <div class="sub" id="fx-sub"></div>
+              <div id="rasc">✏️ Há alterações ainda não salvas (guardadas só neste aparelho). <button class="lnk" onclick="descartarRascunho()">Descartar</button></div>
+            </div>
+            <button class="bt sm perigo" id="bt-excluir" onclick="abrirExcluir()">🗑️ Excluir ficha</button>
+          </div>
+
+          <div class="ident">
+            <label class="campo largo"><span>Nome</span><input id="fx-nome" oninput="mudou()"></label>
+            <label class="campo"><span>Graduação</span><input id="fx-grad" oninput="mudou()"></label>
+            <label class="campo"><span>Quadro</span><input id="fx-quadro" oninput="mudou()"></label>
+            <label class="campo"><span>RE</span><input id="fx-re" readonly style="opacity:.7"></label>
+            <label class="campo"><span>OPM</span><input id="fx-opm" oninput="mudou()"></label>
+            <label class="campo largo"><span>Período</span><input id="fx-periodo" oninput="mudou()"></label>
+          </div>
+
+          <div class="rapido">
+            ⚡ Preencher os itens <b>vazios</b> com
+            <input id="rap-nota" inputmode="decimal" placeholder="80" maxlength="6" onkeydown="if(event.key==='Enter')preencherVazios()">
+            <button class="bt sm" onclick="preencherVazios()">Aplicar</button>
+            <button class="bt sm" onclick="abrirLimpar()">Limpar notas</button>
+            <span style="flex-basis:100%;font-size:12.5px">Digite a nota de 0 a 100 em cada item. <b style="color:var(--no)">NO</b> = não observado (não entra na média). Também dá para digitar "no" na caixa. Enter passa para o próximo item.</span>
+          </div>
+
+          <div class="grupos" id="grupos"></div>
+
+          <label class="campo just"><span>Justificativas de conceito</span>
+            <textarea id="fx-just" oninput="mudou()" placeholder="Texto que vai em JUSTIFICATIVAS DE CONCEITO"></textarea>
+          </label>
+
+          <div class="previa-tit">
+            <h3>👁️ Como vai ficar no SEI</h3>
+            <button class="bt sm pri" onclick="copiar()">📋 Copiar para o SEI</button>
+          </div>
+          <div class="papel" id="previa"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="resumo">
+  <div class="in">
+    <div class="final"><small>Conceito final</small><b id="rs-media">—</b></div>
+    <div class="cont" id="rs-cont"></div>
+    <div class="acoes">
+      <button class="bt ok" id="bt-salvar" onclick="salvar()">💾 Salvar</button>
+      <button class="bt pri" onclick="copiar()">📋 Copiar para o SEI</button>
+    </div>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-excluir">
+  <div class="card">
+    <h3>🗑️ Excluir a ficha</h3>
+    <p>A ficha de <b id="ex-nome"></b> neste quadrimestre será apagada. Digite a sua senha para confirmar.</p>
+    <label class="campo"><span>Senha</span><input id="ex-senha" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')confirmarExcluir()"></label>
+    <div class="msg err" id="ex-msg"></div>
+    <div class="bts"><button class="bt" onclick="fecharOvl('ovl-excluir')">Cancelar</button><button class="bt perigo" id="ex-bt" onclick="confirmarExcluir()">Excluir</button></div>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-limpar">
+  <div class="card">
+    <h3>Limpar as notas?</h3>
+    <p>Todas as notas desta ficha ficam em branco (a justificativa continua).</p>
+    <div class="bts"><button class="bt" onclick="fecharOvl('ovl-limpar')">Cancelar</button><button class="bt perigo" onclick="limparNotas()">Limpar</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_BASE = (function(){
+  try { const q = new URLSearchParams(location.search).get('api'); if (q) return q.replace(/\/+$/, ''); } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const AUTH = {
+  get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
+  set token(t){ try{ t ? localStorage.setItem('bp_token', t) : localStorage.removeItem('bp_token'); }catch(e){} },
+  get user(){ try{ return localStorage.getItem('bp_user') || ''; }catch(e){ return ''; } },
+  set user(u){ try{ u ? localStorage.setItem('bp_user', u) : localStorage.removeItem('bp_user'); }catch(e){} },
+};
+function ls(k, v){
+  try{
+    if (v === undefined) return localStorage.getItem(k);
+    if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
+  }catch(e){}
+  return null;
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const $ = (id) => document.getElementById(id);
+
+/* ======================= Itens da ficha (igual ao Adendo do SEI) =======================
+   O id de cada item é fixo — é ele que fica gravado. Não renumerar. */
+const FICHA = [
+  { id:'I', titulo:'I – VALOR PROFISSIONAL', subs:[
+    { titulo:'a) Espírito Policial Militar', itens:[
+      ['pa1','1 - Entusiasmo pela profissão.'],['pa2','2 - Estado disciplinar'],['pa3','3 - Dedicação'],
+      ['pa4','4 - Tenacidade'],['pa5','5 - Camaradagem'],['pa6','6 - Coragem física'],
+      ['pa7','7 - Apresentação pessoal'],['pa8','8 - Pontualidade'],['pa9','9 - Assiduidade'],
+      ['pa10','10 - Cumprimento do dever'] ]},
+    { titulo:'b) Desempenho Funcional', itens:[
+      ['pb1','1 - Espírito de cooperação'],['pb2','2 - Interesse pelo serviço'],['pb3','3 - Capacidade de trabalho'],
+      ['pb4','4 - Disciplina intelectual'],['pb5','5 - Correção do trabalho'],['pb6','6 - Energia e perseverança'],
+      ['pb7','7 - Devotamento'],['pb8','8 - Conhecimentos profissionais'],['pb9','9 - Iniciativa'],
+      ['pb10','10 - Capacidade como monitor'],['pb11','11 - Desembaraço funcional'],['pb12','12 - Serenidade e equilíbrio'],
+      ['pb13','13 - Interesse pelos subordinados'],['pb14','14 - Zelo pelo material'] ]},
+    { titulo:'c) Comando de Fração de Tropa', itens:[
+      ['pc1','1 - Espírito de decisão'],['pc2','2 - Capacidade de liderança'],['pc3','3 - Senso de julgamento'] ]},
+  ]},
+  { id:'II', titulo:'II – VALOR MORAL', itens:[
+    ['m1','1 - Lealdade'],['m2','2 - Amor a verdade'],['m3','3 - Coragem moral'],['m4','4 - Probidade'],
+    ['m5','5 - Senso de responsabilidade'],['m6','6 - Estabilidade emocional'],['m7','7 - Espírito de renúncia'],
+    ['m8','8 - Projeção pessoal no meio Pol. Militar'] ]},
+  { id:'III', titulo:'III – VALOR INTELECTUAL', itens:[
+    ['in1','1 - Facilidade de apreensão'],['in2','2 - Memória'],['in3','3 - Facilidade de expressão oral'],
+    ['in4','4 - Expressão escrita'],['in5','5 - Objetividade'],['in6','6 - Conhecimentos gerais'],
+    ['in7','7 - Aproveitamento nos cursos'] ]},
+  { id:'IV', titulo:'IV – VALOR FÍSICO', itens:[
+    ['f1','1 - Valor físico'],['f2','2 - Disposição'],['f3','3 - Resistência a esforço prolongado'] ]},
+  { id:'V', titulo:'V – CONDUTA CIVIL', itens:[
+    ['c1','1 - Urbanidade'],['c2','2 - Correção nos compromissos'],['c3','3 - Vida familiar'],['c4','4 - Procedimento público'] ]},
+];
+const ITENS = [];
+FICHA.forEach(g => (g.subs ? g.subs.flatMap(s => s.itens) : g.itens).forEach(([id, txt]) => ITENS.push({ id, txt, g: g.id })));
+
+/* ======================= Cálculo =======================
+   Conceito final = média das notas dos itens avaliados. "NO" (não observado)
+   não entra nem na soma nem na quantidade. 3 casas decimais, como na ficha. */
+function lerNota(v){
+  if (v === 'NO') return 'NO';
+  const s = String(v == null ? '' : v).trim().replace(',', '.');
+  if (!s) return '';
+  if (/^n\.?o\.?$/i.test(s)) return 'NO';
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(s)) return null;      // inválida
+  const x = Number(s);
+  return x >= 0 && x <= 100 ? x : null;
+}
+function calcular(notas){
+  let soma = 0, n = 0, no = 0, vazios = [], invalidos = [];
+  ITENS.forEach(it => {
+    const v = lerNota(notas[it.id]);
+    if (v === 'NO') no++;
+    else if (v === '') vazios.push(it);
+    else if (v === null) invalidos.push(it);
+    else { soma += Math.round(v * 100); n++; }   // em centésimos: sem erro de vírgula flutuante
+  });
+  const media = n ? Math.round((soma * 10) / n) / 1000 : null;
+  return { media, n, no, vazios, invalidos };
+}
+function fmtMedia(m){ return m == null ? '—' : m.toFixed(3).replace('.', ','); }
+function fmtNota(v){
+  const x = lerNota(v);
+  if (x === 'NO') return 'NO';
+  if (x === '' || x === null) return '';
+  return String(x).replace('.', ',');
+}
+
+/* ======================= Graduação / quadrimestre ======================= */
+function gradOrdem(pg){
+  const s = String(pg || '').toUpperCase();
+  if (/SUB\s*-?\s*TEN|^\s*ST\b/.test(s)) return 0;
+  const m = s.match(/([123])\s*[º°ªO]?\s*SGT/);
+  return m ? Number(m[1]) : 4;
+}
+const GRAD_ROT = ['Subtenente','1º SGT','2º SGT','3º SGT','Outros'];
+function gradFicha(pg){
+  const o = gradOrdem(pg);
+  if (o === 0) return 'SUBTEN PM';
+  if (o >= 1 && o <= 3) return o + 'º SGT PM';
+  return String(pg || '').trim();
+}
+function quadroDe(pg){ const m = String(pg || '').toUpperCase().match(/\bQ[A-Z]{2,4}\b/); return m ? m[0] : 'QPPM'; }
+function quadPadrao(){
+  // Sugere o último quadrimestre já encerrado (1º fev–mai, 2º jun–set, 3º out–jan).
+  const d = new Date(), m = d.getMonth() + 1, a = d.getFullYear();
+  if (m === 1) return { q:2, a:a - 1 };
+  if (m <= 5) return { q:3, a:a - 1 };
+  if (m <= 9) return { q:1, a };
+  return { q:2, a };
+}
+function periodoPadrao(q, a){
+  if (q === 1) return `01 de fevereiro à 31 de maio de ${a}`;
+  if (q === 2) return `01 de junho à 30 de setembro de ${a}`;
+  return `01 de outubro de ${a} à 31 de janeiro de ${a + 1}`;
+}
+const QUAD = () => `${$('f-ano').value}-${$('f-quad').value}`;
+
+/* ======================= Estado ======================= */
+let EFETIVO = [];      // [{re,nome,guerra,posto_grad,opm}]
+let FICHAS = {};       // RE -> ficha salva no servidor
+let FILTRO = 'todos';
+let ATUAL = null;      // ficha aberta: {re, pessoa, nome, grad, quadro, opm, periodo, justificativa, notas}
+
+/* ======================= API ======================= */
+async function api(path, opt){
+  opt = opt || {};
+  const h = { 'Authorization':'Bearer ' + AUTH.token };
+  if (opt.body) h['Content-Type'] = 'application/json';
+  const r = await fetch(API_BASE + path, { method: opt.method || 'GET', headers: h, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ AUTH.token = ''; mostrar('login'); $('lg-msg').textContent = 'Sessão expirada. Entre de novo.'; const e = new Error('Sessão expirada. Entre de novo.'); e.tratado = true; throw e; }
+  if (r.status === 403 && d.error === 'forbidden'){ mostrar('negado'); const e = new Error(d.detail || 'Sem acesso.'); e.tratado = true; throw e; }
+  if (r.status === 404) throw new Error('A Ficha de Conceito ainda não foi publicada no servidor (a rota /api/conceito não existe lá). Publique o Worker para usar.');
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.code = d.error; throw e; }
+  return d;
+}
+
+function mostrar(qual){
+  $('tela-login').style.display = qual === 'login' ? '' : 'none';
+  $('tela-negado').style.display = qual === 'negado' ? '' : 'none';
+  $('tela-app').style.display = qual === 'app' ? '' : 'none';
+  $('resumo').style.display = qual === 'app' && ATUAL ? 'block' : 'none';
+  $('bt-sair').style.display = AUTH.token ? '' : 'none';
+  let nome = AUTH.user;
+  try { const p = JSON.parse(ls('bp_perms') || 'null'); if (p && p.user === AUTH.user && p.nome) nome = p.nome; } catch(e){}
+  $('chip').textContent = AUTH.token ? '👤 ' + nome : '';
+  $('neg-user').textContent = AUTH.user;
+  if (qual === 'login') setTimeout(() => $('lg-user').focus(), 50);
+}
+
+async function entrar(){
+  const user = $('lg-user').value.trim().toLowerCase(), pass = $('lg-pass').value;
+  const bt = $('lg-bt'), msg = $('lg-msg');
+  msg.textContent = '';
+  if (!user || !pass){ msg.textContent = 'Digite usuário e senha.'; return; }
+  bt.disabled = true; bt.textContent = 'Entrando…';
+  try{
+    const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, pass }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : (d.detail || 'Falha no login.'));
+    AUTH.token = d.token; AUTH.user = d.user;
+    try { if (d.perms) ls('bp_perms', JSON.stringify({ user:d.user, nome:d.nome, admin:!!d.admin, perms:d.perms, bloqueios:d.bloqueios || [] })); } catch(e){}
+    $('lg-pass').value = '';
+    await iniciar();
+  }catch(e){ msg.textContent = e.message || 'Não foi possível conectar.'; }
+  finally{ bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair(){ AUTH.token = ''; AUTH.user = ''; ls('bp_perms', null); ATUAL = null; mostrar('login'); }
+
+async function iniciar(){
+  if (!AUTH.token){ mostrar('login'); return; }
+  const p = quadPadrao();
+  if (!$('f-ano').value){ $('f-quad').value = String(p.q); $('f-ano').value = String(p.a); }
+  try { await carregar(); }
+  catch(e){
+    if (e.tratado) return;   // 401/403: o api() já trocou a tela
+    // Qualquer outro erro (servidor fora, rota não publicada, sem rede): mostra, nunca fica mudo.
+    mostrar('app');
+    $('aviso').style.display = 'block';
+    $('aviso').textContent = '⚠️ ' + (e.message || 'Não foi possível falar com o servidor.');
+    $('lista').innerHTML = '<div style="color:var(--muted);padding:12px">Não foi possível carregar o efetivo.</div>';
+  }
+}
+
+async function carregar(){
+  const q = QUAD();
+  if (!/^20\d\d-[123]$/.test(q)){ toast('Ano inválido.', true); return; }
+  $('lista').innerHTML = '<div style="color:var(--muted);padding:12px">Carregando o efetivo…</div>';
+  const d = await api('/api/conceito?q=' + q);
+  mostrar('app');
+  EFETIVO = (d.efetivo || []).slice().sort((a, b) => gradOrdem(a.posto_grad) - gradOrdem(b.posto_grad) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  FICHAS = d.fichas || {};
+  $('aviso').style.display = d.aviso ? 'block' : 'none';
+  $('aviso').textContent = d.aviso || '';
+  desenharPilulas();
+  desenharLista();
+  if (ATUAL){
+    // Reabre a mesma pessoa (ex.: depois de Atualizar), se ela continuar no quadrimestre.
+    const re = ATUAL.re; ATUAL = null; abrir(re);
+  }
+}
+function trocarQuad(){ ATUAL = null; fecharFicha(); carregar().catch(e => toast(e.message, true)); }
+
+/* ======================= Lista ======================= */
+function pessoasTodas(){
+  // Quem tem ficha salva mas saiu do cadastro continua aparecendo (no fim).
+  const mapa = new Map(EFETIVO.map(p => [p.re, p]));
+  const extras = Object.keys(FICHAS).filter(re => !mapa.has(re)).map(re => ({
+    re, nome: FICHAS[re].nome || re, guerra: '', posto_grad: FICHAS[re].grad || '', opm: FICHAS[re].opm || '', fora: true }));
+  return EFETIVO.concat(extras);
+}
+function statusDe(re){
+  const f = FICHAS[re];
+  if (!f) return { cls:'falta', txt:'— falta', k:'falta' };
+  if (f.completa) return { cls:'feita', txt:'✅ ' + fmtMedia(f.media), k:'feita' };
+  return { cls:'meio', txt:'✏️ em andamento', k:'meio' };
+}
+function desenharPilulas(){
+  const todas = pessoasTodas();
+  const cont = [0,0,0,0,0]; todas.forEach(p => cont[gradOrdem(p.posto_grad)]++);
+  const nFalta = todas.filter(p => statusDe(p.re).k !== 'feita').length;
+  const pil = [['todos','Todos (' + todas.length + ')'], ['pend','Falta fazer (' + nFalta + ')']];
+  GRAD_ROT.forEach((r, i) => { if (cont[i]) pil.push(['g' + i, r + ' (' + cont[i] + ')']); });
+  $('pilulas').innerHTML = pil.map(([k, t]) => `<button class="pil ${FILTRO === k ? 'on' : ''}" onclick="FILTRO='${k}';desenharPilulas();desenharLista()">${esc(t)}</button>`).join('');
+  const feitas = todas.length - nFalta;
+  $('prog').innerHTML = `<b>${feitas}</b> de ${todas.length} fichas concluídas · ${$('f-quad').value}º quadrimestre de ${esc($('f-ano').value)}`;
+}
+function semAcento(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function desenharLista(){
+  const b = semAcento($('busca').value.trim());
+  let ps = pessoasTodas();
+  if (FILTRO === 'pend') ps = ps.filter(p => statusDe(p.re).k !== 'feita');
+  else if (FILTRO[0] === 'g') ps = ps.filter(p => gradOrdem(p.posto_grad) === Number(FILTRO.slice(1)));
+  if (b) ps = ps.filter(p => semAcento(p.nome + ' ' + p.guerra + ' ' + p.re).includes(b));
+  if (!ps.length){
+    $('lista').innerHTML = `<div style="color:var(--muted);padding:12px">${EFETIVO.length || Object.keys(FICHAS).length ? 'Ninguém encontrado com esse filtro.' : 'Nenhum sargento encontrado no cadastro do efetivo.'}</div>`;
+    return;
+  }
+  let html = '', grupoAnt = null;
+  ps.forEach(p => {
+    const g = p.fora ? 'Fora do cadastro atual' : GRAD_ROT[gradOrdem(p.posto_grad)];
+    if (g !== grupoAnt){ html += `<div class="sep">${esc(g)}</div>`; grupoAnt = g; }
+    const st = statusDe(p.re);
+    const rasc = ls(chaveRasc(p.re)) ? ' ✎' : '';
+    html += `<button class="pes ${ATUAL && ATUAL.re === p.re ? 'sel' : ''}" onclick="abrir('${esc(p.re)}')">
+      <div class="q"><div class="n1">${esc(p.nome)}</div><div class="n2">${esc(p.posto_grad || '')}${p.guerra ? ' · ' + esc(p.guerra) : ''} · RE ${esc(p.re)}${rasc}</div></div>
+      <span class="st ${st.cls}">${esc(st.txt)}</span></button>`;
+  });
+  $('lista').innerHTML = html;
+}
+
+/* ======================= Ficha ======================= */
+const chaveRasc = (re) => `conceito_rasc:${QUAD()}:${re}`;
+
+function abrir(re){
+  const p = pessoasTodas().find(x => x.re === re);
+  if (!p) return;
+  const salvo = FICHAS[re];
+  let base = salvo ? {
+    nome: salvo.nome, grad: salvo.grad, quadro: salvo.quadro, opm: salvo.opm, periodo: salvo.periodo,
+    justificativa: salvo.justificativa || '', notas: Object.assign({}, salvo.notas || {}),
+  } : {
+    nome: String(p.nome || '').toUpperCase(), grad: gradFicha(p.posto_grad), quadro: quadroDe(p.posto_grad),
+    opm: 'BPFRON', periodo: periodoPadrao(Number($('f-quad').value), Number($('f-ano').value)), justificativa: '', notas: {},
+  };
+  let temRasc = false;
+  try { const r = JSON.parse(ls(chaveRasc(re)) || 'null'); if (r && r.notas){ base = r; temRasc = true; } } catch(e){}
+  ATUAL = Object.assign({ re, pessoa: p }, base);
+  ATUAL.notas = Object.assign({}, ATUAL.notas);
+
+  $('vazio').style.display = 'none';
+  $('ficha').style.display = '';
+  document.body.classList.add('editando');
+  $('fx-tit').textContent = (p.guerra ? p.guerra + ' · ' : '') + (p.posto_grad || '');
+  $('fx-sub').textContent = salvo ? `Salva por ${salvo.salvo_por || '?'} em ${salvo.salvo_em || '?'}` : 'Ainda não salva neste quadrimestre';
+  $('rasc').style.display = temRasc ? 'block' : 'none';
+  $('bt-excluir').style.display = salvo ? '' : 'none';
+  $('fx-nome').value = ATUAL.nome || '';
+  $('fx-grad').value = ATUAL.grad || '';
+  $('fx-quadro').value = ATUAL.quadro || '';
+  $('fx-re').value = re;
+  $('fx-opm').value = ATUAL.opm || '';
+  $('fx-periodo').value = ATUAL.periodo || '';
+  $('fx-just').value = ATUAL.justificativa || '';
+  desenharGrupos();
+  atualizarResumo();
+  desenharLista();
+  $('resumo').style.display = 'block';
+  if (window.innerWidth <= 900) window.scrollTo({ top: 0 });
+}
+function fecharFicha(){
+  ATUAL = null;
+  $('ficha').style.display = 'none';
+  $('vazio').style.display = '';
+  $('resumo').style.display = 'none';
+  document.body.classList.remove('editando');
+  desenharLista();
+}
+
+function htmlItem(id, txt){
+  const v = ATUAL.notas[id];
+  const no = v === 'NO';
+  return `<div class="item" id="it-${id}"><label for="n-${id}">${esc(txt)}</label>
+    <input id="n-${id}" data-id="${id}" inputmode="decimal" maxlength="6" autocomplete="off" value="${no ? 'NO' : esc(fmtNota(v) || (v || ''))}" class="${no ? 'ehno' : ''}"
+      oninput="digitou(this)" onkeydown="teclaItem(event,this)" onfocus="this.select()">
+    <button class="nob ${no ? 'on' : ''}" id="no-${id}" title="Não observado" onclick="alternaNO('${id}')">NO</button></div>`;
+}
+function desenharGrupos(){
+  $('grupos').innerHTML = FICHA.map(g => {
+    const corpo = g.subs
+      ? g.subs.map(s => `<h4>${esc(s.titulo)}</h4>` + s.itens.map(([id, t]) => htmlItem(id, t)).join('')).join('')
+      : g.itens.map(([id, t]) => htmlItem(id, t)).join('');
+    return `<div class="grupo"><h3>${esc(g.titulo)} <small id="gm-${g.id}"></small></h3>${corpo}</div>`;
+  }).join('');
+}
+function digitou(el){
+  const id = el.dataset.id, s = el.value.trim();
+  if (/^n\.?o?\.?$/i.test(s) && s.length >= 2){ setNota(id, 'NO'); return; }
+  ATUAL.notas[id] = s;
+  const v = lerNota(s);
+  el.classList.toggle('inval', v === null);
+  el.classList.remove('ehno');
+  $('no-' + id).classList.remove('on');
+  $('it-' + id).classList.remove('falta');
+  mudou(true);
+}
+function setNota(id, v){
+  ATUAL.notas[id] = v;
+  const el = $('n-' + id);
+  el.value = v === 'NO' ? 'NO' : fmtNota(v);
+  el.classList.toggle('ehno', v === 'NO');
+  el.classList.remove('inval');
+  $('no-' + id).classList.toggle('on', v === 'NO');
+  $('it-' + id).classList.remove('falta');
+  mudou(true);
+}
+function alternaNO(id){ setNota(id, ATUAL.notas[id] === 'NO' ? '' : 'NO'); }
+function teclaItem(ev, el){
+  const ids = ITENS.map(i => i.id), i = ids.indexOf(el.dataset.id);
+  if (ev.key === 'Enter' || ev.key === 'ArrowDown'){ ev.preventDefault(); const p = $('n-' + ids[i + 1]); if (p) p.focus(); else $('fx-just').focus(); }
+  else if (ev.key === 'ArrowUp'){ ev.preventDefault(); const p = $('n-' + ids[i - 1]); if (p) p.focus(); }
+}
+function preencherVazios(){
+  const v = lerNota($('rap-nota').value);
+  if (v === '' || v === null){ toast('Digite uma nota de 0 a 100 para preencher.', true); $('rap-nota').focus(); return; }
+  let n = 0;
+  ITENS.forEach(it => { if (lerNota(ATUAL.notas[it.id]) === '' ){ setNota(it.id, v === 'NO' ? 'NO' : String(v)); n++; } });
+  toast(n ? `${n} itens preenchidos.` : 'Não havia item vazio.');
+}
+function abrirLimpar(){ $('ovl-limpar').classList.add('on'); }
+function limparNotas(){
+  fecharOvl('ovl-limpar');
+  ITENS.forEach(it => { ATUAL.notas[it.id] = ''; });
+  desenharGrupos(); mudou();
+}
+
+let _tRasc = null;
+function mudou(soNotas){
+  if (!ATUAL) return;
+  if (!soNotas){
+    ATUAL.nome = $('fx-nome').value; ATUAL.grad = $('fx-grad').value; ATUAL.quadro = $('fx-quadro').value;
+    ATUAL.opm = $('fx-opm').value; ATUAL.periodo = $('fx-periodo').value; ATUAL.justificativa = $('fx-just').value;
+  }
+  atualizarResumo();
+  clearTimeout(_tRasc);
+  _tRasc = setTimeout(() => {
+    if (!ATUAL) return;
+    ls(chaveRasc(ATUAL.re), JSON.stringify(dadosFicha()));
+    $('rasc').style.display = 'block';
+  }, 400);
+}
+function dadosFicha(){
+  return { nome: ATUAL.nome, grad: ATUAL.grad, quadro: ATUAL.quadro, opm: ATUAL.opm, periodo: ATUAL.periodo,
+           justificativa: ATUAL.justificativa, notas: Object.assign({}, ATUAL.notas) };
+}
+function atualizarResumo(){
+  const c = calcular(ATUAL.notas);
+  $('rs-media').textContent = fmtMedia(c.media);
+  const partes = [`<b>${c.n}</b> avaliados`, `<b>${c.no}</b> não observados`];
+  if (c.vazios.length) partes.push(`<b style="color:#fca5a5">${c.vazios.length}</b> sem nota`);
+  if (c.invalidos.length) partes.push(`<b style="color:#fca5a5">${c.invalidos.length}</b> com nota inválida`);
+  $('rs-cont').innerHTML = partes.join(' · ');
+  // média de cada grupo (só para conferência; o conceito final é a média de todos os itens)
+  FICHA.forEach(g => {
+    const ids = ITENS.filter(i => i.g === g.id).map(i => i.id);
+    const sub = {}; ids.forEach(id => { sub[id] = ATUAL.notas[id]; });
+    let s = 0, n = 0; ids.forEach(id => { const v = lerNota(sub[id]); if (typeof v === 'number'){ s += v; n++; } });
+    const el = $('gm-' + g.id); if (el) el.textContent = n ? 'média ' + (s / n).toFixed(2).replace('.', ',') : '';
+  });
+  $('previa').innerHTML = montarHTML();
+}
+
+function descartarRascunho(){
+  if (!ATUAL) return;
+  ls(chaveRasc(ATUAL.re), null);
+  const re = ATUAL.re; ATUAL = null; abrir(re);
+  toast('Alterações descartadas.');
+}
+
+/* ======================= Salvar / excluir ======================= */
+async function salvar(){
+  if (!ATUAL) return;
+  mudou();
+  const c = calcular(ATUAL.notas);
+  if (c.invalidos.length){ marcarFaltas(c.invalidos); toast('Corrija as notas inválidas (0 a 100).', true); return; }
+  const bt = $('bt-salvar'); bt.disabled = true; bt.textContent = 'Salvando…';
+  const notas = {};
+  ITENS.forEach(it => { const v = lerNota(ATUAL.notas[it.id]); if (v !== '' && v !== null) notas[it.id] = v; });
+  try{
+    const d = await api('/api/conceito', { method:'POST', body:{ op:'salvar', q: QUAD(), re: ATUAL.re,
+      ficha: Object.assign(dadosFicha(), { notas, completa: c.vazios.length === 0 && c.n > 0 }) } });
+    FICHAS[ATUAL.re] = d.ficha;
+    ls(chaveRasc(ATUAL.re), null);
+    $('rasc').style.display = 'none';
+    $('bt-excluir').style.display = '';
+    $('fx-sub').textContent = `Salva por ${d.ficha.salvo_por} em ${d.ficha.salvo_em}`;
+    desenharPilulas(); desenharLista();
+    toast(c.vazios.length ? `💾 Salva — ainda faltam ${c.vazios.length} itens sem nota.` : `💾 Ficha salva · Conceito final ${fmtMedia(d.ficha.media)}`);
+  }catch(e){ toast(e.message || 'Não foi possível salvar.', true); }
+  finally{ bt.disabled = false; bt.textContent = '💾 Salvar'; }
+}
+function abrirExcluir(){
+  if (!ATUAL) return;
+  $('ex-nome').textContent = ATUAL.nome;
+  $('ex-senha').value = ''; $('ex-msg').textContent = '';
+  $('ovl-excluir').classList.add('on');
+  setTimeout(() => $('ex-senha').focus(), 50);
+}
+async function confirmarExcluir(){
+  const senha = $('ex-senha').value;
+  if (!senha){ $('ex-msg').textContent = 'Digite a sua senha.'; return; }
+  const bt = $('ex-bt'); bt.disabled = true;
+  try{
+    await api('/api/conceito', { method:'POST', body:{ op:'excluir', q: QUAD(), re: ATUAL.re, senha } });
+    delete FICHAS[ATUAL.re];
+    ls(chaveRasc(ATUAL.re), null);
+    fecharOvl('ovl-excluir');
+    const re = ATUAL.re; ATUAL = null; desenharPilulas(); abrir(re);
+    toast('Ficha excluída.');
+  }catch(e){ $('ex-msg').textContent = e.message; }
+  finally{ bt.disabled = false; }
+}
+function fecharOvl(id){ $(id).classList.remove('on'); }
+
+/* ======================= Tabela para o SEI =======================
+   Mesma disposição do Adendo: duas colunas (I à esquerda; II a V à direita),
+   bordas simples e estilos inline — o editor do SEI mantém a tabela ao colar. */
+const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;';
+function celula(txt, extra){ return `<td style="${TD}${extra || ''}">${txt}</td>`; }
+function linhasEsquerda(){
+  const L = [];
+  FICHA[0].subs.forEach((s, i) => {
+    L.push({ rot: `<b>${esc(s.titulo)}</b>`, val: i === 0 ? '' : '<b>CONCEITO</b>' });
+    s.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: esc(fmtNota(ATUAL.notas[id])) }));
+  });
+  return L;
+}
+function linhasDireita(){
+  const L = [];
+  FICHA.slice(1).forEach((g, i) => {
+    if (i > 0) L.push({ rot: `<b>${esc(g.titulo)}</b>`, val: '<b>CONCEITO</b>' });
+    g.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: esc(fmtNota(ATUAL.notas[id])) }));
+  });
+  return L;
+}
+function montarHTML(){
+  if (!ATUAL) return '';
+  const c = calcular(ATUAL.notas);
+  const TAB = 'border-collapse:collapse;width:100%;font-size:11pt;';
+  const q = $('f-quad').value, a = $('f-ano').value;
+  let h = `<table border="1" cellpadding="3" cellspacing="0" style="${TAB}">`;
+  h += `<tr>${celula('<b>FICHA DE CONCEITO</b>', 'text-align:center;width:66%;" colspan="2')}${celula('<b>GRAD.:</b> ' + esc(ATUAL.grad))}</tr>`;
+  h += `<tr>${celula('<b>NOME:</b> ' + esc(ATUAL.nome), '" colspan="3')}</tr>`;
+  h += `<tr>${celula('<b>QUADRO:</b> ' + esc(ATUAL.quadro), 'width:33%;')}${celula('<b>RE:</b> ' + esc(ATUAL.re), 'width:33%;')}${celula('<b>OPM:</b> ' + esc(ATUAL.opm))}</tr>`;
+  h += `<tr>${celula(`<b>QUADRIMESTRE:</b> ${esc(q)}º de ${esc(a)}`)}${celula('<b>PERÍODO:</b> ' + esc(ATUAL.periodo), '" colspan="2')}</tr>`;
+  h += `</table><p style="margin:0">&nbsp;</p>`;
+
+  const E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
+  h += `<table border="1" cellpadding="3" cellspacing="0" style="${TAB}">`;
+  h += `<tr>${celula('<b>I – VALOR PROFISSIONAL</b>', 'width:38%;')}${celula('<b>CONCEITO</b>', 'width:12%;text-align:center;')}${celula('<b>II – VALOR MORAL</b>', 'width:38%;')}${celula('<b>CONCEITO</b>', 'width:12%;text-align:center;')}</tr>`;
+  for (let i = 0; i < n; i++){
+    const e = E[i] || { rot:'&nbsp;', val:'' }, d = D[i] || { rot:'&nbsp;', val:'' };
+    h += `<tr>${celula(e.rot)}${celula(e.val || '&nbsp;', 'text-align:center;')}${celula(d.rot)}${celula(d.val || '&nbsp;', 'text-align:center;')}</tr>`;
+  }
+  h += `<tr>${celula('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>', 'text-align:right;font-size:12pt;" colspan="4')}</tr>`;
+  h += `</table>`;
+  const just = String(ATUAL.justificativa || '').trim();
+  h += `<p style="text-align:justify;font-size:11pt;margin-top:10px"><b>JUSTIFICATIVAS DE CONCEITO:</b> ${esc(just).replace(/\r?\n/g, '<br>')}</p>`;
+  return h;
+}
+function montarTexto(){
+  const c = calcular(ATUAL.notas), E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
+  const tira = (s) => String(s).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const L = [
+    `FICHA DE CONCEITO\tGRAD.: ${ATUAL.grad}`, `NOME: ${ATUAL.nome}`,
+    `QUADRO: ${ATUAL.quadro}\tRE: ${ATUAL.re}\tOPM: ${ATUAL.opm}`,
+    `QUADRIMESTRE: ${$('f-quad').value}º de ${$('f-ano').value}\tPERÍODO: ${ATUAL.periodo}`, '',
+    'I – VALOR PROFISSIONAL\tCONCEITO\tII – VALOR MORAL\tCONCEITO'];
+  for (let i = 0; i < n; i++){ const e = E[i] || { rot:'', val:'' }, d = D[i] || { rot:'', val:'' }; L.push([e.rot, e.val, d.rot, d.val].map(tira).join('\t')); }
+  L.push('', 'CONCEITO FINAL: ' + fmtMedia(c.media), '', 'JUSTIFICATIVAS DE CONCEITO: ' + String(ATUAL.justificativa || '').trim());
+  return L.join('\n');
+}
+function marcarFaltas(lista){
+  lista.forEach(it => $('it-' + it.id).classList.add('falta'));
+  const el = $('n-' + lista[0].id); el.scrollIntoView({ behavior:'smooth', block:'center' }); setTimeout(() => el.focus(), 300);
+}
+async function copiar(){
+  if (!ATUAL) return;
+  mudou();
+  const c = calcular(ATUAL.notas);
+  if (c.invalidos.length){ marcarFaltas(c.invalidos); toast('Corrija as notas inválidas antes de copiar.', true); return; }
+  if (c.vazios.length){
+    marcarFaltas(c.vazios);
+    toast(`Faltam ${c.vazios.length} itens sem nota. Dê a nota ou marque NO antes de copiar.`, true);
+    return;
+  }
+  const html = montarHTML(), txt = montarTexto();
+  let ok = false;
+  try{
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type:'text/html' }), 'text/plain': new Blob([txt], { type:'text/plain' }) })]);
+      ok = true;
+    }
+  }catch(e){ ok = false; }
+  if (!ok){
+    // Plano B (navegador sem ClipboardItem): seleciona a prévia e copia.
+    const div = document.createElement('div');
+    div.contentEditable = 'true'; div.innerHTML = html;
+    div.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;color:#000';
+    document.body.appendChild(div);
+    const r = document.createRange(); r.selectNodeContents(div);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+    s.removeAllRanges(); div.remove();
+  }
+  toast(ok ? '📋 Ficha copiada! No SEI, abra o documento e cole (Ctrl+V).' : 'Não consegui copiar. Selecione a prévia abaixo e copie com Ctrl+C.', !ok);
+}
+
+let _tToast = null;
+function toast(t, err){
+  const el = $('toast'); el.textContent = t; el.className = 'on' + (err ? ' err' : '');
+  clearTimeout(_tToast); _tToast = setTimeout(() => { el.className = ''; }, err ? 5000 : 3200);
+}
+
+iniciar();
+</script>
+</body>
+</html>
