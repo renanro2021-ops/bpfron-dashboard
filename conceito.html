@@ -402,6 +402,9 @@ function gradFicha(pg){
   if (o >= 1 && o <= 3) return o + 'º SGT PM';
   return String(pg || '').trim();
 }
+/* O cadastro guarda o RE curto (5 dígitos, ex.: 69848); na ficha vai o completo
+   (100069848 = "1000" + curto), como no Adendo. RE já completo fica como está. */
+function reCompleto(re){ const d = String(re || '').replace(/\D/g, ''); return d.length === 5 ? '1000' + d : d; }
 function quadroDe(pg){ const m = String(pg || '').toUpperCase().match(/\bQ[A-Z]{2,4}\b/); return m ? m[0] : 'QPPM'; }
 function quadPadrao(){
   // Sugere o último quadrimestre já encerrado (1º fev–mai, 2º jun–set, 3º out–jan).
@@ -581,7 +584,7 @@ function abrir(re){
   $('fx-nome').value = ATUAL.nome || '';
   $('fx-grad').value = ATUAL.grad || '';
   $('fx-quadro').value = ATUAL.quadro || '';
-  $('fx-re').value = re;
+  $('fx-re').value = reCompleto(re);
   $('fx-opm').value = ATUAL.opm || '';
   $('fx-periodo').value = ATUAL.periodo || '';
   $('fx-just').value = ATUAL.justificativa || '';
@@ -748,8 +751,19 @@ function fecharOvl(id){ $(id).classList.remove('on'); }
 /* ======================= Tabela para o SEI =======================
    Mesma disposição do Adendo: duas colunas (I à esquerda; II a V à direita),
    bordas simples e estilos inline — o editor do SEI mantém a tabela ao colar. */
-const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;';
-function celula(txt, extra){ return `<td style="${TD}${extra || ''}">${txt}</td>`; }
+/* Largura FIXA, do tamanho da folha A4 do SEI (texto ≈ 17 cm ≈ 640 px), em vez de
+   100% — com 100% a tabela estica até a largura da tela de quem cola. Cada coluna
+   tem a sua largura (atributo + style, que o editor do SEI preserva) e
+   table-layout:fixed impede o navegador de redistribuir. */
+const LARG = 640;
+const FONTE = 'font-family:Calibri,Arial,sans-serif;font-size:11pt;';
+const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;' + FONTE;
+function celula(txt, extra, attrs){ return `<td style="${TD}${extra || ''}"${attrs ? ' ' + attrs : ''}>${txt}</td>`; }
+function larg(px){ return [`width:${px}px;`, `width="${px}"`]; }
+function tabela(cols){
+  return `<table border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;margin-left:auto;margin-right:auto;${FONTE}">`
+    + '<colgroup>' + cols.map(w => `<col width="${w}" style="width:${w}px">`).join('') + '</colgroup>';
+}
 function linhasEsquerda(){
   const L = [];
   FICHA[0].subs.forEach((s, i) => {
@@ -769,26 +783,35 @@ function linhasDireita(){
 function montarHTML(){
   if (!ATUAL) return '';
   const c = calcular(ATUAL.notas);
-  const TAB = 'border-collapse:collapse;width:100%;font-size:11pt;';
   const q = $('f-quad').value, a = $('f-ano').value;
-  let h = `<table border="1" cellpadding="3" cellspacing="0" style="${TAB}">`;
-  h += `<tr>${celula('<b>FICHA DE CONCEITO</b>', 'text-align:center;width:66%;" colspan="2')}${celula('<b>GRAD.:</b> ' + esc(ATUAL.grad))}</tr>`;
-  h += `<tr>${celula('<b>NOME:</b> ' + esc(ATUAL.nome), '" colspan="3')}</tr>`;
-  h += `<tr>${celula('<b>QUADRO:</b> ' + esc(ATUAL.quadro), 'width:33%;')}${celula('<b>RE:</b> ' + esc(ATUAL.re), 'width:33%;')}${celula('<b>OPM:</b> ' + esc(ATUAL.opm))}</tr>`;
-  h += `<tr>${celula(`<b>QUADRIMESTRE:</b> ${esc(q)}º de ${esc(a)}`)}${celula('<b>PERÍODO:</b> ' + esc(ATUAL.periodo), '" colspan="2')}</tr>`;
+  // Cabeçalho: 3 colunas iguais (213 + 213 + 214 = 640).
+  const [w1s, w1a] = larg(213), [w3s, w3a] = larg(214);
+  let h = tabela([213, 213, 214]);
+  h += `<tr>${celula('<b>FICHA DE CONCEITO</b>', 'text-align:center;', 'colspan="2"')}${celula('<b>GRAD.:</b> ' + esc(ATUAL.grad), w3s, w3a)}</tr>`;
+  h += `<tr>${celula('<b>NOME:</b> ' + esc(ATUAL.nome), '', 'colspan="3"')}</tr>`;
+  h += `<tr>${celula('<b>QUADRO:</b> ' + esc(ATUAL.quadro), w1s, w1a)}${celula('<b>RE:</b> ' + esc(reCompleto(ATUAL.re)), w1s, w1a)}${celula('<b>OPM:</b> ' + esc(ATUAL.opm), w3s, w3a)}</tr>`;
+  h += `<tr>${celula(`<b>QUADRIMESTRE:</b> ${esc(q)}º de ${esc(a)}`, w1s, w1a)}${celula('<b>PERÍODO:</b> ' + esc(ATUAL.periodo), '', 'colspan="2"')}</tr>`;
   h += `</table><p style="margin:0">&nbsp;</p>`;
 
+  // Notas: item 245 + conceito 75, duas vezes (= 640).
+  const [its, ita] = larg(245), [cos, coa] = larg(75), C = 'text-align:center;';
   const E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
-  h += `<table border="1" cellpadding="3" cellspacing="0" style="${TAB}">`;
-  h += `<tr>${celula('<b>I – VALOR PROFISSIONAL</b>', 'width:38%;')}${celula('<b>CONCEITO</b>', 'width:12%;text-align:center;')}${celula('<b>II – VALOR MORAL</b>', 'width:38%;')}${celula('<b>CONCEITO</b>', 'width:12%;text-align:center;')}</tr>`;
+  h += tabela([245, 75, 245, 75]);
+  h += `<tr>${celula('<b>I – VALOR PROFISSIONAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}${celula('<b>II – VALOR MORAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}</tr>`;
   for (let i = 0; i < n; i++){
     const e = E[i] || { rot:'&nbsp;', val:'' }, d = D[i] || { rot:'&nbsp;', val:'' };
-    h += `<tr>${celula(e.rot)}${celula(e.val || '&nbsp;', 'text-align:center;')}${celula(d.rot)}${celula(d.val || '&nbsp;', 'text-align:center;')}</tr>`;
+    h += `<tr>${celula(e.rot, its, ita)}${celula(e.val || '&nbsp;', cos + C, coa)}${celula(d.rot, its, ita)}${celula(d.val || '&nbsp;', cos + C, coa)}</tr>`;
   }
-  h += `<tr>${celula('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>', 'text-align:right;font-size:12pt;" colspan="4')}</tr>`;
+  h += `<tr>${celula('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>', 'text-align:right;font-size:12pt;', 'colspan="4"')}</tr>`;
   h += `</table>`;
   const just = String(ATUAL.justificativa || '').trim();
-  h += `<p style="text-align:justify;font-size:11pt;margin-top:10px"><b>JUSTIFICATIVAS DE CONCEITO:</b> ${esc(just).replace(/\r?\n/g, '<br>')}</p>`;
+  /* Estilo do próprio SEI "Texto Justificado Recuo Primeira Linha": a classe faz o
+     SEI reconhecer o parágrafo como dele; o style inline é a mesma regra, para
+     a prévia e para o caso de o editor ignorar a classe. Cada Enter = parágrafo novo. */
+  const P = (dentro) => `<p class="Texto_Justificado_Recuo_Primeira_Linha" style="text-align:justify;text-indent:25mm;font-size:12pt;margin:6pt 0;">${dentro}</p>`;
+  const paras = just.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  h += P('<b>JUSTIFICATIVAS DE CONCEITO:</b> ' + esc(paras[0] || ''));
+  paras.slice(1).forEach(t => { h += P(esc(t)); });
   return h;
 }
 function montarTexto(){
@@ -796,7 +819,7 @@ function montarTexto(){
   const tira = (s) => String(s).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   const L = [
     `FICHA DE CONCEITO\tGRAD.: ${ATUAL.grad}`, `NOME: ${ATUAL.nome}`,
-    `QUADRO: ${ATUAL.quadro}\tRE: ${ATUAL.re}\tOPM: ${ATUAL.opm}`,
+    `QUADRO: ${ATUAL.quadro}\tRE: ${reCompleto(ATUAL.re)}\tOPM: ${ATUAL.opm}`,
     `QUADRIMESTRE: ${$('f-quad').value}º de ${$('f-ano').value}\tPERÍODO: ${ATUAL.periodo}`, '',
     'I – VALOR PROFISSIONAL\tCONCEITO\tII – VALOR MORAL\tCONCEITO'];
   for (let i = 0; i < n; i++){ const e = E[i] || { rot:'', val:'' }, d = D[i] || { rot:'', val:'' }; L.push([e.rot, e.val, d.rot, d.val].map(tira).join('\t')); }
