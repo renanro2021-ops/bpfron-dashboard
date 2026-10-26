@@ -141,7 +141,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
 @media(max-width:900px){
   .cols{grid-template-columns:minmax(0,1fr)}
   .papel{padding:10px}
-  .papel table{min-width:560px}
   #lista-box{position:static;max-height:none}
   body.editando #lista-box{display:none}
   body:not(.editando) #editor{display:none}
@@ -660,6 +659,16 @@ function limparNotas(){
   desenharGrupos(); mudou();
 }
 
+/* A tabela copiada tem 1000 px; na prévia ela é reduzida (zoom) para caber inteira
+   na caixa. Só muda a visualização — o que vai para o SEI continua com 1000 px. */
+function ajustarPrevia(){
+  const pv = $('previa'); if (!pv || !pv.offsetParent) return;
+  pv.style.zoom = 1;
+  const livre = pv.clientWidth - 24;
+  pv.style.zoom = livre < LARG ? String(Math.max(0.3, livre / LARG)) : '1';
+}
+window.addEventListener('resize', () => { if (ATUAL) ajustarPrevia(); });
+
 let _tRasc = null;
 function mudou(soNotas){
   if (!ATUAL) return;
@@ -694,6 +703,7 @@ function atualizarResumo(){
     const el = $('gm-' + g.id); if (el) el.textContent = n ? 'média ' + (s / n).toFixed(2).replace('.', ',') : '';
   });
   $('previa').innerHTML = montarHTML();
+  ajustarPrevia();
 }
 
 function descartarRascunho(){
@@ -751,11 +761,12 @@ function fecharOvl(id){ $(id).classList.remove('on'); }
 /* ======================= Tabela para o SEI =======================
    Mesma disposição do Adendo: duas colunas (I à esquerda; II a V à direita),
    bordas simples e estilos inline — o editor do SEI mantém a tabela ao colar. */
-/* Largura FIXA, do tamanho da folha A4 do SEI (texto ≈ 17 cm ≈ 640 px), em vez de
-   100% — com 100% a tabela estica até a largura da tela de quem cola. Cada coluna
+/* Largura FIXA de 1000 px, centralizada (pedido do usuário, 26/10/2026: com 640 px
+   "CONCEITO" quebrava em duas linhas no SEI; com 100% a tabela esticava até a
+   largura da tela de quem cola). Cada coluna
    tem a sua largura (atributo + style, que o editor do SEI preserva) e
    table-layout:fixed impede o navegador de redistribuir. */
-const LARG = 640;
+const LARG = 1000;
 const FONTE = 'font-family:Calibri,Arial,sans-serif;font-size:11pt;';
 const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;' + FONTE;
 function celula(txt, extra, attrs){ return `<td style="${TD}${extra || ''}"${attrs ? ' ' + attrs : ''}>${txt}</td>`; }
@@ -784,19 +795,19 @@ function montarHTML(){
   if (!ATUAL) return '';
   const c = calcular(ATUAL.notas);
   const q = $('f-quad').value, a = $('f-ano').value;
-  // Cabeçalho: 3 colunas iguais (213 + 213 + 214 = 640).
-  const [w1s, w1a] = larg(213), [w3s, w3a] = larg(214);
-  let h = tabela([213, 213, 214]);
+  // Cabeçalho: 3 colunas iguais (333 + 333 + 334 = 1000).
+  const [w1s, w1a] = larg(333), [w3s, w3a] = larg(334);
+  let h = tabela([333, 333, 334]);
   h += `<tr>${celula('<b>FICHA DE CONCEITO</b>', 'text-align:center;', 'colspan="2"')}${celula('<b>GRAD.:</b> ' + esc(ATUAL.grad), w3s, w3a)}</tr>`;
   h += `<tr>${celula('<b>NOME:</b> ' + esc(ATUAL.nome), '', 'colspan="3"')}</tr>`;
   h += `<tr>${celula('<b>QUADRO:</b> ' + esc(ATUAL.quadro), w1s, w1a)}${celula('<b>RE:</b> ' + esc(reCompleto(ATUAL.re)), w1s, w1a)}${celula('<b>OPM:</b> ' + esc(ATUAL.opm), w3s, w3a)}</tr>`;
   h += `<tr>${celula(`<b>QUADRIMESTRE:</b> ${esc(q)}º de ${esc(a)}`, w1s, w1a)}${celula('<b>PERÍODO:</b> ' + esc(ATUAL.periodo), '', 'colspan="2"')}</tr>`;
   h += `</table><p style="margin:0">&nbsp;</p>`;
 
-  // Notas: item 245 + conceito 75, duas vezes (= 640).
-  const [its, ita] = larg(245), [cos, coa] = larg(75), C = 'text-align:center;';
+  // Notas: item 380 + conceito 120, duas vezes (= 1000).
+  const [its, ita] = larg(380), [cos, coa] = larg(120), C = 'text-align:center;';
   const E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
-  h += tabela([245, 75, 245, 75]);
+  h += tabela([380, 120, 380, 120]);
   h += `<tr>${celula('<b>I – VALOR PROFISSIONAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}${celula('<b>II – VALOR MORAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}</tr>`;
   for (let i = 0; i < n; i++){
     const e = E[i] || { rot:'&nbsp;', val:'' }, d = D[i] || { rot:'&nbsp;', val:'' };
