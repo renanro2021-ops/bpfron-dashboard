@@ -50,6 +50,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
 .bt.perigo{background:transparent;border:1px solid rgba(248,113,113,.5);color:var(--bad)}
 .bt:disabled{opacity:.5;cursor:default}
 .bt.sm{padding:7px 11px;font-size:13px;border-radius:8px}
+/* Copiar travado até todo item ter nota ou NO (continua clicável: o clique mostra o que falta) */
+.bt.pri.travado{background:#334155;color:#cbd5e1}
+#trava-previa{display:none;margin:0 0 8px;padding:8px 12px;border-radius:8px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.45);color:#fca5a5;font-size:13.5px}
+#trava-previa.on{display:block}
+.papel.travada{user-select:none;-webkit-user-select:none;opacity:.75}
 
 /* barra do quadrimestre */
 .barra{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
@@ -259,8 +264,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
 
           <div class="previa-tit">
             <h3>👁️ Como vai ficar no SEI</h3>
-            <button class="bt sm pri" onclick="copiar()">📋 Copiar para o SEI</button>
+            <button class="bt sm pri bt-copiar" onclick="copiar()">📋 Copiar para o SEI</button>
           </div>
+          <div id="trava-previa"></div>
           <div class="papel" id="previa"></div>
         </div>
       </div>
@@ -274,7 +280,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
     <div class="cont" id="rs-cont"></div>
     <div class="acoes">
       <button class="bt ok" id="bt-salvar" onclick="salvar()">💾 Salvar</button>
-      <button class="bt pri" onclick="copiar()">📋 Copiar para o SEI</button>
+      <button class="bt pri bt-copiar" onclick="copiar()">📋 Copiar para o SEI</button>
     </div>
   </div>
 </div>
@@ -378,6 +384,15 @@ function calcular(notas){
   });
   const media = n ? Math.round((soma * 10) / n) / 1000 : null;
   return { media, n, no, vazios, invalidos };
+}
+/* Regra para copiar: TODO item precisa ter nota (0 a 100) ou NO, e ao menos um com nota. */
+function prontaParaCopiar(c){
+  if (c.invalidos.length) return { ok:false, lista:c.invalidos, curto:`${c.invalidos.length} inválida${c.invalidos.length > 1 ? 's' : ''}`,
+    msg:`${c.invalidos.length === 1 ? 'Há 1 nota inválida' : `Há ${c.invalidos.length} notas inválidas`} (use 0 a 100 ou NO). Corrija antes de copiar.` };
+  if (c.vazios.length) return { ok:false, lista:c.vazios, curto:`falta${c.vazios.length > 1 ? 'm' : ''} ${c.vazios.length}`,
+    msg:`${c.vazios.length === 1 ? 'Falta 1 item' : `Faltam ${c.vazios.length} itens`} sem resposta. Todo item precisa ter nota ou NO para copiar.` };
+  if (!c.n) return { ok:false, lista:[], curto:'sem nota', msg:'Todos os itens estão NO — dê nota a pelo menos um item para ter o conceito final.' };
+  return { ok:true };
 }
 function fmtMedia(m){ return m == null ? '—' : m.toFixed(3).replace('.', ','); }
 function fmtNota(v){
@@ -704,7 +719,24 @@ function atualizarResumo(){
   });
   $('previa').innerHTML = montarHTML();
   ajustarPrevia();
+  const pr = prontaParaCopiar(c);
+  document.querySelectorAll('.bt-copiar').forEach(b => {
+    b.classList.toggle('travado', !pr.ok);
+    b.textContent = pr.ok ? '📋 Copiar para o SEI' : `🔒 Copiar (${pr.curto})`;
+    b.title = pr.ok ? '' : pr.msg;
+  });
+  $('trava-previa').textContent = pr.ok ? '' : '🔒 ' + pr.msg;
+  $('trava-previa').classList.toggle('on', !pr.ok);
+  $('previa').classList.toggle('travada', !pr.ok);
 }
+/* Sem brecha pelo Ctrl+C: copiar à mão um pedaço da prévia também respeita a regra. */
+document.addEventListener('copy', ev => {
+  if (!ATUAL) return;
+  const sel = getSelection(), pv = $('previa');
+  if (!sel || !sel.rangeCount || !pv || !sel.getRangeAt(0).intersectsNode(pv)) return;
+  const pr = prontaParaCopiar(calcular(ATUAL.notas));
+  if (!pr.ok){ ev.preventDefault(); toast(pr.msg, true); }
+});
 
 function descartarRascunho(){
   if (!ATUAL) return;
@@ -850,12 +882,8 @@ async function copiar(){
   if (!ATUAL) return;
   mudou();
   const c = calcular(ATUAL.notas);
-  if (c.invalidos.length){ marcarFaltas(c.invalidos); toast('Corrija as notas inválidas antes de copiar.', true); return; }
-  if (c.vazios.length){
-    marcarFaltas(c.vazios);
-    toast(`Faltam ${c.vazios.length} itens sem nota. Dê a nota ou marque NO antes de copiar.`, true);
-    return;
-  }
+  const pr = prontaParaCopiar(c);
+  if (!pr.ok){ if (pr.lista.length) marcarFaltas(pr.lista); toast(pr.msg, true); return; }
   const html = montarHTML(), txt = montarTexto();
   let ok = false;
   try{
