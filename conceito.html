@@ -123,7 +123,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
 /* prévia (como fica no SEI) */
 .previa-tit{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:22px 0 8px;flex-wrap:wrap}
 .previa-tit h3{font-family:'Rajdhani',sans-serif;font-size:18px;color:#fff}
-.papel{background:#fff;color:#000;border-radius:6px;padding:22px;overflow:auto;font-family:Calibri,Arial,sans-serif}
+.papel{background:#fff;color:#000;border-radius:6px;padding:22px;overflow:auto;font-family:'Times New Roman',Times,serif}
 
 /* modal */
 .ovl{position:fixed;inset:0;background:rgba(2,6,23,.8);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
@@ -767,12 +767,15 @@ function fecharOvl(id){ $(id).classList.remove('on'); }
    tem a sua largura (atributo + style, que o editor do SEI preserva) e
    table-layout:fixed impede o navegador de redistribuir. */
 const LARG = 1000;
-const FONTE = 'font-family:Calibri,Arial,sans-serif;font-size:11pt;';
+// Times New Roman: a mesma fonte do Adendo original (SEI 77550977) — escolha do usuário, 26/10/2026.
+const FONTE = "font-family:'Times New Roman',Times,serif;font-size:11pt;";
 const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;' + FONTE;
 function celula(txt, extra, attrs){ return `<td style="${TD}${extra || ''}"${attrs ? ' ' + attrs : ''}>${txt}</td>`; }
 function larg(px){ return [`width:${px}px;`, `width="${px}"`]; }
 function tabela(cols){
-  return `<table border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;margin-left:auto;margin-right:auto;${FONTE}">`
+  // align="center" é o que o próprio SEI grava ao centralizar pelo "Formatar Tabela";
+  // o margin auto sozinho o editor do SEI descarta ao colar (tabela ia para a esquerda).
+  return `<table align="center" border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;margin-left:auto;margin-right:auto;${FONTE}">`
     + '<colgroup>' + cols.map(w => `<col width="${w}" style="width:${w}px">`).join('') + '</colgroup>';
 }
 function linhasEsquerda(){
@@ -819,7 +822,7 @@ function montarHTML(){
   /* Estilo do próprio SEI "Texto Justificado Recuo Primeira Linha": a classe faz o
      SEI reconhecer o parágrafo como dele; o style inline é a mesma regra, para
      a prévia e para o caso de o editor ignorar a classe. Cada Enter = parágrafo novo. */
-  const P = (dentro) => `<p class="Texto_Justificado_Recuo_Primeira_Linha" style="text-align:justify;text-indent:25mm;font-size:12pt;margin:6pt 0;">${dentro}</p>`;
+  const P = (dentro) => `<p class="Texto_Justificado_Recuo_Primeira_Linha" style="text-align:justify;text-indent:25mm;font-family:'Times New Roman',Times,serif;font-size:12pt;margin:6pt 0;">${dentro}</p>`;
   const paras = just.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
   h += P('<b>JUSTIFICATIVAS DE CONCEITO:</b> ' + esc(paras[0] || ''));
   paras.slice(1).forEach(t => { h += P(esc(t)); });
