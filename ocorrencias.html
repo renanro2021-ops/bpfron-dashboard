@@ -116,6 +116,11 @@ a{color:var(--yellow)}
 .kpi .kv{font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#fff;line-height:1.1}
 .kpi .kl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-top:2px}
 .kpi.b{border-left-color:var(--blue2)} .kpi.g{border-left-color:var(--green2)} .kpi.r{border-left-color:var(--red)}
+.kpis-apre{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:12px}
+.kpis-apre:empty{display:none}
+.kpis-apre .ka-t{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-right:2px}
+.kpis-apre .ka{background:var(--card);border:1px solid #1e293b;border-radius:999px;padding:4px 10px;color:#cbd5e1}
+.kpis-apre .ka b{color:#fff} .kpis-apre .ka i{color:var(--muted);font-style:normal;font-size:11px}
 
 /* ── barra de resultados ── */
 .res-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0 12px}
@@ -388,6 +393,7 @@ a{color:var(--yellow)}
   </div>
 
   <div class="kpis" id="kpis"></div>
+  <div class="kpis-apre" id="kpis-apre"></div>
 
   <div class="res-bar">
     <div class="res-cont" id="res-cont">—</div>
@@ -1445,9 +1451,15 @@ function etiquetas(o){
   if (o.n_motorpopa > 0)   t.push(['ap', o.n_motorpopa + ' motor(es) de popa']);
   if (o.n_madeira > 0)     t.push(['ap', fD(o.n_madeira,2) + ' m³ de madeira']);
   if (o.n_cigarros > 0)    t.push(['ap', fN(o.n_cigarros) + ' maços']);
-  if (o.n_gasolina > 0)    t.push(['ap', fN(o.n_gasolina) + ' L gasolina']);
-  if (o.n_diesel > 0)      t.push(['ap', fN(o.n_diesel) + ' L diesel']);
-  if (o.n_glp > 0)         t.push(['ap', fN(o.n_glp) + ' botijas']);
+  if (o._apre){
+    // combustível pelo nome do item: um tipo novo no catálogo (ex.: de aviação)
+    // aparece sozinho, sem precisar mexer aqui
+    o._apre.filter(it => it.categoria === 'Combustível').forEach(it => t.push(['ap', apreTexto(it)]));
+  } else {
+    if (o.n_gasolina > 0)  t.push(['ap', fN(o.n_gasolina) + ' L gasolina']);
+    if (o.n_diesel > 0)    t.push(['ap', fN(o.n_diesel) + ' L diesel']);
+    if (o.n_glp > 0)       t.push(['ap', fN(o.n_glp) + ' botijas']);
+  }
   if (o.n_celulares > 0)   t.push(['ap', fN(o.n_celulares) + ' celulares']);
   if (o.n_eletronicos > 0) t.push(['ap', fN(o.n_eletronicos) + ' eletrônicos']);
   if (o.n_ouro > 0)        t.push(['ap', fD(o.n_ouro,1) + ' g de ouro']);
@@ -1533,6 +1545,57 @@ function renderKPIs(){
   ];
   document.getElementById('kpis').innerHTML = kpis
     .map(([c,v,l]) => '<div class="kpi ' + c + '"><div class="kv">' + v + '</div><div class="kl">' + l + '</div></div>').join('');
+
+  // o resto do que foi apreendido (combustível, cigarro, madeira…) — antes só
+  // saía no relatório impresso e parecia que não existia
+  const tot = new Map();
+  RES.forEach(o => apreExtras(o).forEach(x => {
+    const a = tot.get(x.cod) || { ...x, q: 0, n: 0 };
+    a.q += x.q; a.n++; tot.set(x.cod, a);
+  }));
+  const ordemCat = ['Combustível','Descaminho','Ambiental','Veículo','Arma','Financeiro'];
+  const itens = [...tot.values()].sort((a,b) =>
+    (ordemCat.indexOf(a.cat) + 1 || 99) - (ordemCat.indexOf(b.cat) + 1 || 99) || b.q - a.q);
+  document.getElementById('kpis-apre').innerHTML = itens.length
+    ? '<span class="ka-t">Apreendido no resultado:</span>' + itens.map(x =>
+        '<span class="ka" title="' + esc(x.cat) + ' — em ' + fN(x.n) + ' ocorrência(s)">' +
+        '<b>' + esc(qtdUn(x.q, x.un)) + '</b> ' + esc(x.rot) + ' <i>(' + fN(x.n) + ' oc.)</i></span>').join('')
+    : '';
+}
+
+/* Apreensões que não são droga nem arma (essas já têm cartão), de uma
+   ocorrência: [{cod, rot, q, un, cat}]. Ocorrência no banco de apreensões
+   conta pelo item do catálogo — um tipo novo (ex.: combustível de aviação)
+   aparece sozinho; a que não está, pelas colunas da BASE, com o mesmo código
+   para somar junto. Valor estimado de veículo/descaminho e multa não são
+   coisa apreendida e ficam de fora. */
+const APRE_DA_BASE = [   // [campo n_, código do catálogo, rótulo se o catálogo não carregar, unidade, categoria]
+  ['gasolina','GASOLINA','Gasolina boliviana','L','Combustível'], ['diesel','DIESEL','Diesel boliviano','L','Combustível'],
+  ['glp','GLP','Botija GLP','botijas','Combustível'], ['municoes','MUNICAO','Munição','','Arma'],
+  ['embarcacoes','EMBARCACAO','Embarcação','','Veículo'], ['motorpopa','MOTOR_POPA','Motor de popa','','Veículo'],
+  ['cigarros','CIGARRO','Cigarro','maços','Descaminho'], ['celulares','CELULAR','Celular (descaminho)','','Descaminho'],
+  ['roupas','ROUPA','Roupa (descaminho)','','Descaminho'], ['eletronicos','ELETRONICO','Eletrônico (descaminho)','','Descaminho'],
+  ['merc','MERCADORIAS_RS','Mercadorias descaminho','R$','Descaminho'], ['madeira','MADEIRA','Madeira','m³','Ambiental'],
+  ['ouro','OURO','Ouro','g','Ambiental'], ['animais','ANIMAIS_PESCADO_RS','Animais / pescado','R$','Ambiental'],
+  ['dinheiro','DINHEIRO_RS','Dinheiro em espécie','R$','Financeiro'],
+];
+const APRE_FORA = new Set(['VEICULO','VALOR_VEICULOS_RS','VALOR_DESCAMINHO_RS','MULTA_RS']);
+const UN_CURTA = { litro:'L', 'maço':'maços', botija:'botijas', unidade:'', comprimido:'comprimidos' };
+const rotItem = it => String(it.item || it.codigo).replace(/\s*\((valor em )?R\$\)\s*$/,'');
+function apreExtras(o){
+  if (o._apre) return o._apre
+    .filter(it => it.categoria !== 'Droga' && !(it.categoria === 'Arma' && it.codigo !== 'MUNICAO')
+                  && !APRE_FORA.has(it.codigo) && +it.qtd > 0)
+    .map(it => ({ cod: it.codigo, rot: rotItem(it), q: +it.qtd,
+                  un: it.unidade in UN_CURTA ? UN_CURTA[it.unidade] : (it.unidade || ''), cat: it.categoria || '' }));
+  return APRE_DA_BASE.filter(([f]) => o['n_' + f] > 0).map(([f, cod, rot, un, cat]) =>
+    ({ cod, rot: APRE_CAT[cod] ? rotItem(APRE_CAT[cod]) : rot, q: o['n_' + f], un, cat }));
+}
+// "49.535 L", "3,5 m³", "R$ 1.500,00", "12"
+function qtdUn(q, un){
+  if (un === 'R$') return fR(q);
+  if (un === 'kg' || un === 'm³' || un === 'g' || un === 'L') return fD(q, 3).replace(/,?0+$/,'') + ' ' + un;
+  return fN(q) + (un ? ' ' + un : '');
 }
 
 function ordenar(base){
@@ -1993,10 +2056,10 @@ function quadroConteudo(lista){
     }
     [['embarcacoes','Embarcações'],['motorpopa','Motores de popa']]
       .forEach(([f, rot]) => add('Embarcações', rot, o['n_'+f]));
-    [['madeira','Madeira','m³'],['cigarros','Cigarros','maços'],['gasolina','Gasolina','L'],['diesel','Diesel','L'],
-     ['glp','GLP','botijas'],['celulares','Celulares',''],['eletronicos','Eletrônicos',''],['roupas','Roupas',''],
-     ['ouro','Ouro','g'],['dinheiro','Dinheiro em espécie','R$'],['merc','Mercadorias de descaminho','R$'],
-     ['animais','Animais / pescado','R$']].forEach(([f, rot, un]) => add('Outras apreensões', rot, o['n_'+f], un));
+    // pelo item do banco (combustível de cada tipo sai separado); munição,
+    // embarcação e motor de popa já entraram acima
+    apreExtras(o).filter(x => !['MUNICAO','EMBARCACAO','MOTOR_POPA'].includes(x.cod))
+      .forEach(x => add('Outras apreensões', x.rot, x.q, x.un));
   }
 
   const fq = (q, un) => un === 'R$' ? fR(q)
