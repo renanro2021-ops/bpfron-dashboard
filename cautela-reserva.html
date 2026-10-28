@@ -100,14 +100,15 @@ table.t1{width:100%;border-collapse:collapse}
   <!-- login -->
   <div id="login-box" class="card bloqueio hidden">
     <h2>Entrar na reserva de armamento</h2>
-    <p class="muted" style="margin:6px 0 14px">Com o seu RE e a senha do <b>Portal do Policial</b>, ou com o login do dashboard.</p>
+    <p class="muted" style="margin:6px 0 14px"><b>Armeiro de serviço:</b> entre com o seu RE e a senha do <b>Portal do Policial</b>.<br><b>Chefia (P4 / comando):</b> login do dashboard.</p>
     <div id="login-form" style="text-align:left"></div>
   </div>
 
   <!-- sem papel -->
   <div id="sem-papel" class="card bloqueio hidden">
-    <h2>🔒 Você não é o armeiro de serviço</h2>
+    <h2 id="sem-papel-h">🔒 Você não é o armeiro de serviço</h2>
     <p class="muted" style="margin-top:6px" id="sem-papel-txt"></p>
+    <button class="btn hidden" id="sem-papel-re" type="button" style="margin-top:14px">Sair e entrar pelo RE</button>
     <a class="btn" href="cautela.html" style="margin-top:14px;text-decoration:none">Ir para as minhas cautelas</a>
   </div>
 
@@ -291,6 +292,7 @@ const val = (m, id) => m.el.querySelector('#' + id).value;
 /* ---------------- entrada ---------------- */
 function sair(){ CA.sair(); R = null; boot(); }
 $('btn-sair').onclick = sair;
+$('sem-papel-re').onclick = sair;
 $('btn-senha').onclick = () => CA.trocarSenha();
 
 const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(max-width: 760px)').matches;
@@ -299,7 +301,12 @@ function boot(){
   $('btn-sair').classList.toggle('hidden', !AUTH.logged); $('btn-senha').classList.toggle('hidden', !AUTH.logged);
   $('userchip').textContent = '';
   if (MOBILE){ show('so-pc', true); return; }
-  if (!AUTH.logged){ show('login-box', true); CA.montar($('login-form'), { aoEntrar: boot }); return; }
+  if (!AUTH.logged){
+    show('login-box', true);
+    CA.montar($('login-form'), { aoEntrar: boot, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Chefia (dashboard)',
+      notaDash: 'Só para a chefia (P4 / comando). O armeiro de serviço entra pela aba ao lado, com o RE e a senha do Portal do Policial.' });
+    return;
+  }
   carregar();
 }
 
@@ -313,7 +320,10 @@ async function carregar(){
     if (e.status === 401){ CA.esquecer(); R = null; boot(); return; }
     if (e.status === 403){
       show('sem-papel', true);
+      show('sem-papel-re', e.code === 'use_re');
+      $('sem-papel-h').textContent = e.code === 'use_re' ? '🪪 Armeiro: entre pelo seu RE' : '🔒 Você não é o armeiro de serviço';
       $('sem-papel-txt').textContent = e.code === 'somente_computador' ? 'Esta tela só funciona no computador.'
+        : e.code === 'use_re' ? e.message
         : 'Só o armeiro de serviço e a chefia (P4 / comando) abrem a reserva. O armeiro anterior precisa te indicar na passagem de serviço — depois você aceita o plantão em "Minhas cautelas", no celular.';
       return;
     }

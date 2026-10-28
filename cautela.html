@@ -127,6 +127,12 @@ html.portal .wrap{padding-top:14px}
       <button class="btn full" id="btn-assumir" type="button">Aceitar o plantão de armeiro</button>
     </div>
 
+    <div id="box-use-re" class="aviso amarelo hidden">
+      <b>📋 Reserva de armamento: entre pelo seu RE.</b>
+      <p class="muted" style="margin:6px 0 10px">Você está com o login do dashboard. Para aceitar o plantão ou abrir a reserva como armeiro, saia e entre com o seu <b>RE e a senha do Portal do Policial</b>.</p>
+      <button class="btn full" id="btn-use-re" type="button">Sair e entrar pelo RE</button>
+    </div>
+
     <div id="box-reserva" class="aviso hidden" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35)">
       <b>🛡️ Reserva de armamento</b> <span class="muted" id="papel-txt"></span>
       <p class="muted" style="margin-top:4px">A tela do armeiro (estoque, contagem, cautela e Parte Diária) só funciona <b>no computador</b>.</p>
@@ -177,6 +183,7 @@ function telaEntrada(){
 }
 function sair(){ CA.sair(); D = null; boot(); }
 $('btn-sair').onclick = sair;
+$('btn-use-re').onclick = sair;
 $('btn-senha').onclick = () => CA.trocarSenha();
 
 /* ---------------- dados ---------------- */
@@ -212,6 +219,7 @@ async function carregar(){
   if (!D.configurado) $('estado').innerHTML = '⚙️ A planilha da Cautela ainda não foi configurada no servidor. Avise a P4.';
   show('box-vinculo', !D.eu.vinculado);
   show('box-indicado', !!(D.plantao && D.plantao.indicado_a_mim));
+  show('box-use-re', !!D.papel.use_re);
   const operador = D.papel.armeiro || D.papel.chefia;
   show('box-reserva', operador);
   $('papel-txt').textContent = D.papel.chefia ? '· chefia (P4 / comando)' : D.papel.armeiro ? '· você é o armeiro de serviço' : '';

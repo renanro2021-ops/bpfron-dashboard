@@ -59,7 +59,7 @@
     var MODO = '';            // '' (normal) | 'primeiro' | 'trocar'
     var PRECISA = 'cpf4';
     el.innerHTML =
-      '<div class="ca-seg"><button type="button" data-m="re" class="on">🪪 RE e senha</button><button type="button" data-m="dash">🔑 Login do dashboard</button></div>' +
+      '<div class="ca-seg"><button type="button" data-m="re" class="on">' + (opt.rotuloRE || '🪪 RE e senha') + '</button><button type="button" data-m="dash">' + (opt.rotuloDash || '🔑 Login do dashboard') + '</button></div>' +
       (opt.aviso ? '<div class="ca-pa">' + opt.aviso + '</div>' : '') +
       '<form data-p="re" onsubmit="return false">' +
       '  <label for="ca-re">RE</label><input id="ca-re" name="username" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="ex.: 94186">' +
@@ -78,7 +78,7 @@
       '  <label for="ca-pass">Senha</label><input id="ca-pass" name="password" type="password" autocomplete="current-password">' +
       '  <div class="msg" id="ca-msg2"></div>' +
       '  <button class="btn full" id="ca-ok2" type="button">Entrar</button>' +
-      '  <p class="ca-nota">Mesmo usuário e senha do dashboard. O seu RE vem da ligação feita no Portal do Policial.</p>' +
+      '  <p class="ca-nota">' + (opt.notaDash || 'Mesmo usuário e senha do dashboard. O seu RE vem da ligação feita no Portal do Policial.') + '</p>' +
       '</form>';
     var $ = function (id) { return el.querySelector('#' + id); };
     var vis = function (id, on) { $(id).classList.toggle('ca-hide', !on); };
@@ -122,7 +122,8 @@
       var re = $('ca-re').value.replace(/\D/g, '');
       msg('ca-msg', '');
       if (re.length < 4) { msg('ca-msg', 'Digite o seu RE (5 dígitos).'); $('ca-re').focus(); return; }
-      var corpo = { re: re };
+      // para:'cautela' — quem tem login do dashboard também entra pelo RE aqui (o armeiro entra só pelo RE)
+      var corpo = { re: re, para: 'cautela' };
       if (!soConsultar) {
         if (MODO !== 'primeiro') corpo.senha = $('ca-senha').value;
         if (MODO) {
