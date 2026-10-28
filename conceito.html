@@ -844,6 +844,11 @@ function largPt(segs){
   return w * 0.75;
 }
 const LIMITE_PT = 516;   // largura útil da linha dentro da célula (~523 pt), com folga
+/* Espaço que sobrevive à colagem no SEI: o filtro do SEI troca &nbsp; por espaço comum e
+   aí o navegador junta todos num só (a ficha colava "grudada" e perdia a linha em branco,
+   28/10/2026). Com um caractere invisível (U+200B, largura zero) entre cada espaço, eles
+   nunca ficam vizinhos e nenhum é descartado, seja &nbsp; ou espaço comum. */
+const ESPACOS = (n) => '&nbsp;​'.repeat(n);
 function segHtml(segs){ return segs.map(s => s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join(''); }
 function linhaPosicionada(campos){
   const sp = largPt([{ t:' ' }]) || 3;
@@ -852,7 +857,7 @@ function linhaPosicionada(campos){
     if (i > 0){
       const resto = campos.slice(i).reduce((s, c) => s + largPt(c.segs), 0) + (campos.length - 1 - i) * 2 * sp;
       const n = Math.max(2, Math.min(Math.round((cp.x - x) / sp), Math.floor((LIMITE_PT - x - resto) / sp)));
-      html += '&nbsp;'.repeat(n); x += n * sp;
+      html += ESPACOS(n); x += n * sp;
     }
     html += segHtml(cp.segs); x += largPt(cp.segs);
   });
@@ -904,7 +909,7 @@ function montarHTML(){
   const guerra = ATUAL.pessoa && ATUAL.pessoa.guerra;
   let h = '';
   // 1 a 3) cabeçalho: uma tabela de uma célula para cada linha, como no original
-  h += unica(`<p style="margin:0;text-align:center">${P11('<b>FICHA DE CONCEITO</b>')}<br>${P11('&nbsp;')}</p>`
+  h += unica(`<p style="margin:0;text-align:center">${P11('<b>FICHA DE CONCEITO</b>')}<br>${P11('​' + ESPACOS(1))}</p>`
     + `<p style="margin:0">${linhaPosicionada([
         { segs: segsNome(ATUAL.nome, guerra), x: 0 },
         { segs: [{ t:'GRAD', b:true }, { t:'.: ' + (ATUAL.grad || '') }], x: 347.5 }])}</p>`);
@@ -939,7 +944,7 @@ function montarHTML(){
     + `<span style="${FONTE_TAB}">${dentro}</span></p>`;
   let pj = PJ('<b>JUSTIFICATIVAS DE CONCEITO:</b> ' + esc(paras[0] || ''));
   paras.slice(1).forEach(t => { pj += PJ(esc(t)); });
-  h += tabSei(`<tr>${cel('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>' + '&nbsp;'.repeat(5), CEL_UNICA, 'text-align:right;')}</tr>`
+  h += tabSei(`<tr>${cel('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>' + ESPACOS(5), CEL_UNICA, 'text-align:right;')}</tr>`
     + `<tr>${cel(pj, CEL_UNICA, '', '', true)}</tr>`);
   return h;
 }
