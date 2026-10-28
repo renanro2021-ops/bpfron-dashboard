@@ -298,7 +298,7 @@ html,body{overflow-x:hidden}
   #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
   #relatorio .rcab img{height:62px}
   #relatorio .rres{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-  #relatorio .rres div{flex:1 1 22%;border:1px solid #000;padding:5px 8px}
+  #relatorio .rres div{flex:1 1 30%;border:1px solid #000;padding:5px 8px}
   #relatorio .rres span{display:block;font-size:7.5pt;text-transform:uppercase}
   #relatorio .rres b{font-size:12.5pt}
   #relatorio .rres small{display:block;font-size:8pt;color:#333}
@@ -1425,7 +1425,11 @@ function montarRelatorio(tipo, de, ate, inat){
   const porTipoNF = {}; nfsP.forEach(n => { const k = n.tipo || 'Outros'; porTipoNF[k] = (porTipoNF[k] || 0) + 1; });
   const fonte = f => nfsP.filter(n => n.fonte === f).length;
   const at = vts.filter(v => v.ativa);
-  return { tipo, de, ate, inat, itens, porTipoNF, tot: {
+  // Baixadas contam sempre (mesmo sem "incluir devolvidas/baixadas"): é o retrato da frota do recorte.
+  const ordPref = (a, b) => String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true });
+  const baixadas = V.viaturas.filter(v => !v.ativa && !/DEVOLVID/.test(norm(v.status_geral))).sort(ordPref);
+  const oficina = V.viaturas.filter(v => v.ativa && /OFICINA/.test(norm(v.status_geral))).sort(ordPref);
+  return { tipo, de, ate, inat, itens, porTipoNF, baixadas, oficina, tot: {
     vts: vts.length, ativas: at.length, uso: at.filter(v => v.em_uso).length, fora: vts.length - at.length,
     crit: at.filter(v => v.critico).length, comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
     oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
@@ -1442,6 +1446,7 @@ function relatorioHTML(R, completo){
   const crit = its => its.map(i => DB.criticos.includes(i) ? `<b>${esc(i)}</b>` : esc(i)).join(', ');
   const sit = (v, dv) => !v.ativa ? `${esc(v.status_geral || 'Fora de uso')}${dv ? ` → ${esc(dv.destino)}${dv.data ? ' em ' + fD(dv.data) : ''}` : ''}` : v.em_uso ? `Em uso — ${esc(v.ultimo.motorista)}` : 'Na base';
   const box = (l, v, s) => `<div><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ''}</div>`;
+  const listaPref = L => L.slice(0, 5).map(v => esc(v.prefixo)).join(', ') + (L.length > 5 ? ` e mais ${L.length - 5}` : '');
 
   const atencao = [];
   itens.filter(x => x.v.ativa).forEach(({ v }) => {
@@ -1490,6 +1495,7 @@ function relatorioHTML(R, completo){
       <div style="font-size:9.5pt">Período: ${per} · ${R.inat ? 'inclui viaturas devolvidas/baixadas' : 'somente viaturas ativas'}</div></div></div>
     <div class="rres">
       ${box('Viaturas', tot.vts, `${tot.ativas} ativa(s) · ${tot.uso} em uso agora${tot.fora ? ` · ${tot.fora} fora de uso` : ''}`)}
+      ${box('Viaturas baixadas', R.baixadas.length, [listaPref(R.baixadas) || 'nenhuma', R.oficina.length ? `${R.oficina.length} na oficina (${listaPref(R.oficina)})` : ''].filter(Boolean).join(' · '))}
       ${box('Dano crítico', tot.crit, 'motor / transmissão')}
       ${box('Com alteração aberta', tot.comAlt, `${tot.itensAb} item(ns) em aberto`)}
       ${box('Troca de óleo', tot.oleoV + tot.oleoB, `${tot.oleoV} vencida(s) · ${tot.oleoB} em breve`)}
