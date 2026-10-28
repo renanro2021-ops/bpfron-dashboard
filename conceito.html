@@ -799,8 +799,10 @@ function fecharOvl(id){ $(id).classList.remove('on'); }
    Cópia fiel do Adendo do SEI (modelo: SEI 77550981, 2º quad. 2026), pedido do
    usuário em 28/10/2026 ("exatamente deste jeito", com a configuração do
    "Formatar Tabela" que ele mostrou):
-   - O Adendo é feito de 8 tabelas empilhadas, sem nada entre elas. A do meio tem
-     20 linhas x 4 colunas. Todas: largura 666px, borda 1, espaçamento 1, margem
+   - O Adendo é feito de tabelas empilhadas, sem nada entre elas. Aqui são 6: as 3
+     linhas do cabeçalho, os títulos das colunas, TODOS os itens numa tabela só (30
+     linhas x 4; no original eram 20 + 8 + 2, o usuário pediu junta em 28/10/2026) e
+     conceito final + justificativa. Todas: largura 666px, borda 1, espaçamento 1, margem
      interna 1, alinhamento centralizado, sem cabeçalho. A borda é a padrão do
      atributo border="1" (linha dupla cinza do SEI) — sem CSS de borda.
    - Cada coluna tem largura própria (228/89/273/90 + borda e margem, medidas no PDF), como no
@@ -916,7 +918,9 @@ function montarHTML(){
   // 4) títulos das colunas
   const tit = P11('<b>CONCEITO</b>');
   h += tabSei(`<tr>${cel('<b>I – VALOR PROFISSIONAL</b>', w1)}${cel(tit, w2, CE)}${cel('<b>II – VALOR MORAL</b>', w3)}${cel(tit, w4, CE)}</tr>`);
-  // 5 a 7) os itens: 20 linhas, 8 linhas e 2 linhas (as mesmas quebras do original)
+  // 5) os itens: UMA tabela só, de "a)" até "3 - Senso de julgamento". O Adendo original
+  //    tem emendas (20 + 8 + 2 linhas) que aparecem como linha dupla grossa entre
+  //    "8 - Conhecimentos profissionais" e "9 - Iniciativa"; o usuário pediu junta (28/10/2026).
   const E = linhasEsquerda(), D = linhasDireita(), vazio = { rot:'&nbsp;', val:'&nbsp;' };
   const linha = (i) => {
     const e = E[i] || vazio, d = D[i] || vazio;
@@ -925,8 +929,8 @@ function montarHTML(){
   };
   const bloco = (de, ate) => { let r = ''; for (let i = de; i < ate; i++) r += linha(i); return tabSei(r); };
   const n = Math.max(E.length, D.length);
-  h += bloco(0, 20) + bloco(20, 28) + bloco(28, n);
-  // 8) conceito final + justificativa, na mesma tabela
+  h += bloco(0, n);
+  // 6) conceito final + justificativa, na mesma tabela
   const just = String(ATUAL.justificativa || '').trim();
   const paras = just.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
   /* Parágrafo do próprio SEI ("Texto Justificado": margem de 6pt, justificado);
