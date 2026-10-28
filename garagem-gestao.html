@@ -298,7 +298,10 @@ html,body{overflow-x:hidden}
   #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
   #relatorio .rcab img{height:62px}
   #relatorio .rres{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-  #relatorio .rres div{flex:1 1 30%;border:1px solid #000;padding:5px 8px}
+  #relatorio .rres div{flex:1 1 22%;border:1px solid #000;padding:5px 8px}
+  #relatorio .rres.r5{margin-top:-2px}
+  #relatorio .np{font-style:normal;white-space:nowrap}
+  #relatorio .rres.r5 div{flex-basis:17%}
   #relatorio .rres span{display:block;font-size:7.5pt;text-transform:uppercase}
   #relatorio .rres b{font-size:12.5pt}
   #relatorio .rres small{display:block;font-size:8pt;color:#333}
@@ -539,6 +542,9 @@ function fD(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); r
 function fDH(iso){ const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : ''; }
 function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase(); }
 function normK(s){ return norm(s).replace(/[^A-Z0-9]/g,''); }
+// Situação da viatura (28/10/2026): "disponível" = NA BASE = ativa, sem ninguém com ela e fora da oficina.
+function naOficina(v){ return !!v.ativa && /OFICINA/.test(norm(v.status_geral)); }
+function naBase(v){ return !!v.ativa && !v.em_uso && !naOficina(v); }
 function show(id, on){ $(id).classList.toggle('hidden', !on); }
 function hojeISO(){ const d = new Date(Date.now() - 4*3600e3); return d.toISOString().slice(0,10); }
 function diasAtras(n){ return new Date(Date.now() - 4*3600e3 - n*864e5).toISOString().slice(0,10); }
@@ -632,9 +638,9 @@ function togUso(abrir){
 function renderUso(){
   if (!D) return;
   const L = D.viaturas.filter(v => v.ativa && v.em_uso).sort((a,b) => (a.ultimo.data < b.ultimo.data ? 1 : -1));
-  const livres = D.viaturas.filter(v => v.ativa && !v.em_uso).length;
+  const livres = D.viaturas.filter(naBase).length, ofic = D.viaturas.filter(naOficina).length;
   show('uso-btn', true); $('uso-n').textContent = L.length;
-  $('uso-sb').textContent = `${L.length} em uso · ${livres} na base · atualizado ${String(D.agora || '').slice(11,16)}`;
+  $('uso-sb').textContent = `${L.length} em uso · ${livres} na base${ofic ? ` · ${ofic} na oficina` : ''} · atualizado ${String(D.agora || '').slice(11,16)}`;
   $('uso-list').innerHTML = L.map(v => {
     const u = v.ultimo, t = tempoDesde(u.data), longo = t.h >= 24;
     return `<div class="ub ${longo ? 'long' : ''}" onclick="abrirFicha(${v._i})" title="Abrir a ficha da viatura">
@@ -702,7 +708,7 @@ function renderGeral(){
   const itensAbertos = at.reduce((a,v) => a + v.itens_bloqueados.length, 0);
   const K = [
     { l:TIPO === 'locada' ? 'Locadas ativas' : 'Frota ativa', v:at.length, s:`${D.viaturas.length} ${TIPO ? 'cadastradas' : 'no batalhão'} · ${D.viaturas.length - at.length} devolvida(s)/baixada(s)`, c:'#F5C518', go:['frota',''] },
-    { l:'Em uso agora', v:uso.length, s:`${at.length - uso.length} na base`, c:'#60a5fa', go:['frota','uso'] },
+    { l:'Em uso agora', v:uso.length, s:`${at.filter(naBase).length} na base${at.some(naOficina) ? ` · ${at.filter(naOficina).length} na oficina` : ''}`, c:'#60a5fa', go:['frota','uso'] },
     { l:'Com alteração', v:comPend.length, s:`${itensAbertos} itens abertos`, c:'#fbbf24', go:['pend'] },
     { l:'Dano crítico', v:crit.length, s:'motor / transmissão', c:'#f87171', go:['frota','crit'] },
     { l:'Óleo', v:oleoV.length + oleoB.length, s:`${oleoV.length} vencido · ${oleoB.length} em breve`, c:'#fb923c', go:['frota','oleo'] },
@@ -876,7 +882,8 @@ function renderFrota(){
   const F = [
     ['', 'Ativas', v => v.ativa],
     ['uso', 'Em uso', v => v.ativa && v.em_uso],
-    ['livre', 'Disponíveis', v => v.ativa && !v.em_uso],
+    ['livre', 'Disponíveis · na base', naBase],
+    ['ofic', 'Na oficina', naOficina],
     ['pend', 'Com alteração', v => v.ativa && v.pendencias.length],
     ['crit', 'Dano crítico', v => v.ativa && v.critico],
     ['oleo', 'Óleo vencido/em breve', v => v.ativa && v.km_para_troca != null && v.km_para_troca <= 1000],
@@ -899,7 +906,11 @@ function renderFrota(){
     const chips = [];
     const dv = !v.ativa && devDe(v.prefixo);
     if (!v.ativa) chips.push(`<span class="chip n">⛔ ${esc(v.status_geral || 'Fora de uso')}${dv ? ' → ' + esc(dv.destino) : ''}</span>`);
-    else chips.push(v.em_uso ? `<span class="chip b">🔵 Em uso</span>` : `<span class="chip g">🟢 Na base</span>`);
+    else {
+      if (v.em_uso) chips.push(`<span class="chip b">🔵 Em uso</span>`);
+      if (naOficina(v)) chips.push(`<span class="chip o">🔧 Na oficina</span>`);
+      if (naBase(v)) chips.push(`<span class="chip g">🟢 Na base</span>`);
+    }
     if (v.critico) chips.push('<span class="chip r">⚠️ Crítico</span>');
     if (v.itens_bloqueados.length) chips.push(`<span class="chip y">🔧 ${v.itens_bloqueados.length} alteração(ões)</span>`);
     if (o.cls === 'r' || o.cls === 'o') chips.push(`<span class="chip ${o.cls}">🛢️ ${o.cls === 'r' ? 'Óleo vencido' : 'Óleo em breve'}</span>`);
@@ -957,7 +968,7 @@ function abrirFicha(i){
   const u = v.ultimo, dv = devDe(v.prefixo);
   const corpo = `
     ${dv && !v.ativa ? `<div class="banner warn">↩️ <b>Devolvida em ${fD(dv.data)} para ${esc(dv.destino)}</b>${dv.documento ? ` · ${esc(dv.documento)}` : ''}${dv.km ? ` · ${fN(dv.km)} km` : ''}<br><span style="font-size:12.5px">registrada por ${esc(dv.registrado_por)} em ${fDH(dv.registrado_em)}${dv.obs ? ' — ' + esc(dv.obs) : ''}</span></div>` : ''}
-    <div class="chips" style="margin:-4px 0 14px">${!v.ativa ? `<span class="chip n">⛔ Fora de uso</span>` : v.em_uso ? `<span class="chip b">🔵 Em uso com ${esc(u.motorista)} desde ${fDH(u.data)}</span>` : '<span class="chip g">🟢 Na base</span>'}
+    <div class="chips" style="margin:-4px 0 14px">${!v.ativa ? `<span class="chip n">⛔ Fora de uso</span>` : v.em_uso ? `<span class="chip b">🔵 Em uso com ${esc(u.motorista)} desde ${fDH(u.data)}</span>` : naOficina(v) ? '<span class="chip o">🔧 Na oficina</span>' : '<span class="chip g">🟢 Na base</span>'}
       ${v.critico ? '<span class="chip r">⚠️ Dano crítico</span>' : ''}<span class="chip n">${esc(v.status_geral || 'Ativa')}</span><span class="chip n">${esc(v.lotacao || '—')}</span></div>
     <div class="ficha-top">
       <div class="fbox"><div class="l">Km atual</div><div class="v">${v.km_atual ? fN(v.km_atual) : '—'}</div><div class="s">${v.total_checklists} checklists</div></div>
@@ -1425,13 +1436,16 @@ function montarRelatorio(tipo, de, ate, inat){
   const porTipoNF = {}; nfsP.forEach(n => { const k = n.tipo || 'Outros'; porTipoNF[k] = (porTipoNF[k] || 0) + 1; });
   const at = vts.filter(v => v.ativa);
   // Situação da frota (disponíveis × em manutenção × baixadas) conta sempre, mesmo sem
-  // "incluir devolvidas/baixadas": é o retrato da frota do recorte. Disponível = ativa fora da oficina.
+  // "incluir devolvidas/baixadas": é o retrato da frota do recorte. Disponível = na base (naBase).
   const ordPref = (a, b) => String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true });
   const baixadas = V.viaturas.filter(v => !v.ativa && !/DEVOLVID/.test(norm(v.status_geral))).sort(ordPref);
-  const oficina = V.viaturas.filter(v => v.ativa && /OFICINA/.test(norm(v.status_geral))).sort(ordPref);
-  const disponiveis = V.viaturas.filter(v => v.ativa && !/OFICINA/.test(norm(v.status_geral))).sort(ordPref);
-  return { tipo, de, ate, inat, itens, porTipoNF, disponiveis, oficina, baixadas, tot: {
-    vts: vts.length, ativas: at.length, uso: at.filter(v => v.em_uso).length, fora: vts.length - at.length,
+  const oficina = V.viaturas.filter(naOficina).sort(ordPref);
+  const disponiveis = V.viaturas.filter(naBase).sort(ordPref);
+  // Total do cartão fecha a conta: disponíveis + em uso + em manutenção + baixadas (+ devolvidas, se incluídas).
+  const emUso = V.viaturas.filter(v => v.ativa && v.em_uso && !naOficina(v));
+  const devolv = inat ? V.viaturas.filter(v => !v.ativa && /DEVOLVID/.test(norm(v.status_geral))) : [];
+  const frota = { total: disponiveis.length + emUso.length + oficina.length + baixadas.length + devolv.length, uso: emUso.length, dev: devolv.length };
+  return { tipo, de, ate, inat, itens, porTipoNF, disponiveis, oficina, baixadas, frota, tot: {
     comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
     oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
     ck: cksP.length, ckIni: cksP.filter(c => c.momento === 'Início de uso').length, ckFim: cksP.filter(c => c.momento === 'Término de uso').length,
@@ -1445,9 +1459,9 @@ function relatorioHTML(R, completo){
   const per = `${R.de ? fD(R.de) : 'início dos registros'} a ${fD(R.ate)}`;
   const tab = (cab, linhas, rod) => `<table><thead><tr>${cab.map(c => `<th${c[1] ? ` class="${c[1]}"` : ''}>${c[0]}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody>${rod ? `<tfoot>${rod}</tfoot>` : ''}</table>`;
   const crit = its => its.map(i => DB.criticos.includes(i) ? `<b>${esc(i)}</b>` : esc(i)).join(', ');
-  const sit = (v, dv) => !v.ativa ? `${esc(v.status_geral || 'Fora de uso')}${dv ? ` → ${esc(dv.destino)}${dv.data ? ' em ' + fD(dv.data) : ''}` : ''}` : v.em_uso ? `Em uso — ${esc(v.ultimo.motorista)}` : 'Na base';
+  const sit = (v, dv) => !v.ativa ? `${esc(v.status_geral || 'Fora de uso')}${dv ? ` → ${esc(dv.destino)}${dv.data ? ' em ' + fD(dv.data) : ''}` : ''}` : v.em_uso ? `Em uso — ${esc(v.ultimo.motorista)}` : naOficina(v) ? 'Na oficina' : 'Na base';
   const box = (l, v, s) => `<div><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ''}</div>`;
-  const listaPref = L => L.slice(0, 5).map(v => esc(v.prefixo)).join(', ') + (L.length > 5 ? ` e mais ${L.length - 5}` : '');
+  const listaPref = L => L.slice(0, 5).map(v => `<i class="np">${esc(v.prefixo)}</i>`).join(', ') + (L.length > 5 ? ` e mais ${L.length - 5}` : '');
 
   const atencao = [];
   itens.filter(x => x.v.ativa).forEach(({ v }) => {
@@ -1495,10 +1509,12 @@ function relatorioHTML(R, completo){
       <h1>RELATÓRIO DA FROTA — ${nomeTipo} · ${completo ? 'COMPLETO' : 'RESUMIDO'}</h1>
       <div style="font-size:9.5pt">Período: ${per} · ${R.inat ? 'inclui viaturas devolvidas/baixadas' : 'somente viaturas ativas'}</div></div></div>
     <div class="rres">
-      ${box('Viaturas disponíveis', R.disponiveis.length, listaPref(R.disponiveis) || 'nenhuma')}
+      ${box('Total de viaturas', R.frota.total, `${R.frota.uso} em uso agora${R.frota.dev ? ` · ${R.frota.dev} devolvida(s)` : ''}`)}
+      ${box('Viaturas disponíveis', R.disponiveis.length, R.disponiveis.length ? `na base: ${listaPref(R.disponiveis)}` : 'nenhuma na base')}
       ${box('Em manutenção', R.oficina.length, R.oficina.length ? `na oficina: ${listaPref(R.oficina)}` : 'nenhuma na oficina')}
       ${box('Viaturas baixadas', R.baixadas.length, listaPref(R.baixadas) || 'nenhuma')}
-      ${box('Total de viaturas', tot.vts, `${tot.ativas} ativa(s) · ${tot.uso} em uso agora${tot.fora ? ` · ${tot.fora} fora de uso` : ''}`)}
+    </div>
+    <div class="rres r5">
       ${box('Com alteração aberta', tot.comAlt, `${tot.itensAb} item(ns) em aberto`)}
       ${box('Troca de óleo', tot.oleoV + tot.oleoB, `${tot.oleoV} vencida(s) · ${tot.oleoB} em breve`)}
       ${box('Checklists no período', fN(tot.ck), `${tot.ckIni} início · ${tot.ckFim} término`)}
