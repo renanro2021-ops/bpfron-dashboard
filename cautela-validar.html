@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Validar Cautela · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060912;--yellow:#F5C518;--text:#dde3f0;--muted:#94a3b8;--line:rgba(148,163,184,.16);--card:rgba(12,17,30,.88);--green:#34d399;--red:#ef4444;--orange:#fb923c}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12) 0%,transparent 60%);background-attachment:fixed}
+.hdr{background:#05070d;border-bottom:3px solid rgba(245,197,24,.55);padding:12px 16px}
+.hdr-in{max-width:620px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.hdr img{height:40px;mix-blend-mode:screen}
+.hdr b{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff}.hdr b em{font-style:normal;color:var(--yellow)}
+.hdr small{display:block;font-size:11.5px;color:var(--muted)}
+.wrap{max-width:620px;margin:0 auto;padding:20px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px}
+.selo{text-align:center;padding:26px 18px;border-radius:16px;margin-bottom:14px;border:2px solid}
+.selo .ic{font-size:46px;line-height:1}
+.selo h1{font-family:'Rajdhani',sans-serif;font-size:26px;margin-top:6px;color:#fff}
+.selo p{font-size:14.5px;margin-top:4px}
+.selo.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.55)}
+.selo.bad{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.6)}
+.selo.wait{background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.55)}
+.selo.neu{background:rgba(148,163,184,.1);border-color:var(--line)}
+dl{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;font-size:15px}
+dt{color:var(--muted)}dd{color:#fff;word-break:break-word}
+.mono{font-family:ui-monospace,Consolas,monospace;letter-spacing:.5px}
+.tl{margin-top:12px;font-size:14px;color:var(--muted)}.tl div{padding:3px 0}
+.itens{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.itens div{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:15px}
+.itens div:last-child{border-bottom:none}
+input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:inherit;font-size:16px;min-height:46px}
+button{margin-top:10px;width:100%;border:none;border-radius:12px;padding:12px;font-family:inherit;font-size:16px;font-weight:700;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a;min-height:48px;cursor:pointer}
+.muted{color:var(--muted);font-size:14px}
+@media(max-width:480px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="hdr-in"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><div><b>Validação da <em>Cautela</em></b><small>BPFRON/RO · reserva de armamento</small></div></div></div>
+<main class="wrap">
+  <div id="res"></div>
+  <div class="card">
+    <label class="muted" for="cod">Código do documento</label>
+    <input id="cod" placeholder="CAU-2026-XXXX-XXXX" autocapitalize="characters" autocomplete="off">
+    <button id="btn" type="button">Conferir</button>
+  </div>
+  <p class="muted">Esta página confere se o registro existe no sistema da Cautela e se ele <b>não foi alterado depois de assinado</b>. Os itens e números de série só aparecem para o próprio policial, para o armeiro e para a chefia.</p>
+</main>
+<script>
+const API_BASE = (function(){
+  try { const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fQ = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
+
+async function conferir(id){
+  id = String(id || '').trim(); if (!id) return;
+  $('cod').value = id;
+  $('res').innerHTML = '<div class="card muted">Conferindo…</div>';
+  let token = ''; try { token = localStorage.getItem('tar_token') || localStorage.getItem('bp_token') || ''; } catch(e){}
+  try {
+    const r = await fetch(API_BASE + '/api/cautela/validar?id=' + encodeURIComponent(id), { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    const d = await r.json().catch(() => ({}));
+    $('res').innerHTML = desenhar(r.status, d);
+  } catch(e){
+    $('res').innerHTML = '<div class="selo neu"><div class="ic">📡</div><h1>Sem conexão</h1><p>Não foi possível falar com o servidor. Tente de novo.</p></div>';
+  }
+}
+
+function desenhar(st, d){
+  if (st === 404 || d.situacao === 'nao_encontrado') return '<div class="selo bad"><div class="ic">❌</div><h1>Documento não encontrado</h1><p>Este código não existe no sistema. Desconfie do documento.</p></div>';
+  if (st === 503 || d.situacao === 'indisponivel') return '<div class="selo neu"><div class="ic">⚙️</div><h1>Indisponível</h1><p>O sistema da Cautela ainda não está configurado.</p></div>';
+  if (d.situacao === 'invalida') return '<div class="selo bad"><div class="ic">⚠️</div><h1>Registro ADULTERADO</h1><p>O registro deste código foi alterado depois de assinado. Não confie neste documento e avise a P4.</p></div>';
+  let selo;
+  if (d.situacao === 'cancelada') selo = '<div class="selo neu"><div class="ic">🚫</div><h1>Cautela cancelada</h1><p>O registro é autêntico, mas foi cancelado antes de o material sair.</p></div>';
+  else if (d.status === 'aguardando') selo = '<div class="selo wait"><div class="ic">⏳</div><h1>Autêntico · aguardando assinatura</h1><p>O policial ainda não assinou o recebimento.</p></div>';
+  else selo = '<div class="selo ok"><div class="ic">✅</div><h1>Documento autêntico</h1><p>' + esc(d.status_texto || 'Registro íntegro') + '</p></div>';
+  const linhas = [
+    ['Documento', d.tipo], ['Código', '<span class="mono">' + esc(d.codigo) + '</span>'], ['Emitido em', fQ(d.emitida_em)],
+  ];
+  if (d.policial) linhas.push(['Policial', d.policial], ['Armeiro', d.armeiro], ['Missão', d.missao], ['Período', fQ(d.inicio) + ' → ' + fQ(d.fim_previsto)], ['Itens (total)', d.itens_total]);
+  else { linhas.push(['Armeiro', d.armeiro], ['Substituto', d.substituto]); if (d.aceita_em) linhas.push(['Aceita em', fQ(d.aceita_em)]); }
+  linhas.push(['Assinatura', '<span class="mono">' + esc(d.assinatura) + '</span>']);
+  const tl = (d.assinaturas || []).map(a => `<div>✍️ ${esc(a.acao)} — <b>${fQ(a.em)}</b></div>`).join('');
+  const itens = d.itens ? '<div class="itens">' + d.itens.map(i => `<div><span>${esc(i.descricao)}${i.serie ? ' · Nº ' + esc(i.serie) : ''}</span><b>${i.qtd}×</b></div>`).join('') + '</div>' : '';
+  return selo + '<div class="card"><dl>' + linhas.map(([k, v]) => `<dt>${k}</dt><dd>${typeof v === 'string' && v.startsWith('<span') ? v : esc(v)}</dd>`).join('') + '</dl>' + (tl ? '<div class="tl">' + tl + '</div>' : '') + itens + '</div>';
+}
+
+$('btn').onclick = () => conferir($('cod').value);
+$('cod').addEventListener('keydown', e => { if (e.key === 'Enter') conferir($('cod').value); });
+const id0 = new URLSearchParams(location.search).get('id'); if (id0) conferir(id0);
+</script>
+</body>
+</html>

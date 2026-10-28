@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Cautela de Armamento · BPFRON/RO</title>
+<script>try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
+<script src="conta.js"></script>
+<script src="cautela-acesso.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
+  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.16); --card:rgba(12,17,30,0.85);
+  --red:#ef4444; --redsoft:rgba(239,68,68,.12); --green:#34d399; --greensoft:rgba(52,211,153,.12);
+  --orange:#fb923c; --orangesoft:rgba(251,146,60,.13); --blue:#60a5fa;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
+.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:50;box-shadow:0 8px 48px rgba(0,0,0,.8)}
+.hdr-inner{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{height:40px;width:auto;mix-blend-mode:screen}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.1}
+.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
+.hdr-sub{font-size:11.5px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:12px}
+#userchip{font-size:13px;color:var(--yellow);font-weight:600}
+.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;min-height:36px}
+.hdr-link:hover{color:var(--yellow)}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 80px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff;line-height:1.15}
+h2{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;margin-bottom:6px}
+.muted{color:var(--muted);font-size:14px}
+label{display:block;font-size:13px;font-weight:600;color:#cbd5e1;margin:12px 0 5px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:inherit;font-size:16px;outline:none;min-height:46px}
+input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 18px;font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;min-height:48px;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sec{background:rgba(148,163,184,.12);color:#cbd5e1;border:1px solid var(--line)}
+.btn.full{width:100%}
+.btn.sm{min-height:38px;padding:8px 14px;font-size:14px}
+.msg{font-size:14px;margin-top:10px;min-height:20px}
+.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
+.seg{display:flex;gap:6px;margin-bottom:14px}
+.seg button{flex:1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;min-height:48px}
+.seg button.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.seg .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:12px}
+.seg .n.zero{background:rgba(148,163,184,.2)}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.chip.ok{background:var(--greensoft);border-color:rgba(52,211,153,.4);color:#6ee7b7}
+.chip.wait{background:var(--orangesoft);border-color:rgba(251,146,60,.45);color:#fdba74}
+.chip.bad{background:var(--redsoft);border-color:rgba(239,68,68,.45);color:#fca5a5}
+.chip.neu{background:rgba(148,163,184,.1);color:#cbd5e1}
+.cau-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.cau-id{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow);letter-spacing:.5px}
+.itens{margin:10px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.itens div{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:15px}
+.itens div:last-child{border-bottom:none}
+.itens b{color:#fff;white-space:nowrap}
+.itens small{color:var(--muted);display:block;font-size:12.5px}
+.aviso{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14.5px}
+.aviso.amarelo{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4)}
+.aviso.laranja{background:var(--orangesoft);border:1px solid rgba(251,146,60,.4)}
+.tl{margin-top:10px;font-size:13.5px;color:var(--muted)}
+.tl div{padding:3px 0}
+.tl b{color:#cbd5e1}
+.hidden{display:none!important}
+.sel-qr{display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.qr{background:#fff;padding:6px;border-radius:8px;min-width:140px;min-height:140px;display:grid;place-items:center}
+.ovl{position:fixed;inset:0;background:rgba(2,6,14,.82);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0}
+.modal{background:#0d1220;border:1px solid rgba(245,197,24,.4);border-radius:18px 18px 0 0;padding:20px 18px 26px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
+@media(min-width:640px){.ovl{align-items:center;padding:16px}.modal{border-radius:18px}}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:15px}
+.chk input{width:24px;min-height:24px;margin-top:2px;flex:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:12px 18px;border-radius:12px;z-index:300;max-width:92vw;font-size:14.5px;display:none}
+a{color:var(--yellow)}
+/* dentro do Portal do Policial (aba Cautela): o portal já tem o cabeçalho */
+html.portal .hdr{display:none}
+html.portal .wrap{padding-top:14px}
+</style>
+</head>
+<body>
+
+<div class="hdr"><div class="hdr-inner">
+  <div class="hdr-brand">
+    <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+    <div><div class="hdr-title">Cautela de <em>Armamento</em></div><div class="hdr-sub">BPFRON/RO · reserva de armamento</div></div>
+  </div>
+  <div class="hdr-right">
+    <span id="userchip"></span>
+    <button class="hdr-link hidden" id="btn-senha" type="button">🔑 Senha</button>
+    <button class="hdr-link hidden" id="btn-sair" type="button">Sair</button>
+  </div>
+</div></div>
+
+<main class="wrap">
+
+  <!-- ============ deslogado ============ -->
+  <section id="login-box" class="hidden">
+    <div class="card">
+      <h1>Cautela de material bélico</h1>
+      <p class="muted" style="margin-top:6px">Aqui você confere e <b>assina com a sua senha</b> o material que recebe e o que devolve à reserva de armamento. Essa senha é a sua assinatura eletrônica — a mesma do <b>Portal do Policial</b>.</p>
+    </div>
+    <div class="card" id="login-form"></div>
+  </section>
+
+  <!-- ============ logado ============ -->
+  <section id="app" class="hidden">
+    <div id="estado" class="card muted"></div>
+
+    <div id="box-vinculo" class="card hidden">
+      <h2>Ligue o seu login ao seu RE</h2>
+      <p class="muted">Você entrou com o login do dashboard, que ainda não está ligado a um policial. É uma vez só (vale também no Portal do Policial): informe o seu RE e confirme quem é você.</p>
+      <label for="v-re">RE</label><input id="v-re" inputmode="numeric" placeholder="ex.: 94186">
+      <div id="v-w-conf" class="hidden"><label for="v-conf" id="v-conf-l">4 últimos dígitos do CPF</label><input id="v-conf" autocomplete="off"></div>
+      <div class="msg" id="msg-vinculo"></div>
+      <button class="btn full" id="btn-vinculo" type="button">Continuar</button>
+    </div>
+
+    <div id="box-indicado" class="aviso amarelo hidden">
+      <b>📋 Você foi indicado para assumir a reserva de armamento.</b>
+      <p class="muted" style="margin:6px 0 10px">Ao aceitar, com a sua senha, você passa a ser o armeiro de serviço e responde pelo material carga da reserva.</p>
+      <button class="btn full" id="btn-assumir" type="button">Aceitar o plantão de armeiro</button>
+    </div>
+
+    <div id="box-reserva" class="aviso hidden" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35)">
+      <b>🛡️ Reserva de armamento</b> <span class="muted" id="papel-txt"></span>
+      <p class="muted" style="margin-top:4px">A tela do armeiro (estoque, contagem, cautela e Parte Diária) só funciona <b>no computador</b>.</p>
+      <a class="btn sm" id="link-reserva" href="cautela-reserva.html" style="margin-top:8px;text-decoration:none">Abrir a reserva (computador)</a>
+    </div>
+
+    <div class="seg" id="seg-abas">
+      <button type="button" data-aba="assinar" class="on">Para assinar <span class="n zero" id="n-assinar">0</span></button>
+      <button type="button" data-aba="minhas">Minhas cautelas</button>
+    </div>
+    <div id="lista"></div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* Entrada: senha ÚNICA do Portal do Policial (RE) ou login do dashboard — ver cautela-acesso.js.
+   ?api= existe só para os testes locais e SÓ aceita localhost (a página manda o token e a senha). */
+const API_BASE = CA.API;
+const AUTH = { get token(){ return CA.token(); }, get logged(){ return !!CA.token(); } };
+/* Dentro do Portal do Policial (?portal=1&re=…): a sessão tem de ser do RE do portal. */
+const PORTAL_RE = (function(){ try { const q = new URLSearchParams(location.search); return q.has('portal') ? (q.get('re') || '').replace(/D/g, '').slice(-5) : ''; } catch(e){ return ''; } })();
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show = (id, on) => $(id).classList.toggle('hidden', !on);
+const fQuando = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
+const fDia = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { timeZone:'America/Porto_Velho' }); };
+function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 4200); }
+
+function cab(extra){ const h = Object.assign({}, extra || {}); if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token; return h; }
+async function api(path, opt){
+  const r = await fetch(API_BASE + path, Object.assign({ headers: cab() }, opt || {}));
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
+
+/* ---------------- entrada ---------------- */
+let OUTRO = '';   // no portal: a sessão deste aparelho é de outra pessoa
+function telaEntrada(){
+  CA.montar($('login-form'), {
+    re: PORTAL_RE,
+    aviso: OUTRO ? `Este aparelho estava com a sessão de <b>${esc(OUTRO)}</b>. Entre com a <b>sua</b> senha.` : '',
+    aoEntrar: () => { OUTRO = ''; boot(); },
+  });
+}
+function sair(){ CA.sair(); D = null; boot(); }
+$('btn-sair').onclick = sair;
+$('btn-senha').onclick = () => CA.trocarSenha();
+
+/* ---------------- dados ---------------- */
+let D = null, ABA = 'assinar';
+const DESTAQUE = new URLSearchParams(location.search).get('c') || '';
+
+function boot(){
+  show('login-box', !AUTH.logged); show('app', AUTH.logged);
+  $('btn-sair').classList.toggle('hidden', !AUTH.logged);
+  $('btn-senha').classList.toggle('hidden', !AUTH.logged);
+  $('userchip').textContent = '';
+  if (AUTH.logged) carregar(); else telaEntrada();
+}
+
+async function carregar(){
+  try {
+    const eu = await api('/api/cautela/eu');
+    const mi = await api('/api/cautela/minhas');
+    D = { eu: eu.eu, papel: eu.papel, plantao: eu.plantao, aviso: eu.aviso, cautelas: mi.cautelas || [], sem_vinculo: !!mi.sem_vinculo, configurado: eu.configurado };
+  } catch(e){
+    if (e.status === 401){ CA.esquecer(); boot(); return; }
+    show('estado', true); $('estado').innerHTML = '⚠️ ' + esc(e.message); return;
+  }
+  // no portal, sessão de outra pessoa: pede a senha de quem está no portal (não apaga a sessão dela)
+  if (PORTAL_RE && D.eu.re && D.eu.re !== PORTAL_RE){
+    OUTRO = D.eu.guerra ? `${D.eu.posto} ${D.eu.guerra}` : D.eu.nome;
+    D = null; show('app', false); show('login-box', true); $('btn-sair').classList.add('hidden'); $('btn-senha').classList.add('hidden');
+    telaEntrada(); return;
+  }
+  $('userchip').textContent = '👤 ' + (D.eu.guerra ? `${D.eu.posto} ${D.eu.guerra}` : D.eu.nome);
+  if (!D.eu.vinculado && PORTAL_RE && !$('v-re').value) $('v-re').value = PORTAL_RE;
+  show('estado', !D.configurado);
+  if (!D.configurado) $('estado').innerHTML = '⚙️ A planilha da Cautela ainda não foi configurada no servidor. Avise a P4.';
+  show('box-vinculo', !D.eu.vinculado);
+  show('box-indicado', !!(D.plantao && D.plantao.indicado_a_mim));
+  const operador = D.papel.armeiro || D.papel.chefia;
+  show('box-reserva', operador);
+  $('papel-txt').textContent = D.papel.chefia ? '· chefia (P4 / comando)' : D.papel.armeiro ? '· você é o armeiro de serviço' : '';
+  show('seg-abas', D.eu.vinculado); show('lista', D.eu.vinculado);
+  render();
+}
+
+const precisaAssinar = (c) => c.status === 'aguardando' || c.devolucoes.some(d => !d.assinada);
+const STATUS = {
+  aguardando: ['wait', 'Aguardando a sua assinatura'], ativa: ['ok', 'Material com você'], parcial: ['wait', 'Devolução parcial'],
+  devolvida: ['neu', 'Devolvida'], cancelada: ['neu', 'Cancelada']
+};
+const ALERTAS = { vencida: ['bad', 'Prazo vencido'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_sem_assinatura: ['wait', 'Devolução aguarda sua assinatura'] };
+
+function itensHtml(c){
+  return '<div class="itens">' + c.itens.map(i => `<div><span>${esc(i.descricao)}${i.serie ? `<small>Nº de série ${esc(i.serie)}</small>` : ''}${i.devolvido ? `<small>devolvido: ${i.devolvido} de ${i.qtd}</small>` : ''}</span><b>${i.qtd}×</b></div>`).join('') + '</div>';
+}
+
+function cartao(c, completo){
+  const [cls, txt] = STATUS[c.status] || ['neu', c.status];
+  const chips = c.alertas.filter(a => ALERTAS[a]).map(a => `<span class="chip ${ALERTAS[a][0]}">${ALERTAS[a][1]}</span>`).join(' ');
+  const botoes = [];
+  if (c.status === 'aguardando') botoes.push(`<button class="btn full" data-act="receber" data-id="${esc(c.cautela_id)}">✍️ Conferi — assinar o recebimento</button>`);
+  c.devolucoes.filter(d => !d.assinada).forEach(d => botoes.push(`<button class="btn full" data-act="devolver" data-id="${esc(c.cautela_id)}" data-ref="${esc(d.evento)}">✍️ Assinar a entrega (devolução) de ${d.itens.length} item(ns)</button>`));
+  const tl = [];
+  tl.push(`<div>📌 Cautela lançada em <b>${fQuando(c.criada_em)}</b> por ${esc((c.armeiro && (c.armeiro.guerra || c.armeiro.nome)) || c.criada_por)}</div>`);
+  if (c.recebimento) tl.push(`<div>✅ Recebimento assinado em <b>${fQuando(c.recebimento.em)}</b></div>`);
+  c.prorrogacoes.forEach(p => tl.push(`<div>⏱️ Prorrogada para <b>${fQuando(p.para)}</b> — ${esc(p.motivo)}</div>`));
+  c.devolucoes.forEach(d => tl.push(`<div>↩️ Devolução registrada em ${fQuando(d.em)}${d.itens.some(x => x.estado !== 'ok') ? ' (com ocorrência)' : ''} — ${d.assinada ? `assinada em <b>${fQuando(d.assinada.em)}</b>` : '<b>aguarda a sua assinatura</b>'}</div>`));
+  if (c.cancelada) tl.push(`<div>🚫 Cancelada: ${esc(c.cancelada.motivo)}</div>`);
+  return `<div class="card" id="c-${esc(c.cautela_id)}" ${DESTAQUE === c.cautela_id ? 'style="border-color:var(--yellow)"' : ''}>
+    <div class="cau-top"><div><div class="cau-id">${esc(c.cautela_id)}</div>
+      <div class="muted">${esc(c.tipo === 'servico' ? 'Serviço' : 'Missão')}: <b style="color:#fff">${esc(c.missao)}</b></div>
+      <div class="muted">${fQuando(c.inicio)} → ${fQuando(c.fim_previsto)}</div></div>
+      <div style="text-align:right"><span class="chip ${cls}">${txt}</span><div style="margin-top:6px">${chips}</div></div></div>
+    ${itensHtml(c)}
+    ${botoes.join('<div style="height:8px"></div>')}
+    ${completo ? `<div class="tl">${tl.join('')}</div>
+      <div class="sel-qr"><button class="btn sm sec" data-act="auth" data-id="${esc(c.cautela_id)}">🔎 Autenticação do documento</button><span class="muted">Assinatura ${esc(c.assinatura)}</span></div>
+      <div id="auth-${esc(c.cautela_id)}"></div>` : ''}
+  </div>`;
+}
+
+function render(){
+  const aGuardar = D.cautelas.filter(precisaAssinar);
+  $('n-assinar').textContent = aGuardar.length; $('n-assinar').classList.toggle('zero', !aGuardar.length);
+  document.querySelectorAll('#seg-abas button').forEach(b => b.classList.toggle('on', b.dataset.aba === ABA));
+  let html;
+  if (ABA === 'assinar'){
+    html = aGuardar.length ? aGuardar.map(c => cartao(c, false)).join('')
+      : '<div class="card muted">Nada aguardando a sua assinatura. 👍</div>';
+  } else {
+    html = D.cautelas.length ? D.cautelas.map(c => cartao(c, true)).join('')
+      : '<div class="card muted">Você ainda não tem cautelas registradas.</div>';
+  }
+  $('lista').innerHTML = html;
+  $('lista').querySelectorAll('[data-act]').forEach(b => b.onclick = () => acao(b));
+  if (DESTAQUE){ const el = document.getElementById('c-' + DESTAQUE); if (el) el.scrollIntoView({ block:'center' }); }
+}
+document.querySelectorAll('#seg-abas button').forEach(b => b.onclick = () => { ABA = b.dataset.aba; render(); });
+
+/* ---------------- senha / assinatura ---------------- */
+function pedirSenha({ titulo, texto, conferir }){
+  return new Promise((resolve) => {
+    const o = document.createElement('div'); o.className = 'ovl';
+    o.innerHTML = `<div class="modal"><h2>${esc(titulo)}</h2><div class="muted">${texto || ''}</div>
+      ${conferir ? `<label class="chk"><input type="checkbox" id="m-conf"><span>${esc(conferir)}</span></label>` : ''}
+      <label for="m-senha">Sua senha (é a sua assinatura)</label>
+      <input id="m-senha" type="password" autocomplete="current-password">
+      <div class="msg err" id="m-msg"></div>
+      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn sec" id="m-nao" type="button" style="flex:1">Cancelar</button><button class="btn" id="m-ok" type="button" style="flex:2">✍️ Assinar</button></div></div>`;
+    document.body.appendChild(o);
+    const fechar = (v) => { o.remove(); resolve(v); };
+    o.querySelector('#m-nao').onclick = () => fechar(null);
+    const ok = () => {
+      if (conferir && !o.querySelector('#m-conf').checked){ o.querySelector('#m-msg').textContent = 'Marque que conferiu os itens.'; return; }
+      const s = o.querySelector('#m-senha').value;
+      if (!s){ o.querySelector('#m-msg').textContent = 'Digite a sua senha.'; return; }
+      fechar(s);
+    };
+    o.querySelector('#m-ok').onclick = ok;
+    o.querySelector('#m-senha').addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
+    setTimeout(() => o.querySelector('#m-senha').focus(), 50);
+  });
+}
+
+async function acao(b){
+  const id = b.dataset.id, a = b.dataset.act;
+  if (a === 'auth') return mostrarAutenticacao(id);
+  const c = D.cautelas.find(x => x.cautela_id === id); if (!c) return;
+  const receber = a === 'receber';
+  const dev = receber ? null : c.devolucoes.find(d => d.evento === b.dataset.ref);
+  const lista = receber ? c.itens.map(i => `${i.qtd}× ${i.descricao}${i.serie ? ' (Nº ' + i.serie + ')' : ''}`)
+    : dev.itens.map(x => `${x.qtd}× ${c.itens[x.i].descricao}${x.estado !== 'ok' ? ' — ' + x.estado.toUpperCase() + (x.obs ? ': ' + x.obs : '') : ''}`);
+  const senha = await pedirSenha({
+    titulo: receber ? 'Assinar o recebimento' : 'Assinar a entrega (devolução)',
+    texto: `<div class="itens" style="margin:10px 0">${lista.map(t => `<div><span>${esc(t)}</span></div>`).join('')}</div>`,
+    conferir: receber ? 'Conferi e estou recebendo exatamente estes itens.' : 'Entreguei exatamente estes itens à reserva.',
+  });
+  if (!senha) return;
+  b.disabled = true;
+  try {
+    const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, senha });
+    toast('Assinado ✔  código ' + d.assinatura);
+    await carregar();
+  } catch(e){
+    b.disabled = false;
+    if (e.status === 401){ CA.esquecer(); D = null; boot(); return; }
+    toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi assinado.' : e.message);
+  }
+}
+
+/* ---------------- autenticação (QR) ---------------- */
+function urlValidacao(id){ return new URL('cautela-validar.html?id=' + encodeURIComponent(id), location.href).href; }
+function carregarScript(src){
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+}
+async function mostrarAutenticacao(id){
+  const alvo = $('auth-' + id); if (!alvo) return;
+  if (alvo.innerHTML){ alvo.innerHTML = ''; return; }
+  const url = urlValidacao(id);
+  alvo.innerHTML = `<div class="sel-qr"><div class="qr" id="qr-${esc(id)}"></div><div class="muted">Aponte a câmera para o QR Code, ou abra:<br><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a><br>Confere se o registro é verdadeiro e se não foi alterado.</div></div>`;
+  try {
+    if (!window.QRCode) await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    const el = $('qr-' + id); el.innerHTML = '';
+    new QRCode(el, { text: url, width: 128, height: 128 });
+  } catch(e){ /* sem internet para a biblioteca: o link continua valendo */ }
+}
+
+/* ---------------- vínculo e plantão ---------------- */
+/* login do dashboard sem RE: liga pelo Portal (/api/portal/ligar), confirmando com o CPF ou o nascimento */
+let V_PRECISA = '';
+$('btn-vinculo').onclick = async () => {
+  const m = $('msg-vinculo'), b = $('btn-vinculo'); m.className = 'msg'; m.textContent = '';
+  const re = $('v-re').value.replace(/D/g, '');
+  if (re.length < 4){ m.className = 'msg err'; m.textContent = 'Digite o seu RE.'; return; }
+  const corpo = { re };
+  if (V_PRECISA){ corpo.confirma = $('v-conf').value.trim(); if (!corpo.confirma){ m.className = 'msg err'; m.textContent = 'Preencha a confirmação.'; return; } }
+  b.disabled = true;
+  try {
+    const d = await apiPost('/api/portal/ligar', corpo);
+    if (d.ligado){ V_PRECISA = ''; $('v-conf').value = ''; show('v-w-conf', false); $('btn-vinculo').textContent = 'Continuar'; toast('RE ligado ao seu login.'); await carregar(); return; }
+    if (d.precisa){
+      V_PRECISA = d.precisa; const cpf = d.precisa === 'cpf4';
+      $('v-conf-l').textContent = cpf ? '4 últimos dígitos do CPF' : 'Sua data de nascimento';
+      $('v-conf').placeholder = cpf ? 'ex.: 1234' : 'dd/mm/aaaa'; $('v-conf').inputMode = cpf ? 'numeric' : 'text';
+      show('v-w-conf', true); $('btn-vinculo').textContent = 'Ligar'; setTimeout(() => $('v-conf').focus(), 30);
+      return;
+    }
+    throw new Error(d.detail || 'Não foi possível ligar.');
+  } catch(e){ m.className = 'msg err'; m.textContent = e.message; }
+  finally { b.disabled = false; }
+};
+$('v-re').addEventListener('input', () => { V_PRECISA = ''; show('v-w-conf', false); $('btn-vinculo').textContent = 'Continuar'; });
+$('btn-assumir').onclick = async () => {
+  const senha = await pedirSenha({ titulo: 'Aceitar o plantão de armeiro', texto: 'Você passa a responder pelo material carga da reserva de armamento. Esta confirmação fica registrada com a sua assinatura.' });
+  if (!senha) return;
+  try { await apiPost('/api/cautela/assumir', { senha }); toast('Você é o armeiro de serviço.'); await carregar(); }
+  catch(e){ toast(e.code === 'senha_incorreta' ? 'Senha incorreta.' : e.message); }
+};
+
+boot();
+</script>
+</body>
+</html>

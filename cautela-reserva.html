@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Reserva de Armamento · BPFRON/RO</title>
+<script src="conta.js"></script>
+<script src="cautela-acesso.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060912;--bg2:#0b0f1a;--yellow:#F5C518;--text:#dde3f0;--muted:#94a3b8;--line:rgba(148,163,184,.16);--card:rgba(12,17,30,.88);
+  --red:#ef4444;--redsoft:rgba(239,68,68,.13);--green:#34d399;--greensoft:rgba(52,211,153,.12);--orange:#fb923c;--orangesoft:rgba(251,146,60,.13);--blue:#60a5fa}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.45;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12) 0%,transparent 60%);background-attachment:fixed}
+.hdr{background:linear-gradient(100deg,#05070d,#0b0f1a 55%,#0d1220);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:50}
+.hdr-in{max-width:1500px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.brand img{height:42px;mix-blend-mode:screen}
+.t{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff;line-height:1.1}.t em{font-style:normal;color:var(--yellow)}
+.sub{font-size:12px;color:var(--muted)}
+.right{display:flex;align-items:center;gap:14px}.right a,.right button{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:none}
+.right a:hover,.right button:hover{color:var(--yellow)}#userchip{color:var(--yellow);font-weight:600;font-size:13.5px}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 22px 80px}
+.faixa{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:12px;padding:10px 16px;margin-bottom:14px}
+.faixa b{color:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{background:rgba(148,163,184,.07);border:1px solid var(--line);border-radius:10px;padding:10px 16px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.tab .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:12px}.tab .n.zero{display:none}
+.pane{display:none}.pane.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;margin-bottom:8px}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:150px}
+label{display:block;font-size:12px;font-weight:600;color:#cbd5e1;margin:8px 0 4px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-family:inherit;font-size:14px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
+input[type=checkbox]{width:auto}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:9px 15px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn.sec{background:rgba(148,163,184,.12);color:#cbd5e1;border:1px solid var(--line)}
+.btn.red{background:var(--redsoft);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.btn.sm{padding:5px 10px;font-size:12.5px}.btn:disabled{opacity:.5;cursor:default}
+.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700;border:1px solid var(--line);white-space:nowrap}
+.chip.ok{background:var(--greensoft);border-color:rgba(52,211,153,.4);color:#6ee7b7}
+.chip.wait{background:var(--orangesoft);border-color:rgba(251,146,60,.45);color:#fdba74}
+.chip.bad{background:var(--redsoft);border-color:rgba(239,68,68,.45);color:#fca5a5}
+.chip.neu{background:rgba(148,163,184,.1);color:#cbd5e1}
+.msg{font-size:13px;margin-top:8px;min-height:18px}.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
+table.t1{width:100%;border-collapse:collapse}
+.t1 th{position:sticky;top:62px;background:#0d1220;color:var(--yellow);font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:8px 8px;border-bottom:1px solid rgba(245,197,24,.3);z-index:5}
+.t1 td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.t1 tr.grupo td{background:rgba(245,197,24,.07);color:var(--yellow);font-weight:700;font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:1px}
+.t1 tr.l:hover{background:rgba(148,163,184,.05);cursor:pointer}
+.t1 td.n,.t1 th.n{text-align:right;font-variant-numeric:tabular-nums}
+.t1 td.neg{color:#fca5a5;font-weight:700}.t1 td.div input{border-color:var(--orange);background:var(--orangesoft)}
+.t1 input.cnt{width:84px;text-align:right}
+.t1 .obs{color:var(--muted);font-size:12px;max-width:340px}
+.det{background:rgba(2,6,14,.55);padding:12px 16px;border-left:3px solid var(--yellow)}
+.det table{width:100%;border-collapse:collapse;margin-top:6px}.det th,.det td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filtros .f{background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.filtros .f.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+.res{border:1px solid var(--line);border-radius:10px;max-height:240px;overflow:auto;margin-top:6px}
+.res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);color:var(--text);padding:8px 12px;font-family:inherit;font-size:13.5px;cursor:pointer}
+.res button:hover{background:rgba(245,197,24,.08)}
+.sel-box{background:var(--greensoft);border:1px solid rgba(52,211,153,.4);border-radius:10px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ovl{position:fixed;inset:0;background:rgba(2,6,14,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#0d1220;border:1px solid rgba(245,197,24,.4);border-radius:16px;padding:20px;width:100%;max-width:640px;max-height:92vh;overflow:auto}
+.modal .acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:10px 16px;border-radius:10px;z-index:300;display:none;max-width:90vw}
+.hidden{display:none!important}
+.bloqueio{max-width:560px;margin:60px auto;text-align:center}
+/* a Parte Diária (e o que vai para o SEI) é papel branco, letra preta */
+.papel{background:#fff;color:#000;padding:26px 30px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.35;overflow:auto}
+.papel table{border-collapse:collapse;width:100%;margin:6px 0 12px}
+.papel th,.papel td{border:1px solid #000;padding:3px 5px;vertical-align:top;font-size:11.5px}
+.papel th{background:#e8e8e8;text-transform:uppercase}
+.papel td.c{text-align:center}.papel .tit{text-align:center;font-weight:bold}
+.papel tr.div td{background:#fff3cd}
+@media(max-width:900px){.hdr-in{padding:8px 12px}}
+</style>
+</head>
+<body>
+
+<div class="hdr"><div class="hdr-in">
+  <div class="brand"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><div><div class="t">Reserva de <em>Armamento</em></div><div class="sub">BPFRON/RO · armeiro de serviço · somente computador</div></div></div>
+  <div class="right"><span id="userchip"></span><a href="cautela.html">📱 Minhas cautelas</a><button id="btn-senha" class="hidden" type="button">🔑 Senha</button><button id="btn-sair" class="hidden" type="button">Sair</button></div>
+</div></div>
+
+<main class="wrap">
+  <!-- celular -->
+  <div id="so-pc" class="card bloqueio hidden">
+    <h2>💻 Somente no computador</h2>
+    <p class="muted" style="margin-top:6px">A reserva de armamento (estoque, contagem, cautela e Parte Diária) precisa de tela grande e só funciona no computador. No celular você confere e assina as suas cautelas.</p>
+    <a class="btn" href="cautela.html" style="margin-top:14px;text-decoration:none">Ir para as minhas cautelas</a>
+  </div>
+
+  <!-- login -->
+  <div id="login-box" class="card bloqueio hidden">
+    <h2>Entrar na reserva de armamento</h2>
+    <p class="muted" style="margin:6px 0 14px">Com o seu RE e a senha do <b>Portal do Policial</b>, ou com o login do dashboard.</p>
+    <div id="login-form" style="text-align:left"></div>
+  </div>
+
+  <!-- sem papel -->
+  <div id="sem-papel" class="card bloqueio hidden">
+    <h2>🔒 Você não é o armeiro de serviço</h2>
+    <p class="muted" style="margin-top:6px" id="sem-papel-txt"></p>
+    <a class="btn" href="cautela.html" style="margin-top:14px;text-decoration:none">Ir para as minhas cautelas</a>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="faixa" id="faixa"></div>
+    <div id="avisos"></div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-p="reserva">📦 Reserva e contagem</button>
+      <button class="tab" data-p="cautelar">➕ Cautelar</button>
+      <button class="tab" data-p="campo">⏳ Em campo e pendências <span class="n zero" id="n-campo">0</span></button>
+      <button class="tab" data-p="passagem">📄 Passagem de serviço</button>
+      <button class="tab" data-p="historico">🕘 Histórico</button>
+      <button class="tab hidden" data-p="catalogo" id="tab-catalogo">⚙️ Catálogo (chefia)</button>
+    </div>
+
+    <!-- ===== RESERVA ===== -->
+    <section class="pane on" id="p-reserva">
+      <div class="card">
+        <div class="filtros" id="f-grupos"></div>
+        <div class="row">
+          <div style="flex:2"><input id="q-res" placeholder="🔎 Buscar material (ex.: PT 100, ARAD, granada, 5,56)…"></div>
+          <div style="flex:none"><button class="btn sec" id="btn-preencher" type="button">Preencher com o esperado</button></div>
+          <div style="flex:none"><button class="btn" id="btn-contagem" type="button">💾 Salvar contagem</button></div>
+        </div>
+        <div class="muted" id="info-contagem" style="margin-top:8px"></div>
+      </div>
+      <div class="card" style="padding:0"><table class="t1"><thead><tr>
+        <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva<br><span style="text-transform:none;letter-spacing:0">(esperado)</span></th><th class="n">Em missão</th><th class="n">Especial</th><th class="n">Contado</th><th>Obs</th>
+      </tr></thead><tbody id="tb-res"></tbody></table></div>
+    </section>
+
+    <!-- ===== CAUTELAR ===== -->
+    <section class="pane" id="p-cautelar">
+      <div class="card">
+        <h2>1 · Quem recebe</h2>
+        <input id="c-q" placeholder="🔎 RE ou nome do policial…" autocomplete="off">
+        <div class="res hidden" id="c-res"></div>
+        <div id="c-pol"></div>
+      </div>
+      <div class="card">
+        <h2>2 · Missão e período</h2>
+        <div class="row">
+          <div><label>Tipo</label><select id="c-tipo"><option value="missao">Missão / operação</option><option value="servico">Serviço (turno)</option></select></div>
+          <div style="flex:2"><label>Missão / operação</label><input id="c-missao" list="dl-missoes" placeholder="ex.: 27º OPERAÇÃO PROTETOR"></div>
+          <div><label>Início</label><input id="c-ini" type="datetime-local"></div>
+          <div><label>Fim previsto</label><input id="c-fim" type="datetime-local"></div>
+        </div>
+        <datalist id="dl-missoes"></datalist>
+      </div>
+      <div class="card">
+        <h2>3 · Material</h2>
+        <input id="c-qi" placeholder="🔎 Buscar material para incluir (ex.: ARAD, PT 100, 5,56, carregador)…" autocomplete="off">
+        <div class="res hidden" id="c-resi"></div>
+        <table class="t1" style="margin-top:10px"><thead><tr><th>Material</th><th>Nº de série / quantidade</th><th>Na reserva</th><th></th></tr></thead><tbody id="c-carrinho"></tbody></table>
+        <div class="muted" id="c-vazio">Nenhum item ainda.</div>
+        <label>Observação (opcional)</label><input id="c-obs" maxlength="300">
+        <div class="msg" id="c-msg"></div>
+        <button class="btn" id="btn-cautelar" type="button">✍️ Entregar o material e gerar a cautela</button>
+      </div>
+      <div id="c-ok"></div>
+    </section>
+
+    <!-- ===== EM CAMPO ===== -->
+    <section class="pane" id="p-campo">
+      <div class="card"><h2>Material fora da reserva</h2><div class="muted">Ordenado pelo prazo: quem vence primeiro aparece em cima.</div></div>
+      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Policial</th><th>Missão</th><th>Material</th><th>Prazo</th><th>Situação</th><th></th></tr></thead><tbody id="tb-campo"></tbody></table></div>
+    </section>
+
+    <!-- ===== PASSAGEM ===== -->
+    <section class="pane" id="p-passagem">
+      <div class="card">
+        <h2>Passagem de serviço → Parte Diária</h2>
+        <p class="muted">Escolha quem te rende. O sistema monta a Parte Diária igual ao modelo do SEI com a reserva, as cautelas e o texto da passagem. Você confere, copia para o SEI e confirma a passagem com a sua senha — quem te rende aceita o plantão no celular dele.</p>
+        <div class="row" style="margin-top:6px">
+          <div style="flex:2"><label>Quem assume a reserva (substituto)</label><input id="s-q" placeholder="🔎 RE ou nome…" autocomplete="off"><div class="res hidden" id="s-res"></div><div id="s-pol"></div></div>
+          <div><label>Serviço do dia</label><input id="s-de" placeholder="dd/mm/aaaa"></div>
+          <div><label>Para o dia</label><input id="s-para" placeholder="dd/mm/aaaa"></div>
+        </div>
+        <label>Alterações a registrar (opcional — vem antes do texto da passagem)</label><textarea id="s-extras" rows="2"></textarea>
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Cautelas que entram na Parte (<span id="s-ncau">0</span>)</summary><div id="s-cautelas" style="margin-top:6px"></div></details>
+        <div class="msg" id="s-msg"></div>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:none"><button class="btn sec" id="btn-previa" type="button">👁️ Gerar prévia</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-copiar" type="button" disabled>📋 Copiar para o SEI</button></div>
+          <div style="flex:none"><button class="btn" id="btn-passar" type="button" disabled>✍️ Confirmar a passagem e assinar</button></div>
+        </div>
+      </div>
+      <div id="s-resumo"></div>
+      <div class="papel hidden" id="parte"></div>
+    </section>
+
+    <!-- ===== HISTÓRICO ===== -->
+    <section class="pane" id="p-historico">
+      <div class="card">
+        <div class="row">
+          <div style="flex:2"><label>Buscar</label><input id="h-q" placeholder="policial, RE, missão, material ou nº de série"></div>
+          <div><label>De</label><input id="h-de" type="date"></div><div><label>Até</label><input id="h-ate" type="date"></div>
+          <div><label>Situação</label><select id="h-st"><option value="">Todas</option><option value="aguardando">Aguardando assinatura</option><option value="ativa">Em posse</option><option value="parcial">Devolução parcial</option><option value="devolvida">Devolvida</option><option value="cancelada">Cancelada</option></select></div>
+          <div style="flex:none"><button class="btn" id="btn-hist" type="button">Buscar</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-csv" type="button">⬇️ CSV</button></div>
+        </div>
+        <div class="muted" id="h-escopo" style="margin-top:6px"></div>
+      </div>
+      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Código</th><th>Policial</th><th>Missão</th><th>Material</th><th>Período</th><th>Situação</th></tr></thead><tbody id="tb-hist"></tbody></table></div>
+    </section>
+
+    <!-- ===== CATÁLOGO ===== -->
+    <section class="pane" id="p-catalogo">
+      <div class="card">
+        <h2>Ferramentas da chefia</h2>
+        <div class="row">
+          <div style="flex:none"><button class="btn" id="btn-semear" type="button">🌱 Semear o catálogo (Parte 618)</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-importar" type="button">⬇️ Importar nº de série do Material Bélico</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-integ" type="button">🛡️ Verificar integridade do livro</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-novo-item" type="button">➕ Nova linha</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-nova-serie" type="button">➕ Nova série</button></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:none;min-width:220px"><label>Designar armeiro (RE)</label><input id="d-re" placeholder="RE do policial"></div>
+          <div style="flex:none"><button class="btn sec" id="btn-designar" type="button">Designar</button></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:none;min-width:220px"><label>Policial esqueceu a senha (RE)</label><input id="z-re" placeholder="RE do policial"></div>
+          <div style="flex:none;min-width:260px"><label>O que fazer</label><select id="z-modo"><option value="zerar">Zerar — ele cria outra no 1º acesso (CPF)</option><option value="provisoria">Senha provisória (cadastro sem CPF ou de outra unidade)</option></select></div>
+          <div style="flex:none"><button class="btn sec" id="btn-zerar" type="button">🔑 Aplicar</button></div>
+        </div>
+        <p class="muted" style="margin-top:6px">A senha é a do Portal do Policial (a mesma das Tarefas). Quem está na Central de Tarefas recebe a provisória pelo administrador da Central — aqui só zerar.</p>
+        <div class="msg" id="cat-msg"></div>
+      </div>
+      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Cód.</th><th>Descrição</th><th>Grupo</th><th>Controle</th><th class="n">Total</th><th class="n">P4</th><th class="n">Especial</th><th class="n">Legado</th><th></th></tr></thead><tbody id="tb-cat"></tbody></table></div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+/* Entrada: senha ÚNICA do Portal do Policial (RE) ou login do dashboard — ver cautela-acesso.js. */
+const API_BASE = CA.API;
+const AUTH = { get token(){ return CA.token(); }, get logged(){ return !!CA.token(); } };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show = (id, on) => $(id).classList.toggle('hidden', !on);
+const fQ = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
+const fN = (n) => Number(n).toLocaleString('pt-BR');
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 4500); }
+function cab(extra){ const h = Object.assign({}, extra || {}); if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token; return h; }
+async function api(path, opt){
+  const r = await fetch(API_BASE + path, Object.assign({ headers: cab() }, opt || {}));
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
+function falha(e){ if (e.status === 401){ CA.esquecer(); R = null; boot(); return; } toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi feito.' : e.message); }
+
+/* ---------------- modal ---------------- */
+function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura }){
+  return new Promise((resolve) => {
+    const o = document.createElement('div'); o.className = 'ovl';
+    o.innerHTML = `<div class="modal" ${largura ? `style="max-width:${largura}px"` : ''}><h2>${esc(titulo)}</h2><div id="mb">${corpo || ''}</div>
+      ${senha ? '<label>Sua senha (assina esta ação)</label><input id="m-senha" type="password" autocomplete="current-password">' : ''}
+      <div class="msg err" id="m-msg"></div>
+      <div class="acoes"><button class="btn sec" id="m-nao" type="button">Cancelar</button><button class="btn" id="m-ok" type="button">${esc(ok)}</button></div></div>`;
+    document.body.appendChild(o);
+    const fechar = (v) => { o.remove(); resolve(v); };
+    o.querySelector('#m-nao').onclick = () => fechar(null);
+    const fim = () => {
+      const s = senha ? o.querySelector('#m-senha').value : '';
+      if (senha && !s){ o.querySelector('#m-msg').textContent = 'Digite a sua senha.'; return; }
+      fechar({ senha: s, el: o });
+    };
+    o.querySelector('#m-ok').onclick = fim;
+    o.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') fim(); });
+    setTimeout(() => (o.querySelector('input,select') || o).focus(), 50);
+    o._fechar = fechar;
+  });
+}
+const val = (m, id) => m.el.querySelector('#' + id).value;
+
+/* ---------------- entrada ---------------- */
+function sair(){ CA.sair(); R = null; boot(); }
+$('btn-sair').onclick = sair;
+$('btn-senha').onclick = () => CA.trocarSenha();
+
+const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(max-width: 760px)').matches;
+function boot(){
+  ['so-pc', 'login-box', 'sem-papel', 'app'].forEach(i => show(i, false));
+  $('btn-sair').classList.toggle('hidden', !AUTH.logged); $('btn-senha').classList.toggle('hidden', !AUTH.logged);
+  $('userchip').textContent = '';
+  if (MOBILE){ show('so-pc', true); return; }
+  if (!AUTH.logged){ show('login-box', true); CA.montar($('login-form'), { aoEntrar: boot }); return; }
+  carregar();
+}
+
+/* ---------------- dados ---------------- */
+let R = null, GRUPO = '', CONTAGEM = {}, ABERTO = '';
+const ordenadoPorPrazo = (a, b) => Date.parse(a.fim_previsto) - Date.parse(b.fim_previsto);
+
+async function carregar(){
+  try { R = await api('/api/cautela/reserva'); }
+  catch(e){
+    if (e.status === 401){ CA.esquecer(); R = null; boot(); return; }
+    if (e.status === 403){
+      show('sem-papel', true);
+      $('sem-papel-txt').textContent = e.code === 'somente_computador' ? 'Esta tela só funciona no computador.'
+        : 'Só o armeiro de serviço e a chefia (P4 / comando) abrem a reserva. O armeiro anterior precisa te indicar na passagem de serviço — depois você aceita o plantão em "Minhas cautelas", no celular.';
+      return;
+    }
+    show('app', true); $('faixa').innerHTML = '⚠️ ' + esc(e.message); return;
+  }
+  show('app', true);
+  $('userchip').textContent = '👤 ' + (R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome);
+  CONTAGEM = {};
+  if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null ? '' : x.contado, obs: x.obs || '' };
+  $('tab-catalogo').classList.toggle('hidden', !R.papel.chefia);
+  renderFaixa(); renderReserva(); renderCarrinho(); renderCampo(); renderPassagemInfo();
+  if (R.vazio) $('faixa').insertAdjacentHTML('beforeend', '<span class="chip bad">Catálogo vazio — a chefia precisa semear (aba Catálogo)</span>');
+}
+
+function renderFaixa(){
+  const a = R.plantao.armeiro, p = R.plantao.pendente;
+  $('faixa').innerHTML = `<span>🛡️ Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
+    + (p ? `<span class="chip wait">Passagem feita — aguardando o aceite de RE ${esc(p.re)}</span>` : '')
+    + (R.papel.chefia ? '<span class="chip neu">Você: chefia</span>' : '');
+  const av = [];
+  if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker — sem ele, trocar o <code>JWT_SECRET</code> invalidaria todo o livro da Cautela.</div>');
+  $('avisos').innerHTML = av.join('');
+}
+
+/* ===== reserva ===== */
+function renderReserva(){
+  const grupos = [...new Set(R.linhas.map(l => l.grupo))];
+  $('f-grupos').innerHTML = `<button class="f ${GRUPO === '' ? 'on' : ''}" data-g="">Tudo</button>` + R.grupos.filter(g => grupos.includes(g)).map(g => `<button class="f ${GRUPO === g ? 'on' : ''}" data-g="${esc(g)}">${esc(g)}</button>`).join('');
+  $('f-grupos').querySelectorAll('.f').forEach(b => b.onclick = () => { GRUPO = b.dataset.g; renderReserva(); });
+  const q = norm($('q-res').value);
+  // Na tela o material fica junto por grupo; a Parte Diária segue a ordem do PDF (campo `ordem`).
+  const gi = (g) => { const i = R.grupos.indexOf(g); return i < 0 ? 99 : i; };
+  const linhas = R.linhas.filter(l => (!GRUPO || l.grupo === GRUPO) && (!q || norm(l.descricao + ' ' + l.obs + ' ' + l.seriais.map(s => s.serie).join(' ')).includes(q)))
+    .sort((a, b) => gi(a.grupo) - gi(b.grupo));
+  let html = '', ult = '', diverg = 0;
+  for (const l of linhas){
+    if (l.grupo !== ult){ html += `<tr class="grupo"><td colspan="8">${esc(l.grupo)}</td></tr>`; ult = l.grupo; }
+    const c = CONTAGEM[l.item_id] || { contado: '', obs: '' };
+    const dv = c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva);
+    if (dv) diverg++;
+    const fora = l.missoes + l.fora_legado;
+    html += `<tr class="l" data-id="${esc(l.item_id)}">
+      <td>${esc(l.descricao)} ${l.controle === 'serie' ? `<span class="chip neu">${l.seriais.length} série(s)</span>` : ''} ${l.revisar ? '<span class="chip wait" title="A Parte 618 somava mais que a carga">revisar carga</span>' : ''}</td>
+      <td class="n">${fN(l.total)}</td><td class="n">${l.p4 ? fN(l.p4) : '-'}</td>
+      <td class="n ${l.reserva < 0 ? 'neg' : ''}"><b>${fN(l.reserva)}</b></td>
+      <td class="n">${fora ? fN(fora) : '-'}${l.fora_legado ? ` <span class="chip neu" title="Parte 618: fora da reserva, sem cautela registrada">${fN(l.fora_legado)} legado</span>` : ''}</td>
+      <td class="n">${l.especial ? fN(l.especial) : '-'}</td>
+      <td class="n ${dv ? 'div' : ''}"><input class="cnt" inputmode="numeric" data-cnt="${esc(l.item_id)}" value="${esc(c.contado)}" placeholder="${Math.max(0, l.reserva)}"></td>
+      <td class="obs">${esc(l.obs)}${c.obs ? `<br><i>${esc(c.obs)}</i>` : ''}</td></tr>`;
+    if (ABERTO === l.item_id) html += `<tr><td colspan="8"><div class="det">${detalheLinha(l)}</div></td></tr>`;
+  }
+  $('tb-res').innerHTML = html || '<tr><td colspan="8" class="muted">Nada encontrado.</td></tr>';
+  $('tb-res').querySelectorAll('tr.l').forEach(tr => tr.onclick = (e) => { if (e.target.tagName === 'INPUT') return; ABERTO = ABERTO === tr.dataset.id ? '' : tr.dataset.id; renderReserva(); });
+  $('tb-res').querySelectorAll('input[data-cnt]').forEach(i => i.oninput = () => {
+    const id = i.dataset.cnt; CONTAGEM[id] = Object.assign(CONTAGEM[id] || { obs: '' }, { contado: i.value.replace(/\D/g, '') });
+    const l = R.linhas.find(x => x.item_id === id); i.parentElement.classList.toggle('div', i.value !== '' && Number(i.value) !== Math.max(0, l.reserva));
+    infoContagem();
+  });
+  $('tb-res').querySelectorAll('[data-esp]').forEach(b => b.onclick = () => enviarEspecial(b.dataset.esp, b.dataset.serie));
+  infoContagem();
+}
+function infoContagem(){
+  const n = Object.values(CONTAGEM).filter(x => x.contado !== '').length;
+  const dv = R.linhas.filter(l => { const c = CONTAGEM[l.item_id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); }).length;
+  $('info-contagem').innerHTML = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv} divergência(s)</b>`
+    + (R.contagem ? ` · última contagem salva em ${fQ(R.contagem.em)}` : ' · contagem ainda não salva neste plantão');
+}
+function detalheLinha(l){
+  const sit = { reserva: 'Na reserva', cautela_p4: 'Carga pessoal (P4)', missao: 'Em missão', manutencao: 'Manutenção', pericia: 'Perícia', extraviado: 'Extraviado', danificado: 'Danificado', descarga: 'Descarga', baixa: 'Baixa', vencido: 'Vencido' };
+  const opts = ['manutencao', 'pericia', 'extraviado', 'danificado', 'descarga', 'baixa', 'reserva'].map(k => `<option value="${k}">${sit[k]}</option>`).join('');
+  let h = l.obs ? `<div class="muted">${esc(l.obs)}</div>` : '';
+  if (l.seriais.length){
+    h += `<table><tr><th>Nº de série</th><th>Tombo</th><th>Situação</th><th>Em cautela</th><th>Mudar situação</th></tr>` + l.seriais.map(s => `<tr><td><b>${esc(s.serie)}</b></td><td>${esc(s.tombo)}</td>
+      <td><span class="chip ${s.disponivel ? 'ok' : s.em_cautela ? 'wait' : 'neu'}">${esc(s.em_cautela ? 'Em cautela' : sit[s.situacao] || s.situacao)}</span> ${esc(s.responsavel)}</td><td>${esc(s.em_cautela)}</td>
+      <td>${s.em_cautela ? '' : `<select id="sit-${esc(s.serie_id)}">${opts}</select> <button class="btn sm sec" data-esp="${esc(l.item_id)}" data-serie="${esc(s.serie_id)}">Aplicar</button>`}</td></tr>`).join('') + '</table>';
+  } else h += '<div class="muted" style="margin-top:6px">Material controlado só por quantidade.</div>';
+  h += `<div style="margin-top:10px"><button class="btn sm sec" data-esp="${esc(l.item_id)}" data-serie="">Tirar / devolver unidades do serviço (perícia, manutenção, extravio…)</button></div>`;
+  return h;
+}
+async function enviarEspecial(item, serie){
+  const l = R.linhas.find(x => x.item_id === item);
+  const corpo = serie ? '<div class="muted">A situação escolhida na lista será registrada para este número de série.</div><label>Motivo</label><input id="e-mot" placeholder="ex.: apreendida em ocorrência, protocolo…">'
+    : `<label>Unidades (use número negativo para devolver ao serviço)</label><input id="e-qtd" type="number" value="1"><label>Motivo</label><input id="e-mot" placeholder="ex.: 2 em manutenção na DMB">`;
+  const m = await modal({ titulo: l.descricao, corpo });
+  if (!m) return;
+  const body = { item_id: item, motivo: val(m, 'e-mot'), senha: m.senha };
+  if (serie){ body.serie_id = serie; body.situacao = document.getElementById('sit-' + serie).value; } else body.delta = Number(val(m, 'e-qtd'));
+  try { await apiPost('/api/cautela/especial', body); toast('Registrado.'); await carregar(); } catch(e){ falha(e); }
+}
+$('q-res').oninput = renderReserva;
+$('btn-preencher').onclick = () => { R.linhas.forEach(l => { if (!CONTAGEM[l.item_id] || CONTAGEM[l.item_id].contado === '') CONTAGEM[l.item_id] = Object.assign(CONTAGEM[l.item_id] || { obs: '' }, { contado: String(Math.max(0, l.reserva)) }); }); renderReserva(); };
+$('btn-contagem').onclick = async () => {
+  const dv = R.linhas.filter(l => { const c = CONTAGEM[l.item_id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); });
+  const corpo = dv.length ? `<div class="muted">Divergências — escreva o que houve (vai na coluna OBS da Parte):</div>` + dv.map(l => `<label>${esc(l.descricao)} · esperado ${Math.max(0, l.reserva)}, contado ${CONTAGEM[l.item_id].contado}</label><input data-obs="${esc(l.item_id)}" value="${esc(CONTAGEM[l.item_id].obs)}">`).join('') : '<div class="muted">Sem divergências. Salvar a contagem?</div>';
+  const m = await modal({ titulo: 'Salvar a contagem', corpo, senha: false, ok: 'Salvar' });
+  if (!m) return;
+  m.el.querySelectorAll('[data-obs]').forEach(i => { CONTAGEM[i.dataset.obs].obs = i.value; });
+  try {
+    const linhas = {}; for (const [id, c] of Object.entries(CONTAGEM)) if (c.contado !== '' || c.obs) linhas[id] = { contado: c.contado === '' ? null : Number(c.contado), obs: c.obs };
+    await apiPost('/api/cautela/contagem', { linhas }); toast('Contagem salva.'); await carregar();
+  } catch(e){ falha(e); }
+};
+
+/* ===== cautelar ===== */
+let POL = null, CARRO = [];
+function picker({ campo, res, destino, onPick, todos }){
+  let t;
+  $(campo).oninput = () => { clearTimeout(t); t = setTimeout(async () => {
+    const q = $(campo).value.trim(); if (q.length < 2){ show(res, false); return; }
+    try {
+      const d = await api('/api/cautela/policiais?q=' + encodeURIComponent(q) + (todos ? '&todos=1' : ''));
+      $(res).innerHTML = d.policiais.map((p, i) => `<button data-i="${i}"><span><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> <span class="muted">· RE ${esc(p.re)} · ${esc(p.opm)}</span></span><span class="chip ${p.tem_conta ? 'ok' : 'wait'}">${p.tem_conta ? 'pode assinar' : 'sem senha ainda'}</span></button>`).join('') || '<div class="muted" style="padding:10px">Ninguém encontrado.</div>';
+      show(res, true);
+      $(res).querySelectorAll('button').forEach(b => b.onclick = () => { const p = d.policiais[b.dataset.i]; show(res, false); $(campo).value = ''; onPick(p); });
+    } catch(e){ falha(e); }
+  }, 250); };
+}
+picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); }, todos: true });
+function renderPol(){
+  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '✅ Já tem a senha do Portal: assina o recebimento pelo celular.' : '⚠️ Ainda não criou a senha do Portal. Peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF), senão não terá como assinar.'}</span></div><button class="btn sm sec" id="c-troca">trocar</button></div>` : '';
+  if (POL) $('c-troca').onclick = () => { POL = null; renderPol(); };
+}
+function dtLocal(ms){ const d = new Date(ms - 4 * 3600e3); return d.toISOString().slice(0, 16); }
+function resetCautelar(){
+  POL = null; CARRO = []; renderPol(); renderCarrinho();
+  $('c-ini').value = dtLocal(Date.now()); $('c-fim').value = dtLocal(Date.now() + 7 * 86400e3); $('c-missao').value = ''; $('c-obs').value = '';
+}
+const doLocal = (v) => new Date(v + ':00-04:00').toISOString();
+
+$('c-qi').oninput = () => {
+  const q = norm($('c-qi').value);
+  if (q.length < 2){ show('c-resi', false); return; }
+  const achados = R.linhas.filter(l => norm(l.descricao + ' ' + l.seriais.map(s => s.serie).join(' ')).includes(q)).slice(0, 14);
+  $('c-resi').innerHTML = achados.map(l => `<button data-id="${esc(l.item_id)}"><span>${esc(l.descricao)}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">reserva ${l.reserva}</span></button>`).join('') || '<div class="muted" style="padding:10px">Nada encontrado.</div>';
+  show('c-resi', true);
+  $('c-resi').querySelectorAll('button').forEach(b => b.onclick = () => { CARRO.push({ item_id: b.dataset.id, qtd: 1, serie_id: '', legado: false }); show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); });
+};
+function renderCarrinho(){
+  if (!R) return;
+  show('c-vazio', !CARRO.length);
+  $('c-carrinho').innerHTML = CARRO.map((x, i) => {
+    const l = R.linhas.find(y => y.item_id === x.item_id);
+    const livres = l.seriais.filter(s => s.disponivel && !CARRO.some((y, j) => j !== i && y.serie_id === s.serie_id));
+    const campo = livres.length ? `<select data-i="${i}" data-k="serie"><option value="">sem número de série (por quantidade)</option>${livres.map(s => `<option value="${esc(s.serie_id)}" ${x.serie_id === s.serie_id ? 'selected' : ''}>Nº ${esc(s.serie)}</option>`).join('')}</select>` : '';
+    const qtd = x.serie_id ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:110px;margin-top:${livres.length ? 6 : 0}px">`;
+    return `<tr><td>${esc(l.descricao)}</td><td>${campo}${qtd}${l.fora_legado ? `<label style="margin-top:6px"><input type="checkbox" data-i="${i}" data-k="legado" ${x.legado ? 'checked' : ''}> já estava fora da reserva (abater dos ${l.fora_legado} do legado)</label>` : ''}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}">✕</button></td></tr>`;
+  }).join('');
+  $('c-carrinho').querySelectorAll('[data-k]').forEach(el => el.onchange = el.oninput = () => {
+    const x = CARRO[el.dataset.i], k = el.dataset.k;
+    if (k === 'serie'){ x.serie_id = el.value; if (el.value) x.qtd = 1; renderCarrinho(); }
+    else if (k === 'qtd') x.qtd = Math.max(1, Number(el.value) || 1);
+    else x.legado = el.checked;
+  });
+  $('c-carrinho').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { CARRO.splice(b.dataset.rm, 1); renderCarrinho(); });
+}
+$('btn-cautelar').onclick = async () => {
+  const m = $('c-msg'); m.className = 'msg err'; m.textContent = '';
+  if (!POL){ m.textContent = 'Escolha o policial.'; return; }
+  if (!CARRO.length){ m.textContent = 'Inclua pelo menos um item.'; return; }
+  if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Informe o início e o fim previsto.'; return; }
+  const resumo = `<div class="muted"><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> vai receber:</div><div class="muted" style="margin-top:6px">` + CARRO.map(x => { const l = R.linhas.find(y => y.item_id === x.item_id); const s = l.seriais.find(y => y.serie_id === x.serie_id); return `• ${x.qtd}× ${esc(l.descricao)}${s ? ' (Nº ' + esc(s.serie) + ')' : ''}`; }).join('<br>') + '</div>';
+  const mm = await modal({ titulo: 'Entregar o material', corpo: resumo, ok: '✍️ Assinar e entregar' });
+  if (!mm) return;
+  const corpo = { re: POL.re, tipo: $('c-tipo').value, missao: $('c-missao').value, inicio: doLocal($('c-ini').value), fim_previsto: doLocal($('c-fim').value), obs: $('c-obs').value,
+    itens: CARRO.map(x => ({ item_id: x.item_id, qtd: x.qtd, serie_id: x.serie_id || undefined, abate_legado: x.legado })), senha: mm.senha };
+  try {
+    let d;
+    try { d = await apiPost('/api/cautela/cautelar', corpo); }
+    catch(e){
+      if (e.code === 'sem_saldo' && confirm(e.message + '\n\nCautelar assim mesmo?')) d = await apiPost('/api/cautela/cautelar', Object.assign(corpo, { confirmar_sem_saldo: true }));
+      else throw e;
+    }
+    const url = new URL('cautela.html?c=' + d.cautela_id, location.href).href;
+    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Cautela ${esc(d.cautela_id)} registrada</h2>
+      <p class="muted">${d.policial_tem_conta ? 'O policial já pode abrir a <b>Cautela no Portal do Policial</b> (celular), conferir e assinar com a senha dele.' : '⚠️ O policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) no Portal do Policial → Cautela antes de assinar.'}${d.sem_saldo ? '<br>⚠️ Foi lançada com saldo insuficiente na reserva — confira a carga.' : ''}</p>
+      <p class="muted" style="margin-top:6px">Link para o policial: <a style="color:var(--yellow)" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p></div>`;
+    resetCautelar(); toast('Cautela registrada.'); await carregar();
+  } catch(e){ falha(e); }
+};
+
+/* ===== em campo ===== */
+function renderCampo(){
+  const lista = R.cautelas_abertas.slice().sort(ordenadoPorPrazo);
+  const urgentes = R.pendencias.length;
+  const n = $('n-campo'); n.textContent = urgentes; n.classList.toggle('zero', !urgentes);
+  const AL = { aguardando_assinatura: ['wait', 'Aguardando assinatura do policial'], vencida: ['bad', 'Prazo vencido'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_parcial: ['wait', 'Devolução parcial'], devolucao_sem_assinatura: ['wait', 'Devolução sem assinatura'] };
+  $('tb-campo').innerHTML = lista.map(c => `<tr>
+    <td><b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b><br><span class="muted">RE ${esc(c.policial.re)} · ${esc(c.cautela_id)}</span></td>
+    <td>${esc(c.missao)}<br><span class="muted">${c.tipo === 'servico' ? 'serviço' : 'missão'}</span></td>
+    <td>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '<s>'}${i.qtd}× ${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}${i.qtd - i.devolvido > 0 ? '' : '</s>'}`).join('<br>')}</td>
+    <td>${fQ(c.fim_previsto)}</td>
+    <td>${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'}</td>
+    <td style="white-space:nowrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}">Cancelar</button>` : `<button class="btn sm" data-a="devolver" data-id="${esc(c.cautela_id)}">↩️ Devolução</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}">⏱️ Prorrogar</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="muted">Nenhum material fora da reserva. 👍</td></tr>';
+  $('tb-campo').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCampo(b.dataset.a, b.dataset.id));
+}
+async function acaoCampo(a, id){
+  const c = R.cautelas_abertas.find(x => x.cautela_id === id);
+  if (a === 'devolver'){
+    const corpo = '<div class="muted">Marque o que está voltando. O policial assina a entrega pelo celular.</div><table class="t1" style="margin-top:8px"><tr><th>Material</th><th>Qtd</th><th>Estado</th><th>Observação</th></tr>' + c.itens.map((i, k) => {
+      const resta = i.qtd - i.devolvido;
+      return resta > 0 ? `<tr><td>${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}</td><td><input type="number" min="0" max="${resta}" value="${resta}" data-q="${k}" style="width:70px"></td><td><select data-e="${k}"><option value="ok">OK</option><option value="danificado">Danificado</option><option value="extraviado">Extraviado</option></select></td><td><input data-o="${k}" placeholder="obrigatório se danificado/extraviado"></td></tr>` : '';
+    }).join('') + '</table><label>Nota</label><input id="d-nota">';
+    const m = await modal({ titulo: 'Registrar devolução · ' + c.policial.guerra, corpo, ok: '✍️ Registrar', largura: 760 });
+    if (!m) return;
+    const itens = [...m.el.querySelectorAll('[data-q]')].map(i => ({ i: Number(i.dataset.q), qtd: Number(i.value), estado: m.el.querySelector(`[data-e="${i.dataset.q}"]`).value, obs: m.el.querySelector(`[data-o="${i.dataset.q}"]`).value })).filter(x => x.qtd > 0);
+    try { const d = await apiPost('/api/cautela/devolver', { cautela_id: id, itens, nota: val(m, 'd-nota'), senha: m.senha }); toast(d.completa ? 'Devolução completa registrada.' : 'Devolução parcial registrada.'); await carregar(); } catch(e){ falha(e); }
+  } else if (a === 'prorrogar'){
+    const m = await modal({ titulo: 'Prorrogar · ' + c.policial.guerra, corpo: `<label>Novo fim previsto</label><input id="p-fim" type="datetime-local" value="${dtLocal(Date.parse(c.fim_previsto) + 7 * 86400e3)}"><label>Motivo</label><input id="p-mot">` });
+    if (!m) return;
+    try { await apiPost('/api/cautela/prorrogar', { cautela_id: id, fim_previsto: doLocal(val(m, 'p-fim')), motivo: val(m, 'p-mot'), senha: m.senha }); toast('Prorrogada.'); await carregar(); } catch(e){ falha(e); }
+  } else {
+    const m = await modal({ titulo: 'Cancelar a cautela ' + id, corpo: '<div class="muted">Só dá para cancelar antes de o policial assinar. O material volta para a reserva.</div><label>Motivo</label><input id="x-mot">' });
+    if (!m) return;
+    try { await apiPost('/api/cautela/cancelar', { cautela_id: id, motivo: val(m, 'x-mot'), senha: m.senha }); toast('Cancelada.'); await carregar(); } catch(e){ falha(e); }
+  }
+}
+
+/* ===== passagem de serviço / Parte Diária ===== */
+let SUB = null, PARTE = null;
+picker({ campo: 's-q', res: 's-res', onPick: (p) => { SUB = p; renderSub(); }, todos: false });
+function renderSub(){
+  $('s-pol').innerHTML = SUB ? `<div class="sel-box"><div><b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b> · RE ${esc(SUB.re)}<br><span class="muted">${SUB.tem_conta ? '✅ Já tem a senha do Portal — vai aceitar o plantão no celular.' : '⚠️ Ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) para aceitar.'}</span></div><button class="btn sm sec" id="s-troca">trocar</button></div>` : '';
+  if (SUB) $('s-troca').onclick = () => { SUB = null; renderSub(); };
+}
+function renderPassagemInfo(){
+  const desde = R.plantao.desde ? new Date(R.plantao.desde) : new Date();
+  const d1 = desde.toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' });
+  const d2 = new Date(desde.getTime() + 86400e3).toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' });
+  if (!$('s-de').value) $('s-de').value = d1; if (!$('s-para').value) $('s-para').value = d2;
+  $('s-ncau').textContent = R.cautelas_parte.length;
+  $('s-cautelas').innerHTML = R.cautelas_parte.map(c => `<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" checked data-cid="${esc(c.cautela_id)}"> ${esc(c.posto)} ${esc(c.policial)} — ${esc(c.missao)} <span class="chip neu">${esc(c.status)}</span></label>`).join('') || '<span class="muted">Nenhuma cautela recente.</span>';
+}
+function corpoPassagem(confirmar, senha){
+  const marcadas = [...document.querySelectorAll('[data-cid]')];
+  const incluir = marcadas.every(i => i.checked) ? undefined : marcadas.filter(i => i.checked).map(i => i.dataset.cid);
+  return { substituto_re: SUB && SUB.re, de: $('s-de').value, para: $('s-para').value, extras: $('s-extras').value, incluir, confirmar, senha };
+}
+$('btn-previa').onclick = async () => {
+  const m = $('s-msg'); m.className = 'msg err'; m.textContent = '';
+  if (!SUB){ m.textContent = 'Escolha quem assume a reserva.'; return; }
+  try {
+    const d = await apiPost('/api/cautela/passagem', corpoPassagem(false));
+    PARTE = d.parte; $('parte').innerHTML = parteHtml(PARTE); show('parte', true);
+    $('btn-copiar').disabled = false; $('btn-passar').disabled = false;
+    const aviso = [];
+    if (!R.contagem) aviso.push('Você <b>não salvou a contagem</b> deste plantão: a coluna NA RESERVA usa o saldo esperado.');
+    if (PARTE.resumo.divergentes) aviso.push(`${PARTE.resumo.divergentes} linha(s) com divergência (destacadas em amarelo na prévia).`);
+    $('s-resumo').innerHTML = `<div class="card"><b>Prévia:</b> ${PARTE.resumo.linhas} linhas de material · ${PARTE.resumo.cautelas} cautela(s) (${PARTE.resumo.abertas} em aberto)${aviso.length ? '<br>⚠️ ' + aviso.join('<br>⚠️ ') : ''}</div>`;
+    $('parte').scrollIntoView({ behavior: 'smooth' });
+  } catch(e){ m.textContent = e.message; if (e.status === 401) sair(); }
+};
+$('btn-copiar').onclick = async () => {
+  const html = `<div>${$('parte').innerHTML}</div>`, texto = $('parte').innerText;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([texto], { type: 'text/plain' }) })]);
+    toast('Copiado. Cole no editor do SEI.');
+  } catch(e){
+    const r = document.createRange(); r.selectNodeContents($('parte')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges(); toast('Copiado. Cole no editor do SEI.');
+  }
+};
+$('btn-passar').onclick = async () => {
+  const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte Diária fica guardada e assinada; o substituto aceita o plantão no celular dele. Cole a Parte no SEI e assine por lá também.</div>`, ok: '✍️ Assinar a passagem' });
+  if (!m) return;
+  try {
+    const d = await apiPost('/api/cautela/passagem', corpoPassagem(true, m.senha));
+    $('s-resumo').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Passagem registrada · ${esc(d.codigo)}</h2><p class="muted">Assinatura ${esc(d.assinatura)} · conteúdo SHA-256 <code>${esc(d.hash.slice(0, 16))}…</code><br>Valide em <a style="color:var(--yellow)" href="cautela-validar.html?id=${esc(d.codigo)}" target="_blank">cautela-validar.html</a>. Quem te rende precisa aceitar o plantão em <b>cautela.html</b>.</p></div>`;
+    $('btn-passar').disabled = true; toast('Passagem registrada.'); await carregar();
+  } catch(e){ falha(e); }
+};
+
+/* Parte Diária — mesmo desenho do modelo do SEI (Parte 618/2026) */
+function parteHtml(p){
+  const cel = (t, c) => `<td ${c ? `class="${c}"` : ''}>${esc(t)}</td>`;
+  const mat = p.material.map(m => `<tr ${m.divergente ? 'class="div"' : ''}>${cel(m.descricao)}${cel(m.total, 'c')}${cel(m.p4, 'c')}${cel(m.reserva, 'c')}${cel(m.missoes, 'c')}${cel(m.obs)}</tr>`).join('');
+  const miss = p.missoes.map(g => `<p class="tit" style="margin-top:10px">${esc(g.titulo)}</p><table><tr><th>Posto/<br>Graduação</th><th>Matrícula</th><th>Nome</th><th>Escala</th><th>Data<br>início</th><th>Armamento</th><th>Carregador/<br>Munição</th><th>Acessórios</th><th>Alterações</th><th>Data de<br>devolução</th></tr>`
+    + g.linhas.map(l => `<tr>${cel(l.posto)}${cel(l.matricula)}${cel(l.nome)}${cel(l.escala)}${cel(l.inicio)}<td>${esc(l.armamento).replace(/\n/g, '<br>')}</td><td>${esc(l.municao).replace(/\n/g, '<br>')}</td><td>${esc(l.acessorios).replace(/\n/g, '<br>')}</td>${cel(l.alteracoes)}${cel(l.devolucao)}</tr>`).join('') + '</table>').join('');
+  return `<p class="tit">${esc(p.cabecalho[0])}</p><p class="tit">${esc(p.cabecalho[1])}</p><p class="tit" style="font-size:15px">${esc(p.cabecalho[2])}</p>
+    <p style="margin-top:10px">${esc(p.abertura)}</p>
+    <p style="margin-top:10px"><b>1. MATERIAL:</b></p><p><b>1.1 - ARMAMENTO E MUNIÇÃO</b> &nbsp;&nbsp; C/A ( X ) &nbsp;&nbsp; S/A (&nbsp;&nbsp;&nbsp;&nbsp;)</p>
+    <table><tr><th>Descrição</th><th>Total</th><th>Cautela/P4</th><th>Na reserva</th><th>Missões</th><th>Obs</th></tr>${mat}</table>
+    <p><b>2. CAUTELA MISSÕES</b></p>${miss || '<p>Sem cautelas no período.</p>'}
+    <p style="margin-top:10px"><b>3. ALTERAÇÕES</b></p>${p.alteracoes.map(t => `<p style="margin-top:6px">${esc(t)}</p>`).join('')}
+    <p style="margin-top:14px">${esc(p.local_data)}</p>
+    <p class="tit" style="margin-top:22px">${esc(p.assinatura.nome)} - ${esc(p.assinatura.posto)}</p><p class="tit">${esc(p.assinatura.funcao)}</p>`;
+}
+
+/* ===== histórico ===== */
+let HIST = [];
+async function buscarHistorico(){
+  const q = new URLSearchParams({ q: $('h-q').value, de: $('h-de').value, ate: $('h-ate').value, status: $('h-st').value });
+  try {
+    const d = await api('/api/cautela/historico?' + q); HIST = d.cautelas;
+    $('h-escopo').textContent = d.escopo === 'todas' ? 'Chefia: todas as cautelas.' : 'Mostrando as cautelas que você lançou.';
+    const ST = { aguardando: 'wait', ativa: 'ok', parcial: 'wait', devolvida: 'neu', cancelada: 'neu' };
+    $('tb-hist').innerHTML = HIST.map(c => `<tr><td><b>${esc(c.cautela_id)}</b><br><span class="muted">${fQ(c.criada_em)}</span></td><td>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}<br><span class="muted">RE ${esc(c.policial.re)}</span></td><td>${esc(c.missao)}</td>
+      <td>${c.itens.map(i => `${i.qtd}× ${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}`).join('<br>')}</td><td>${fQ(c.inicio)}<br>→ ${fQ(c.fim_previsto)}</td><td><span class="chip ${ST[c.status]}">${esc(c.status)}</span>${c.devolvida_em ? `<br><span class="muted">devolvida ${fQ(c.devolvida_em)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
+  } catch(e){ falha(e); }
+}
+$('btn-hist').onclick = buscarHistorico;
+$('btn-csv').onclick = () => {
+  const q = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  const linhas = [['codigo', 'criada_em', 're', 'policial', 'missao', 'inicio', 'fim_previsto', 'situacao', 'devolvida_em', 'material'].join(';')]
+    .concat(HIST.map(c => [c.cautela_id, c.criada_em, c.policial.re, c.policial.guerra || c.policial.nome, c.missao, c.inicio, c.fim_previsto, c.status, c.devolvida_em || '', c.itens.map(i => `${i.qtd}x ${i.descricao}${i.serie ? ' Nº ' + i.serie : ''}`).join(' | ')].map(q).join(';')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'cautelas.csv'; a.click();
+};
+
+/* ===== catálogo (chefia) ===== */
+async function carregarCatalogo(){
+  $('tb-cat').innerHTML = R.linhas.map(l => `<tr><td>${esc(l.item_id)}</td><td>${esc(l.descricao)} ${l.revisar ? '<span class="chip wait">revisar</span>' : ''}</td><td>${esc(l.grupo)}</td><td>${esc(l.controle)}</td><td class="n">${fN(l.total)}</td><td class="n">${fN(l.p4)}</td><td class="n">${fN(l.especial)}</td><td class="n">${fN(l.fora_legado)}</td><td><button class="btn sm sec" data-ed="${esc(l.item_id)}">Editar</button></td></tr>`).join('');
+  $('tb-cat').querySelectorAll('[data-ed]').forEach(b => b.onclick = () => editarItem(b.dataset.ed));
+}
+async function editarItem(id){
+  const l = id ? R.linhas.find(x => x.item_id === id) : { descricao: '', grupo: R.grupos[0], controle: 'quantidade', total: 0, p4: 0, especial: 0, fora_legado: 0, obs: '', revisar: false };
+  const corpo = `<label>Descrição</label><input id="i-desc" value="${esc(l.descricao)}">
+    <div class="row"><div><label>Grupo</label><select id="i-grupo">${R.grupos.map(g => `<option ${g === l.grupo ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div><div><label>Controle</label><select id="i-ctl"><option value="quantidade" ${l.controle === 'quantidade' ? 'selected' : ''}>Por quantidade</option><option value="serie" ${l.controle === 'serie' ? 'selected' : ''}>Por nº de série</option></select></div></div>
+    <div class="row"><div><label>Total (carga)</label><input id="i-total" type="number" value="${l.total}"></div><div><label>Cautela/P4</label><input id="i-p4" type="number" value="${l.p4}"></div><div><label>Especial</label><input id="i-esp" type="number" value="${l.especial}"></div><div><label>Legado</label><input id="i-leg" type="number" value="${l.fora_legado}"></div></div>
+    <label>Observação fixa (sai na coluna OBS da Parte)</label><textarea id="i-obs" rows="3">${esc(l.obs)}</textarea><label>Motivo da alteração</label><input id="i-mot">`;
+  const m = await modal({ titulo: id ? 'Editar ' + id : 'Nova linha do catálogo', corpo, largura: 720 });
+  if (!m) return;
+  const campos = { descricao: val(m, 'i-desc'), grupo: val(m, 'i-grupo'), controle: val(m, 'i-ctl'), total: Number(val(m, 'i-total')), p4: Number(val(m, 'i-p4')), especial: Number(val(m, 'i-esp')), fora_legado: Number(val(m, 'i-leg')), obs: val(m, 'i-obs'), revisar: false };
+  try { await apiPost('/api/cautela/catalogo', { item_id: id || undefined, campos, motivo: val(m, 'i-mot'), senha: m.senha }); toast('Catálogo atualizado.'); await carregar(); carregarCatalogo(); } catch(e){ falha(e); }
+}
+$('btn-novo-item').onclick = () => editarItem('');
+$('btn-nova-serie').onclick = async () => {
+  const m = await modal({ titulo: 'Nova série', corpo: `<label>Material</label><select id="n-item">${R.linhas.filter(l => l.controle === 'serie').map(l => `<option value="${esc(l.item_id)}">${esc(l.descricao)}</option>`).join('')}</select><label>Nº de série</label><input id="n-serie"><label>Tombo (opcional)</label><input id="n-tombo">` });
+  if (!m) return;
+  try { await apiPost('/api/cautela/serial', { campos: { item_id: val(m, 'n-item'), serie: val(m, 'n-serie'), tombo: val(m, 'n-tombo') }, senha: m.senha }); toast('Série cadastrada.'); await carregar(); } catch(e){ falha(e); }
+};
+$('btn-semear').onclick = async () => {
+  if (!confirm('Criar as linhas do catálogo a partir da Parte Diária 618? Só funciona com o catálogo vazio.')) return;
+  try { const d = await apiPost('/api/cautela/semear', {}); $('cat-msg').className = 'msg ok'; $('cat-msg').textContent = `${d.linhas} linhas criadas (${d.a_revisar} marcadas “revisar carga”).`; await carregar(); carregarCatalogo(); }
+  catch(e){ $('cat-msg').className = 'msg err'; $('cat-msg').textContent = e.message; }
+};
+$('btn-importar').onclick = async () => {
+  const m = await modal({ titulo: 'Importar nº de série', corpo: '<div class="muted">Lê a aba DADOS do Material Bélico e cadastra as séries de armas, coletes, algemas, rádios… nas linhas do catálogo. O que não tiver linha certa é listado para você classificar. Pode rodar de novo sem duplicar.</div>' });
+  if (!m) return;
+  try { const d = await apiPost('/api/cautela/importar', { senha: m.senha }); $('cat-msg').className = 'msg ok'; $('cat-msg').innerHTML = `${d.criados} série(s) importada(s). ${d.sem_linha.length ? `<br>Sem linha no catálogo (${d.sem_linha.length}), cadastre manualmente em “Nova série”: ` + d.sem_linha.slice(0, 40).map(x => esc(`${x.modelo} Nº ${x.serie}`)).join('; ') : ''}`; await carregar(); } catch(e){ falha(e); }
+};
+$('btn-integ').onclick = async () => {
+  try {
+    const d = await api('/api/cautela/integridade');
+    $('cat-msg').className = 'msg ' + (d.invalidos.length || d.buracos.length ? 'err' : 'ok');
+    $('cat-msg').innerHTML = `${d.eventos} registro(s) no livro · <b>${d.invalidos.length}</b> com assinatura inválida · <b>${d.buracos.length}</b> lacuna(s) na sequência.` + (d.invalidos.length ? '<br>Inválidos: ' + d.invalidos.map(x => esc(`${x.tipo} #${x.seq} (${fQ(x.em)})`)).join('; ') : '') + (d.chave_derivada ? '<br>⚠️ Chave derivada do JWT_SECRET.' : '');
+  } catch(e){ falha(e); }
+};
+$('btn-designar').onclick = async () => {
+  const re = $('d-re').value.trim(); if (!re) return;
+  const m = await modal({ titulo: 'Designar armeiro de serviço', corpo: `<div class="muted">RE ${esc(re)} passa a ser o armeiro de serviço. Para abrir a reserva ele entra com o RE e a senha do Portal do Policial.</div>` });
+  if (!m) return;
+  try {
+    const d = await apiPost('/api/cautela/designar', { re, senha: m.senha });
+    toast(d.tem_senha ? 'Armeiro designado.' : 'Armeiro designado — ele ainda precisa criar a senha do Portal (1º acesso) para abrir a reserva.');
+    $('d-re').value = ''; await carregar();
+  } catch(e){ falha(e); }
+};
+$('btn-zerar').onclick = async () => {
+  const re = $('z-re').value.trim(), modo = $('z-modo').value; if (!re) return;
+  const m = await modal({ titulo: modo === 'provisoria' ? 'Gerar senha provisória' : 'Zerar a senha do Portal',
+    corpo: `<div class="muted">RE ${esc(re)}: ${modo === 'provisoria' ? 'gera um código de 6 dígitos para você entregar ao policial; no 1º uso ele troca pela senha dele.' : 'a senha atual deixa de valer e a sessão aberta cai. Ele cria outra no 1º acesso, confirmando com o CPF.'}</div>` });
+  if (!m) return;
+  try {
+    const d = await apiPost('/api/cautela/senha', { re, modo, senha: m.senha });
+    $('z-re').value = '';
+    if (d.codigo){
+      await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar',
+        corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Ela vale para entrar uma vez e é trocada no 1º uso. Não fica guardada em lugar nenhum.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--yellow);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
+    } else toast(`Senha de ${d.nome} zerada: ele cria outra no 1º acesso.`);
+  } catch(e){ falha(e); }
+};
+
+/* ===== abas ===== */
+document.querySelectorAll('#tabs .tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('#tabs .tab').forEach(x => x.classList.toggle('on', x === t));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + t.dataset.p));
+  if (t.dataset.p === 'cautelar' && !$('c-ini').value) resetCautelar();
+  if (t.dataset.p === 'historico') buscarHistorico();
+  if (t.dataset.p === 'catalogo') carregarCatalogo();
+});
+boot();
+</script>
+</body>
+</html>

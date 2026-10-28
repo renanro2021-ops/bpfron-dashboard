@@ -18,7 +18,8 @@
    policial.html — Portal do Policial (23/10/2026)
    Tudo num lugar só: tarefas designadas (Central de Tarefas), checklist da
    viatura (Garagem) e ficha da P1. O portal NÃO tem senha: identifica pelo RE
-   e lembra neste aparelho. As Tarefas continuam pedindo a senha delas.
+   e lembra neste aparelho. As Tarefas e a Cautela pedem a senha do Portal
+   (uma só, pelo RE — desde 28/10/2026 vale para todo o efetivo).
    Cada aba abre a página de sempre dentro do portal (?portal=1&re=…), então
    as regras de cada sistema continuam no Worker, sem cópia aqui.
    ===================================================================== */
@@ -112,7 +113,8 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 /* ---------- início ---------- */
 .ola h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:var(--t1);line-height:1.15}
 .ola p{color:var(--muted);font-size:13px;margin-top:2px;text-transform:capitalize}
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 6px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 6px}
+@media (max-width:640px){ .cards{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .cd{position:relative;text-align:left;border:1px solid var(--border);background:var(--card);border-radius:16px;padding:12px;min-height:118px;display:flex;flex-direction:column;gap:4px;overflow:hidden;transition:.15s}
 .cd:hover{border-color:var(--border2);background:var(--card2)}
 .cd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--yellow))}
@@ -174,7 +176,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 
 <header class="top">
   <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-  <div class="tt"><b>Portal do <em>Policial</em></b><small>BPFRON · tarefas, viatura e ficha</small></div>
+  <div class="tt"><b>Portal do <em>Policial</em></b><small>BPFRON · tarefas, viatura, cautela e ficha</small></div>
   <div class="eu hide" id="eu"><span class="av" id="eu-av"></span><span class="nm" id="eu-nm"></span><button id="bt-trocar" title="Outra pessoa vai usar este aparelho">Trocar</button></div>
 </header>
 
@@ -182,6 +184,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
   <button data-aba="inicio" class="on"><span class="i">🏠</span><span>Início</span></button>
   <button data-aba="tarefas"><span class="i">📋</span><span>Tarefas</span><i class="bd hide" id="bd-tar"></i></button>
   <button data-aba="viatura"><span class="i">🚓</span><span>Viatura</span><i class="bd az hide" id="bd-vtr"></i></button>
+  <button data-aba="cautela"><span class="i">🛡️</span><span>Cautela</span><i class="bd hide" id="bd-cau"></i></button>
   <button data-aba="ficha"><span class="i">👤</span><span>Minha ficha</span></button>
 </nav>
 
@@ -191,7 +194,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
     <div class="entrar">
       <img class="brasao" src="LOGOS/bpfron_transp.avif" alt="">
       <h1>Portal do <em>Policial</em></h1>
-      <p class="lead">Suas <b style="color:var(--t2)">tarefas</b>, o <b style="color:var(--t2)">checklist da viatura</b> e a sua <b style="color:var(--t2)">ficha da P1</b> num lugar só.</p>
+      <p class="lead">Suas <b style="color:var(--t2)">tarefas</b>, o <b style="color:var(--t2)">checklist da viatura</b>, a <b style="color:var(--t2)">cautela de armamento</b> e a sua <b style="color:var(--t2)">ficha da P1</b> num lugar só.</p>
       <div class="box">
         <div class="achou ja hide" id="ja-dash">
           <small>Você já entrou no dashboard neste aparelho</small>
@@ -232,7 +235,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
           <p class="dica">Mesmo usuário e senha do dashboard. Assim as <b>Tarefas</b> já abrem direto, sem outra senha.</p>
         </form>
       </div>
-      <p class="nota">Pelo RE não precisa de senha: ele fica lembrado neste aparelho. Só as <b>Tarefas</b> pedem a senha delas.</p>
+      <p class="nota">Pelo RE não precisa de senha: ele fica lembrado neste aparelho. Só as <b>Tarefas</b> e a <b>Cautela</b> pedem a senha do Portal — é uma só, criada no 1º acesso com o RE e o CPF.</p>
       <p class="manual"><a href="manual-portal.html" target="_blank" rel="noopener">📖 Como usar o portal (manual)</a></p>
     </div>
   </section>
@@ -243,6 +246,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
     <div class="cards" id="cards"></div>
     <div id="res-tar"></div>
     <div id="res-vtr"></div>
+    <div id="res-cau"></div>
     <div id="res-p1"></div>
     <div class="inst hide" id="inst">
       <button class="btn sec" id="bt-inst">📲 Instalar o portal no celular</button>
@@ -255,6 +259,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 <!-- cada aba é a página de sempre, aberta dentro do portal -->
 <div class="fr hide" id="v-tarefas"><div class="carr">Carregando as tarefas…</div></div>
 <div class="fr hide" id="v-viatura"><div class="carr">Carregando a frota…</div></div>
+<div class="fr hide" id="v-cautela"><div class="carr">Carregando a cautela…</div></div>
 <div class="fr hide" id="v-ficha"><div class="carr">Carregando a sua ficha…</div></div>
 
 <div class="md" id="md"><div class="cx" id="md-cx"></div></div>
@@ -421,13 +426,13 @@ $('bt-ja-nao').onclick = () => { vis('ja-dash', false); JA = null; };
 
 /* trocar de policial: limpa o RE e também sai das Tarefas e do checklist neste aparelho */
 $('bt-trocar').onclick = () => {
-  $('md-cx').innerHTML = `<h3>Trocar de policial</h3><p>Use quando outra pessoa for usar este aparelho. Isso também <b style="color:var(--t2)">sai das Tarefas</b> e do checklist da viatura aqui.</p>
+  $('md-cx').innerHTML = `<h3>Trocar de policial</h3><p>Use quando outra pessoa for usar este aparelho. Isso também <b style="color:var(--t2)">sai das Tarefas</b>, da Cautela e do checklist da viatura aqui.</p>
     <div class="bts"><button class="btn sec" id="md-nao">Cancelar</button><button class="btn" id="md-sim">Trocar</button></div>`;
   $('md').classList.add('on');
   $('md-nao').onclick = () => $('md').classList.remove('on');
   $('md-sim').onclick = () => {
     ['tar_token', 'bp_token', 'bp_user', 'bp_perms', 'bp_gar_motorista', LS_EU].forEach(k => ls.set(k, null));
-    EU = null; DADOS = {}; ['tarefas', 'viatura', 'ficha'].forEach(a => { $('v-' + a).querySelector('iframe')?.remove(); });
+    EU = null; DADOS = {}; FRAMES.forEach(a => { $('v-' + a).querySelector('iframe')?.remove(); });
     $('md').classList.remove('on');
     iniciar();
   };
@@ -435,16 +440,17 @@ $('bt-trocar').onclick = () => {
 $('md').addEventListener('click', (e) => { if (e.target === $('md')) $('md').classList.remove('on'); });
 
 /* ============================== abas ============================== */
-const ABAS = ['inicio', 'tarefas', 'viatura', 'ficha'];
+const ABAS = ['inicio', 'tarefas', 'viatura', 'cautela', 'ficha'];
+const FRAMES = ['tarefas', 'viatura', 'cautela', 'ficha'];
 let ABA = 'inicio';
-const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', ficha: 'p1.html' };
+const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', cautela: 'cautela.html', ficha: 'p1.html' };
 function srcDe(aba){ return `${PAGINA[aba]}?portal=1&re=${encodeURIComponent(re5(EU.re))}${API_Q ? '&api=' + encodeURIComponent(API_Q) : ''}`; }
 function quadro(aba){
   const box = $('v-' + aba);
   let f = box.querySelector('iframe');
   if (!f){
     f = document.createElement('iframe');
-    f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', ficha:'Minha ficha (P1)' }[aba];
+    f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', cautela:'Cautela de armamento', ficha:'Minha ficha (P1)' }[aba];
     f.src = srcDe(aba);
     f.addEventListener('load', () => { const c = box.querySelector('.carr'); if (c) c.remove(); });
     box.appendChild(f);
@@ -457,12 +463,13 @@ function irAba(aba, opt){
   ABA = aba;
   qsa('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.aba === aba));
   vis('main', aba === 'inicio');
-  ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, a === aba));
+  FRAMES.forEach(a => vis('v-' + a, a === aba));
   if (aba === 'inicio'){ vis('v-inicio', true); if (Date.now() - (DADOS.em || 0) > 45e3) carregarInicio(); }
   else {
     const f = quadro(aba);
-    // a ficha recarrega se a pessoa entrou nas Tarefas depois (aí não pede mais o CPF)
-    if (aba === 'ficha' && f.dataset.tok !== tokenTar()){ if (f.dataset.tok !== undefined) f.src = srcDe('ficha'); }
+    // a ficha e a cautela recarregam se a pessoa entrou com a senha em outra aba depois
+    // (a ficha deixa de pedir o CPF; a cautela já abre logada)
+    if ((aba === 'ficha' || aba === 'cautela') && f.dataset.tok !== tokenTar()){ if (f.dataset.tok !== undefined) f.src = srcDe(aba); }
     f.dataset.tok = tokenTar();
     if (opt && opt.abrir) abrirNaCentral(f, opt.abrir);
   }
@@ -539,6 +546,23 @@ async function carregarViatura(){
     return { estado: 'ok', minhas, livres: vs.filter(v => !v.em_uso && !/devolvid|baixad/i.test(v.status_geral || '')).length };
   } catch(e){ return { estado: 'erro', msg: e.message }; }
 }
+async function carregarCautela(){
+  const tk = tokenTar();
+  if (!tk) return { estado: 'sem_login' };
+  try {
+    const d = await getJ('/api/cautela/minhas', { headers: { Authorization: 'Bearer ' + tk } });
+    if (d.eu && d.eu.re && re5(d.eu.re) !== re5(EU.re)) return { estado: 'outro', quem: d.eu.guerra ? d.eu.posto + ' ' + d.eu.guerra : d.eu.nome };
+    if (d.sem_vinculo) return { estado: 'sem_re' };
+    const cs = d.cautelas || [];
+    const assinar = cs.filter(c => c.status === 'aguardando' || (c.devolucoes || []).some(x => !x.assinada));
+    const comigo = cs.filter(c => c.status === 'ativa' || c.status === 'parcial');
+    const vencidas = comigo.filter(c => (c.alertas || []).includes('vencida'));
+    return { estado: 'ok', assinar, comigo, vencidas };
+  } catch(e){
+    if (e.status === 401) return { estado: 'sem_login' };
+    return { estado: 'erro', msg: e.message };
+  }
+}
 async function carregarFicha(){
   const tk = tokenTar();
   if (!tk) return { estado: 'cpf' };
@@ -553,7 +577,7 @@ function cartao(c){
   return `<button class="cd" data-ir="${c.ir}" style="--c:${c.cor}"><span class="ic">${c.ic}</span><span class="v ${c.txt ? 'txt' : ''}">${c.v}</span><span class="l">${c.l}</span>${c.s ? `<span class="s ${c.sc || ''}">${c.s}</span>` : ''}</button>`;
 }
 function renderInicio(){
-  const T = DADOS.tar, V = DADOS.vtr, P = DADOS.p1;
+  const T = DADOS.tar, V = DADOS.vtr, P = DADOS.p1, C = DADOS.cau;
   const h = Number(new Date(agora() - 4 * 3600e3).toISOString().slice(11, 13));
   $('ola').textContent = `${h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'}, ${nomeCurto(EU)}`;
   $('hoje').textContent = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho', weekday: 'long', day: 'numeric', month: 'long' });
@@ -562,7 +586,9 @@ function renderInicio(){
     ? cartao({ ir:'tarefas', ic:'📋', v:T.abertas.length, l:`tarefa${T.abertas.length === 1 ? '' : 's'} com você`, cor:'#3987e5',
         s: T.atrasadas.length ? `⏰ ${T.atrasadas.length} atrasada${T.atrasadas.length > 1 ? 's' : ''}` : T.novas.length ? `📥 ${T.novas.length} nova${T.novas.length > 1 ? 's' : ''}` : T.pontos && T.pontos.mes ? `🏆 ${T.pontos.mes} pts no mês` : 'tudo em dia',
         sc: T.atrasadas.length ? 'c' : T.novas.length ? 'w' : 'g' })
-    : cartao({ ir:'tarefas', ic:'🔒', v:'Tarefas', txt:true, l:'entre com a senha', cor:'#3987e5', s: T.estado === 'outro' ? 'entrou outra pessoa' : 'toque para entrar' });
+    : T.estado === 'sem_acesso'
+      ? cartao({ ir:'tarefas', ic:'🙋', v:'Tarefas', txt:true, l:'ainda não liberado', cor:'#3987e5', s:'fale com o chefe da seção' })
+      : cartao({ ir:'tarefas', ic:'🔒', v:'Tarefas', txt:true, l:'entre com a senha', cor:'#3987e5', s: T.estado === 'outro' ? 'entrou outra pessoa' : 'toque para entrar' });
   const cV = !V ? sk : V.estado === 'ok' && V.minhas.length
     ? cartao({ ir:'viatura', ic:'🚓', v:esc(V.minhas[0].prefixo), txt:true, l:'em uso com você', cor:'#F5C518', s:'dê o término ao devolver', sc:'w' })
     : cartao({ ir:'viatura', ic:'🚓', v:'Viatura', txt:true, l:'nenhuma com você', cor:'#F5C518', s: V.estado === 'ok' ? `${V.livres} disponíve${V.livres === 1 ? 'l' : 'is'}` : 'fazer checklist' });
@@ -570,7 +596,15 @@ function renderInicio(){
     ? cartao({ ir:'ficha', ic:'👤', v:'Ficha', txt:true, l: P.ficha ? 'P1 preenchida' : 'P1 não preenchida', cor:'#199e70',
         s: P.ficha ? `${P.cursos} curso${P.cursos === 1 ? '' : 's'} · ${P.acessos} sistema${P.acessos === 1 ? '' : 's'}` : 'preencha os seus dados', sc: P.ficha ? '' : 'w' })
     : cartao({ ir:'ficha', ic:'👤', v:'Ficha', txt:true, l:'P1 · seção pessoal', cor:'#199e70', s:'conferir e atualizar' });
-  $('cards').innerHTML = cT + cV + cP;
+  const nItens = (cs) => cs.reduce((n, c) => n + (c.itens || []).reduce((a, i) => a + (i.qtd - (i.devolvido || 0)), 0), 0);
+  const cC = !C ? sk : C.estado === 'ok' && C.assinar.length
+    ? cartao({ ir:'cautela', ic:'🛡️', v:C.assinar.length, l:`para assinar`, cor:'#e66767', s:'confira e assine', sc:'c' })
+    : C.estado === 'ok' && C.comigo.length
+      ? cartao({ ir:'cautela', ic:'🛡️', v:nItens(C.comigo), l:`ite${nItens(C.comigo) === 1 ? 'm' : 'ns'} cautelado${nItens(C.comigo) === 1 ? '' : 's'}`, cor:'#e66767',
+          s: C.vencidas.length ? `⏰ ${C.vencidas.length} com prazo vencido` : 'devolva no prazo', sc: C.vencidas.length ? 'c' : 'w' })
+      : cartao({ ir:'cautela', ic: C.estado === 'ok' ? '🛡️' : '🔒', v:'Cautela', txt:true, l: C.estado === 'ok' ? 'nada com você' : 'entre com a senha', cor:'#e66767',
+          s: C.estado === 'ok' ? 'armamento em dia' : C.estado === 'outro' ? 'entrou outra pessoa' : C.estado === 'sem_re' ? 'ligar o login ao RE' : 'toque para entrar', sc: C.estado === 'ok' ? 'g' : '' });
+  $('cards').innerHTML = cT + cV + cC + cP;
   qsa('[data-ir]', $('cards')).forEach(b => b.onclick = () => irAba(b.dataset.ir));
 
   // tarefas
@@ -582,7 +616,7 @@ function renderInicio(){
         ${l.length ? `<div class="lst">${l.map(t => `<button class="it" data-tar="${esc(t.id)}"><div class="tx"><b>${esc(t.titulo)}</b><small>#${t.num} · ${esc(t.secao)}${((t.ciencia || {})[T.me] || {}).ciente ? '' : ' · 📥 chegou para você'}</small></div>${prazoChip(t)}</button>`).join('')}</div>`
           : `<div class="box painel"><span class="ic2">🌤️</span><div class="tx">Nenhuma tarefa em aberto com você. ${T.pontos && T.pontos.mes ? `Você tem <b>${T.pontos.mes} pontos</b> este mês.` : ''}</div></div>`}`;
     } else if (T.estado === 'sem_acesso'){
-      ht = `<div class="sect">📋 Tarefas</div><div class="box painel"><span class="ic2">🙋</span><div class="tx">${esc(T.msg || 'Você ainda não está liberado na Central de Tarefas.')} Fale com o chefe da sua seção.</div></div>`;
+      ht = `<div class="sect">📋 Tarefas</div><div class="box painel"><span class="ic2">🙋</span><div class="tx">${esc(T.msg || 'Você ainda não está liberado na Central de Tarefas.')}${/chefe/i.test(T.msg || '') ? '' : ' Fale com o chefe da sua seção.'}</div></div>`;
     } else {
       ht = `<div class="sect">📋 Tarefas</div><div class="box painel"><span class="ic2">🔒</span><div class="tx">${T.estado === 'outro' ? `As Tarefas deste aparelho estão abertas com <b>${esc(T.quem)}</b>. Entre com a sua senha.` : 'As tarefas pedem a <b>sua senha</b>. No 1º acesso você cria a senha ali mesmo.'}</div><button class="btn" data-ir2="tarefas">Entrar nas tarefas</button></div>`;
     }
@@ -598,32 +632,50 @@ function renderInicio(){
       <button class="btn" data-ir2="viatura">${m ? 'Registrar o término' : 'Fazer checklist'}</button></div>`;
   }
   $('res-vtr').innerHTML = hv;
+  // cautela de armamento
+  let hc = '';
+  if (C && C.estado !== 'erro'){
+    const lista = (C.estado === 'ok' ? [...C.assinar, ...C.comigo.filter(c => !C.assinar.includes(c))] : []).slice(0, 4);
+    hc = `<div class="sect">🛡️ Cautela de armamento</div><div class="box painel"><span class="ic2">${C.estado === 'ok' && C.assinar.length ? '✍️' : C.estado === 'ok' ? '🛡️' : '🔒'}</span>
+      <div class="tx">${C.estado === 'ok'
+        ? (C.assinar.length ? `<b>${C.assinar.length} cautela${C.assinar.length > 1 ? 's' : ''} aguardando a sua assinatura.</b> Confira o material e assine com a sua senha.`
+          : C.comigo.length ? `Você está com material da reserva em <b>${C.comigo.length} cautela${C.comigo.length > 1 ? 's' : ''}</b>${C.vencidas.length ? ` — <b style="color:var(--tx-crit)">${C.vencidas.length} com prazo vencido</b>` : ''}.`
+          : 'Nenhum material da reserva de armamento com você.')
+        : C.estado === 'outro' ? `A cautela deste aparelho está aberta com <b>${esc(C.quem)}</b>. Entre com a sua senha.`
+        : C.estado === 'sem_re' ? 'Ligue o seu login ao seu RE para ver as suas cautelas.'
+        : 'Você confere e <b>assina com a sua senha</b> o armamento que recebe e devolve. É a mesma senha das Tarefas — no 1º acesso você cria com o RE e o CPF.'}</div>
+      <button class="btn" data-ir2="cautela">${C.estado === 'ok' && C.assinar.length ? 'Assinar' : C.estado === 'ok' ? 'Ver as minhas cautelas' : 'Entrar na cautela'}</button></div>
+      ${lista.length ? `<div class="lst" style="margin-top:8px">${lista.map(c => `<button class="it" data-ir3="cautela"><div class="tx"><b>${esc(c.missao)}</b><small>${esc(c.cautela_id)} · ${(c.itens || []).length} ite${(c.itens || []).length === 1 ? 'm' : 'ns'}</small></div>${C.assinar.includes(c) ? '<span class="chip late">assinar</span>' : (c.alertas || []).includes('vencida') ? '<span class="chip late">prazo vencido</span>' : '<span class="chip">com você</span>'}</button>`).join('')}</div>` : ''}`;
+  }
+  $('res-cau').innerHTML = hc;
   // ficha P1
   let hp = '';
   if (P){
     hp = `<div class="sect">👤 Minha ficha (P1)</div><div class="box painel"><span class="ic2">${P.estado === 'ok' && P.ficha ? '✅' : '📝'}</span>
       <div class="tx">${P.estado === 'ok'
         ? (P.ficha ? `Ficha preenchida${P.ficha.atualizado_em ? ' — atualizada em <b>' + esc(String(P.ficha.atualizado_em).slice(0, 10)) + '</b>' : ''}: ${P.cursos} curso(s) e ${P.acessos} sistema(s). Mantenha em dia.` : 'A sua ficha ainda <b>não foi preenchida</b>: dados pessoais, cursos feitos na PM e sistemas a que você tem acesso.')
-        : 'Confira e atualize os seus dados, cursos e sistemas. Pede os 4 últimos dígitos do CPF — <b>se entrar nas Tarefas antes, não pede</b>.'}</div>
+        : 'Confira e atualize os seus dados, cursos e sistemas. Pede os 4 últimos dígitos do CPF — <b>se já entrou com a senha do Portal, não pede</b>.'}</div>
       <button class="btn" data-ir2="ficha">${P.estado === 'ok' && P.ficha ? 'Ver a minha ficha' : 'Preencher a ficha'}</button></div>`;
   }
   $('res-p1').innerHTML = hp;
-  qsa('[data-ir2]', $('main')).forEach(b => b.onclick = () => irAba(b.dataset.ir2));
+  qsa('[data-ir2], [data-ir3]', $('main')).forEach(b => b.onclick = () => irAba(b.dataset.ir2 || b.dataset.ir3));
   qsa('[data-tar]', $('main')).forEach(b => b.onclick = () => irAba('tarefas', { abrir: b.dataset.tar }));
   // marcadores nas abas
   const nT = T && T.estado === 'ok' ? T.novas.length + T.atrasadas.filter(t => !T.novas.includes(t)).length : 0;
   $('bd-tar').textContent = nT; vis('bd-tar', nT > 0);
   const emUso = V && V.estado === 'ok' && V.minhas.length;
   $('bd-vtr').textContent = '1'; vis('bd-vtr', !!emUso);
+  const nC = C && C.estado === 'ok' ? C.assinar.length + C.vencidas.filter(c => !C.assinar.includes(c)).length : 0;
+  $('bd-cau').textContent = nC; vis('bd-cau', nC > 0);
 }
 let _carr = 0;
 async function carregarInicio(){
   const n = ++_carr;
   DADOS.em = Date.now();
   renderInicio();
-  const [tar, vtr, p1] = await Promise.all([carregarTarefas(), carregarViatura(), carregarFicha()]);
+  const [tar, vtr, p1, cau] = await Promise.all([carregarTarefas(), carregarViatura(), carregarFicha(), carregarCautela()]);
   if (n !== _carr || !EU) return;
-  Object.assign(DADOS, { tar, vtr, p1 });
+  Object.assign(DADOS, { tar, vtr, p1, cau });
   renderInicio();
 }
 // voltou para o portal (ou entrou/saiu das Tarefas em uma aba): atualiza o resumo
@@ -645,7 +697,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 /* ============================== começo ============================== */
 function iniciar(){
   vis('eu', !!EU); vis('tabs', !!EU); vis('v-entrar', !EU); vis('v-inicio', false);
-  ['tarefas', 'viatura', 'ficha'].forEach(a => vis('v-' + a, false));
+  FRAMES.forEach(a => vis('v-' + a, false));
   vis('main', true);
   if (!EU){ $('re').value = ''; vis('achou', false); vis('ligar', false); LIGAR = null; $('re-msg').textContent = ''; abaEntrada(false); jaLogadoDash(); return; }
   $('eu-nm').textContent = nomeCurto(EU);
