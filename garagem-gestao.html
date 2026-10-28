@@ -995,6 +995,8 @@ function abrirFicha(i){
     <button class="btn gray" onclick="novaManutencao('${esc(v.prefixo)}')">🛠️ Manutenção</button>
     <button class="btn gray" onclick="editarViatura(${i})">✏️ Editar</button>
     ${v.ativa ? `<button class="btn gray" onclick="devolverViatura(${esc(JSON.stringify(v.prefixo))})">↩️ Devolver</button>` : `<button class="btn green" onclick="reativarViatura(${esc(JSON.stringify(v.prefixo))})">♻️ Reativar</button>`}
+    <button class="btn ${vtrDevolvida(v) ? 'red' : 'gray'}" id="bt-excluir-vtr" onclick="excluirViatura(${esc(JSON.stringify(v.prefixo))})"
+      ${vtrDevolvida(v) ? '' : 'style="opacity:.45" title="Libera quando a viatura estiver com status Devolvida"'}>${vtrDevolvida(v) ? '🗑️' : '🔒'} Excluir</button>
     <button class="btn-main" onclick="abrirNF(null,'${esc(v.prefixo)}')">🧾 Lançar nota</button>` : '<span class="muted">Modo consulta</span>';
   modal(`🚓 ${esc(v.prefixo)} <span class="muted" style="font:500 14px Inter">${esc(v.modelo)} · ${esc(v.placa)}</span>`, corpo, rod);
 }
@@ -1086,6 +1088,23 @@ function devolverViatura(prefixo){
     try{ await salvar('viatura_devolver', { devolucao }, `↩️ ${prefixo} devolvida para ${devolucao.destino}.`); fecharModal(); }
     catch(e){ toast('⚠️ ' + e.message, true); }
   };
+}
+// Excluir viatura do cadastro: só libera com status "Devolvida" (pedido do usuário, 28/10/2026).
+function vtrDevolvida(v){ return !!v && !v.ativa && /DEVOLVID/.test(norm(v.status_geral)); }
+async function excluirViatura(prefixo){
+  const v = DB.viaturas.find(x => x.prefixo === prefixo);
+  if (!vtrDevolvida(v)){
+    toast(`🔒 A exclusão só libera quando a viatura está com status "Devolvida"${v ? ` (a ${prefixo} está como "${v.status_geral || 'Ativa'}")` : ''}. Use ↩️ Devolver antes.`, true);
+    return;
+  }
+  const n = lista => (DB[lista] || []).filter(x => x.prefixo === prefixo).length;
+  const dv = devDe(prefixo);
+  await confirmarExclusao({ titulo:'Excluir viatura',
+    texto:`${prefixo} — ${v.modelo || ''} · ${v.placa || ''}\nStatus: ${v.status_geral}${dv ? ` (para ${dv.destino} em ${fD(dv.data)})` : ''}\n\nSai do cadastro de viaturas e das telas. O histórico — ${n('checklists')} checklist(s), ${n('nfs')} nota(s) e ${n('pendencias')} alteração(ões) — continua guardado na planilha.`,
+    acao: async ({ senha, motivo }) => {
+      await apiPost('/api/garagem/gestao/save', { op:'viatura_excluir', prefixo, senha, motivo });
+      fecharModal(); toast(`🗑️ ${prefixo} excluída do cadastro.`); await carregar(true);
+    } });
 }
 function reativarViatura(prefixo){
   const dv = devDe(prefixo);
@@ -1416,7 +1435,10 @@ window.addEventListener('afterprint', () => document.body.classList.remove('imp-
 
 function montarRelatorio(tipo, de, ate, inat){
   const V = vistaTipo(DB, tipo);
-  const vts = V.viaturas.filter(v => inat || v.ativa).slice().sort((a, b) => String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true }));
+  // Lista na ordem dos cartões (pedido do usuário, 28/10/2026): disponíveis (na base) → em uso →
+  // em manutenção → baixadas → devolvidas; dentro do grupo, pelo prefixo.
+  const grupo = v => naBase(v) ? 0 : naOficina(v) ? 2 : v.ativa ? 1 : /DEVOLVID/.test(norm(v.status_geral)) ? 4 : 3;
+  const vts = V.viaturas.filter(v => inat || v.ativa).slice().sort((a, b) => grupo(a) - grupo(b) || String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true }));
   const set = new Set(vts.map(v => v.prefixo));
   const noPer = d => { const x = String(d || '').slice(0, 10); return !!x && (!de || x >= de) && (!ate || x <= ate); };
   const daV = L => L.filter(x => set.has(x.prefixo));
