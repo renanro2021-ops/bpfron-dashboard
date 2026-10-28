@@ -1423,18 +1423,19 @@ function montarRelatorio(tipo, de, ate, inat){
   });
   // O relatório não leva valor em dinheiro (pedido do usuário, 28/10/2026): só a quantidade de notas.
   const porTipoNF = {}; nfsP.forEach(n => { const k = n.tipo || 'Outros'; porTipoNF[k] = (porTipoNF[k] || 0) + 1; });
-  const fonte = f => nfsP.filter(n => n.fonte === f).length;
   const at = vts.filter(v => v.ativa);
-  // Baixadas contam sempre (mesmo sem "incluir devolvidas/baixadas"): é o retrato da frota do recorte.
+  // Situação da frota (disponíveis × em manutenção × baixadas) conta sempre, mesmo sem
+  // "incluir devolvidas/baixadas": é o retrato da frota do recorte. Disponível = ativa fora da oficina.
   const ordPref = (a, b) => String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true });
   const baixadas = V.viaturas.filter(v => !v.ativa && !/DEVOLVID/.test(norm(v.status_geral))).sort(ordPref);
   const oficina = V.viaturas.filter(v => v.ativa && /OFICINA/.test(norm(v.status_geral))).sort(ordPref);
-  return { tipo, de, ate, inat, itens, porTipoNF, baixadas, oficina, tot: {
+  const disponiveis = V.viaturas.filter(v => v.ativa && !/OFICINA/.test(norm(v.status_geral))).sort(ordPref);
+  return { tipo, de, ate, inat, itens, porTipoNF, disponiveis, oficina, baixadas, tot: {
     vts: vts.length, ativas: at.length, uso: at.filter(v => v.em_uso).length, fora: vts.length - at.length,
-    crit: at.filter(v => v.critico).length, comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
+    comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
     oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
     ck: cksP.length, ckIni: cksP.filter(c => c.momento === 'Início de uso').length, ckFim: cksP.filter(c => c.momento === 'Término de uso').length,
-    km: soma(itens, x => x.km), mn: mnsP.length, nf: nfsP.length, prime: fonte('PRIME'), recurso: fonte('RECURSO') } };
+    km: soma(itens, x => x.km), mn: mnsP.length, nf: nfsP.length } };
 }
 
 function relatorioHTML(R, completo){
@@ -1494,15 +1495,15 @@ function relatorioHTML(R, completo){
       <h1>RELATÓRIO DA FROTA — ${nomeTipo} · ${completo ? 'COMPLETO' : 'RESUMIDO'}</h1>
       <div style="font-size:9.5pt">Período: ${per} · ${R.inat ? 'inclui viaturas devolvidas/baixadas' : 'somente viaturas ativas'}</div></div></div>
     <div class="rres">
-      ${box('Viaturas', tot.vts, `${tot.ativas} ativa(s) · ${tot.uso} em uso agora${tot.fora ? ` · ${tot.fora} fora de uso` : ''}`)}
-      ${box('Viaturas baixadas', R.baixadas.length, [listaPref(R.baixadas) || 'nenhuma', R.oficina.length ? `${R.oficina.length} na oficina (${listaPref(R.oficina)})` : ''].filter(Boolean).join(' · '))}
-      ${box('Dano crítico', tot.crit, 'motor / transmissão')}
+      ${box('Viaturas disponíveis', R.disponiveis.length, listaPref(R.disponiveis) || 'nenhuma')}
+      ${box('Em manutenção', R.oficina.length, R.oficina.length ? `na oficina: ${listaPref(R.oficina)}` : 'nenhuma na oficina')}
+      ${box('Viaturas baixadas', R.baixadas.length, listaPref(R.baixadas) || 'nenhuma')}
+      ${box('Total de viaturas', tot.vts, `${tot.ativas} ativa(s) · ${tot.uso} em uso agora${tot.fora ? ` · ${tot.fora} fora de uso` : ''}`)}
       ${box('Com alteração aberta', tot.comAlt, `${tot.itensAb} item(ns) em aberto`)}
       ${box('Troca de óleo', tot.oleoV + tot.oleoB, `${tot.oleoV} vencida(s) · ${tot.oleoB} em breve`)}
       ${box('Checklists no período', fN(tot.ck), `${tot.ckIni} início · ${tot.ckFim} término`)}
       ${box('Km rodado no período', tot.km ? fN(tot.km) : '—', '')}
       ${box('Manutenções no período', tot.mn, '')}
-      ${box('Notas fiscais no período', fN(tot.nf), [tot.prime ? `${tot.prime} PRIME` : '', tot.recurso ? `${tot.recurso} RECURSO` : ''].filter(Boolean).join(' · '))}
     </div>
     <h3>1. Pontos de atenção</h3>
     ${atencao.length ? `<ul class="ratn">${atencao.map(a => `<li>${a}</li>`).join('')}</ul>` : '<p class="rvz">Nenhum dano crítico nem troca de óleo vencida ou próxima.</p>'}
