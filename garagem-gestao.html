@@ -1381,7 +1381,8 @@ function abrirRelatorio(){
       <div class="fg hidden" id="rl-dw"><label>De</label><input type="date" id="rl-de"></div>
       <div class="fg hidden" id="rl-aw"><label>Até</label><input type="date" id="rl-ate" value="${hojeISO()}"></div>
       <label class="chk wall"><input type="checkbox" id="rl-inat"> Incluir viaturas devolvidas/baixadas</label></div>
-    <div class="hint" style="margin-top:12px"><b>Resumido:</b> indicadores, pontos de atenção, situação de cada viatura e gasto por tipo — cabe em 1 ou 2 folhas.<br>
+    <div class="hint" style="margin-top:12px"><b>Resumido:</b> indicadores, pontos de atenção, situação de cada viatura e notas fiscais por tipo — cabe em 1 ou 2 folhas.<br>
+      O relatório não mostra valores em dinheiro (só a quantidade de notas).<br>
       <b>Completo:</b> o resumido mais a ficha de cada viatura (alterações, notas fiscais, manutenções e todos os checklists do período).<br>
       Abre a janela de impressão: escolha <b>Salvar como PDF</b> para guardar ou anexar ao SEI.</div>`,
     `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn" id="rl-res">📄 Relatório resumido</button><button class="btn-main" id="rl-comp">📑 Relatório completo</button>`);
@@ -1418,17 +1419,18 @@ function montarRelatorio(tipo, de, ate, inat){
     return { v, o: oleoSit(v), dv: v.ativa ? null : devDe(v.prefixo),
       abertas: ps.filter(p => p.status === 'Aberta'), sanadas: ps.filter(p => p.status !== 'Aberta' && noPer(p.data_sanada)),
       nfs, cks: cksP.filter(mine).sort(porData('data')), mns: mnsP.filter(mine).sort(porData('data')),
-      km: (kms[v.prefixo] || {}).km || 0, gasto: soma(nfs, n => n.valor_total) };
+      km: (kms[v.prefixo] || {}).km || 0 };
   });
-  const porTipoNF = {}; nfsP.forEach(n => { const e = porTipoNF[n.tipo || 'Outros'] || (porTipoNF[n.tipo || 'Outros'] = { n:0, v:0 }); e.n++; e.v += n.valor_total || 0; });
-  const fonte = f => soma(nfsP.filter(n => n.fonte === f), n => n.valor_total);
+  // O relatório não leva valor em dinheiro (pedido do usuário, 28/10/2026): só a quantidade de notas.
+  const porTipoNF = {}; nfsP.forEach(n => { const k = n.tipo || 'Outros'; porTipoNF[k] = (porTipoNF[k] || 0) + 1; });
+  const fonte = f => nfsP.filter(n => n.fonte === f).length;
   const at = vts.filter(v => v.ativa);
   return { tipo, de, ate, inat, itens, porTipoNF, tot: {
     vts: vts.length, ativas: at.length, uso: at.filter(v => v.em_uso).length, fora: vts.length - at.length,
     crit: at.filter(v => v.critico).length, comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
     oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
     ck: cksP.length, ckIni: cksP.filter(c => c.momento === 'Início de uso').length, ckFim: cksP.filter(c => c.momento === 'Término de uso').length,
-    km: soma(itens, x => x.km), mn: mnsP.length, nf: nfsP.length, gasto: soma(nfsP, n => n.valor_total), prime: fonte('PRIME'), recurso: fonte('RECURSO') } };
+    km: soma(itens, x => x.km), mn: mnsP.length, nf: nfsP.length, prime: fonte('PRIME'), recurso: fonte('RECURSO') } };
 }
 
 function relatorioHTML(R, completo){
@@ -1449,18 +1451,18 @@ function relatorioHTML(R, completo){
     else if (v.km_para_troca != null && v.km_para_troca <= 1000) atencao.push(`<b>${esc(v.prefixo)}</b> — faltam ${fN(v.km_para_troca)} km para a troca de óleo.`);
   });
 
-  const linhas = itens.map(({ v, o, dv, cks, km, gasto }) => `<tr><td><b>${esc(v.prefixo)}</b><br>${esc(v.modelo)} · ${esc(v.placa)}</td><td>${esc(TIPOS[tipoVtr(v)])}</td><td>${sit(v, dv)}</td>
+  const linhas = itens.map(({ v, o, dv, cks, km, nfs }) => `<tr><td><b>${esc(v.prefixo)}</b><br>${esc(v.modelo)} · ${esc(v.placa)}</td><td>${esc(TIPOS[tipoVtr(v)])}</td><td>${sit(v, dv)}</td>
     <td class="v">${v.km_atual ? fN(v.km_atual) : '—'}</td><td>${v.ativa ? esc(o.txt) : '—'}</td><td>${crit([...new Set(v.itens_bloqueados)]) || '—'}</td>
-    <td class="v">${cks.length}</td><td class="v">${km ? fN(km) : '—'}</td><td class="v">${fR(gasto)}</td></tr>`);
-  const rodTab = `<tr><td colspan="6">Total — ${itens.length} viatura(s)</td><td class="v">${tot.ck}</td><td class="v">${tot.km ? fN(tot.km) : '—'}</td><td class="v">${fR(tot.gasto)}</td></tr>`;
+    <td class="v">${cks.length}</td><td class="v">${km ? fN(km) : '—'}</td><td class="v">${nfs.length || '—'}</td></tr>`);
+  const rodTab = `<tr><td colspan="6">Total — ${itens.length} viatura(s)</td><td class="v">${tot.ck}</td><td class="v">${tot.km ? fN(tot.km) : '—'}</td><td class="v">${tot.nf}</td></tr>`;
 
-  const tiposNF = Object.entries(R.porTipoNF).sort((a, b) => b[1].v - a[1].v);
-  const grp = {}; itens.forEach(x => { const k = tipoVtr(x.v), g = grp[k] || (grp[k] = { n:0, at:0, km:0, gasto:0 }); g.n++; if (x.v.ativa) g.at++; g.km += x.km; g.gasto += x.gasto; });
+  const tiposNF = Object.entries(R.porTipoNF).sort((a, b) => b[1] - a[1]);
+  const grp = {}; itens.forEach(x => { const k = tipoVtr(x.v), g = grp[k] || (grp[k] = { n:0, at:0, km:0, nf:0 }); g.n++; if (x.v.ativa) g.at++; g.km += x.km; g.nf += x.nfs.length; });
   const comparativo = !R.tipo && Object.keys(grp).length > 1
-    ? `<h4>Por tipo de viatura</h4>${tab([['Tipo'], ['Viaturas', 'v'], ['Ativas', 'v'], ['Km rodado', 'v'], ['Gasto', 'v'], ['Gasto por viatura', 'v']],
-        Object.entries(grp).map(([k, g]) => `<tr><td>${esc(TIPOS[k])}</td><td class="v">${g.n}</td><td class="v">${g.at}</td><td class="v">${g.km ? fN(g.km) : '—'}</td><td class="v">${fR(g.gasto)}</td><td class="v">${fR(g.n ? g.gasto / g.n : 0)}</td></tr>`))}` : '';
+    ? `<h4>Por tipo de viatura</h4>${tab([['Tipo'], ['Viaturas', 'v'], ['Ativas', 'v'], ['Km rodado', 'v'], ['Notas fiscais', 'v']],
+        Object.entries(grp).map(([k, g]) => `<tr><td>${esc(TIPOS[k])}</td><td class="v">${g.n}</td><td class="v">${g.at}</td><td class="v">${g.km ? fN(g.km) : '—'}</td><td class="v">${g.nf}</td></tr>`))}` : '';
 
-  const ficha = ({ v, o, dv, abertas, sanadas, nfs, cks, mns, km, gasto }) => {
+  const ficha = ({ v, o, dv, abertas, sanadas, nfs, cks, mns, km }) => {
     const u = v.ultimo, vz = t => `<p class="rvz">${t}</p>`;
     const dtAb = p => fD(p.data_abertura) || esc(p.data) || '—';
     return `<div class="rvt"><div class="rvt-h"><span>${esc(v.prefixo)} — ${esc(v.modelo)} · ${esc(v.placa)}</span><span>${esc(TIPOS[tipoVtr(v)])} · ${sit(v, dv)}</span></div>
@@ -1471,9 +1473,8 @@ function relatorioHTML(R, completo){
           abertas.map(p => `<tr><td>${dtAb(p)}</td><td>${crit(p.itens) || '—'}</td><td>${esc(p.descricao) || '—'}</td><td>${esc(p.aberta_por) || '—'}</td></tr>`))}` : vz('Nenhuma alteração aberta.')}
       ${sanadas.length ? `<h4>Alterações sanadas no período (${sanadas.length})</h4>${tab([['Aberta em'], ['Sanada em'], ['Itens'], ['Sanada por']],
           sanadas.map(p => `<tr><td>${dtAb(p)}</td><td>${fD(p.data_sanada) || '—'}</td><td>${esc(p.itens.join(', ')) || '—'}</td><td>${esc(p.sanada_por) || '—'}</td></tr>`))}` : ''}
-      ${nfs.length ? `<h4>Notas fiscais no período (${nfs.length})</h4>${tab([['Emissão'], ['Nº'], ['Fornecedor'], ['Tipo'], ['Fonte'], ['Descrição'], ['Valor', 'v']],
-          nfs.map(n => `<tr><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td>${esc(n.fonte) || '—'}</td><td>${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0, 240))}</td><td class="v">${fR(n.valor_total)}</td></tr>`),
-          `<tr><td colspan="6">Subtotal</td><td class="v">${fR(gasto)}</td></tr>`)}` : vz('Nenhuma nota fiscal no período.')}
+      ${nfs.length ? `<h4>Notas fiscais no período (${nfs.length})</h4>${tab([['Emissão'], ['Nº'], ['Fornecedor'], ['Tipo'], ['Fonte'], ['Descrição']],
+          nfs.map(n => `<tr><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td>${esc(n.fonte) || '—'}</td><td>${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0, 240))}</td></tr>`))}` : vz('Nenhuma nota fiscal no período.')}
       ${mns.length ? `<h4>Manutenções no período (${mns.length})</h4>${tab([['Data'], ['Situação'], ['Km', 'v'], ['Oficina / local'], ['Observação']],
           mns.map(m => `<tr><td>${fD(m.data)}</td><td>${esc(m.situacao)}</td><td class="v">${m.km ? fN(m.km) : ''}</td><td>${esc(m.localidade)}</td><td>${esc(m.obs)}</td></tr>`))}` : vz('Nenhuma manutenção registrada no período.')}
       ${cks.length ? `<h4>Checklists no período (${cks.length})</h4>${tab([['Data/hora'], ['Momento'], ['Motorista'], ['Km', 'v'], ['Local'], ['Alterações / observações']],
@@ -1493,18 +1494,18 @@ function relatorioHTML(R, completo){
       ${box('Com alteração aberta', tot.comAlt, `${tot.itensAb} item(ns) em aberto`)}
       ${box('Troca de óleo', tot.oleoV + tot.oleoB, `${tot.oleoV} vencida(s) · ${tot.oleoB} em breve`)}
       ${box('Checklists no período', fN(tot.ck), `${tot.ckIni} início · ${tot.ckFim} término`)}
-      ${box('Km rodado no período', tot.km ? fN(tot.km) : '—', tot.km && tot.gasto ? `${fR(tot.gasto / tot.km)} por km` : '')}
+      ${box('Km rodado no período', tot.km ? fN(tot.km) : '—', '')}
       ${box('Manutenções no período', tot.mn, '')}
-      ${box('Gasto (notas fiscais)', fR(tot.gasto), `${tot.nf} nota(s)${tot.prime ? ` · PRIME ${fR(tot.prime)}` : ''}${tot.recurso ? ` · RECURSO ${fR(tot.recurso)}` : ''}`)}
+      ${box('Notas fiscais no período', fN(tot.nf), [tot.prime ? `${tot.prime} PRIME` : '', tot.recurso ? `${tot.recurso} RECURSO` : ''].filter(Boolean).join(' · '))}
     </div>
     <h3>1. Pontos de atenção</h3>
     ${atencao.length ? `<ul class="ratn">${atencao.map(a => `<li>${a}</li>`).join('')}</ul>` : '<p class="rvz">Nenhum dano crítico nem troca de óleo vencida ou próxima.</p>'}
     <h3>2. Situação por viatura</h3>
-    ${tab([['Viatura'], ['Tipo'], ['Situação'], ['Km atual', 'v'], ['Óleo'], ['Alterações abertas'], ['Check.', 'v'], ['Km período', 'v'], ['Gasto', 'v']], linhas, rodTab)}
-    <p class="rvz">Itens em negrito = dano crítico (motor / transmissão). “Check.”, “Km período” e “Gasto” se referem ao período do relatório.</p>
-    <h3>3. Gasto com manutenção</h3>
-    ${tiposNF.length ? tab([['Tipo de despesa'], ['Notas', 'v'], ['Valor', 'v'], ['%', 'v']], tiposNF.map(([k, e]) => `<tr><td>${esc(k)}</td><td class="v">${e.n}</td><td class="v">${fR(e.v)}</td><td class="v">${tot.gasto ? (e.v / tot.gasto * 100).toLocaleString('pt-BR', { maximumFractionDigits:1 }) : 0}%</td></tr>`),
-        `<tr><td>Total</td><td class="v">${tot.nf}</td><td class="v">${fR(tot.gasto)}</td><td class="v">100%</td></tr>`) : '<p class="rvz">Nenhuma nota fiscal lançada no período.</p>'}
+    ${tab([['Viatura'], ['Tipo'], ['Situação'], ['Km atual', 'v'], ['Óleo'], ['Alterações abertas'], ['Check.', 'v'], ['Km período', 'v'], ['Notas', 'v']], linhas, rodTab)}
+    <p class="rvz">Itens em negrito = dano crítico (motor / transmissão). “Check.”, “Km período” e “Notas” (notas fiscais) se referem ao período do relatório.</p>
+    <h3>3. Notas fiscais por tipo de despesa</h3>
+    ${tiposNF.length ? tab([['Tipo de despesa'], ['Notas', 'v'], ['%', 'v']], tiposNF.map(([k, n]) => `<tr><td>${esc(k)}</td><td class="v">${n}</td><td class="v">${tot.nf ? (n / tot.nf * 100).toLocaleString('pt-BR', { maximumFractionDigits:1 }) : 0}%</td></tr>`),
+        `<tr><td>Total</td><td class="v">${tot.nf}</td><td class="v">100%</td></tr>`) : '<p class="rvz">Nenhuma nota fiscal lançada no período.</p>'}
     ${comparativo}
     ${completo ? `<h3>4. Ficha de cada viatura</h3>${itens.map(ficha).join('')}` : ''}
     <div class="rass"><div>Responsável pela Garagem</div><div>Comandante / ordenador de despesa</div></div>
