@@ -7,7 +7,9 @@
 <script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* O reset não vale dentro da prévia (.papel): lá a tabela tem que se comportar como no
+   editor do SEI (cellpadding, align=center, largura sem contar borda). */
+*:where(:not(.papel *)),*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --gold:#c9a030;
   --text:#dde3f0; --muted:#94a3b8; --border:rgba(245,197,24,.12);
@@ -253,7 +255,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--yellow)}
             <input id="rap-nota" inputmode="decimal" placeholder="80" maxlength="6" onkeydown="if(event.key==='Enter')preencherVazios()">
             <button class="bt sm" onclick="preencherVazios()">Aplicar</button>
             <button class="bt sm" onclick="abrirLimpar()">Limpar notas</button>
-            <span style="flex-basis:100%;font-size:12.5px">Digite a nota de 0 a 100 em cada item. <b style="color:var(--no)">NO</b> = não observado (não entra na média). Também dá para digitar "no" na caixa. Enter passa para o próximo item.</span>
+            <span style="flex-basis:100%;font-size:12.5px">Digite a nota de 0 a 100 em cada item. <b style="color:var(--no)">NO</b> = não observado: na ficha aparece NO, mas na média conta como <b>80</b> (não prejudica o policial). Também dá para digitar "no" na caixa. Enter passa para o próximo item.</span>
           </div>
 
           <div class="grupos" id="grupos"></div>
@@ -362,8 +364,11 @@ const ITENS = [];
 FICHA.forEach(g => (g.subs ? g.subs.flatMap(s => s.itens) : g.itens).forEach(([id, txt]) => ITENS.push({ id, txt, g: g.id })));
 
 /* ======================= Cálculo =======================
-   Conceito final = média das notas dos itens avaliados. "NO" (não observado)
-   não entra nem na soma nem na quantidade. 3 casas decimais, como na ficha. */
+   Conceito final = média de todos os itens, com 3 casas decimais, como na ficha.
+   "NO" (não observado) continua aparecendo como NO na ficha, mas entra na conta
+   valendo 80, para não prejudicar o policial (pedido do usuário, 28/10/2026).
+   A mesma regra está no Worker (conceitoMedia) — mudar sempre nos dois. */
+const NO_VALE = 80;
 function lerNota(v){
   if (v === 'NO') return 'NO';
   const s = String(v == null ? '' : v).trim().replace(',', '.');
@@ -377,21 +382,21 @@ function calcular(notas){
   let soma = 0, n = 0, no = 0, vazios = [], invalidos = [];
   ITENS.forEach(it => {
     const v = lerNota(notas[it.id]);
-    if (v === 'NO') no++;
+    if (v === 'NO'){ soma += NO_VALE * 100; no++; }
     else if (v === '') vazios.push(it);
     else if (v === null) invalidos.push(it);
     else { soma += Math.round(v * 100); n++; }   // em centésimos: sem erro de vírgula flutuante
   });
-  const media = n ? Math.round((soma * 10) / n) / 1000 : null;
+  const media = n + no ? Math.round((soma * 10) / (n + no)) / 1000 : null;
   return { media, n, no, vazios, invalidos };
 }
-/* Regra para copiar: TODO item precisa ter nota (0 a 100) ou NO, e ao menos um com nota. */
+/* Regra para copiar: TODO item precisa ter nota (0 a 100) ou NO. */
 function prontaParaCopiar(c){
   if (c.invalidos.length) return { ok:false, lista:c.invalidos, curto:`${c.invalidos.length} inválida${c.invalidos.length > 1 ? 's' : ''}`,
     msg:`${c.invalidos.length === 1 ? 'Há 1 nota inválida' : `Há ${c.invalidos.length} notas inválidas`} (use 0 a 100 ou NO). Corrija antes de copiar.` };
   if (c.vazios.length) return { ok:false, lista:c.vazios, curto:`falta${c.vazios.length > 1 ? 'm' : ''} ${c.vazios.length}`,
     msg:`${c.vazios.length === 1 ? 'Falta 1 item' : `Faltam ${c.vazios.length} itens`} sem resposta. Todo item precisa ter nota ou NO para copiar.` };
-  if (!c.n) return { ok:false, lista:[], curto:'sem nota', msg:'Todos os itens estão NO — dê nota a pelo menos um item para ter o conceito final.' };
+  if (c.media == null) return { ok:false, lista:[], curto:'sem nota', msg:'Dê nota (ou NO) aos itens para ter o conceito final.' };
   return { ok:true };
 }
 function fmtMedia(m){ return m == null ? '—' : m.toFixed(3).replace('.', ','); }
@@ -674,13 +679,13 @@ function limparNotas(){
   desenharGrupos(); mudou();
 }
 
-/* A tabela copiada tem 1000 px; na prévia ela é reduzida (zoom) para caber inteira
-   na caixa. Só muda a visualização — o que vai para o SEI continua com 1000 px. */
+/* A ficha copiada ocupa ~706 px; na prévia ela é reduzida (zoom) para caber inteira
+   na caixa. Só muda a visualização — o que vai para o SEI não muda. */
 function ajustarPrevia(){
   const pv = $('previa'); if (!pv || !pv.offsetParent) return;
   pv.style.zoom = 1;
-  const livre = pv.clientWidth - 24;
-  pv.style.zoom = livre < LARG ? String(Math.max(0.3, livre / LARG)) : '1';
+  const livre = pv.clientWidth - 44;
+  pv.style.zoom = livre < LARG_REAL ? String(Math.max(0.3, livre / LARG_REAL)) : '1';
 }
 window.addEventListener('resize', () => { if (ATUAL) ajustarPrevia(); });
 
@@ -706,7 +711,7 @@ function dadosFicha(){
 function atualizarResumo(){
   const c = calcular(ATUAL.notas);
   $('rs-media').textContent = fmtMedia(c.media);
-  const partes = [`<b>${c.n}</b> avaliados`, `<b>${c.no}</b> não observados`];
+  const partes = [`<b>${c.n}</b> avaliados`, `<b>${c.no}</b> não observados${c.no ? ` <span style="color:var(--no)">(NO conta ${NO_VALE} na média)</span>` : ''}`];
   if (c.vazios.length) partes.push(`<b style="color:#fca5a5">${c.vazios.length}</b> sem nota`);
   if (c.invalidos.length) partes.push(`<b style="color:#fca5a5">${c.invalidos.length}</b> com nota inválida`);
   $('rs-cont').innerHTML = partes.join(' · ');
@@ -714,7 +719,7 @@ function atualizarResumo(){
   FICHA.forEach(g => {
     const ids = ITENS.filter(i => i.g === g.id).map(i => i.id);
     const sub = {}; ids.forEach(id => { sub[id] = ATUAL.notas[id]; });
-    let s = 0, n = 0; ids.forEach(id => { const v = lerNota(sub[id]); if (typeof v === 'number'){ s += v; n++; } });
+    let s = 0, n = 0; ids.forEach(id => { const v = lerNota(sub[id]); if (typeof v === 'number'){ s += v; n++; } else if (v === 'NO'){ s += NO_VALE; n++; } });
     const el = $('gm-' + g.id); if (el) el.textContent = n ? 'média ' + (s / n).toFixed(2).replace('.', ',') : '';
   });
   $('previa').innerHTML = montarHTML();
@@ -756,7 +761,7 @@ async function salvar(){
   ITENS.forEach(it => { const v = lerNota(ATUAL.notas[it.id]); if (v !== '' && v !== null) notas[it.id] = v; });
   try{
     const d = await api('/api/conceito', { method:'POST', body:{ op:'salvar', q: QUAD(), re: ATUAL.re,
-      ficha: Object.assign(dadosFicha(), { notas, completa: c.vazios.length === 0 && c.n > 0 }) } });
+      ficha: Object.assign(dadosFicha(), { notas, completa: c.vazios.length === 0 && c.media != null }) } });
     FICHAS[ATUAL.re] = d.ficha;
     ls(chaveRasc(ATUAL.re), null);
     $('rasc').style.display = 'none';
@@ -791,40 +796,100 @@ async function confirmarExcluir(){
 function fecharOvl(id){ $(id).classList.remove('on'); }
 
 /* ======================= Tabela para o SEI =======================
-   Mesma disposição do Adendo: duas colunas (I à esquerda; II a V à direita),
-   bordas simples e estilos inline — o editor do SEI mantém a tabela ao colar. */
-/* Largura FIXA de 1000 px, centralizada (pedido do usuário, 26/10/2026: com 640 px
-   "CONCEITO" quebrava em duas linhas no SEI; com 100% a tabela esticava até a
-   largura da tela de quem cola). Cada coluna
-   tem a sua largura (atributo + style, que o editor do SEI preserva) e
-   table-layout:fixed impede o navegador de redistribuir. */
-const LARG = 1000;
-// Times New Roman: a mesma fonte do Adendo original (SEI 77550977) — escolha do usuário, 26/10/2026.
-const FONTE = "font-family:'Times New Roman',Times,serif;font-size:11pt;";
-const TD = 'border:1px solid #000;padding:2px 5px;vertical-align:middle;' + FONTE;
-function celula(txt, extra, attrs){ return `<td style="${TD}${extra || ''}"${attrs ? ' ' + attrs : ''}>${txt}</td>`; }
-function larg(px){ return [`width:${px}px;`, `width="${px}"`]; }
-function tabela(cols){
-  // Centraliza SÓ com align="center" (o que o "Formatar Tabela" do SEI grava).
-  // NUNCA pôr margin-left/right:auto: o filtro de colagem do SEI (pastefromword)
-  // troca "auto" por "0px", e esse estilo vence o align — a tabela ia para a
-  // esquerda. Conferido colando de verdade no editor do SEI em 26/10/2026.
-  return `<table align="center" border="1" cellpadding="3" cellspacing="0" width="${LARG}" style="border-collapse:collapse;table-layout:fixed;width:${LARG}px;${FONTE}">`
-    + '<colgroup>' + cols.map(w => `<col width="${w}" style="width:${w}px">`).join('') + '</colgroup>';
+   Cópia fiel do Adendo do SEI (modelo: SEI 77550981, 2º quad. 2026), pedido do
+   usuário em 28/10/2026 ("exatamente deste jeito", com a configuração do
+   "Formatar Tabela" que ele mostrou):
+   - O Adendo é feito de 8 tabelas empilhadas, sem nada entre elas. A do meio tem
+     20 linhas x 4 colunas. Todas: largura 666px, borda 1, espaçamento 1, margem
+     interna 1, alinhamento centralizado, sem cabeçalho. A borda é a padrão do
+     atributo border="1" (linha dupla cinza do SEI) — sem CSS de borda.
+   - Cada coluna tem largura própria (228/89/273/90 + borda e margem, medidas no PDF), como no
+     original: é isso que deixa a tabela com ~703 px na tela e no PDF (os 666 px
+     ficam como configuração, igual ao original) e impede "c) Comando de Fração de
+     Tropa" de quebrar.
+   - Times New Roman: 12pt nos itens, 11pt em CONCEITO, nas notas e no título
+     (medido no PDF do SEI, que grava 11pt como 10,8 e 13pt como 13,2).
+   - A justificativa fica DENTRO da última tabela, como no original.
+   - Centralizar SÓ com align="center": o filtro de colagem do SEI (pastefromword)
+     troca margin auto por 0px e isso vence o align (conferido em 26/10/2026). */
+const TAB_LARG = 666;                         // o que o "Formatar Tabela" do SEI mostra
+const COLS = [228, 89, 273, 90];              // largura de cada coluna (sem borda e margem interna), em px, medida no PDF
+const LARG_REAL = COLS.reduce((a, b) => a + b, 0) + 4 * 4 + 5 + 2;   // 703 px: + borda/margem das células, espaçamento e borda da tabela
+const CEL_UNICA = LARG_REAL - 2 - 2 - 2 - 2;  // célula que ocupa a linha inteira (695 px)
+const FONTE_TAB = "font-family:'Times New Roman',Times,serif;font-size:12pt;";
+const P11 = (t) => `<span style="font-size:11pt">${t}</span>`;
+function tabSei(linhas){
+  return `<table align="center" border="1" cellpadding="1" cellspacing="1" width="${TAB_LARG}" style="width:${TAB_LARG}px;${FONTE_TAB}"><tbody>${linhas}</tbody></table>`;
 }
+/* A largura de cada coluna tem que valer como MÍNIMO, senão a tabela encolhe para
+   os 666 px, "c) Comando de Fração de Tropa" quebra e as colunas de uma tabela não
+   batem com as da outra. Dois jeitos juntos: min-width (o Chrome, onde o SEI é
+   editado, respeita) e o atributo nowrap com largura (regra antiga do IE que o
+   gerador de PDF do SEI segue). A célula da justificativa não leva nowrap (o texto
+   precisa quebrar linha). */
+function cel(txt, w, sty, attrs, quebra){
+  return `<td${w ? ` width="${w}"` : ''}${w && !quebra ? ' nowrap="nowrap"' : ''}${w || sty ? ` style="${w ? `width:${w}px;min-width:${w}px;` : ''}${sty || ''}"` : ''}${attrs ? ' ' + attrs : ''}>${txt}</td>`;
+}
+const CE = 'text-align:center;';
+
+/* Linha de cabeçalho com os campos nas mesmas posições do Adendo (o original
+   alinha com espaços; aqui a quantidade de espaços é calculada pela largura do
+   texto em Times New Roman 12pt). Posições em pt a partir do início do texto. */
+const _medidor = document.createElement('canvas').getContext('2d');
+function largPt(segs){
+  let w = 0;
+  segs.forEach(s => { _medidor.font = (s.b ? 'bold ' : '') + '16px "Times New Roman", Times, serif'; w += _medidor.measureText(s.t).width; });
+  return w * 0.75;
+}
+const LIMITE_PT = 516;   // largura útil da linha dentro da célula (~523 pt), com folga
+function segHtml(segs){ return segs.map(s => s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join(''); }
+function linhaPosicionada(campos){
+  const sp = largPt([{ t:' ' }]) || 3;
+  let html = '', x = 0;
+  campos.forEach((cp, i) => {
+    if (i > 0){
+      const resto = campos.slice(i).reduce((s, c) => s + largPt(c.segs), 0) + (campos.length - 1 - i) * 2 * sp;
+      const n = Math.max(2, Math.min(Math.round((cp.x - x) / sp), Math.floor((LIMITE_PT - x - resto) / sp)));
+      html += '&nbsp;'.repeat(n); x += n * sp;
+    }
+    html += segHtml(cp.segs); x += largPt(cp.segs);
+  });
+  return html;
+}
+/* NOME: nome completo com o nome de guerra em negrito, como no Adendo. */
+function segsNome(nome, guerra){
+  const ws = String(nome || '').trim().split(/\s+/).filter(Boolean);
+  const gs = String(guerra || '').trim().split(/\s+/).filter(Boolean).map(semAcento);
+  let ini = -1;
+  if (gs.length) for (let i = 0; i + gs.length <= ws.length && ini < 0; i++){
+    if (gs.every((g, k) => semAcento(ws[i + k]) === g)) ini = i;
+  }
+  const out = [{ t:'NOME', b:true }, { t:': ' }];
+  ws.forEach((w, i) => {
+    if (i) out.push({ t:' ' });
+    out.push({ t:w, b: ini >= 0 && i >= ini && i < ini + gs.length });
+  });
+  return out.reduce((a, s) => { const u = a[a.length - 1]; if (u && !!u.b === !!s.b) u.t += s.t; else a.push(Object.assign({}, s)); return a; }, []);
+}
+function tituloSub(t){
+  // "a) Espírito Policial Militar" → "a)" em negrito e o nome sublinhado
+  const m = String(t).match(/^(\S+\)\s*)(.*)$/);
+  return m ? `<b>${esc(m[1])}<u>${esc(m[2])}</u></b>` : `<b>${esc(t)}</b>`;
+}
+function valNota(id){ const v = fmtNota(ATUAL.notas[id]); return v ? P11(esc(v)) : '&nbsp;'; }
 function linhasEsquerda(){
   const L = [];
   FICHA[0].subs.forEach((s, i) => {
-    L.push({ rot: `<b>${esc(s.titulo)}</b>`, val: i === 0 ? '' : '<b>CONCEITO</b>' });
-    s.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: esc(fmtNota(ATUAL.notas[id])) }));
+    L.push(i === 0 ? { rot: tituloSub(s.titulo), junta: true } : { rot: tituloSub(s.titulo), val: P11('<b>CONCEITO</b>') });
+    s.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: valNota(id) }));
   });
   return L;
 }
 function linhasDireita(){
   const L = [];
   FICHA.slice(1).forEach((g, i) => {
-    if (i > 0) L.push({ rot: `<b>${esc(g.titulo)}</b>`, val: '<b>CONCEITO</b>' });
-    g.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: esc(fmtNota(ATUAL.notas[id])) }));
+    if (i > 0) L.push({ rot: `<b>${esc(g.titulo)}</b>`, val: P11('<b>CONCEITO</b>') });
+    g.itens.forEach(([id, t]) => L.push({ rot: esc(t), val: valNota(id) }));
   });
   return L;
 }
@@ -832,46 +897,61 @@ function montarHTML(){
   if (!ATUAL) return '';
   const c = calcular(ATUAL.notas);
   const q = $('f-quad').value, a = $('f-ano').value;
-  // Cabeçalho: 3 colunas iguais (333 + 333 + 334 = 1000).
-  const [w1s, w1a] = larg(333), [w3s, w3a] = larg(334);
-  let h = tabela([333, 333, 334]);
-  h += `<tr>${celula('<b>FICHA DE CONCEITO</b>', 'text-align:center;', 'colspan="2"')}${celula('<b>GRAD.:</b> ' + esc(ATUAL.grad), w3s, w3a)}</tr>`;
-  h += `<tr>${celula('<b>NOME:</b> ' + esc(ATUAL.nome), '', 'colspan="3"')}</tr>`;
-  h += `<tr>${celula('<b>QUADRO:</b> ' + esc(ATUAL.quadro), w1s, w1a)}${celula('<b>RE:</b> ' + esc(reCompleto(ATUAL.re)), w1s, w1a)}${celula('<b>OPM:</b> ' + esc(ATUAL.opm), w3s, w3a)}</tr>`;
-  h += `<tr>${celula(`<b>QUADRIMESTRE:</b> ${esc(q)}º de ${esc(a)}`, w1s, w1a)}${celula('<b>PERÍODO:</b> ' + esc(ATUAL.periodo), '', 'colspan="2"')}</tr>`;
-  h += `</table><p style="margin:0">&nbsp;</p>`;
-
-  // Notas: item 380 + conceito 120, duas vezes (= 1000).
-  const [its, ita] = larg(380), [cos, coa] = larg(120), C = 'text-align:center;';
-  const E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
-  h += tabela([380, 120, 380, 120]);
-  h += `<tr>${celula('<b>I – VALOR PROFISSIONAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}${celula('<b>II – VALOR MORAL</b>', its, ita)}${celula('<b>CONCEITO</b>', cos + C, coa)}</tr>`;
-  for (let i = 0; i < n; i++){
-    const e = E[i] || { rot:'&nbsp;', val:'' }, d = D[i] || { rot:'&nbsp;', val:'' };
-    h += `<tr>${celula(e.rot, its, ita)}${celula(e.val || '&nbsp;', cos + C, coa)}${celula(d.rot, its, ita)}${celula(d.val || '&nbsp;', cos + C, coa)}</tr>`;
-  }
-  h += `<tr>${celula('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>', 'text-align:right;font-size:12pt;', 'colspan="4"')}</tr>`;
-  h += `</table>`;
+  const [w1, w2, w3, w4] = COLS;
+  const unica = (txt, sty) => tabSei(`<tr>${cel(txt, CEL_UNICA, sty)}</tr>`);
+  const guerra = ATUAL.pessoa && ATUAL.pessoa.guerra;
+  let h = '';
+  // 1 a 3) cabeçalho: uma tabela de uma célula para cada linha, como no original
+  h += unica(`<p style="margin:0;text-align:center">${P11('<b>FICHA DE CONCEITO</b>')}<br>${P11('&nbsp;')}</p>`
+    + `<p style="margin:0">${linhaPosicionada([
+        { segs: segsNome(ATUAL.nome, guerra), x: 0 },
+        { segs: [{ t:'GRAD', b:true }, { t:'.: ' + (ATUAL.grad || '') }], x: 347.5 }])}</p>`);
+  h += unica(linhaPosicionada([
+    { segs: [{ t:'QUADRO', b:true }, { t:': ' + (ATUAL.quadro || '') }], x: 0 },
+    { segs: [{ t:'RE', b:true }, { t:': ' + reCompleto(ATUAL.re) }], x: 218.5 },
+    { segs: [{ t:'OPM', b:true }, { t:': ' + (ATUAL.opm || '') }], x: 355.9 }]));
+  h += unica(linhaPosicionada([
+    { segs: [{ t:'QUADRIMESTRE', b:true }, { t:`: ${q}º de ${a}` }], x: 0 },
+    { segs: [{ t:'PERÍODO', b:true }, { t:': ' + (ATUAL.periodo || '') }], x: 264.7 }]));
+  // 4) títulos das colunas
+  const tit = P11('<b>CONCEITO</b>');
+  h += tabSei(`<tr>${cel('<b>I – VALOR PROFISSIONAL</b>', w1)}${cel(tit, w2, CE)}${cel('<b>II – VALOR MORAL</b>', w3)}${cel(tit, w4, CE)}</tr>`);
+  // 5 a 7) os itens: 20 linhas, 8 linhas e 2 linhas (as mesmas quebras do original)
+  const E = linhasEsquerda(), D = linhasDireita(), vazio = { rot:'&nbsp;', val:'&nbsp;' };
+  const linha = (i) => {
+    const e = E[i] || vazio, d = D[i] || vazio;
+    const esq = e.junta ? cel(e.rot, 0, '', 'colspan="2"') : cel(e.rot, w1) + cel(e.val || '&nbsp;', w2, CE);
+    return `<tr>${esq}${cel(d.rot, w3)}${cel(d.val || '&nbsp;', w4, CE)}</tr>`;
+  };
+  const bloco = (de, ate) => { let r = ''; for (let i = de; i < ate; i++) r += linha(i); return tabSei(r); };
+  const n = Math.max(E.length, D.length);
+  h += bloco(0, 20) + bloco(20, 28) + bloco(28, n);
+  // 8) conceito final + justificativa, na mesma tabela
   const just = String(ATUAL.justificativa || '').trim();
-  /* Estilo do próprio SEI "Texto Justificado Recuo Primeira Linha": a classe faz o
-     SEI reconhecer o parágrafo como dele; o style inline é a mesma regra, para
-     a prévia e para o caso de o editor ignorar a classe. Cada Enter = parágrafo novo. */
-  const P = (dentro) => `<p class="Texto_Justificado_Recuo_Primeira_Linha" style="text-align:justify;text-indent:25mm;font-family:'Times New Roman',Times,serif;font-size:12pt;margin:6pt 0;">${dentro}</p>`;
   const paras = just.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-  h += P('<b>JUSTIFICATIVAS DE CONCEITO:</b> ' + esc(paras[0] || ''));
-  paras.slice(1).forEach(t => { h += P(esc(t)); });
+  /* Parágrafo do próprio SEI ("Texto Justificado": margem de 6pt, justificado);
+     a fonte vai num span porque o SEI apaga a fonte do <p> ao colar. Cada Enter = parágrafo. */
+  const PJ = (dentro) => `<p class="Texto_Justificado" style="margin:6pt;text-align:justify;text-indent:0">`
+    + `<span style="${FONTE_TAB}">${dentro}</span></p>`;
+  let pj = PJ('<b>JUSTIFICATIVAS DE CONCEITO:</b> ' + esc(paras[0] || ''));
+  paras.slice(1).forEach(t => { pj += PJ(esc(t)); });
+  h += tabSei(`<tr>${cel('<b>CONCEITO FINAL: ' + esc(fmtMedia(c.media)) + '</b>' + '&nbsp;'.repeat(5), CEL_UNICA, 'text-align:right;')}</tr>`
+    + `<tr>${cel(pj, CEL_UNICA, '', '', true)}</tr>`);
   return h;
 }
 function montarTexto(){
   const c = calcular(ATUAL.notas), E = linhasEsquerda(), D = linhasDireita(), n = Math.max(E.length, D.length);
   const tira = (s) => String(s).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   const L = [
-    `FICHA DE CONCEITO\tGRAD.: ${ATUAL.grad}`, `NOME: ${ATUAL.nome}`,
+    'FICHA DE CONCEITO', `NOME: ${ATUAL.nome}\tGRAD.: ${ATUAL.grad}`,
     `QUADRO: ${ATUAL.quadro}\tRE: ${reCompleto(ATUAL.re)}\tOPM: ${ATUAL.opm}`,
-    `QUADRIMESTRE: ${$('f-quad').value}º de ${$('f-ano').value}\tPERÍODO: ${ATUAL.periodo}`, '',
+    `QUADRIMESTRE: ${$('f-quad').value}º de ${$('f-ano').value}\tPERÍODO: ${ATUAL.periodo}`,
     'I – VALOR PROFISSIONAL\tCONCEITO\tII – VALOR MORAL\tCONCEITO'];
-  for (let i = 0; i < n; i++){ const e = E[i] || { rot:'', val:'' }, d = D[i] || { rot:'', val:'' }; L.push([e.rot, e.val, d.rot, d.val].map(tira).join('\t')); }
-  L.push('', 'CONCEITO FINAL: ' + fmtMedia(c.media), '', 'JUSTIFICATIVAS DE CONCEITO: ' + String(ATUAL.justificativa || '').trim());
+  for (let i = 0; i < n; i++){
+    const e = E[i] || { rot:'', val:'' }, d = D[i] || { rot:'', val:'' };
+    L.push([e.rot, e.val || '', d.rot, d.val || ''].map(tira).map(s => s.trim()).join('\t'));
+  }
+  L.push('CONCEITO FINAL: ' + fmtMedia(c.media), 'JUSTIFICATIVAS DE CONCEITO: ' + String(ATUAL.justificativa || '').trim());
   return L.join('\n');
 }
 function marcarFaltas(lista){
