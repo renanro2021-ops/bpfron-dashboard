@@ -265,7 +265,53 @@ html,body{overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;background:#0f1a2e;border:1px solid rgba(52,211,153,.5);color:#d1fae5;border-radius:12px;padding:11px 18px;font-weight:600;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:none;max-width:90vw}
 #toast.err{border-color:rgba(248,113,113,.6);color:#fecaca}
-@media print{.hdr,.tabs,.toolbar,.btn,.pag{display:none!important}body{background:#fff;color:#000}.card,.kpi{border-color:#ccc;background:#fff}}
+@media print{.hdr,.tabs,.toolbar,.tipobar,.btn,.pag{display:none!important}body{background:#fff;color:#000}.card,.kpi{border-color:#ccc;background:#fff}}
+
+/* separação Frota × Locadas (vale para a página inteira) */
+.tipobar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.tipobar .tb-l{font:700 11px 'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid #334155;border-radius:10px;overflow:hidden;max-width:100%;flex-wrap:wrap}
+.seg button{background:none;border:none;border-right:1px solid #334155;color:#cbd5e1;font:700 13px 'Inter',sans-serif;padding:7px 14px;cursor:pointer;white-space:nowrap}
+.seg button:last-child{border-right:none}
+.seg button:hover{background:rgba(245,197,24,.08)}
+.seg button.on{background:rgba(245,197,24,.18);color:var(--yellow)}
+.seg button small{font-weight:600;color:var(--muted);margin-left:5px}
+.seg button.on small{color:#fde68a}
+.tipobar .tb-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+/* relatório (impressão): fica escondido e só aparece ao imprimir, com body.imp-rel */
+#relatorio{display:none}
+@media print{
+  body.imp-rel{background:#fff!important;background-image:none!important;color:#000}
+  body.imp-rel > *:not(#relatorio){display:none!important}
+  body.imp-rel #relatorio{display:block;font-family:'Inter',Arial,sans-serif;font-size:10pt;line-height:1.35;color:#000}
+  #relatorio h1{font-size:15pt;margin:0}
+  #relatorio h3{font-size:11pt;margin:15px 0 6px;border-bottom:1.5px solid #000;padding-bottom:3px;text-transform:uppercase;letter-spacing:.5px;break-after:avoid}
+  #relatorio h4{font-size:9.5pt;margin:9px 0 3px;break-after:avoid}
+  #relatorio table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #relatorio thead{display:table-header-group}
+  #relatorio tr{break-inside:avoid}
+  #relatorio th,#relatorio td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top;color:#000;background:none}
+  #relatorio th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:8pt;text-transform:uppercase}
+  #relatorio td.v,#relatorio th.v{text-align:right;white-space:nowrap}
+  #relatorio tfoot td{font-weight:700}
+  #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
+  #relatorio .rcab img{height:62px}
+  #relatorio .rres{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  #relatorio .rres div{flex:1 1 22%;border:1px solid #000;padding:5px 8px}
+  #relatorio .rres span{display:block;font-size:7.5pt;text-transform:uppercase}
+  #relatorio .rres b{font-size:12.5pt}
+  #relatorio .rres small{display:block;font-size:8pt;color:#333}
+  #relatorio .rdados td{border:none;padding:1px 8px 1px 0;font-size:9pt}
+  #relatorio ul.ratn{margin:4px 0 0 18px;padding:0;font-size:9pt}
+  #relatorio .rvt{margin-top:14px}
+  #relatorio .rvt-h{border:1.5px solid #000;background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:4px 8px;display:flex;justify-content:space-between;gap:10px;font-weight:700;break-after:avoid}
+  #relatorio .rvz{margin:5px 0 0;font-size:8.5pt;color:#444}
+  #relatorio .rass{margin-top:46px;display:flex;justify-content:space-around;gap:30px;text-align:center;font-size:9.5pt;break-inside:avoid}
+  #relatorio .rass div{flex:1;border-top:1px solid #000;padding-top:4px}
+  #relatorio .rrod{margin-top:16px;font-size:8pt;color:#444}
+  @page{size:A4;margin:14mm 12mm}
+}
 </style>
 </head>
 <body>
@@ -317,6 +363,13 @@ html,body{overflow-x:hidden}
 
   <div id="app" class="hidden">
     <div id="ro-banner" class="banner warn hidden">👁️ Você está vendo a Garagem em <b>modo consulta</b>. Para retirar alterações, lançar notas e editar cadastros, peça a permissão <b>“Garagem · Gestão da frota”</b> no Painel de Controle.</div>
+
+    <!-- SEPARAÇÃO FROTA × LOCADAS + RELATÓRIOS -->
+    <div class="tipobar" id="tipobar">
+      <span class="tb-l">Viaturas</span>
+      <div class="seg" id="tipo-seg"></div>
+      <div class="tb-r"><span class="hint" id="tipo-hint"></span><button class="btn sm" onclick="abrirRelatorio()" title="Relatório resumido ou completo, com o período que você escolher">📄 Relatório</button></div>
+    </div>
 
     <!-- VISÃO GERAL -->
     <section data-p="geral">
@@ -460,6 +513,7 @@ html,body{overflow-x:hidden}
 </aside>
 <div id="load-ovl"><div class="load-card"><div class="spin"></div><div id="load-msg" style="font-weight:700;color:var(--yellow)"></div><div class="prog hidden" id="load-prog"><div></div></div></div></div>
 <div id="toast"></div>
+<div id="relatorio"></div>
 
 <script>
 const API_BASE = "https://bpfron-api.bpfron.workers.dev";
@@ -531,7 +585,7 @@ async function doLogin(ev){
   finally{ btn.disabled = false; btn.textContent = 'Entrar'; }
   return false;
 }
-function apiLogout(){ AUTH.token = ''; AUTH.user = ''; D = null; boot(); }
+function apiLogout(){ AUTH.token = ''; AUTH.user = ''; DB = null; D = null; boot(); }
 function boot(){
   const logged = AUTH.logged, ps = permsSessao();
   $('userchip').textContent = logged ? '👤 ' + ((ps && ps.nome) || AUTH.user) : '';
@@ -541,20 +595,20 @@ function boot(){
 }
 
 /* ── dados ── */
-let D = null, VMAP = {}, CAN = false;
+// DB = tudo o que o Worker mandou; D = o recorte que a tela mostra (filtro Frota × Locadas). Formulários e relatórios que
+// precisam enxergar a frota inteira leem DB; todas as telas leem D e por isso seguem o filtro sozinhas.
+let DB = null, D = null, VMAP = {}, CAN = false;
 const PG = { ck:0 };
 async function carregar(silencioso){
   if (!silencioso){ show('carregando', true); show('falha', false); }
-  try{ D = await apiFetchJSON('/api/garagem/gestao'); }
+  try{ DB = await apiFetchJSON('/api/garagem/gestao'); }
   catch(e){ show('carregando', false); if (!silencioso){ show('falha', true); $('falha-msg').textContent = '⚠️ ' + e.message; } else toast('⚠️ ' + e.message, true); return; }
   show('carregando', false); show('app', true); show('tabs', true);
-  CAN = !!D.pode_editar;
+  CAN = !!DB.pode_editar;
   show('ro-banner', !CAN);
   document.querySelectorAll('.ed').forEach(el => el.classList.toggle('hidden', !CAN));
-  VMAP = {}; D.viaturas.forEach((v, i) => { v._i = i; VMAP[v.prefixo] = v; });
-  D.nfs.forEach(n => n._i = D.nfs.indexOf(n));
-  preencherSelects();
-  $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta' && pendDeFrota(p)).length || '';
+  if (TIPO === 'sem' && !DB.viaturas.some(v => tipoVtr(v) === 'sem')) TIPO = '';   // já foram todas classificadas
+  aplicarTipo();
   renderTudo();
   if (!silencioso){ let ab = null; try{ ab = localStorage.getItem('bp_gar_uso'); }catch(e){} togUso(innerWidth > 700 && (ab === null ? innerWidth > 1500 : ab === '1')); abrirNovidades(true); }
 }
@@ -596,7 +650,7 @@ function renderUso(){
 // atualiza sozinho a cada 2 min (sem atrapalhar quem está com um formulário aberto)
 setInterval(() => { if (D && AUTH.logged && !$('mov') && document.visibilityState === 'visible') carregar(true); }, 120000);
 
-function renderTudo(){ renderUso(); renderGeral(); renderFrota(); renderPend(); renderCheck(); renderNF(); renderMan(); renderCad(); renderHist(); }
+function renderTudo(){ renderTipoBar(); renderUso(); renderGeral(); renderFrota(); renderPend(); renderCheck(); renderNF(); renderMan(); renderCad(); renderHist(); }
 
 /* ── abas ── */
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => irAba(b.dataset.t));
@@ -620,12 +674,12 @@ function gastoPorVtr(desdeISO){
   const m = {}; D.nfs.forEach(n => { if (!desdeISO || n.data_emissao >= desdeISO) m[n.prefixo] = (m[n.prefixo]||0) + n.valor_total; }); return m;
 }
 // km rodado desde uma data: soma dos saltos positivos entre leituras consecutivas (igual ao Worker)
-function kmRodado(desdeISO){
+function kmRodado(desdeISO, lista, ateISO){
   const por = {};
-  D.checklists.slice().sort((a,b) => a.data < b.data ? -1 : 1).forEach(c => {
+  (lista || D.checklists).slice().sort((a,b) => a.data < b.data ? -1 : 1).forEach(c => {
     if (!c.km) return;
     const e = por[c.prefixo] || (por[c.prefixo] = { ult:null, km:0 });
-    if (e.ult != null && c.data >= desdeISO){ const d = c.km - e.ult; if (d > 0 && d < 5000) e.km += d; }
+    if (e.ult != null && c.data >= desdeISO && (!ateISO || c.data.slice(0,10) <= ateISO)){ const d = c.km - e.ult; if (d > 0 && d < 5000) e.km += d; }
     e.ult = c.km;
   });
   return por;
@@ -647,7 +701,7 @@ function renderGeral(){
   const km30 = Object.values(kmRodado(diasAtras(30))).reduce((a,e) => a + e.km, 0);
   const itensAbertos = at.reduce((a,v) => a + v.itens_bloqueados.length, 0);
   const K = [
-    { l:'Frota ativa', v:at.length, s:`${D.viaturas.length} no batalhão · ${D.viaturas.length - at.length} devolvida(s)/baixada(s)`, c:'#F5C518', go:['frota',''] },
+    { l:TIPO === 'locada' ? 'Locadas ativas' : 'Frota ativa', v:at.length, s:`${D.viaturas.length} ${TIPO ? 'cadastradas' : 'no batalhão'} · ${D.viaturas.length - at.length} devolvida(s)/baixada(s)`, c:'#F5C518', go:['frota',''] },
     { l:'Em uso agora', v:uso.length, s:`${at.length - uso.length} na base`, c:'#60a5fa', go:['frota','uso'] },
     { l:'Com alteração', v:comPend.length, s:`${itensAbertos} itens abertos`, c:'#fbbf24', go:['pend'] },
     { l:'Dano crítico', v:crit.length, s:'motor / transmissão', c:'#f87171', go:['frota','crit'] },
@@ -953,7 +1007,7 @@ function retirar(id, item){
 }
 function novaPendencia(prefixo){
   modal('➕ Nova alteração', `
-    <div class="grid"><div class="fg wall"><label>Viatura <span class="req">*</span></label><select id="np-v">${D.viaturas.filter(v => v.ativa).map(v => `<option ${v.prefixo === prefixo ? 'selected' : ''}>${esc(v.prefixo)}</option>`).join('')}</select></div></div>
+    <div class="grid"><div class="fg wall"><label>Viatura <span class="req">*</span></label><select id="np-v">${DB.viaturas.filter(v => v.ativa).map(v => `<option ${v.prefixo === prefixo ? 'selected' : ''}>${esc(v.prefixo)}</option>`).join('')}</select></div></div>
     <div class="fg" style="margin-top:12px"><label>Itens</label><div id="np-it">${D.itens.map(i => `<label class="chk" style="display:inline-flex;margin:4px 14px 4px 0"><input type="checkbox" value="${esc(i)}">${esc(i)}</label>`).join('')}</div></div>
     <div class="fg" style="margin-top:12px"><label>Descrição</label><textarea id="np-d" maxlength="3000"></textarea></div>`,
     `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" id="np-ok">Abrir alteração</button>`);
@@ -992,15 +1046,15 @@ function renderPend(){
 }
 
 /* ── devolução de viatura ── */
-function devDe(prefixo){ return (D.devolucoes || []).find(d => d.prefixo === prefixo && d.situacao === 'Devolvida'); }
+function devDe(prefixo){ return (DB.devolucoes || []).find(d => d.prefixo === prefixo && d.situacao === 'Devolvida'); }
 function devolverViatura(prefixo){
   const v = VMAP[prefixo];
   if (v && v.em_uso){
     return modal('↩️ Devolver viatura', `<div style="font-size:14px;line-height:1.6">A <b style="color:#fff">${esc(prefixo)}</b> está <b>em uso</b> com ${esc(v.ultimo.motorista)} desde ${fDH(v.ultimo.data)}. Encerre o uso antes de registrar a devolução.</div>`,
       `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn-main" onclick="encerrarUso(${v._i})">🏁 Encerrar uso</button>`, true);
   }
-  const abertas = D.pendencias.filter(p => p.prefixo === prefixo && p.status === 'Aberta').length;
-  const destinos = [...new Set((D.devolucoes || []).map(d => d.destino).filter(Boolean))];
+  const abertas = DB.pendencias.filter(p => p.prefixo === prefixo && p.status === 'Aberta').length;
+  const destinos = [...new Set((DB.devolucoes || []).map(d => d.destino).filter(Boolean))];
   modal('↩️ Devolver viatura', `
     <div style="font-size:14px;line-height:1.6">Viatura <b style="color:#fff">${esc(prefixo)}</b>${v ? ` — ${esc(v.modelo)} · ${esc(v.placa)}` : ' <span class="chip o">fora do cadastro</span>'}</div>
     <div class="grid" style="margin-top:12px">
@@ -1193,7 +1247,7 @@ function renderMan(){
 function novaManutencao(prefixo, oleo){
   const v = VMAP[prefixo];
   modal('🛠️ Registrar manutenção', `<div class="grid">
-    <div class="fg"><label>Viatura <span class="req">*</span></label><select id="mn-f-v">${D.viaturas.map(x => `<option ${x.prefixo === prefixo ? 'selected' : ''}>${esc(x.prefixo)}</option>`).join('')}</select></div>
+    <div class="fg"><label>Viatura <span class="req">*</span></label><select id="mn-f-v">${DB.viaturas.map(x => `<option ${x.prefixo === prefixo ? 'selected' : ''}>${esc(x.prefixo)}</option>`).join('')}</select></div>
     <div class="fg"><label>Data <span class="req">*</span></label><input type="date" id="mn-f-d" value="${hojeISO()}"></div>
     <div class="fg"><label>Km</label><input id="mn-f-km" inputmode="numeric" value="${v && v.km_atual ? v.km_atual : ''}"></div>
     <div class="fg"><label>Situação</label><input id="mn-f-s" list="dl-tipos" value="${oleo ? 'Troca de óleo' : ''}" placeholder="Revisão, troca de óleo, pneus…"><datalist id="dl-tipos">${D.tipos_nf.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>
@@ -1220,12 +1274,13 @@ function renderCad(){
       <td>${d.situacao === 'Devolvida' ? '<span class="chip n">Devolvida</span>' : `<span class="muted" style="font-size:12px">${esc(d.situacao)}</span>`}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Nenhuma devolução registrada.</td></tr>'}</tbody>`;
   const q = norm($('mo-q').value);
   const M = D.motoristas.map((m,i) => ({ ...m, _i:i })).filter(m => !q || norm(m.re + ' ' + m.nome + ' ' + m.posto).includes(q));
-  const usos = {}; D.checklists.forEach(c => usos[c.motorista_re] = (usos[c.motorista_re]||0) + 1);
+  const usos = {}; DB.checklists.forEach(c => usos[c.motorista_re] = (usos[c.motorista_re]||0) + 1);
   $('cad-mot').innerHTML = `<thead><tr><th>RE</th><th>Posto/grad.</th><th>Nome</th>${CAN ? '<th>Telefone</th><th>E-mail</th>' : ''}<th class="num">Checklists</th><th></th></tr></thead><tbody>
     ${M.map(m => `<tr><td>${esc(m.re)}</td><td>${esc(m.posto)}</td><td>${esc(m.nome)}</td>${CAN ? `<td>${esc(m.telefone)}</td><td>${esc(m.email)}</td>` : ''}<td class="num">${usos[m.re] || 0}</td><td>${CAN ? `<button class="btn sm gray" onclick="editarMotorista(${m._i})">✏️</button>` : ''}</td></tr>`).join('')}</tbody>`;
 }
 function editarViatura(i, prefixoNovo){
-  const nova = i < 0, v = nova ? { prefixo:prefixoNovo || '', placa:'', modelo:'', ano:'', lotacao:'', status_geral:'Ativa', intervalo_oleo_km:10000, km_ultima_troca_oleo:'' } : D.viaturas[i];
+  // viatura nova já nasce com a lotação do filtro ativo, senão ela some da tela logo depois de salva
+  const nova = i < 0, v = nova ? { prefixo:prefixoNovo || '', placa:'', modelo:'', ano:'', lotacao:TIPO === 'frota' ? 'FROTA' : TIPO === 'locada' ? 'LOCADA' : '', status_geral:'Ativa', intervalo_oleo_km:10000, km_ultima_troca_oleo:'' } : D.viaturas[i];
   modal(nova ? '➕ Nova viatura' : '✏️ ' + esc(v.prefixo), `<div class="grid">
     <div class="fg"><label>Prefixo <span class="req">*</span></label><input id="vf-p" value="${esc(v.prefixo)}" ${nova ? '' : 'readonly'}></div>
     <div class="fg"><label>Placa</label><input id="vf-pl" value="${esc(v.placa)}"></div>
@@ -1262,6 +1317,200 @@ function renderHist(){
     ${D.historico.map(h => `<tr><td>${fDH(h.quando)}</td><td>${esc(h.quem)}</td><td>${esc(h.acao)}</td><td>${esc(h.prefixo)}</td><td>${esc(h.detalhe)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nada registrado ainda.</td></tr>'}</tbody>`;
 }
 
+/* ══════════════════ SEPARAÇÃO FROTA × LOCADAS ══════════════════
+   A "lotação" do cadastro diz de onde vem a viatura (FROTA ou LOCADA). O filtro da barra vale para a
+   página inteira: aplicarTipo() monta D (o recorte que as telas leem) a partir de DB (tudo). Lotação
+   vazia ou diferente cai em "Sem classificação", pra nenhuma viatura sumir sem aviso. */
+const TIPOS = { frota:'Frota', locada:'Locadas', sem:'Sem classificação' };
+function tipoVtr(v){ const t = norm(v && v.lotacao); return /LOCA[DC]/.test(t) ? 'locada' : /FROTA/.test(t) ? 'frota' : 'sem'; }
+let TIPO = (() => { try{ const t = localStorage.getItem('bp_gar_tipo'); return TIPOS[t] ? t : ''; }catch(e){ return ''; } })();
+function vistaTipo(raw, tipo){
+  if (!tipo) return raw;
+  const ok = new Set(raw.viaturas.filter(v => tipoVtr(v) === tipo).map(v => v.prefixo));
+  const dele = x => ok.has(x.prefixo);
+  return { ...raw, viaturas: raw.viaturas.filter(dele), nfs: raw.nfs.filter(dele), checklists: raw.checklists.filter(dele), pendencias: raw.pendencias.filter(dele),
+    manutencoes: raw.manutencoes.filter(dele), devolucoes: (raw.devolucoes || []).filter(dele), historico: (raw.historico || []).filter(h => !h.prefixo || ok.has(h.prefixo)) };
+}
+function aplicarTipo(){
+  D = vistaTipo(DB, TIPO);
+  VMAP = {}; D.viaturas.forEach((v, i) => { v._i = i; VMAP[v.prefixo] = v; });
+  D.nfs.forEach((n, i) => n._i = i);
+  preencherSelects();
+  $('bdg-pend').textContent = D.pendencias.filter(p => p.status === 'Aberta' && pendDeFrota(p)).length || '';
+}
+function setTipo(t){
+  TIPO = TIPOS[t] ? t : '';
+  try{ localStorage.setItem('bp_gar_tipo', TIPO); }catch(e){}
+  ['pe-v','ck-v','nf-v','mn-v'].forEach(id => { $(id).value = ''; });   // a viatura escolhida pode estar fora do novo recorte
+  PG.ck = 0;
+  aplicarTipo(); renderTudo();
+}
+function renderTipoBar(){
+  if (!DB) return;
+  const n = {}; DB.viaturas.forEach(v => { if (v.ativa) n[tipoVtr(v)] = (n[tipoVtr(v)] || 0) + 1; });
+  const B = [['', 'Todas', DB.viaturas.filter(v => v.ativa).length], ['frota', TIPOS.frota, n.frota || 0], ['locada', TIPOS.locada, n.locada || 0]];
+  if (n.sem || TIPO === 'sem') B.push(['sem', TIPOS.sem, n.sem || 0]);
+  $('tipo-seg').innerHTML = B.map(([k, l, c]) => `<button class="${k === TIPO ? 'on' : ''}" onclick="setTipo('${k}')" title="${c} viatura(s) ativa(s)">${l}<small>${c}</small></button>`).join('');
+  $('tipo-hint').textContent = TIPO ? `Todas as abas mostram só: ${TIPOS[TIPO]}` : '';
+}
+
+/* ══════════════════ RELATÓRIO DA FROTA (resumido e completo) ══════════════════
+   Feito sobre DB recortado pelo tipo escolhido no diálogo — dá para emitir o de Locadas com a tela
+   em Frota. Imprime pelo mesmo caminho do leilao.html: bloco #relatorio + window.print(). */
+const REL_PER = [['30d','Últimos 30 dias'],['mes','Mês atual'],['mesant','Mês anterior'],['90d','Últimos 90 dias'],['ano','Ano atual'],['12m','Últimos 12 meses'],['tudo','Todo o histórico'],['custom','Escolher as datas…']];
+function relPeriodo(k, de, ate){
+  const hoje = hojeISO(), a = +hoje.slice(0, 4), m = +hoje.slice(5, 7);
+  const iso = (y, mo, d) => new Date(Date.UTC(y, mo, d)).toISOString().slice(0, 10);
+  switch (k){
+    case '30d': return [diasAtras(29), hoje];
+    case '90d': return [diasAtras(89), hoje];
+    case 'mes': return [iso(a, m - 1, 1), hoje];
+    case 'mesant': return [iso(a, m - 2, 1), iso(a, m - 1, 0)];
+    case 'ano': return [a + '-01-01', hoje];
+    case '12m': return [iso(a, m - 12, 1), hoje];
+    case 'custom': return [de || '', ate || hoje];
+    default: return ['', hoje];
+  }
+}
+function relPerMudou(){ const c = $('rl-p').value === 'custom'; show('rl-dw', c); show('rl-aw', c); }
+function abrirRelatorio(){
+  const op = [['', 'Todas (frota e locadas)'], ['frota', 'Somente Frota'], ['locada', 'Somente Locadas']].concat(DB.viaturas.some(v => tipoVtr(v) === 'sem') ? [['sem', 'Sem classificação']] : []);
+  modal('📄 Relatório da frota', `<div class="grid">
+      <div class="fg w2"><label>Viaturas do relatório</label><select id="rl-t">${op.map(([k, l]) => `<option value="${k}" ${k === TIPO ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="fg"><label>Período</label><select id="rl-p" onchange="relPerMudou()">${REL_PER.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+      <div class="fg hidden" id="rl-dw"><label>De</label><input type="date" id="rl-de"></div>
+      <div class="fg hidden" id="rl-aw"><label>Até</label><input type="date" id="rl-ate" value="${hojeISO()}"></div>
+      <label class="chk wall"><input type="checkbox" id="rl-inat"> Incluir viaturas devolvidas/baixadas</label></div>
+    <div class="hint" style="margin-top:12px"><b>Resumido:</b> indicadores, pontos de atenção, situação de cada viatura e gasto por tipo — cabe em 1 ou 2 folhas.<br>
+      <b>Completo:</b> o resumido mais a ficha de cada viatura (alterações, notas fiscais, manutenções e todos os checklists do período).<br>
+      Abre a janela de impressão: escolha <b>Salvar como PDF</b> para guardar ou anexar ao SEI.</div>`,
+    `<button class="btn gray" onclick="fecharModal()">Cancelar</button><button class="btn" id="rl-res">📄 Relatório resumido</button><button class="btn-main" id="rl-comp">📑 Relatório completo</button>`);
+  $('rl-res').onclick = () => gerarRelatorio(false);
+  $('rl-comp').onclick = () => gerarRelatorio(true);
+}
+function gerarRelatorio(completo){
+  const tipo = $('rl-t').value, pk = $('rl-p').value, inat = $('rl-inat').checked;
+  const [de, ate] = relPeriodo(pk, $('rl-de').value, $('rl-ate').value);
+  if (pk === 'custom' && !de) return toast('⚠️ Informe a data inicial.', true);
+  if (de && ate && de > ate) return toast('⚠️ A data inicial é depois da data final.', true);
+  const R = montarRelatorio(tipo, de, ate, inat);
+  if (!R.itens.length) return toast('⚠️ Nenhuma viatura nesse recorte.' + (inat ? '' : ' Marque “Incluir devolvidas/baixadas” se for o caso.'), true);
+  fecharModal();
+  $('relatorio').innerHTML = relatorioHTML(R, completo);
+  document.body.classList.add('imp-rel');
+  setTimeout(() => window.print(), 300);
+}
+window.addEventListener('afterprint', () => document.body.classList.remove('imp-rel'));
+
+function montarRelatorio(tipo, de, ate, inat){
+  const V = vistaTipo(DB, tipo);
+  const vts = V.viaturas.filter(v => inat || v.ativa).slice().sort((a, b) => String(a.prefixo).localeCompare(String(b.prefixo), 'pt-BR', { numeric:true }));
+  const set = new Set(vts.map(v => v.prefixo));
+  const noPer = d => { const x = String(d || '').slice(0, 10); return !!x && (!de || x >= de) && (!ate || x <= ate); };
+  const daV = L => L.filter(x => set.has(x.prefixo));
+  const nfsP = daV(V.nfs).filter(n => noPer(n.data_emissao)), cksP = daV(V.checklists).filter(c => noPer(c.data)), mnsP = daV(V.manutencoes).filter(m => noPer(m.data));
+  const kms = kmRodado(de || '', daV(V.checklists), ate);
+  const soma = (L, f) => L.reduce((a, x) => a + (Number(f(x)) || 0), 0);
+  const porData = (campo) => (a, b) => a[campo] < b[campo] ? -1 : 1;
+  const itens = vts.map(v => {
+    const ps = V.pendencias.filter(p => p.prefixo === v.prefixo), mine = x => x.prefixo === v.prefixo;
+    const nfs = nfsP.filter(mine).sort(porData('data_emissao'));
+    return { v, o: oleoSit(v), dv: v.ativa ? null : devDe(v.prefixo),
+      abertas: ps.filter(p => p.status === 'Aberta'), sanadas: ps.filter(p => p.status !== 'Aberta' && noPer(p.data_sanada)),
+      nfs, cks: cksP.filter(mine).sort(porData('data')), mns: mnsP.filter(mine).sort(porData('data')),
+      km: (kms[v.prefixo] || {}).km || 0, gasto: soma(nfs, n => n.valor_total) };
+  });
+  const porTipoNF = {}; nfsP.forEach(n => { const e = porTipoNF[n.tipo || 'Outros'] || (porTipoNF[n.tipo || 'Outros'] = { n:0, v:0 }); e.n++; e.v += n.valor_total || 0; });
+  const fonte = f => soma(nfsP.filter(n => n.fonte === f), n => n.valor_total);
+  const at = vts.filter(v => v.ativa);
+  return { tipo, de, ate, inat, itens, porTipoNF, tot: {
+    vts: vts.length, ativas: at.length, uso: at.filter(v => v.em_uso).length, fora: vts.length - at.length,
+    crit: at.filter(v => v.critico).length, comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
+    oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
+    ck: cksP.length, ckIni: cksP.filter(c => c.momento === 'Início de uso').length, ckFim: cksP.filter(c => c.momento === 'Término de uso').length,
+    km: soma(itens, x => x.km), mn: mnsP.length, nf: nfsP.length, gasto: soma(nfsP, n => n.valor_total), prime: fonte('PRIME'), recurso: fonte('RECURSO') } };
+}
+
+function relatorioHTML(R, completo){
+  const { tot, itens } = R, ps = permsSessao();
+  const quem = (ps && ps.nome) || AUTH.user, agora = new Date(Date.now() - 4 * 3600e3).toISOString();
+  const nomeTipo = { '':'FROTA E LOCADAS', frota:'FROTA', locada:'VIATURAS LOCADAS', sem:'VIATURAS SEM CLASSIFICAÇÃO' }[R.tipo];
+  const per = `${R.de ? fD(R.de) : 'início dos registros'} a ${fD(R.ate)}`;
+  const tab = (cab, linhas, rod) => `<table><thead><tr>${cab.map(c => `<th${c[1] ? ` class="${c[1]}"` : ''}>${c[0]}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody>${rod ? `<tfoot>${rod}</tfoot>` : ''}</table>`;
+  const crit = its => its.map(i => DB.criticos.includes(i) ? `<b>${esc(i)}</b>` : esc(i)).join(', ');
+  const sit = (v, dv) => !v.ativa ? `${esc(v.status_geral || 'Fora de uso')}${dv ? ` → ${esc(dv.destino)}${dv.data ? ' em ' + fD(dv.data) : ''}` : ''}` : v.em_uso ? `Em uso — ${esc(v.ultimo.motorista)}` : 'Na base';
+  const box = (l, v, s) => `<div><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ''}</div>`;
+
+  const atencao = [];
+  itens.filter(x => x.v.ativa).forEach(({ v }) => {
+    const cr = v.itens_bloqueados.filter(i => DB.criticos.includes(i));
+    if (cr.length) atencao.push(`<b>${esc(v.prefixo)}</b> — dano crítico em aberto: ${esc(cr.join(' e '))}.`);
+    if (v.km_para_troca != null && v.km_para_troca <= 0) atencao.push(`<b>${esc(v.prefixo)}</b> — troca de óleo vencida há ${fN(-v.km_para_troca)} km.`);
+    else if (v.km_para_troca != null && v.km_para_troca <= 1000) atencao.push(`<b>${esc(v.prefixo)}</b> — faltam ${fN(v.km_para_troca)} km para a troca de óleo.`);
+  });
+
+  const linhas = itens.map(({ v, o, dv, cks, km, gasto }) => `<tr><td><b>${esc(v.prefixo)}</b><br>${esc(v.modelo)} · ${esc(v.placa)}</td><td>${esc(TIPOS[tipoVtr(v)])}</td><td>${sit(v, dv)}</td>
+    <td class="v">${v.km_atual ? fN(v.km_atual) : '—'}</td><td>${v.ativa ? esc(o.txt) : '—'}</td><td>${crit([...new Set(v.itens_bloqueados)]) || '—'}</td>
+    <td class="v">${cks.length}</td><td class="v">${km ? fN(km) : '—'}</td><td class="v">${fR(gasto)}</td></tr>`);
+  const rodTab = `<tr><td colspan="6">Total — ${itens.length} viatura(s)</td><td class="v">${tot.ck}</td><td class="v">${tot.km ? fN(tot.km) : '—'}</td><td class="v">${fR(tot.gasto)}</td></tr>`;
+
+  const tiposNF = Object.entries(R.porTipoNF).sort((a, b) => b[1].v - a[1].v);
+  const grp = {}; itens.forEach(x => { const k = tipoVtr(x.v), g = grp[k] || (grp[k] = { n:0, at:0, km:0, gasto:0 }); g.n++; if (x.v.ativa) g.at++; g.km += x.km; g.gasto += x.gasto; });
+  const comparativo = !R.tipo && Object.keys(grp).length > 1
+    ? `<h4>Por tipo de viatura</h4>${tab([['Tipo'], ['Viaturas', 'v'], ['Ativas', 'v'], ['Km rodado', 'v'], ['Gasto', 'v'], ['Gasto por viatura', 'v']],
+        Object.entries(grp).map(([k, g]) => `<tr><td>${esc(TIPOS[k])}</td><td class="v">${g.n}</td><td class="v">${g.at}</td><td class="v">${g.km ? fN(g.km) : '—'}</td><td class="v">${fR(g.gasto)}</td><td class="v">${fR(g.n ? g.gasto / g.n : 0)}</td></tr>`))}` : '';
+
+  const ficha = ({ v, o, dv, abertas, sanadas, nfs, cks, mns, km, gasto }) => {
+    const u = v.ultimo, vz = t => `<p class="rvz">${t}</p>`;
+    const dtAb = p => fD(p.data_abertura) || esc(p.data) || '—';
+    return `<div class="rvt"><div class="rvt-h"><span>${esc(v.prefixo)} — ${esc(v.modelo)} · ${esc(v.placa)}</span><span>${esc(TIPOS[tipoVtr(v)])} · ${sit(v, dv)}</span></div>
+      <table class="rdados"><tr><td>Ano: <b>${esc(v.ano) || '—'}</b></td><td>Lotação: <b>${esc(v.lotacao) || '—'}</b></td><td>Km atual: <b>${v.km_atual ? fN(v.km_atual) : '—'}</b></td><td>Km no período: <b>${fN(km)}</b></td></tr>
+      <tr><td colspan="2">Óleo: <b>${esc(o.txt)}</b> (última troca ${v.km_ultima_troca_oleo ? fN(v.km_ultima_troca_oleo) + ' km' : '—'}, a cada ${fN(v.intervalo_oleo_km)} km)</td><td colspan="2">Último uso: <b>${u ? esc(u.motorista) + ' · ' + fDH(u.data) : 'sem checklist'}</b></td></tr>
+      ${dv ? `<tr><td colspan="4">Devolvida${dv.data ? ' em <b>' + fD(dv.data) + '</b>' : ''} para <b>${esc(dv.destino)}</b>${dv.documento ? ' · ' + esc(dv.documento) : ''}${dv.km ? ' · ' + fN(dv.km) + ' km' : ''}</td></tr>` : ''}</table>
+      ${abertas.length ? `<h4>Alterações abertas (${abertas.length})</h4>${tab([['Aberta em'], ['Itens'], ['Descrição'], ['Aberta por']],
+          abertas.map(p => `<tr><td>${dtAb(p)}</td><td>${crit(p.itens) || '—'}</td><td>${esc(p.descricao) || '—'}</td><td>${esc(p.aberta_por) || '—'}</td></tr>`))}` : vz('Nenhuma alteração aberta.')}
+      ${sanadas.length ? `<h4>Alterações sanadas no período (${sanadas.length})</h4>${tab([['Aberta em'], ['Sanada em'], ['Itens'], ['Sanada por']],
+          sanadas.map(p => `<tr><td>${dtAb(p)}</td><td>${fD(p.data_sanada) || '—'}</td><td>${esc(p.itens.join(', ')) || '—'}</td><td>${esc(p.sanada_por) || '—'}</td></tr>`))}` : ''}
+      ${nfs.length ? `<h4>Notas fiscais no período (${nfs.length})</h4>${tab([['Emissão'], ['Nº'], ['Fornecedor'], ['Tipo'], ['Fonte'], ['Descrição'], ['Valor', 'v']],
+          nfs.map(n => `<tr><td>${fD(n.data_emissao)}</td><td>${esc(n.numero)}</td><td>${esc(n.fornecedor)}</td><td>${esc(n.tipo)}</td><td>${esc(n.fonte) || '—'}</td><td>${esc((n.descricao || n.itens.map(i => i.descricao).join('; ')).slice(0, 240))}</td><td class="v">${fR(n.valor_total)}</td></tr>`),
+          `<tr><td colspan="6">Subtotal</td><td class="v">${fR(gasto)}</td></tr>`)}` : vz('Nenhuma nota fiscal no período.')}
+      ${mns.length ? `<h4>Manutenções no período (${mns.length})</h4>${tab([['Data'], ['Situação'], ['Km', 'v'], ['Oficina / local'], ['Observação']],
+          mns.map(m => `<tr><td>${fD(m.data)}</td><td>${esc(m.situacao)}</td><td class="v">${m.km ? fN(m.km) : ''}</td><td>${esc(m.localidade)}</td><td>${esc(m.obs)}</td></tr>`))}` : vz('Nenhuma manutenção registrada no período.')}
+      ${cks.length ? `<h4>Checklists no período (${cks.length})</h4>${tab([['Data/hora'], ['Momento'], ['Motorista'], ['Km', 'v'], ['Local'], ['Alterações / observações']],
+          cks.map(c => `<tr><td>${fDH(c.data)}</td><td>${c.momento === 'Início de uso' ? 'Início' : 'Término'}</td><td>${esc(c.motorista)}</td><td class="v">${c.km ? fN(c.km) : ''}</td><td>${esc(c.local)}</td>
+            <td>${esc(c.itens.join(', '))}${c.condicao === 'Suja' ? ' [suja]' : ''}${c.ciente_km === 'Sim' ? ' [km divergente]' : ''}${c.externo ? ' [outra unidade]' : ''}</td></tr>`))}` : vz('Nenhum checklist no período.')}
+    </div>`;
+  };
+
+  return `
+    <div class="rcab"><img src="LOGOS/bpfron_transp.avif" alt="">
+      <div><div style="font-size:9pt">POLÍCIA MILITAR DO ESTADO DE RONDÔNIA · BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS</div>
+      <h1>RELATÓRIO DA FROTA — ${nomeTipo} · ${completo ? 'COMPLETO' : 'RESUMIDO'}</h1>
+      <div style="font-size:9.5pt">Período: ${per} · ${R.inat ? 'inclui viaturas devolvidas/baixadas' : 'somente viaturas ativas'}</div></div></div>
+    <div class="rres">
+      ${box('Viaturas', tot.vts, `${tot.ativas} ativa(s) · ${tot.uso} em uso agora${tot.fora ? ` · ${tot.fora} fora de uso` : ''}`)}
+      ${box('Dano crítico', tot.crit, 'motor / transmissão')}
+      ${box('Com alteração aberta', tot.comAlt, `${tot.itensAb} item(ns) em aberto`)}
+      ${box('Troca de óleo', tot.oleoV + tot.oleoB, `${tot.oleoV} vencida(s) · ${tot.oleoB} em breve`)}
+      ${box('Checklists no período', fN(tot.ck), `${tot.ckIni} início · ${tot.ckFim} término`)}
+      ${box('Km rodado no período', tot.km ? fN(tot.km) : '—', tot.km && tot.gasto ? `${fR(tot.gasto / tot.km)} por km` : '')}
+      ${box('Manutenções no período', tot.mn, '')}
+      ${box('Gasto (notas fiscais)', fR(tot.gasto), `${tot.nf} nota(s)${tot.prime ? ` · PRIME ${fR(tot.prime)}` : ''}${tot.recurso ? ` · RECURSO ${fR(tot.recurso)}` : ''}`)}
+    </div>
+    <h3>1. Pontos de atenção</h3>
+    ${atencao.length ? `<ul class="ratn">${atencao.map(a => `<li>${a}</li>`).join('')}</ul>` : '<p class="rvz">Nenhum dano crítico nem troca de óleo vencida ou próxima.</p>'}
+    <h3>2. Situação por viatura</h3>
+    ${tab([['Viatura'], ['Tipo'], ['Situação'], ['Km atual', 'v'], ['Óleo'], ['Alterações abertas'], ['Check.', 'v'], ['Km período', 'v'], ['Gasto', 'v']], linhas, rodTab)}
+    <p class="rvz">Itens em negrito = dano crítico (motor / transmissão). “Check.”, “Km período” e “Gasto” se referem ao período do relatório.</p>
+    <h3>3. Gasto com manutenção</h3>
+    ${tiposNF.length ? tab([['Tipo de despesa'], ['Notas', 'v'], ['Valor', 'v'], ['%', 'v']], tiposNF.map(([k, e]) => `<tr><td>${esc(k)}</td><td class="v">${e.n}</td><td class="v">${fR(e.v)}</td><td class="v">${tot.gasto ? (e.v / tot.gasto * 100).toLocaleString('pt-BR', { maximumFractionDigits:1 }) : 0}%</td></tr>`),
+        `<tr><td>Total</td><td class="v">${tot.nf}</td><td class="v">${fR(tot.gasto)}</td><td class="v">100%</td></tr>`) : '<p class="rvz">Nenhuma nota fiscal lançada no período.</p>'}
+    ${comparativo}
+    ${completo ? `<h3>4. Ficha de cada viatura</h3>${itens.map(ficha).join('')}` : ''}
+    <div class="rass"><div>Responsável pela Garagem</div><div>Comandante / ordenador de despesa</div></div>
+    <div class="rrod">Emitido em ${fDH(agora)} por ${esc(quem)} · BPFRON/RO · dados da Garagem — Gestão da frota.</div>`;
+}
+
 /* ══════════════════ NOTA FISCAL: lançamento + OCR ══════════════════
    Ordem de confiança: XML da NF-e/NFS-e (exato) > PDF com texto (exato) > foto/PDF
    escaneado no Tesseract (aproximado). Tudo roda NO NAVEGADOR — a nota não vai
@@ -1283,7 +1532,7 @@ function chaveValida(k){
 function abrirNF(idx, prefixo){
   const ed = idx != null ? D.nfs[idx] : null;
   NFF = { arquivo:null, texto:'', origem:'', editId: ed ? ed.id : '' };
-  const vs = D.viaturas.map(v => `<option value="${esc(v.prefixo)}" ${(ed ? ed.prefixo : prefixo) === v.prefixo ? 'selected' : ''}>${esc(v.prefixo)} · ${esc(v.modelo)} · ${esc(v.placa)}</option>`).join('');
+  const vs = DB.viaturas.map(v => `<option value="${esc(v.prefixo)}" ${(ed ? ed.prefixo : prefixo) === v.prefixo ? 'selected' : ''}>${esc(v.prefixo)} · ${esc(v.modelo)} · ${esc(v.placa)}</option>`).join('');
   modal(ed ? '✏️ Editar nota fiscal' : '🧾 Lançar nota fiscal', `
     ${ed ? '' : `<div class="drop" id="nf-drop"><b>📷 Foto, PDF ou XML da nota</b><br>arraste aqui ou clique para escolher — no celular dá para tirar a foto na hora<br><span style="font-size:12px">XML da NF-e/NFS-e lê 100% certo · PDF da nota lê o texto exato · foto passa pelo OCR (confira os campos em roxo)</span></div>
     <input type="file" id="nf-file" accept="image/*,application/pdf,.xml,text/xml" class="hidden">
@@ -1350,7 +1599,7 @@ function nfItemAdd(it){
 function nfPendencias(){
   const box = $('nf-sanar'); if (!box) return;
   const p = $('nf-f-v').value;
-  const L = D.pendencias.filter(x => x.prefixo === p && x.status === 'Aberta');
+  const L = DB.pendencias.filter(x => x.prefixo === p && x.status === 'Aberta');
   box.innerHTML = !p ? '<div class="muted">Escolha a viatura.</div>' : L.length ? L.map(x => `<div class="pc" data-id="${x.id}">
       <div class="meta" style="font-size:12px;color:var(--muted)">aberta em ${fD(x.data_abertura)} por ${esc(x.aberta_por)}${x.descricao ? ' — ' + esc(x.descricao.slice(0,140)) : ''}</div>
       ${x.itens.length ? x.itens.map(i => `<label><input type="checkbox" value="${esc(i)}"> ${esc(i)}</label>`).join('') : `<label><input type="checkbox" value="*"> sanar esta alteração</label>`}</div>`).join('')
@@ -1496,7 +1745,7 @@ function nfDoTexto(txt){
   const razao = linhas.slice(0, 18).find(l => /\b(LTDA|EIRELI|ME|EPP|S\/?A|MEI|COMERCIO|AUTO|MECANICA|PECAS|OFICINA|SERVICOS|PNEUS|CENTER|DISTRIBUIDORA)\b/.test(l) && !/POLICIA|ESTADO DE RONDONIA|DESTINAT|RECEBEMOS/.test(l) && l.length < 90);
   if (razao) r.fornecedor = razao.replace(/^(RAZAO SOCIAL|NOME\/?RAZAO SOCIAL|EMITENTE|PRESTADOR DE SERVICOS?)[:\s]*/,'').replace(/^\d{5,}\s*-\s*/, '').trim();
   const pl = T.match(/\b([A-Z]{3})[- ]?(\d[A-Z0-9]\d{2})\b/g);
-  if (pl){ for (const p of pl){ const k = normK(p); const v = D.viaturas.find(x => normK(x.placa).startsWith(k)); if (v){ r.placa = p; r.prefixoAchado = v.prefixo; break; } } if (!r.placa) r.placa = pl[0]; }
+  if (pl){ for (const p of pl){ const k = normK(p); const v = DB.viaturas.find(x => normK(x.placa).startsWith(k)); if (v){ r.placa = p; r.prefixoAchado = v.prefixo; break; } } if (!r.placa) r.placa = pl[0]; }
   const km = T.match(/(?:\bKM(?:\s*\/\s*HORIMETRO)?|QUILOMETRAGEM|HODOMETRO|ODOMETRO)\s*(?:ATUAL|\(OS\))?\s*[:.=]?\s*(\d{1,3}(?:\.\d{3})+|\d{3,7})\b/); if (km) r.km = km[1].replace(/\./g,'');
   if (/PRIMEBENEFICIOS|ITENS \/ VALORES/.test(T) && /\bOS N[°ºO]/.test(T)) return nfDoOSPrime(r, T, txt);
   // itens: linha com texto + valor no fim (fora cabeçalho/rodapé de impostos)
@@ -1569,7 +1818,7 @@ function nfAplicar(r){
   if (r.fonte) nfFonte(r.fonte);
   if (r.desc) put('nf-f-desc', r.desc.slice(0, 3000));
   else if (r.itens && r.itens.length && !$('nf-f-desc').value) put('nf-f-desc', r.itens.map(i => i.descricao).join('; ').slice(0, 600));
-  const achou = r.prefixoAchado || (r.placa && (D.viaturas.find(v => normK(v.placa).startsWith(normK(r.placa))) || {}).prefixo);
+  const achou = r.prefixoAchado || (r.placa && (DB.viaturas.find(v => normK(v.placa).startsWith(normK(r.placa))) || {}).prefixo);
   if (achou && !$('nf-f-v').value){ $('nf-f-v').value = achou; $('nf-f-v').classList.add('ocr'); nfPendencias(); }
   const tipo = nfTipo(NFF.texto); $('nf-f-tipo').value = tipo; $('nf-f-tipo').classList.add('ocr');
   if (tipo === 'Troca de óleo' && $('nf-f-oleo')) $('nf-f-oleo').checked = true;
