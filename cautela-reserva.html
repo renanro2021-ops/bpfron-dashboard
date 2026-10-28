@@ -443,13 +443,43 @@ function resetCautelar(){
 }
 const doLocal = (v) => new Date(v + ':00-04:00').toISOString();
 
+/* busca de material: pelo nome OU pelo nº de série (ignora espaço, traço e maiúscula: "b2301433" acha "B 230-1433") */
+const compacto = (s) => norm(s).replace(/[^a-z0-9]/g, '');
 $('c-qi').oninput = () => {
-  const q = norm($('c-qi').value);
+  const bruto = $('c-qi').value.trim(), q = norm(bruto), qc = compacto(bruto);
   if (q.length < 2){ show('c-resi', false); return; }
-  const achados = R.linhas.filter(l => norm(l.descricao + ' ' + l.seriais.map(s => s.serie).join(' ')).includes(q)).slice(0, 14);
-  $('c-resi').innerHTML = achados.map(l => `<button data-id="${esc(l.item_id)}"><span>${esc(l.descricao)}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">reserva ${l.reserva}</span></button>`).join('') || '<div class="muted" style="padding:10px">Nada encontrado.</div>';
+  const aviso = (t) => `<div class="muted" style="padding:10px;line-height:1.5">${t}</div>`;
+  if (!R.linhas.length){
+    $('c-resi').innerHTML = aviso('O catálogo da reserva ainda está <b>vazio</b>. A chefia precisa clicar em <b>🌱 Semear o catálogo</b> e depois em <b>⬇️ Importar nº de série</b>, na aba ⚙️ Catálogo.');
+    show('c-resi', true); return;
+  }
+  // 1) número de série (a partir de 3 caracteres)
+  const porSerie = [];
+  if (qc.length >= 3) for (const l of R.linhas) for (const s of l.seriais) if (compacto(s.serie).includes(qc)) porSerie.push({ l, s });
+  // 2) nome do material
+  const porNome = R.linhas.filter(l => norm(l.descricao).includes(q)).slice(0, 14);
+  const chipSerie = (s) => s.disponivel ? '<span class="chip ok">disponível</span>'
+    : s.em_cautela ? '<span class="chip bad">já cautelada</span>'
+    : `<span class="chip wait">${esc(String(s.situacao || 'fora').replace('_', ' '))}</span>`;
+  const html = porSerie.slice(0, 14).map((x, i) => `<button data-s="${i}"><span>Nº <b>${esc(x.s.serie)}</b> · ${esc(x.l.descricao)}</span>${chipSerie(x.s)}</button>`).join('')
+    + porNome.map(l => `<button data-id="${esc(l.item_id)}"><span>${esc(l.descricao)}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">reserva ${l.reserva}</span></button>`).join('');
+  let vazio = 'Nada encontrado.';
+  if (!html){
+    const temSerie = R.linhas.some(l => l.seriais.length);
+    const pareceSerie = /\d/.test(bruto) && qc.length >= 4;
+    if (pareceSerie && !temSerie) vazio = 'Nenhum nº de série foi importado ainda. A chefia precisa clicar em <b>⬇️ Importar nº de série do Material Bélico</b> (aba ⚙️ Catálogo). Enquanto isso, busque pelo nome do material (ex.: PT 100).';
+    else if (pareceSerie) vazio = `Nenhum material com o nº de série <b>${esc(bruto)}</b>. Confira o número. Se a arma existe, ela pode ter ficado <b>sem linha</b> na importação (ex.: ARAD) — a chefia cadastra em <b>➕ Nova série</b>. Também dá para buscar pelo nome do material.`;
+  }
+  $('c-resi').innerHTML = html || aviso(vazio);
   show('c-resi', true);
-  $('c-resi').querySelectorAll('button').forEach(b => b.onclick = () => { CARRO.push({ item_id: b.dataset.id, qtd: 1, serie_id: '', legado: false }); show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); });
+  const fechar = () => { show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); };
+  $('c-resi').querySelectorAll('[data-id]').forEach(b => b.onclick = () => { CARRO.push({ item_id: b.dataset.id, qtd: 1, serie_id: '', legado: false }); fechar(); });
+  $('c-resi').querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
+    const { l, s } = porSerie[b.dataset.s];
+    if (!s.disponivel){ toast(s.em_cautela ? `O Nº ${s.serie} já está cautelado (${s.em_cautela}).` : `O Nº ${s.serie} não está na reserva (${String(s.situacao || '').replace('_', ' ')}).`); return; }
+    if (CARRO.some(x => x.serie_id === s.serie_id)){ toast(`O Nº ${s.serie} já está na lista.`); return; }
+    CARRO.push({ item_id: l.item_id, qtd: 1, serie_id: s.serie_id, legado: false }); fechar();
+  });
 };
 function renderCarrinho(){
   if (!R) return;
