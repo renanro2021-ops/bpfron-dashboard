@@ -298,11 +298,9 @@ html,body{overflow-x:hidden}
   #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
   #relatorio .rcab img{height:62px}
   #relatorio .rres{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-  #relatorio .rres div{flex:1 1 22%;border:1px solid #000;padding:5px 8px}
+  #relatorio .rres div{flex:1 1 17%;border:1px solid #000;padding:5px 8px}
   #relatorio .rres.r5{margin-top:-2px}
-  #relatorio .np{font-style:normal;white-space:nowrap}
-  #relatorio .rres.r5 div{flex-basis:17%}
-  #relatorio .rres span{display:block;font-size:7.5pt;text-transform:uppercase}
+  #relatorio .np{font-style:normal;white-space:nowrap}  #relatorio .rres span{display:block;font-size:7.5pt;text-transform:uppercase}
   #relatorio .rres b{font-size:12.5pt}
   #relatorio .rres small{display:block;font-size:8pt;color:#333}
   #relatorio .rdados td{border:none;padding:1px 8px 1px 0;font-size:9pt}
@@ -1464,10 +1462,10 @@ function montarRelatorio(tipo, de, ate, inat){
   const oficina = V.viaturas.filter(naOficina).sort(ordPref);
   const disponiveis = V.viaturas.filter(naBase).sort(ordPref);
   // Total do cartão fecha a conta: disponíveis + em uso + em manutenção + baixadas (+ devolvidas, se incluídas).
-  const emUso = V.viaturas.filter(v => v.ativa && v.em_uso && !naOficina(v));
+  const emUso = V.viaturas.filter(v => v.ativa && v.em_uso && !naOficina(v)).sort(ordPref);
   const devolv = inat ? V.viaturas.filter(v => !v.ativa && /DEVOLVID/.test(norm(v.status_geral))) : [];
-  const frota = { total: disponiveis.length + emUso.length + oficina.length + baixadas.length + devolv.length, uso: emUso.length, dev: devolv.length };
-  return { tipo, de, ate, inat, itens, porTipoNF, disponiveis, oficina, baixadas, frota, tot: {
+  const frota = { total: disponiveis.length + emUso.length + oficina.length + baixadas.length + devolv.length, dev: devolv.length };
+  return { tipo, de, ate, inat, itens, porTipoNF, disponiveis, emUso, oficina, baixadas, frota, tot: {
     comAlt: at.filter(v => v.itens_bloqueados.length).length, itensAb: soma(at, v => v.itens_bloqueados.length),
     oleoV: at.filter(v => v.km_para_troca != null && v.km_para_troca <= 0).length, oleoB: at.filter(v => v.km_para_troca != null && v.km_para_troca > 0 && v.km_para_troca <= 1000).length,
     ck: cksP.length, ckIni: cksP.filter(c => c.momento === 'Início de uso').length, ckFim: cksP.filter(c => c.momento === 'Término de uso').length,
@@ -1531,8 +1529,9 @@ function relatorioHTML(R, completo){
       <h1>RELATÓRIO DA FROTA — ${nomeTipo} · ${completo ? 'COMPLETO' : 'RESUMIDO'}</h1>
       <div style="font-size:9.5pt">Período: ${per} · ${R.inat ? 'inclui viaturas devolvidas/baixadas' : 'somente viaturas ativas'}</div></div></div>
     <div class="rres">
-      ${box('Total de viaturas', R.frota.total, `${R.frota.uso} em uso agora${R.frota.dev ? ` · ${R.frota.dev} devolvida(s)` : ''}`)}
+      ${box('Total de viaturas', R.frota.total, R.frota.dev ? `inclui ${R.frota.dev} devolvida(s)` : 'soma dos 4 ao lado')}
       ${box('Viaturas disponíveis', R.disponiveis.length, R.disponiveis.length ? `na base: ${listaPref(R.disponiveis)}` : 'nenhuma na base')}
+      ${box('Viaturas em uso', R.emUso.length, R.emUso.length ? `agora: ${listaPref(R.emUso)}` : 'nenhuma em uso agora')}
       ${box('Em manutenção', R.oficina.length, R.oficina.length ? `na oficina: ${listaPref(R.oficina)}` : 'nenhuma na oficina')}
       ${box('Viaturas baixadas', R.baixadas.length, listaPref(R.baixadas) || 'nenhuma')}
     </div>
