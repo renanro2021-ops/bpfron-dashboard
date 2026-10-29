@@ -85,7 +85,7 @@ table.t1{width:100%;border-collapse:collapse}
 .bloqueio{max-width:560px;margin:60px auto;text-align:center}
 .dica{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:10px}
 .dica ol{margin:6px 0 0 20px}.dica li{margin:3px 0}
-iframe#parte{width:100%;height:78vh;border:1px solid var(--line);border-radius:8px;background:#fff}
+iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line);border-radius:8px;background:#fff}
 @media(max-width:900px){.hdr-in{padding:8px 12px}}
 </style>
 </head>
@@ -121,10 +121,11 @@ iframe#parte{width:100%;height:78vh;border:1px solid var(--line);border-radius:8
     <div id="avisos"></div>
     <div class="acoesG" id="acoes">
       <button class="ac on" data-p="reserva"><span class="ico">📦</span><b>Reserva</b><span>o que tem e onde está</span></button>
-      <button class="ac" data-p="entregar"><span class="ico">📤</span><b>Entregar</b><span>material para um policial</span></button>
-      <button class="ac" data-p="receber"><span class="ico">📥</span><b>Receber de volta</b><span>o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
-      <button class="ac" data-p="conferir"><span class="ico">🔢</span><b>Conferir</b><span>contar a reserva</span></button>
-      <button class="ac" data-p="passar"><span class="ico">📄</span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
+      <button class="ac" data-p="entregar" id="ac-entregar"><span class="ico">📤</span><b>Entregar</b><span>material para um policial</span></button>
+      <button class="ac" data-p="receber" id="ac-receber"><span class="ico">📥</span><b id="ac-receber-t">Receber de volta</b><span id="ac-receber-s">o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
+      <button class="ac" data-p="conferir" id="ac-conferir"><span class="ico">🔢</span><b>Conferir</b><span>contar a reserva</span></button>
+      <button class="ac" data-p="ver"><span class="ico">👁️</span><b>Ver Parte Diária</b><span>como ela está agora</span></button>
+      <button class="ac" data-p="passar" id="ac-passar"><span class="ico">📄</span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
       <button class="ac" data-p="historico"><span class="ico">🕘</span><b>Histórico</b><span>todas as cautelas</span></button>
       <button class="ac hidden" data-p="admin" id="ac-admin"><span class="ico">⚙️</span><b>Administração</b><span>cadastrar e corrigir</span></button>
     </div>
@@ -182,6 +183,11 @@ iframe#parte{width:100%;height:78vh;border:1px solid var(--line);border-radius:8
 
     <!-- ===== RECEBER DE VOLTA ===== -->
     <section class="pane" id="p-receber">
+      <div class="card">
+        <input id="q-rec" placeholder="🔎 Procurar: policial, RE, missão, material, código (ARM-0012) ou nº de série" autocomplete="off">
+        <div class="muted" id="rec-info" style="margin-top:6px"></div>
+        <div class="dica hidden" id="rec-so-ver">👁️ Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.</div>
+      </div>
       <div class="card"><h2>Cautelas no sistema</h2><p class="muted">Quem vence primeiro aparece em cima. Clique em <b>📥 Receber</b> quando o material voltar.</p><div id="lista-cautelas" style="margin-top:10px"></div></div>
       <div class="card"><h2>Missões que já estavam na Parte</h2><p class="muted">Material que saiu antes do sistema começar (veio da última Parte Diária). Quando voltar, clique em <b>📥 Voltou</b>: o sistema já sugere o que entra de volta na reserva — é só conferir.</p><div id="lista-anteriores" style="margin-top:10px"></div></div>
     </section>
@@ -199,6 +205,17 @@ iframe#parte{width:100%;height:78vh;border:1px solid var(--line);border-radius:8
         <div class="muted" id="info-contagem" style="margin-top:8px"></div>
       </div>
       <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
+    </section>
+
+    <!-- ===== VER A PARTE DIÁRIA (só olhar) ===== -->
+    <section class="pane" id="p-ver">
+      <div class="card">
+        <h2>👁️ Parte Diária de agora</h2>
+        <p class="muted">É a Parte exatamente como sairia se o serviço fosse passado neste momento: os números da reserva, as OBS e as missões. Só para olhar — nada é gravado. O nome de quem assume aparece na hora de <b>Passar o serviço</b>.</p>
+        <div class="row" style="margin-top:8px"><div style="flex:none"><button class="btn sec" id="btn-ver-atualizar" type="button">🔄 Atualizar</button></div></div>
+        <div class="msg" id="ver-msg"></div>
+      </div>
+      <iframe id="parte-ver" title="Parte Diária de agora"></iframe>
     </section>
 
     <!-- ===== PASSAR O SERVIÇO ===== -->
@@ -354,7 +371,7 @@ function boot(){
 }
 
 /* ---------------- dados ---------------- */
-let R = null, GRUPO = '', CONTAGEM = {}, ABERTO = '';
+let R = null, GRUPO = '', CONTAGEM = {}, ABERTO = '', PODE = false;
 const linha = (id) => R.linhas.find(l => l.id === id);
 
 async function carregar(){
@@ -377,15 +394,25 @@ async function carregar(){
   CONTAGEM = {};
   if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
   $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
+  // só o armeiro de serviço mexe no material; o administrador acompanha (29/10/2026)
+  PODE = !!R.papel.armeiro;
+  ['ac-entregar', 'ac-conferir', 'ac-passar'].forEach(id => $(id).classList.toggle('hidden', !PODE));
+  $('ac-receber-t').textContent = PODE ? 'Receber de volta' : 'Com policiais';
+  $('ac-receber-s').textContent = PODE ? 'o que está com policiais' : 'quem está com material (só ver)';
+  show('rec-so-ver', !PODE);
+  const ativo = document.querySelector('#acoes .ac.on');
+  if (ativo && ativo.classList.contains('hidden')) abrirPane('reserva');
   $('dl-missoes').innerHTML = R.nomes_missao.map(n => `<option value="${esc(n)}">`).join('');
   renderFaixa(); renderReserva(); renderCarrinho(); renderReceber(); renderConferir(); renderPassarInfo();
+  if ($('p-ver').classList.contains('on')) verParte();
 }
 
 function renderFaixa(){
   const a = R.plantao.armeiro, p = R.plantao.pendente;
   $('faixa').innerHTML = `<span>🛡️ Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
     + (p ? `<span class="chip wait">Serviço passado — falta RE ${esc(p.re)} aceitar</span>` : '')
-    + (R.papel.chefia ? '<span class="chip neu">Você: administrador</span>' : '');
+    + (R.papel.chefia ? '<span class="chip neu">Você: administrador (só acompanha)</span>' : '')
+    + (!a && R.papel.chefia ? '<span class="muted">Designe o armeiro em ⚙️ Administração.</span>' : '');
   const av = [];
   if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker.</div>');
   if (R.pecas_sem_linha && R.papel.chefia) av.push(`<div class="card" style="border-color:var(--orange)">⚠️ ${R.pecas_sem_linha} peça(s) do Material Bélico sem <b>linha da Parte</b> (ex.: Taser). Elas não podem ser cauteladas até alguém escolher a linha na página Material Bélico do dashboard.</div>`);
@@ -533,23 +560,33 @@ $('btn-cautelar').onclick = async () => {
 
 /* ===== receber de volta ===== */
 const AL = { aguardando_assinatura: ['wait', 'Falta o policial assinar'], vencida: ['bad', 'Passou do prazo'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_parcial: ['wait', 'Voltou só uma parte'], devolucao_sem_assinatura: ['wait', 'Falta assinar a devolução'] };
+// busca do "Receber de volta": nome, RE, missão, material, código ou nº de série (sem ligar para espaço/traço)
+const textoCautela = (c) => [c.policial.posto, c.policial.nome, c.policial.guerra, c.policial.re, c.missao, c.cautela_id, ...c.itens.map(i => `${i.descricao} ${i.codigo || ''} ${i.serie || ''}`)].join(' ');
+const textoAnterior = (m) => [m.posto, m.nome, m.matricula, m.titulo, m.armamento, m.municao, m.acessorios, m.alteracoes].join(' ');
+function achou(texto, q, qc){ return !q || norm(texto).includes(q) || (qc.length >= 3 && compacto(texto).includes(qc)); }
 function renderReceber(){
-  const lista = R.cautelas_abertas.slice().sort((a, b) => Date.parse(a.fim_previsto) - Date.parse(b.fim_previsto));
-  const ant = R.missoes_anteriores.filter(m => !m.devolvido_em);
-  const n = $('n-receber'); n.textContent = lista.length + ant.length; n.classList.toggle('zero', !(lista.length + ant.length));
+  const todas = R.cautelas_abertas.slice().sort((a, b) => Date.parse(a.fim_previsto) - Date.parse(b.fim_previsto));
+  const todasAnt = R.missoes_anteriores.filter(m => !m.devolvido_em);
+  const n = $('n-receber'); n.textContent = todas.length + todasAnt.length; n.classList.toggle('zero', !(todas.length + todasAnt.length));
+  const bruto = $('q-rec').value.trim(), q = norm(bruto), qc = compacto(bruto);
+  const lista = todas.filter(c => achou(textoCautela(c), q, qc));
+  const ant = todasAnt.filter(m => achou(textoAnterior(m), q, qc));
+  $('rec-info').textContent = q ? `Achei ${lista.length} cautela(s) e ${ant.length} missão(ões) da Parte com "${bruto}".` : `${todas.length} cautela(s) no sistema e ${todasAnt.length} missão(ões) da Parte ainda fora.`;
+  const vazio = (t) => `<div class="muted">${q ? `Nada com "${esc(bruto)}".` : t}</div>`;
   $('lista-cautelas').innerHTML = lista.map(c => `<div class="lista-item"><div class="txt">
       <b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b> <span class="muted">· ${esc(c.missao)} · volta até ${fQ(c.fim_previsto)}</span><br>
       <pre>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '✔ '}${i.qtd}× ${i.descricao}${i.codigo ? ' [' + i.codigo + ']' : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join('\n')}</pre>
       <div style="margin-top:4px">${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'} <span class="muted">${esc(c.cautela_id)}</span></div></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button">📥 Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div></div>`).join('')
-    || '<div class="muted">Nenhuma cautela aberta. 👍</div>';
+    ${PODE ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button">📥 Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div>` : ''}</div>`).join('')
+    || vazio('Nenhuma cautela aberta. 👍');
   $('lista-cautelas').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCautela(b.dataset.a, b.dataset.id));
   $('lista-anteriores').innerHTML = ant.map(m => `<div class="lista-item"><div class="txt">
       <b>${esc(m.posto)} ${esc(m.nome)}</b> <span class="muted">· ${esc(m.titulo)} · desde ${esc(m.inicio)}</span>
       <pre>${esc([m.armamento, m.municao, m.acessorios].filter(Boolean).join('\n'))}</pre>${m.alteracoes ? `<div class="muted" style="color:#fca5a5">${esc(m.alteracoes)}</div>` : ''}</div>
-    <div><button class="btn" data-ant="${esc(m.id)}" type="button">📥 Voltou</button></div></div>`).join('') || '<div class="muted">Todas as missões antigas já voltaram. 👍</div>';
+    ${PODE ? `<div><button class="btn" data-ant="${esc(m.id)}" type="button">📥 Voltou</button></div>` : ''}</div>`).join('') || vazio('Todas as missões antigas já voltaram. 👍');
   $('lista-anteriores').querySelectorAll('[data-ant]').forEach(b => b.onclick = () => voltouAnterior(b.dataset.ant));
 }
+$('q-rec').oninput = renderReceber;
 async function acaoCautela(a, id){
   const c = R.cautelas_abertas.find(x => x.cautela_id === id);
   if (a === 'devolver'){
@@ -675,6 +712,16 @@ $('btn-previa').onclick = async () => {
     $('s-pronta').scrollIntoView({ behavior: 'smooth' });
   } catch(e){ m.textContent = e.message; if (e.status === 401) sair(); }
 };
+// 👁️ Ver Parte Diária: a Parte de agora, sem escolher substituto e sem gravar nada
+async function verParte(){
+  const m = $('ver-msg'); m.className = 'msg'; m.textContent = 'Montando…';
+  try {
+    const d = await api('/api/cautela/parte-atual');
+    $('parte-ver').srcdoc = `<!doctype html><meta charset="utf-8"><style>${CSS_SEI}</style><body>${d.html}</body>`;
+    m.textContent = d.armeiro ? '' : '⚠️ Ninguém designado como armeiro de serviço: o nome do armeiro sai em branco.';
+  } catch(e){ m.className = 'msg err'; m.textContent = e.message; if (e.status === 401) falha(e); }
+}
+$('btn-ver-atualizar').onclick = verParte;
 async function copiar(tipo){
   try {
     if (tipo === 'fonte') await navigator.clipboard.writeText(HTML_PARTE);
@@ -793,12 +840,14 @@ $('btn-zerar').onclick = async () => {
 };
 
 /* ===== botões de ação ===== */
-document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => {
-  document.querySelectorAll('#acoes .ac').forEach(x => x.classList.toggle('on', x === t));
-  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + t.dataset.p));
-  if (t.dataset.p === 'entregar' && !$('c-ini').value) resetEntregar();
-  if (t.dataset.p === 'historico') buscarHistorico();
-});
+function abrirPane(p){
+  document.querySelectorAll('#acoes .ac').forEach(x => x.classList.toggle('on', x.dataset.p === p));
+  document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'p-' + p));
+  if (p === 'entregar' && !$('c-ini').value) resetEntregar();
+  if (p === 'historico') buscarHistorico();
+  if (p === 'ver') verParte();
+}
+document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => abrirPane(t.dataset.p));
 boot();
 </script>
 </body>
