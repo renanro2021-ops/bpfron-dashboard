@@ -1255,12 +1255,13 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #page-material .mt-stack .s-otimo{background:#22c55e}#page-material .mt-stack .s-bom{background:#86efac}
       #page-material .mt-stack .s-regular{background:#fbbf24}#page-material .mt-stack .s-ruim{background:#f87171}
       #page-material .mt-stack .s-na{background:rgba(148,163,184,.25)}
+      @media(min-width:1101px){#page-material .mt-kpis.k7{grid-template-columns:repeat(7,1fr)}}
       @media(max-width:1100px){#page-material .mt-kpis{grid-template-columns:repeat(3,1fr)}#page-material .mt-grid,#page-material .mt-grid2{grid-template-columns:1fr}}
       @media(max-width:600px){#page-material .mt-kpis{grid-template-columns:repeat(2,1fr)}#page-material .mt-types{grid-template-columns:repeat(2,1fr)}}
     </style>
     <div id="page-material" class="page-content">
       <div class="sec"><i class="ico-img ico-pistola"></i> Material Bélico — Poder de Fogo</div>
-      <div class="mt-sub">Inventário de armamento, proteção balística, equipamentos e munição — dados ao vivo da planilha <b>BPFRON_Patrimonio_BI</b>.</div>
+      <div class="mt-sub">Inventário de armamento, proteção balística, equipamentos e munição — dados ao vivo da planilha <b id="mat-planilha">BPFRON_Patrimonio_BI</b>.</div>
       <div id="mat-status" class="mt-status">Carregando…</div>
 
       <div id="mat-kpis" class="mt-kpis"></div>
@@ -5988,6 +5989,11 @@ function renderMaterialAll(){
     ['<i class="ico-img ico-colete"></i>', k.coletes_vencidos, 'Coletes Vencidos', 'danger'],
     ['<i class="ico-img ico-municao"></i>', fN(k.saldo_municao), 'Saldo Munição', ''],
   ];
+  // Planilha única (28/10/2026): o Material Bélico é a mesma planilha da Reserva de Armamento
+  if (MAT_DATA.planilha_unica) kpis.push(['🛡️', k.em_cautela||0, 'Em cautela agora', 'info']);
+  document.getElementById('mat-kpis').classList.toggle('k7', kpis.length===7);
+  const nomePlan = document.getElementById('mat-planilha');
+  if (nomePlan) nomePlan.textContent = MAT_DATA.planilha_unica ? 'BPFRON_Cautela (a mesma da Reserva de Armamento)' : 'BPFRON_Patrimonio_BI';
   document.getElementById('mat-kpis').innerHTML = kpis.map((x,i)=>
     `<div class="mt-kpi clk ${x[3]}" data-mk="${i}" onclick="selectMatKpi(${i})"><span class="mk-go">ver ›</span><div class="ic">${x[0]}</div><div class="v">${typeof x[1]==='number'?fN(x[1]):x[1]}</div><div class="l">${x[2]}</div></div>`
   ).join('');
@@ -6192,6 +6198,7 @@ function matKpiSel(i){
     case 3: return K('kpi:3','<i class="ico-img ico-colete"></i>','Coletes Válidos','proteção balística dentro da validade',coletes.filter(x=>!isVenc(x)));
     case 4: return K('kpi:4','<i class="ico-img ico-colete"></i>','Coletes Vencidos','proteção balística fora da validade',coletes.filter(isVenc));
     case 5: return {src:'kpi',key:'kpi:5',icon:'<i class="ico-img ico-municao"></i>',label:'Saldo de Munição',ctx:'lotes de munição e granadas em estoque',kind:'municao',munItems:MAT_DATA.municao_itens||[]};
+    case 6: return K('kpi:6','🛡️','Em cautela agora','peças com policiais pela Reserva de Armamento',itens.filter(x=>x.em_cautela));
   }
 }
 function matSelFromGroup(g){
@@ -6343,18 +6350,20 @@ function renderMaterialTable(){
   let rows = MAT_DATA.itens||[];
   if (fcat) rows = rows.filter(r=>r.categoria===fcat);
   if (fsit) rows = rows.filter(r=>r.situacao===fsit);
-  if (busca) rows = rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao}`).toLowerCase().includes(busca));
+  if (busca) rows = rows.filter(r=>(`${r.codigo||''} ${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao} ${r.em_cautela?r.em_cautela.com:''}`).toLowerCase().includes(busca));
   const cnt = document.getElementById('mat-count');
   if (cnt) cnt.textContent = `${fN(rows.length)} de ${fN((MAT_DATA.itens||[]).length)} itens`;
+  const uni = !!MAT_DATA.planilha_unica;
   document.getElementById('mat-inv-table').innerHTML =
-    `<thead><tr><th>Categoria</th><th>Modelo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
+    `<thead><tr>${uni?'<th>Código</th>':''}<th>Categoria</th><th>Modelo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
     rows.map(r=>`<tr>
+      ${uni?`<td style="font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--yellow,#F5C518);white-space:nowrap">${ecEsc(r.codigo||'—')}</td>`:''}
       <td>${ecEsc(r.categoria)}${r.subtipo?`<div style="font-size:10.5px;color:var(--muted)">${ecEsc(r.subtipo)}</div>`:''}</td>
       <td>${ecEsc(r.modelo||'—')}</td>
       <td>${ecEsc(r.calibre||'—')}</td>
       <td style="font-variant-numeric:tabular-nums">${ecEsc(r.serie||'—')}</td>
       <td>${ecEsc(r.companhia||'—')}</td>
-      <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}</td>
+      <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}${r.em_cautela?`<div style="font-size:10.5px;color:#fdba74;margin-top:2px" title="${matAttr(r.em_cautela.cautela_id+' · '+r.em_cautela.missao)}">🛡️ em cautela: ${ecEsc(r.em_cautela.com)}</div>`:''}</td>
       <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
       <td>${ecEsc(r.responsavel||'—')}</td>
       <td>${ecEsc(r.validade||'—')}</td>
@@ -6398,7 +6407,9 @@ function matDistinct(tab, col){
   vals.sort(numerico ? (a,b)=>parseFloat(a.replace(',','.'))-parseFloat(b.replace(',','.')) : (a,b)=>a.localeCompare(b,'pt-BR'));
   return vals.slice(0,80);
 }
-function matKeyField(tab){ const c=matColumns(tab); return c.includes('Nº') ? 'Nº' : (c[0]||''); }
+function matKeyField(tab){ const c=matColumns(tab); return c.includes('Código') ? 'Código' : c.includes('Nº') ? 'Nº' : (c[0]||''); }
+// Planilha única: o código (ARM-0001…) e o "Nº antigo" são do sistema — não se digitam.
+function matCampoDoSistema(col){ return !!(MAT_DATA && MAT_DATA.planilha_unica) && (col==='Código' || col==='Nº antigo'); }
 // Próximo número da coluna-chave (maior valor numérico existente + 1).
 function matNextNum(tab, col){
   const arr = tab==='municao' ? (MAT_DATA.municao_itens||[]) : (MAT_DATA.itens||[]);
@@ -6419,8 +6430,9 @@ function openMatEditor(tab, row){
   if (!isNew && !item){ alert('Item não encontrado (a lista pode ter mudado). Recarregue a página.'); return; }
   const keyCol0 = matKeyField(tab);
   const raw = item ? {...item._raw} : {};
-  // Item novo: gera o "Nº" automaticamente (maior número existente + 1).
-  if (isNew && keyCol0) raw[keyCol0] = String(matNextNum(tab, keyCol0));
+  // Item novo: gera o "Nº" automaticamente (maior número existente + 1). Na planilha única
+  // quem gera o código (ARM-0001…) é o servidor.
+  if (isNew && keyCol0 && !matCampoDoSistema(keyCol0)) raw[keyCol0] = String(matNextNum(tab, keyCol0));
   MAT_EDIT = { tab, row: isNew?null:row, key: keyCol0 };
 
   const nomeAba = tab==='municao' ? 'munição' : 'material';
@@ -6432,6 +6444,16 @@ function openMatEditor(tab, row){
   const keyCol = matKeyField(tab);
   document.getElementById('me-body').innerHTML = cols.map((c,i)=>{
     const val = raw[c]!=null ? String(raw[c]) : '';
+    if (matCampoDoSistema(c)){
+      // código e nº antigo: só mostra (o servidor gera e protege)
+      return isNew && c==='Nº antigo' ? '' : `<div class="me-fg"><label>${ecEsc(c)}</label><input value="${matAttr(isNew?'gerado ao salvar':val)}" disabled></div>`;
+    }
+    if (c==='Linha da Parte' && MAT_DATA.planilha_unica){
+      // onde a peça conta na Parte Diária (TOTAL / NA RESERVA). Vazio = o servidor escolhe pelo modelo.
+      const atual = (val.match(/^I\d+/)||[''])[0];
+      const opts = (MAT_DATA.linhas_parte||[]).map(l=>`<option value="${matAttr(l.id+' - '+l.descricao)}"${l.id===atual?' selected':''}>${ecEsc(l.descricao)}</option>`).join('');
+      return `<div class="me-fg wide"><label>Linha da Parte Diária (onde esta peça conta)</label><select id="me-f-${i}" data-col="${matAttr(c)}"><option value="">${isNew?'— o sistema escolhe pelo modelo —':'— nenhuma (não sai na Parte) —'}</option>${opts}</select></div>`;
+    }
     const longo = /obs|observa|altera|descri|localiza/i.test(c);
     // Sem sugestões na coluna-chave (Nº) nem em campos de valor único (série,
     // patrimônio, modelo, datas, validade) — a lista de autocomplete só atrapalha.

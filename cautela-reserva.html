@@ -12,7 +12,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#060912;--bg2:#0b0f1a;--yellow:#F5C518;--text:#dde3f0;--muted:#94a3b8;--line:rgba(148,163,184,.16);--card:rgba(12,17,30,.88);
   --red:#ef4444;--redsoft:rgba(239,68,68,.13);--green:#34d399;--greensoft:rgba(52,211,153,.12);--orange:#fb923c;--orangesoft:rgba(251,146,60,.13);--blue:#60a5fa}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.45;min-height:100vh;-webkit-font-smoothing:antialiased;
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;min-height:100vh;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12) 0%,transparent 60%);background-attachment:fixed}
 .hdr{background:linear-gradient(100deg,#05070d,#0b0f1a 55%,#0d1220);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:50}
 .hdr-in{max-width:1500px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -24,61 +24,68 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .wrap{max-width:1500px;margin:0 auto;padding:18px 22px 80px}
 .faixa{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:12px;padding:10px 16px;margin-bottom:14px}
 .faixa b{color:#fff}
-.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-.tab{background:rgba(148,163,184,.07);border:1px solid var(--line);border-radius:10px;padding:10px 16px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-.tab .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:12px}.tab .n.zero{display:none}
+/* as ações: botões grandes, com o que fazem escrito embaixo */
+.acoesG{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.ac{position:relative;text-align:left;background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--text);font-family:inherit;cursor:pointer}
+.ac b{display:block;font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;line-height:1.15}.ac span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+.ac .ico{font-size:24px;display:block;margin-bottom:4px}
+.ac:hover{border-color:rgba(245,197,24,.4)}
+.ac.on{background:rgba(245,197,24,.13);border-color:rgba(245,197,24,.6)}.ac.on b{color:var(--yellow)}
+.ac .n{position:absolute;top:10px;right:12px;min-width:24px;padding:1px 8px;border-radius:999px;background:var(--red);color:#fff;font-size:13px;font-weight:800;text-align:center}.ac .n.zero{display:none}
 .pane{display:none}.pane.on{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-h2{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;margin-bottom:8px}
+h2{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff;margin-bottom:8px}
+h3{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--yellow);margin:4px 0 8px}
+.passo{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--yellow);color:#111;font-weight:800;font-size:14px;margin-right:8px}
 .muted{color:var(--muted);font-size:13px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .row>div{flex:1;min-width:150px}
-label{display:block;font-size:12px;font-weight:600;color:#cbd5e1;margin:8px 0 4px}
-input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-family:inherit;font-size:14px;outline:none}
+label{display:block;font-size:12.5px;font-weight:600;color:#cbd5e1;margin:8px 0 4px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:#e2e8f0;font-family:inherit;font-size:14.5px;outline:none}
 input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
 input[type=checkbox]{width:auto}
-.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:9px 15px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a;text-decoration:none}
+.btn.big{padding:13px 22px;font-size:15.5px}
 .btn.sec{background:rgba(148,163,184,.12);color:#cbd5e1;border:1px solid var(--line)}
 .btn.red{background:var(--redsoft);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
-.btn.sm{padding:5px 10px;font-size:12.5px}.btn:disabled{opacity:.5;cursor:default}
+.btn.verde{background:var(--greensoft);color:#6ee7b7;border:1px solid rgba(52,211,153,.45)}
+.btn.sm{padding:6px 11px;font-size:13px}.btn:disabled{opacity:.5;cursor:default}
+.pill{background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.pill.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
 .chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700;border:1px solid var(--line);white-space:nowrap}
 .chip.ok{background:var(--greensoft);border-color:rgba(52,211,153,.4);color:#6ee7b7}
 .chip.wait{background:var(--orangesoft);border-color:rgba(251,146,60,.45);color:#fdba74}
 .chip.bad{background:var(--redsoft);border-color:rgba(239,68,68,.45);color:#fca5a5}
 .chip.neu{background:rgba(148,163,184,.1);color:#cbd5e1}
-.msg{font-size:13px;margin-top:8px;min-height:18px}.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
+.msg{font-size:13.5px;margin-top:8px;min-height:18px}.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
 table.t1{width:100%;border-collapse:collapse}
-.t1 th{position:sticky;top:62px;background:#0d1220;color:var(--yellow);font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:8px 8px;border-bottom:1px solid rgba(245,197,24,.3);z-index:5}
-.t1 td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.t1 th{position:sticky;top:62px;background:#0d1220;color:var(--yellow);font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;text-align:left;padding:8px;border-bottom:1px solid rgba(245,197,24,.3);z-index:5}
+.t1 td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .t1 tr.grupo td{background:rgba(245,197,24,.07);color:var(--yellow);font-weight:700;font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:1px}
 .t1 tr.l:hover{background:rgba(148,163,184,.05);cursor:pointer}
-.t1 td.n,.t1 th.n{text-align:right;font-variant-numeric:tabular-nums}
+.t1 td.n,.t1 th.n{text-align:center;font-variant-numeric:tabular-nums}
 .t1 td.neg{color:#fca5a5;font-weight:700}.t1 td.div input{border-color:var(--orange);background:var(--orangesoft)}
-.t1 input.cnt{width:84px;text-align:right}
-.t1 .obs{color:var(--muted);font-size:12px;max-width:340px}
+.t1 input.cnt{width:90px;text-align:center}
+.t1 .obs{font-size:12.5px;max-width:380px;white-space:pre-line}.t1 .obs.v{color:#fca5a5}
 .det{background:rgba(2,6,14,.55);padding:12px 16px;border-left:3px solid var(--yellow)}
-.det table{width:100%;border-collapse:collapse;margin-top:6px}.det th,.det td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
-.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.filtros .f{background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
-.filtros .f.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-.res{border:1px solid var(--line);border-radius:10px;max-height:240px;overflow:auto;margin-top:6px}
-.res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);color:var(--text);padding:8px 12px;font-family:inherit;font-size:13.5px;cursor:pointer}
+.det table{width:100%;border-collapse:collapse;margin-top:6px}.det th,.det td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+.cod{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--yellow);font-size:13px}
+.res{border:1px solid var(--line);border-radius:10px;max-height:300px;overflow:auto;margin-top:6px}
+.res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);color:var(--text);padding:9px 12px;font-family:inherit;font-size:14px;cursor:pointer}
 .res button:hover{background:rgba(245,197,24,.08)}
 .sel-box{background:var(--greensoft);border:1px solid rgba(52,211,153,.4);border-radius:10px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.lista-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.lista-item .txt{flex:1;min-width:260px}
+.lista-item pre{font-family:inherit;white-space:pre-line;font-size:13px;color:#cbd5e1;margin-top:4px}
 .ovl{position:fixed;inset:0;background:rgba(2,6,14,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal{background:#0d1220;border:1px solid rgba(245,197,24,.4);border-radius:16px;padding:20px;width:100%;max-width:640px;max-height:92vh;overflow:auto}
 .modal .acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
-#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:10px 16px;border-radius:10px;z-index:300;display:none;max-width:90vw}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:11px 18px;border-radius:10px;z-index:300;display:none;max-width:90vw}
 .hidden{display:none!important}
 .bloqueio{max-width:560px;margin:60px auto;text-align:center}
-/* a Parte Diária (e o que vai para o SEI) é papel branco, letra preta */
-.papel{background:#fff;color:#000;padding:26px 30px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.35;overflow:auto}
-.papel table{border-collapse:collapse;width:100%;margin:6px 0 12px}
-.papel th,.papel td{border:1px solid #000;padding:3px 5px;vertical-align:top;font-size:11.5px}
-.papel th{background:#e8e8e8;text-transform:uppercase}
-.papel td.c{text-align:center}.papel .tit{text-align:center;font-weight:bold}
-.papel tr.div td{background:#fff3cd}
+.dica{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:10px}
+.dica ol{margin:6px 0 0 20px}.dica li{margin:3px 0}
+iframe#parte{width:100%;height:78vh;border:1px solid var(--line);border-radius:8px;background:#fff}
 @media(max-width:900px){.hdr-in{padding:8px 12px}}
 </style>
 </head>
@@ -90,162 +97,195 @@ table.t1{width:100%;border-collapse:collapse}
 </div></div>
 
 <main class="wrap">
-  <!-- celular -->
   <div id="so-pc" class="card bloqueio hidden">
     <h2>💻 Somente no computador</h2>
-    <p class="muted" style="margin-top:6px">A reserva de armamento (estoque, contagem, cautela e Parte Diária) precisa de tela grande e só funciona no computador. No celular você confere e assina as suas cautelas.</p>
-    <a class="btn" href="cautela.html" style="margin-top:14px;text-decoration:none">Ir para as minhas cautelas</a>
+    <p class="muted" style="margin-top:6px">A reserva de armamento só funciona no computador. No celular você confere e assina as suas cautelas.</p>
+    <a class="btn" href="cautela.html" style="margin-top:14px">Ir para as minhas cautelas</a>
   </div>
 
-  <!-- login -->
   <div id="login-box" class="card bloqueio hidden">
     <h2>Entrar na reserva de armamento</h2>
-    <p class="muted" style="margin:6px 0 14px"><b>Armeiro de serviço:</b> entre com o seu RE e a senha do <b>Portal do Policial</b>.<br><b>Chefia (P4 / comando):</b> login do dashboard.</p>
+    <p class="muted" style="margin:6px 0 14px"><b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br><b>Administrador (P4 / comando):</b> login do dashboard.</p>
     <div id="login-form" style="text-align:left"></div>
   </div>
 
-  <!-- sem papel -->
   <div id="sem-papel" class="card bloqueio hidden">
     <h2 id="sem-papel-h">🔒 Você não é o armeiro de serviço</h2>
     <p class="muted" style="margin-top:6px" id="sem-papel-txt"></p>
     <button class="btn hidden" id="sem-papel-re" type="button" style="margin-top:14px">Sair e entrar pelo RE</button>
-    <a class="btn" href="cautela.html" style="margin-top:14px;text-decoration:none">Ir para as minhas cautelas</a>
+    <a class="btn" href="cautela.html" style="margin-top:14px">Ir para as minhas cautelas</a>
   </div>
 
   <div id="app" class="hidden">
     <div class="faixa" id="faixa"></div>
     <div id="avisos"></div>
-    <div class="tabs" id="tabs">
-      <button class="tab on" data-p="reserva">📦 Reserva e contagem</button>
-      <button class="tab" data-p="cautelar">➕ Cautelar</button>
-      <button class="tab" data-p="campo">⏳ Em campo e pendências <span class="n zero" id="n-campo">0</span></button>
-      <button class="tab" data-p="passagem">📄 Passagem de serviço</button>
-      <button class="tab" data-p="historico">🕘 Histórico</button>
-      <button class="tab hidden" data-p="catalogo" id="tab-catalogo">⚙️ Catálogo (chefia)</button>
+    <div class="acoesG" id="acoes">
+      <button class="ac on" data-p="reserva"><span class="ico">📦</span><b>Reserva</b><span>o que tem e onde está</span></button>
+      <button class="ac" data-p="entregar"><span class="ico">📤</span><b>Entregar</b><span>material para um policial</span></button>
+      <button class="ac" data-p="receber"><span class="ico">📥</span><b>Receber de volta</b><span>o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
+      <button class="ac" data-p="conferir"><span class="ico">🔢</span><b>Conferir</b><span>contar a reserva</span></button>
+      <button class="ac" data-p="passar"><span class="ico">📄</span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
+      <button class="ac" data-p="historico"><span class="ico">🕘</span><b>Histórico</b><span>todas as cautelas</span></button>
+      <button class="ac hidden" data-p="admin" id="ac-admin"><span class="ico">⚙️</span><b>Administração</b><span>cadastrar e corrigir</span></button>
     </div>
 
-    <!-- ===== RESERVA ===== -->
+    <!-- ===== RESERVA (mesmas colunas da Parte) ===== -->
     <section class="pane on" id="p-reserva">
       <div class="card">
-        <div class="filtros" id="f-grupos"></div>
         <div class="row">
-          <div style="flex:2"><input id="q-res" placeholder="🔎 Buscar material (ex.: PT 100, ARAD, granada, 5,56)…"></div>
-          <div style="flex:none"><button class="btn sec" id="btn-preencher" type="button">Preencher com o esperado</button></div>
-          <div style="flex:none"><button class="btn" id="btn-contagem" type="button">💾 Salvar contagem</button></div>
+          <div style="flex:3"><input id="q-res" placeholder="🔎 Procurar: nome (PT 100, ARAD, granada), código (ARM-0012) ou nº de série"></div>
         </div>
-        <div class="muted" id="info-contagem" style="margin-top:8px"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="f-grupos"></div>
+        <p class="muted" style="margin-top:8px">Clique numa linha para ver cada peça, com o código e com quem está.</p>
       </div>
       <div class="card" style="padding:0"><table class="t1"><thead><tr>
-        <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva<br><span style="text-transform:none;letter-spacing:0">(esperado)</span></th><th class="n">Em missão</th><th class="n">Especial</th><th class="n">Contado</th><th>Obs</th>
+        <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva</th><th class="n">Missões</th><th>Obs</th>
       </tr></thead><tbody id="tb-res"></tbody></table></div>
     </section>
 
-    <!-- ===== CAUTELAR ===== -->
-    <section class="pane" id="p-cautelar">
+    <!-- ===== ENTREGAR ===== -->
+    <section class="pane" id="p-entregar">
       <div class="card">
-        <h2>1 · Quem recebe</h2>
-        <input id="c-q" placeholder="🔎 RE ou nome do policial…" autocomplete="off">
+        <h2><span class="passo">1</span>Quem vai receber?</h2>
+        <input id="c-q" placeholder="🔎 Digite o RE ou o nome do policial" autocomplete="off">
         <div class="res hidden" id="c-res"></div>
         <div id="c-pol"></div>
       </div>
       <div class="card">
-        <h2>2 · Missão e período</h2>
-        <div class="row">
-          <div><label>Tipo</label><select id="c-tipo"><option value="missao">Missão / operação</option><option value="servico">Serviço (turno)</option></select></div>
-          <div style="flex:2"><label>Missão / operação</label><input id="c-missao" list="dl-missoes" placeholder="ex.: 27º OPERAÇÃO PROTETOR"></div>
-          <div><label>Início</label><input id="c-ini" type="datetime-local"></div>
-          <div><label>Fim previsto</label><input id="c-fim" type="datetime-local"></div>
+        <h2><span class="passo">2</span>Para quê e até quando?</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="pill on" data-tipo="missao" type="button">🚓 Missão / operação</button>
+          <button class="pill" data-tipo="servico" type="button">🕐 Serviço do dia</button>
         </div>
-        <datalist id="dl-missoes"></datalist>
+        <div id="c-missao-box"><label>Nome da missão (é o título da tabela na Parte)</label><input id="c-missao" list="dl-missoes" placeholder="ex.: 27º OPERAÇÃO PROTETOR"><datalist id="dl-missoes"></datalist></div>
+        <label>Devolve até</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="c-prazos">
+          <button class="pill" data-dias="1" type="button">amanhã (24 h)</button>
+          <button class="pill on" data-dias="7" type="button">7 dias</button>
+          <button class="pill" data-dias="12" type="button">12 dias</button>
+          <button class="pill" data-dias="30" type="button">30 dias</button>
+        </div>
+        <div class="row"><div><label>Saída</label><input id="c-ini" type="datetime-local"></div><div><label>Volta prevista</label><input id="c-fim" type="datetime-local"></div></div>
       </div>
       <div class="card">
-        <h2>3 · Material</h2>
-        <input id="c-qi" placeholder="🔎 Buscar material para incluir (ex.: ARAD, PT 100, 5,56, carregador)…" autocomplete="off">
+        <h2><span class="passo">3</span>O que vai levar?</h2>
+        <input id="c-qi" placeholder="🔎 Nome do material, código (ARM-0012) ou nº de série" autocomplete="off">
         <div class="res hidden" id="c-resi"></div>
-        <table class="t1" style="margin-top:10px"><thead><tr><th>Material</th><th>Nº de série / quantidade</th><th>Na reserva</th><th></th></tr></thead><tbody id="c-carrinho"></tbody></table>
-        <div class="muted" id="c-vazio">Nenhum item ainda.</div>
+        <table class="t1" style="margin-top:10px"><thead><tr><th>Material</th><th>Qual peça / quantos</th><th class="n">Na reserva</th><th></th></tr></thead><tbody id="c-carrinho"></tbody></table>
+        <div class="muted" id="c-vazio" style="margin-top:6px">Nada ainda. Procure acima e clique para incluir.</div>
         <label>Observação (opcional)</label><input id="c-obs" maxlength="300">
         <div class="msg" id="c-msg"></div>
-        <button class="btn" id="btn-cautelar" type="button">✍️ Entregar o material e gerar a cautela</button>
+        <button class="btn big" id="btn-cautelar" type="button" style="margin-top:6px">✍️ Entregar e gerar a cautela</button>
       </div>
       <div id="c-ok"></div>
     </section>
 
-    <!-- ===== EM CAMPO ===== -->
-    <section class="pane" id="p-campo">
-      <div class="card"><h2>Material fora da reserva</h2><div class="muted">Ordenado pelo prazo: quem vence primeiro aparece em cima.</div></div>
-      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Policial</th><th>Missão</th><th>Material</th><th>Prazo</th><th>Situação</th><th></th></tr></thead><tbody id="tb-campo"></tbody></table></div>
+    <!-- ===== RECEBER DE VOLTA ===== -->
+    <section class="pane" id="p-receber">
+      <div class="card"><h2>Cautelas no sistema</h2><p class="muted">Quem vence primeiro aparece em cima. Clique em <b>📥 Receber</b> quando o material voltar.</p><div id="lista-cautelas" style="margin-top:10px"></div></div>
+      <div class="card"><h2>Missões que já estavam na Parte</h2><p class="muted">Material que saiu antes do sistema começar (veio da última Parte Diária). Quando voltar, clique em <b>📥 Voltou</b>: o sistema já sugere o que entra de volta na reserva — é só conferir.</p><div id="lista-anteriores" style="margin-top:10px"></div></div>
     </section>
 
-    <!-- ===== PASSAGEM ===== -->
-    <section class="pane" id="p-passagem">
+    <!-- ===== CONFERIR ===== -->
+    <section class="pane" id="p-conferir">
       <div class="card">
-        <h2>Passagem de serviço → Parte Diária</h2>
-        <p class="muted">Escolha quem te rende. O sistema monta a Parte Diária igual ao modelo do SEI com a reserva, as cautelas e o texto da passagem. Você confere, copia para o SEI e confirma a passagem com a sua senha — quem te rende aceita o plantão no celular dele.</p>
-        <div class="row" style="margin-top:6px">
-          <div style="flex:2"><label>Quem assume a reserva (substituto)</label><input id="s-q" placeholder="🔎 RE ou nome…" autocomplete="off"><div class="res hidden" id="s-res"></div><div id="s-pol"></div></div>
+        <h2>Conferir a reserva</h2>
+        <p class="muted">Conte o que está na reserva e digite na coluna <b>Contei</b>. Se bateu tudo, clique em <b>✔️ Tudo confere</b>. O que você contar passa a ser o número <b>NA RESERVA</b> da Parte.</p>
+        <div class="row" style="margin-top:8px">
+          <div style="flex:2"><input id="q-cnt" placeholder="🔎 Procurar material…"></div>
+          <div style="flex:none"><button class="btn verde" id="btn-tudo" type="button">✔️ Tudo confere</button></div>
+          <div style="flex:none"><button class="btn" id="btn-contagem" type="button">💾 Salvar a conferência</button></div>
+        </div>
+        <div class="muted" id="info-contagem" style="margin-top:8px"></div>
+      </div>
+      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
+    </section>
+
+    <!-- ===== PASSAR O SERVIÇO ===== -->
+    <section class="pane" id="p-passar">
+      <div class="card">
+        <h2><span class="passo">1</span>Quem assume a reserva?</h2>
+        <input id="s-q" placeholder="🔎 RE ou nome de quem te rende" autocomplete="off"><div class="res hidden" id="s-res"></div><div id="s-pol"></div>
+        <div class="row">
           <div><label>Serviço do dia</label><input id="s-de" placeholder="dd/mm/aaaa"></div>
           <div><label>Para o dia</label><input id="s-para" placeholder="dd/mm/aaaa"></div>
         </div>
-        <label>Alterações a registrar (opcional — vem antes do texto da passagem)</label><textarea id="s-extras" rows="2"></textarea>
-        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Cautelas que entram na Parte (<span id="s-ncau">0</span>)</summary><div id="s-cautelas" style="margin-top:6px"></div></details>
+        <label>Alterações do plantão (opcional — uma por linha)</label><textarea id="s-extras" rows="2" placeholder="ex.: Sem alterações."></textarea>
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">O que entra em "Cautela Missões" (<span id="s-nmis">0</span>)</summary><div id="s-missoes" style="margin-top:6px"></div></details>
         <div class="msg" id="s-msg"></div>
-        <div class="row" style="margin-top:10px">
-          <div style="flex:none"><button class="btn sec" id="btn-previa" type="button">👁️ Gerar prévia</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-copiar" type="button" disabled>📋 Copiar para o SEI</button></div>
-          <div style="flex:none"><button class="btn" id="btn-passar" type="button" disabled>✍️ Confirmar a passagem e assinar</button></div>
-        </div>
+        <button class="btn big" id="btn-previa" type="button" style="margin-top:6px">📄 Montar a Parte Diária</button>
       </div>
-      <div id="s-resumo"></div>
-      <div class="papel hidden" id="parte"></div>
+      <div id="s-pronta" class="hidden">
+        <div class="card">
+          <h2><span class="passo">2</span>Copie para o SEI</h2>
+          <div class="row">
+            <div style="flex:none"><button class="btn big" id="btn-fonte" type="button">🧾 Copiar o código (recomendado)</button></div>
+            <div style="flex:none"><button class="btn sec big" id="btn-copiar" type="button">📋 Copiar a Parte</button></div>
+          </div>
+          <div class="dica"><b>Como colar igualzinho no SEI:</b>
+            <ol><li>No SEI, abra a Parte Diária e clique no botão <b>Código-Fonte</b> (o ícone de página com &lt;/&gt;).</li>
+            <li>Apague o que estiver lá (Ctrl+A) e cole (Ctrl+V).</li>
+            <li>Clique de novo em <b>Código-Fonte</b> e salve. As tabelas saem com 1222,22 px, borda 1, centralizadas — igual ao modelo.</li></ol>
+            <span class="muted">Se preferir colar direto no texto, use "Copiar a Parte" — mas o SEI às vezes muda a largura das colunas.</span></div>
+          <div id="s-resumo" style="margin-top:10px"></div>
+        </div>
+        <div class="card"><h2><span class="passo">3</span>Confirme a passagem</h2><p class="muted">Depois de colar no SEI, assine aqui. Quem te rende aceita o plantão pelo celular dele (Portal do Policial → Cautela).</p>
+          <button class="btn big" id="btn-passar" type="button" style="margin-top:8px">✍️ Confirmar e assinar a passagem</button></div>
+        <iframe id="parte" title="Prévia da Parte Diária"></iframe>
+      </div>
     </section>
 
     <!-- ===== HISTÓRICO ===== -->
     <section class="pane" id="p-historico">
       <div class="card">
         <div class="row">
-          <div style="flex:2"><label>Buscar</label><input id="h-q" placeholder="policial, RE, missão, material ou nº de série"></div>
+          <div style="flex:2"><label>Procurar</label><input id="h-q" placeholder="policial, RE, missão, material, código ou nº de série"></div>
           <div><label>De</label><input id="h-de" type="date"></div><div><label>Até</label><input id="h-ate" type="date"></div>
-          <div><label>Situação</label><select id="h-st"><option value="">Todas</option><option value="aguardando">Aguardando assinatura</option><option value="ativa">Em posse</option><option value="parcial">Devolução parcial</option><option value="devolvida">Devolvida</option><option value="cancelada">Cancelada</option></select></div>
-          <div style="flex:none"><button class="btn" id="btn-hist" type="button">Buscar</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-csv" type="button">⬇️ CSV</button></div>
+          <div><label>Situação</label><select id="h-st"><option value="">Todas</option><option value="aguardando">Aguardando assinatura</option><option value="ativa">Com o policial</option><option value="parcial">Voltou só uma parte</option><option value="devolvida">Devolvida</option><option value="cancelada">Cancelada</option></select></div>
+          <div style="flex:none"><button class="btn" id="btn-hist" type="button">Procurar</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-csv" type="button">⬇️ Planilha (CSV)</button></div>
         </div>
         <div class="muted" id="h-escopo" style="margin-top:6px"></div>
       </div>
       <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Código</th><th>Policial</th><th>Missão</th><th>Material</th><th>Período</th><th>Situação</th></tr></thead><tbody id="tb-hist"></tbody></table></div>
     </section>
 
-    <!-- ===== CATÁLOGO ===== -->
-    <section class="pane" id="p-catalogo">
+    <!-- ===== ADMINISTRAÇÃO ===== -->
+    <section class="pane" id="p-admin">
       <div class="card">
-        <h2>Ferramentas da chefia</h2>
-        <div class="row">
-          <div style="flex:none"><button class="btn" id="btn-semear" type="button">🌱 Semear o catálogo (Parte 618)</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-importar" type="button">⬇️ Importar nº de série do Material Bélico</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-integ" type="button">🛡️ Verificar integridade do livro</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-novo-item" type="button">➕ Nova linha</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-nova-serie" type="button">➕ Nova série</button></div>
-        </div>
+        <h2>Administração</h2>
+        <p class="muted">Tudo fica na mesma planilha da reserva (a mesma que a página <b>Material Bélico</b> do dashboard mostra). Cadastrar aqui ou lá dá no mesmo.</p>
         <div class="row" style="margin-top:10px">
-          <div style="flex:none;min-width:220px"><label>Designar armeiro (RE)</label><input id="d-re" placeholder="RE do policial"></div>
+          <div style="flex:none"><button class="btn" id="btn-nova-peca" type="button">➕ Cadastrar arma / equipamento</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-nova-mun" type="button">➕ Lote de munição</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-corrigir" type="button">✏️ Corrigir os números de uma linha</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-nova-linha" type="button">➕ Linha nova na Parte</button></div>
+        </div>
+        <div class="msg" id="adm-msg"></div>
+      </div>
+      <div class="card">
+        <h3>Armeiro de serviço</h3>
+        <div class="row">
+          <div style="flex:none;min-width:240px"><label>Designar armeiro (RE)</label><input id="d-re" placeholder="RE do policial"></div>
           <div style="flex:none"><button class="btn sec" id="btn-designar" type="button">Designar</button></div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <div style="flex:none;min-width:220px"><label>Policial esqueceu a senha (RE)</label><input id="z-re" placeholder="RE do policial"></div>
-          <div style="flex:none;min-width:260px"><label>O que fazer</label><select id="z-modo"><option value="zerar">Zerar — ele cria outra no 1º acesso (CPF)</option><option value="provisoria">Senha provisória (cadastro sem CPF ou de outra unidade)</option></select></div>
+        <h3 style="margin-top:14px">Policial esqueceu a senha</h3>
+        <div class="row">
+          <div style="flex:none;min-width:240px"><label>RE</label><input id="z-re" placeholder="RE do policial"></div>
+          <div style="flex:none;min-width:280px"><label>O que fazer</label><select id="z-modo"><option value="zerar">Zerar — ele cria outra no 1º acesso (CPF)</option><option value="provisoria">Senha provisória (sem CPF no cadastro ou de outra unidade)</option></select></div>
           <div style="flex:none"><button class="btn sec" id="btn-zerar" type="button">🔑 Aplicar</button></div>
         </div>
-        <p class="muted" style="margin-top:6px">A senha é a do Portal do Policial (a mesma das Tarefas). Quem está na Central de Tarefas recebe a provisória pelo administrador da Central — aqui só zerar.</p>
+        <h3 style="margin-top:14px">Segurança do livro</h3>
+        <button class="btn sec" id="btn-integ" type="button">🛡️ Verificar se alguém mexeu na planilha</button>
         <div class="msg" id="cat-msg"></div>
       </div>
-      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Cód.</th><th>Descrição</th><th>Grupo</th><th>Controle</th><th class="n">Total</th><th class="n">P4</th><th class="n">Especial</th><th class="n">Legado</th><th></th></tr></thead><tbody id="tb-cat"></tbody></table></div>
     </section>
   </div>
 </main>
 <div id="toast"></div>
 
 <script>
-/* Entrada: senha ÚNICA do Portal do Policial (RE) ou login do dashboard — ver cautela-acesso.js. */
+/* Entrada: armeiro pelo RE + senha do Portal; administrador pelo login do dashboard — ver cautela-acesso.js. */
 const API_BASE = CA.API;
 const AUTH = { get token(){ return CA.token(); }, get logged(){ return !!CA.token(); } };
 const $ = (id) => document.getElementById(id);
@@ -253,8 +293,11 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&a
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
 const fQ = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
 const fN = (n) => Number(n).toLocaleString('pt-BR');
+const pad = (n) => n >= 1000 ? fN(n) : String(Math.max(0, n)).padStart(2, '0');
+const traco = (n) => n ? pad(n) : '-';
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 4500); }
+const compacto = (s) => norm(s).replace(/[^a-z0-9]/g, '');
+function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 5000); }
 function cab(extra){ const h = Object.assign({}, extra || {}); if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token; return h; }
 async function api(path, opt){
   const r = await fetch(API_BASE + path, Object.assign({ headers: cab() }, opt || {}));
@@ -265,8 +308,8 @@ async function api(path, opt){
 const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
 function falha(e){ if (e.status === 401){ CA.esquecer(); R = null; boot(); return; } toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi feito.' : e.message); }
 
-/* ---------------- modal ---------------- */
-function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura }){
+/* ---------------- janela (modal) ---------------- */
+function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura, depois }){
   return new Promise((resolve) => {
     const o = document.createElement('div'); o.className = 'ovl';
     o.innerHTML = `<div class="modal" ${largura ? `style="max-width:${largura}px"` : ''}><h2>${esc(titulo)}</h2><div id="mb">${corpo || ''}</div>
@@ -283,8 +326,8 @@ function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura }){
     };
     o.querySelector('#m-ok').onclick = fim;
     o.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') fim(); });
+    if (depois) depois(o);
     setTimeout(() => (o.querySelector('input,select') || o).focus(), 50);
-    o._fechar = fechar;
   });
 }
 const val = (m, id) => m.el.querySelector('#' + id).value;
@@ -303,8 +346,8 @@ function boot(){
   if (MOBILE){ show('so-pc', true); return; }
   if (!AUTH.logged){
     show('login-box', true);
-    CA.montar($('login-form'), { aoEntrar: boot, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Chefia (dashboard)',
-      notaDash: 'Só para a chefia (P4 / comando). O armeiro de serviço entra pela aba ao lado, com o RE e a senha do Portal do Policial.' });
+    CA.montar($('login-form'), { aoEntrar: boot, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Administrador (dashboard)',
+      notaDash: 'Só para o administrador (P4 / comando). O armeiro de serviço entra pela aba ao lado, com o RE e a senha do Portal do Policial.' });
     return;
   }
   carregar();
@@ -312,7 +355,7 @@ function boot(){
 
 /* ---------------- dados ---------------- */
 let R = null, GRUPO = '', CONTAGEM = {}, ABERTO = '';
-const ordenadoPorPrazo = (a, b) => Date.parse(a.fim_previsto) - Date.parse(b.fim_previsto);
+const linha = (id) => R.linhas.find(l => l.id === id);
 
 async function carregar(){
   try { R = await api('/api/cautela/reserva'); }
@@ -324,323 +367,336 @@ async function carregar(){
       $('sem-papel-h').textContent = e.code === 'use_re' ? '🪪 Armeiro: entre pelo seu RE' : '🔒 Você não é o armeiro de serviço';
       $('sem-papel-txt').textContent = e.code === 'somente_computador' ? 'Esta tela só funciona no computador.'
         : e.code === 'use_re' ? e.message
-        : 'Só o armeiro de serviço e a chefia (P4 / comando) abrem a reserva. O armeiro anterior precisa te indicar na passagem de serviço — depois você aceita o plantão em "Minhas cautelas", no celular.';
+        : 'Só o armeiro de serviço e o administrador (P4 / comando) abrem a reserva. Quem está de serviço te indica na passagem; depois você aceita em "Minhas cautelas", no celular.';
       return;
     }
-    show('app', true); $('faixa').innerHTML = '⚠️ ' + esc(e.message); return;
+    show('app', true); $('faixa').innerHTML = '⚠️ ' + esc(e.message) + (e.status === 503 ? ' <button class="btn sm sec" onclick="carregar()">Tentar de novo</button>' : ''); return;
   }
   show('app', true);
   $('userchip').textContent = '👤 ' + (R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome);
   CONTAGEM = {};
-  if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null ? '' : x.contado, obs: x.obs || '' };
-  $('tab-catalogo').classList.toggle('hidden', !R.papel.chefia);
-  renderFaixa(); renderReserva(); renderCarrinho(); renderCampo(); renderPassagemInfo();
-  if (R.vazio) $('faixa').insertAdjacentHTML('beforeend', '<span class="chip bad">Catálogo vazio — a chefia precisa semear (aba Catálogo)</span>');
+  if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
+  $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
+  $('dl-missoes').innerHTML = R.nomes_missao.map(n => `<option value="${esc(n)}">`).join('');
+  renderFaixa(); renderReserva(); renderCarrinho(); renderReceber(); renderConferir(); renderPassarInfo();
 }
 
 function renderFaixa(){
   const a = R.plantao.armeiro, p = R.plantao.pendente;
   $('faixa').innerHTML = `<span>🛡️ Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
-    + (p ? `<span class="chip wait">Passagem feita — aguardando o aceite de RE ${esc(p.re)}</span>` : '')
-    + (R.papel.chefia ? '<span class="chip neu">Você: chefia</span>' : '');
+    + (p ? `<span class="chip wait">Serviço passado — falta RE ${esc(p.re)} aceitar</span>` : '')
+    + (R.papel.chefia ? '<span class="chip neu">Você: administrador</span>' : '');
   const av = [];
-  if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker — sem ele, trocar o <code>JWT_SECRET</code> invalidaria todo o livro da Cautela.</div>');
+  if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker.</div>');
+  if (R.pecas_sem_linha && R.papel.chefia) av.push(`<div class="card" style="border-color:var(--orange)">⚠️ ${R.pecas_sem_linha} peça(s) do Material Bélico sem <b>linha da Parte</b> (ex.: Taser). Elas não podem ser cauteladas até alguém escolher a linha na página Material Bélico do dashboard.</div>`);
+  const neg = R.linhas.filter(l => l.reserva < 0);
+  if (neg.length) av.push(`<div class="card" style="border-color:var(--red)">⚠️ Reserva negativa em: ${neg.map(l => esc(l.descricao)).join(', ')}. Saiu mais do que a Parte dizia ter — confira e corrija na <b>🔢 Conferir</b>.</div>`);
   $('avisos').innerHTML = av.join('');
 }
 
 /* ===== reserva ===== */
+function casa(l, q, qc){
+  if (!q) return true;
+  if (norm(l.descricao + ' ' + l.obs).includes(q)) return true;
+  return qc.length >= 3 && l.pecas.some(p => compacto(p.codigo + ' ' + p.serie + ' ' + p.patrimonio).includes(qc));
+}
 function renderReserva(){
   const grupos = [...new Set(R.linhas.map(l => l.grupo))];
-  $('f-grupos').innerHTML = `<button class="f ${GRUPO === '' ? 'on' : ''}" data-g="">Tudo</button>` + R.grupos.filter(g => grupos.includes(g)).map(g => `<button class="f ${GRUPO === g ? 'on' : ''}" data-g="${esc(g)}">${esc(g)}</button>`).join('');
-  $('f-grupos').querySelectorAll('.f').forEach(b => b.onclick = () => { GRUPO = b.dataset.g; renderReserva(); });
-  const q = norm($('q-res').value);
-  // Na tela o material fica junto por grupo; a Parte Diária segue a ordem do PDF (campo `ordem`).
-  const gi = (g) => { const i = R.grupos.indexOf(g); return i < 0 ? 99 : i; };
-  const linhas = R.linhas.filter(l => (!GRUPO || l.grupo === GRUPO) && (!q || norm(l.descricao + ' ' + l.obs + ' ' + l.seriais.map(s => s.serie).join(' ')).includes(q)))
-    .sort((a, b) => gi(a.grupo) - gi(b.grupo));
-  let html = '', ult = '', diverg = 0;
+  $('f-grupos').innerHTML = `<button class="pill ${GRUPO === '' ? 'on' : ''}" data-g="">Tudo</button>` + R.grupos.filter(g => grupos.includes(g)).map(g => `<button class="pill ${GRUPO === g ? 'on' : ''}" data-g="${esc(g)}">${esc(g)}</button>`).join('');
+  $('f-grupos').querySelectorAll('.pill').forEach(b => b.onclick = () => { GRUPO = b.dataset.g; renderReserva(); });
+  const q = norm($('q-res').value), qc = compacto($('q-res').value);
+  const linhas = R.linhas.filter(l => (!GRUPO || l.grupo === GRUPO) && casa(l, q, qc));
+  let html = '', tab = 0;
   for (const l of linhas){
-    if (l.grupo !== ult){ html += `<tr class="grupo"><td colspan="8">${esc(l.grupo)}</td></tr>`; ult = l.grupo; }
-    const c = CONTAGEM[l.item_id] || { contado: '', obs: '' };
-    const dv = c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva);
-    if (dv) diverg++;
-    const fora = l.missoes + l.fora_legado;
-    html += `<tr class="l" data-id="${esc(l.item_id)}">
-      <td>${esc(l.descricao)} ${l.controle === 'serie' ? `<span class="chip neu">${l.seriais.length} série(s)</span>` : ''} ${l.revisar ? '<span class="chip wait" title="A Parte 618 somava mais que a carga">revisar carga</span>' : ''}</td>
-      <td class="n">${fN(l.total)}</td><td class="n">${l.p4 ? fN(l.p4) : '-'}</td>
-      <td class="n ${l.reserva < 0 ? 'neg' : ''}"><b>${fN(l.reserva)}</b></td>
-      <td class="n">${fora ? fN(fora) : '-'}${l.fora_legado ? ` <span class="chip neu" title="Parte 618: fora da reserva, sem cautela registrada">${fN(l.fora_legado)} legado</span>` : ''}</td>
-      <td class="n">${l.especial ? fN(l.especial) : '-'}</td>
-      <td class="n ${dv ? 'div' : ''}"><input class="cnt" inputmode="numeric" data-cnt="${esc(l.item_id)}" value="${esc(c.contado)}" placeholder="${Math.max(0, l.reserva)}"></td>
-      <td class="obs">${esc(l.obs)}${c.obs ? `<br><i>${esc(c.obs)}</i>` : ''}</td></tr>`;
-    if (ABERTO === l.item_id) html += `<tr><td colspan="8"><div class="det">${detalheLinha(l)}</div></td></tr>`;
+    if (l.tabela !== tab){ tab = l.tabela; html += `<tr class="grupo"><td colspan="6">${tab === 1 ? 'Armamento, carregadores e munição' : 'Equipamentos'}</td></tr>`; }
+    html += `<tr class="l" data-id="${esc(l.id)}">
+      <td><b>${esc(l.descricao)}</b>${l.pecas.length ? ` <span class="chip neu">${l.pecas.length} com código</span>` : ''}</td>
+      <td class="n"><b>${pad(l.total)}</b></td><td class="n">${traco(l.p4)}</td>
+      <td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.nota_reserva ? `<span class="muted">${esc(l.nota_reserva)}</span><br>` : ''}<b>${l.reserva < 0 ? l.reserva : pad(l.reserva)}</b></td>
+      <td class="n">${traco(l.missoes)}${l.em_cautela ? `<br><span class="chip wait" title="cautelas abertas no sistema">${l.em_cautela} no sistema</span>` : ''}</td>
+      <td class="obs ${l.obs_vermelha ? 'v' : ''}">${esc(l.obs) || '-'}</td></tr>`;
+    if (ABERTO === l.id) html += `<tr><td colspan="6"><div class="det">${detalheLinha(l)}</div></td></tr>`;
   }
-  $('tb-res').innerHTML = html || '<tr><td colspan="8" class="muted">Nada encontrado.</td></tr>';
-  $('tb-res').querySelectorAll('tr.l').forEach(tr => tr.onclick = (e) => { if (e.target.tagName === 'INPUT') return; ABERTO = ABERTO === tr.dataset.id ? '' : tr.dataset.id; renderReserva(); });
-  $('tb-res').querySelectorAll('input[data-cnt]').forEach(i => i.oninput = () => {
-    const id = i.dataset.cnt; CONTAGEM[id] = Object.assign(CONTAGEM[id] || { obs: '' }, { contado: i.value.replace(/\D/g, '') });
-    const l = R.linhas.find(x => x.item_id === id); i.parentElement.classList.toggle('div', i.value !== '' && Number(i.value) !== Math.max(0, l.reserva));
-    infoContagem();
-  });
-  $('tb-res').querySelectorAll('[data-esp]').forEach(b => b.onclick = () => enviarEspecial(b.dataset.esp, b.dataset.serie));
-  infoContagem();
-}
-function infoContagem(){
-  const n = Object.values(CONTAGEM).filter(x => x.contado !== '').length;
-  const dv = R.linhas.filter(l => { const c = CONTAGEM[l.item_id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); }).length;
-  $('info-contagem').innerHTML = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv} divergência(s)</b>`
-    + (R.contagem ? ` · última contagem salva em ${fQ(R.contagem.em)}` : ' · contagem ainda não salva neste plantão');
+  $('tb-res').innerHTML = html || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
+  $('tb-res').querySelectorAll('tr.l').forEach(tr => tr.onclick = () => { ABERTO = ABERTO === tr.dataset.id ? '' : tr.dataset.id; renderReserva(); });
 }
 function detalheLinha(l){
-  const sit = { reserva: 'Na reserva', cautela_p4: 'Carga pessoal (P4)', missao: 'Em missão', manutencao: 'Manutenção', pericia: 'Perícia', extraviado: 'Extraviado', danificado: 'Danificado', descarga: 'Descarga', baixa: 'Baixa', vencido: 'Vencido' };
-  const opts = ['manutencao', 'pericia', 'extraviado', 'danificado', 'descarga', 'baixa', 'reserva'].map(k => `<option value="${k}">${sit[k]}</option>`).join('');
-  let h = l.obs ? `<div class="muted">${esc(l.obs)}</div>` : '';
-  if (l.seriais.length){
-    h += `<table><tr><th>Nº de série</th><th>Tombo</th><th>Situação</th><th>Em cautela</th><th>Mudar situação</th></tr>` + l.seriais.map(s => `<tr><td><b>${esc(s.serie)}</b></td><td>${esc(s.tombo)}</td>
-      <td><span class="chip ${s.disponivel ? 'ok' : s.em_cautela ? 'wait' : 'neu'}">${esc(s.em_cautela ? 'Em cautela' : sit[s.situacao] || s.situacao)}</span> ${esc(s.responsavel)}</td><td>${esc(s.em_cautela)}</td>
-      <td>${s.em_cautela ? '' : `<select id="sit-${esc(s.serie_id)}">${opts}</select> <button class="btn sm sec" data-esp="${esc(l.item_id)}" data-serie="${esc(s.serie_id)}">Aplicar</button>`}</td></tr>`).join('') + '</table>';
-  } else h += '<div class="muted" style="margin-top:6px">Material controlado só por quantidade.</div>';
-  h += `<div style="margin-top:10px"><button class="btn sm sec" data-esp="${esc(l.item_id)}" data-serie="">Tirar / devolver unidades do serviço (perícia, manutenção, extravio…)</button></div>`;
-  return h;
-}
-async function enviarEspecial(item, serie){
-  const l = R.linhas.find(x => x.item_id === item);
-  const corpo = serie ? '<div class="muted">A situação escolhida na lista será registrada para este número de série.</div><label>Motivo</label><input id="e-mot" placeholder="ex.: apreendida em ocorrência, protocolo…">'
-    : `<label>Unidades (use número negativo para devolver ao serviço)</label><input id="e-qtd" type="number" value="1"><label>Motivo</label><input id="e-mot" placeholder="ex.: 2 em manutenção na DMB">`;
-  const m = await modal({ titulo: l.descricao, corpo });
-  if (!m) return;
-  const body = { item_id: item, motivo: val(m, 'e-mot'), senha: m.senha };
-  if (serie){ body.serie_id = serie; body.situacao = document.getElementById('sit-' + serie).value; } else body.delta = Number(val(m, 'e-qtd'));
-  try { await apiPost('/api/cautela/especial', body); toast('Registrado.'); await carregar(); } catch(e){ falha(e); }
+  if (!l.pecas.length) return `<div class="muted">Este material é controlado só pela quantidade (sem código por peça).${R.papel.chefia ? ' Para dar código a cada peça, cadastre-as em ⚙️ Administração.' : ''}</div>`;
+  return `<table><tr><th>Código</th><th>Nº de série</th><th>Patrimônio</th><th>Modelo</th><th>Onde está</th></tr>` + l.pecas.map(p => `<tr><td class="cod">${esc(p.codigo)}</td><td><b>${esc(p.serie || '-')}</b></td><td>${esc(p.patrimonio || '-')}</td><td>${esc(p.modelo)}</td>
+    <td>${p.em_cautela ? `<span class="chip wait">com ${esc(p.com)}</span> <span class="muted">${esc(p.em_cautela)}</span>` : p.disponivel ? '<span class="chip ok">na reserva</span>' : `<span class="chip neu">${esc(p.situacao)}</span> <span class="muted">${esc(p.responsavel)}</span>`}</td></tr>`).join('') + '</table>'
+    + `<div class="muted" style="margin-top:6px">${l.pecas.length} de ${l.total} peças têm código. ${l.total > l.pecas.length ? 'As outras são controladas só pela quantidade.' : ''}</div>`;
 }
 $('q-res').oninput = renderReserva;
-$('btn-preencher').onclick = () => { R.linhas.forEach(l => { if (!CONTAGEM[l.item_id] || CONTAGEM[l.item_id].contado === '') CONTAGEM[l.item_id] = Object.assign(CONTAGEM[l.item_id] || { obs: '' }, { contado: String(Math.max(0, l.reserva)) }); }); renderReserva(); };
-$('btn-contagem').onclick = async () => {
-  const dv = R.linhas.filter(l => { const c = CONTAGEM[l.item_id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); });
-  const corpo = dv.length ? `<div class="muted">Divergências — escreva o que houve (vai na coluna OBS da Parte):</div>` + dv.map(l => `<label>${esc(l.descricao)} · esperado ${Math.max(0, l.reserva)}, contado ${CONTAGEM[l.item_id].contado}</label><input data-obs="${esc(l.item_id)}" value="${esc(CONTAGEM[l.item_id].obs)}">`).join('') : '<div class="muted">Sem divergências. Salvar a contagem?</div>';
-  const m = await modal({ titulo: 'Salvar a contagem', corpo, senha: false, ok: 'Salvar' });
-  if (!m) return;
-  m.el.querySelectorAll('[data-obs]').forEach(i => { CONTAGEM[i.dataset.obs].obs = i.value; });
-  try {
-    const linhas = {}; for (const [id, c] of Object.entries(CONTAGEM)) if (c.contado !== '' || c.obs) linhas[id] = { contado: c.contado === '' ? null : Number(c.contado), obs: c.obs };
-    await apiPost('/api/cautela/contagem', { linhas }); toast('Contagem salva.'); await carregar();
-  } catch(e){ falha(e); }
-};
 
-/* ===== cautelar ===== */
-let POL = null, CARRO = [];
-function picker({ campo, res, destino, onPick, todos }){
+/* ===== entregar ===== */
+let POL = null, CARRO = [], TIPO = 'missao';
+function picker({ campo, res, onPick, todos }){
   let t;
   $(campo).oninput = () => { clearTimeout(t); t = setTimeout(async () => {
     const q = $(campo).value.trim(); if (q.length < 2){ show(res, false); return; }
     try {
       const d = await api('/api/cautela/policiais?q=' + encodeURIComponent(q) + (todos ? '&todos=1' : ''));
-      $(res).innerHTML = d.policiais.map((p, i) => `<button data-i="${i}"><span><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> <span class="muted">· RE ${esc(p.re)} · ${esc(p.opm)}</span></span><span class="chip ${p.tem_conta ? 'ok' : 'wait'}">${p.tem_conta ? 'pode assinar' : 'sem senha ainda'}</span></button>`).join('') || '<div class="muted" style="padding:10px">Ninguém encontrado.</div>';
+      $(res).innerHTML = d.policiais.map((p, i) => `<button data-i="${i}" type="button"><span><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> <span class="muted">· RE ${esc(p.re)} · ${esc(p.opm)}</span></span><span class="chip ${p.tem_conta ? 'ok' : 'wait'}">${p.tem_conta ? 'pode assinar' : 'sem senha ainda'}</span></button>`).join('') || '<div class="muted" style="padding:10px">Ninguém encontrado.</div>';
       show(res, true);
       $(res).querySelectorAll('button').forEach(b => b.onclick = () => { const p = d.policiais[b.dataset.i]; show(res, false); $(campo).value = ''; onPick(p); });
     } catch(e){ falha(e); }
   }, 250); };
 }
-picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); }, todos: true });
+picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); $('c-missao').focus(); }, todos: true });
 function renderPol(){
-  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '✅ Já tem a senha do Portal: assina o recebimento pelo celular.' : '⚠️ Ainda não criou a senha do Portal. Peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF), senão não terá como assinar.'}</span></div><button class="btn sm sec" id="c-troca">trocar</button></div>` : '';
+  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '✅ Assina o recebimento pelo celular, com a senha do Portal.' : '⚠️ Ainda não criou a senha do Portal: peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF).'}</span></div><button class="btn sm sec" id="c-troca" type="button">trocar</button></div>` : '';
   if (POL) $('c-troca').onclick = () => { POL = null; renderPol(); };
 }
 function dtLocal(ms){ const d = new Date(ms - 4 * 3600e3); return d.toISOString().slice(0, 16); }
-function resetCautelar(){
-  POL = null; CARRO = []; renderPol(); renderCarrinho();
-  $('c-ini').value = dtLocal(Date.now()); $('c-fim').value = dtLocal(Date.now() + 7 * 86400e3); $('c-missao').value = ''; $('c-obs').value = '';
-}
 const doLocal = (v) => new Date(v + ':00-04:00').toISOString();
-
-/* busca de material: pelo nome OU pelo nº de série (ignora espaço, traço e maiúscula: "b2301433" acha "B 230-1433") */
-const compacto = (s) => norm(s).replace(/[^a-z0-9]/g, '');
+function prazo(dias){
+  document.querySelectorAll('#c-prazos .pill').forEach(b => b.classList.toggle('on', Number(b.dataset.dias) === dias));
+  const ini = $('c-ini').value ? Date.parse(doLocal($('c-ini').value)) : Date.now();
+  $('c-fim').value = dtLocal(ini + dias * 86400e3);
+}
+document.querySelectorAll('#c-prazos .pill').forEach(b => b.onclick = () => prazo(Number(b.dataset.dias)));
+document.querySelectorAll('[data-tipo]').forEach(b => b.onclick = () => {
+  TIPO = b.dataset.tipo; document.querySelectorAll('[data-tipo]').forEach(x => x.classList.toggle('on', x === b));
+  show('c-missao-box', TIPO === 'missao'); prazo(TIPO === 'servico' ? 1 : 7);
+});
+function resetEntregar(){
+  POL = null; CARRO = []; renderPol(); renderCarrinho();
+  $('c-ini').value = dtLocal(Date.now()); prazo(TIPO === 'servico' ? 1 : 7); $('c-missao').value = ''; $('c-obs').value = '';
+}
+// procurar o que entregar: pelo nome, pelo código (ARM-0012) ou pelo nº de série (sem ligar para espaço/traço)
 $('c-qi').oninput = () => {
   const bruto = $('c-qi').value.trim(), q = norm(bruto), qc = compacto(bruto);
   if (q.length < 2){ show('c-resi', false); return; }
-  const aviso = (t) => `<div class="muted" style="padding:10px;line-height:1.5">${t}</div>`;
-  if (!R.linhas.length){
-    $('c-resi').innerHTML = aviso('O catálogo da reserva ainda está <b>vazio</b>. A chefia precisa clicar em <b>🌱 Semear o catálogo</b> e depois em <b>⬇️ Importar nº de série</b>, na aba ⚙️ Catálogo.');
-    show('c-resi', true); return;
-  }
-  // 1) número de série (a partir de 3 caracteres)
-  const porSerie = [];
-  if (qc.length >= 3) for (const l of R.linhas) for (const s of l.seriais) if (compacto(s.serie).includes(qc)) porSerie.push({ l, s });
-  // 2) nome do material
+  const pecas = [];
+  if (qc.length >= 3) for (const l of R.linhas) for (const p of l.pecas) if (compacto(p.codigo).includes(qc) || compacto(p.serie).includes(qc) || compacto(p.patrimonio).includes(qc)) pecas.push({ l, p });
   const porNome = R.linhas.filter(l => norm(l.descricao).includes(q)).slice(0, 14);
-  const chipSerie = (s) => s.disponivel ? '<span class="chip ok">disponível</span>'
-    : s.em_cautela ? '<span class="chip bad">já cautelada</span>'
-    : `<span class="chip wait">${esc(String(s.situacao || 'fora').replace('_', ' '))}</span>`;
-  const html = porSerie.slice(0, 14).map((x, i) => `<button data-s="${i}"><span>Nº <b>${esc(x.s.serie)}</b> · ${esc(x.l.descricao)}</span>${chipSerie(x.s)}</button>`).join('')
-    + porNome.map(l => `<button data-id="${esc(l.item_id)}"><span>${esc(l.descricao)}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">reserva ${l.reserva}</span></button>`).join('');
-  let vazio = 'Nada encontrado.';
-  if (!html){
-    const temSerie = R.linhas.some(l => l.seriais.length);
-    const pareceSerie = /\d/.test(bruto) && qc.length >= 4;
-    if (pareceSerie && !temSerie) vazio = 'Nenhum nº de série foi importado ainda. A chefia precisa clicar em <b>⬇️ Importar nº de série do Material Bélico</b> (aba ⚙️ Catálogo). Enquanto isso, busque pelo nome do material (ex.: PT 100).';
-    else if (pareceSerie) vazio = `Nenhum material com o nº de série <b>${esc(bruto)}</b>. Confira o número. Se a arma existe, ela pode ter ficado <b>sem linha</b> na importação (ex.: ARAD) — a chefia cadastra em <b>➕ Nova série</b>. Também dá para buscar pelo nome do material.`;
-  }
-  $('c-resi').innerHTML = html || aviso(vazio);
+  const chip = (p) => p.disponivel ? '<span class="chip ok">na reserva</span>' : p.em_cautela ? `<span class="chip bad">com ${esc(p.com)}</span>` : `<span class="chip wait">${esc(p.situacao)}</span>`;
+  const html = pecas.slice(0, 14).map((x, i) => `<button data-p="${i}" type="button"><span><span class="cod">${esc(x.p.codigo)}</span> · ${esc(x.l.descricao)}${x.p.serie ? ' · Nº <b>' + esc(x.p.serie) + '</b>' : ''}</span>${chip(x.p)}</button>`).join('')
+    + porNome.map(l => `<button data-id="${esc(l.id)}" type="button"><span>${esc(l.descricao)}${l.disponiveis ? ` <span class="muted">· ${l.disponiveis} com código disponíveis</span>` : ''}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">${l.reserva} na reserva</span></button>`).join('');
+  $('c-resi').innerHTML = html || `<div class="muted" style="padding:10px">Nada com "${esc(bruto)}". Confira o número ou procure pelo nome (ex.: PT 100).</div>`;
   show('c-resi', true);
-  const fechar = () => { show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); };
-  $('c-resi').querySelectorAll('[data-id]').forEach(b => b.onclick = () => { CARRO.push({ item_id: b.dataset.id, qtd: 1, serie_id: '', legado: false }); fechar(); });
-  $('c-resi').querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
-    const { l, s } = porSerie[b.dataset.s];
-    if (!s.disponivel){ toast(s.em_cautela ? `O Nº ${s.serie} já está cautelado (${s.em_cautela}).` : `O Nº ${s.serie} não está na reserva (${String(s.situacao || '').replace('_', ' ')}).`); return; }
-    if (CARRO.some(x => x.serie_id === s.serie_id)){ toast(`O Nº ${s.serie} já está na lista.`); return; }
-    CARRO.push({ item_id: l.item_id, qtd: 1, serie_id: s.serie_id, legado: false }); fechar();
+  const fechar = () => { show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); $('c-qi').focus(); };
+  $('c-resi').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+    const l = linha(b.dataset.id);
+    const livre = l.pecas.find(p => p.disponivel && !CARRO.some(x => x.codigo === p.codigo));
+    CARRO.push({ item_id: l.id, qtd: 1, codigo: livre ? livre.codigo : '' }); fechar();
+  });
+  $('c-resi').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    const { l, p } = pecas[b.dataset.p];
+    if (!p.disponivel){ toast(p.em_cautela ? `${p.codigo} está com ${p.com}.` : `${p.codigo} não está na reserva (${p.situacao}).`); return; }
+    if (CARRO.some(x => x.codigo === p.codigo)){ toast(`${p.codigo} já está na lista.`); return; }
+    CARRO.push({ item_id: l.id, qtd: 1, codigo: p.codigo }); fechar();
   });
 };
 function renderCarrinho(){
   if (!R) return;
   show('c-vazio', !CARRO.length);
   $('c-carrinho').innerHTML = CARRO.map((x, i) => {
-    const l = R.linhas.find(y => y.item_id === x.item_id);
-    const livres = l.seriais.filter(s => s.disponivel && !CARRO.some((y, j) => j !== i && y.serie_id === s.serie_id));
-    const campo = livres.length ? `<select data-i="${i}" data-k="serie"><option value="">sem número de série (por quantidade)</option>${livres.map(s => `<option value="${esc(s.serie_id)}" ${x.serie_id === s.serie_id ? 'selected' : ''}>Nº ${esc(s.serie)}</option>`).join('')}</select>` : '';
-    const qtd = x.serie_id ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:110px;margin-top:${livres.length ? 6 : 0}px">`;
-    return `<tr><td>${esc(l.descricao)}</td><td>${campo}${qtd}${l.fora_legado ? `<label style="margin-top:6px"><input type="checkbox" data-i="${i}" data-k="legado" ${x.legado ? 'checked' : ''}> já estava fora da reserva (abater dos ${l.fora_legado} do legado)</label>` : ''}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}">✕</button></td></tr>`;
+    const l = linha(x.item_id);
+    const livres = l.pecas.filter(p => p.disponivel && !CARRO.some((y, j) => j !== i && y.codigo === p.codigo));
+    const campo = livres.length || x.codigo ? `<select data-i="${i}" data-k="codigo">${l.pecas.length > 0 ? '' : ''}<option value="">sem código (só a quantidade)</option>${livres.map(p => `<option value="${esc(p.codigo)}" ${x.codigo === p.codigo ? 'selected' : ''}>${esc(p.codigo)}${p.serie ? ' · Nº ' + esc(p.serie) : ''}</option>`).join('')}</select>` : '';
+    const qtd = x.codigo ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:120px;margin-top:${campo ? 6 : 0}px"> <span class="muted">unidade(s)</span>`;
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${qtd}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}" type="button">✕</button></td></tr>`;
   }).join('');
   $('c-carrinho').querySelectorAll('[data-k]').forEach(el => el.onchange = el.oninput = () => {
     const x = CARRO[el.dataset.i], k = el.dataset.k;
-    if (k === 'serie'){ x.serie_id = el.value; if (el.value) x.qtd = 1; renderCarrinho(); }
-    else if (k === 'qtd') x.qtd = Math.max(1, Number(el.value) || 1);
-    else x.legado = el.checked;
+    if (k === 'codigo'){ x.codigo = el.value; x.qtd = 1; renderCarrinho(); }
+    else x.qtd = Math.max(1, Number(el.value) || 1);
   });
   $('c-carrinho').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { CARRO.splice(b.dataset.rm, 1); renderCarrinho(); });
 }
 $('btn-cautelar').onclick = async () => {
   const m = $('c-msg'); m.className = 'msg err'; m.textContent = '';
-  if (!POL){ m.textContent = 'Escolha o policial.'; return; }
-  if (!CARRO.length){ m.textContent = 'Inclua pelo menos um item.'; return; }
-  if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Informe o início e o fim previsto.'; return; }
-  const resumo = `<div class="muted"><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> vai receber:</div><div class="muted" style="margin-top:6px">` + CARRO.map(x => { const l = R.linhas.find(y => y.item_id === x.item_id); const s = l.seriais.find(y => y.serie_id === x.serie_id); return `• ${x.qtd}× ${esc(l.descricao)}${s ? ' (Nº ' + esc(s.serie) + ')' : ''}`; }).join('<br>') + '</div>';
+  if (!POL){ m.textContent = 'Passo 1: escolha quem vai receber.'; return; }
+  if (TIPO === 'missao' && $('c-missao').value.trim().length < 3){ m.textContent = 'Passo 2: escreva o nome da missão.'; return; }
+  if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Passo 2: informe a saída e a volta prevista.'; return; }
+  if (!CARRO.length){ m.textContent = 'Passo 3: inclua pelo menos um material.'; return; }
+  const resumo = `<div class="muted"><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> vai levar:</div><div style="margin-top:6px;line-height:1.7">` + CARRO.map(x => `• ${x.qtd}× ${esc(linha(x.item_id).descricao)}${x.codigo ? ` <span class="cod">${esc(x.codigo)}</span>` : ''}`).join('<br>') + '</div>';
   const mm = await modal({ titulo: 'Entregar o material', corpo: resumo, ok: '✍️ Assinar e entregar' });
   if (!mm) return;
-  const corpo = { re: POL.re, tipo: $('c-tipo').value, missao: $('c-missao').value, inicio: doLocal($('c-ini').value), fim_previsto: doLocal($('c-fim').value), obs: $('c-obs').value,
-    itens: CARRO.map(x => ({ item_id: x.item_id, qtd: x.qtd, serie_id: x.serie_id || undefined, abate_legado: x.legado })), senha: mm.senha };
+  const corpo = { re: POL.re, tipo: TIPO, missao: TIPO === 'missao' ? $('c-missao').value : '', inicio: doLocal($('c-ini').value), fim_previsto: doLocal($('c-fim').value), obs: $('c-obs').value,
+    itens: CARRO.map(x => x.codigo ? { item_id: x.item_id, codigo: x.codigo } : { item_id: x.item_id, qtd: x.qtd }), senha: mm.senha };
   try {
     let d;
     try { d = await apiPost('/api/cautela/cautelar', corpo); }
     catch(e){
-      if (e.code === 'sem_saldo' && confirm(e.message + '\n\nCautelar assim mesmo?')) d = await apiPost('/api/cautela/cautelar', Object.assign(corpo, { confirmar_sem_saldo: true }));
+      if (e.code === 'sem_saldo' && confirm(e.message + '\n\nO sistema diz que não tem tudo isso na reserva. Entregar assim mesmo?')) d = await apiPost('/api/cautela/cautelar', Object.assign(corpo, { confirmar_sem_saldo: true }));
       else throw e;
     }
     const url = new URL('cautela.html?c=' + d.cautela_id, location.href).href;
-    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Cautela ${esc(d.cautela_id)} registrada</h2>
-      <p class="muted">${d.policial_tem_conta ? 'O policial já pode abrir a <b>Cautela no Portal do Policial</b> (celular), conferir e assinar com a senha dele.' : '⚠️ O policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) no Portal do Policial → Cautela antes de assinar.'}${d.sem_saldo ? '<br>⚠️ Foi lançada com saldo insuficiente na reserva — confira a carga.' : ''}</p>
+    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Entregue · cautela ${esc(d.cautela_id)}</h2>
+      <p class="muted">${d.policial_tem_conta ? 'Agora o policial abre a <b>Cautela no Portal do Policial</b> (celular), confere e assina com a senha dele.' : '⚠️ O policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) no Portal do Policial → Cautela antes de assinar.'}${d.sem_saldo ? '<br>⚠️ Saiu mais do que o sistema tinha na reserva — confira na 🔢 Conferir.' : ''}</p>
       <p class="muted" style="margin-top:6px">Link para o policial: <a style="color:var(--yellow)" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p></div>`;
-    resetCautelar(); toast('Cautela registrada.'); await carregar();
+    resetEntregar(); toast('Material entregue.'); await carregar();
   } catch(e){ falha(e); }
 };
 
-/* ===== em campo ===== */
-function renderCampo(){
-  const lista = R.cautelas_abertas.slice().sort(ordenadoPorPrazo);
-  const urgentes = R.pendencias.length;
-  const n = $('n-campo'); n.textContent = urgentes; n.classList.toggle('zero', !urgentes);
-  const AL = { aguardando_assinatura: ['wait', 'Aguardando assinatura do policial'], vencida: ['bad', 'Prazo vencido'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_parcial: ['wait', 'Devolução parcial'], devolucao_sem_assinatura: ['wait', 'Devolução sem assinatura'] };
-  $('tb-campo').innerHTML = lista.map(c => `<tr>
-    <td><b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b><br><span class="muted">RE ${esc(c.policial.re)} · ${esc(c.cautela_id)}</span></td>
-    <td>${esc(c.missao)}<br><span class="muted">${c.tipo === 'servico' ? 'serviço' : 'missão'}</span></td>
-    <td>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '<s>'}${i.qtd}× ${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}${i.qtd - i.devolvido > 0 ? '' : '</s>'}`).join('<br>')}</td>
-    <td>${fQ(c.fim_previsto)}</td>
-    <td>${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'}</td>
-    <td style="white-space:nowrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}">Cancelar</button>` : `<button class="btn sm" data-a="devolver" data-id="${esc(c.cautela_id)}">↩️ Devolução</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}">⏱️ Prorrogar</button></td></tr>`).join('')
-    || '<tr><td colspan="6" class="muted">Nenhum material fora da reserva. 👍</td></tr>';
-  $('tb-campo').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCampo(b.dataset.a, b.dataset.id));
+/* ===== receber de volta ===== */
+const AL = { aguardando_assinatura: ['wait', 'Falta o policial assinar'], vencida: ['bad', 'Passou do prazo'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_parcial: ['wait', 'Voltou só uma parte'], devolucao_sem_assinatura: ['wait', 'Falta assinar a devolução'] };
+function renderReceber(){
+  const lista = R.cautelas_abertas.slice().sort((a, b) => Date.parse(a.fim_previsto) - Date.parse(b.fim_previsto));
+  const ant = R.missoes_anteriores.filter(m => !m.devolvido_em);
+  const n = $('n-receber'); n.textContent = lista.length + ant.length; n.classList.toggle('zero', !(lista.length + ant.length));
+  $('lista-cautelas').innerHTML = lista.map(c => `<div class="lista-item"><div class="txt">
+      <b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b> <span class="muted">· ${esc(c.missao)} · volta até ${fQ(c.fim_previsto)}</span><br>
+      <pre>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '✔ '}${i.qtd}× ${i.descricao}${i.codigo ? ' [' + i.codigo + ']' : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join('\n')}</pre>
+      <div style="margin-top:4px">${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'} <span class="muted">${esc(c.cautela_id)}</span></div></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button">📥 Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div></div>`).join('')
+    || '<div class="muted">Nenhuma cautela aberta. 👍</div>';
+  $('lista-cautelas').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCautela(b.dataset.a, b.dataset.id));
+  $('lista-anteriores').innerHTML = ant.map(m => `<div class="lista-item"><div class="txt">
+      <b>${esc(m.posto)} ${esc(m.nome)}</b> <span class="muted">· ${esc(m.titulo)} · desde ${esc(m.inicio)}</span>
+      <pre>${esc([m.armamento, m.municao, m.acessorios].filter(Boolean).join('\n'))}</pre>${m.alteracoes ? `<div class="muted" style="color:#fca5a5">${esc(m.alteracoes)}</div>` : ''}</div>
+    <div><button class="btn" data-ant="${esc(m.id)}" type="button">📥 Voltou</button></div></div>`).join('') || '<div class="muted">Todas as missões antigas já voltaram. 👍</div>';
+  $('lista-anteriores').querySelectorAll('[data-ant]').forEach(b => b.onclick = () => voltouAnterior(b.dataset.ant));
 }
-async function acaoCampo(a, id){
+async function acaoCautela(a, id){
   const c = R.cautelas_abertas.find(x => x.cautela_id === id);
   if (a === 'devolver'){
-    const corpo = '<div class="muted">Marque o que está voltando. O policial assina a entrega pelo celular.</div><table class="t1" style="margin-top:8px"><tr><th>Material</th><th>Qtd</th><th>Estado</th><th>Observação</th></tr>' + c.itens.map((i, k) => {
+    const corpo = '<div class="muted">Está tudo voltando? Se sim, só assine. Se faltou algo, diminua a quantidade; se veio estragado ou se perdeu, escolha ao lado e escreva o que houve.</div><table class="t1" style="margin-top:8px"><tr><th>Material</th><th>Voltou</th><th>Como</th><th>O que houve</th></tr>' + c.itens.map((i, k) => {
       const resta = i.qtd - i.devolvido;
-      return resta > 0 ? `<tr><td>${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}</td><td><input type="number" min="0" max="${resta}" value="${resta}" data-q="${k}" style="width:70px"></td><td><select data-e="${k}"><option value="ok">OK</option><option value="danificado">Danificado</option><option value="extraviado">Extraviado</option></select></td><td><input data-o="${k}" placeholder="obrigatório se danificado/extraviado"></td></tr>` : '';
-    }).join('') + '</table><label>Nota</label><input id="d-nota">';
-    const m = await modal({ titulo: 'Registrar devolução · ' + c.policial.guerra, corpo, ok: '✍️ Registrar', largura: 760 });
+      return resta > 0 ? `<tr><td>${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? '<br><span class="muted">Nº ' + esc(i.serie) + '</span>' : ''}</td><td><input type="number" min="0" max="${resta}" value="${resta}" data-q="${k}" style="width:76px"></td><td><select data-e="${k}"><option value="ok">✅ OK</option><option value="danificado">⚠️ Estragado</option><option value="extraviado">❌ Perdido</option></select></td><td><input data-o="${k}" placeholder="só se estragou/perdeu"></td></tr>` : '';
+    }).join('') + '</table><label>Nota (opcional)</label><input id="d-nota">';
+    const m = await modal({ titulo: 'Receber de volta · ' + (c.policial.guerra || c.policial.nome), corpo, ok: '✍️ Assinar o recebimento', largura: 780 });
     if (!m) return;
     const itens = [...m.el.querySelectorAll('[data-q]')].map(i => ({ i: Number(i.dataset.q), qtd: Number(i.value), estado: m.el.querySelector(`[data-e="${i.dataset.q}"]`).value, obs: m.el.querySelector(`[data-o="${i.dataset.q}"]`).value })).filter(x => x.qtd > 0);
-    try { const d = await apiPost('/api/cautela/devolver', { cautela_id: id, itens, nota: val(m, 'd-nota'), senha: m.senha }); toast(d.completa ? 'Devolução completa registrada.' : 'Devolução parcial registrada.'); await carregar(); } catch(e){ falha(e); }
+    try { const d = await apiPost('/api/cautela/devolver', { cautela_id: id, itens, nota: val(m, 'd-nota'), senha: m.senha }); toast(d.completa ? 'Recebido. O policial assina a entrega no celular dele.' : 'Recebido em parte. O resto continua com o policial.'); await carregar(); } catch(e){ falha(e); }
   } else if (a === 'prorrogar'){
-    const m = await modal({ titulo: 'Prorrogar · ' + c.policial.guerra, corpo: `<label>Novo fim previsto</label><input id="p-fim" type="datetime-local" value="${dtLocal(Date.parse(c.fim_previsto) + 7 * 86400e3)}"><label>Motivo</label><input id="p-mot">` });
+    const m = await modal({ titulo: 'Mais prazo · ' + (c.policial.guerra || c.policial.nome), corpo: `<label>Nova data de volta</label><input id="p-fim" type="datetime-local" value="${dtLocal(Date.parse(c.fim_previsto) + 7 * 86400e3)}"><label>Por quê?</label><input id="p-mot" placeholder="ex.: operação estendida">` });
     if (!m) return;
-    try { await apiPost('/api/cautela/prorrogar', { cautela_id: id, fim_previsto: doLocal(val(m, 'p-fim')), motivo: val(m, 'p-mot'), senha: m.senha }); toast('Prorrogada.'); await carregar(); } catch(e){ falha(e); }
+    try { await apiPost('/api/cautela/prorrogar', { cautela_id: id, fim_previsto: doLocal(val(m, 'p-fim')), motivo: val(m, 'p-mot'), senha: m.senha }); toast('Prazo aumentado.'); await carregar(); } catch(e){ falha(e); }
   } else {
-    const m = await modal({ titulo: 'Cancelar a cautela ' + id, corpo: '<div class="muted">Só dá para cancelar antes de o policial assinar. O material volta para a reserva.</div><label>Motivo</label><input id="x-mot">' });
+    const m = await modal({ titulo: 'Cancelar a cautela', corpo: '<div class="muted">Só dá para cancelar antes de o policial assinar. O material volta para a reserva.</div><label>Por quê?</label><input id="x-mot" placeholder="ex.: lançada errada">' });
     if (!m) return;
     try { await apiPost('/api/cautela/cancelar', { cautela_id: id, motivo: val(m, 'x-mot'), senha: m.senha }); toast('Cancelada.'); await carregar(); } catch(e){ falha(e); }
   }
 }
+function opcoesLinhas(sel){ return R.linhas.map(l => `<option value="${esc(l.id)}" ${l.id === sel ? 'selected' : ''}>${esc(l.descricao)}</option>`).join(''); }
+async function voltouAnterior(id){
+  const m0 = R.missoes_anteriores.find(x => x.id === id);
+  const itens = (m0.palpite && m0.palpite.itens) || [];
+  const linhaItem = (x) => `<tr><td><select data-l>${opcoesLinhas(x.id)}</select></td><td><input type="number" min="0" value="${x.qtd}" data-q style="width:90px"></td><td><button class="btn sm red" type="button" data-x>✕</button></td></tr>`;
+  const corpo = `<div class="muted">Na Parte estava:</div><pre style="white-space:pre-line;font-size:13px;margin:4px 0 10px">${esc([m0.armamento, m0.municao, m0.acessorios].filter(Boolean).join('\n'))}</pre>
+    <div class="muted">O sistema entendeu assim. Confira — é o que <b>volta para a reserva</b>:</div>
+    <table class="t1" style="margin-top:6px"><tbody id="v-itens">${itens.map(linhaItem).join('')}</tbody></table>
+    <button class="btn sm sec" type="button" id="v-mais" style="margin-top:6px">➕ outro material</button>
+    ${m0.palpite && m0.palpite.nao_reconhecido.length ? `<div class="muted" style="margin-top:8px">Não reconheci: <b>${esc(m0.palpite.nao_reconhecido.join(', '))}</b> — inclua acima se for da reserva.</div>` : ''}
+    <label>Nota (opcional)</label><input id="v-nota">`;
+  const ligar = (o) => {
+    const tb = o.querySelector('#v-itens');
+    const religa = () => tb.querySelectorAll('[data-x]').forEach(b => b.onclick = () => b.closest('tr').remove());
+    o.querySelector('#v-mais').onclick = () => { tb.insertAdjacentHTML('beforeend', linhaItem({ id: R.linhas[0].id, qtd: 1 })); religa(); };
+    religa();
+  };
+  const m = await modal({ titulo: `Voltou · ${m0.posto} ${m0.nome}`, corpo, ok: '✍️ Confirmar que voltou', largura: 720, depois: ligar });
+  if (!m) return;
+  const lista = [...m.el.querySelectorAll('#v-itens tr')].map(tr => ({ id: tr.querySelector('[data-l]').value, qtd: Number(tr.querySelector('[data-q]').value) })).filter(x => x.qtd > 0);
+  try { const d = await apiPost('/api/cautela/missao-voltou', { id, itens: lista, nota: val(m, 'v-nota'), senha: m.senha }); toast(`Registrado: ${d.linhas} linha(s) da reserva atualizadas.`); await carregar(); } catch(e){ falha(e); }
+}
 
-/* ===== passagem de serviço / Parte Diária ===== */
-let SUB = null, PARTE = null;
+/* ===== conferir (contagem) ===== */
+function renderConferir(){
+  const q = norm($('q-cnt').value);
+  const linhas = R.linhas.filter(l => !q || norm(l.descricao).includes(q));
+  $('tb-cnt').innerHTML = linhas.map(l => {
+    const c = CONTAGEM[l.id] || { contado: '', obs: '' };
+    const dv = c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva);
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td class="n">${pad(l.reserva)}</td>
+      <td class="n ${dv ? 'div' : ''}"><input class="cnt" inputmode="numeric" data-cnt="${esc(l.id)}" value="${esc(c.contado)}" placeholder="${Math.max(0, l.reserva)}"></td>
+      <td><input data-cobs="${esc(l.id)}" value="${esc(c.obs)}" placeholder="${dv ? 'diga o que houve (vai na OBS da Parte)' : ''}"></td></tr>`;
+  }).join('');
+  $('tb-cnt').querySelectorAll('input[data-cnt]').forEach(i => i.oninput = () => {
+    const id = i.dataset.cnt; CONTAGEM[id] = Object.assign(CONTAGEM[id] || { obs: '' }, { contado: i.value.replace(/\D/g, '') });
+    i.parentElement.classList.toggle('div', i.value !== '' && Number(i.value) !== Math.max(0, linha(id).reserva));
+    infoContagem();
+  });
+  $('tb-cnt').querySelectorAll('input[data-cobs]').forEach(i => i.oninput = () => { CONTAGEM[i.dataset.cobs] = Object.assign(CONTAGEM[i.dataset.cobs] || { contado: '' }, { obs: i.value }); });
+  infoContagem();
+}
+function divergentes(){ return R.linhas.filter(l => { const c = CONTAGEM[l.id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); }); }
+function infoContagem(){
+  const n = R.linhas.filter(l => CONTAGEM[l.id] && CONTAGEM[l.id].contado !== '').length, dv = divergentes().length;
+  $('info-contagem').innerHTML = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv ? dv + ' não bate(m)' : 'tudo bate'}</b>`
+    + (R.contagem ? ` · última conferência salva em ${fQ(R.contagem.em)}` : ' · ainda não conferido neste plantão');
+}
+$('q-cnt').oninput = renderConferir;
+$('btn-tudo').onclick = () => { R.linhas.forEach(l => { if (!CONTAGEM[l.id] || CONTAGEM[l.id].contado === '') CONTAGEM[l.id] = Object.assign(CONTAGEM[l.id] || { obs: '' }, { contado: String(Math.max(0, l.reserva)) }); }); renderConferir(); toast('Preenchido com o que o sistema espera. Corrija só o que não bater.'); };
+$('btn-contagem').onclick = async () => {
+  const dv = divergentes();
+  const corpo = dv.length ? `<div class="muted">Estes números <b>não batem</b> e vão substituir o NA RESERVA:</div>` + dv.map(l => `<div style="margin-top:6px">• ${esc(l.descricao)}: sistema ${Math.max(0, l.reserva)} → contei <b>${esc(CONTAGEM[l.id].contado)}</b></div>`).join('') : '<div class="muted">Tudo bate. Salvar a conferência?</div>';
+  const m = await modal({ titulo: 'Salvar a conferência', corpo, senha: false, ok: '💾 Salvar' });
+  if (!m) return;
+  try {
+    const linhas = {}; for (const [id, c] of Object.entries(CONTAGEM)) if (c.contado !== '' || c.obs) linhas[id] = { contado: c.contado === '' ? null : Number(c.contado), obs: c.obs };
+    const d = await apiPost('/api/cautela/contagem', { linhas }); toast(d.diferencas.length ? `Salvo. ${d.diferencas.length} número(s) corrigido(s) na reserva.` : 'Salvo. Tudo bate.'); await carregar();
+  } catch(e){ falha(e); }
+};
+
+/* ===== passar o serviço / Parte Diária ===== */
+let SUB = null, HTML_PARTE = '';
 picker({ campo: 's-q', res: 's-res', onPick: (p) => { SUB = p; renderSub(); }, todos: false });
 function renderSub(){
-  $('s-pol').innerHTML = SUB ? `<div class="sel-box"><div><b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b> · RE ${esc(SUB.re)}<br><span class="muted">${SUB.tem_conta ? '✅ Já tem a senha do Portal — vai aceitar o plantão no celular.' : '⚠️ Ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) para aceitar.'}</span></div><button class="btn sm sec" id="s-troca">trocar</button></div>` : '';
+  $('s-pol').innerHTML = SUB ? `<div class="sel-box"><div><b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b> · RE ${esc(SUB.re)}<br><span class="muted">${SUB.tem_conta ? '✅ Vai aceitar o plantão no celular.' : '⚠️ Ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) para aceitar.'}</span></div><button class="btn sm sec" id="s-troca" type="button">trocar</button></div>` : '';
   if (SUB) $('s-troca').onclick = () => { SUB = null; renderSub(); };
 }
-function renderPassagemInfo(){
+function renderPassarInfo(){
   const desde = R.plantao.desde ? new Date(R.plantao.desde) : new Date();
   const d1 = desde.toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' });
   const d2 = new Date(desde.getTime() + 86400e3).toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' });
   if (!$('s-de').value) $('s-de').value = d1; if (!$('s-para').value) $('s-para').value = d2;
-  $('s-ncau').textContent = R.cautelas_parte.length;
-  $('s-cautelas').innerHTML = R.cautelas_parte.map(c => `<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" checked data-cid="${esc(c.cautela_id)}"> ${esc(c.posto)} ${esc(c.policial)} — ${esc(c.missao)} <span class="chip neu">${esc(c.status)}</span></label>`).join('') || '<span class="muted">Nenhuma cautela recente.</span>';
+  const ant = R.missoes_anteriores.filter(m => m.na_parte);
+  $('s-nmis').textContent = R.cautelas_parte.length + ant.length;
+  $('s-missoes').innerHTML = (R.cautelas_parte.map(c => `<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" checked data-cid="${esc(c.cautela_id)}"> ${esc(c.posto)} ${esc(c.policial)} — ${esc(c.missao)} <span class="chip neu">${esc(c.status)}</span></label>`).join('')
+    + ant.map(m => `<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" checked data-aid="${esc(m.id)}"> ${esc(m.posto)} ${esc(m.nome)} — ${esc(m.titulo.slice(0, 60))} <span class="chip neu">${m.devolvido_em ? 'voltou' : 'da Parte anterior'}</span></label>`).join(''))
+    || '<span class="muted">Nada em missão.</span>';
 }
 function corpoPassagem(confirmar, senha){
-  const marcadas = [...document.querySelectorAll('[data-cid]')];
-  const incluir = marcadas.every(i => i.checked) ? undefined : marcadas.filter(i => i.checked).map(i => i.dataset.cid);
-  return { substituto_re: SUB && SUB.re, de: $('s-de').value, para: $('s-para').value, extras: $('s-extras').value, incluir, confirmar, senha };
+  const cs = [...document.querySelectorAll('[data-cid]')], as = [...document.querySelectorAll('[data-aid]')];
+  const incluir = cs.every(i => i.checked) ? undefined : cs.filter(i => i.checked).map(i => i.dataset.cid);
+  const incluir_anteriores = as.every(i => i.checked) ? undefined : as.filter(i => i.checked).map(i => i.dataset.aid);
+  return { substituto_re: SUB && SUB.re, de: $('s-de').value, para: $('s-para').value, extras: $('s-extras').value, incluir, incluir_anteriores, confirmar, senha };
 }
+// a prévia imita o editor do SEI (as classes que o SEI usa)
+const CSS_SEI = `body{font-family:Calibri,Arial,sans-serif;font-size:12pt;color:#000;background:#fff;margin:24px}p{margin:0 0 4px}
+.Texto_Justificado_Recuo_Primeira_Linha{text-align:justify;text-indent:25mm;margin:6px 0}.Item_Nivel1{font-weight:bold;text-transform:uppercase;margin:10px 0}
+.Item_Nivel1::before{content:"1. "}.Tabela_Texto_Centralizado,.Texto_Centralizado{text-align:center}.Texto_Alinhado_Direita{text-align:right}td{vertical-align:middle}`;
 $('btn-previa').onclick = async () => {
   const m = $('s-msg'); m.className = 'msg err'; m.textContent = '';
   if (!SUB){ m.textContent = 'Escolha quem assume a reserva.'; return; }
   try {
     const d = await apiPost('/api/cautela/passagem', corpoPassagem(false));
-    PARTE = d.parte; $('parte').innerHTML = parteHtml(PARTE); show('parte', true);
-    $('btn-copiar').disabled = false; $('btn-passar').disabled = false;
-    const aviso = [];
-    if (!R.contagem) aviso.push('Você <b>não salvou a contagem</b> deste plantão: a coluna NA RESERVA usa o saldo esperado.');
-    if (PARTE.resumo.divergentes) aviso.push(`${PARTE.resumo.divergentes} linha(s) com divergência (destacadas em amarelo na prévia).`);
-    $('s-resumo').innerHTML = `<div class="card"><b>Prévia:</b> ${PARTE.resumo.linhas} linhas de material · ${PARTE.resumo.cautelas} cautela(s) (${PARTE.resumo.abertas} em aberto)${aviso.length ? '<br>⚠️ ' + aviso.join('<br>⚠️ ') : ''}</div>`;
-    $('parte').scrollIntoView({ behavior: 'smooth' });
+    HTML_PARTE = d.html;
+    $('parte').srcdoc = `<!doctype html><meta charset="utf-8"><style>${CSS_SEI}</style><body>${d.html}</body>`;
+    show('s-pronta', true);
+    const p = d.parte, aviso = [];
+    if (!R.contagem) aviso.push('Você ainda <b>não conferiu</b> a reserva neste plantão (botão 🔢 Conferir).');
+    if (p.resumo.negativos) aviso.push(`${p.resumo.negativos} linha(s) com reserva negativa — confira.`);
+    $('s-resumo').innerHTML = `<div class="muted">${p.resumo.linhas} linhas de material · ${p.missoes.length} tabela(s) de missão${aviso.length ? '<br>⚠️ ' + aviso.join('<br>⚠️ ') : ''}</div>`;
+    $('s-pronta').scrollIntoView({ behavior: 'smooth' });
   } catch(e){ m.textContent = e.message; if (e.status === 401) sair(); }
 };
-$('btn-copiar').onclick = async () => {
-  const html = `<div>${$('parte').innerHTML}</div>`, texto = $('parte').innerText;
+async function copiar(tipo){
   try {
-    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([texto], { type: 'text/plain' }) })]);
-    toast('Copiado. Cole no editor do SEI.');
+    if (tipo === 'fonte') await navigator.clipboard.writeText(HTML_PARTE);
+    else await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([HTML_PARTE], { type: 'text/html' }), 'text/plain': new Blob([$('parte').contentDocument.body.innerText], { type: 'text/plain' }) })]);
+    toast(tipo === 'fonte' ? 'Código copiado. No SEI: Código-Fonte → Ctrl+A → Ctrl+V → Código-Fonte.' : 'Parte copiada. Cole no editor do SEI.');
   } catch(e){
-    const r = document.createRange(); r.selectNodeContents($('parte')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-    document.execCommand('copy'); s.removeAllRanges(); toast('Copiado. Cole no editor do SEI.');
+    const t = document.createElement('textarea'); t.value = HTML_PARTE; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+    toast('Código copiado. No SEI: Código-Fonte → Ctrl+A → Ctrl+V.');
   }
-};
+}
+$('btn-fonte').onclick = () => copiar('fonte');
+$('btn-copiar').onclick = () => copiar('html');
 $('btn-passar').onclick = async () => {
-  const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte Diária fica guardada e assinada; o substituto aceita o plantão no celular dele. Cole a Parte no SEI e assine por lá também.</div>`, ok: '✍️ Assinar a passagem' });
+  const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte fica guardada e assinada aqui; ele aceita o plantão no celular dele.</div>`, ok: '✍️ Assinar a passagem' });
   if (!m) return;
   try {
     const d = await apiPost('/api/cautela/passagem', corpoPassagem(true, m.senha));
-    $('s-resumo').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Passagem registrada · ${esc(d.codigo)}</h2><p class="muted">Assinatura ${esc(d.assinatura)} · conteúdo SHA-256 <code>${esc(d.hash.slice(0, 16))}…</code><br>Valide em <a style="color:var(--yellow)" href="cautela-validar.html?id=${esc(d.codigo)}" target="_blank">cautela-validar.html</a>. Quem te rende precisa aceitar o plantão em <b>cautela.html</b>.</p></div>`;
-    $('btn-passar').disabled = true; toast('Passagem registrada.'); await carregar();
+    HTML_PARTE = d.html;
+    $('s-resumo').innerHTML = `<div class="card" style="border-color:var(--green);margin:0"><h2>✅ Serviço passado · ${esc(d.codigo)}</h2><p class="muted">Assinatura ${esc(d.assinatura)}. Para conferir depois: <a style="color:var(--yellow)" href="cautela-validar.html?id=${esc(d.codigo)}" target="_blank">cautela-validar.html</a>. Quem te rende precisa aceitar o plantão em <b>cautela.html</b>.</p></div>`;
+    $('btn-passar').disabled = true; toast('Serviço passado.'); await carregar();
   } catch(e){ falha(e); }
 };
-
-/* Parte Diária — mesmo desenho do modelo do SEI (Parte 618/2026) */
-function parteHtml(p){
-  const cel = (t, c) => `<td ${c ? `class="${c}"` : ''}>${esc(t)}</td>`;
-  const mat = p.material.map(m => `<tr ${m.divergente ? 'class="div"' : ''}>${cel(m.descricao)}${cel(m.total, 'c')}${cel(m.p4, 'c')}${cel(m.reserva, 'c')}${cel(m.missoes, 'c')}${cel(m.obs)}</tr>`).join('');
-  const miss = p.missoes.map(g => `<p class="tit" style="margin-top:10px">${esc(g.titulo)}</p><table><tr><th>Posto/<br>Graduação</th><th>Matrícula</th><th>Nome</th><th>Escala</th><th>Data<br>início</th><th>Armamento</th><th>Carregador/<br>Munição</th><th>Acessórios</th><th>Alterações</th><th>Data de<br>devolução</th></tr>`
-    + g.linhas.map(l => `<tr>${cel(l.posto)}${cel(l.matricula)}${cel(l.nome)}${cel(l.escala)}${cel(l.inicio)}<td>${esc(l.armamento).replace(/\n/g, '<br>')}</td><td>${esc(l.municao).replace(/\n/g, '<br>')}</td><td>${esc(l.acessorios).replace(/\n/g, '<br>')}</td>${cel(l.alteracoes)}${cel(l.devolucao)}</tr>`).join('') + '</table>').join('');
-  return `<p class="tit">${esc(p.cabecalho[0])}</p><p class="tit">${esc(p.cabecalho[1])}</p><p class="tit" style="font-size:15px">${esc(p.cabecalho[2])}</p>
-    <p style="margin-top:10px">${esc(p.abertura)}</p>
-    <p style="margin-top:10px"><b>1. MATERIAL:</b></p><p><b>1.1 - ARMAMENTO E MUNIÇÃO</b> &nbsp;&nbsp; C/A ( X ) &nbsp;&nbsp; S/A (&nbsp;&nbsp;&nbsp;&nbsp;)</p>
-    <table><tr><th>Descrição</th><th>Total</th><th>Cautela/P4</th><th>Na reserva</th><th>Missões</th><th>Obs</th></tr>${mat}</table>
-    <p><b>2. CAUTELA MISSÕES</b></p>${miss || '<p>Sem cautelas no período.</p>'}
-    <p style="margin-top:10px"><b>3. ALTERAÇÕES</b></p>${p.alteracoes.map(t => `<p style="margin-top:6px">${esc(t)}</p>`).join('')}
-    <p style="margin-top:14px">${esc(p.local_data)}</p>
-    <p class="tit" style="margin-top:22px">${esc(p.assinatura.nome)} - ${esc(p.assinatura.posto)}</p><p class="tit">${esc(p.assinatura.funcao)}</p>`;
-}
 
 /* ===== histórico ===== */
 let HIST = [];
@@ -648,91 +704,100 @@ async function buscarHistorico(){
   const q = new URLSearchParams({ q: $('h-q').value, de: $('h-de').value, ate: $('h-ate').value, status: $('h-st').value });
   try {
     const d = await api('/api/cautela/historico?' + q); HIST = d.cautelas;
-    $('h-escopo').textContent = d.escopo === 'todas' ? 'Chefia: todas as cautelas.' : 'Mostrando as cautelas que você lançou.';
-    const ST = { aguardando: 'wait', ativa: 'ok', parcial: 'wait', devolvida: 'neu', cancelada: 'neu' };
+    $('h-escopo').textContent = d.escopo === 'todas' ? 'Administrador: todas as cautelas.' : 'Mostrando as cautelas que você entregou.';
+    const ST = { aguardando: ['wait', 'falta assinar'], ativa: ['ok', 'com o policial'], parcial: ['wait', 'voltou em parte'], devolvida: ['neu', 'devolvida'], cancelada: ['neu', 'cancelada'] };
     $('tb-hist').innerHTML = HIST.map(c => `<tr><td><b>${esc(c.cautela_id)}</b><br><span class="muted">${fQ(c.criada_em)}</span></td><td>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}<br><span class="muted">RE ${esc(c.policial.re)}</span></td><td>${esc(c.missao)}</td>
-      <td>${c.itens.map(i => `${i.qtd}× ${esc(i.descricao)}${i.serie ? ' Nº ' + esc(i.serie) : ''}`).join('<br>')}</td><td>${fQ(c.inicio)}<br>→ ${fQ(c.fim_previsto)}</td><td><span class="chip ${ST[c.status]}">${esc(c.status)}</span>${c.devolvida_em ? `<br><span class="muted">devolvida ${fQ(c.devolvida_em)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
+      <td>${c.itens.map(i => `${i.qtd}× ${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? ' Nº ' + esc(i.serie) : ''}`).join('<br>')}</td><td>${fQ(c.inicio)}<br>→ ${fQ(c.fim_previsto)}</td><td><span class="chip ${ST[c.status][0]}">${ST[c.status][1]}</span>${c.devolvida_em ? `<br><span class="muted">${fQ(c.devolvida_em)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
   } catch(e){ falha(e); }
 }
 $('btn-hist').onclick = buscarHistorico;
 $('btn-csv').onclick = () => {
   const q = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
   const linhas = [['codigo', 'criada_em', 're', 'policial', 'missao', 'inicio', 'fim_previsto', 'situacao', 'devolvida_em', 'material'].join(';')]
-    .concat(HIST.map(c => [c.cautela_id, c.criada_em, c.policial.re, c.policial.guerra || c.policial.nome, c.missao, c.inicio, c.fim_previsto, c.status, c.devolvida_em || '', c.itens.map(i => `${i.qtd}x ${i.descricao}${i.serie ? ' Nº ' + i.serie : ''}`).join(' | ')].map(q).join(';')));
+    .concat(HIST.map(c => [c.cautela_id, c.criada_em, c.policial.re, c.policial.guerra || c.policial.nome, c.missao, c.inicio, c.fim_previsto, c.status, c.devolvida_em || '', c.itens.map(i => `${i.qtd}x ${i.descricao}${i.codigo ? ' ' + i.codigo : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join(' | ')].map(q).join(';')));
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'cautelas.csv'; a.click();
 };
 
-/* ===== catálogo (chefia) ===== */
-async function carregarCatalogo(){
-  $('tb-cat').innerHTML = R.linhas.map(l => `<tr><td>${esc(l.item_id)}</td><td>${esc(l.descricao)} ${l.revisar ? '<span class="chip wait">revisar</span>' : ''}</td><td>${esc(l.grupo)}</td><td>${esc(l.controle)}</td><td class="n">${fN(l.total)}</td><td class="n">${fN(l.p4)}</td><td class="n">${fN(l.especial)}</td><td class="n">${fN(l.fora_legado)}</td><td><button class="btn sm sec" data-ed="${esc(l.item_id)}">Editar</button></td></tr>`).join('');
-  $('tb-cat').querySelectorAll('[data-ed]').forEach(b => b.onclick = () => editarItem(b.dataset.ed));
-}
-async function editarItem(id){
-  const l = id ? R.linhas.find(x => x.item_id === id) : { descricao: '', grupo: R.grupos[0], controle: 'quantidade', total: 0, p4: 0, especial: 0, fora_legado: 0, obs: '', revisar: false };
-  const corpo = `<label>Descrição</label><input id="i-desc" value="${esc(l.descricao)}">
-    <div class="row"><div><label>Grupo</label><select id="i-grupo">${R.grupos.map(g => `<option ${g === l.grupo ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div><div><label>Controle</label><select id="i-ctl"><option value="quantidade" ${l.controle === 'quantidade' ? 'selected' : ''}>Por quantidade</option><option value="serie" ${l.controle === 'serie' ? 'selected' : ''}>Por nº de série</option></select></div></div>
-    <div class="row"><div><label>Total (carga)</label><input id="i-total" type="number" value="${l.total}"></div><div><label>Cautela/P4</label><input id="i-p4" type="number" value="${l.p4}"></div><div><label>Especial</label><input id="i-esp" type="number" value="${l.especial}"></div><div><label>Legado</label><input id="i-leg" type="number" value="${l.fora_legado}"></div></div>
-    <label>Observação fixa (sai na coluna OBS da Parte)</label><textarea id="i-obs" rows="3">${esc(l.obs)}</textarea><label>Motivo da alteração</label><input id="i-mot">`;
-  const m = await modal({ titulo: id ? 'Editar ' + id : 'Nova linha do catálogo', corpo, largura: 720 });
+/* ===== administração ===== */
+const CATEGORIAS = ['Armamento', 'Colete Balístico', 'Placa Balística', 'Algema', 'Rádio/Comunicação', 'Taser', 'Body Cam', 'Impressora', 'Celular/Tablet', 'Painel Balístico', 'Capa de Compressão', 'Outros Eletrônicos', 'Outros'];
+const SITUACOES = ['Reserva', 'Cautelado', 'Manutenção', 'Perícia-Judicial', 'Vencido', 'Danificado', 'Extraviado', 'Baixa'];
+const admMsg = (t, ok) => { $('adm-msg').className = 'msg ' + (ok ? 'ok' : 'err'); $('adm-msg').innerHTML = t; };
+$('btn-nova-peca').onclick = async () => {
+  const corpo = `<div class="muted">O código (ARM-…, PRO-…, COM-…) é criado pelo sistema. A peça soma no TOTAL e no NA RESERVA da linha escolhida.</div>
+    <div class="row"><div><label>Tipo</label><select id="np-cat">${CATEGORIAS.map(c => `<option>${esc(c)}</option>`).join('')}</select></div><div><label>Subtipo</label><input id="np-sub" placeholder="ex.: Pistola, Fuzil, Colete"></div></div>
+    <div class="row"><div><label>Marca / modelo</label><input id="np-mod" placeholder="ex.: TAURUS PT100"></div><div><label>Calibre</label><input id="np-cal" placeholder="ex.: .40"></div></div>
+    <div class="row"><div><label>Nº de série</label><input id="np-serie"></div><div><label>Patrimônio (tombo)</label><input id="np-pat"></div></div>
+    <label>Linha da Parte (onde ela conta)</label><select id="np-linha"><option value="">— o sistema escolhe pelo modelo —</option>${opcoesLinhas('')}</select>
+    <div class="row"><div><label>Situação</label><select id="np-sit">${SITUACOES.map(s => `<option>${esc(s)}</option>`).join('')}</select></div><div><label>Responsável</label><input id="np-resp" value="RES. DE ARMAMENTO"></div></div>`;
+  const m = await modal({ titulo: 'Cadastrar arma / equipamento', corpo, ok: '➕ Cadastrar', largura: 720 });
   if (!m) return;
-  const campos = { descricao: val(m, 'i-desc'), grupo: val(m, 'i-grupo'), controle: val(m, 'i-ctl'), total: Number(val(m, 'i-total')), p4: Number(val(m, 'i-p4')), especial: Number(val(m, 'i-esp')), fora_legado: Number(val(m, 'i-leg')), obs: val(m, 'i-obs'), revisar: false };
-  try { await apiPost('/api/cautela/catalogo', { item_id: id || undefined, campos, motivo: val(m, 'i-mot'), senha: m.senha }); toast('Catálogo atualizado.'); await carregar(); carregarCatalogo(); } catch(e){ falha(e); }
-}
-$('btn-novo-item').onclick = () => editarItem('');
-$('btn-nova-serie').onclick = async () => {
-  const m = await modal({ titulo: 'Nova série', corpo: `<label>Material</label><select id="n-item">${R.linhas.filter(l => l.controle === 'serie').map(l => `<option value="${esc(l.item_id)}">${esc(l.descricao)}</option>`).join('')}</select><label>Nº de série</label><input id="n-serie"><label>Tombo (opcional)</label><input id="n-tombo">` });
-  if (!m) return;
-  try { await apiPost('/api/cautela/serial', { campos: { item_id: val(m, 'n-item'), serie: val(m, 'n-serie'), tombo: val(m, 'n-tombo') }, senha: m.senha }); toast('Série cadastrada.'); await carregar(); } catch(e){ falha(e); }
+  const values = { 'Categoria': val(m, 'np-cat'), 'Subtipo': val(m, 'np-sub'), 'Marca / Modelo': val(m, 'np-mod'), 'Calibre / Espec.': val(m, 'np-cal'), 'Nº de Série': val(m, 'np-serie'), 'Patrimônio': val(m, 'np-pat'), 'Linha da Parte': val(m, 'np-linha'), 'Situação': val(m, 'np-sit'), 'Responsável': val(m, 'np-resp') };
+  try { const d = await apiPost('/api/cautela/peca', { tab: 'dados', op: 'add', values, senha: m.senha }); admMsg(`✅ Cadastrado com o código <b class="cod">${esc(d.codigo)}</b>.`, true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
 };
-$('btn-semear').onclick = async () => {
-  if (!confirm('Criar as linhas do catálogo a partir da Parte Diária 618? Só funciona com o catálogo vazio.')) return;
-  try { const d = await apiPost('/api/cautela/semear', {}); $('cat-msg').className = 'msg ok'; $('cat-msg').textContent = `${d.linhas} linhas criadas (${d.a_revisar} marcadas “revisar carga”).`; await carregar(); carregarCatalogo(); }
-  catch(e){ $('cat-msg').className = 'msg err'; $('cat-msg').textContent = e.message; }
-};
-$('btn-importar').onclick = async () => {
-  const m = await modal({ titulo: 'Importar nº de série', corpo: '<div class="muted">Lê a aba DADOS do Material Bélico e cadastra as séries de armas, coletes, algemas, rádios… nas linhas do catálogo. O que não tiver linha certa é listado para você classificar. Pode rodar de novo sem duplicar.</div>' });
+$('btn-nova-mun').onclick = async () => {
+  const corpo = `<div class="row"><div><label>Calibre / tipo</label><input id="nm-tipo" placeholder="ex.: 5,56 / .40 S&W"></div><div><label>Fabricante</label><input id="nm-fab"></div></div>
+    <div class="row"><div><label>Lote</label><input id="nm-lote"></div><div><label>Quantidade</label><input id="nm-qtd" type="number" min="1"></div><div><label>Validade</label><input id="nm-val" placeholder="mm/aaaa"></div></div>
+    <div class="muted" style="margin-top:8px">Isto registra o lote (código MUN-…). Para somar as munições na Parte, use também <b>✏️ Corrigir os números de uma linha</b>.</div>`;
+  const m = await modal({ titulo: 'Lote de munição', corpo, ok: '➕ Cadastrar', largura: 640 });
   if (!m) return;
-  try { const d = await apiPost('/api/cautela/importar', { senha: m.senha }); $('cat-msg').className = 'msg ok'; $('cat-msg').innerHTML = `${d.criados} série(s) importada(s). ${d.sem_linha.length ? `<br>Sem linha no catálogo (${d.sem_linha.length}), cadastre manualmente em “Nova série”: ` + d.sem_linha.slice(0, 40).map(x => esc(`${x.modelo} Nº ${x.serie}`)).join('; ') : ''}`; await carregar(); } catch(e){ falha(e); }
+  const q = val(m, 'nm-qtd');
+  const values = { 'Categoria': 'Munição', 'Tipo / Calibre': val(m, 'nm-tipo'), 'Fabricante': val(m, 'nm-fab'), 'Lote': val(m, 'nm-lote'), 'Qtd. Entrada': q, 'Qtd. Consumida': '0', 'Saldo Atual': q, 'Validade': val(m, 'nm-val'), 'Responsável': 'RES. DE ARMAMENTO' };
+  try { const d = await apiPost('/api/cautela/peca', { tab: 'municao', op: 'add', values, senha: m.senha }); admMsg(`✅ Lote cadastrado: <b class="cod">${esc(d.codigo)}</b>.`, true); } catch(e){ admMsg(esc(e.message)); falha(e); }
+};
+async function editarLinha(id){
+  const l = id ? linha(id) : { descricao: '', grupo: R.grupos[0], tabela: 2, total: 0, p4: 0, reserva: 0, legado: 0, nota_reserva: '', obs: '', obs_vermelha: false };
+  const corpo = `<label>Descrição (como sai na Parte)</label><input id="e-desc" value="${esc(l.descricao)}">
+    <div class="row"><div><label>Grupo</label><select id="e-grupo">${R.grupos.map(g => `<option ${g === l.grupo ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
+    <div><label>Tabela da Parte</label><select id="e-tab"><option value="1" ${l.tabela === 1 ? 'selected' : ''}>1ª (armamento e munição)</option><option value="2" ${l.tabela === 2 ? 'selected' : ''}>2ª (equipamentos)</option></select></div></div>
+    <div class="row"><div><label>Total</label><input id="e-tot" type="number" value="${l.total}"></div><div><label>Cautela/P4</label><input id="e-p4" type="number" value="${l.p4}"></div><div><label>Na reserva</label><input id="e-res" type="number" value="${Math.max(0, l.reserva)}"></div><div><label>Missões (da Parte antiga)</label><input id="e-leg" type="number" value="${l.legado}"></div></div>
+    <label>Nota acima do número da reserva (ex.: (CAIXA 3900))</label><input id="e-nota" value="${esc(l.nota_reserva)}">
+    <label>OBS (uma frase por linha)</label><textarea id="e-obs" rows="4">${esc(l.obs)}</textarea>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-verm" ${l.obs_vermelha ? 'checked' : ''}> OBS em vermelho</label>
+    ${id ? '<label>Por que está corrigindo? (fica no histórico)</label><input id="e-mot">' : ''}`;
+  const m = await modal({ titulo: id ? 'Corrigir · ' + l.descricao : 'Linha nova na Parte', corpo, largura: 760, ok: id ? '💾 Corrigir' : '➕ Criar' });
+  if (!m) return;
+  const campos = { descricao: val(m, 'e-desc'), grupo: val(m, 'e-grupo'), tabela: Number(val(m, 'e-tab')), total: val(m, 'e-tot'), p4: val(m, 'e-p4'), reserva: val(m, 'e-res'), legado: val(m, 'e-leg'), nota_reserva: val(m, 'e-nota'), obs: val(m, 'e-obs'), obs_vermelha: m.el.querySelector('#e-verm').checked };
+  try { await apiPost('/api/cautela/linha', { id: id || undefined, campos, motivo: id ? val(m, 'e-mot') : 'linha nova', senha: m.senha }); admMsg('✅ Salvo.', true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
+}
+$('btn-nova-linha').onclick = () => editarLinha('');
+$('btn-corrigir').onclick = async () => {
+  const m = await modal({ titulo: 'Qual linha?', corpo: `<select id="q-linha">${opcoesLinhas('')}</select>`, senha: false, ok: 'Abrir' });
+  if (m) editarLinha(val(m, 'q-linha'));
 };
 $('btn-integ').onclick = async () => {
   try {
     const d = await api('/api/cautela/integridade');
     $('cat-msg').className = 'msg ' + (d.invalidos.length || d.buracos.length ? 'err' : 'ok');
-    $('cat-msg').innerHTML = `${d.eventos} registro(s) no livro · <b>${d.invalidos.length}</b> com assinatura inválida · <b>${d.buracos.length}</b> lacuna(s) na sequência.` + (d.invalidos.length ? '<br>Inválidos: ' + d.invalidos.map(x => esc(`${x.tipo} #${x.seq} (${fQ(x.em)})`)).join('; ') : '') + (d.chave_derivada ? '<br>⚠️ Chave derivada do JWT_SECRET.' : '');
+    $('cat-msg').innerHTML = d.invalidos.length || d.buracos.length
+      ? `⚠️ ${d.invalidos.length} registro(s) alterado(s) na planilha e ${d.buracos.length} apagado(s). ` + d.invalidos.map(x => esc(`${x.tipo} #${x.seq} (${fQ(x.em)})`)).join('; ')
+      : `✅ ${d.eventos} registro(s) no livro e nenhum foi mexido.`;
   } catch(e){ falha(e); }
 };
 $('btn-designar').onclick = async () => {
   const re = $('d-re').value.trim(); if (!re) return;
-  const m = await modal({ titulo: 'Designar armeiro de serviço', corpo: `<div class="muted">RE ${esc(re)} passa a ser o armeiro de serviço. Para abrir a reserva ele entra com o RE e a senha do Portal do Policial.</div>` });
+  const m = await modal({ titulo: 'Designar armeiro de serviço', corpo: `<div class="muted">RE ${esc(re)} passa a ser o armeiro de serviço. Ele entra na reserva com o RE e a senha do Portal do Policial.</div>` });
   if (!m) return;
-  try {
-    const d = await apiPost('/api/cautela/designar', { re, senha: m.senha });
-    toast(d.tem_senha ? 'Armeiro designado.' : 'Armeiro designado — ele ainda precisa criar a senha do Portal (1º acesso) para abrir a reserva.');
-    $('d-re').value = ''; await carregar();
-  } catch(e){ falha(e); }
+  try { const d = await apiPost('/api/cautela/designar', { re, senha: m.senha }); toast(d.tem_senha ? 'Armeiro designado.' : 'Armeiro designado — ele ainda precisa criar a senha do Portal (1º acesso).'); $('d-re').value = ''; await carregar(); } catch(e){ falha(e); }
 };
 $('btn-zerar').onclick = async () => {
   const re = $('z-re').value.trim(), modo = $('z-modo').value; if (!re) return;
   const m = await modal({ titulo: modo === 'provisoria' ? 'Gerar senha provisória' : 'Zerar a senha do Portal',
-    corpo: `<div class="muted">RE ${esc(re)}: ${modo === 'provisoria' ? 'gera um código de 6 dígitos para você entregar ao policial; no 1º uso ele troca pela senha dele.' : 'a senha atual deixa de valer e a sessão aberta cai. Ele cria outra no 1º acesso, confirmando com o CPF.'}</div>` });
+    corpo: `<div class="muted">RE ${esc(re)}: ${modo === 'provisoria' ? 'gera um código de 6 dígitos para entregar ao policial; no 1º uso ele troca.' : 'a senha atual deixa de valer e a sessão aberta cai. Ele cria outra no 1º acesso, com o CPF.'}</div>` });
   if (!m) return;
   try {
     const d = await apiPost('/api/cautela/senha', { re, modo, senha: m.senha });
     $('z-re').value = '';
-    if (d.codigo){
-      await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar',
-        corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Ela vale para entrar uma vez e é trocada no 1º uso. Não fica guardada em lugar nenhum.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--yellow);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
-    } else toast(`Senha de ${d.nome} zerada: ele cria outra no 1º acesso.`);
+    if (d.codigo) await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar', corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Vale uma vez e não fica guardada.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--yellow);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
+    else toast(`Senha de ${d.nome} zerada: ele cria outra no 1º acesso.`);
   } catch(e){ falha(e); }
 };
 
-/* ===== abas ===== */
-document.querySelectorAll('#tabs .tab').forEach(t => t.onclick = () => {
-  document.querySelectorAll('#tabs .tab').forEach(x => x.classList.toggle('on', x === t));
+/* ===== botões de ação ===== */
+document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => {
+  document.querySelectorAll('#acoes .ac').forEach(x => x.classList.toggle('on', x === t));
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + t.dataset.p));
-  if (t.dataset.p === 'cautelar' && !$('c-ini').value) resetCautelar();
+  if (t.dataset.p === 'entregar' && !$('c-ini').value) resetEntregar();
   if (t.dataset.p === 'historico') buscarHistorico();
-  if (t.dataset.p === 'catalogo') carregarCatalogo();
 });
 boot();
 </script>
