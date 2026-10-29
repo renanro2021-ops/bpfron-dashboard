@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
+<script src="bp-casca.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#060912">
 <link rel="manifest" href="tarefas.webmanifest">
@@ -13,7 +14,7 @@
 <title>Central de Tarefas · BPFRON/RO</title>
 <link rel="icon" id="favicon" href="LOGOS/bpfron_transp.png">
 <script>/* aberta dentro do Portal do Policial (policial.html) */try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
-<script>/* tema antes de pintar (sem piscar) */try{var t=localStorage.getItem('tar_tema')||'escuro';if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'claro':'escuro';document.documentElement.dataset.tema=t}catch(e){}</script>
+<script>/* tema antes de pintar (sem piscar) — tema comum do site (bp-casca.js), com o antigo da Central de reserva */try{var t=localStorage.getItem('bp_tema')||localStorage.getItem('tar_tema')||'escuro';if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'claro':'escuro';document.documentElement.dataset.tema=t}catch(e){}</script>
 <script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -2951,7 +2952,8 @@ const TEMAS = [
   { id:'azul', nome:'Azul-marinho', ic:'🌊', cores:['#041227','#0e2850','#38bdf8'], desc:'azul escuro' },
   { id:'auto', nome:'Automático', ic:'🖥️', cores:['#060912','#eef2f7','#F5C518'], desc:'segue o aparelho' },
 ];
-const temaEscolhido = () => TEMAS.some(t => t.id === lido('tar_tema')) ? lido('tar_tema') : 'escuro';
+// 29/10/2026: o tema é o do site todo (bp-casca.js, chave bp_tema, acompanha o login).
+const temaEscolhido = () => window.BPCasca ? BPCasca.tema() : (TEMAS.some(t => t.id === lido('tar_tema')) ? lido('tar_tema') : 'escuro');
 const MQ_CLARO = matchMedia('(prefers-color-scheme: light)');
 function aplicarTema(){
   let t = temaEscolhido(); if (t === 'auto') t = MQ_CLARO.matches ? 'claro' : 'escuro';
@@ -2961,10 +2963,14 @@ function aplicarTema(){
 try { MQ_CLARO.addEventListener('change', () => { if (temaEscolhido() === 'auto') aplicarTema(); }); } catch(e){}
 function renderTemas(){
   const at = temaEscolhido();
-  $('tp').innerHTML = `<div class="nph"><b>🎨 Tema</b><small style="color:var(--dim);font-size:12px">fica salvo neste aparelho</small></div>
+  $('tp').innerHTML = `<div class="nph"><b>🎨 Tema</b><small style="color:var(--dim);font-size:12px">vale em todo o site</small></div>
     <div class="tps">${TEMAS.map(t => `<button data-tema="${t.id}" class="${t.id === at ? 'on' : ''}"><span class="sw">${t.cores.map(c => `<i style="background:${c}"></i>`).join('')}</span><span class="tx"><b>${t.ic} ${t.nome}</b><small>${t.desc}</small></span>${t.id === at ? '<span class="ok">✔</span>' : ''}</button>`).join('')}</div>`;
-  qsa('[data-tema]', $('tp')).forEach(b => b.onclick = () => { lembrar('tar_tema', b.dataset.tema); aplicarTema(); renderTemas(); });
+  qsa('[data-tema]', $('tp')).forEach(b => b.onclick = (e) => {
+    if (window.BPCasca) BPCasca.setTema(b.dataset.tema, e); else { lembrar('tar_tema', b.dataset.tema); aplicarTema(); }
+    renderTemas();
+  });
 }
+window.addEventListener('bp-tema', () => { if ($('tp').classList.contains('on')) renderTemas(); });
 $('bt-tema').addEventListener('click', (e) => { e.stopPropagation(); $('np').classList.remove('on'); if ($('tp').classList.toggle('on')) renderTemas(); });
 document.addEventListener('click', (e) => { if (!e.target.closest('#tp') && !e.target.closest('#bt-tema')) $('tp').classList.remove('on'); });
 aplicarTema();

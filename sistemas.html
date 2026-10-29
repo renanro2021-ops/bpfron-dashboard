@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
+<script src="bp-casca.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Sistemas · BPFRON/RO</title>
@@ -49,6 +50,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .chip.res{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.45);color:var(--yellow)}
 .go{font-size:14px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:8px 16px;white-space:nowrap}
 .vazio{color:var(--muted);padding:30px 4px}
+.sec{display:flex;align-items:center;gap:8px}
+.sec i{width:8px;height:8px;border-radius:2px}
+.ic{background:color-mix(in srgb,var(--c,#F5C518) 14%,transparent);border-color:color-mix(in srgb,var(--c,#F5C518) 35%,transparent)}
+.chip.lib{background:rgba(57,135,229,.12);border-color:rgba(57,135,229,.4);color:#93c5fd}
+.chip.nao{background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.25);color:var(--muted)}
+.card.fora{opacity:.55}
+.card.fora:hover{opacity:.85}
+.portal{display:flex;align-items:center;gap:16px;margin:20px 0 4px;padding:18px 20px;border-radius:18px;text-decoration:none;color:inherit;
+  background:linear-gradient(135deg,rgba(245,197,24,.16),rgba(245,197,24,.03) 60%),var(--card);border:1px solid rgba(245,197,24,.4);transition:transform .2s,box-shadow .2s}
+.portal:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(245,197,24,.12)}
+.portal .pic{width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-size:28px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.35);flex:none}
+.portal .ptx{flex:1;min-width:0}
+.portal b{display:block;font-family:'Rajdhani',sans-serif;font-size:22px;color:#fff}
+.portal small{display:block;font-size:13.5px;color:var(--muted);line-height:1.5}
+@media (max-width:640px){ .portal{flex-wrap:wrap}.portal .go{width:100%;text-align:center} }
+/* tema Claro */
+:root[data-tema="claro"] body{background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.08) 0%,transparent 60%)}
+:root[data-tema="claro"] .hdr{background:linear-gradient(100deg,#ffffff,#f1f5f9);box-shadow:0 8px 30px rgba(15,23,42,.08);border-bottom-color:rgba(181,133,0,.5)}
+:root[data-tema="claro"] .hdr-logo{mix-blend-mode:normal}
+:root[data-tema="claro"] .hdr-title,:root[data-tema="claro"] .intro h1,:root[data-tema="claro"] .card h2,:root[data-tema="claro"] .portal b{color:#0f172a}
+:root[data-tema="claro"] .card{box-shadow:0 4px 16px rgba(15,23,42,.05)}
+:root[data-tema="claro"] .card:hover{background:#fff;border-color:rgba(181,133,0,.5)}
+:root[data-tema="claro"] .busca input{color:#0f172a;background:#fff}
+:root[data-tema="claro"] .chip.pub{color:#047857}:root[data-tema="claro"] .chip.lib{color:#1d4ed8}
+:root[data-tema="claro"] ::-webkit-scrollbar-thumb{background:#cbd5e1}
 .hidden{display:none!important}
 
 @media (max-width:640px){
@@ -77,8 +103,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 <main class="wrap">
   <div class="intro">
     <h1>Todos os sistemas</h1>
-    <p>Clique no sistema para abrir. As páginas restritas pedem o login do dashboard ao entrar.</p>
+    <p>Clique no sistema para abrir. As páginas restritas pedem o login do dashboard ao entrar. O ☰ no alto abre esta lista de qualquer página.</p>
   </div>
+
+  <a class="portal" id="portal" href="gestao.html">
+    <span class="pic">🏛️</span>
+    <span class="ptx"><b>Portal da Gestão</b><small id="portal-sub"></small></span>
+    <span class="go">Abrir →</span>
+  </a>
 
   <div class="busca">
     <input id="q" type="search" placeholder="🔎 Buscar sistema…" autocomplete="off" aria-label="Buscar sistema">
@@ -89,104 +121,45 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 </main>
 
 <script>
-/* Para incluir um sistema novo, basta acrescentar uma linha aqui.
-   pub:true = aberto ao efetivo (sem login para entrar); false = pede login. */
-const GRUPOS = [
-  { nome:'Análise e Inteligência', itens:[
-    { href:'index.html', ic:'📊', nome:'Painel Analítico', pub:true,
-      desc:'Dashboard de operações: indicadores, mapa, gráficos e áreas de Gestão (Garagem, Material Bélico, Diárias, Consultas).' },
-    { href:'intel.html', ic:'🕵️', nome:'Central de Inteligência', pub:false,
-      desc:'Mapa de Inteligência (P2) com marcações, fotos e pesquisa cruzada de envolvidos, veículos e ocorrências.' },
-    { href:'ocorrencias.html', ic:'🔎', nome:'Busca de Ocorrências', pub:false,
-      desc:'Pesquisa livre no texto de todas as ocorrências: digite o que procura (embarcação, starlink, carro vermelho, madeira) e veja tudo que bate.' }
-  ]},
-  { nome:'Apoio às Ocorrências', itens:[
-    { href:'prompts.html', ic:'🤖', nome:'Prompts de IA', pub:true,
-      desc:'Prompt de agente pronto para copiar e colar no ChatGPT, Gemini ou Claude e redigir o histórico da ocorrência.' },
-    { href:'ia.html', ic:'🧠', nome:'Plataformas de IA', pub:true,
-      desc:'Catálogo de ferramentas de IA gratuitas em português: transformar texto em voz, transcrever áudio, resumir documento e traduzir.' }
-  ]},
-  { nome:'Apresentações', itens:[
-    { href:'slides.html', ic:'🎞️', nome:'Banco de Slides', pub:false,
-      desc:'Apresentações institucionais do batalhão em um lugar só. Todo login assiste; quem tem a permissão envia a apresentação pelo próprio site, sem publicar nada no GitHub.' }
-  ]},
-  { nome:'Gestão', itens:[
-    { href:'diaria.html', ic:'💵', nome:'Lançar Diárias', pub:false,
-      desc:'Lançamento das diárias a partir da escala em PDF do SEI, com edição e histórico das escalas lançadas.' },
-    { href:'rvn.html', ic:'✍️', nome:'RVN · Assinatura Digital', pub:false,
-      desc:'Assinatura digital dos RVNs e controle dos documentos pendentes e assinados.' },
-    { href:'pesquisas.html', ic:'📊', nome:'Pesquisas e Formulários', pub:false,
-      desc:'Monte o questionário, distribua o link (quem responde não precisa de login) e emita o relatório do resultado em PDF. Tem manual: manual-pesquisas.html' },
-    { href:'questionario.html', ic:'📋', nome:'Questionário Colaborativo', pub:false,
-      desc:'Documento que pede UMA resposta do batalhão (ofício, MP, inspeção): vários setores preenchem juntos, ao vivo, vendo quem está editando cada pergunta. Relatório consolidado e de quem respondeu o quê.' },
-    { href:'garagem-gestao.html', ic:'🛠️', nome:'Garagem · Gestão da Frota', pub:false,
-      desc:'Painel do gestor: situação das viaturas, retirar alterações, checklists, notas fiscais de oficina com leitura automática (OCR) e manutenção.' },
-    { href:'cautela-reserva.html', ic:'🛡️', nome:'Reserva de Armamento (armeiro)', pub:false,
-      desc:'Somente no computador: estoque e contagem da reserva, cautela para o policial, material em campo e pendências, passagem de serviço com a Parte Diária pronta para o SEI e histórico. Armeiro de serviço e chefia (P4/comando).' },
-    { href:'leilao.html', ic:'🔨', nome:'Leilão · Prestação de Contas', pub:false,
-      desc:'Processo de cada leilão, entradas de recurso com o comprovante do depósito/pagamento e gastos com nota fiscal ou recibo. Saldo, histórico e relatório para imprimir.' },
-    { href:'tarefas.html', ic:'✅', nome:'Central de Tarefas', pub:false,
-      desc:'Comandante e chefes delegam tarefas com prazo e prioridade e veem quem já recebeu (ciência), o andamento e as atrasadas. Quadro, calendário, painel da chefia e acompanhamento de IPM/procedimentos da P6. Cada seção vê só o que é dela.' },
-    { href:'conceito.html', ic:'🎖️', nome:'Ficha de Conceito', pub:false,
-      desc:'Conceito quadrimestral dos graduados (3º SGT em diante): nota de cada item, "NO" fora da média, conceito final calculado e tabela pronta para colar no SEI. Exclusivo do Comandante.' }
-  ]},
-  { nome:'Comunicação', itens:[
-    { href:'sala.html', ic:'🎥', nome:'Sala de Reunião', pub:false,
-      desc:'Videoconferência sem limite de tempo, pelo Jitsi. A reunião abre em outra aba; convidados entram só com o link do moderador.' }
-  ]},
-  { nome:'Serviços ao Efetivo', itens:[
-    { href:'policial.html', ic:'🛡️', nome:'Portal do Policial', pub:true,
-      desc:'Tudo do policial num app só: tarefas designadas, checklist da viatura, cautela de armamento e ficha da P1. Entra só com o RE; a Cautela e as Tarefas pedem a senha do Portal (uma só). Tem manual: manual-portal.html' },
-    { href:'cautela.html', ic:'🔫', nome:'Cautela de Armamento', pub:false,
-      desc:'Confira e assine com a sua senha o material que recebe e devolve na reserva de armamento. É a senha do Portal do Policial: no 1º acesso você cria com o RE e os 4 últimos dígitos do CPF.' },
-    { href:'garagem.html', ic:'🚓', nome:'Checklist da Viatura', pub:true,
-      desc:'Início e término de uso da viatura: hodômetro, alterações e termo de responsabilidade. Entra só com o RE, direto do celular.' },
-    { href:'p1.html', ic:'🗂️', nome:'P1 · Seção Pessoal', pub:true,
-      desc:'Autoatualização da ficha cadastral do policial: dados pessoais, cursos e acessos.' },
-    { href:'acessos.html', ic:'🔐', nome:'Acesso a Sistemas', pub:true,
-      desc:'Informe a quais sistemas policiais (INFOSEG, SEISP, DETRANET, CÓRTEX…) você ainda não tem acesso.' },
-    { href:'emborrachados.html', ic:'🛒', nome:'Pedido de Emborrachados', pub:true,
-      desc:'Catálogo e pedido de emborrachados do batalhão.' },
-    { href:'loja.html', ic:'🛍️', nome:'Loja BPFRON', pub:false,
-      desc:'Vitrine de itens à venda para o efetivo — catálogo por fotos, com preço lido direto do Drive.' },
-    { href:'aplicativos.html', ic:'📲', nome:'Loja de Aplicativos', pub:true,
-      desc:'Aplicativos que instalam no celular sem loja: MapaCampo (mapas offline com GPS e fotos) e os próximos.' },
-    { href:'drone.html', ic:'🚁', nome:'Piloto de Drones', pub:true,
-      desc:'Apostilas do CPPSARP, simulado de questões (ANAC e apostilas) e Formulário ARO. Aluno entra pelo CPF; instrutor, pelo login.' }
-  ]},
-  { nome:'Administração', itens:[
-    { href:'admin.html', ic:'🛡️', nome:'Painel de Controle', pub:false,
-      desc:'Usuários, senhas e níveis de acesso de cada login. Somente administradores.' }
-  ]}
-];
-
+/* 29/10/2026: a lista de sistemas é a do bp-casca.js (BPCasca.CATALOGO), a
+   mesma do Portal da Gestão e do menu ☰. Sistema novo = item no CATALOGO. */
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
 
 function render(){
+  const C = window.BPCasca, P = C.perfil();
   const q = norm(document.getElementById('q').value.trim());
   let html = '', total = 0;
-  GRUPOS.forEach(g => {
-    const itens = g.itens.filter(s => !q || norm(s.nome + ' ' + s.desc + ' ' + g.nome).includes(q));
+  C.GRUPOS.forEach(g => {
+    const itens = C.CATALOGO.filter(s => s.grupo === g.id && s.id !== 'sistemas' && (!q || norm(s.nome + ' ' + s.desc + ' ' + g.nome).includes(q)));
     if (!itens.length) return;
     total += itens.length;
-    html += '<div class="sec">' + esc(g.nome) + '</div><div class="grid">'
-      + itens.map(s =>
-          '<a class="card" href="' + esc(s.href) + '">'
-        +   '<div class="card-top"><span class="ic">' + s.ic + '</span><h2>' + esc(s.nome) + '</h2></div>'
-        +   '<p>' + esc(s.desc) + '</p>'
-        +   '<div class="card-foot">'
-        +     (s.pub ? '<span class="chip pub">Aberto ao efetivo</span>' : '<span class="chip res">🔒 Requer login</span>')
-        +     '<span class="go">Acessar →</span>'
-        +   '</div>'
-        + '</a>').join('')
+    html += '<div class="sec"><i style="background:' + g.cor + '"></i>' + esc(g.nome) + '</div><div class="grid">'
+      + itens.map(s => {
+          const pode = C.pode(s, P), pa = C.papel(s, P);
+          const chip = s.acesso === 'pub' ? '<span class="chip pub">Aberto ao efetivo</span>'
+            : !P.logado ? '<span class="chip res">🔒 Requer login</span>'
+            : pode ? '<span class="chip lib">✓ Liberado para você' + (pa === 'gestor' ? ' · gestor' : pa === 'ver' ? ' · só ver' : '') + '</span>'
+            : '<span class="chip nao">Sem acesso neste login</span>';
+          return '<a class="card' + (P.logado && !pode ? ' fora' : '') + '" href="' + esc(C.hrefCom(s.href)) + '" style="--c:' + g.cor + '">'
+            +   '<div class="card-top"><span class="ic">' + s.ic + '</span><h2>' + esc(s.nome) + '</h2></div>'
+            +   '<p>' + esc(s.desc) + '</p>'
+            +   '<div class="card-foot">' + chip + '<span class="go">Acessar →</span></div>'
+            + '</a>';
+        }).join('')
       + '</div>';
   });
   document.getElementById('lista').innerHTML = html;
   document.getElementById('vazio').classList.toggle('hidden', total > 0);
+  const pt = document.getElementById('portal');
+  pt.href = C.hrefCom(C.PORTAL.href);
+  document.getElementById('portal-sub').textContent = P.logado
+    ? 'Você está como ' + P.nome + '. Abra o portal para ver só os seus sistemas, fixar favoritos e escolher o tema do site.'
+    : 'Entre com o login do dashboard e veja só os sistemas liberados para você, com atalhos e tema do site.';
 }
 
 document.getElementById('q').addEventListener('input', render);
+BPCasca.aoMudarPerfil(render);
 render();
 </script>
 </body>
