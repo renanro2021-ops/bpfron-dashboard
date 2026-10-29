@@ -144,6 +144,8 @@
       desc: 'Videoconferência pelo Jitsi, com link de convidado.' },
     { id: 'slides', href: 'slides.html', ic: '🎞️', nome: 'Banco de Slides', grupo: 'com', acesso: { perm: ['slides', 'slidesver'] }, gestor: 'slides', ver: 'slidesver',
       desc: 'Apresentações institucionais do batalhão num lugar só.' },
+    { id: 'p5', href: 'p5.html', ic: '🏅', nome: 'P5 · Comunicação Social', grupo: 'com', acesso: 'login', gestor: 'p5',
+      desc: 'Agraciados com diploma: portarias, lista na ordem do documento e o diploma de cada um.' },
 
     // ---- Curso de Drone
     { id: 'drone', href: 'drone.html', ic: '🚁', nome: 'Piloto de Drones', grupo: 'drone', acesso: 'pub', gestor: 'aro',

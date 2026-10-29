@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro data-bp-menu="nao">
+<head>
+<meta charset="UTF-8">
+<!-- Link direto do diploma (P5 · Comunicação Social, 29/10/2026).
+     Abre SEM login: p5-diploma.html?c=CÓDIGO. O código é sorteado pelo Worker
+     e o gestor pode trocar (o link antigo deixa de abrir). Só mostra UM
+     diploma; a lista inteira fica no p5.html, que exige login. -->
+<script src="bp-casca.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<meta name="robots" content="noindex">
+<title>Diploma · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1120px}
+.dp-cab{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.dp-cab h1{margin:0;font-family:'Rajdhani',sans-serif;font-size:clamp(24px,3.4vw,34px);color:var(--t1);line-height:1.1}
+.dp-cab p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.dp-medalha{width:54px;height:54px;border-radius:50%;flex:none;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#f6dc8c,#b8892c 60%,#8a6417);box-shadow:0 8px 22px rgba(184,137,44,.4);color:#0d2340}
+.dp-medalha svg{width:26px;height:26px}
+.dp-folha{position:relative;border-radius:14px;overflow:hidden;background:#f4ecd6;box-shadow:0 24px 60px rgba(0,0,0,.45);aspect-ratio:2339/1654;animation:bp-sobe .7s var(--ease) both}
+.dp-folha canvas{display:block;width:100%;height:100%}
+.dp-folha .carga{position:absolute;inset:0;display:grid;place-items:center;color:#0d2340;font-weight:700;gap:10px}
+.dp-barra{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.dp-rodape{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+@media (max-width:760px){ .dp-barra .bp-btn{flex:1 1 100%} }
+</style>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="bp-topo">
+  <div class="bp-topo-in">
+    <span class="bp-marca">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P5 · Comunicação Social</b></span>
+    </span>
+  </div>
+</header>
+
+<main class="bp-wrap">
+  <div id="dp-ok" style="display:none">
+    <div class="dp-cab">
+      <span class="dp-medalha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg></span>
+      <div><h1 id="dp-nome"></h1><p id="dp-sub"></p></div>
+    </div>
+    <div class="dp-folha"><canvas id="dp-canvas" width="2339" height="1654"></canvas><div class="carga" id="dp-carga"><span class="bp-gira"></span>Montando o diploma…</div></div>
+    <div class="dp-barra">
+      <button type="button" class="bp-btn" id="dp-pdf" onclick="baixar('pdf')"><i data-ic="baixar"></i>Baixar PDF</button>
+      <button type="button" class="bp-btn sec" id="dp-png" onclick="baixar('png')"><i data-ic="baixar"></i>Baixar imagem</button>
+      <button type="button" class="bp-btn ghost" id="dp-comp" onclick="compartilhar()" style="display:none"><i data-ic="enviar"></i>Compartilhar</button>
+    </div>
+    <p class="dp-rodape">Diploma emitido pela P5 · Comunicação Social do Batalhão de Polícia de Fronteira e Divisas (BPFRON/PMRO).</p>
+  </div>
+  <div class="bp-vazio" id="dp-erro" style="display:none;margin-top:30px"></div>
+</main>
+
+<script src="p5-diploma.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+'use strict';
+// página aberta: não manda token, então aceitar ?api= de teste não expõe nada — mesmo assim só localhost
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const $ = (id) => document.getElementById(id);
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+let DADOS = null;
+
+function erro(msg) { $('dp-ok').style.display = 'none'; $('dp-erro').style.display = ''; $('dp-erro').textContent = msg; }
+
+async function iniciar() {
+  const c = new URLSearchParams(location.search).get('c') || '';
+  if (!c) return erro('Link incompleto: falta o código do diploma.');
+  let d;
+  try {
+    const r = await fetch(API_BASE + '/api/p5/diploma?c=' + encodeURIComponent(c));
+    d = await r.json().catch(() => ({}));
+    if (!r.ok) return erro(d.detail || 'Não encontrei este diploma.');
+  } catch (e) { return erro('Sem conexão com o servidor. Confira a internet e tente de novo.'); }
+  DADOS = d;
+  const a = d.agraciado, p = d.portaria;
+  document.title = 'Diploma · ' + (a.posto ? a.posto + ' ' : '') + a.nome;
+  $('dp-nome').textContent = (a.posto ? a.posto + ' ' : (a.trat ? a.trat + ' ' : '')) + a.nome;
+  $('dp-sub').textContent = (p.titulo || 'Diploma') + ' · Portaria nº ' + p.numero + '/' + p.ano;
+  $('dp-ok').style.display = '';
+  if (navigator.share) $('dp-comp').style.display = '';
+  await P5Diploma.desenhar($('dp-canvas'), { agraciado: a, portaria: p, grupo: d.grupo, link: location.href.split('#')[0] });
+  $('dp-carga').style.display = 'none';
+}
+
+async function baixar(tipo) {
+  if (!DADOS) return;
+  const bt = $(tipo === 'pdf' ? 'dp-pdf' : 'dp-png'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Gerando…';
+  try {
+    const nome = P5Diploma.nomeArquivo(DADOS);
+    if (tipo === 'pdf') await P5Diploma.baixarPDF($('dp-canvas'), nome); else await P5Diploma.baixarPNG($('dp-canvas'), nome);
+  } catch (e) { toast(e.message, 'err'); }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+
+async function compartilhar() {
+  try {
+    const nome = P5Diploma.nomeArquivo(DADOS) + '.pdf';
+    const arq = new File([await P5Diploma.pdfBlob($('dp-canvas'))], nome, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [arq] })) await navigator.share({ files: [arq], title: document.title });
+    else await navigator.share({ url: location.href, title: document.title });
+  } catch (e) { if (e && e.name !== 'AbortError') toast('Não consegui compartilhar daqui. Use “Baixar PDF”.', 'err'); }
+}
+
+iniciar();
+</script>
+</body>
+</html>

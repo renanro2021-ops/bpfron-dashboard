@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P5 · Comunicação Social (29/10/2026). 1º módulo: Agraciados com Diploma.
+     Dados e PDFs no Worker (backend/p5.js): planilha BPFRON_P5_Comunicacao e
+     pasta da P5 no Drive. O diploma é desenhado no navegador (p5-diploma.js)
+     e o link compartilhado abre o p5-diploma.html sem login. -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P5 · Comunicação Social · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1120px}
+.bp-topo-in{max-width:1180px}
+.p5-busca{margin-top:14px}
+.p5-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.p5-port{cursor:pointer;display:flex;flex-direction:column;gap:12px;text-align:left;width:100%;font:inherit;color:inherit;animation:bp-sobe .6s var(--ease) both;animation-delay:calc(var(--i,0) * 70ms)}
+.p5-port:hover{transform:translateY(-3px);border-color:var(--acc-line);box-shadow:var(--sh2)}
+.p5-port:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.p5-port .cab{display:flex;align-items:center;gap:14px}
+.p5-port .num{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:var(--t1);line-height:1}
+.p5-port .num small{display:block;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--acc);font-weight:800;margin-bottom:4px}
+.p5-port .meta{color:var(--muted);font-size:13.5px}
+.p5-port .chips{display:flex;gap:6px;flex-wrap:wrap}
+.p5-port .total{margin-left:auto;text-align:right}
+.p5-port .total b{display:block;font-family:'Rajdhani',sans-serif;font-size:34px;color:var(--t1);line-height:1}
+.p5-port .total small{color:var(--muted);font-size:12px}
+.p5-medalha{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#f6dc8c,#b8892c 60%,#8a6417);box-shadow:0 6px 18px rgba(184,137,44,.35),inset 0 0 0 3px rgba(255,255,255,.25);color:#0d2340}
+.p5-medalha svg{width:22px;height:22px}
+
+.p5-vista-cab{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.p5-vista-cab h2{margin:0;font-family:'Rajdhani',sans-serif;font-size:30px;color:var(--t1);line-height:1.1}
+.p5-vista-cab .meta{color:var(--muted);font-size:14px;margin-top:4px}
+.p5-vista-cab .acoes{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.p5-seg{display:inline-flex;padding:4px;border-radius:14px;background:var(--surf2);border:1px solid var(--line2);gap:4px;margin:16px 0 4px}
+.p5-seg button{border:0;background:none;padding:9px 16px;border-radius:10px;font-weight:800;font-size:14px;color:var(--muted);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.p5-seg button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink)}
+.p5-grupo{display:flex;align-items:center;gap:10px;margin:22px 0 10px;color:var(--t1);font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700}
+.p5-grupo .art{font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--acc);padding:4px 9px;border-radius:999px;border:1px solid var(--acc-line);background:var(--acc-soft)}
+.p5-lista{display:flex;flex-direction:column;gap:8px}
+.p5-ag{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:15px;background:var(--card);border:1px solid var(--line);cursor:pointer;transition:border-color .2s,background .2s,transform .2s var(--ease)}
+.p5-ag:hover{border-color:var(--acc-line);background:var(--card-h);transform:translateX(2px)}
+.p5-ag .ord{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line)}
+.p5-ag .tx{flex:1;min-width:0}
+.p5-ag .tx b{display:block;color:var(--t1);font-size:14.5px;line-height:1.3}
+.p5-ag .tx small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:1px}
+.p5-ag .posto{color:var(--acc);font-weight:800;font-size:12px;letter-spacing:.4px;margin-right:6px}
+.p5-ag .ver{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--acc);white-space:nowrap}
+.p5-ag .ges{display:flex;gap:6px}
+.p5-pdf{display:flex;flex-direction:column;gap:12px;align-items:center;padding:14px;border-radius:18px;background:var(--surf2);border:1px solid var(--line);min-height:240px}
+.p5-pdf canvas{width:100%;max-width:880px;height:auto;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);background:#fff}
+.p5-pdf-barra{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}
+
+.p5-modal-larga .bp-modal-cx{width:min(1080px,100%)}
+.p5-dip{position:relative;border-radius:12px;overflow:hidden;background:#e9dfc4;box-shadow:0 18px 40px rgba(0,0,0,.4);aspect-ratio:2339/1654}
+.p5-dip canvas{display:block;width:100%;height:100%}
+.p5-dip .carga{position:absolute;inset:0;display:grid;place-items:center;color:#0d2340;font-weight:700;background:#f4ecd6}
+.p5-dip-barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.p5-dip-barra .nav{margin-left:auto;display:flex;gap:6px}
+.p5-link{margin-top:14px;padding:14px;border-radius:16px;border:1px solid var(--acc-line);background:var(--acc-soft)}
+.p5-link .bp-in{background:var(--surf)}
+.p5-link .linha{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.p5-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.p5-form .inteira{grid-column:1/-1}
+.p5-rev{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+.p5-rev table{width:100%;border-collapse:collapse;font-size:13px}
+.p5-rev th,.p5-rev td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.p5-rev th{position:sticky;top:0;background:var(--surf);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.8px}
+.p5-rev td{color:var(--t2)}
+.p5-res-port{font-size:11.5px;font-weight:800;color:var(--info);white-space:nowrap}
+@media (max-width:760px){
+  .p5-grade{grid-template-columns:1fr}
+  .p5-vista-cab .acoes{margin-left:0;width:100%}
+  .p5-ag .ver span{display:none}
+  .p5-form{grid-template-columns:1fr}
+  .p5-dip-barra .bp-btn{flex:1 1 auto}
+}
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-29", "titulo": "Plataforma da P5 · Comunicação Social", "quem": "todos", "itens": [
+    "Agraciados com diploma: as portarias da Medalha do Mérito Policial de Fronteira com o PDF e a lista na ordem do documento.",
+    "Clique no nome para ver o diploma da pessoa e baixar em PDF ou imagem.",
+    "Busca pelo nome em todas as portarias de uma vez."
+  ] },
+  { "data": "2026-10-29", "titulo": "Para o gestor da P5", "quem": "gestor", "itens": [
+    "Link direto do diploma para mandar ao agraciado (abre sem login e deixa baixar), com botão do WhatsApp.",
+    "Nova portaria: arraste o PDF do DOE e a lista de agraciados é montada sozinha para você conferir.",
+    "Corrigir, incluir e excluir agraciado; trocar o link quando precisar derrubar o antigo."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P5 · Comunicação Social</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="p5-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="p5-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="p5-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P5 · Comunicação Social</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="p5-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P5 · Comunicação Social</span>
+        <h1>Agraciados com <em>diploma</em></h1>
+        <p>As portarias de outorga do batalhão com o documento publicado e a lista de agraciados na ordem em que aparecem. Clique no nome para ver o diploma.</p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn" onclick="document.getElementById('p5-q').focus()"><i data-ic="buscar"></i>Buscar agraciado</button>
+          <button type="button" class="bp-btn sec p5-ges" style="display:none" onclick="novaPortaria()"><i data-ic="mais"></i>Nova portaria</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="bp-nums" style="margin-top:14px" id="p5-nums"></div>
+
+    <div class="bp-in p5-busca"><i data-ic="buscar"></i><input id="p5-q" placeholder="Buscar pelo nome em todas as portarias" autocomplete="off" oninput="buscar()">
+      <button type="button" class="bp-btn ic sm ghost" id="p5-q-x" style="display:none" aria-label="Limpar busca" onclick="limparBusca()"><i data-ic="x"></i></button></div>
+
+    <div id="p5-res" style="display:none"></div>
+
+    <div id="p5-inicio">
+      <div class="bp-sec"><span class="bp-tile"><i data-ic="arquivo"></i></span><div><h2>Portarias</h2><small>Medalhas e diplomas outorgados ao batalhão</small></div><span class="bp-cont bp-sl" id="p5-nport">0</span></div>
+      <div class="p5-grade" id="p5-grade"></div>
+    </div>
+
+    <div id="p5-vista" style="display:none"></div>
+  </div>
+
+  <div class="bp-vazio" id="p5-estado" style="display:none;margin-top:24px"></div>
+</main>
+
+<!-- DIPLOMA -->
+<div class="bp-modal p5-modal-larga" id="m-dip" onclick="if(event.target===this)fechar('m-dip')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-dip-tit">
+    <div class="bp-modal-cab">
+      <span class="p5-medalha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg></span>
+      <div><h3 id="m-dip-tit">Diploma</h3><small id="m-dip-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-dip')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="p5-dip"><canvas id="dip-canvas" width="2339" height="1654"></canvas><div class="carga" id="dip-carga">Montando o diploma…</div></div>
+    <div class="p5-dip-barra">
+      <button type="button" class="bp-btn" id="dip-pdf" onclick="baixar('pdf')"><i data-ic="baixar"></i>Baixar PDF</button>
+      <button type="button" class="bp-btn sec" id="dip-png" onclick="baixar('png')"><i data-ic="baixar"></i>Baixar imagem</button>
+      <div class="nav">
+        <button type="button" class="bp-btn ic sec" id="dip-ant" onclick="vizinho(-1)" title="Anterior da lista" aria-label="Anterior"><i data-ic="voltar"></i></button>
+        <button type="button" class="bp-btn ic sec" id="dip-prox" onclick="vizinho(1)" title="Próximo da lista" aria-label="Próximo"><i data-ic="seta"></i></button>
+      </div>
+    </div>
+    <div class="p5-link p5-ges" style="display:none" id="dip-link-box">
+      <div class="bp-rot" style="display:flex;align-items:center;gap:6px"><i data-ic="enviar"></i>Link direto do diploma · abre sem login e deixa baixar</div>
+      <div class="bp-in" style="margin-top:8px"><i data-ic="seta"></i><input id="dip-link" readonly onclick="this.select()"></div>
+      <div class="linha">
+        <button type="button" class="bp-btn sm" onclick="copiarLink()"><i data-ic="arquivo"></i>Copiar link</button>
+        <button type="button" class="bp-btn sm sec" onclick="whatsLink()"><i data-ic="enviar"></i>Mandar pelo WhatsApp</button>
+        <a class="bp-btn sm sec" id="dip-abrir" target="_blank" rel="noopener"><i data-ic="olho"></i>Abrir o link</a>
+        <button type="button" class="bp-btn sm ghost" onclick="trocarLink()" title="O link antigo deixa de abrir"><i data-ic="atualizar"></i>Gerar link novo</button>
+        <button type="button" class="bp-btn sm ghost" style="margin-left:auto" onclick="editarAg(DIP.ag.id)"><i data-ic="editar"></i>Corrigir dados</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR / INCLUIR AGRACIADO -->
+<div class="bp-modal" id="m-ag" onclick="if(event.target===this)fechar('m-ag')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-ag-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-ag-tit">Agraciado</h3><small id="m-ag-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ag')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <form class="p5-form" onsubmit="event.preventDefault(); salvarAg()">
+      <div class="bp-campo"><label for="ag-posto">Posto / graduação</label><div class="bp-in"><input id="ag-posto" placeholder="Ex.: CB QPPM"></div></div>
+      <div class="bp-campo"><label for="ag-trat">Tratamento</label><div class="bp-in"><input id="ag-trat" placeholder="Ex.: Exmo. Sr."></div></div>
+      <div class="bp-campo inteira"><label for="ag-nome">Nome</label><div class="bp-in"><input id="ag-nome" required></div></div>
+      <div class="bp-campo inteira"><label for="ag-funcao">Função / órgão (autoridades)</label><div class="bp-in"><input id="ag-funcao" placeholder="Ex.: Delegado de Polícia Federal"></div></div>
+      <div class="bp-campo"><label for="ag-art">Artigo (grupo)</label><div class="bp-in"><select id="ag-art"></select></div></div>
+      <div class="bp-campo"><label for="ag-ordem">Posição na lista</label><div class="bp-in"><input id="ag-ordem" type="number" min="1" placeholder="no fim"></div></div>
+      <div class="bp-msg err inteira" id="ag-msg"></div>
+      <div class="bp-modal-pe inteira" style="margin-top:4px">
+        <button type="button" class="bp-btn perigo-l" id="ag-excluir" style="margin-right:auto" onclick="excluirAg()"><i data-ic="lixeira"></i>Excluir</button>
+        <button type="button" class="bp-btn ghost" onclick="fechar('m-ag')">Cancelar</button>
+        <button type="submit" class="bp-btn" id="ag-salvar"><i data-ic="check"></i>Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PORTARIA (nova pelo PDF / editar) -->
+<div class="bp-modal p5-modal-larga" id="m-port" onclick="if(event.target===this)fechar('m-port')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-port-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="arquivo"></i></span>
+      <div><h3 id="m-port-tit">Nova portaria</h3><small id="m-port-sub">Arraste o PDF do DOE: a lista é montada sozinha para você conferir</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-port')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <label class="bp-arquivo grande" id="pt-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerPdfPortaria(event.dataTransfer.files)">
+      <span class="bp-tile"><i data-ic="arquivo"></i></span>
+      <span class="tx"><b>Toque para escolher o PDF da portaria</b><small>ou arraste para cá (PDF do SEI/DOE, até 15 MB)</small></span>
+      <span class="bp-trocar"></span>
+      <input type="file" id="pt-file" accept="application/pdf,.pdf" onchange="lerPdfPortaria(this.files)">
+    </label>
+    <div class="bp-msg" id="pt-ler" style="margin-top:8px"></div>
+    <form class="p5-form" id="pt-form" style="margin-top:12px" onsubmit="event.preventDefault(); salvarPortaria()">
+      <div class="bp-campo"><label for="pt-numero">Número</label><div class="bp-in"><input id="pt-numero" inputmode="numeric" required></div></div>
+      <div class="bp-campo"><label for="pt-data">Data da portaria</label><div class="bp-in"><input id="pt-data" type="date" required></div></div>
+      <div class="bp-campo inteira"><label for="pt-titulo">Honraria</label><div class="bp-in"><input id="pt-titulo" placeholder="Medalha do Mérito Policial de Fronteira"></div></div>
+      <div class="bp-campo"><label for="pt-doe">DOE nº</label><div class="bp-in"><input id="pt-doe"></div></div>
+      <div class="bp-campo"><label for="pt-doedata">Publicado no DOE em</label><div class="bp-in"><input id="pt-doedata" type="date"></div></div>
+      <div class="bp-campo"><label for="pt-sei">Nº SEI do documento</label><div class="bp-in"><input id="pt-sei"></div></div>
+      <div class="bp-campo"><label for="pt-processo">Processo SEI</label><div class="bp-in"><input id="pt-processo"></div></div>
+      <div class="bp-campo"><label for="pt-assinante">Quem assina</label><div class="bp-in"><input id="pt-assinante"></div></div>
+      <div class="bp-campo"><label for="pt-cargo">Cargo de quem assina</label><div class="bp-in"><input id="pt-cargo" placeholder="Comandante-Geral da PMRO"></div></div>
+      <div class="inteira" id="pt-rev-box" style="display:none">
+        <div class="bp-rot" style="margin-bottom:8px" id="pt-rev-tit"></div>
+        <div class="p5-rev"><table><thead><tr><th>Art.</th><th>Nº</th><th>Posto</th><th>Nome</th><th>Função</th></tr></thead><tbody id="pt-rev"></tbody></table></div>
+      </div>
+      <div class="bp-msg err inteira" id="pt-msg"></div>
+      <div class="bp-modal-pe inteira" style="margin-top:4px">
+        <button type="button" class="bp-btn perigo-l" id="pt-excluir" style="margin-right:auto;display:none" onclick="excluirPortaria()"><i data-ic="lixeira"></i>Excluir portaria</button>
+        <button type="button" class="bp-btn ghost" onclick="fechar('m-port')">Cancelar</button>
+        <button type="submit" class="bp-btn" id="pt-salvar"><i data-ic="check"></i>Salvar portaria</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SENHA (exclusão) -->
+<div class="bp-modal" id="m-senha" onclick="if(event.target===this)fechar('m-senha')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-senha-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile crit"><i data-ic="lixeira"></i></span>
+      <div><h3 id="m-senha-tit">Confirmar exclusão</h3><small id="m-senha-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-senha')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <form onsubmit="event.preventDefault(); confirmarSenha()" style="display:flex;flex-direction:column;gap:12px">
+      <div class="bp-campo"><label for="sx-pass">Sua senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="sx-pass" type="password" autocomplete="current-password" required></div></div>
+      <div class="bp-msg err" id="sx-msg"></div>
+      <div class="bp-modal-pe" style="margin-top:0">
+        <button type="button" class="bp-btn ghost" onclick="fechar('m-senha')">Cancelar</button>
+        <button type="submit" class="bp-btn perigo" id="sx-btn"><i data-ic="lixeira"></i>Excluir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<input type="file" id="pdf-troca" accept="application/pdf,.pdf" style="display:none" onchange="enviarPdf(this.files)">
+
+<script src="p5-portaria.js"></script>
+<script src="p5-diploma.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const fData = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const MEDALHA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg>';
+
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') ['m-senha', 'm-ag', 'm-port', 'm-dip'].some((id) => $(id).classList.contains('on') && (fechar(id), true));
+  if ($('m-dip').classList.contains('on') && !$('m-ag').classList.contains('on') && document.activeElement.tagName !== 'INPUT') {
+    if (e.key === 'ArrowRight') vizinho(1); if (e.key === 'ArrowLeft') vizinho(-1);
+  }
+});
+
+/* ============================== API / login ============================== */
+async function api(path, opt) {
+  const h = Object.assign({}, (opt && opt.headers) || {});
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, Object.assign({}, opt || {}, { headers: h }));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  return r;
+}
+async function apiJson(path, body) {
+  const r = await api(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+
+function nomeLogado() {
+  try { const p = JSON.parse(ls('bp_perms') || 'null'); if (p && p.nome) return p.nome; } catch (e) {}
+  return ls('bp_user');
+}
+function boot() {
+  const logado = !!ls('bp_token');
+  $('p5-login').style.display = logado ? 'none' : '';
+  $('p5-app').style.display = logado ? '' : 'none';
+  $('p5-sair').style.display = logado ? '' : 'none';
+  $('p5-eu').style.display = logado ? '' : 'none';
+  $('p5-estado').style.display = 'none';
+  if (logado) {
+    const n = nomeLogado();
+    $('p5-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P5';
+    $('p5-eu').querySelector('span').textContent = n;
+    carregar();
+  }
+}
+
+/* ============================== dados ============================== */
+let D = null;          // { gestor, portarias:[…] }
+let SEL = null;        // portaria aberta
+let ABA = 'lista';
+
+async function carregar(manter) {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo os agraciados') : null;
+  try { D = await apiJson('/api/p5'); }
+  catch (e) {
+    if (carga) carga.fechar();
+    if (e.status === 401) return;
+    $('p5-app').style.display = 'none'; $('p5-estado').style.display = '';
+    $('p5-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  if (window.BPCasca && BPCasca.novidades) BPCasca.novidades.gestor = () => !!(D && D.gestor);
+  document.querySelectorAll('.p5-ges').forEach((el) => { el.style.display = D.gestor ? '' : 'none'; });
+  pintarNums(); pintarGrade();
+  const h = new URLSearchParams(location.hash.slice(1));
+  const alvo = manter && SEL ? SEL.id : h.get('p');
+  if (alvo && D.portarias.some((p) => p.id === alvo)) abrirPortaria(alvo, true); else voltarInicio(true);
+  if ($('p5-q').value) buscar();
+}
+
+function contaGrupo(p, re) { return p.agraciados.filter((a) => re.test(tituloGrupo(p, a.art))).length; }
+function tituloGrupo(p, art) { const g = (p.grupos || []).find((x) => Number(x.art) === Number(art)); return g ? g.titulo : 'Agraciados'; }
+
+function pintarNums() {
+  const ps = D.portarias, todos = ps.flatMap((p) => p.agraciados.map((a) => ({ p, a })));
+  const pm = todos.filter((x) => /^Policia/i.test(tituloGrupo(x.p, x.a.art))).length;
+  $('p5-nums').innerHTML = [
+    ['arquivo', 'Portarias', ps.length, 'var(--info)'],
+    ['usuarios', 'Agraciados', todos.length, 'var(--acc)'],
+    ['escudo', 'Policiais militares', pm, 'var(--good)'],
+    ['usuario', 'Autoridades e civis', todos.length - pm, 'var(--warn)'],
+  ].map((k, i) => `<div class="bp-num" style="--i:${i};--c:${k[3]}">${IC(k[0])}<div class="r">${k[1]}</div><div class="v">${k[2]}</div></div>`).join('');
+  $('p5-nport').textContent = ps.length;
+}
+
+function pintarGrade() {
+  $('p5-grade').innerHTML = D.portarias.length ? D.portarias.map((p, i) => `
+    <button type="button" class="bp-card vivo topo-acc p5-port" style="--i:${i}" onclick="abrirPortaria('${esc(p.id)}')">
+      <div class="cab">
+        <span class="p5-medalha">${MEDALHA}</span>
+        <div class="num"><small>Portaria</small>nº ${esc(p.numero)}/${esc(p.ano)}</div>
+        <div class="total"><b>${p.agraciados.length}</b><small>agraciados</small></div>
+      </div>
+      <div class="meta">${esc(p.titulo || '')}<br>${fData(p.data) ? 'Assinada em ' + fData(p.data) : ''}${p.doe ? ' · DOE nº ' + esc(p.doe) + (p.doe_data ? ' de ' + fData(p.doe_data) : '') : ''}</div>
+      <div class="chips">${(p.grupos || []).map((g) => `<span class="bp-sl">${esc(g.titulo)} · ${p.agraciados.filter((a) => a.art === g.art).length}</span>`).join('')}
+        ${p.tem_pdf ? `<span class="bp-sl ok">${IC('arquivo')}PDF</span>` : `<span class="bp-sl pend">sem PDF</span>`}</div>
+    </button>`).join('') : '<div class="bp-vazio">Nenhuma portaria cadastrada ainda.</div>';
+}
+
+function voltarInicio(semHash) {
+  SEL = null; $('p5-vista').style.display = 'none'; $('p5-inicio').style.display = '';
+  if (!semHash) history.replaceState(null, '', location.pathname + location.search);
+}
+
+function abrirPortaria(id, semRolar) {
+  SEL = D.portarias.find((p) => p.id === id);
+  if (!SEL) return voltarInicio();
+  history.replaceState(null, '', location.pathname + location.search + '#p=' + encodeURIComponent(id));
+  $('p5-inicio').style.display = 'none'; $('p5-vista').style.display = '';
+  pintarVista();
+  if (!semRolar) $('p5-vista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function pintarVista() {
+  const p = SEL;
+  $('p5-vista').innerHTML = `
+    <div class="bp-sec"><button type="button" class="bp-btn sm ghost" onclick="voltarInicio()">${IC('voltar')}Todas as portarias</button></div>
+    <div class="bp-card topo-acc">
+      <div class="p5-vista-cab">
+        <span class="p5-medalha" style="width:56px;height:56px">${MEDALHA}</span>
+        <div><h2>Portaria nº ${esc(p.numero)}/${esc(p.ano)}</h2>
+          <div class="meta">${esc(p.titulo || '')}${fData(p.data) ? ' · ' + fData(p.data) : ''}${p.doe ? ' · DOE nº ' + esc(p.doe) + (p.doe_data ? ' de ' + fData(p.doe_data) : '') : ''}</div>
+          ${p.assinante ? `<div class="meta">Assinada por ${esc(p.assinante)}${p.cargo_assinante ? ', ' + esc(p.cargo_assinante) : ''}</div>` : ''}</div>
+        <div class="acoes p5-ges" style="display:${D.gestor ? '' : 'none'}">
+          <button type="button" class="bp-btn sm sec" onclick="incluirAg()">${IC('mais')}Incluir agraciado</button>
+          <button type="button" class="bp-btn sm sec" onclick="$('pdf-troca').click()">${IC('enviar')}${p.tem_pdf ? 'Trocar PDF' : 'Anexar PDF'}</button>
+          <button type="button" class="bp-btn sm ghost" onclick="editarPortaria()">${IC('editar')}Editar</button>
+        </div>
+      </div>
+      <div class="p5-seg" role="tablist">
+        <button type="button" class="${ABA === 'lista' ? 'on' : ''}" onclick="trocarAba('lista')">${IC('usuarios')}Lista (${p.agraciados.length})</button>
+        <button type="button" class="${ABA === 'pdf' ? 'on' : ''}" onclick="trocarAba('pdf')">${IC('arquivo')}Documento (PDF)</button>
+      </div>
+      <div id="p5-corpo"></div>
+    </div>`;
+  if (ABA === 'pdf') pintarPdf(); else pintarLista();
+}
+function trocarAba(a) { ABA = a; pintarVista(); }
+
+function linhaAg(p, a, extra) {
+  return `<div class="p5-ag" onclick="verDiploma('${esc(p.id)}','${esc(a.id)}')">
+    <span class="ord">${a.ordem}</span>
+    <div class="tx"><b>${a.posto ? `<span class="posto">${esc(a.posto)}</span>` : (a.trat ? `<span class="posto">${esc(a.trat)}</span>` : '')}${esc(a.nome)}</b>
+      ${a.funcao || extra ? `<small>${extra || ''}${a.funcao ? esc(a.funcao) : ''}</small>` : ''}</div>
+    ${D.gestor ? `<span class="ges"><button type="button" class="bp-btn ic sm ghost" title="Copiar o link do diploma" aria-label="Copiar o link do diploma" onclick="event.stopPropagation(); copiarLink('${esc(a.codigo)}')">${IC('enviar')}</button>
+      <button type="button" class="bp-btn ic sm ghost" title="Corrigir" aria-label="Corrigir" onclick="event.stopPropagation(); editarAg('${esc(a.id)}')">${IC('editar')}</button></span>` : ''}
+    <span class="ver">${IC('olho')}<span>Diploma</span></span>
+  </div>`;
+}
+
+function pintarLista() {
+  const p = SEL;
+  $('p5-corpo').innerHTML = (p.grupos || []).map((g) => {
+    const ags = p.agraciados.filter((a) => a.art === g.art);
+    if (!ags.length) return '';
+    return `<div class="p5-grupo"><span class="art">Art. ${g.art}º</span>${esc(g.titulo)}<span class="bp-sl" style="margin-left:auto">${ags.length}</span></div>
+      <div class="p5-lista">${ags.map((a) => linhaAg(p, a)).join('')}</div>`;
+  }).join('') || '<div class="bp-vazio" style="margin-top:14px">Nenhum agraciado nesta portaria.</div>';
+}
+
+/* ---------- PDF (pdf.js desenha as páginas; funciona também no celular) ---------- */
+let _pdfjs = null;
+function carregarPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!_pdfjs) _pdfjs = new Promise((ok, no) => {
+    const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(pdfjsLib); };
+    s.onerror = () => { _pdfjs = null; no(new Error('Não consegui carregar o leitor de PDF. Confira a internet.')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjs;
+}
+const PDF_CACHE = {};
+async function pdfBytes(id) {
+  if (PDF_CACHE[id]) return PDF_CACHE[id];
+  const r = await api('/api/p5/pdf?p=' + encodeURIComponent(id));
+  if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || 'Não consegui abrir o PDF (' + r.status + ').'); }
+  return (PDF_CACHE[id] = new Uint8Array(await r.arrayBuffer()));
+}
+async function pintarPdf() {
+  const p = SEL, corpo = $('p5-corpo');
+  if (!p.tem_pdf) { corpo.innerHTML = `<div class="bp-vazio" style="margin-top:14px">Esta portaria ainda não tem PDF.${D.gestor ? ' Use <b>Anexar PDF</b> acima.' : ''}</div>`; return; }
+  corpo.innerHTML = `<div class="p5-pdf-barra"><button type="button" class="bp-btn sm sec" onclick="baixarPortaria()">${IC('baixar')}Baixar PDF</button>
+    <button type="button" class="bp-btn sm sec" onclick="abrirPortariaAba()">${IC('olho')}Abrir em outra aba</button></div>
+    <div class="p5-pdf" id="p5-pdf"><div class="bp-msg"><span class="bp-gira"></span> Abrindo o documento…</div></div>`;
+  try {
+    const [lib, bytes] = await Promise.all([carregarPdfJs(), pdfBytes(p.id)]);
+    if (SEL !== p || ABA !== 'pdf') return;
+    const doc = await lib.getDocument({ data: bytes.slice() }).promise;
+    const box = $('p5-pdf'); box.innerHTML = '';
+    for (let n = 1; n <= doc.numPages; n++) {
+      const pg = await doc.getPage(n), vp = pg.getViewport({ scale: 1.6 });
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.setAttribute('aria-label', 'Página ' + n);
+      box.appendChild(cv);
+      await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) { const box = $('p5-pdf'); if (box) box.innerHTML = `<div class="bp-msg err">${esc(e.message)}</div>`; }
+}
+async function baixarPortaria() {
+  try { const b = await pdfBytes(SEL.id); salvarBlob(new Blob([b], { type: 'application/pdf' }), SEL.pdf_nome || ('Portaria ' + SEL.numero + '-' + SEL.ano + '.pdf')); }
+  catch (e) { toast(e.message, 'err'); }
+}
+async function abrirPortariaAba() {
+  const w = window.open('', '_blank');
+  try { const b = await pdfBytes(SEL.id); const u = URL.createObjectURL(new Blob([b], { type: 'application/pdf' })); if (w) w.location = u; else location.href = u; }
+  catch (e) { if (w) w.close(); toast(e.message, 'err'); }
+}
+function salvarBlob(blob, nome) {
+  const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 4000);
+}
+
+/* ---------- busca em todas as portarias ---------- */
+function buscar() {
+  const q = sem($('p5-q').value.trim());
+  $('p5-q-x').style.display = q ? '' : 'none';
+  if (q.length < 2) { $('p5-res').style.display = 'none'; $('p5-inicio').style.display = SEL ? 'none' : ''; $('p5-vista').style.display = SEL ? '' : 'none'; return; }
+  const termos = q.split(/\s+/);
+  const achados = [];
+  D.portarias.forEach((p) => p.agraciados.forEach((a) => {
+    const alvo = sem([a.posto, a.trat, a.nome, a.funcao].join(' '));
+    if (termos.every((t) => alvo.includes(t))) achados.push({ p, a });
+  }));
+  $('p5-inicio').style.display = 'none'; $('p5-vista').style.display = 'none'; $('p5-res').style.display = '';
+  $('p5-res').innerHTML = `<div class="bp-sec"><span class="bp-tile info">${IC('buscar')}</span><div><h2>Resultado da busca</h2><small>${achados.length} ${achados.length === 1 ? 'agraciado encontrado' : 'agraciados encontrados'}</small></div></div>
+    ${achados.length ? `<div class="p5-lista">${achados.slice(0, 200).map((x) => linhaAg(x.p, x.a, `<span class="p5-res-port">Portaria ${esc(x.p.numero)}/${esc(x.p.ano)} · ${esc(tituloGrupo(x.p, x.a.art))}</span>${x.a.funcao ? ' · ' : ''}`)).join('')}</div>` : '<div class="bp-vazio">Ninguém com esse nome nas portarias cadastradas.</div>'}`;
+}
+function limparBusca() { $('p5-q').value = ''; buscar(); }
+
+/* ============================== diploma ============================== */
+let DIP = null;  // { p, a, lista } — lista = ordem de navegação (portaria ou busca)
+function linkDe(codigo) {
+  const u = new URL('p5-diploma.html', location.href);
+  u.search = ''; u.hash = '';
+  u.searchParams.set('c', codigo);
+  if (API_BASE !== 'https://bpfron-api.bpfron.workers.dev') u.searchParams.set('api', API_BASE); // só nos testes locais
+  return u.toString();
+}
+async function verDiploma(pid, aid) {
+  const p = D.portarias.find((x) => x.id === pid), a = p && p.agraciados.find((x) => x.id === aid);
+  if (!a) return;
+  const lista = $('p5-res').style.display !== 'none'
+    ? [...document.querySelectorAll('#p5-res .p5-ag')].map((el) => el.getAttribute('onclick').match(/'([^']+)','([^']+)'/).slice(1, 3))
+    : p.agraciados.map((x) => [p.id, x.id]);
+  DIP = { p, a, ag: a, lista, i: lista.findIndex((x) => x[1] === aid) };
+  $('m-dip-tit').textContent = (a.posto ? a.posto + ' ' : '') + a.nome;
+  $('m-dip-sub').textContent = `Portaria nº ${p.numero}/${p.ano} · ${tituloGrupo(p, a.art)} · ${a.ordem}º da lista`;
+  $('dip-ant').disabled = DIP.i <= 0; $('dip-prox').disabled = DIP.i >= lista.length - 1;
+  if (D.gestor && a.codigo) { const l = linkDe(a.codigo); $('dip-link').value = l; $('dip-abrir').href = l; }
+  abrir('m-dip');
+  $('dip-carga').style.display = '';
+  const eu = DIP;
+  await P5Diploma.desenhar($('dip-canvas'), { agraciado: Object.assign({ codigo: a.codigo || '' }, a), portaria: p, grupo: tituloGrupo(p, a.art), link: D.gestor && a.codigo ? linkDe(a.codigo) : '' });
+  if (DIP === eu) $('dip-carga').style.display = 'none';
+}
+function vizinho(d) {
+  if (!DIP) return;
+  const n = DIP.lista[DIP.i + d];
+  if (n) verDiploma(n[0], n[1]);
+}
+async function baixar(tipo) {
+  if (!DIP) return;
+  const bt = $(tipo === 'pdf' ? 'dip-pdf' : 'dip-png'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Gerando…';
+  try {
+    const nome = P5Diploma.nomeArquivo({ agraciado: DIP.a, portaria: DIP.p });
+    if (tipo === 'pdf') await P5Diploma.baixarPDF($('dip-canvas'), nome); else await P5Diploma.baixarPNG($('dip-canvas'), nome);
+  } catch (e) { toast(e.message, 'err'); }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+async function copiarLink(codigo) {
+  const l = codigo ? linkDe(codigo) : $('dip-link').value;
+  try { await navigator.clipboard.writeText(l); toast('Link copiado. Cole no WhatsApp ou no e-mail.'); }
+  catch (e) { $('dip-link').value = l; $('dip-link').select(); document.execCommand('copy'); toast('Link copiado.'); }
+}
+function whatsLink() {
+  if (!DIP) return;
+  const a = DIP.a, p = DIP.p;
+  const msg = `${a.trat ? a.trat + ' ' : ''}${a.posto ? a.posto + ' ' : ''}${a.nome}, o seu diploma da ${p.titulo || 'medalha'} (Portaria nº ${p.numero}/${p.ano}) está disponível. Abra o link para ver e baixar:\n${$('dip-link').value}\n\nP5 · Comunicação Social · BPFRON`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+async function trocarLink() {
+  if (!DIP || !confirmaTexto('Gerar um link novo? O link antigo deste diploma deixa de abrir.')) return;
+  try {
+    const r = await apiJson('/api/p5/salvar', { op: 'novo_link', id: DIP.a.id });
+    DIP.a.codigo = r.codigo; toast('Link novo gerado. O antigo não abre mais.');
+    verDiploma(DIP.p.id, DIP.a.id);
+  } catch (e) { toast(e.message, 'err'); }
+}
+function confirmaTexto(t) { return window.__p5Confirma ? window.__p5Confirma(t) : confirm(t); }
+
+/* ============================== gestor: agraciado ============================== */
+let AG_ED = null;
+function opcoesArt(p, sel) {
+  $('ag-art').innerHTML = (p.grupos && p.grupos.length ? p.grupos : [{ art: 1, titulo: 'Agraciados' }])
+    .map((g) => `<option value="${g.art}" ${Number(sel) === Number(g.art) ? 'selected' : ''}>Art. ${g.art}º · ${esc(g.titulo)}</option>`).join('');
+}
+function editarAg(id) {
+  const p = DIP && DIP.a.id === id ? DIP.p : SEL || D.portarias.find((x) => x.agraciados.some((a) => a.id === id));
+  const a = p && p.agraciados.find((x) => x.id === id);
+  if (!a) return;
+  AG_ED = { p, a };
+  $('m-ag-tit').textContent = 'Corrigir agraciado'; $('m-ag-sub').textContent = `Portaria nº ${p.numero}/${p.ano}`;
+  $('ag-posto').value = a.posto || ''; $('ag-trat').value = a.trat || ''; $('ag-nome').value = a.nome || ''; $('ag-funcao').value = a.funcao || '';
+  opcoesArt(p, a.art); $('ag-ordem').value = a.ordem || '';
+  $('ag-excluir').style.display = ''; $('ag-msg').textContent = '';
+  abrir('m-ag');
+}
+function incluirAg() {
+  AG_ED = { p: SEL, a: null };
+  $('m-ag-tit').textContent = 'Incluir agraciado'; $('m-ag-sub').textContent = `Portaria nº ${SEL.numero}/${SEL.ano}`;
+  ['ag-posto', 'ag-trat', 'ag-nome', 'ag-funcao', 'ag-ordem'].forEach((k) => { $(k).value = ''; });
+  opcoesArt(SEL, 1); $('ag-excluir').style.display = 'none'; $('ag-msg').textContent = '';
+  abrir('m-ag'); setTimeout(() => $('ag-posto').focus(), 100);
+}
+async function salvarAg() {
+  const bt = $('ag-salvar'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…'; $('ag-msg').textContent = '';
+  const ag = { posto: $('ag-posto').value, trat: $('ag-trat').value, nome: $('ag-nome').value, funcao: $('ag-funcao').value, art: $('ag-art').value };
+  if ($('ag-ordem').value) ag.ordem = $('ag-ordem').value;
+  if (AG_ED.a) ag.id = AG_ED.a.id; else ag.portaria_id = AG_ED.p.id;
+  try {
+    await apiJson('/api/p5/salvar', { op: 'agraciado', agraciado: ag });
+    fechar('m-ag'); toast(AG_ED.a ? 'Dados corrigidos.' : 'Agraciado incluído.');
+    const reabrir = $('m-dip').classList.contains('on') && AG_ED.a ? AG_ED.a.id : null;
+    await carregar(true);
+    if (reabrir) verDiploma(SEL.id, reabrir);
+  } catch (e) { $('ag-msg').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+
+/* ---------- exclusão com senha ---------- */
+let EXCLUIR = null;
+function pedirSenha(texto, fn) {
+  EXCLUIR = fn; $('m-senha-sub').textContent = texto; $('sx-pass').value = ''; $('sx-msg').textContent = '';
+  abrir('m-senha'); setTimeout(() => $('sx-pass').focus(), 100);
+}
+async function confirmarSenha() {
+  const bt = $('sx-btn'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Excluindo…';
+  try { await EXCLUIR($('sx-pass').value); fechar('m-senha'); }
+  catch (e) { $('sx-msg').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+function excluirAg() {
+  const { a } = AG_ED;
+  pedirSenha(`${a.posto ? a.posto + ' ' : ''}${a.nome} sai da lista (fica no histórico da planilha).`, async (senha) => {
+    await apiJson('/api/p5/salvar', { op: 'excluir', tipo: 'agraciado', id: a.id, senha });
+    fechar('m-ag'); fechar('m-dip'); toast('Agraciado excluído da lista.'); await carregar(true);
+  });
+}
+
+/* ============================== gestor: portaria ============================== */
+let PT = null; // { edit: portaria|null, lida: {…}|null, file: File|null }
+function camposPortaria(x) {
+  $('pt-numero').value = x.numero || ''; $('pt-data').value = x.data || ''; $('pt-titulo').value = x.titulo || '';
+  $('pt-doe').value = x.doe || ''; $('pt-doedata').value = x.doe_data || x.doeData || ''; $('pt-sei').value = x.sei || '';
+  $('pt-processo').value = x.processo || ''; $('pt-assinante').value = x.assinante || ''; $('pt-cargo').value = x.cargo_assinante || x.cargoAssinante || '';
+}
+function arqPortaria(f) {
+  const box = $('pt-arq');
+  box.classList.toggle('tem', !!f);
+  box.querySelector('.tx b').textContent = f ? f.name : 'Toque para escolher o PDF da portaria';
+  box.querySelector('.tx small').textContent = f ? (f.size / 1024).toFixed(0) + ' KB' : 'ou arraste para cá (PDF do SEI/DOE, até 15 MB)';
+  box.querySelector('.bp-trocar').textContent = f ? 'Trocar' : '';
+}
+function novaPortaria() {
+  PT = { edit: null, lida: null, file: null };
+  $('m-port-tit').textContent = 'Nova portaria'; $('m-port-sub').textContent = 'Arraste o PDF do DOE: a lista é montada sozinha para você conferir';
+  $('pt-arq').style.display = ''; arqPortaria(null); $('pt-file').value = '';
+  camposPortaria({ titulo: 'Medalha do Mérito Policial de Fronteira', cargo_assinante: 'Comandante-Geral da PMRO' });
+  $('pt-rev-box').style.display = 'none'; $('pt-ler').textContent = ''; $('pt-msg').textContent = ''; $('pt-excluir').style.display = 'none';
+  abrir('m-port');
+}
+function editarPortaria() {
+  PT = { edit: SEL, lida: null, file: null };
+  $('m-port-tit').textContent = 'Editar portaria'; $('m-port-sub').textContent = `Portaria nº ${SEL.numero}/${SEL.ano}`;
+  $('pt-arq').style.display = 'none'; camposPortaria(SEL);
+  $('pt-rev-box').style.display = 'none'; $('pt-ler').textContent = ''; $('pt-msg').textContent = ''; $('pt-excluir').style.display = '';
+  abrir('m-port');
+}
+async function lerPdfPortaria(files) {
+  const f = files && files[0];
+  if (!f) return;
+  PT.file = f; arqPortaria(f);
+  const m = $('pt-ler'); m.className = 'bp-msg'; m.innerHTML = '<span class="bp-gira"></span> Lendo a portaria…';
+  try {
+    const lib = await carregarPdfJs();
+    const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+    const paginas = [];
+    for (let n = 1; n <= doc.numPages; n++) paginas.push((await (await doc.getPage(n)).getTextContent()).items);
+    const r = P5Portaria.ler(P5Portaria.linhasDoPdfJs(paginas));
+    PT.lida = r; camposPortaria(r);
+    $('pt-rev').innerHTML = r.agraciados.map((a) => `<tr><td>${a.art}º</td><td>${a.ordem}</td><td>${esc(a.posto || a.trat)}</td><td>${esc(a.nome)}</td><td>${esc(a.funcao)}</td></tr>`).join('');
+    $('pt-rev-tit').textContent = `${r.agraciados.length} agraciados lidos · ` + r.grupos.map((g) => `${g.titulo} (${r.agraciados.filter((a) => a.art === g.art).length})`).join(' · ');
+    $('pt-rev-box').style.display = r.agraciados.length ? '' : 'none';
+    m.className = r.avisos.length ? 'bp-msg err' : 'bp-msg ok';
+    m.textContent = r.avisos.length ? 'Atenção: ' + r.avisos.join(' ') + ' Confira os campos; dá para corrigir os nomes depois de salvar.' : 'Pronto: confira a lista e os dados abaixo antes de salvar.';
+  } catch (e) { m.className = 'bp-msg err'; m.textContent = 'Não consegui ler este PDF: ' + e.message; }
+}
+async function salvarPortaria() {
+  const bt = $('pt-salvar'), antes = bt.innerHTML, msg = $('pt-msg');
+  msg.textContent = '';
+  const x = { numero: $('pt-numero').value, data: $('pt-data').value, ano: ($('pt-data').value || '').slice(0, 4), titulo: $('pt-titulo').value,
+    doe: $('pt-doe').value, doe_data: $('pt-doedata').value, sei: $('pt-sei').value, processo: $('pt-processo').value,
+    assinante: $('pt-assinante').value, cargo_assinante: $('pt-cargo').value };
+  if (!x.numero || !x.ano) { msg.textContent = 'Informe o número e a data da portaria.'; return; }
+  if (!PT.edit && !(PT.lida && PT.lida.agraciados.length) && !confirmaTexto('Salvar a portaria sem nenhum agraciado? Você pode incluir um por um depois.')) return;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…';
+  try {
+    let id;
+    if (PT.edit) { x.id = PT.edit.id; id = (await apiJson('/api/p5/salvar', { op: 'portaria', portaria: x })).id; }
+    else {
+      x.grupos = PT.lida ? PT.lida.grupos : [{ art: 1, titulo: 'Agraciados' }];
+      id = (await apiJson('/api/p5/salvar', { op: 'portaria', portaria: x, agraciados: PT.lida ? PT.lida.agraciados : [] })).id;
+      if (PT.file) { bt.innerHTML = '<span class="bp-gira"></span>Enviando o PDF…'; await subirPdf(id, PT.file); }
+    }
+    fechar('m-port'); toast(PT.edit ? 'Portaria atualizada.' : 'Portaria cadastrada.');
+    await carregar(); abrirPortaria(id);
+  } catch (e) { msg.textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+function excluirPortaria() {
+  const p = PT.edit;
+  pedirSenha(`A Portaria nº ${p.numero}/${p.ano} e a lista dela saem da plataforma (ficam no histórico da planilha e o PDF continua no Drive).`, async (senha) => {
+    await apiJson('/api/p5/salvar', { op: 'excluir', tipo: 'portaria', id: p.id, senha });
+    fechar('m-port'); toast('Portaria excluída.'); SEL = null; await carregar(); voltarInicio();
+  });
+}
+async function subirPdf(id, f) {
+  const fd = new FormData(); fd.append('p', id); fd.append('arquivo', f);
+  const r = await api('/api/p5/enviar-pdf', { method: 'POST', body: fd });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.error || 'Não consegui enviar o PDF.');
+  delete PDF_CACHE[id];
+}
+async function enviarPdf(files) {
+  const f = files && files[0]; $('pdf-troca').value = '';
+  if (!f || !SEL) return;
+  toast('Enviando o PDF…');
+  try { await subirPdf(SEL.id, f); toast('PDF da portaria atualizado.'); ABA = 'pdf'; await carregar(true); }
+  catch (e) { toast(e.message, 'err'); }
+}
+
+boot();
+</script>
+</body>
+</html>
