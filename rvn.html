@@ -121,6 +121,9 @@ body{
 .rvn-painel-lbl{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .rvn-painel-item{font-size:14.5px;color:#cbd5e1;padding:4px 0}
 .rvn-painel-item.vazio{color:var(--muted)}
+.rvn-edit-btn{background:transparent;border:1px solid var(--border);color:#cbd5e1;border-radius:8px;padding:6px 11px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.rvn-edit-btn:hover{border-color:rgba(245,197,24,.6);color:var(--yellow)}
+.rvn-edit-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;margin:0 0 14px;padding:14px;border:1px dashed rgba(245,197,24,.4);border-radius:12px}
 
 /* ---------------- tablet / mobile ---------------- */
 @media(max-width:760px){
@@ -596,11 +599,34 @@ function renderPainel(periodos){
 
   if (!periodos.length){ wrap.innerHTML = '<div class="rvn-state">Nenhum período criado ainda.</div>'; return; }
 
-  wrap.innerHTML = periodos.map((p) => `
+  RVN_PERIODOS = periodos;
+  wrap.innerHTML = periodos.map((p, i) => `
     <div class="rvn-painel-card">
       <div class="rvn-card-top">
         <b>${esc(p.nome)}</b>
         <span class="rvn-periodo-datas">${esc(p.dataInicio || '—')} a ${esc(p.dataFim || '—')}</span>
+        <button type="button" class="rvn-edit-btn" onclick="rvnEditarDatas(${i})">✏️ Editar datas</button>
+      </div>
+      <div class="rvn-edit-box" id="rvn-ed-${i}" style="display:none">
+        <div class="rvn-fg"><label>Início</label>
+          <div class="rvn-date-wrap">
+            <input id="rvn-ed-ini-${i}" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="off" oninput="rvnMaskData(this)">
+            <input type="date" id="rvn-ed-ini-${i}-nat" class="rvn-date-native" tabindex="-1" onchange="rvnDateFromNative(this,'rvn-ed-ini-${i}')">
+            <button type="button" class="rvn-date-btn" onclick="rvnAbrirCalendario('rvn-ed-ini-${i}','rvn-ed-ini-${i}-nat')" aria-label="Abrir calendário" title="Abrir calendário">📅</button>
+          </div>
+        </div>
+        <div class="rvn-fg"><label>Fim</label>
+          <div class="rvn-date-wrap">
+            <input id="rvn-ed-fim-${i}" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="off" oninput="rvnMaskData(this)">
+            <input type="date" id="rvn-ed-fim-${i}-nat" class="rvn-date-native" tabindex="-1" onchange="rvnDateFromNative(this,'rvn-ed-fim-${i}')">
+            <button type="button" class="rvn-date-btn" onclick="rvnAbrirCalendario('rvn-ed-fim-${i}','rvn-ed-fim-${i}-nat')" aria-label="Abrir calendário" title="Abrir calendário">📅</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="rvn-send" id="rvn-ed-ok-${i}" onclick="rvnSalvarDatas(${i})">Salvar</button>
+          <button type="button" class="rvn-btn ghost" style="min-height:46px" onclick="rvnEditarDatas(${i})">Cancelar</button>
+        </div>
+        <div class="rvn-msg" id="rvn-ed-msg-${i}" style="grid-column:1/-1"></div>
       </div>
       <div class="rvn-painel-cols">
         <div>
@@ -638,9 +664,72 @@ function rvnDateFromNative(nat, textId){
   document.getElementById(textId).value = `${d}/${m}/${y}`;
 }
 
+// Confere as duas datas antes de mandar pro Worker (ele só checa o formato
+// DD/MM/AAAA, e assim passou um "21/02/0261" no período PROTETOR de out/2026).
+// Devolve a mensagem de erro, ou '' se estiver tudo certo.
+function rvnValidaPeriodo(ini, fim){
+  const ler = (s) => {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s || '').trim());
+    if (!m) return null;
+    const d = new Date(+m[3], +m[2] - 1, +m[1]);
+    if (d.getFullYear() !== +m[3] || d.getMonth() !== +m[2] - 1 || d.getDate() !== +m[1]) return null;
+    return d;
+  };
+  const a = ler(ini), b = ler(fim);
+  if (!a) return 'Data de início inválida. Use DD/MM/AAAA.';
+  if (!b) return 'Data de fim inválida. Use DD/MM/AAAA.';
+  const ano = new Date().getFullYear();
+  for (const [d, rot] of [[a, 'início'], [b, 'fim']]){
+    if (d.getFullYear() < ano - 3 || d.getFullYear() > ano + 1) return `Confira o ano da data de ${rot} (${d.getFullYear()}).`;
+  }
+  if (b < a) return 'A data de fim é anterior à de início.';
+  if ((b - a) / 86400000 > 120) return 'O período passa de 120 dias. Confira as datas.';
+  return '';
+}
+
+let RVN_PERIODOS = [];
+
+function rvnEditarDatas(i){
+  const box = document.getElementById('rvn-ed-' + i);
+  const abrir = box.style.display === 'none';
+  box.style.display = abrir ? 'grid' : 'none';
+  if (!abrir) return;
+  const p = RVN_PERIODOS[i] || {};
+  document.getElementById('rvn-ed-ini-' + i).value = p.dataInicio || '';
+  document.getElementById('rvn-ed-fim-' + i).value = p.dataFim || '';
+  const msg = document.getElementById('rvn-ed-msg-' + i);
+  msg.className = 'rvn-msg'; msg.textContent = '';
+}
+
+async function rvnSalvarDatas(i){
+  const p = RVN_PERIODOS[i];
+  const msg = document.getElementById('rvn-ed-msg-' + i);
+  const btn = document.getElementById('rvn-ed-ok-' + i);
+  const ini = document.getElementById('rvn-ed-ini-' + i).value.trim();
+  const fim = document.getElementById('rvn-ed-fim-' + i).value.trim();
+  const erro = rvnValidaPeriodo(ini, fim);
+  if (erro){ msg.className = 'rvn-msg err'; msg.textContent = '❌ ' + erro; return; }
+  if (!p) return;
+  btn.disabled = true;
+  msg.className = 'rvn-msg'; msg.textContent = 'Salvando…';
+  try {
+    await apiPostJSON('/api/rvn/periodo', { op: 'set_props', id: p.id, dataInicio: ini, dataFim: fim });
+    msg.className = 'rvn-msg ok'; msg.textContent = '✅ Datas corrigidas.';
+    setTimeout(gestCarregarPainel, 900);
+  } catch(e){
+    msg.className = 'rvn-msg err'; msg.textContent = '❌ ' + e.message;
+    btn.disabled = false;
+  }
+}
+
 async function gestCriarPeriodo(ev){
   ev.preventDefault();
   const msg = document.getElementById('rvn-p-msg');
+  const erroDatas = rvnValidaPeriodo(
+    document.getElementById('rvn-p-inicio').value,
+    document.getElementById('rvn-p-fim').value
+  );
+  if (erroDatas){ msg.className = 'rvn-msg err'; msg.textContent = '❌ ' + erroDatas; return false; }
   msg.className = 'rvn-msg'; msg.textContent = 'Criando…';
   try {
     await apiPostJSON('/api/rvn/periodo', {
