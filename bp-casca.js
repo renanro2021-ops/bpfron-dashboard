@@ -18,6 +18,12 @@
       No dashboard (index.html) entra como itens da barra lateral.
       <html data-bp-menu="nao"> ou página dentro de iframe = sem menu.
    4. TELA DE CARREGAMENTO (arcos dourados girando): BPCasca.carregando().
+   5. (o menu ☰ propriamente dito)
+   6. ÍCONES DESENHADOS (BPCasca.ic / <i data-ic>) e aviso rápido (BPCasca.toast).
+   7. NOVIDADES: aviso do que mudou na página, uma vez por pessoa
+      (bloco <script id="bp-novidades"> da própria página). Padrão do site:
+      toda atualização de página ganha uma entrada ali.
+   O visual comum (cartões, botões, campos…) fica no bp-ui.css.
 
    ⚠️ O menu só ESCONDE o que a pessoa não usa. Quem barra o acesso de
    verdade é o Worker (cada rota confere a permissão).
@@ -776,6 +782,194 @@
   }
 
   /* ================================================================
+     6. ÍCONES DESENHADOS (SVG de traço, no lugar de emoji em botão)
+     No Windows ⬇️ ⬆️ 🔎 viram quadrados azuis; estes seguem a cor do texto.
+     HTML: <i data-ic="baixar"></i>   JS: BPCasca.ic('baixar')
+     Página que pinta HTML depois de abrir: BPCasca.icones(elemento).
+     ================================================================ */
+  var ICONES = {
+    baixar: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    enviar: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    buscar: '<circle cx="11" cy="11" r="7.5"/><line x1="21" y1="21" x2="16.4" y2="16.4"/>',
+    arquivo: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    assinar: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    editar: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+    calendario: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    arquivar: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
+    lixeira: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    cadeado: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    sair: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    ok: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    alerta: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    relogio: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    pasta: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    mais: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    zip: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    escudo: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+    usuario: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    usuarios: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    seta: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+    voltar: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+    novidade: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/>',
+    info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+    atualizar: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+    foguete: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    grade: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+    olho: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    abaixo: '<polyline points="6 9 12 15 18 9"/>'
+  };
+  function ic(nome, cls) {
+    var d = ICONES[nome];
+    if (!d) return '';
+    return '<svg class="bp-i' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + d + '</svg>';
+  }
+  function icones(raiz) {
+    // o <i> vira o próprio <svg> (as classes dele passam para o svg)
+    var l = (raiz || document).querySelectorAll('i[data-ic]');
+    Array.prototype.forEach.call(l, function (el) { var s = ic(el.getAttribute('data-ic'), el.className); if (s) el.outerHTML = s; });
+  }
+  // .bp-i solto (página sem o bp-ui.css) não pode virar um SVG gigante
+  var CSS_IC_BASE = 'svg.bp-i{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}i[data-ic]{display:inline-flex;font-style:normal}';
+
+  /* Aviso rápido no pé da tela. tipo: '' (ok) | 'err' */
+  function toast(msg, tipo, ms) {
+    injetarCss('bpc-css-toast', CSS_IC_BASE +
+      '.bp-toasts{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147475000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(460px,calc(100vw - 24px))}' +
+      '.bp-toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;background:var(--surf,#0d1324);border:1px solid var(--line2,rgba(148,163,184,.22));box-shadow:0 10px 30px rgba(0,0,0,.35);color:var(--t1,#f8fafc);' +
+        'font:600 14px/1.4 Inter,system-ui,sans-serif;pointer-events:auto;animation:bpc-toast .35s cubic-bezier(.2,.8,.2,1) both}' +
+      '.bp-toast svg{width:20px;height:20px;color:var(--good,#4ade80)}.bp-toast.err svg{color:var(--crit,#f87171)}' +
+      '.bp-toast.sai{opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}' +
+      '@keyframes bpc-toast{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}');
+    var box = document.querySelector('.bp-toasts');
+    if (!box) { box = document.createElement('div'); box.className = 'bp-toasts'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
+    var t = document.createElement('div');
+    t.className = 'bp-toast' + (tipo ? ' ' + tipo : '');
+    t.innerHTML = ic(tipo === 'err' ? 'alerta' : 'ok') + '<span></span>';
+    t.querySelector('span').textContent = msg;
+    box.appendChild(t);
+    setTimeout(function () { t.classList.add('sai'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 350); }, ms || 3800);
+  }
+
+  /* ================================================================
+     7. NOVIDADES DA PÁGINA (padrão do site desde 29/10/2026)
+     Toda atualização de uma página ganha uma entrada no bloco
+       <script type="application/json" id="bp-novidades">[
+         { "data":"2026-10-29", "titulo":"…", "itens":["…","…"], "quem":"todos"|"gestor" }
+       ]</script>
+     da PRÓPRIA página (assim sobe junto com ela, sem mexer neste arquivo).
+     Quem abre a página vê UMA vez o que mudou (guardado no aparelho em
+     localStorage.bp_novid). "gestor" = só quem é gestor daquele sistema
+     (regra do CATALOGO); a página pode mudar com BPCasca.novidades.gestor = fn.
+     Mostra só o que tem até 45 dias. BPCasca.novidades.abrir() reabre tudo.
+     ================================================================ */
+  var NOVID_DIAS = 45;
+  var CSS_NOVID = CSS_IC_BASE +
+    '#bpc-novid{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:2147479000;width:min(400px,calc(100vw - 24px));max-height:min(560px,calc(100vh - 36px));display:flex;flex-direction:column;' +
+      'border-radius:22px;background:var(--surf,#0d1324);color:var(--t2,#e2e8f0);border:1px solid var(--line2,rgba(148,163,184,.22));box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden;' +
+      'font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:left;transform:translateY(24px) scale(.97);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s}' +
+    '#bpc-novid.on{transform:none;opacity:1}' +
+    '#bpc-novid *{box-sizing:border-box}' +
+    '#bpc-novid::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,transparent,var(--acc,var(--yellow,#F5C518)),transparent)}' +
+    '#bpc-novid .bn-cab{display:flex;align-items:center;gap:12px;padding:18px 18px 12px}' +
+    '#bpc-novid .bn-tile{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none;color:var(--acc,var(--yellow,#F5C518));' +
+      'background:linear-gradient(135deg,rgba(245,197,24,.28),rgba(245,197,24,.06));border:1px solid rgba(245,197,24,.34)}' +
+    '#bpc-novid .bn-tile svg{width:22px;height:22px;animation:bpc-brilha 2.4s ease-in-out infinite}' +
+    '@keyframes bpc-brilha{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.14) rotate(8deg)}}' +
+    '#bpc-novid .bn-cab b{display:block;font-family:Rajdhani,Inter,sans-serif;font-size:21px;color:var(--t1,#fff);line-height:1.1}' +
+    '#bpc-novid .bn-cab small{display:block;font-size:12px;color:var(--muted,#94a3b8)}' +
+    '#bpc-novid .bn-x{margin-left:auto;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2,rgba(148,163,184,.22));background:none;color:var(--muted,#94a3b8);cursor:pointer;display:grid;place-items:center;flex:none}' +
+    '#bpc-novid .bn-x:hover{color:var(--t1,#fff)}#bpc-novid .bn-x svg{width:16px;height:16px}' +
+    '#bpc-novid .bn-lista{overflow-y:auto;padding:0 18px 4px;overscroll-behavior:contain}' +
+    '#bpc-novid .bn-it{position:relative;padding:12px 0 12px 18px;border-top:1px solid var(--line,rgba(148,163,184,.12))}' +
+    '#bpc-novid .bn-it::before{content:"";position:absolute;left:0;top:19px;width:8px;height:8px;border-radius:50%;background:var(--acc,var(--yellow,#F5C518));box-shadow:0 0 0 4px rgba(245,197,24,.15)}' +
+    '#bpc-novid .bn-it.lido::before{background:var(--dim,#64748b);box-shadow:none}' +
+    '#bpc-novid .bn-it h4{margin:0;font-size:14.5px;color:var(--t1,#fff);display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '#bpc-novid .bn-it h4 span{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted,#94a3b8)}' +
+    '#bpc-novid .bn-it h4 em{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:999px;background:rgba(34,197,94,.14);color:var(--good,#4ade80)}' +
+    '#bpc-novid .bn-it ul{margin:6px 0 0;padding-left:18px;color:var(--t3,#cbd5e1);font-size:13.5px}' +
+    '#bpc-novid .bn-it li{margin:3px 0}' +
+    '#bpc-novid .bn-pe{display:flex;gap:10px;padding:14px 18px 18px}' +
+    '#bpc-novid .bn-ok{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:0;border-radius:13px;cursor:pointer;font:800 14.5px Inter,system-ui,sans-serif;' +
+      'background:linear-gradient(135deg,var(--acc,#F5C518),var(--acc2,#e0a800));color:var(--acc-ink,#1a1300)}' +
+    '#bpc-novid .bn-ok svg{width:18px;height:18px}' +
+    ':root[data-tema="claro"] #bpc-novid{box-shadow:0 24px 60px rgba(15,23,42,.18)}' +
+    '@media (max-width:640px){#bpc-novid{right:12px;left:12px;width:auto;bottom:calc(12px + env(safe-area-inset-bottom))}}' +
+    '@media print{#bpc-novid{display:none!important}}';
+
+  function novidLista() {
+    var el = document.getElementById('bp-novidades');
+    if (!el) return [];
+    var l = jparse(el.textContent, []);
+    if (!Array.isArray(l)) return [];
+    return l.filter(function (n) { return n && /^\d{4}-\d{2}-\d{2}$/.test(n.data || '') && n.titulo; })
+      .map(function (n) { return { data: n.data, titulo: String(n.titulo), itens: Array.isArray(n.itens) ? n.itens.map(String) : [], quem: n.quem === 'gestor' ? 'gestor' : 'todos', id: n.data + '|' + n.titulo }; })
+      .sort(function (a, b) { return a.data < b.data ? 1 : a.data > b.data ? -1 : 0; });
+  }
+  function novidEhGestor() {
+    if (typeof novidades.gestor === 'function') { try { return !!novidades.gestor(); } catch (e) { return false; } }
+    var P = PERFIL || perfilLocal(), i = itemAtual();
+    if (!P.logado) return false;
+    return i ? papel(i, P) === 'gestor' || deGestao(i, P) : true;
+  }
+  function novidVistas() { return jparse(ls('bp_novid'), []); }
+  function novidMarcar(lista) {
+    var v = novidVistas();
+    lista.forEach(function (n) { if (v.indexOf(n.id) < 0) v.push(n.id); });
+    ls('bp_novid', JSON.stringify(v.slice(-300)));
+  }
+  function novidDataBR(d) { var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  function novidFechar() {
+    var el = document.getElementById('bpc-novid');
+    if (!el) return;
+    el.classList.remove('on');
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 450);
+  }
+  // tudo = true: reabre todas as entradas (já lidas aparecem apagadas)
+  function novidades(tudo) {
+    var lista = novidLista(), gestor = novidEhGestor(), vistas = novidVistas();
+    var limite = Date.now() - NOVID_DIAS * 86400000;
+    lista = lista.filter(function (n) { return n.quem === 'todos' || gestor; });
+    var novas = lista.filter(function (n) { return vistas.indexOf(n.id) < 0 && new Date(n.data + 'T12:00:00').getTime() >= limite; });
+    var mostrar = tudo ? lista.slice(0, 12) : novas;
+    if (!mostrar.length) return false;
+    injetarCss('bpc-css-novid', CSS_NOVID);
+    var velho = document.getElementById('bpc-novid'); if (velho && velho.parentNode) velho.parentNode.removeChild(velho);
+    var i = itemAtual();
+    var el = document.createElement('section');
+    el.id = 'bpc-novid'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Novidades desta página');
+    el.innerHTML =
+      '<div class="bn-cab"><span class="bn-tile">' + ic('novidade') + '</span><div><b>Novidades</b><small>' + esc(i ? i.nome : document.title.split('·')[0]) + '</small></div>' +
+      '<button type="button" class="bn-x" aria-label="Fechar">' + ic('x') + '</button></div>' +
+      '<div class="bn-lista">' + mostrar.map(function (n) {
+        var lido = tudo && vistas.indexOf(n.id) >= 0;
+        return '<div class="bn-it' + (lido ? ' lido' : '') + '"><h4>' + esc(n.titulo) + '<span>' + novidDataBR(n.data) + '</span>' + (n.quem === 'gestor' ? '<em>GESTÃO</em>' : '') + '</h4>' +
+          (n.itens.length ? '<ul>' + n.itens.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '') + '</div>';
+      }).join('') + '</div>' +
+      '<div class="bn-pe"><button type="button" class="bn-ok">' + ic('check') + 'Entendi</button></div>';
+    document.body.appendChild(el);
+    var fechar = function () { novidMarcar(mostrar); novidFechar(); };
+    el.querySelector('.bn-x').onclick = fechar;
+    el.querySelector('.bn-ok').onclick = fechar;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add('on'); }); });
+    return true;
+  }
+  novidades.abrir = function () { return novidades(true); };
+  novidades.tem = function () { var g = novidEhGestor(); return novidLista().some(function (n) { return n.quem === 'todos' || g; }); };
+  function novidIniciar() {
+    if (!document.getElementById('bp-novidades')) return;
+    try { if (window.self !== window.top) return; } catch (e) { return; }
+    // espera a tela de carregamento e o /api/me (o "gestor" depende do login)
+    setTimeout(function () {
+      var vai = function () { if (!document.getElementById('bpc-carga')) novidades(); else setTimeout(vai, 600); };
+      vai();
+    }, 1400);
+    // entrou/saiu do login depois: pode ter novidade só da gestão
+    ouvintes.push(function () { setTimeout(function () { if (!document.getElementById('bpc-novid')) novidades(); }, 700); });
+  }
+
+  /* ================================================================
      início
      ================================================================ */
   function iniciar() {
@@ -783,6 +977,8 @@
     registrarVisita();
     if (!semMenu) montarMenu();
     atualizarPerfil();
+    if (document.querySelector('i[data-ic]')) { injetarCss('bpc-css-ic', CSS_IC_BASE); icones(); }
+    novidIniciar();
   }
   PERFIL = perfilLocal();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
@@ -799,6 +995,7 @@
     pode: pode, papel: papel, deGestao: deGestao, visiveis: visiveis,
     recentes: recentes, hrefCom: hrefCom, sair: sair, iniciais: iniciais,
     abrirMenu: abrirMenu, fecharMenu: fecharMenu,
+    ic: ic, icones: icones, ICONES: ICONES, toast: toast, novidades: novidades,
     carregando: carregando, cssOnca: function () { injetarCss('bpc-css-onca', CSS_ONCA); }
   };
 })();
