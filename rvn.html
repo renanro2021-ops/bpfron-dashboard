@@ -123,6 +123,12 @@ body{
 .rvn-painel-item.vazio{color:var(--muted)}
 .rvn-edit-btn{background:transparent;border:1px solid var(--border);color:#cbd5e1;border-radius:8px;padding:6px 11px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .rvn-edit-btn:hover{border-color:rgba(245,197,24,.6);color:var(--yellow)}
+.rvn-zip-btn{margin:0 0 8px}
+.rvn-zip-btn:disabled{opacity:.6;cursor:wait}
+.rvn-ass-item{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rvn-dl-btn{flex:none;background:transparent;border:1px solid var(--border);border-radius:8px;width:36px;height:32px;cursor:pointer;font-size:15px}
+.rvn-dl-btn:hover{border-color:rgba(245,197,24,.6)}
+.rvn-dl-btn:disabled{opacity:.5;cursor:wait}
 .rvn-edit-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;margin:0 0 14px;padding:14px;border:1px dashed rgba(245,197,24,.4);border-radius:12px}
 
 /* ---------------- tablet / mobile ---------------- */
@@ -635,7 +641,8 @@ function renderPainel(periodos){
         </div>
         <div>
           <div class="rvn-painel-lbl">✅ Assinados (${p.assinados.length})</div>
-          ${p.assinados.map((x) => `<div class="rvn-painel-item">${esc(x.nome || x.cpf)} · CPF ${esc(x.cpf)}</div>`).join('') || '<div class="rvn-painel-item vazio">—</div>'}
+          ${p.assinados.length && p.assinados.some((x) => x.fileId) ? `<button type="button" class="rvn-edit-btn rvn-zip-btn" id="rvn-zip-${i}" onclick="rvnBaixarTodos(${i})">⬇️ Baixar todos (${p.assinados.length}) em .zip</button><div class="rvn-msg" id="rvn-zip-msg-${i}"></div>` : ''}
+          ${p.assinados.map((x, j) => `<div class="rvn-painel-item rvn-ass-item"><span>${esc(x.nome || x.cpf)} · CPF ${esc(x.cpf)}</span>${x.fileId ? `<button type="button" class="rvn-dl-btn" title="Baixar o PDF assinado" aria-label="Baixar o PDF assinado de ${esc(x.nome || x.cpf)}" onclick="rvnBaixarAssinado(${i},${j},this)">⬇️</button>` : ''}</div>`).join('') || '<div class="rvn-painel-item vazio">—</div>'}
         </div>
       </div>
     </div>`
@@ -720,6 +727,125 @@ async function rvnSalvarDatas(i){
     msg.className = 'rvn-msg err'; msg.textContent = '❌ ' + e.message;
     btn.disabled = false;
   }
+}
+
+// ---- Baixar os RVN assinados (gestão) ----
+// O painel traz o fileId de cada assinado; o PDF vem do /api/rvn/download
+// (o mesmo que o policial usa para o pendente). "Baixar todos" junta os PDFs
+// num .zip montado aqui mesmo, sem biblioteca: PDF já é comprimido, então o
+// zip só guarda (método 0) e o arquivo final tem o tamanho da soma dos PDFs.
+async function rvnPegarPdf(fileId){
+  const r = await fetch(API_BASE + '/api/rvn/download?fileId=' + encodeURIComponent(fileId));
+  if (!r.ok) throw new Error('Erro ' + r.status);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
+function rvnSalvarArquivo(blob, nome){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+function rvnNomeArquivo(x){
+  return String(x.arquivo || ((x.cpf ? x.cpf + ' - ' : '') + (x.nome || 'RVN') + '.pdf')).replace(/[\\/:*?"<>|]/g, '_');
+}
+
+async function rvnBaixarAssinado(i, j, btn){
+  const x = ((RVN_PERIODOS[i] || {}).assinados || [])[j];
+  if (!x || !x.fileId) return;
+  btn.disabled = true; const antes = btn.textContent; btn.textContent = '⏳';
+  try {
+    const bytes = await rvnPegarPdf(x.fileId);
+    rvnSalvarArquivo(new Blob([bytes], { type: 'application/pdf' }), rvnNomeArquivo(x));
+    btn.textContent = '✅';
+  } catch(e){
+    btn.textContent = '⚠️'; btn.title = 'Não deu para baixar (' + e.message + '). Clique para tentar de novo.';
+  }
+  setTimeout(() => { btn.disabled = false; if (btn.textContent === '✅') btn.textContent = antes; }, 1500);
+}
+
+let RVN_CRC_TAB = null;
+function rvnCrc32(b){
+  if (!RVN_CRC_TAB){
+    RVN_CRC_TAB = new Uint32Array(256);
+    for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; RVN_CRC_TAB[n] = c >>> 0; }
+  }
+  let c = 0xFFFFFFFF;
+  for (let k = 0; k < b.length; k++) c = RVN_CRC_TAB[(c ^ b[k]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// arquivos = [{ nome, bytes:Uint8Array }] -> Blob .zip (sem compressão, nomes em UTF-8)
+function rvnMontarZip(arquivos){
+  const enc = new TextEncoder();
+  const d = new Date();
+  const hora = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const dia = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const partes = [], central = [];
+  let pos = 0;
+  for (const f of arquivos){
+    const nome = enc.encode(f.nome), crc = rvnCrc32(f.bytes), tam = f.bytes.length;
+    const loc = new DataView(new ArrayBuffer(30));
+    loc.setUint32(0, 0x04034b50, true); loc.setUint16(4, 20, true); loc.setUint16(6, 0x0800, true);
+    loc.setUint16(8, 0, true); loc.setUint16(10, hora, true); loc.setUint16(12, dia, true);
+    loc.setUint32(14, crc, true); loc.setUint32(18, tam, true); loc.setUint32(22, tam, true);
+    loc.setUint16(26, nome.length, true); loc.setUint16(28, 0, true);
+    partes.push(loc.buffer, nome, f.bytes);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true);
+    cen.setUint16(10, 0, true); cen.setUint16(12, hora, true); cen.setUint16(14, dia, true);
+    cen.setUint32(16, crc, true); cen.setUint32(20, tam, true); cen.setUint32(24, tam, true);
+    cen.setUint16(28, nome.length, true); cen.setUint32(42, pos, true);
+    central.push(cen.buffer, nome);
+    pos += 30 + nome.length + tam;
+  }
+  const tamCentral = central.reduce((s, x) => s + x.byteLength, 0);
+  const fim = new DataView(new ArrayBuffer(22));
+  fim.setUint32(0, 0x06054b50, true); fim.setUint16(8, arquivos.length, true); fim.setUint16(10, arquivos.length, true);
+  fim.setUint32(12, tamCentral, true); fim.setUint32(16, pos, true);
+  return new Blob([...partes, ...central, fim.buffer], { type: 'application/zip' });
+}
+
+async function rvnBaixarTodos(i){
+  const p = RVN_PERIODOS[i];
+  if (!p) return;
+  const lista = (p.assinados || []).filter((x) => x.fileId);
+  const btn = document.getElementById('rvn-zip-' + i);
+  const msg = document.getElementById('rvn-zip-msg-' + i);
+  const rotulo = btn.textContent;
+  btn.disabled = true; msg.className = 'rvn-msg'; msg.textContent = '';
+  const ok = [], falhou = [], usados = new Set();
+  let feitos = 0, prox = 0;
+  const um = async () => {
+    while (prox < lista.length){
+      const x = lista[prox++];
+      try {
+        let nome = rvnNomeArquivo(x);
+        for (let n = 2; usados.has(nome.toLowerCase()); n++) nome = rvnNomeArquivo(x).replace(/\.pdf$/i, '') + ' (' + n + ').pdf';
+        usados.add(nome.toLowerCase());
+        ok.push({ nome, bytes: await rvnPegarPdf(x.fileId) });
+      } catch(e){ falhou.push(x.nome || x.cpf); }
+      feitos++;
+      btn.textContent = `⏳ Baixando ${feitos} de ${lista.length}…`;
+    }
+  };
+  btn.textContent = `⏳ Baixando 0 de ${lista.length}…`;
+  await Promise.all([um(), um(), um()]);
+  if (ok.length){
+    ok.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const nomeZip = ('RVN assinados - ' + p.nome).replace(/[\\/:*?"<>|]/g, '_') + '.zip';
+    rvnSalvarArquivo(rvnMontarZip(ok), nomeZip);
+  }
+  if (falhou.length){
+    msg.className = 'rvn-msg err';
+    msg.textContent = `⚠️ ${ok.length} de ${lista.length} no .zip. Não deu para baixar: ${falhou.join(', ')}. Tente de novo.`;
+  } else {
+    msg.className = 'rvn-msg ok';
+    msg.textContent = `✅ ${ok.length} RVN no .zip.`;
+  }
+  btn.disabled = false; btn.textContent = rotulo;
 }
 
 async function gestCriarPeriodo(ev){
