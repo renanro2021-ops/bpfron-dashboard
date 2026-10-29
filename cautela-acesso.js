@@ -80,6 +80,7 @@
       '  <button class="btn full" id="ca-ok2" type="button">Entrar</button>' +
       '  <p class="ca-nota">' + (opt.notaDash || 'Mesmo usuário e senha do dashboard. O seu RE vem da ligação feita no Portal do Policial.') + '</p>' +
       '</form>';
+    if (opt.soRE) el.querySelector('.ca-seg').classList.add('ca-hide');   // só a entrada pelo RE (ex.: reserva no celular)
     var $ = function (id) { return el.querySelector('#' + id); };
     var vis = function (id, on) { $(id).classList.toggle('ca-hide', !on); };
     var msg = function (id, t, ok) { var m = $(id); m.className = 'msg ' + (ok ? 'ok' : t ? 'err' : ''); m.textContent = t || ''; };

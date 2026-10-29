@@ -86,26 +86,50 @@ table.t1{width:100%;border-collapse:collapse}
 .dica{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:10px}
 .dica ol{margin:6px 0 0 20px}.dica li{margin:3px 0}
 iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line);border-radius:8px;background:#fff}
+.rolar{overflow-x:auto}
 @media(max-width:900px){.hdr-in{padding:8px 12px}}
+/* celular: o armeiro acompanha e confere (29/10/2026) */
+@media(max-width:760px){
+  body{font-size:14.5px}
+  .wrap{padding:12px 10px 80px}
+  .brand img{height:34px}.t{font-size:18px}.right{gap:10px}
+  input,select,textarea{font-size:16px}
+  .acoesG{grid-template-columns:repeat(2,1fr);gap:8px}
+  .ac{padding:10px 11px}.ac b{font-size:16.5px}.ac span{font-size:11.5px}.ac .ico{font-size:20px}
+  .card{padding:12px}
+  .faixa{gap:8px;padding:9px 12px}
+  .tres thead,.tcnt thead{display:none}
+  .tres tr.grupo,.tres tr.grupo td{display:block}
+  .tres tr:not(.l):not(.grupo),.tres tr:not(.l):not(.grupo)>td{display:block}
+  .tres tr.l{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .tres tr.l td{border:none;padding:0}
+  .tres tr.l td:first-child,.tres tr.l td.obs{grid-column:1/-1;max-width:none}
+  .tres tr.l td.obs.vazio{display:none}
+  .tres td.n::before,.tcnt td.n::before{content:attr(data-l);display:block;font-size:10.5px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
+  .det{overflow-x:auto;padding:10px}
+  .tcnt tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;padding:12px;border-bottom:1px solid var(--line);align-items:end}
+  .tcnt td{border:none;padding:0}
+  .tcnt td:first-child,.tcnt td:last-child{grid-column:1/-1}
+  .tcnt td.n{text-align:left;font-size:18px}
+  .t1 input.cnt{width:100%;font-size:20px;padding:10px;text-align:center}
+  .fim-cnt{position:sticky;bottom:8px;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-color:rgba(245,197,24,.45)}
+  .fim-cnt .btn{flex:1;justify-content:center}
+  .lista-item .txt{min-width:0}
+  iframe#parte-ver{height:70vh}
+}
 </style>
 </head>
 <body>
 
 <div class="hdr"><div class="hdr-in">
-  <div class="brand"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><div><div class="t">Reserva de <em>Armamento</em></div><div class="sub">BPFRON/RO · armeiro de serviço · somente computador</div></div></div>
+  <div class="brand"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><div><div class="t">Reserva de <em>Armamento</em></div><div class="sub">BPFRON/RO · armeiro de serviço</div></div></div>
   <div class="right"><span id="userchip"></span><a href="cautela.html">📱 Minhas cautelas</a><button id="btn-senha" class="hidden" type="button">🔑 Senha</button><button id="btn-sair" class="hidden" type="button">Sair</button></div>
 </div></div>
 
 <main class="wrap">
-  <div id="so-pc" class="card bloqueio hidden">
-    <h2>💻 Somente no computador</h2>
-    <p class="muted" style="margin-top:6px">A reserva de armamento só funciona no computador. No celular você confere e assina as suas cautelas.</p>
-    <a class="btn" href="cautela.html" style="margin-top:14px">Ir para as minhas cautelas</a>
-  </div>
-
   <div id="login-box" class="card bloqueio hidden">
     <h2>Entrar na reserva de armamento</h2>
-    <p class="muted" style="margin:6px 0 14px"><b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br><b>Administrador (P4 / comando):</b> login do dashboard.</p>
+    <p class="muted" style="margin:6px 0 14px" id="login-dica"></p>
     <div id="login-form" style="text-align:left"></div>
   </div>
 
@@ -139,7 +163,7 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="f-grupos"></div>
         <p class="muted" style="margin-top:8px">Clique numa linha para ver cada peça, com o código e com quem está.</p>
       </div>
-      <div class="card" style="padding:0"><table class="t1"><thead><tr>
+      <div class="card" style="padding:0"><table class="t1 tres"><thead><tr>
         <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva</th><th class="n">Missões</th><th>Obs</th>
       </tr></thead><tbody id="tb-res"></tbody></table></div>
     </section>
@@ -204,7 +228,8 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         </div>
         <div class="muted" id="info-contagem" style="margin-top:8px"></div>
       </div>
-      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
+      <div class="card" style="padding:0"><table class="t1 tcnt"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
+      <div class="card fim-cnt"><button class="btn big" id="btn-contagem2" type="button">💾 Salvar a conferência</button> <span class="muted" id="info-contagem2"></span></div>
     </section>
 
     <!-- ===== VER A PARTE DIÁRIA (só olhar) ===== -->
@@ -236,14 +261,12 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         <div class="card">
           <h2><span class="passo">2</span>Copie para o SEI</h2>
           <div class="row">
-            <div style="flex:none"><button class="btn big" id="btn-fonte" type="button">🧾 Copiar o código (recomendado)</button></div>
-            <div style="flex:none"><button class="btn sec big" id="btn-copiar" type="button">📋 Copiar a Parte</button></div>
+            <div style="flex:none"><button class="btn big" id="btn-copiar" type="button">📋 Copiar a Parte</button></div>
           </div>
-          <div class="dica"><b>Como colar igualzinho no SEI:</b>
-            <ol><li>No SEI, abra a Parte Diária e clique no botão <b>Código-Fonte</b> (o ícone de página com &lt;/&gt;).</li>
-            <li>Apague o que estiver lá (Ctrl+A) e cole (Ctrl+V).</li>
-            <li>Clique de novo em <b>Código-Fonte</b> e salve. As tabelas saem com 1222,22 px, borda 1, centralizadas — igual ao modelo.</li></ol>
-            <span class="muted">Se preferir colar direto no texto, use "Copiar a Parte" — mas o SEI às vezes muda a largura das colunas.</span></div>
+          <div class="dica"><b>Como colar no SEI:</b>
+            <ol><li>Clique em <b>📋 Copiar a Parte</b>.</li>
+            <li>No SEI, abra a Parte Diária no editor e clique dentro do texto (a área branca embaixo do número da Parte).</li>
+            <li>Cole com <b>Ctrl+V</b> e salve. As tabelas já vão centralizadas, com borda 1 — igual ao modelo.</li></ol></div>
           <div id="s-resumo" style="margin-top:10px"></div>
         </div>
         <div class="card"><h2><span class="passo">3</span>Confirme a passagem</h2><p class="muted">Depois de colar no SEI, assine aqui. Quem te rende aceita o plantão pelo celular dele (Portal do Policial → Cautela).</p>
@@ -264,7 +287,7 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         </div>
         <div class="muted" id="h-escopo" style="margin-top:6px"></div>
       </div>
-      <div class="card" style="padding:0"><table class="t1"><thead><tr><th>Código</th><th>Policial</th><th>Missão</th><th>Material</th><th>Período</th><th>Situação</th></tr></thead><tbody id="tb-hist"></tbody></table></div>
+      <div class="card rolar" style="padding:0"><table class="t1"><thead><tr><th>Código</th><th>Policial</th><th>Missão</th><th>Material</th><th>Período</th><th>Situação</th></tr></thead><tbody id="tb-hist"></tbody></table></div>
     </section>
 
     <!-- ===== ADMINISTRAÇÃO ===== -->
@@ -355,15 +378,19 @@ $('btn-sair').onclick = sair;
 $('sem-papel-re').onclick = sair;
 $('btn-senha').onclick = () => CA.trocarSenha();
 
-const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(max-width: 760px)').matches;
+// mesmo critério do Worker (pelo navegador, não pela largura): janela estreita no computador continua sendo computador
+const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 function boot(){
-  ['so-pc', 'login-box', 'sem-papel', 'app'].forEach(i => show(i, false));
+  ['login-box', 'sem-papel', 'app'].forEach(i => show(i, false));
   $('btn-sair').classList.toggle('hidden', !AUTH.logged); $('btn-senha').classList.toggle('hidden', !AUTH.logged);
   $('userchip').textContent = '';
-  if (MOBILE){ show('so-pc', true); return; }
   if (!AUTH.logged){
     show('login-box', true);
-    CA.montar($('login-form'), { aoEntrar: boot, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Administrador (dashboard)',
+    // celular: só o armeiro de serviço (RE e senha), para acompanhar e conferir; a administração é no computador
+    $('login-dica').innerHTML = MOBILE
+      ? '<b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br>No celular você acompanha a reserva e faz a conferência. Entregar, receber e passar o serviço são no computador.'
+      : '<b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br><b>Administrador (P4 / comando):</b> login do dashboard.';
+    CA.montar($('login-form'), { aoEntrar: boot, soRE: MOBILE, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Administrador (dashboard)',
       notaDash: 'Só para o administrador (P4 / comando). O armeiro de serviço entra pela aba ao lado, com o RE e a senha do Portal do Policial.' });
     return;
   }
@@ -380,10 +407,10 @@ async function carregar(){
     if (e.status === 401){ CA.esquecer(); R = null; boot(); return; }
     if (e.status === 403){
       show('sem-papel', true);
-      show('sem-papel-re', e.code === 'use_re');
-      $('sem-papel-h').textContent = e.code === 'use_re' ? '🪪 Armeiro: entre pelo seu RE' : '🔒 Você não é o armeiro de serviço';
-      $('sem-papel-txt').textContent = e.code === 'somente_computador' ? 'Esta tela só funciona no computador.'
-        : e.code === 'use_re' ? e.message
+      show('sem-papel-re', e.code === 'use_re' || e.code === 'somente_computador');
+      $('sem-papel-h').textContent = e.code === 'use_re' ? '🪪 Armeiro: entre pelo seu RE'
+        : e.code === 'somente_computador' ? '📱 No celular, só o armeiro de serviço' : '🔒 Você não é o armeiro de serviço';
+      $('sem-papel-txt').textContent = e.code === 'somente_computador' || e.code === 'use_re' ? e.message
         : 'Só o armeiro de serviço e o administrador (P4 / comando) abrem a reserva. Quem está de serviço te indica na passagem; depois você aceita em "Minhas cautelas", no celular.';
       return;
     }
@@ -395,10 +422,15 @@ async function carregar(){
   if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
   $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
   // só o armeiro de serviço mexe no material; o administrador acompanha (29/10/2026)
-  PODE = !!R.papel.armeiro;
-  ['ac-entregar', 'ac-conferir', 'ac-passar'].forEach(id => $(id).classList.toggle('hidden', !PODE));
+  // no celular o armeiro só acompanha e confere; entregar, receber e passar o serviço são no computador
+  PODE = !!R.papel.armeiro && !MOBILE;
+  ['ac-entregar', 'ac-passar'].forEach(id => $(id).classList.toggle('hidden', !PODE));
+  $('ac-conferir').classList.toggle('hidden', !R.papel.armeiro);
   $('ac-receber-t').textContent = PODE ? 'Receber de volta' : 'Com policiais';
   $('ac-receber-s').textContent = PODE ? 'o que está com policiais' : 'quem está com material (só ver)';
+  $('rec-so-ver').innerHTML = R.papel.armeiro
+    ? '📱 No celular você acompanha quem está com material. Para <b>receber de volta</b>, use o computador da reserva.'
+    : '👁️ Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.';
   show('rec-so-ver', !PODE);
   const ativo = document.querySelector('#acoes .ac.on');
   if (ativo && ativo.classList.contains('hidden')) abrirPane('reserva');
@@ -412,6 +444,7 @@ function renderFaixa(){
   $('faixa').innerHTML = `<span>🛡️ Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
     + (p ? `<span class="chip wait">Serviço passado — falta RE ${esc(p.re)} aceitar</span>` : '')
     + (R.papel.chefia ? '<span class="chip neu">Você: administrador (só acompanha)</span>' : '')
+    + (MOBILE && R.papel.armeiro ? '<span class="chip neu">📱 Celular: acompanhar e conferir</span>' : '')
     + (!a && R.papel.chefia ? '<span class="muted">Designe o armeiro em ⚙️ Administração.</span>' : '');
   const av = [];
   if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker.</div>');
@@ -438,10 +471,10 @@ function renderReserva(){
     if (l.tabela !== tab){ tab = l.tabela; html += `<tr class="grupo"><td colspan="6">${tab === 1 ? 'Armamento, carregadores e munição' : 'Equipamentos'}</td></tr>`; }
     html += `<tr class="l" data-id="${esc(l.id)}">
       <td><b>${esc(l.descricao)}</b>${l.pecas.length ? ` <span class="chip neu">${l.pecas.length} com código</span>` : ''}</td>
-      <td class="n"><b>${pad(l.total)}</b></td><td class="n">${traco(l.p4)}</td>
-      <td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.nota_reserva ? `<span class="muted">${esc(l.nota_reserva)}</span><br>` : ''}<b>${l.reserva < 0 ? l.reserva : pad(l.reserva)}</b></td>
-      <td class="n">${traco(l.missoes)}${l.em_cautela ? `<br><span class="chip wait" title="cautelas abertas no sistema">${l.em_cautela} no sistema</span>` : ''}</td>
-      <td class="obs ${l.obs_vermelha ? 'v' : ''}">${esc(l.obs) || '-'}</td></tr>`;
+      <td class="n" data-l="Total"><b>${pad(l.total)}</b></td><td class="n" data-l="Cautela/P4">${traco(l.p4)}</td>
+      <td class="n ${l.reserva < 0 ? 'neg' : ''}" data-l="Na reserva">${l.nota_reserva ? `<span class="muted">${esc(l.nota_reserva)}</span><br>` : ''}<b>${l.reserva < 0 ? l.reserva : pad(l.reserva)}</b></td>
+      <td class="n" data-l="Missões">${traco(l.missoes)}${l.em_cautela ? `<br><span class="chip wait" title="cautelas abertas no sistema">${l.em_cautela} no sistema</span>` : ''}</td>
+      <td class="obs ${l.obs_vermelha ? 'v' : ''} ${l.obs ? '' : 'vazio'}">${esc(l.obs) || '-'}</td></tr>`;
     if (ABERTO === l.id) html += `<tr><td colspan="6"><div class="det">${detalheLinha(l)}</div></td></tr>`;
   }
   $('tb-res').innerHTML = html || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
@@ -638,9 +671,9 @@ function renderConferir(){
   $('tb-cnt').innerHTML = linhas.map(l => {
     const c = CONTAGEM[l.id] || { contado: '', obs: '' };
     const dv = c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva);
-    return `<tr><td><b>${esc(l.descricao)}</b></td><td class="n">${pad(l.reserva)}</td>
-      <td class="n ${dv ? 'div' : ''}"><input class="cnt" inputmode="numeric" data-cnt="${esc(l.id)}" value="${esc(c.contado)}" placeholder="${Math.max(0, l.reserva)}"></td>
-      <td><input data-cobs="${esc(l.id)}" value="${esc(c.obs)}" placeholder="${dv ? 'diga o que houve (vai na OBS da Parte)' : ''}"></td></tr>`;
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td class="n" data-l="Sistema">${pad(l.reserva)}</td>
+      <td class="n ${dv ? 'div' : ''}" data-l="Contei"><input class="cnt" inputmode="numeric" data-cnt="${esc(l.id)}" value="${esc(c.contado)}" placeholder="${Math.max(0, l.reserva)}"></td>
+      <td><input data-cobs="${esc(l.id)}" value="${esc(c.obs)}" placeholder="${dv ? 'diga o que houve (vai na OBS da Parte)' : 'observação (opcional)'}"></td></tr>`;
   }).join('');
   $('tb-cnt').querySelectorAll('input[data-cnt]').forEach(i => i.oninput = () => {
     const id = i.dataset.cnt; CONTAGEM[id] = Object.assign(CONTAGEM[id] || { obs: '' }, { contado: i.value.replace(/\D/g, '') });
@@ -653,8 +686,9 @@ function renderConferir(){
 function divergentes(){ return R.linhas.filter(l => { const c = CONTAGEM[l.id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); }); }
 function infoContagem(){
   const n = R.linhas.filter(l => CONTAGEM[l.id] && CONTAGEM[l.id].contado !== '').length, dv = divergentes().length;
-  $('info-contagem').innerHTML = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv ? dv + ' não bate(m)' : 'tudo bate'}</b>`
-    + (R.contagem ? ` · última conferência salva em ${fQ(R.contagem.em)}` : ' · ainda não conferido neste plantão');
+  const resumo = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv ? dv + ' não bate(m)' : 'tudo bate'}</b>`;
+  $('info-contagem').innerHTML = resumo + (R.contagem ? ` · última conferência salva em ${fQ(R.contagem.em)}` : ' · ainda não conferido neste plantão');
+  $('info-contagem2').innerHTML = resumo;
 }
 $('q-cnt').oninput = renderConferir;
 $('btn-tudo').onclick = () => { R.linhas.forEach(l => { if (!CONTAGEM[l.id] || CONTAGEM[l.id].contado === '') CONTAGEM[l.id] = Object.assign(CONTAGEM[l.id] || { obs: '' }, { contado: String(Math.max(0, l.reserva)) }); }); renderConferir(); toast('Preenchido com o que o sistema espera. Corrija só o que não bater.'); };
@@ -668,6 +702,7 @@ $('btn-contagem').onclick = async () => {
     const d = await apiPost('/api/cautela/contagem', { linhas }); toast(d.diferencas.length ? `Salvo. ${d.diferencas.length} número(s) corrigido(s) na reserva.` : 'Salvo. Tudo bate.'); await carregar();
   } catch(e){ falha(e); }
 };
+$('btn-contagem2').onclick = () => $('btn-contagem').onclick();
 
 /* ===== passar o serviço / Parte Diária ===== */
 let SUB = null, HTML_PARTE = '';
@@ -722,18 +757,24 @@ async function verParte(){
   } catch(e){ m.className = 'msg err'; m.textContent = e.message; if (e.status === 401) falha(e); }
 }
 $('btn-ver-atualizar').onclick = verParte;
-async function copiar(tipo){
+// copia a Parte já formatada (o SEI não tem Código-Fonte; cola-se direto no texto)
+async function copiar(){
+  const ok = () => toast('Parte copiada. No SEI: clique dentro do texto da Parte e cole (Ctrl+V).');
   try {
-    if (tipo === 'fonte') await navigator.clipboard.writeText(HTML_PARTE);
-    else await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([HTML_PARTE], { type: 'text/html' }), 'text/plain': new Blob([$('parte').contentDocument.body.innerText], { type: 'text/plain' }) })]);
-    toast(tipo === 'fonte' ? 'Código copiado. No SEI: Código-Fonte → Ctrl+A → Ctrl+V → Código-Fonte.' : 'Parte copiada. Cole no editor do SEI.');
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([HTML_PARTE], { type: 'text/html' }), 'text/plain': new Blob([$('parte').contentDocument.body.innerText], { type: 'text/plain' }) })]);
+    ok();
   } catch(e){
-    const t = document.createElement('textarea'); t.value = HTML_PARTE; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
-    toast('Código copiado. No SEI: Código-Fonte → Ctrl+A → Ctrl+V.');
+    // navegador sem ClipboardItem: copia selecionando a própria prévia (mantém a formatação)
+    try {
+      const doc = $('parte').contentDocument, sel = doc.getSelection(), rg = doc.createRange();
+      rg.selectNodeContents(doc.body); sel.removeAllRanges(); sel.addRange(rg);
+      const foi = doc.execCommand('copy'); sel.removeAllRanges();
+      if (!foi) throw new Error('copy');
+      ok();
+    } catch(e2){ toast('Não consegui copiar sozinho. Clique na prévia abaixo, aperte Ctrl+A e Ctrl+C, e cole no SEI.'); }
   }
 }
-$('btn-fonte').onclick = () => copiar('fonte');
-$('btn-copiar').onclick = () => copiar('html');
+$('btn-copiar').onclick = () => copiar();
 $('btn-passar').onclick = async () => {
   const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte fica guardada e assinada aqui; ele aceita o plantão no celular dele.</div>`, ok: '✍️ Assinar a passagem' });
   if (!m) return;
