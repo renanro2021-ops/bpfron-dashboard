@@ -150,6 +150,17 @@ i[data-ic]{display:inline-flex;font-style:normal}
 .bp-num .v{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--t1);line-height:1.1;margin-top:4px}
 .bp-num .bp-i{position:absolute;right:14px;top:14px;width:20px;height:20px;color:var(--c,var(--acc));opacity:.9}
 .bp-num::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;background:linear-gradient(90deg,var(--c,var(--acc)),transparent)}
+/* número clicável: <button class="bp-num clica"> … <small class="bp-ver">ver lista</small></button> */
+.bp-num.clica{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:transform .25s var(--ease),border-color .25s,box-shadow .25s,background .25s}
+.bp-num.clica:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c,var(--acc)) 45%,transparent);box-shadow:var(--sh2);background:var(--card-h)}
+.bp-num.clica:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.bp-num .bp-ver{display:inline-flex;align-items:center;gap:4px;margin-top:2px;font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--c,var(--acc)) 85%,var(--t1));opacity:.85}
+.bp-num .bp-ver .bp-i{position:static;width:13px;height:13px;opacity:1}
+/* bolinha "ao vivo" */
+.bp-vivo{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--dim);flex:none}
+.bp-vivo.on{background:var(--good);animation:bp-pulso-v 1.8s infinite}
+.bp-vivo.espera{background:var(--warn)}
+@keyframes bp-pulso-v{0%{box-shadow:0 0 0 0 var(--good-line)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
 
 /* botões */
 .bp-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:14px;padding:13px 18px;min-height:48px;font-size:15px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap;

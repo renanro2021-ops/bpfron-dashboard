@@ -72,6 +72,38 @@
 .rvn-zip-msg{margin:-2px 0 8px;font-size:13px}
 .rvn-dl-btn:disabled{cursor:wait}
 
+/* atividade ao vivo */
+.rvn-vivo{margin-top:14px;padding:16px 18px}
+.rvn-vivo-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rvn-vivo-cab b{font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1)}
+.rvn-vivo-st{font-size:12.5px;color:var(--muted)}
+.rvn-vivo-on{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.rvn-vivo-on .bp-eu{padding:2px 9px 2px 2px;font-size:12px}
+.rvn-vivo-on .bp-eu b{width:22px;height:22px;font-size:9.5px}
+#rvn-vivo-lista{margin-top:10px;display:flex;flex-direction:column;max-height:300px;overflow-y:auto}
+.rvn-vivo-vazio{font-size:13.5px;color:var(--dim);padding:6px 0}
+.rvn-ev{display:flex;align-items:center;gap:12px;padding:9px 2px;border-top:1px solid var(--line)}
+.rvn-ev:first-child{border-top:0}
+.rvn-ev.novo{animation:rvn-chega 1.6s var(--ease)}
+@keyframes rvn-chega{0%{background:var(--acc-soft);transform:translateX(-6px)}100%{background:transparent;transform:none}}
+.rvn-ev .tx{min-width:0;flex:1;font-size:14px;color:var(--t2)}
+.rvn-ev .tx b{color:var(--t1)}
+.rvn-ev .tx small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvn-ev time{font-size:12px;color:var(--dim);white-space:nowrap}
+.rvn-vivo-mais{margin-top:8px}
+.rvn-pi-tag{display:block;margin-top:4px}
+.rvn-pi-tag .bp-sl{font-size:11.5px;padding:2px 8px}
+.rvn-pi-tag:empty{display:none}
+
+/* janela da lista */
+.rvn-lista-cx{width:min(620px,100%)}
+#rvn-lista-corpo{margin-top:12px;display:flex;flex-direction:column;gap:12px;max-height:min(52vh,520px);overflow-y:auto}
+.rvn-lg{border:1px solid var(--line);border-radius:16px;background:var(--surf2);padding:10px 12px}
+.rvn-lg-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.rvn-lg-cab b{color:var(--t1);font-size:14px}
+.rvn-lg-cab small{color:var(--muted);font-size:12px}
+.rvn-lg-cab .bp-sl{margin-left:auto}
+
 /* arquivados */
 .rvn-arq-lista{display:flex;flex-direction:column;gap:10px}
 .rvn-arq-it{display:flex;align-items:flex-start;gap:12px;padding:14px 16px}
@@ -114,6 +146,12 @@
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-29", "titulo": "Quem falta e atividade ao vivo", "quem": "gestor", "itens": [
+    "Toque no cartão Pendentes para ver quem ainda falta assinar, separado por período (dá para filtrar e copiar a lista para o WhatsApp). Assinados faz o mesmo com quem já assinou.",
+    "Quadro Atividade ao vivo: aparece na hora quem baixou o RVN (está assinando), quem mandou assinado e envio recusado, com o motivo.",
+    "Mostra também quem da gestão está com o painel aberto agora.",
+    "Quando alguém assina, o painel se atualiza sozinho; na lista, o pendente que já baixou ganha a marca \"baixou há X min\"."
+  ] },
   { "data": "2026-10-29", "titulo": "Página de cara nova", "quem": "todos", "itens": [
     "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
     "Botão novo para escolher o PDF assinado: toque nele ou arraste o arquivo.",
@@ -211,6 +249,16 @@
     </div>
     <div class="bp-nums" id="rvn-nums"></div>
 
+    <div class="bp-card rvn-vivo" id="rvn-vivo">
+      <div class="rvn-vivo-cab">
+        <span class="bp-vivo espera" id="rvn-vivo-pt"></span>
+        <b>Atividade ao vivo</b>
+        <span class="rvn-vivo-st" id="rvn-vivo-st">conectando…</span>
+        <div class="rvn-vivo-on" id="rvn-vivo-on"></div>
+      </div>
+      <div id="rvn-vivo-lista"><div class="rvn-vivo-vazio">Quando alguém baixar ou mandar o RVN assinado, aparece aqui na hora.</div></div>
+    </div>
+
     <div class="bp-sec"><span class="bp-tile info"><i data-ic="pasta"></i></span><div><h2>Períodos</h2><small>Quem já assinou e quem falta em cada período</small></div></div>
     <div id="rvn-painel"><div class="bp-vazio">Carregando…</div></div>
     <div id="rvn-arquivados"></div>
@@ -261,6 +309,23 @@
   </div>
 
 </main>
+
+<!-- janela: lista de pendentes / assinados (cartões do topo do painel) -->
+<div class="bp-modal" id="rvn-lista-modal" onclick="if(event.target===this)rvnListaFechar()">
+  <div class="bp-modal-cx rvn-lista-cx" role="dialog" aria-modal="true" aria-labelledby="rvn-lista-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile" id="rvn-lista-tile"></span>
+      <div><h3 id="rvn-lista-tit"></h3><small id="rvn-lista-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="rvnListaFechar()" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-in" style="min-height:44px"><i data-ic="buscar"></i><input id="rvn-lista-q" placeholder="Filtrar por nome, CPF ou período" autocomplete="off" oninput="rvnListaPintar()"></div>
+    <div id="rvn-lista-corpo"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn sec" id="rvn-lista-copiar" onclick="rvnListaCopiar()"><i data-ic="arquivo"></i>Copiar a lista</button>
+      <button type="button" class="bp-btn" onclick="rvnListaFechar()">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <!-- janela: arquivar período -->
 <div class="bp-modal" id="rvn-arq-modal" onclick="if(event.target===this)rvnArquivarFechar()">
@@ -413,6 +478,7 @@ function renderUserChip(){
 function apiLogout(){
   AUTH.token = ''; AUTH.user = '';
   RVN_FILA = [];
+  rvnVivoDesligar(); RVN_EVENTOS = [];
   document.getElementById('rvn-gestao').style.display = 'none';
   document.getElementById('rvn-login').style.display = 'none';
   renderUserChip();
@@ -605,7 +671,7 @@ function gestToggle(){
   const gestao = document.getElementById('rvn-gestao');
   const abrir = gestao.style.display === 'none';
   gestao.style.display = abrir ? 'block' : 'none';
-  if (abrir) gestAbrir();
+  if (abrir) gestAbrir(); else rvnVivoDesligar();
 }
 
 async function gestDoLogin(ev){
@@ -635,6 +701,7 @@ function gestAbrir(){
   document.getElementById('rvn-gestao').style.display = 'block';
   document.getElementById('rvn-gest-user').textContent = AUTH.user;
   gestCarregarPainel();
+  rvnVivoLigar();
 }
 
 async function gestCarregarPainel(){
@@ -659,14 +726,206 @@ function renderNums(periodos){
     ['Assinados', ass, 'ok', 'var(--good)'],
     ['Concluído', pct + '%', 'escudo', 'var(--acc)'],
   ];
-  document.getElementById('rvn-nums').innerHTML = nums.map(([r, v, ic, c], i) =>
-    `<div class="bp-num" style="--i:${i};--c:${c}">${IC(ic)}<div class="r">${r}</div><div class="v">${v}</div></div>`).join('');
+  // Períodos leva até a lista dos períodos; Pendentes e Assinados abrem a lista de nomes.
+  const acao = [`rvnIrPeriodos()`, `rvnAbrirLista('pend')`, `rvnAbrirLista('ass')`, ''];
+  const dica = ['ver períodos', 'ver quem falta', 'ver quem assinou', ''];
+  document.getElementById('rvn-nums').innerHTML = nums.map(([r, v, ic, c], i) => acao[i]
+    ? `<button type="button" class="bp-num clica" id="rvn-num-${i}" style="--i:${i};--c:${c}" onclick="${acao[i]}">${IC(ic)}<div class="r">${r}</div><div class="v">${v}</div><small class="bp-ver">${dica[i]}${IC('seta')}</small></button>`
+    : `<div class="bp-num" style="--i:${i};--c:${c}">${IC(ic)}<div class="r">${r}</div><div class="v">${v}</div></div>`).join('');
 }
 
-function rvnItemPainel(x){
-  const nome = x.nome || x.cpf;
-  return `<span class="rvn-pi-av">${esc(iniciais(nome))}</span><span class="rvn-pi-tx"><b>${esc(nome)}</b><small>CPF ${esc(x.cpf)}</small></span>`;
+function rvnIrPeriodos(){
+  document.getElementById('rvn-painel').scrollIntoView({ behavior:'smooth', block:'start' });
 }
+
+// pendente: mostra "baixou há X" quando o painel ao vivo viu o download dele
+function rvnItemPainel(x, pend){
+  const nome = x.nome || x.cpf;
+  const tag = pend ? `<span class="rvn-pi-tag" data-k="${esc(x.fileId || '')}">${rvnTagBaixou(x.fileId)}</span>` : '';
+  return `<span class="rvn-pi-av">${esc(iniciais(nome))}</span><span class="rvn-pi-tx"><b>${esc(nome)}</b><small>CPF ${esc(x.cpf)}</small>${tag}</span>`;
+}
+
+/* ---- Lista de quem falta / quem assinou (cartões do topo) ---- */
+let RVN_LISTA_TIPO = '';
+function rvnAbrirLista(tipo){
+  RVN_LISTA_TIPO = tipo;
+  const pend = tipo === 'pend';
+  const n = RVN_PERIODOS.reduce((s, p) => s + p[pend ? 'pendentes' : 'assinados'].length, 0);
+  const tile = document.getElementById('rvn-lista-tile');
+  tile.className = 'bp-tile ' + (pend ? 'pend' : 'ok');
+  tile.innerHTML = IC(pend ? 'relogio' : 'ok');
+  document.getElementById('rvn-lista-tit').textContent = (pend ? 'Quem falta assinar' : 'Quem já assinou') + ` (${n})`;
+  document.getElementById('rvn-lista-sub').textContent = RVN_PERIODOS.length + ' período' + (RVN_PERIODOS.length === 1 ? '' : 's') + ' ativo' + (RVN_PERIODOS.length === 1 ? '' : 's');
+  document.getElementById('rvn-lista-q').value = '';
+  document.getElementById('rvn-lista-copiar').style.display = n ? '' : 'none';
+  rvnListaPintar();
+  document.getElementById('rvn-lista-modal').classList.add('on');
+}
+function rvnListaFechar(){ document.getElementById('rvn-lista-modal').classList.remove('on'); RVN_LISTA_TIPO = ''; }
+
+function rvnListaGrupos(){
+  const pend = RVN_LISTA_TIPO === 'pend';
+  const q = (document.getElementById('rvn-lista-q').value || '').trim().toLowerCase();
+  const qd = q.replace(/\D/g, '');
+  return RVN_PERIODOS.map((p) => {
+    const todos = p[pend ? 'pendentes' : 'assinados'];
+    const casaPer = q && p.nome.toLowerCase().includes(q);
+    const itens = todos.filter((x) => !q || casaPer || String(x.nome || '').toLowerCase().includes(q) || (qd && String(x.cpf || '').replace(/\D/g, '').includes(qd)));
+    return { p, itens, total: todos.length };
+  }).filter((g) => g.itens.length);
+}
+
+function rvnListaPintar(){
+  if (!RVN_LISTA_TIPO) return;
+  const pend = RVN_LISTA_TIPO === 'pend';
+  const corpo = document.getElementById('rvn-lista-corpo');
+  const grupos = rvnListaGrupos();
+  if (!grupos.length){
+    const nada = !RVN_PERIODOS.some((p) => p[pend ? 'pendentes' : 'assinados'].length);
+    corpo.innerHTML = `<div class="bp-vazio">${nada ? (pend ? 'Ninguém pendente. Todos assinaram! 🎉' : 'Ninguém assinou ainda.') : 'Nada com esse filtro.'}</div>`;
+    return;
+  }
+  corpo.innerHTML = grupos.map(({ p, itens, total }) => `
+    <div class="rvn-lg">
+      <div class="rvn-lg-cab"><b>${esc(p.nome)}</b><small>${esc(p.dataInicio || '—')} a ${esc(p.dataFim || '—')}</small>
+        <span class="bp-sl ${pend ? 'pend' : 'ok'}">${itens.length < total ? itens.length + ' de ' : ''}${total}</span></div>
+      ${itens.map((x) => `<div class="rvn-painel-item rvn-lista-item">${rvnItemPainel(x, pend)}</div>`).join('')}
+    </div>`).join('');
+}
+
+async function rvnListaCopiar(){
+  const pend = RVN_LISTA_TIPO === 'pend';
+  const grupos = rvnListaGrupos();
+  const txt = (pend ? 'RVN — falta assinar' : 'RVN — já assinaram') + '\n\n' + grupos.map(({ p, itens }) =>
+    `${p.nome} (${p.dataInicio || '—'} a ${p.dataFim || '—'}) — ${itens.length}\n` + itens.map((x, i) => `${i + 1}. ${x.nome || x.cpf}`).join('\n')).join('\n\n');
+  try { await navigator.clipboard.writeText(txt); toast('Lista copiada. É só colar no WhatsApp.'); }
+  catch(e){ toast('Não deu para copiar neste navegador.', 'err'); }
+}
+
+/* ---- Atividade ao vivo (WebSocket /api/rvn/ao-vivo, Durable Object RvnVivoDO) ----
+   A gestão vê na hora: quem baixou o RVN (está assinando), quem mandou assinado,
+   envio recusado (com o motivo) e período arquivado; e quem da gestão está com o
+   painel aberto. Assinou/arquivou → o painel recarrega sozinho. */
+let RVN_EVENTOS = [], RVN_ONLINE = [], RVN_WS = null, RVN_WS_ESPERA = 2000, RVN_WS_TIMER = 0, RVN_WS_PING = 0, RVN_RECARGA = 0;
+const RVN_EV = {
+  baixou:   { ic:'baixar',  c:'var(--info)', tx:(e) => `<b>${esc(e.nome)}</b> baixou o RVN — está assinando` },
+  assinou:  { ic:'ok',      c:'var(--good)', tx:(e) => `<b>${esc(e.nome)}</b> assinou o RVN` },
+  recusado: { ic:'alerta',  c:'var(--crit)', tx:(e) => `<b>${esc(e.nome)}</b> mandou o assinado e foi recusado` },
+  arquivou: { ic:'arquivar',c:'var(--dim)',  tx:(e) => `<b>${esc(e.por || 'gestão')}</b> arquivou o período` },
+};
+
+function rvnHaQuanto(ms){
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return 'agora';
+  const m = Math.round(s / 60);
+  if (m < 60) return `há ${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24);
+  return `há ${d} dia${d > 1 ? 's' : ''}`;
+}
+
+function rvnTagBaixou(fileId){
+  if (!fileId) return '';
+  const e = RVN_EVENTOS.find((x) => x.tipo === 'baixou' && x.k === fileId);
+  return e ? `<span class="bp-sl info">${IC('baixar')}baixou ${rvnHaQuanto(e.em)}</span>` : '';
+}
+function rvnPintarTags(){
+  document.querySelectorAll('.rvn-pi-tag[data-k]').forEach((el) => { el.innerHTML = rvnTagBaixou(el.dataset.k); });
+}
+
+function rvnVivoStatus(estado, texto){
+  const pt = document.getElementById('rvn-vivo-pt');
+  pt.className = 'bp-vivo' + (estado === 'on' ? ' on' : estado === 'espera' ? ' espera' : '');
+  document.getElementById('rvn-vivo-st').textContent = texto;
+}
+
+function rvnVivoPintar(novoId){
+  const box = document.getElementById('rvn-vivo-lista');
+  if (!RVN_EVENTOS.length){ box.innerHTML = '<div class="rvn-vivo-vazio">Quando alguém baixar ou mandar o RVN assinado, aparece aqui na hora.</div>'; return; }
+  const tudo = box.dataset.tudo === '1';
+  const lista = tudo ? RVN_EVENTOS : RVN_EVENTOS.slice(0, 12);
+  box.innerHTML = lista.map((e) => {
+    const t = RVN_EV[e.tipo] || RVN_EV.baixou;
+    const sub = [e.periodo && e.tipo !== 'arquivou' ? e.periodo : '', e.tipo === 'arquivou' ? e.nome : '', e.motivo].filter(Boolean).join(' · ');
+    return `<div class="rvn-ev${e.id === novoId ? ' novo' : ''}" data-tipo="${e.tipo}">
+      <span class="bp-tile sm" style="--c:${t.c}">${IC(t.ic)}</span>
+      <div class="tx">${t.tx(e)}${sub ? `<small>${esc(sub)}</small>` : ''}</div>
+      <time datetime="${new Date(e.em).toISOString()}" title="${esc(new Date(e.em).toLocaleString('pt-BR'))}">${rvnHaQuanto(e.em)}</time>
+    </div>`;
+  }).join('') + (RVN_EVENTOS.length > 12 ? `<button type="button" class="bp-btn sm ghost rvn-vivo-mais" onclick="this.parentNode.dataset.tudo='${tudo ? '' : '1'}';rvnVivoPintar()">${tudo ? 'Mostrar menos' : 'Ver tudo (' + RVN_EVENTOS.length + ')'}</button>` : '');
+}
+
+function rvnVivoOnline(){
+  const el = document.getElementById('rvn-vivo-on');
+  if (!RVN_ONLINE.length){ el.innerHTML = ''; return; }
+  el.innerHTML = '<span>Na gestão agora:</span>' + RVN_ONLINE.map((u) =>
+    `<span class="bp-eu" title="${esc(u.login)}"><b>${esc(iniciais(u.nome || u.login))}</b><span>${esc(u.login === AUTH.user ? 'você' : (u.nome || u.login))}</span></span>`).join('');
+}
+
+function rvnVivoMsg(m){
+  if (m.t === 'hist'){ RVN_EVENTOS = Array.isArray(m.eventos) ? m.eventos : []; rvnVivoPintar(); rvnPintarTags(); return; }
+  if (m.t === 'online'){ RVN_ONLINE = Array.isArray(m.lista) ? m.lista : []; rvnVivoOnline(); return; }
+  if (m.t !== 'evento' || !m.e) return;
+  const e = m.e;
+  RVN_EVENTOS.unshift(e);
+  RVN_EVENTOS = RVN_EVENTOS.slice(0, 80);
+  rvnVivoPintar(e.id);
+  rvnPintarTags();
+  if (e.tipo === 'assinou') toast(`${e.nome} assinou o RVN.`);
+  else if (e.tipo === 'baixou') toast(`${e.nome} baixou o RVN e está assinando.`);
+  else if (e.tipo === 'recusado') toast(`Envio de ${e.nome} recusado: ${e.motivo || 'conferência falhou'}.`, 'err');
+  if (e.tipo === 'assinou' || e.tipo === 'arquivou') rvnRecarregarDepois();
+}
+
+// Recarrega o painel depois de assinou/arquivou — mas não enquanto alguém
+// edita datas ou está na janela de arquivar (o redesenho apagaria o que digitou).
+function rvnRecarregarDepois(){
+  clearTimeout(RVN_RECARGA);
+  RVN_RECARGA = setTimeout(() => {
+    const editando = [...document.querySelectorAll('.rvn-edit-box')].some((b) => b.style.display !== 'none');
+    if (editando || document.getElementById('rvn-arq-modal').classList.contains('on')){ rvnRecarregarDepois(); return; }
+    gestCarregarPainel().then(() => { if (RVN_LISTA_TIPO) rvnAbrirLista(RVN_LISTA_TIPO); });
+  }, 1500);
+}
+
+function rvnVivoLigar(){
+  if (RVN_WS || !AUTH.logged || !rvnPodeGerir() || typeof WebSocket === 'undefined') return;
+  clearTimeout(RVN_WS_TIMER);
+  rvnVivoStatus('espera', 'conectando…');
+  let ws;
+  try { ws = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/rvn/ao-vivo?t=' + encodeURIComponent(AUTH.token)); }
+  catch(e){ rvnVivoStatus('', 'indisponível'); return; }
+  RVN_WS = ws;
+  ws.onopen = () => {
+    RVN_WS_ESPERA = 2000;
+    rvnVivoStatus('on', 'ao vivo');
+    clearInterval(RVN_WS_PING);
+    RVN_WS_PING = setInterval(() => { try { ws.send('{"t":"ping"}'); } catch(e){} }, 25000);
+  };
+  ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch(e){ return; } rvnVivoMsg(m); };
+  ws.onclose = () => {
+    clearInterval(RVN_WS_PING);
+    if (RVN_WS !== ws) return;
+    RVN_WS = null; RVN_ONLINE = []; rvnVivoOnline();
+    if (!AUTH.logged || document.getElementById('rvn-gestao').style.display === 'none'){ rvnVivoStatus('', 'desligado'); return; }
+    rvnVivoStatus('espera', 'reconectando…');
+    RVN_WS_TIMER = setTimeout(rvnVivoLigar, RVN_WS_ESPERA);
+    RVN_WS_ESPERA = Math.min(RVN_WS_ESPERA * 2, 30000);
+  };
+}
+function rvnVivoDesligar(){
+  clearTimeout(RVN_WS_TIMER); clearInterval(RVN_WS_PING);
+  const ws = RVN_WS; RVN_WS = null;
+  if (ws) try { ws.close(1000, 'saiu'); } catch(e){}
+  RVN_ONLINE = []; rvnVivoOnline(); rvnVivoStatus('', 'desligado');
+}
+// o "há X min" envelhece sozinho
+setInterval(() => {
+  if (!RVN_EVENTOS.length) return;
+  document.querySelectorAll('.rvn-ev time').forEach((t) => { t.textContent = rvnHaQuanto(Date.parse(t.getAttribute('datetime'))); });
+  rvnPintarTags();
+}, 30000);
 
 function renderPainel(periodos){
   const wrap = document.getElementById('rvn-painel');
@@ -720,7 +979,7 @@ function renderPainel(periodos){
       <div class="rvn-painel-cols">
         <div>
           <div class="rvn-painel-lbl pend">${IC('relogio')}Pendentes (${np})</div>
-          ${p.pendentes.map((x) => `<div class="rvn-painel-item">${rvnItemPainel(x)}</div>`).join('') || '<div class="rvn-painel-item vazio">ninguém pendente</div>'}
+          ${p.pendentes.map((x) => `<div class="rvn-painel-item">${rvnItemPainel(x, true)}</div>`).join('') || '<div class="rvn-painel-item vazio">ninguém pendente</div>'}
         </div>
         <div>
           <div class="rvn-painel-lbl ok">${IC('ok')}Assinados (${na})</div>
@@ -1034,7 +1293,11 @@ async function rvnArquivarConfirmar(){
     if (e.code === 'tem_pendentes' || e.code === 'nao_encontrado') gestCarregarPainel();
   }
 }
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('rvn-arq-modal').classList.contains('on')) rvnArquivarFechar(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('rvn-arq-modal').classList.contains('on')) rvnArquivarFechar();
+  else if (document.getElementById('rvn-lista-modal').classList.contains('on')) rvnListaFechar();
+});
 
 async function gestCriarPeriodo(ev){
   ev.preventDefault();
