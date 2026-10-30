@@ -1,22 +1,32 @@
 /* =====================================================================
-   p5-diploma.js — desenha o DIPLOMA de um agraciado num <canvas> (A4
-   deitado) e baixa em PDF ou PNG. Usado pelo p5.html (clicar no nome) e
-   pelo p5-diploma.html (link compartilhado, sem login).
+   p5-diploma.js — desenha o CERTIFICADO ou o DIPLOMA de um agraciado num
+   <canvas> e baixa em PDF ou PNG, um por um ou em LOTE. Usado pelo p5.html
+   (clicar no nome, Confeccionar) e pelo p5-diploma.html (link compartilhado,
+   sem login).
 
-   MODELOS: por enquanto só o "simbolico" (prévia, 29/10/2026). Quando a
-   P5 mandar os diplomas oficiais, cada um vira uma entrada em MODELOS
-   (imagem de fundo + posição dos campos) e a portaria aponta para ele na
-   coluna MODELO da planilha — o resto da plataforma não muda.
+   MODELOS (a portaria aponta para um na coluna MODELO da planilha):
+     certificado — o modelo oficial da P5 (CERTIFICADO.cdr do CorelDRAW,
+                   29/10/2026): A4 em pé, fundo tirado do próprio arquivo
+                   (p5-certificado-fundo.jpg) e os textos nas mesmas posições,
+                   em Calisto MT como no Corel;
+     simbolico   — o diploma provisório (A4 deitado) até chegar o modelo
+                   oficial do diploma.
+   Os textos de cada portaria (parágrafo, fecho, local/data, quem assina)
+   ficam na coluna CONFIG; o que faltar sai de P5Diploma.padrao(portaria).
 
-   P5Diploma.desenhar(canvas, dados) → Promise
+   P5Diploma.desenhar(canvas, dados, {escala}) → Promise
      dados = { agraciado:{posto,nome,funcao,trat,art,codigo},
-               portaria:{numero,ano,data,titulo,doe,doe_data,assinante,cargo_assinante,modelo},
-               link }                      (link = endereço de conferência, vai no QR)
-   P5Diploma.baixarPDF(canvas, nome) / baixarPNG(canvas, nome) / nomeArquivo(dados)
+               portaria:{numero,ano,data,titulo,doe,doe_data,assinante,cargo_assinante,modelo,config},
+               grupo, link, modelo?, config? }   (modelo/config sobrepõem os da portaria: prévia)
+   P5Diploma.baixarPDF / baixarPNG / pdfBlob / nomeArquivo / lote(itens, {formato, progresso})
    ===================================================================== */
 (function () {
   'use strict';
-  var W = 2339, H = 1654;           // A4 deitado a ~200 dpi
+  var W = 2339, H = 1654;           // diploma: A4 deitado a ~200 dpi
+  var CW = 2480, CH = 3508;         // certificado: A4 em pé a 300 dpi
+  var CALISTO = '"Calisto MT", "Crimson Pro", Georgia, serif';
+  var FUNDO_CERT = 'p5-certificado-fundo.jpg';
+  var PARAGRAFO_PADRAO = 'O Comandante-Geral da Polícia Militar do Estado de Rondônia, tendo em vista o dispositivo na Resolução nº 274, de 20 de julho de 2022, resolve, conferir a presente medalha pelos valorosos serviços prestados ao Batalhão de Polícia de Fronteira e Divisas e à Polícia Militar do Estado de Rondônia a(o) Sr(a).';
   var AZUL = '#0d2340', OURO = '#b8892c', OURO2 = '#e2bd5c', OURO3 = '#8a6417', TINTA = '#1d2433';
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   var BRASAO = 'LOGOS/bpfron_transp.png';
@@ -34,8 +44,70 @@
   }
   function fontes() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    return Promise.all(['700 80px Cinzel', '400 40px Cinzel', '500 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '400 60px "Great Vibes"']
+    return Promise.all(['700 80px Cinzel', '400 40px Cinzel', '500 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '400 60px "Great Vibes"',
+      '400 40px "Crimson Pro"', '700 40px "Crimson Pro"', 'italic 400 40px "Crimson Pro"', 'italic 700 40px "Crimson Pro"']
       .map(function (f) { return document.fonts.load(f).catch(function () {}); }));
+  }
+  /* A Calisto MT vem com o Office (não pode ser publicada no site). Com ela
+     instalada o certificado sai idêntico ao do Corel; sem ela, Crimson Pro. */
+  var _calisto = null;
+  function temCalisto() {
+    if (_calisto !== null) return _calisto;
+    try {
+      var c = document.createElement('canvas').getContext('2d'), t = 'Mérito Policial de Fronteira 0123';
+      c.font = '40px monospace'; var a = c.measureText(t).width;
+      c.font = '40px "Calisto MT", monospace'; _calisto = Math.abs(c.measureText(t).width - a) > 1;
+    } catch (e) { _calisto = false; }
+    return _calisto;
+  }
+
+  // "JAMES ALVES PADILHA - CEL QOPM" (como vem na portaria) → "CEL QOPM JAMES ALVES PADILHA"
+  function assinanteCert(s) {
+    var p = String(s || '').split(/\s+-\s+/);
+    return (p.length > 1 ? p[1] + ' ' + p[0] : p[0]).toUpperCase().trim();
+  }
+  /* textos de uma portaria que ainda não foi confeccionada */
+  function padrao(p) {
+    p = p || {};
+    return {
+      paragrafo: PARAGRAFO_PADRAO,
+      fecho: 'E para constar, expede o presente diploma.',
+      local: 'Porto Velho, RO',
+      data: p.data || '',
+      assinante: assinanteCert(p.assinante),
+      cargo: p.cargo_assinante || 'Comandante-Geral da PMRO',
+    };
+  }
+  function textos(d) {
+    var p = d.portaria || {}, base = padrao(p), c = d.config || p.config || {};
+    Object.keys(base).forEach(function (k) { if (c[k] != null && String(c[k]).trim() !== '') base[k] = String(c[k]).trim(); });
+    return base;
+  }
+
+  // parágrafo JUSTIFICADO (última linha centralizada), como no Corel; devolve o nº de linhas
+  function quebra(ctx, texto, larg) {
+    var pal = texto.split(/\s+/).filter(Boolean), linhas = [], linha = [];
+    pal.forEach(function (p) {
+      var t = linha.concat(p).join(' ');
+      if (linha.length && ctx.measureText(t).width > larg) { linhas.push(linha); linha = [p]; } else linha.push(p);
+    });
+    if (linha.length) linhas.push(linha);
+    return linhas;
+  }
+  function justificado(ctx, linhas, x, y, larg, alt) {
+    linhas.forEach(function (l, i) {
+      var yy = y + i * alt;
+      if (i === linhas.length - 1 || l.length === 1) { ctx.textAlign = 'center'; ctx.fillText(l.join(' '), x + larg / 2, yy); return; }
+      ctx.textAlign = 'left';
+      var soma = l.reduce(function (s, p) { return s + ctx.measureText(p).width; }, 0);
+      var vao = (larg - soma) / (l.length - 1), xx = x;
+      l.forEach(function (p) { ctx.fillText(p, xx, yy); xx += ctx.measureText(p).width + vao; });
+    });
+    ctx.textAlign = 'center';
+  }
+  // diminui a fonte até o texto caber na largura
+  function cabe(ctx, estilo, tam, texto, larg, min) {
+    do { ctx.font = estilo + ' ' + tam + 'px ' + CALISTO; tam -= 1; } while (ctx.measureText(texto).width > larg && tam > (min || 30));
   }
   function esp(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; }
 
@@ -205,20 +277,21 @@
         (p.numero || '—') + (dt ? ', de ' + dt : '') + (p.doe ? ', publicada no Diário Oficial do Estado de Rondônia nº ' + p.doe + (doe ? ', de ' + doe : '') : '') + '.';
       var yFim = paragrafo(ctx, corpo, cx, y + 100, 1400, 54);
 
+      var tx = textos(d);
       ctx.font = 'italic 500 40px "Cormorant Garamond"';
       var yData = Math.max(yFim + 82, 1236);
-      ctx.fillText('Porto Velho – RO, ' + (dt || '___ de ____________ de ____') + '.', cx, yData);
+      ctx.fillText(tx.local + ', ' + (extenso(tx.data) || '___ de ____________ de ____') + '.', cx, yData);
 
       // assinatura
       var ya = Math.max(1388, yData + 128); // texto longo empurra a assinatura
       ctx.font = '400 66px "Great Vibes"'; ctx.fillStyle = 'rgba(13,35,64,.78)';
-      var ass = String(p.assinante || '').split(' - ')[0].toLowerCase().replace(/(^|\s)\S/g, function (s) { return s.toUpperCase(); });
+      var ass = tx.assinante.replace(/^(?:(?:CEL|TEN|MAJ|CAP|QOPM|QOAPM|RR)\s+)+/, '').toLowerCase().replace(/(^|\s)\S/g, function (s) { return s.toUpperCase(); });
       if (ass) ctx.fillText(ass, cx, ya - 26);
       ctx.strokeStyle = AZUL; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 380, ya); ctx.lineTo(cx + 380, ya); ctx.stroke();
       ctx.fillStyle = AZUL; ctx.font = '700 30px Cinzel'; esp(ctx, 2);
-      ctx.fillText((p.assinante || 'COMANDANTE-GERAL').toUpperCase(), cx, ya + 42);
+      ctx.fillText(tx.assinante || 'COMANDANTE-GERAL', cx, ya + 42);
       esp(ctx, 0); ctx.font = '500 32px "Cormorant Garamond"'; ctx.fillStyle = TINTA;
-      ctx.fillText(p.cargo_assinante || 'Comandante-Geral da PMRO', cx, ya + 82);
+      ctx.fillText(tx.cargo, cx, ya + 82);
 
       medalha(ctx, W - 318, 1218, p.titulo);
 
@@ -233,22 +306,76 @@
         if (a.codigo) { ctx.font = '700 20px Cinzel'; esp(ctx, 3); ctx.fillText(a.codigo.toUpperCase(), 352, 1452); esp(ctx, 0); }
       }
       ctx.font = 'italic 500 22px "Cormorant Garamond"'; ctx.fillStyle = 'rgba(60,70,88,.7)';
-      ctx.fillText('Modelo simbólico · prévia gerada pela P5 · Comunicação Social do BPFRON', cx, H - 126);
+      ctx.fillText('Modelo provisório · o diploma oficial da P5 entra no lugar deste', cx, H - 126);
+    },
+
+    /* Certificado oficial (CERTIFICADO.cdr). Posições e tamanhos medidos na
+       prévia do próprio arquivo do Corel e calibrados com a Calisto MT: com o
+       texto padrão, o parágrafo quebra nas mesmas 4 linhas do modelo. */
+    certificado: async function (ctx, d) {
+      var a = d.agraciado || {}, p = d.portaria || {}, tx = textos(d);
+      var fundo = await imagem(FUNDO_CERT);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, CW, CH);
+      if (fundo) ctx.drawImage(fundo, 0, 0, CW, CH);
+      var cx = 1237;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+      // título da medalha (no Corel é texto por cima do fundo)
+      var tit = String(p.titulo || 'Medalha do Mérito Policial de Fronteira').trim();
+      var mt = /^(medalha|comenda|diploma|láurea|laurea)\s+(d[oa]s?)\s+(.+)$/i.exec(tit);
+      var l1 = mt ? (mt[1] + ' ' + mt[2]).toUpperCase() : '', resto = (mt ? mt[3] : tit).toUpperCase();
+      ctx.fillStyle = ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+      var grosso = function (t, x, y) { ctx.fillText(t, x, y); ctx.strokeText(t, x, y); }; // no Corel o título é mais encorpado
+      if (l1) { ctx.font = '700 51px ' + CALISTO; grosso(l1, cx, 2076); }
+      ctx.font = '700 72px ' + CALISTO;
+      var lt = quebra(ctx, resto, 1000).map(function (l) { return l.join(' '); }).slice(0, 2);
+      if (lt.length === 1) { cabe(ctx, '700', 72, lt[0], 1080, 44); grosso(lt[0], cx, 2200); }
+      else lt.forEach(function (l, i) { grosso(l, cx, 2162 + i * 77); });
+
+      // parágrafo: 53 px, justificado entre x 285 e 2190
+      var par = tx.paragrafo;
+      if (/empresa/i.test(d.grupo || '')) par = par.replace(/a\(o\)\s*Sr\(a\)\.?\s*$/i, 'à empresa');
+      var tam = 53, linhas;
+      do { ctx.font = '400 ' + tam + 'px ' + CALISTO; linhas = quebra(ctx, par, 1905); tam -= 1; } while (linhas.length > 6 && tam > 40);
+      var alt = Math.round(tam * 1.03 + 1);
+      ctx.fillStyle = '#1b1b1b';
+      justificado(ctx, linhas, 285, 2393, 1905, alt);
+      var desce = Math.max(0, linhas.length - 4) * alt; // texto maior empurra o resto (até a linha da assinatura)
+
+      // nome: negrito itálico 59 px (diminui se não couber)
+      var nome = ((a.posto ? a.posto + ' ' : '') + (a.nome || '')).toUpperCase().trim();
+      ctx.fillStyle = '#000';
+      cabe(ctx, 'italic 700', 59, nome, 1905, 36);
+      ctx.fillText(nome, cx, 2681 + desce);
+
+      ctx.fillStyle = '#1b1b1b';
+      ctx.font = '400 58px ' + CALISTO; ctx.fillText(tx.fecho, cx, 2787 + desce);
+      ctx.font = '400 56px ' + CALISTO;
+      ctx.fillText(tx.local + ', ' + (extenso(tx.data) || '___ de ____________ de ____'), cx, Math.min(2893 + desce, 3020));
+
+      // assinatura (a linha já vem no fundo, em y 3093)
+      ctx.fillStyle = '#111';
+      cabe(ctx, '700', 47, tx.assinante, 1300, 32); ctx.fillText(tx.assinante, cx, 3152);
+      ctx.font = 'italic 400 49px ' + CALISTO; ctx.fillText(tx.cargo, cx, 3204);
     },
   };
+  var TAM = { certificado: { w: CW, h: CH, nome: 'Certificado' }, simbolico: { w: W, h: H, nome: 'Diploma' } };
+  function modeloDe(d) { var m = (d && (d.modelo || (d.portaria || {}).modelo)) || 'certificado'; return MODELOS[m] ? m : 'certificado'; }
 
-  async function desenhar(canvas, dados) {
-    canvas.width = W; canvas.height = H;
+  async function desenhar(canvas, dados, opt) {
+    var m = modeloDe(dados), t = TAM[m], esc = (opt && opt.escala) || 1;
+    canvas.width = Math.round(t.w * esc); canvas.height = Math.round(t.h * esc);
     var ctx = canvas.getContext('2d');
+    ctx.setTransform(esc, 0, 0, esc, 0, 0);
     await fontes();
-    var m = MODELOS[(dados.portaria || {}).modelo] || MODELOS.simbolico;
-    await m(ctx, dados);
+    await MODELOS[m](ctx, dados);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     return canvas;
   }
 
   function nomeArquivo(d) {
     var a = (d && d.agraciado) || {}, p = (d && d.portaria) || {};
-    var base = ('Diploma ' + (a.posto ? a.posto + ' ' : '') + (a.nome || '') + ' - Portaria ' + (p.numero || '') + '-' + (p.ano || ''))
+    var base = (TAM[modeloDe(d)].nome + ' ' + (a.posto ? a.posto + ' ' : '') + (a.nome || '') + ' - Portaria ' + (p.numero || '') + '-' + (p.ano || ''))
       .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[º°]/g, '').replace(/[^\w\- ]+/g, '').replace(/\s+/g, ' ').trim();
     return base || 'Diploma';
   }
@@ -272,13 +399,59 @@
     });
     return _jspdf;
   }
+  var _jszip = null;
+  function carregarJSZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    if (!_jszip) _jszip = new Promise(function (ok, no) {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload = function () { ok(window.JSZip); }; s.onerror = function () { _jszip = null; no(new Error('Não consegui carregar o gerador de .zip. Confira a internet.')); };
+      document.head.appendChild(s);
+    });
+    return _jszip;
+  }
+  // uma página A4 (em pé ou deitada, conforme o canvas) no documento
+  function pagina(lib, doc, canvas, qual) {
+    var deitado = canvas.width > canvas.height, w = deitado ? 297 : 210, h = deitado ? 210 : 297;
+    if (!doc) doc = new lib.jsPDF({ orientation: deitado ? 'landscape' : 'portrait', unit: 'mm', format: 'a4', compress: true });
+    else doc.addPage('a4', deitado ? 'landscape' : 'portrait');
+    doc.addImage(canvas.toDataURL('image/jpeg', qual), 'JPEG', 0, 0, w, h);
+    return doc;
+  }
   async function pdfBlob(canvas) {
     var lib = await carregarJsPDF();
-    var doc = new lib.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
-    doc.addImage(canvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 297, 210);
-    return doc.output('blob');
+    return pagina(lib, null, canvas, 0.93).output('blob');
   }
   async function baixarPDF(canvas, nome) { salvar(await pdfBlob(canvas), nome + '.pdf'); }
 
-  window.P5Diploma = { desenhar: desenhar, baixarPDF: baixarPDF, baixarPNG: baixarPNG, pdfBlob: pdfBlob, nomeArquivo: nomeArquivo, extenso: extenso, W: W, H: H };
+  /* LOTE: todos de uma vez, na ordem da lista.
+     formato 'pdf' = um PDF só com uma página por agraciado (para imprimir);
+     formato 'zip' = um PDF para cada um, numerados na ordem do documento.
+     A escala menor (≈200 dpi) segura o tamanho do arquivo: o fundo do
+     certificado tem 153 dpi, então não se perde nada. */
+  async function lote(itens, op) {
+    op = op || {};
+    var lib = await carregarJsPDF();
+    var zip = op.formato === 'zip' ? new (await carregarJSZip())() : null;
+    var cv = document.createElement('canvas'), doc = null, n = itens.length, usados = {};
+    for (var i = 0; i < n; i++) {
+      if (op.cancelado && op.cancelado()) throw new Error('Cancelado.');
+      await desenhar(cv, itens[i], { escala: op.escala || 0.67 });
+      if (zip) {
+        var nome = String(i + 1).padStart(3, '0') + ' - ' + nomeArquivo(itens[i]);
+        if (usados[nome]) nome += ' (' + (++usados[nome]) + ')'; else usados[nome] = 1;
+        zip.file(nome + '.pdf', pagina(lib, null, cv, 0.9).output('arraybuffer'));
+      } else doc = pagina(lib, doc, cv, 0.88);
+      if (op.progresso) op.progresso(i + 1, n);
+      await new Promise(function (r) { setTimeout(r, 0); }); // deixa a tela respirar
+    }
+    if (zip) return zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    return doc ? doc.output('blob') : null;
+  }
+
+  window.P5Diploma = {
+    desenhar: desenhar, baixarPDF: baixarPDF, baixarPNG: baixarPNG, pdfBlob: pdfBlob, nomeArquivo: nomeArquivo, extenso: extenso,
+    lote: lote, salvar: salvar, padrao: padrao, textos: textos, temCalisto: temCalisto, modeloDe: modeloDe,
+    tamanho: function (m) { return TAM[MODELOS[m] ? m : 'certificado']; }, W: W, H: H,
+  };
 })();

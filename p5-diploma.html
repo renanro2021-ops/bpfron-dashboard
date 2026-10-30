@@ -2,7 +2,8 @@
 <html lang="pt-BR" data-bp-claro data-bp-menu="nao">
 <head>
 <meta charset="UTF-8">
-<!-- Link direto do diploma (P5 · Comunicação Social, 29/10/2026).
+<!-- Link direto do certificado/diploma (P5 · Comunicação Social, 29/10/2026).
+     O formato (certificado em pé ou diploma deitado) vem da portaria.
      Abre SEM login: p5-diploma.html?c=CÓDIGO. O código é sorteado pelo Worker
      e o gestor pode trocar (o link antigo deixa de abrir). Só mostra UM
      diploma; a lista inteira fica no p5.html, que exige login. -->
@@ -11,7 +12,7 @@
 <meta name="theme-color" content="#060912">
 <meta name="robots" content="noindex">
 <title>Diploma · BPFRON/RO</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Crimson+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="bp-ui.css">
 <style>
 .bp-wrap{max-width:1120px}
@@ -22,6 +23,7 @@
 .dp-medalha svg{width:26px;height:26px}
 .dp-folha{position:relative;border-radius:14px;overflow:hidden;background:#f4ecd6;box-shadow:0 24px 60px rgba(0,0,0,.45);aspect-ratio:2339/1654;animation:bp-sobe .7s var(--ease) both}
 .dp-folha canvas{display:block;width:100%;height:100%}
+.dp-folha.retrato{max-width:min(100%,calc(78vh * .707));margin:0 auto;background:#fff}
 .dp-folha .carga{position:absolute;inset:0;display:grid;place-items:center;color:#0d2340;font-weight:700;gap:10px}
 .dp-barra{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .dp-rodape{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
@@ -51,7 +53,7 @@
       <button type="button" class="bp-btn sec" id="dp-png" onclick="baixar('png')"><i data-ic="baixar"></i>Baixar imagem</button>
       <button type="button" class="bp-btn ghost" id="dp-comp" onclick="compartilhar()" style="display:none"><i data-ic="enviar"></i>Compartilhar</button>
     </div>
-    <p class="dp-rodape">Diploma emitido pela P5 · Comunicação Social do Batalhão de Polícia de Fronteira e Divisas (BPFRON/PMRO).</p>
+    <p class="dp-rodape">Emitido pela P5 · Comunicação Social do Batalhão de Polícia de Fronteira e Divisas (BPFRON/PMRO).</p>
   </div>
   <div class="bp-vazio" id="dp-erro" style="display:none;margin-top:30px"></div>
 </main>
@@ -84,10 +86,13 @@ async function iniciar() {
     if (!r.ok) return erro(d.detail || 'Não encontrei este diploma.');
   } catch (e) { return erro('Sem conexão com o servidor. Confira a internet e tente de novo.'); }
   DADOS = d;
-  const a = d.agraciado, p = d.portaria;
-  document.title = 'Diploma · ' + (a.posto ? a.posto + ' ' : '') + a.nome;
+  const a = d.agraciado, p = d.portaria, t = P5Diploma.tamanho(p.modelo);
+  const folha = document.querySelector('.dp-folha');
+  folha.style.aspectRatio = t.w + '/' + t.h; folha.classList.toggle('retrato', t.h > t.w);
+  document.title = t.nome + ' · ' + (a.posto ? a.posto + ' ' : '') + a.nome;
   $('dp-nome').textContent = (a.posto ? a.posto + ' ' : (a.trat ? a.trat + ' ' : '')) + a.nome;
-  $('dp-sub').textContent = (p.titulo || 'Diploma') + ' · Portaria nº ' + p.numero + '/' + p.ano;
+  $('dp-sub').textContent = t.nome + ' · ' + (p.titulo || 'Medalha') + ' · Portaria nº ' + p.numero + '/' + p.ano;
+  $('dp-carga').innerHTML = '<span class="bp-gira"></span>Montando o ' + t.nome.toLowerCase() + '…';
   $('dp-ok').style.display = '';
   if (navigator.share) $('dp-comp').style.display = '';
   await P5Diploma.desenhar($('dp-canvas'), { agraciado: a, portaria: p, grupo: d.grupo, link: location.href.split('#')[0] });
