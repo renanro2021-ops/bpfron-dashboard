@@ -110,6 +110,9 @@
 .p5-gerar button:disabled{opacity:.55;cursor:wait}
 .p5-gerar button b{font-size:16px;color:var(--t1);display:flex;align-items:center;gap:8px}
 .p5-gerar button small{color:var(--muted);font-size:13px;line-height:1.45}
+.p5-passo{display:flex;align-items:center;gap:8px;margin:18px 0 10px}
+.p5-passo:first-child{margin-top:4px}
+.p5-passo b{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:#0d1424;font-size:12px}
 .p5-resumo{display:flex;gap:14px;align-items:center;padding:14px;border-radius:16px;border:1px solid var(--acc-line);background:var(--acc-soft);margin-bottom:14px}
 .p5-resumo b{display:block;color:var(--t1);font-size:16px}
 .p5-resumo small{color:var(--muted);font-size:13px}
@@ -129,12 +132,18 @@
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-29", "titulo": "Cadastrar nova portaria", "quem": "gestor", "itens": [
+    "Botão próprio Cadastrar nova portaria: escolha Certificado ou Diploma e lance o PDF da portaria do SEI.",
+    "A plataforma lê o documento sozinha (número, data, DOE, SEI e a lista de agraciados na ordem) e guarda o PDF para visualização.",
+    "Informe o Comandante-Geral que assinou, com graduação e nome: é ele que sai no certificado.",
+    "Sem o documento não dá para cadastrar. Depois é só usar Confeccionar para gerar todos de uma vez."
+  ] },
   { "data": "2026-10-29", "titulo": "Certificado no modelo oficial", "quem": "todos", "itens": [
     "O certificado da Medalha do Mérito Policial de Fronteira agora sai igual ao modelo oficial da P5 (moldura, brasões e textos nas mesmas posições).",
     "Cada portaria mostra o documento que foi confeccionado para ela: certificado ou diploma."
   ] },
   { "data": "2026-10-29", "titulo": "Confeccionar em lote", "quem": "gestor", "itens": [
-    "Botão Confeccionar: escolha Certificado ou Diploma, lance a portaria pelo PDF (ou use uma já lançada), confira os textos na prévia e gere todos de uma vez.",
+    "Botão Confeccionar: escolha Certificado ou Diploma e a portaria cadastrada, confira os textos na prévia e gere todos de uma vez.",
     "Sai um PDF com todos para imprimir ou um .zip com um arquivo por agraciado, na ordem do documento.",
     "Não existe mais incluir agraciado à mão: a lista vem sempre da portaria (corrigir um nome continua possível)."
   ] },
@@ -192,6 +201,7 @@
         <p>As portarias de outorga do batalhão com o documento publicado e a lista de agraciados na ordem em que aparecem. Clique no nome para ver o diploma.</p>
         <div class="bp-bts">
           <button type="button" class="bp-btn" onclick="document.getElementById('p5-q').focus()"><i data-ic="buscar"></i>Buscar agraciado</button>
+          <button type="button" class="bp-btn p5-ges" style="display:none" onclick="cadastrar()"><i data-ic="mais"></i>Cadastrar nova portaria</button>
           <button type="button" class="bp-btn sec p5-ges" style="display:none" onclick="confeccionar()"><i data-ic="foguete"></i>Confeccionar</button>
         </div>
       </div>
@@ -282,7 +292,7 @@
     </div>
     <div class="p5-etapas" id="cf-etapas">
       <span data-e="1"><b>1</b><em>O que confeccionar</em></span>
-      <span data-e="2"><b>2</b><em>Portaria</em></span>
+      <span data-e="2"><b>2</b><em>Portaria cadastrada</em></span>
       <span data-e="3"><b>3</b><em>Textos e prévia</em></span>
       <span data-e="4"><b>4</b><em>Gerar em lote</em></span>
     </div>
@@ -301,37 +311,10 @@
       </div>
     </div>
 
-    <!-- 2: portaria -->
+    <!-- 2: portaria (só as já cadastradas: portaria nova entra por "Cadastrar nova portaria") -->
     <div id="cf-e2" style="display:none">
-      <div class="p5-seg" role="tablist" style="margin-top:0">
-        <button type="button" id="cf-m-nova" onclick="cfModo('nova')"><i data-ic="enviar"></i>Lançar portaria nova</button>
-        <button type="button" id="cf-m-existe" onclick="cfModo('existe')"><i data-ic="arquivo"></i>Usar portaria já lançada</button>
-      </div>
-      <div id="cf-nova" style="margin-top:12px">
-        <label class="bp-arquivo grande" id="pt-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerPdfPortaria(event.dataTransfer.files)">
-          <span class="bp-tile"><i data-ic="arquivo"></i></span>
-          <span class="tx"><b>Toque para escolher o PDF da portaria</b><small>ou arraste para cá (PDF do SEI/DOE, até 15 MB)</small></span>
-          <span class="bp-trocar"></span>
-          <input type="file" id="pt-file" accept="application/pdf,.pdf" onchange="lerPdfPortaria(this.files)">
-        </label>
-        <div class="bp-msg" id="pt-ler" style="margin-top:8px"></div>
-        <div class="p5-form" id="cf-campos" style="margin-top:12px;display:none">
-          <div class="bp-campo"><label for="cf-numero">Número</label><div class="bp-in"><input id="cf-numero" inputmode="numeric"></div></div>
-          <div class="bp-campo"><label for="cf-data">Data da portaria</label><div class="bp-in"><input id="cf-data" type="date"></div></div>
-          <div class="bp-campo inteira"><label for="cf-titulo">Honraria</label><div class="bp-in"><input id="cf-titulo"></div></div>
-          <div class="bp-campo"><label for="cf-doe">DOE nº</label><div class="bp-in"><input id="cf-doe"></div></div>
-          <div class="bp-campo"><label for="cf-doedata">Publicado no DOE em</label><div class="bp-in"><input id="cf-doedata" type="date"></div></div>
-          <div class="bp-campo"><label for="cf-sei">Nº SEI do documento</label><div class="bp-in"><input id="cf-sei"></div></div>
-          <div class="bp-campo"><label for="cf-processo">Processo SEI</label><div class="bp-in"><input id="cf-processo"></div></div>
-          <div class="bp-campo"><label for="cf-assinante">Quem assina a portaria</label><div class="bp-in"><input id="cf-assinante"></div></div>
-          <div class="bp-campo"><label for="cf-cargo">Cargo</label><div class="bp-in"><input id="cf-cargo"></div></div>
-          <div class="inteira" id="pt-rev-box" style="display:none">
-            <div class="bp-rot" style="margin-bottom:8px" id="pt-rev-tit"></div>
-            <div class="p5-rev"><table><thead><tr><th>Art.</th><th>Nº</th><th>Posto</th><th>Nome</th><th>Função</th></tr></thead><tbody id="pt-rev"></tbody></table></div>
-          </div>
-        </div>
-      </div>
-      <div id="cf-existe" style="margin-top:12px;display:none"><div class="p5-portsel" id="cf-lista"></div></div>
+      <div class="p5-portsel" id="cf-lista"></div>
+      <button type="button" class="bp-btn sm ghost" style="margin-top:10px" onclick="fecharConf(); cadastrar()"><i data-ic="mais"></i>A portaria não está na lista? Cadastrar nova portaria</button>
     </div>
 
     <!-- 3: textos e prévia -->
@@ -380,6 +363,74 @@
       <button type="button" class="bp-btn ghost" id="cf-voltar" style="margin-right:auto" onclick="cfIr(CF.e - 1)"><i data-ic="voltar"></i>Voltar</button>
       <button type="button" class="bp-btn ghost" id="cf-fim" style="display:none" onclick="cfVerPortaria()"><i data-ic="olho"></i>Ver a portaria</button>
       <button type="button" class="bp-btn" id="cf-seguir" onclick="cfSeguir()">Continuar<i data-ic="seta"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- CADASTRAR NOVA PORTARIA (só pelo documento do SEI) -->
+<div class="bp-modal p5-modal-larga" id="m-cad" onclick="if(event.target===this)fecharCad()">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-cad-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="mais"></i></span>
+      <div><h3 id="m-cad-tit">Cadastrar nova portaria</h3><small>Pelo documento do SEI: a lista de agraciados é lida do PDF, nada é digitado</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fecharCad()" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="cad-form">
+      <div class="bp-rot p5-passo"><b>1</b>O que a portaria concede</div>
+      <div class="p5-tipos">
+        <button type="button" class="p5-tipo" id="cad-t-certificado" onclick="cadTipo('certificado')">
+          <span class="fig"><img src="p5-certificado-fundo.jpg" alt="Modelo do certificado" loading="lazy"></span>
+          <b>Certificado</b><small>Modelo oficial da P5 · A4 em pé</small>
+        </button>
+        <button type="button" class="p5-tipo" id="cad-t-simbolico" onclick="cadTipo('simbolico')">
+          <span class="fig"><span class="dip">DIPLOMA</span></span>
+          <b>Diploma</b><small>A arte oficial ainda não chegou · sai no modelo provisório até lá</small>
+        </button>
+      </div>
+
+      <div class="bp-rot p5-passo"><b>2</b>Documento do SEI</div>
+      <label class="bp-arquivo grande" id="pt-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerPdfPortaria(event.dataTransfer.files)">
+        <span class="bp-tile"><i data-ic="arquivo"></i></span>
+        <span class="tx"><b>Toque para escolher o PDF da portaria</b><small>ou arraste para cá (PDF do SEI/DOE, até 15 MB)</small></span>
+        <span class="bp-trocar"></span>
+        <input type="file" id="pt-file" accept="application/pdf,.pdf" onchange="lerPdfPortaria(this.files)">
+      </label>
+      <div class="bp-msg" id="pt-ler" style="margin-top:8px"></div>
+      <div id="cad-lido" style="display:none">
+        <div class="p5-form" style="margin-top:12px">
+          <div class="bp-campo"><label for="cad-numero">Número</label><div class="bp-in"><input id="cad-numero" inputmode="numeric"></div></div>
+          <div class="bp-campo"><label for="cad-data">Data da portaria</label><div class="bp-in"><input id="cad-data" type="date"></div></div>
+          <div class="bp-campo inteira"><label for="cad-titulo">Honraria</label><div class="bp-in"><input id="cad-titulo"></div></div>
+          <div class="bp-campo"><label for="cad-doe">DOE nº</label><div class="bp-in"><input id="cad-doe"></div></div>
+          <div class="bp-campo"><label for="cad-doedata">Publicado no DOE em</label><div class="bp-in"><input id="cad-doedata" type="date"></div></div>
+          <div class="bp-campo"><label for="cad-sei">Nº SEI do documento</label><div class="bp-in"><input id="cad-sei"></div></div>
+          <div class="bp-campo"><label for="cad-processo">Processo SEI</label><div class="bp-in"><input id="cad-processo"></div></div>
+          <div class="inteira" id="pt-rev-box" style="display:none">
+            <div class="bp-rot" style="margin-bottom:8px" id="pt-rev-tit"></div>
+            <div class="p5-rev"><table><thead><tr><th>Art.</th><th>Nº</th><th>Posto</th><th>Nome</th><th>Função</th></tr></thead><tbody id="pt-rev"></tbody></table></div>
+          </div>
+        </div>
+
+        <div class="bp-rot p5-passo"><b>3</b>Comandante-Geral que assinou o documento</div>
+        <div class="p5-form">
+          <div class="bp-campo"><label for="cad-grad">Graduação</label><div class="bp-in"><input id="cad-grad" list="cad-grads" placeholder="Ex.: CEL QOPM" autocomplete="off" oninput="cadAssina()"></div></div>
+          <div class="bp-campo"><label for="cad-nome">Nome</label><div class="bp-in"><input id="cad-nome" placeholder="Nome completo" autocomplete="off" oninput="cadAssina()"></div></div>
+          <div class="bp-campo inteira"><label for="cad-ccargo">Cargo</label><div class="bp-in"><input id="cad-ccargo" oninput="cadAssina()"></div></div>
+          <datalist id="cad-grads"><option value="CEL QOPM"><option value="CEL PM"><option value="CEL QOAPM"></datalist>
+          <small class="inteira" style="color:var(--muted)">Sai assim no documento: <b id="cad-assina">—</b></small>
+        </div>
+      </div>
+    </div>
+    <div id="cad-ok" style="display:none">
+      <div class="p5-resumo"><span class="p5-medalha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg></span><div><b id="cad-ok-tit"></b><small id="cad-ok-sub"></small></div></div>
+      <div class="bp-msg" id="cad-ok-pdf"></div>
+    </div>
+    <div class="bp-msg err" id="cad-msg" style="margin-top:12px"></div>
+    <div class="bp-modal-pe" style="margin-top:14px">
+      <button type="button" class="bp-btn ghost" id="cad-cancelar" style="margin-right:auto" onclick="fecharCad()">Cancelar</button>
+      <button type="button" class="bp-btn" id="cad-salvar" onclick="cadSalvar()"><i data-ic="check"></i>Cadastrar portaria</button>
+      <button type="button" class="bp-btn ghost" id="cad-ver" style="display:none" onclick="cadVer()"><i data-ic="olho"></i>Ver a portaria</button>
+      <button type="button" class="bp-btn" id="cad-conf" style="display:none" onclick="cadConfeccionar()"><i data-ic="foguete"></i>Confeccionar agora</button>
     </div>
   </div>
 </div>
@@ -460,7 +511,7 @@ const MEDALHA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9
 function abrir(id) { $(id).classList.add('on'); }
 function fechar(id) { $(id).classList.remove('on'); }
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') ['m-senha', 'm-ag', 'm-port', 'm-dip', 'm-conf'].some((id) => $(id).classList.contains('on') && (id === 'm-conf' ? fecharConf() : fechar(id), true));
+  if (e.key === 'Escape') ['m-senha', 'm-ag', 'm-port', 'm-dip', 'm-conf', 'm-cad'].some((id) => $(id).classList.contains('on') && (id === 'm-conf' ? fecharConf() : id === 'm-cad' ? fecharCad() : fechar(id), true));
   if ($('m-dip').classList.contains('on') && !$('m-ag').classList.contains('on') && document.activeElement.tagName !== 'INPUT') {
     if (e.key === 'ArrowRight') vizinho(1); if (e.key === 'ArrowLeft') vizinho(-1);
   }
@@ -568,11 +619,11 @@ function pintarGrade() {
       <div class="chips">${(p.grupos || []).map((g) => `<span class="bp-sl">${esc(g.titulo)} · ${p.agraciados.filter((a) => a.art === g.art).length}</span>`).join('')}
         ${p.tem_pdf ? `<span class="bp-sl ok">${IC('arquivo')}PDF</span>` : `<span class="bp-sl pend">sem PDF</span>`}
         ${D.gestor ? seloConf(p) : ''}</div>
-    </button>`).join('') : '<div class="bp-vazio">Nenhuma portaria cadastrada ainda.</div>';
+    </button>`).join('') : `<div class="bp-vazio">Nenhuma portaria cadastrada ainda.${D.gestor ? '<br><button type="button" class="bp-btn" style="margin-top:12px" onclick="cadastrar()">' + IC('mais') + 'Cadastrar nova portaria</button>' : ''}</div>`;
 }
 const NOME_MOD = { certificado: 'Certificado', simbolico: 'Diploma' };
 function seloConf(p) {
-  return p.confeccionado ? `<span class="bp-sl info">${IC('check')}${NOME_MOD[p.modelo] || 'Certificado'} confeccionado</span>` : `<span class="bp-sl pend">não confeccionado</span>`;
+  return p.confeccionado ? `<span class="bp-sl info">${IC('check')}${NOME_MOD[p.modelo] || 'Certificado'} confeccionado</span>` : `<span class="bp-sl pend">${NOME_MOD[p.modelo] || 'Certificado'} · a confeccionar</span>`;
 }
 
 function voltarInicio(semHash) {
@@ -873,19 +924,18 @@ async function enviarPdf(files) {
 
 /* ============================== gestor: CONFECCIONAR ==============================
    Única forma de fazer certificados (pedido da P5, 29/10/2026): escolhe
-   Certificado ou Diploma → lança a portaria pelo PDF (a lista sai do
-   documento, nada é digitado) ou usa uma já lançada → confere os textos na
-   prévia → gera todos de uma vez (um PDF para imprimir ou um .zip). */
-let CF = null; // { e, modelo, modo, pid, lida, file, idx, salvo, gerando, parar, textosDe }
+   Certificado ou Diploma → escolhe a portaria
+   JÁ CADASTRADA (pelo documento do SEI) → confere os textos na prévia → gera
+   todos de uma vez (um PDF para imprimir ou um .zip). */
+let CF = null; // { e, modelo, pid, idx, salvo, gerando, parar, textosDe }
 function formato(el, modelo) {
   const t = P5Diploma.tamanho(modelo);
   el.style.aspectRatio = t.w + '/' + t.h; el.classList.toggle('retrato', t.h > t.w);
 }
 function confeccionar(pid) {
   const p = pid && D.portarias.find((x) => x.id === pid);
-  CF = { e: 1, modelo: p ? p.modelo : 'certificado', modo: pid ? 'existe' : 'nova', pid: pid || '', lida: null, file: null, idx: 0, salvo: null, gerando: false, parar: false, textosDe: '' };
+  CF = { e: 1, modelo: p ? p.modelo : 'certificado', pid: p ? pid : '', idx: 0, salvo: null, gerando: false, parar: false, textosDe: '' };
   ['certificado', 'simbolico'].forEach((m) => $('cf-t-' + m).classList.toggle('on', CF.modelo === m));
-  arqPortaria(null); $('pt-file').value = ''; $('pt-ler').textContent = ''; $('cf-campos').style.display = 'none'; $('pt-rev-box').style.display = 'none';
   $('cf-prog-box').style.display = 'none';
   abrir('m-conf'); cfIr(1);
 }
@@ -903,7 +953,7 @@ function cfIr(n) {
   $('cf-seguir').style.display = n < 4 ? '' : 'none';
   $('cf-fim').style.display = 'none';
   $('cf-msg').textContent = '';
-  if (n === 2) cfModo(CF.modo);
+  if (n === 2) cfLista();
   if (n === 3) cfMontarTextos();
   if (n === 4) cfResumo();
   $('m-conf').querySelector('.bp-modal-cx').scrollTop = 0;
@@ -917,30 +967,36 @@ function idPortaria(numero, data) { return String(numero || '').replace(/\D/g, '
 function cfSeguir() {
   const m = $('cf-msg'); m.textContent = '';
   if (CF.e === 1) { if (!CF.modelo) { m.textContent = 'Escolha Certificado ou Diploma.'; return; } return cfIr(2); }
-  if (CF.e === 2) {
-    if (CF.modo === 'existe') { if (!CF.pid) { m.textContent = 'Escolha a portaria.'; return; } }
-    else {
-      if (!CF.lida || !CF.lida.agraciados.length) { m.textContent = 'Lance o PDF da portaria: a lista de agraciados sai dele, nada é digitado.'; return; }
-      if (!$('cf-numero').value || !$('cf-data').value) { m.textContent = 'Confira o número e a data da portaria.'; return; }
-      const id = idPortaria($('cf-numero').value, $('cf-data').value);
-      if (D.portarias.some((p) => p.id === id)) { m.textContent = `A Portaria nº ${id.replace('-', '/')} já está lançada. Use “Usar portaria já lançada”.`; return; }
-    }
-    return cfIr(3);
-  }
+  if (CF.e === 2) { if (!cfPortaria()) { m.textContent = 'Escolha a portaria. Se ela não está na lista, cadastre primeiro pelo documento do SEI.'; return; } return cfIr(3); }
   if (CF.e === 3) { if (!cfSelecionados().length) { m.textContent = 'Marque pelo menos um grupo de agraciados.'; return; } return cfIr(4); }
 }
-function cfModo(modo) {
-  CF.modo = modo;
-  $('cf-m-nova').classList.toggle('on', modo === 'nova'); $('cf-m-existe').classList.toggle('on', modo === 'existe');
-  $('cf-nova').style.display = modo === 'nova' ? '' : 'none'; $('cf-existe').style.display = modo === 'existe' ? '' : 'none';
-  if (modo === 'existe') {
-    $('cf-lista').innerHTML = D.portarias.length ? D.portarias.map((p) => `<label>
-        <input type="radio" name="cf-port" value="${esc(p.id)}" ${CF.pid === p.id ? 'checked' : ''} onchange="CF.pid = this.value">
-        <span class="p5-medalha" style="width:36px;height:36px">${MEDALHA}</span>
-        <span class="tx"><b>Portaria nº ${esc(p.numero)}/${esc(p.ano)}</b><small>${esc(p.titulo || '')} · ${p.agraciados.length} agraciados${fData(p.data) ? ' · ' + fData(p.data) : ''}</small></span>
-        ${seloConf(p)}</label>`).join('') : '<div class="bp-vazio">Nenhuma portaria lançada ainda. Use “Lançar portaria nova”.</div>';
-  }
+function cfLista() {
+  $('cf-lista').innerHTML = D.portarias.length ? D.portarias.map((p) => `<label>
+      <input type="radio" name="cf-port" value="${esc(p.id)}" ${CF.pid === p.id ? 'checked' : ''} onchange="CF.pid = this.value">
+      <span class="p5-medalha" style="width:36px;height:36px">${MEDALHA}</span>
+      <span class="tx"><b>Portaria nº ${esc(p.numero)}/${esc(p.ano)}</b><small>${esc(p.titulo || '')} · ${p.agraciados.length} agraciados${fData(p.data) ? ' · ' + fData(p.data) : ''}</small></span>
+      ${seloConf(p)}</label>`).join('') : '<div class="bp-vazio">Nenhuma portaria cadastrada ainda.</div>';
 }
+
+/* ============================== gestor: CADASTRAR NOVA PORTARIA ==============================
+   Pedido da P5 (29/10/2026): portaria só entra pelo documento do SEI. O gestor
+   escolhe Certificado ou Diploma, lança o PDF (lido no navegador: dados e lista
+   de agraciados saem dele, o arquivo fica guardado para visualização) e informa
+   o Comandante-Geral que assinou, com graduação e nome. Confeccionar vem depois. */
+let CAD = null; // { modelo, file, lida, id, pdfOk, salvando }
+function cadastrar() {
+  CAD = { modelo: '', file: null, lida: null, id: '', pdfOk: false, salvando: false };
+  ['certificado', 'simbolico'].forEach((m) => $('cad-t-' + m).classList.remove('on'));
+  arqPortaria(null); $('pt-file').value = ''; $('pt-ler').textContent = ''; $('pt-ler').className = 'bp-msg';
+  $('cad-lido').style.display = 'none'; $('pt-rev-box').style.display = 'none';
+  ['cad-grad', 'cad-nome'].forEach((id) => { $(id).value = ''; }); $('cad-ccargo').value = 'Comandante-Geral da PMRO'; cadAssina();
+  $('cad-form').style.display = ''; $('cad-ok').style.display = 'none'; $('cad-msg').textContent = '';
+  $('cad-salvar').style.display = ''; $('cad-salvar').disabled = false; $('cad-cancelar').textContent = 'Cancelar';
+  $('cad-ver').style.display = 'none'; $('cad-conf').style.display = 'none';
+  abrir('m-cad'); $('m-cad').querySelector('.bp-modal-cx').scrollTop = 0;
+}
+function fecharCad() { if (CAD && CAD.salvando) return; fechar('m-cad'); }
+function cadTipo(m) { CAD.modelo = m; ['certificado', 'simbolico'].forEach((k) => $('cad-t-' + k).classList.toggle('on', k === m)); $('cad-msg').textContent = ''; }
 function arqPortaria(f) {
   const box = $('pt-arq');
   box.classList.toggle('tem', !!f);
@@ -948,54 +1004,98 @@ function arqPortaria(f) {
   box.querySelector('.tx small').textContent = f ? (f.size / 1024).toFixed(0) + ' KB' : 'ou arraste para cá (PDF do SEI/DOE, até 15 MB)';
   box.querySelector('.bp-trocar').textContent = f ? 'Trocar' : '';
 }
-function camposConf(x) {
-  $('cf-numero').value = x.numero || ''; $('cf-data').value = x.data || ''; $('cf-titulo').value = x.titulo || 'Medalha do Mérito Policial de Fronteira';
-  $('cf-doe').value = x.doe || ''; $('cf-doedata').value = x.doeData || ''; $('cf-sei').value = x.sei || '';
-  $('cf-processo').value = x.processo || ''; $('cf-assinante').value = x.assinante || ''; $('cf-cargo').value = x.cargoAssinante || 'Comandante-Geral da PMRO';
+// "NOME DO COMANDANTE - CEL QOPM" (como vem assinado no SEI) → graduação e nome separados
+function separaAssinante(s) {
+  const m = String(s || '').trim().match(/^(.+?)\s*[-–—]\s*((?:CEL|TEN[ -]?CEL|MAJ|CAP)\b.*)$/i);
+  if (m) return { grad: m[2].trim().toUpperCase(), nome: m[1].trim().toUpperCase() };
+  const n = String(s || '').trim().match(/^((?:CEL|TEN[ -]?CEL|MAJ|CAP)\s+\S+)\s+(.+)$/i);
+  return n ? { grad: n[1].toUpperCase(), nome: n[2].toUpperCase() } : { grad: '', nome: String(s || '').trim().toUpperCase() };
 }
+function cadAssinante() {
+  const g = $('cad-grad').value.trim().replace(/\s+/g, ' ').toUpperCase(), n = $('cad-nome').value.trim().replace(/\s+/g, ' ').toUpperCase();
+  return { grad: g, nome: n, cargo: $('cad-ccargo').value.trim() || 'Comandante-Geral da PMRO', texto: (g && n) ? g + ' ' + n : '' };
+}
+function cadAssina() { const a = cadAssinante(); $('cad-assina').textContent = a.texto ? a.texto + ' · ' + a.cargo : '—'; $('cad-msg').textContent = ''; }
 async function lerPdfPortaria(files) {
   const f = files && files[0];
-  if (!f) return;
-  CF.file = f; CF.lida = null; CF.salvo = null; CF.textosDe = ''; arqPortaria(f);
-  const m = $('pt-ler'); m.className = 'bp-msg'; m.innerHTML = '<span class="bp-gira"></span> Lendo a portaria…';
+  if (!f || !CAD) return;
+  const m = $('pt-ler');
+  if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { m.className = 'bp-msg err'; m.textContent = 'Escolha o PDF da portaria.'; return; }
+  if (f.size > 15 * 1048576) { m.className = 'bp-msg err'; m.textContent = 'O PDF passa de 15 MB.'; return; }
+  CAD.file = f; CAD.lida = null; arqPortaria(f); $('cad-msg').textContent = '';
+  m.className = 'bp-msg'; m.innerHTML = '<span class="bp-gira"></span> Lendo a portaria…';
   try {
     const lib = await carregarPdfJs();
     const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     const paginas = [];
     for (let n = 1; n <= doc.numPages; n++) paginas.push((await (await doc.getPage(n)).getTextContent()).items);
     const r = P5Portaria.ler(P5Portaria.linhasDoPdfJs(paginas));
-    CF.lida = r; camposConf(r);
-    $('cf-campos').style.display = '';
-    $('pt-rev').innerHTML = r.agraciados.map((a) => `<tr><td>${a.art}º</td><td>${a.ordem}</td><td>${esc(a.posto || a.trat)}</td><td>${esc(a.nome)}</td><td>${esc(a.funcao)}</td></tr>`).join('');
-    $('pt-rev-tit').textContent = `${r.agraciados.length} agraciados lidos · ` + r.grupos.map((g) => `${g.titulo} (${r.agraciados.filter((a) => a.art === g.art).length})`).join(' · ');
+    CAD.lida = r;
+    $('cad-numero').value = r.numero || ''; $('cad-data').value = r.data || ''; $('cad-titulo').value = r.titulo || 'Medalha do Mérito Policial de Fronteira';
+    $('cad-doe').value = r.doe || ''; $('cad-doedata').value = r.doeData || ''; $('cad-sei').value = r.sei || ''; $('cad-processo').value = r.processo || '';
+    const a = separaAssinante(r.assinante);
+    $('cad-grad').value = a.grad; $('cad-nome').value = a.nome; $('cad-ccargo').value = r.cargoAssinante || 'Comandante-Geral da PMRO'; cadAssina();
+    $('cad-lido').style.display = '';
+    $('pt-rev').innerHTML = r.agraciados.map((x) => `<tr><td>${x.art}º</td><td>${x.ordem}</td><td>${esc(x.posto || x.trat)}</td><td>${esc(x.nome)}</td><td>${esc(x.funcao)}</td></tr>`).join('');
+    $('pt-rev-tit').textContent = `${r.agraciados.length} agraciados lidos · ` + r.grupos.map((g) => `${g.titulo} (${r.agraciados.filter((x) => x.art === g.art).length})`).join(' · ');
     $('pt-rev-box').style.display = r.agraciados.length ? '' : 'none';
+    if (!r.agraciados.length) { m.className = 'bp-msg err'; m.textContent = 'Não achei a lista de agraciados neste PDF. Confira se é a portaria de outorga do SEI.'; return; }
     const ja = D.portarias.find((p) => p.id === idPortaria(r.numero, r.data));
     if (ja) {
       m.className = 'bp-msg err';
-      m.innerHTML = `A Portaria nº ${esc(ja.numero)}/${esc(ja.ano)} já está lançada. <button type="button" class="bp-btn sm sec" onclick="CF.pid='${esc(ja.id)}'; cfModo('existe')">Usar a que já está lançada</button>`;
+      m.innerHTML = `A Portaria nº ${esc(ja.numero)}/${esc(ja.ano)} já está cadastrada. <button type="button" class="bp-btn sm sec" onclick="fechar('m-cad'); abrirPortaria('${esc(ja.id)}')">Abrir a portaria</button>`;
       return;
     }
     m.className = r.avisos.length ? 'bp-msg err' : 'bp-msg ok';
-    m.textContent = r.avisos.length ? 'Atenção: ' + r.avisos.join(' ') + ' Confira os campos; dá para corrigir um nome depois.' : 'Pronto: confira a lista e os dados da portaria e continue.';
+    m.textContent = r.avisos.length ? 'Atenção: ' + r.avisos.join(' ') + ' Confira os campos; dá para corrigir um nome depois.' : 'Pronto: a portaria foi lida. Confira os dados, a lista e o Comandante-Geral.';
   } catch (e) { m.className = 'bp-msg err'; m.textContent = 'Não consegui ler este PDF: ' + e.message; }
 }
-// a portaria do lote: a já lançada ou a que está sendo lançada agora (ainda sem id)
-function cfPortaria() {
-  if (CF.modo === 'existe') return D.portarias.find((p) => p.id === CF.pid) || null;
-  const r = CF.lida || { agraciados: [], grupos: [] };
-  return { id: '', numero: $('cf-numero').value, ano: ($('cf-data').value || '').slice(0, 4), data: $('cf-data').value, titulo: $('cf-titulo').value,
-    doe: $('cf-doe').value, doe_data: $('cf-doedata').value, assinante: $('cf-assinante').value, cargo_assinante: $('cf-cargo').value,
-    grupos: r.grupos, agraciados: r.agraciados.map((a, i) => Object.assign({ id: 'novo-' + i }, a)) };
+async function cadSalvar() {
+  if (!CAD || CAD.salvando) return;
+  const m = $('cad-msg'), a = cadAssinante(); m.textContent = '';
+  if (!CAD.modelo) { m.textContent = 'Escolha se a portaria concede Certificado ou Diploma.'; return; }
+  if (!CAD.file || !CAD.lida) { m.textContent = 'Lance o PDF da portaria do SEI: sem o documento não dá para cadastrar.'; return; }
+  if (!CAD.lida.agraciados.length) { m.textContent = 'O PDF não trouxe a lista de agraciados.'; return; }
+  if (!$('cad-numero').value.trim() || !$('cad-data').value) { m.textContent = 'Confira o número e a data da portaria.'; return; }
+  const id = idPortaria($('cad-numero').value, $('cad-data').value);
+  if (D.portarias.some((p) => p.id === id)) { m.textContent = `A Portaria nº ${id.replace('-', '/')} já está cadastrada.`; return; }
+  if (!a.grad || !a.nome) { m.textContent = 'Informe a graduação e o nome do Comandante-Geral que assinou o documento.'; ($(a.grad ? 'cad-nome' : 'cad-grad')).focus(); return; }
+  const bt = $('cad-salvar'), antes = bt.innerHTML;
+  CAD.salvando = true; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Cadastrando…';
+  try {
+    const x = { numero: $('cad-numero').value.trim(), data: $('cad-data').value, ano: $('cad-data').value.slice(0, 4), titulo: $('cad-titulo').value.trim(),
+      doe: $('cad-doe').value.trim(), doe_data: $('cad-doedata').value, sei: $('cad-sei').value.trim(), processo: $('cad-processo').value.trim(),
+      assinante: a.nome + ' - ' + a.grad, cargo_assinante: a.cargo, grupos: CAD.lida.grupos };
+    CAD.id = (await apiJson('/api/p5/salvar', { op: 'portaria', portaria: x, agraciados: CAD.lida.agraciados, modelo: CAD.modelo, config: { assinante: a.texto, cargo: a.cargo } })).id;
+    bt.innerHTML = '<span class="bp-gira"></span>Guardando o PDF…';
+    try { await subirPdf(CAD.id, CAD.file); CAD.pdfOk = true; } catch (e) { CAD.pdfOk = false; CAD.erroPdf = e.message; }
+    await carregar(true);
+    const p = D.portarias.find((y) => y.id === CAD.id) || { numero: x.numero, ano: x.ano, agraciados: CAD.lida.agraciados };
+    $('cad-form').style.display = 'none'; $('cad-ok').style.display = '';
+    $('cad-ok-tit').textContent = `Portaria nº ${p.numero}/${p.ano} cadastrada · ${NOME_MOD[CAD.modelo]}`;
+    $('cad-ok-sub').textContent = `${p.agraciados.length} agraciados na ordem do documento · assina ${a.texto}`;
+    const ok = $('cad-ok-pdf');
+    ok.className = CAD.pdfOk ? 'bp-msg ok' : 'bp-msg err';
+    ok.textContent = CAD.pdfOk ? 'O PDF da portaria ficou guardado para visualização.' : `A portaria entrou, mas o PDF não subiu (${CAD.erroPdf}). Abra a portaria e use “Anexar PDF”.`;
+    bt.style.display = 'none'; $('cad-cancelar').textContent = 'Fechar';
+    $('cad-ver').style.display = ''; $('cad-conf').style.display = '';
+    toast('Portaria cadastrada.');
+  } catch (e) { m.textContent = e.message; }
+  finally { CAD.salvando = false; bt.disabled = false; if (bt.style.display !== 'none') bt.innerHTML = antes; }
 }
+function cadVer() { const id = CAD.id; fechar('m-cad'); abrirPortaria(id); }
+function cadConfeccionar() { const id = CAD.id; fechar('m-cad'); confeccionar(id); cfIr(3); }
+
+function cfPortaria() { return D.portarias.find((p) => p.id === CF.pid) || null; }
 function cfArts() { return [...document.querySelectorAll('#cf-grupos input:checked')].map((i) => Number(i.value)); }
 function cfSelecionados() { const p = cfPortaria(), arts = cfArts(); return p ? p.agraciados.filter((a) => arts.includes(Number(a.art))) : []; }
 const CF_CAMPOS = { paragrafo: 'cf-paragrafo', fecho: 'cf-fecho', local: 'cf-local', data: 'cf-cdata', assinante: 'cf-cass', cargo: 'cf-ccargo' };
 function cfConfig() { const c = {}; Object.keys(CF_CAMPOS).forEach((k) => { c[k] = $(CF_CAMPOS[k]).value.trim(); }); return c; }
 function cfPreencher(c) { Object.keys(CF_CAMPOS).forEach((k) => { $(CF_CAMPOS[k]).value = c[k] || ''; }); }
 function cfMontarTextos() {
-  const p = cfPortaria(), chave = CF.modo + '|' + (p.id || p.numero + '/' + p.ano);
-  if (CF.textosDe !== chave) { // voltar e seguir não apaga o que o gestor editou
-    CF.textosDe = chave; CF.idx = 0;
+  const p = cfPortaria();
+  if (CF.textosDe !== p.id) { // voltar e seguir não apaga o que o gestor editou
+    CF.textosDe = p.id; CF.idx = 0;
     const salvos = {}; Object.entries(p.config || {}).forEach(([k, v]) => { if (v) salvos[k] = v; });
     cfPreencher(Object.assign(P5Diploma.padrao(p), salvos));
     $('cf-grupos').innerHTML = (p.grupos || []).map((g) => `<label class="bp-check"><input type="checkbox" value="${g.art}" checked onchange="CF.idx = 0; cfPrevia(true)">Art. ${g.art}º · ${esc(g.titulo)} (${p.agraciados.filter((a) => Number(a.art) === Number(g.art)).length})</label>`).join('');
@@ -1008,7 +1108,7 @@ function cfMontarTextos() {
   formato($('cf-dip'), CF.modelo);
   cfPrevia(true);
 }
-function cfRestaurar() { cfPreencher(P5Diploma.padrao(cfPortaria())); cfPrevia(true); }
+function cfRestaurar() { const p = cfPortaria(); cfPreencher(Object.assign(P5Diploma.padrao(p), p.config && p.config.assinante ? { assinante: p.config.assinante, cargo: p.config.cargo || '' } : {})); cfPrevia(true); }
 let _cfT = null, _cfN = 0;
 function cfPrevia(agora) {
   clearTimeout(_cfT);
@@ -1027,26 +1127,13 @@ function cfVer(d) { CF.idx += d; cfPrevia(true); }
 function cfResumo() {
   const p = cfPortaria(), lista = cfSelecionados(), nome = NOME_MOD[CF.modelo];
   $('cf-res-tit').textContent = `${nome} · Portaria nº ${p.numero}/${p.ano}`;
-  $('cf-res-sub').textContent = `${lista.length} ${lista.length === 1 ? 'agraciado' : 'agraciados'}` + (lista.length < p.agraciados.length ? ` (de ${p.agraciados.length})` : '') +
-    (CF.modo === 'nova' ? ' · a portaria é lançada junto, com o PDF' : '');
+  $('cf-res-sub').textContent = `${lista.length} ${lista.length === 1 ? 'agraciado' : 'agraciados'}` + (lista.length < p.agraciados.length ? ` (de ${p.agraciados.length})` : '');
   $('cf-prog-box').style.display = 'none';
   ['cf-g-pdf', 'cf-g-zip'].forEach((id) => { $(id).disabled = false; });
 }
-// grava na planilha: a portaria nova (com a lista do PDF) ou o modelo/textos da já lançada
-async function cfGravar(aviso) {
+// grava o modelo e os textos da portaria na planilha (só quando mudaram)
+async function cfGravar() {
   const config = cfConfig(), chave = JSON.stringify([CF.modelo, config]);
-  if (CF.modo === 'nova') {
-    const x = { numero: $('cf-numero').value, data: $('cf-data').value, ano: ($('cf-data').value || '').slice(0, 4), titulo: $('cf-titulo').value,
-      doe: $('cf-doe').value, doe_data: $('cf-doedata').value, sei: $('cf-sei').value, processo: $('cf-processo').value,
-      assinante: $('cf-assinante').value, cargo_assinante: $('cf-cargo').value, grupos: CF.lida.grupos };
-    const id = (await apiJson('/api/p5/salvar', { op: 'portaria', portaria: x, agraciados: CF.lida.agraciados, modelo: CF.modelo, config })).id;
-    CF.salvo = { id, chave }; CF.modo = 'existe'; CF.pid = id; CF.textosDe = 'existe|' + id;
-    if (CF.file) {
-      aviso('Enviando o PDF da portaria…');
-      try { await subirPdf(id, CF.file); } catch (e) { toast('A portaria foi lançada, mas o PDF não subiu (' + e.message + '). Use “Anexar PDF” na portaria.', 'err'); }
-    }
-    return id;
-  }
   if (!CF.salvo || CF.salvo.id !== CF.pid || CF.salvo.chave !== chave) {
     await apiJson('/api/p5/salvar', { op: 'confeccionar', id: CF.pid, modelo: CF.modelo, config });
     CF.salvo = { id: CF.pid, chave };
@@ -1062,7 +1149,7 @@ async function cfGerar(formatoSaida) {
   const aviso = (t) => { tx.className = 'bp-msg'; tx.innerHTML = '<span class="bp-gira"></span> ' + esc(t); };
   try {
     aviso('Gravando na planilha…');
-    const id = await cfGravar(aviso);
+    const id = await cfGravar();
     aviso('Atualizando a lista…');
     await carregar(true);
     const p = D.portarias.find((x) => x.id === id);
