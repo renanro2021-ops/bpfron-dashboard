@@ -115,7 +115,7 @@
   ] },
   { "data": "2026-10-30", "titulo": "Para o gestor do Patrimônio", "quem": "gestor", "itens": [
     "Cadastrar bem um a um (com “Salvar e cadastrar outro”) ou importar de uma vez colando do Excel ou escolhendo o arquivo.",
-    "Código vazio vira o próximo automático (PAT-0001…); código e tombamento repetidos são barrados.",
+    "O código do bem (PAT-0001, PAT-0002…) é gerado sozinho pelo sistema; tombamento repetido é barrado.",
     "Tipo é a origem do bem, escolhida numa lista (E-Estado, Leilão, Doação ou outra origem que você digitar).",
     "Corrigir e excluir (com a sua senha). Cada mudança fica no histórico do bem."
   ] }
@@ -222,8 +222,8 @@
     </div>
     <form class="pat-form" id="f-bem" onsubmit="event.preventDefault(); salvarBem(false)">
       <div class="bp-campo"><label for="b-codigo">Código</label>
-        <div class="bp-in"><i data-ic="escudo"></i><input id="b-codigo" autocomplete="off" maxlength="40" oninput="conferirBem()"></div>
-        <div class="pat-dica" id="b-codigo-dica"></div></div>
+        <div class="bp-in"><i data-ic="cadeado"></i><input id="b-codigo" readonly tabindex="-1" style="cursor:default"></div>
+        <div class="pat-dica" id="b-codigo-dica">Gerado automaticamente pelo sistema.</div></div>
       <div class="bp-campo"><label for="b-quantidade">Quantidade *</label>
         <div class="bp-in"><i data-ic="grade"></i><input id="b-quantidade" type="number" min="1" step="1" inputmode="numeric" value="1" required oninput="conferirBem()"></div></div>
       <div class="bp-campo inteira"><label for="b-descricao">Descrição do bem *</label>
@@ -286,7 +286,7 @@
       <div><h3 id="m-imp-tit">Importar planilha</h3><small>Vários bens de uma vez, do Excel ou do Google Planilhas</small></div>
       <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-imp')" aria-label="Fechar"><i data-ic="x"></i></button>
     </div>
-    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (CÓDIGO, DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. Código vazio vira o próximo automático. No TIPO vale <b>E-Estado</b>, <b>Leilão</b>, <b>Doação</b> ou outra origem.</div></div>
+    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. O código é gerado pelo sistema: se a planilha tiver uma coluna CÓDIGO, ela é ignorada. No TIPO vale <b>E-Estado</b>, <b>Leilão</b>, <b>Doação</b> ou outra origem.</div></div>
     <label class="bp-arquivo" id="imp-arq" style="margin-top:12px" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerArquivoImp(event.dataTransfer.files)">
       <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
       <span class="tx"><b>Escolher arquivo (.xlsx ou .csv)</b><small>ou arraste para cá</small></span>
@@ -294,7 +294,7 @@
       <input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt,.tsv" onchange="lerArquivoImp(this.files)">
     </label>
     <div class="bp-campo" style="margin-top:12px"><label for="pat-imp-txt">Ou cole aqui</label>
-      <textarea id="pat-imp-txt" placeholder="CÓDIGO&#9;DESCRIÇÃO DO BEM&#9;Nº DE SÉRIE&#9;TOMBAMENTO&#9;QUANTIDADE&#9;TIPO&#9;DEPARTAMENTO" oninput="lerTextoImp()"></textarea></div>
+      <textarea id="pat-imp-txt" placeholder="DESCRIÇÃO DO BEM&#9;Nº DE SÉRIE&#9;TOMBAMENTO&#9;QUANTIDADE&#9;TIPO&#9;DEPARTAMENTO" oninput="lerTextoImp()"></textarea></div>
     <div id="imp-res"></div>
     <div class="bp-msg err" id="imp-msg"></div>
     <div class="bp-modal-pe">
@@ -546,6 +546,7 @@ async function abrirFicha(id) {
 
 /* ============================== cadastro ============================== */
 const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento'];
+const CF = CB.filter((k) => k !== 'codigo'); // o código é sempre do sistema (PAT-0001…), ninguém digita
 function montarTipos(atual) {
   const padrao = TIPOS_PADRAO.map((t) => t[0]);
   const outros = valores('tipo').filter((v) => !padrao.includes(v));
@@ -564,9 +565,9 @@ function tipoMudou(quieto) {
   if (outro && !quieto) setTimeout(() => $('b-tipo').focus(), 50);
   if (!quieto) conferirBem();
 }
-function preencherForm(b) { CB.forEach((k) => { if (k !== 'tipo') $('b-' + k).value = b[k] == null ? '' : b[k]; }); montarTipos(b.tipo); }
+function preencherForm(b) { CF.forEach((k) => { if (k !== 'tipo') $('b-' + k).value = b[k] == null ? '' : b[k]; }); montarTipos(b.tipo); }
 function lerForm() {
-  const o = {}; CB.forEach((k) => { if (k !== 'tipo') o[k] = $('b-' + k).value.trim(); });
+  const o = {}; CF.forEach((k) => { if (k !== 'tipo') o[k] = $('b-' + k).value.trim(); });
   const sel = $('b-tipo-sel').value;
   o.tipo = sel === '__outro' ? normTipo($('b-tipo').value) : sel;
   return o;
@@ -593,10 +594,9 @@ function editarBem() {
   fechar('m-ficha'); conferirBem(); abrir('m-bem');
 }
 
-/* avisos ao vivo: código/tombamento repetidos barram (o Worker também barra); série repetida só avisa */
+/* avisos ao vivo: tombamento repetido barra (o Worker também barra); série repetida só avisa */
 function problemasDe(o, outros) {
   const bloq = [], aviso = [];
-  if (o.codigo) { const x = outros.find((b) => chave(b.codigo) === chave(o.codigo)); if (x) bloq.push(`O código <b>${esc(o.codigo)}</b> já é de outro bem (${esc(x.descricao)}).`); }
   if (o.tombamento) { const x = outros.find((b) => b.tombamento && chave(b.tombamento) === chave(o.tombamento)); if (x) bloq.push(`O tombamento <b>${esc(o.tombamento)}</b> já está no bem ${esc(x.codigo)} (${esc(x.descricao)}).`); }
   if (o.serie) { const x = outros.find((b) => b.serie && chave(b.serie) === chave(o.serie)); if (x) aviso.push(`O nº de série <b>${esc(o.serie)}</b> também aparece no bem ${esc(x.codigo)} (${esc(x.descricao)}). Confira se não é o mesmo bem.`); }
   return { bloq, aviso };
@@ -604,8 +604,8 @@ function problemasDe(o, outros) {
 function conferirBem() {
   const o = lerForm();
   const outros = D.bens.filter((b) => b.id !== EDITANDO);
-  $('b-codigo').placeholder = EDITANDO ? '' : D.proximo_codigo;
-  $('b-codigo-dica').textContent = EDITANDO ? '' : `Deixe vazio para usar o próximo automático (${D.proximo_codigo}).`;
+  $('b-codigo').value = EDITANDO ? ((D.bens.find((b) => b.id === EDITANDO) || {}).codigo || '') : D.proximo_codigo;
+  $('b-codigo-dica').textContent = EDITANDO ? 'O código não muda.' : 'Gerado automaticamente pelo sistema.';
   const p = problemasDe(o, outros);
   $('b-avisos').innerHTML = p.bloq.map((t) => `<div class="bp-aviso crit" style="margin-bottom:8px">${IC('alerta')}<div>${t}</div></div>`).join('') +
     p.aviso.map((t) => `<div class="bp-aviso pend" style="margin-bottom:8px">${IC('info')}<div>${t}</div></div>`).join('');
@@ -688,13 +688,14 @@ function montarImp(linhas) {
   const mapa = {};
   cab.forEach((c, i) => { for (const k of Object.keys(CAB_RE)) if (!(k in mapa) && CAB_RE[k].test(c)) { mapa[k] = i; break; } });
   const temCab = Object.keys(mapa).length >= 2;
-  if (!temCab) CB.forEach((k, i) => { mapa[k] = i; });
+  // sem cabeçalho: 6 colunas na ordem do formulário; com 7, a 1ª é um código antigo e é pulada
+  if (!temCab) { const pula = Math.max(...linhas.map((l) => l.length)) >= 7 ? 1 : 0; CF.forEach((k, i) => { mapa[k] = i + pula; }); }
   const corpo = temCab ? linhas.slice(1) : linhas;
   const ja = D.bens.slice();
   let n = Number((D.proximo_codigo.match(/\d+/) || [1])[0]);
   IMP = corpo.map((l) => {
-    const bem = {}; CB.forEach((k) => { bem[k] = k in mapa ? (l[mapa[k]] || '') : ''; });
-    ['codigo', 'serie', 'tombamento', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
+    const bem = {}; CF.forEach((k) => { bem[k] = k in mapa ? (l[mapa[k]] || '') : ''; });
+    ['serie', 'tombamento', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
     bem.tipo = normTipo(bem.tipo);
     const qt = String(bem.quantidade).replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
     bem.quantidade = qt === '' ? '1' : qt;
@@ -703,11 +704,11 @@ function montarImp(linhas) {
     if (!/^\d{1,6}$/.test(bem.quantidade) || Number(bem.quantidade) < 1) erros.push('quantidade inválida');
     if (!bem.tipo) erros.push('falta o tipo');
     if (!bem.departamento) erros.push('falta o departamento');
-    const auto = !bem.codigo;
-    const p = problemasDe(Object.assign({}, bem, { codigo: bem.codigo || '' }), ja);
+    const p = problemasDe(bem, ja);
     p.bloq.forEach((t) => erros.push(t.replace(/<[^>]+>/g, '')));
-    if (!erros.length) { if (auto) bem.codigo = 'PAT-' + String(n++).padStart(4, '0'); ja.push(bem); }
-    return { bem, erros, auto, aviso: p.aviso.map((t) => t.replace(/<[^>]+>/g, '')) };
+    bem.codigo = erros.length ? '' : 'PAT-' + String(n++).padStart(4, '0'); // prévia; quem dá o código é o Worker
+    if (!erros.length) ja.push(bem);
+    return { bem, erros, aviso: p.aviso.map((t) => t.replace(/<[^>]+>/g, '')) };
   });
   pintarImp(temCab ? Object.keys(mapa).length : 0);
 }
@@ -716,14 +717,14 @@ function pintarImp(nCab) {
   $('imp-btn').disabled = !ok.length;
   $('imp-btn').innerHTML = IC('check') + (ok.length ? `Importar ${fNum(ok.length)} ${ok.length === 1 ? 'bem' : 'bens'}` : 'Importar');
   if (!IMP.length) { $('imp-res').innerHTML = ''; return; }
-  const cab = nCab ? `Cabeçalho reconhecido (${nCab} colunas).` : 'Sem cabeçalho: colunas lidas na ordem CÓDIGO, DESCRIÇÃO, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO.';
+  const cab = nCab ? `Cabeçalho reconhecido (${nCab} colunas).` : 'Sem cabeçalho: colunas lidas na ordem DESCRIÇÃO, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO.';
   const resumo = ruins
     ? `<div class="bp-aviso pend" style="margin-top:12px">${IC('alerta')}<div><b>${fNum(ok.length)}</b> prontas e <b>${fNum(ruins)}</b> com problema (em vermelho) — as com problema ficam de fora. Corrija na planilha e importe de novo depois. ${cab}</div></div>`
     : `<div class="bp-aviso ok" style="margin-top:12px">${IC('ok')}<div><b>${fNum(ok.length)}</b> ${ok.length === 1 ? 'linha pronta' : 'linhas prontas'} para importar. ${cab}</div></div>`;
   const mostra = IMP.slice().sort((a, b) => (b.erros.length > 0) - (a.erros.length > 0)).slice(0, 300);
   $('imp-res').innerHTML = resumo + `<div class="pat-imp-prev"><table><thead><tr><th></th>${CAMPOS.map(([, r]) => `<th>${r}</th>`).join('')}<th>Situação</th></tr></thead><tbody>` +
     mostra.map((x) => `<tr class="${x.erros.length ? 'erro' : ''}"><td class="st">${IC(x.erros.length ? 'alerta' : 'check')}</td>` +
-      CB.map((k) => `<td>${esc(x.bem[k])}${k === 'codigo' && x.auto && !x.erros.length ? ' <span class="bp-sl info">auto</span>' : ''}</td>`).join('') +
+      CB.map((k) => `<td>${esc(x.bem[k])}${k === 'codigo' && x.bem.codigo ? ' <span class="bp-sl info">auto</span>' : ''}</td>`).join('') +
       (x.erros.length ? `<td class="erro-tx">${esc(x.erros.join('; '))}</td>` : (x.aviso.length ? `<td class="aviso-tx">${esc(x.aviso.join(' '))}</td>` : '<td class="ok-tx">pronta</td>')) + '</tr>').join('') +
     '</tbody></table></div>' + (IMP.length > 300 ? `<div class="pat-dica">Mostrando 300 de ${fNum(IMP.length)} linhas.</div>` : '');
 }
@@ -749,8 +750,8 @@ async function lerArquivoImp(files) {
   } catch (e) { $('imp-msg').textContent = e.message || 'Não consegui ler esse arquivo.'; }
 }
 async function importar() {
-  // o código automático é dado pelo Worker (o daqui é só prévia)
-  const ok = IMP.filter((x) => !x.erros.length).map((x) => Object.assign({}, x.bem, { codigo: x.auto ? '' : x.bem.codigo }));
+  // o código é dado pelo Worker (o daqui é só prévia)
+  const ok = IMP.filter((x) => !x.erros.length).map((x) => { const o = Object.assign({}, x.bem); delete o.codigo; return o; });
   if (!ok.length) return;
   const bt = $('imp-btn');
   bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Importando…'; $('imp-msg').textContent = '';
