@@ -80,110 +80,115 @@
              {pagina:x} página do dashboard — todo login, menos quem tem x bloqueada
      gestor/ver: permissão que mostra o selo "Gestor" / "Só ver".
      ================================================================ */
+  /* Seções do batalhão (29/10/2026, pedido do usuário): mesmos nomes, cores e
+     ícones das seções da Central de Tarefas (TAR_SECOES_PADRAO do worker.js).
+     sigla = selo curto mostrado no sistemas.html e no Portal. */
   var GRUPOS = [
-    { id: 'analise',  nome: 'Análise e Inteligência',      ic: '📊', cor: '#3b82f6' },
-    { id: 'dash',     nome: 'Dashboard · Áreas de Gestão', ic: '🚓', cor: '#f59e0b' },
-    { id: 'adm',      nome: 'Administrativo',               ic: '🗂️', cor: '#22c55e' },
-    { id: 'log',      nome: 'Logística',                    ic: '🛠️', cor: '#f97316' },
-    { id: 'com',      nome: 'Comunicação',                  ic: '🎥', cor: '#a855f7' },
-    { id: 'drone',    nome: 'Curso de Drone',               ic: '🚁', cor: '#06b6d4' },
-    { id: 'efetivo',  nome: 'Serviços ao Efetivo',          ic: '🛡️', cor: '#eab308' },
-    { id: 'apoio',    nome: 'Apoio às Ocorrências',         ic: '🤖', cor: '#ec4899' },
-    { id: 'admin',    nome: 'Administração',                ic: '🔐', cor: '#ef4444' }
+    { id: 'cmd',     sigla: 'CMD', nome: 'Comando',                 ic: '⭐', cor: '#F5C518', desc: 'Coordenação do batalhão e reuniões.' },
+    { id: 'p1',      sigla: 'P1',  nome: 'P1 · Pessoal',            ic: '👥', cor: '#38bdf8', desc: 'Efetivo, fichas, conceito e acessos.' },
+    { id: 'p2',      sigla: 'P2',  nome: 'P2 · Inteligência',       ic: '🛰️', cor: '#a78bfa', desc: 'Consultas, mapa de inteligência e ocorrências.' },
+    { id: 'p3',      sigla: 'P3',  nome: 'P3 · Operações',          ic: '🎯', cor: '#34d399', desc: 'Indicadores, policiais em campo, diárias, RVN e instrução.' },
+    { id: 'p4',      sigla: 'P4',  nome: 'P4 · Logística',          ic: '📦', cor: '#fb923c', desc: 'Frota, armamento, cautela, leilão e pedidos.' },
+    { id: 'p5',      sigla: 'P5',  nome: 'P5 · Comunicação Social', ic: '📣', cor: '#f472b6', desc: 'Agraciados, apresentações e pesquisas.' },
+    { id: 'p6',      sigla: 'P6',  nome: 'P6 · Procedimentos',      ic: '⚖️', cor: '#f87171', desc: 'IPM, sindicância e demais procedimentos.' },
+    { id: 'efetivo', sigla: '★',   nome: 'Para todo o efetivo',     ic: '🛡️', cor: '#eab308', desc: 'Portal do policial, aplicativos e apoio às ocorrências.' },
+    { id: 'admin',   sigla: 'ADM', nome: 'Administração do site',   ic: '🔐', cor: '#ef4444', desc: 'Lista de sistemas e controle de logins.' }
   ];
 
   var CATALOGO = [
-    // ---- Análise e Inteligência
-    { id: 'painel', href: 'index.html', ic: '📊', nome: 'Painel Analítico', grupo: 'analise', acesso: 'pub',
-      desc: 'Dashboard de operações: indicadores, mapa, gráficos e comparativos.' },
-    { id: 'consultas', href: 'index.html?pg=consultas', ic: '🔎', nome: 'Consultas (Envolvidos e Veículos)', grupo: 'analise', acesso: { pagina: 'consultas' },
-      desc: 'Qualificação de envolvidos e veículos das ocorrências.' },
-    { id: 'intel', href: 'intel.html', ic: '🕵️', nome: 'Central de Inteligência', grupo: 'analise', acesso: { perm: ['intel'] },
-      desc: 'Mapa de Inteligência (P2) com marcações, fotos e pesquisa cruzada.' },
-    { id: 'busca', href: 'ocorrencias.html', ic: '🧾', nome: 'Busca de Ocorrências', grupo: 'analise', acesso: { perm: ['busca'] },
-      desc: 'Pesquisa livre no texto de todas as ocorrências, com relatório.' },
-
-    // ---- Dashboard · Áreas de Gestão (páginas dentro do index.html)
-    { id: 'dgaragem', href: 'index.html?pg=garagem', ic: '🚗', nome: 'Garagem (painel)', grupo: 'dash', acesso: { pagina: 'garagem' },
-      desc: 'Situação das viaturas e o último checklist de cada uma.' },
-    { id: 'dmaterial', href: 'index.html?pg=material', ic: IC_PISTOLA, nome: 'Material Bélico', grupo: 'dash', acesso: { pagina: 'material' }, gestor: 'material',
-      desc: 'Armamento, munição e equipamentos da reserva.' },
-    { id: 'dcampo', href: 'index.html?pg=policiais-campo', ic: '👮', nome: 'Policiais em Campo', grupo: 'dash', acesso: { pagina: 'policiais-campo' },
-      desc: 'Onde cada policial está, pela escala, no mapa.' },
-    { id: 'ddiaria', href: 'index.html?pg=diaria', ic: '💵', nome: 'Diária por Policial', grupo: 'dash', acesso: { pagina: 'diaria' }, gestor: 'diaria',
-      desc: 'Ranking de diárias, missões e cadastro.' },
-    { id: 'drecursos', href: 'index.html?pg=recursos', ic: '💰', nome: 'Valor de Recursos Obtidos', grupo: 'dash', acesso: { pagina: 'recursos' },
-      desc: 'Prejuízo ao crime e recursos obtidos.' },
-    { id: 'dp1', href: 'index.html?pg=p1', ic: '🗂️', nome: 'Ficha do Efetivo', grupo: 'dash', acesso: { perm: ['p1'] }, gestor: 'p1',
-      desc: 'Painel consolidado da P1 com os dados de todo o efetivo.' },
-
-    // ---- Administrativo
-    { id: 'diaria', href: 'diaria.html', ic: '🧮', nome: 'Lançar Diárias', grupo: 'adm', acesso: { perm: ['diaria'] }, gestor: 'diaria',
-      desc: 'Lançamento das diárias pela escala do SEI (PDF ou HTML), com edição e histórico.' },
-    { id: 'rvn', href: 'rvn.html', ic: '✍️', nome: 'RVN · Assinatura Digital', grupo: 'adm', acesso: { perm: ['rvn'] }, gestor: 'rvn',
-      desc: 'Assinatura digital dos RVNs e controle dos pendentes e assinados.' },
-    { id: 'pesquisas', href: 'pesquisas.html', ic: '📋', nome: 'Pesquisas e Formulários', grupo: 'adm', acesso: { perm: ['pesquisa'] }, gestor: 'pesquisa',
-      desc: 'Monte o questionário, distribua o link e emita o relatório.' },
-    { id: 'questionario', href: 'questionario.html', ic: '🧩', nome: 'Questionário Colaborativo', grupo: 'adm', acesso: { perm: ['pesquisa'] }, gestor: 'pesquisa',
-      desc: 'Uma resposta do batalhão preenchida por vários setores, ao vivo.' },
-    { id: 'tarefas', href: 'tarefas.html', ic: '✅', nome: 'Central de Tarefas', grupo: 'adm', acesso: 'pub', gestor: 'tarefas',
+    // ---- Comando
+    { id: 'tarefas', href: 'tarefas.html', ic: '✅', nome: 'Central de Tarefas', grupo: 'cmd', acesso: 'pub', gestor: 'tarefas',
       desc: 'Tarefas com prazo e prioridade, ciência, andamento e atrasadas.' },
-    { id: 'conceito', href: 'conceito.html', ic: '🎖️', nome: 'Ficha de Conceito', grupo: 'adm', acesso: 'conceito',
+    { id: 'sala', href: 'sala.html', ic: '🎥', nome: 'Sala de Reunião', grupo: 'cmd', acesso: 'login', gestor: 'video',
+      desc: 'Videoconferência pelo Jitsi, com link de convidado.' },
+
+    // ---- P1 · Pessoal
+    { id: 'dp1', href: 'index.html?pg=p1', ic: '🗂️', nome: 'Ficha do Efetivo', grupo: 'p1', acesso: { perm: ['p1'] }, gestor: 'p1',
+      desc: 'Painel consolidado da P1 com os dados de todo o efetivo.' },
+    { id: 'p1', href: 'p1.html', ic: '🪪', nome: 'P1 · Minha Ficha', grupo: 'p1', acesso: 'pub',
+      desc: 'Autoatualização da ficha cadastral: dados, cursos e acessos.' },
+    { id: 'acessos', href: 'acessos.html', ic: '🔑', nome: 'Acesso a Sistemas', grupo: 'p1', acesso: 'pub', gestor: 'acessos',
+      desc: 'Informe a quais sistemas policiais você ainda não tem acesso.' },
+    { id: 'conceito', href: 'conceito.html', ic: '🎖️', nome: 'Ficha de Conceito', grupo: 'p1', acesso: 'conceito',
       desc: 'Conceito quadrimestral dos graduados, com tabela pronta para o SEI.' },
 
-    // ---- Logística
-    { id: 'garagem-gestao', href: 'garagem-gestao.html', ic: '🛠️', nome: 'Garagem · Gestão da Frota', grupo: 'log', acesso: { perm: ['garagem'] }, gestor: 'garagem',
-      desc: 'Alterações, checklists, notas fiscais com leitura automática e manutenção.' },
-    { id: 'reserva', href: 'cautela-reserva.html', ic: IC_PISTOLA, nome: 'Reserva de Armamento', grupo: 'log', acesso: { perm: ['cautela', 'material'] }, gestor: 'cautela',
-      desc: 'Estoque, cautela, passagem de serviço e a Parte Diária para o SEI.' },
-    { id: 'leilao', href: 'leilao.html', ic: '🔨', nome: 'Leilão · Prestação de Contas', grupo: 'log', acesso: { perm: ['leilao', 'leilaover'] }, gestor: 'leilao', ver: 'leilaover',
-      desc: 'Processo, entradas com comprovante, gastos com nota e relatório.' },
+    // ---- P2 · Inteligência
+    { id: 'consultas', href: 'index.html?pg=consultas', ic: '🔎', nome: 'Consultas (Envolvidos e Veículos)', grupo: 'p2', acesso: { pagina: 'consultas' },
+      desc: 'Qualificação de envolvidos e veículos das ocorrências.' },
+    { id: 'intel', href: 'intel.html', ic: '🕵️', nome: 'Central de Inteligência', grupo: 'p2', acesso: { perm: ['intel'] },
+      desc: 'Mapa de Inteligência (P2) com marcações, fotos e pesquisa cruzada.' },
+    { id: 'busca', href: 'ocorrencias.html', ic: '🧾', nome: 'Busca de Ocorrências', grupo: 'p2', acesso: { perm: ['busca'] },
+      desc: 'Pesquisa livre no texto de todas as ocorrências, com relatório.' },
 
-    // ---- Comunicação
-    { id: 'sala', href: 'sala.html', ic: '🎥', nome: 'Sala de Reunião', grupo: 'com', acesso: 'login', gestor: 'video',
-      desc: 'Videoconferência pelo Jitsi, com link de convidado.' },
-    { id: 'slides', href: 'slides.html', ic: '🎞️', nome: 'Banco de Slides', grupo: 'com', acesso: { perm: ['slides', 'slidesver'] }, gestor: 'slides', ver: 'slidesver',
-      desc: 'Apresentações institucionais do batalhão num lugar só.' },
-    { id: 'p5', href: 'p5.html', ic: '🏅', nome: 'P5 · Comunicação Social', grupo: 'com', acesso: 'login', gestor: 'p5',
-      desc: 'Agraciados com diploma: portarias, lista na ordem do documento e o diploma de cada um.' },
-
-    // ---- Curso de Drone
-    { id: 'drone', href: 'drone.html', ic: '🚁', nome: 'Piloto de Drones', grupo: 'drone', acesso: 'pub', gestor: 'aro',
+    // ---- P3 · Operações
+    { id: 'painel', href: 'index.html', ic: '📊', nome: 'Painel Analítico', grupo: 'p3', acesso: 'pub',
+      desc: 'Dashboard de operações: indicadores, mapa, gráficos e comparativos.' },
+    { id: 'dcampo', href: 'index.html?pg=policiais-campo', ic: '👮', nome: 'Policiais em Campo', grupo: 'p3', acesso: { pagina: 'policiais-campo' },
+      desc: 'Onde cada policial está, pela escala, no mapa.' },
+    { id: 'drecursos', href: 'index.html?pg=recursos', ic: '💰', nome: 'Valor de Recursos Obtidos', grupo: 'p3', acesso: { pagina: 'recursos' },
+      desc: 'Prejuízo ao crime e recursos obtidos.' },
+    { id: 'ddiaria', href: 'index.html?pg=diaria', ic: '💵', nome: 'Diária por Policial', grupo: 'p3', acesso: { pagina: 'diaria' }, gestor: 'diaria',
+      desc: 'Ranking de diárias, missões e cadastro.' },
+    { id: 'diaria', href: 'diaria.html', ic: '🧮', nome: 'Lançar Diárias', grupo: 'p3', acesso: { perm: ['diaria'] }, gestor: 'diaria',
+      desc: 'Lançamento das diárias pela escala do SEI (PDF ou HTML), com edição e histórico.' },
+    { id: 'rvn', href: 'rvn.html', ic: '✍️', nome: 'RVN · Assinatura Digital', grupo: 'p3', acesso: { perm: ['rvn'] }, gestor: 'rvn',
+      desc: 'Assinatura digital dos RVNs e controle dos pendentes e assinados.' },
+    { id: 'drone', href: 'drone.html', ic: '🚁', nome: 'Curso de Drone', grupo: 'p3', acesso: 'pub', gestor: 'aro',
       desc: 'Apostilas, simulado, simulador de voo e Formulário ARO.' },
-    { id: 'drone-alunos', href: 'drone-alunos.html', ic: '🎓', nome: 'Cadastro de Alunos', grupo: 'drone', acesso: { perm: ['aro'] }, gestor: 'aro',
+    { id: 'drone-alunos', href: 'drone-alunos.html', ic: '🎓', nome: 'Drone · Cadastro de Alunos', grupo: 'p3', acesso: { perm: ['aro'] }, gestor: 'aro',
       desc: 'Relação da turma, CSV e relatório em PDF.' },
-    { id: 'drone-material', href: 'drone-material.html', ic: '📚', nome: 'Apostilas do Curso', grupo: 'drone', acesso: { perm: ['aro'] }, gestor: 'aro',
+    { id: 'drone-material', href: 'drone-material.html', ic: '📚', nome: 'Drone · Apostilas do Curso', grupo: 'p3', acesso: { perm: ['aro'] }, gestor: 'aro',
       desc: 'Envie apostilas novas sem publicar nada no GitHub.' },
-    { id: 'caixa', href: 'caixinha.html', ic: '🪙', nome: 'Caixa da Turma', grupo: 'drone', acesso: { perm: ['caixa'] }, gestor: 'caixa',
+    { id: 'caixa', href: 'caixinha.html', ic: '🪙', nome: 'Drone · Caixa da Turma', grupo: 'p3', acesso: { perm: ['caixa'] }, gestor: 'caixa',
       desc: 'Pagamentos por PIX, compras com nota e loja da turma.' },
 
-    // ---- Serviços ao Efetivo
+    // ---- P4 · Logística
+    { id: 'garagem-gestao', href: 'garagem-gestao.html', ic: '🛠️', nome: 'Garagem · Gestão da Frota', grupo: 'p4', acesso: { perm: ['garagem'] }, gestor: 'garagem',
+      desc: 'Alterações, checklists, notas fiscais com leitura automática e manutenção.' },
+    { id: 'dgaragem', href: 'index.html?pg=garagem', ic: '🚗', nome: 'Garagem (painel)', grupo: 'p4', acesso: { pagina: 'garagem' },
+      desc: 'Situação das viaturas e o último checklist de cada uma.' },
+    { id: 'garagem', href: 'garagem.html', ic: '🚓', nome: 'Checklist da Viatura', grupo: 'p4', acesso: 'pub',
+      desc: 'Início e término de uso da viatura, direto do celular.' },
+    { id: 'reserva', href: 'cautela-reserva.html', ic: IC_PISTOLA, nome: 'Reserva de Armamento', grupo: 'p4', acesso: { perm: ['cautela', 'material'] }, gestor: 'cautela',
+      desc: 'Estoque, cautela, passagem de serviço e a Parte Diária para o SEI.' },
+    { id: 'dmaterial', href: 'index.html?pg=material', ic: IC_PISTOLA, nome: 'Material Bélico', grupo: 'p4', acesso: { pagina: 'material' }, gestor: 'material',
+      desc: 'Armamento, munição e equipamentos da reserva.' },
+    { id: 'cautela', href: 'cautela.html', ic: IC_PISTOLA, nome: 'Cautela de Armamento', grupo: 'p4', acesso: 'pub',
+      desc: 'Confira e assine o material que recebe e devolve na reserva.' },
+    { id: 'leilao', href: 'leilao.html', ic: '🔨', nome: 'Leilão · Prestação de Contas', grupo: 'p4', acesso: { perm: ['leilao', 'leilaover'] }, gestor: 'leilao', ver: 'leilaover',
+      desc: 'Processo, entradas com comprovante, gastos com nota e relatório.' },
+    { id: 'emborrachados', href: 'emborrachados.html', ic: '🛒', nome: 'Pedido de Emborrachados', grupo: 'p4', acesso: 'pub', gestor: 'emborrachados',
+      desc: 'Catálogo e pedido de emborrachados do batalhão.' },
+    { id: 'loja', href: 'loja.html', ic: '🛍️', nome: 'Loja BPFRON', grupo: 'p4', acesso: 'login', gestor: 'vitrine',
+      desc: 'Vitrine de itens à venda para o efetivo.' },
+
+    // ---- P5 · Comunicação Social
+    { id: 'p5', href: 'p5.html', ic: '🏅', nome: 'P5 · Comunicação Social', grupo: 'p5', acesso: 'login', gestor: 'p5',
+      desc: 'Agraciados com diploma: portarias, lista na ordem do documento e o diploma de cada um.' },
+    { id: 'slides', href: 'slides.html', ic: '🎞️', nome: 'Banco de Slides', grupo: 'p5', acesso: { perm: ['slides', 'slidesver'] }, gestor: 'slides', ver: 'slidesver',
+      desc: 'Apresentações institucionais do batalhão num lugar só.' },
+    { id: 'pesquisas', href: 'pesquisas.html', ic: '📋', nome: 'Pesquisas e Formulários', grupo: 'p5', acesso: { perm: ['pesquisa'] }, gestor: 'pesquisa',
+      desc: 'Monte o questionário, distribua o link e emita o relatório.' },
+    { id: 'questionario', href: 'questionario.html', ic: '🧩', nome: 'Questionário Colaborativo', grupo: 'p5', acesso: { perm: ['pesquisa'] }, gestor: 'pesquisa',
+      desc: 'Uma resposta do batalhão preenchida por vários setores, ao vivo.' },
+
+    // ---- P6 · Procedimentos (ficam dentro da Central de Tarefas)
+    { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub',
+      desc: 'IPM, sindicância e perícias ficam na Central de Tarefas, só para a P6 e o Comando.' },
+
+    // ---- Para todo o efetivo
     { id: 'policial', href: 'policial.html', ic: '🛡️', nome: 'Portal do Policial', grupo: 'efetivo', acesso: 'pub',
       desc: 'Tarefas, checklist da viatura, cautela e ficha da P1 num app só.' },
-    { id: 'cautela', href: 'cautela.html', ic: IC_PISTOLA, nome: 'Cautela de Armamento', grupo: 'efetivo', acesso: 'pub',
-      desc: 'Confira e assine o material que recebe e devolve na reserva.' },
-    { id: 'garagem', href: 'garagem.html', ic: '🚓', nome: 'Checklist da Viatura', grupo: 'efetivo', acesso: 'pub',
-      desc: 'Início e término de uso da viatura, direto do celular.' },
-    { id: 'p1', href: 'p1.html', ic: '🪪', nome: 'P1 · Minha Ficha', grupo: 'efetivo', acesso: 'pub',
-      desc: 'Autoatualização da ficha cadastral: dados, cursos e acessos.' },
-    { id: 'acessos', href: 'acessos.html', ic: '🔑', nome: 'Acesso a Sistemas', grupo: 'efetivo', acesso: 'pub', gestor: 'acessos',
-      desc: 'Informe a quais sistemas policiais você ainda não tem acesso.' },
-    { id: 'emborrachados', href: 'emborrachados.html', ic: '🛒', nome: 'Pedido de Emborrachados', grupo: 'efetivo', acesso: 'pub', gestor: 'emborrachados',
-      desc: 'Catálogo e pedido de emborrachados do batalhão.' },
-    { id: 'loja', href: 'loja.html', ic: '🛍️', nome: 'Loja BPFRON', grupo: 'efetivo', acesso: 'login', gestor: 'vitrine',
-      desc: 'Vitrine de itens à venda para o efetivo.' },
     { id: 'aplicativos', href: 'aplicativos.html', ic: '📲', nome: 'Loja de Aplicativos', grupo: 'efetivo', acesso: 'pub',
       desc: 'Aplicativos que instalam no celular sem loja (MapaCampo e outros).' },
-
-    // ---- Apoio às Ocorrências
-    { id: 'prompts', href: 'prompts.html', ic: '🤖', nome: 'Prompts de IA', grupo: 'apoio', acesso: 'pub',
+    { id: 'prompts', href: 'prompts.html', ic: '🤖', nome: 'Prompts de IA', grupo: 'efetivo', acesso: 'pub',
       desc: 'Prompt pronto para redigir o histórico da ocorrência.' },
-    { id: 'ia', href: 'ia.html', ic: '🧠', nome: 'Plataformas de IA', grupo: 'apoio', acesso: 'pub',
+    { id: 'ia', href: 'ia.html', ic: '🧠', nome: 'Plataformas de IA', grupo: 'efetivo', acesso: 'pub',
       desc: 'Ferramentas de IA gratuitas em português.' },
 
-    // ---- Administração
+    // ---- Administração do site
     { id: 'sistemas', href: 'sistemas.html', ic: '🧭', nome: 'Todos os Sistemas', grupo: 'admin', acesso: 'pub',
-      desc: 'Lista completa dos sistemas do site.' },
+      desc: 'Lista completa dos sistemas do site, por seção.' },
     { id: 'admin', href: 'admin.html', ic: '🛡️', nome: 'Painel de Controle', grupo: 'admin', acesso: 'admin',
       desc: 'Usuários, senhas e níveis de acesso de cada login.' }
   ];
@@ -443,7 +448,7 @@
     var a = arquivoAtual(), achou = null;
     CATALOGO.forEach(function (i) {
       var u = i.href.split('?'), f = u[0].toLowerCase(), pg = (u[1] || '').replace(/^pg=/, '');
-      if (f === a.f && pg === a.pg) achou = i;
+      if (!achou && f === a.f && pg === a.pg) achou = i; // o 1º do mesmo endereço (tarefas.html = Central de Tarefas)
     });
     return achou;
   }

@@ -3,163 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#060912">
 <title>Sistemas · BPFRON/RO</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
-  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.14); --card:rgba(12,17,30,0.85);
-  --green:#34d399;
-}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+/* sistemas.html — prefixo .sis- (o resto vem do bp-ui.css) */
+.sis-atalhos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:16px}
+.sis-at{--c:var(--acc);position:relative;display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;border-radius:18px;border:1px solid var(--line);background:var(--card);
+  text-align:left;cursor:pointer;color:inherit;overflow:hidden;transition:transform .25s var(--ease),border-color .25s,box-shadow .25s,background .25s;animation:bp-sobe .5s var(--ease) both;animation-delay:calc(var(--i,0) * 40ms)}
+.sis-at::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--c),transparent)}
+.sis-at:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 50%,transparent);box-shadow:var(--sh2);background:var(--card-h)}
+.sis-at.on{border-color:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent);background:var(--card-h)}
+.sis-at .sg{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;line-height:1;color:var(--c)}
+.sis-at b{font-size:13px;color:var(--t1);line-height:1.25}
+.sis-at small{font-size:11.5px;color:var(--muted);font-weight:700}
+.sis-at .ic{position:absolute;right:12px;top:12px;font-size:20px;opacity:.85}
+.sis-at.vazio{opacity:.5}
 
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
-.hdr-inner{max-width:1240px;margin:0 auto;padding:clamp(10px,2vw,14px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff}
-.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
-.hdr-sub{font-size:12px;color:var(--muted)}
-.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}.hdr-back:hover{color:var(--yellow)}
+.sis-barra{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:22px 0 4px}
+.sis-barra .bp-in{flex:1;min-width:220px}
+.sis-so{display:inline-flex;align-items:center;gap:8px;padding:0 14px;min-height:50px;border-radius:14px;border:1px solid var(--line2);background:var(--card);font-size:14px;font-weight:700;color:var(--t3);cursor:pointer;user-select:none}
+.sis-so input{width:18px;height:18px;accent-color:var(--acc)}
 
-.wrap{max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(16px,4vw,28px) 80px}
-.intro h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,34px);color:#fff;line-height:1.15}
-.intro p{color:var(--muted);font-size:14px;margin-top:4px}
+.sis-sec{--c:var(--acc);margin-top:34px;scroll-margin-top:84px}
+.sis-cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.sis-cab .sg{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;flex:none;font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:var(--c);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 28%,transparent),color-mix(in srgb,var(--c) 6%,transparent));border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.sis-cab h2{margin:0;font-family:'Rajdhani',sans-serif;font-size:24px;color:var(--t1);line-height:1.1}
+.sis-cab small{display:block;color:var(--muted);font-size:13px}
+.sis-cab .bp-sl{margin-left:auto}
+.sis-cab::after{content:'';display:none}
 
-.busca{margin:20px 0 6px}
-.busca input{width:100%;max-width:460px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-family:inherit;font-size:15px;outline:none;min-height:44px}
-.busca input:focus{border-color:rgba(245,197,24,.6)}
+.sis-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.sis-cd{--c:var(--acc);position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;border:1px solid var(--line);background:var(--card);text-decoration:none;color:inherit;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:transform .25s var(--ease),border-color .25s,box-shadow .25s,background .25s;animation:bp-sobe .5s var(--ease) both;animation-delay:calc(var(--i,0) * 35ms)}
+.sis-cd:hover,.sis-cd:focus-visible{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 50%,transparent);box-shadow:var(--sh2);background:var(--card-h);outline:none}
+.sis-cd .lin{display:flex;align-items:center;gap:12px}
+.sis-cd .bp-tile{--c:inherit}
+.sis-cd h3{margin:0;font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1);line-height:1.15}
+.sis-cd p{margin:0;flex:1;color:var(--muted);font-size:13.5px;line-height:1.55}
+.sis-cd .ro{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sis-cd .seta{margin-left:auto;color:var(--c);font-weight:800;transition:transform .25s var(--ease)}
+.sis-cd:hover .seta{transform:translateX(4px)}
+.sis-cd.fora{opacity:.5}
+.sis-cd.fora:hover{opacity:.85}
+.sis-nada{margin-top:10px}
 
-.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:28px 0 12px}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
-.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
-.card:hover,.card:focus-visible{border-color:rgba(245,197,24,.55);background:rgba(18,24,40,.92);transform:translateY(-2px);outline:none}
-.card-top{display:flex;align-items:center;gap:12px}
-.ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:rgba(245,197,24,.10);border:1px solid rgba(245,197,24,.25);flex-shrink:0}
-.card h2{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#fff;line-height:1.15}
-.card p{font-size:13.5px;color:var(--muted);line-height:1.55;flex:1}
-.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700;border:1px solid}
-.chip.pub{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.35);color:#6ee7b7}
-.chip.res{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-.go{font-size:14px;font-weight:700;color:#1a1a1a;background:linear-gradient(135deg,#F5C518,#e0a800);border-radius:10px;padding:8px 16px;white-space:nowrap}
-.vazio{color:var(--muted);padding:30px 4px}
-.sec{display:flex;align-items:center;gap:8px}
-.sec i{width:8px;height:8px;border-radius:2px}
-.ic{background:color-mix(in srgb,var(--c,#F5C518) 14%,transparent);border-color:color-mix(in srgb,var(--c,#F5C518) 35%,transparent)}
-.chip.lib{background:rgba(57,135,229,.12);border-color:rgba(57,135,229,.4);color:#93c5fd}
-.chip.nao{background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.25);color:var(--muted)}
-.card.fora{opacity:.55}
-.card.fora:hover{opacity:.85}
-.portal{display:flex;align-items:center;gap:16px;margin:20px 0 4px;padding:18px 20px;border-radius:18px;text-decoration:none;color:inherit;
-  background:linear-gradient(135deg,rgba(245,197,24,.16),rgba(245,197,24,.03) 60%),var(--card);border:1px solid rgba(245,197,24,.4);transition:transform .2s,box-shadow .2s}
-.portal:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(245,197,24,.12)}
-.portal .pic{width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-size:28px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.35);flex:none}
-.portal .ptx{flex:1;min-width:0}
-.portal b{display:block;font-family:'Rajdhani',sans-serif;font-size:22px;color:#fff}
-.portal small{display:block;font-size:13.5px;color:var(--muted);line-height:1.5}
-@media (max-width:640px){ .portal{flex-wrap:wrap}.portal .go{width:100%;text-align:center} }
-/* tema Claro */
-:root[data-tema="claro"] body{background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.08) 0%,transparent 60%)}
-:root[data-tema="claro"] .hdr{background:linear-gradient(100deg,#ffffff,#f1f5f9);box-shadow:0 8px 30px rgba(15,23,42,.08);border-bottom-color:rgba(181,133,0,.5)}
-:root[data-tema="claro"] .hdr-logo{mix-blend-mode:normal}
-:root[data-tema="claro"] .hdr-title,:root[data-tema="claro"] .intro h1,:root[data-tema="claro"] .card h2,:root[data-tema="claro"] .portal b{color:#0f172a}
-:root[data-tema="claro"] .card{box-shadow:0 4px 16px rgba(15,23,42,.05)}
-:root[data-tema="claro"] .card:hover{background:#fff;border-color:rgba(181,133,0,.5)}
-:root[data-tema="claro"] .busca input{color:#0f172a;background:#fff}
-:root[data-tema="claro"] .chip.pub{color:#047857}:root[data-tema="claro"] .chip.lib{color:#1d4ed8}
-:root[data-tema="claro"] ::-webkit-scrollbar-thumb{background:#cbd5e1}
-.hidden{display:none!important}
-
-@media (max-width:640px){
-  .hdr{position:static}
-  .hdr-logo{height:34px}
-  .busca input{font-size:16px}
-  .grid{grid-template-columns:1fr}
+@media (max-width:760px){
+  .sis-atalhos{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .sis-at{padding:11px 10px 10px}
+  .sis-at .sg{font-size:23px}
+  .sis-at b{font-size:12px}
+  .sis-at .ic{display:none}
+  .sis-grade{grid-template-columns:1fr}
+  .sis-so{flex:1 1 100%;justify-content:center}
 }
 </style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-29", "titulo": "Sistemas separados por seção", "quem": "todos", "itens": [
+    "Os sistemas agora ficam agrupados por seção: Comando, P1, P2, P3, P4, P5 e P6, além do bloco para todo o efetivo.",
+    "Os atalhos no topo levam direto para a seção; a busca procura em todas.",
+    "Com login, marque \"Só os liberados para mim\" para esconder o que o seu login não abre.",
+    "O menu ☰ e o Portal da Gestão usam a mesma divisão."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-      <div>
-        <div class="hdr-title">Sistemas <em>BPFRON</em></div>
-        <div class="hdr-sub">Acesso rápido a todas as páginas · BPFRON/RO</div>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>Todos os Sistemas</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <a class="bp-btn ic sec" href="index.html" title="Voltar ao dashboard" aria-label="Voltar ao dashboard"><i data-ic="grade"></i></a>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+  <section class="bp-heroi">
+    <div>
+      <span class="bp-selo-tx"><b></b>Sistemas por seção</span>
+      <h1>Tudo do <em>BPFRON</em> num lugar só</h1>
+      <p id="sis-texto">Escolha a seção e abra o sistema. As páginas restritas pedem o login do dashboard ao entrar; o ☰ no alto abre esta lista de qualquer página.</p>
+      <div class="bp-bts">
+        <a class="bp-btn" id="sis-portal" href="gestao.html"><i data-ic="grade"></i><span id="sis-portal-tx">Portal da Gestão</span></a>
+        <a class="bp-btn sec" href="index.html"><i data-ic="voltar"></i>Dashboard</a>
       </div>
     </div>
-    <a class="hdr-back" href="index.html">⬅ Dashboard</a>
-  </div>
-</div>
+    <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+  </section>
 
-<main class="wrap">
-  <div class="intro">
-    <h1>Todos os sistemas</h1>
-    <p>Clique no sistema para abrir. As páginas restritas pedem o login do dashboard ao entrar. O ☰ no alto abre esta lista de qualquer página.</p>
-  </div>
+  <div class="sis-atalhos" id="sis-atalhos"></div>
 
-  <a class="portal" id="portal" href="gestao.html">
-    <span class="pic">🏛️</span>
-    <span class="ptx"><b>Portal da Gestão</b><small id="portal-sub"></small></span>
-    <span class="go">Abrir →</span>
-  </a>
-
-  <div class="busca">
-    <input id="q" type="search" placeholder="🔎 Buscar sistema…" autocomplete="off" aria-label="Buscar sistema">
+  <div class="sis-barra">
+    <div class="bp-in"><i data-ic="buscar"></i><input id="q" type="search" placeholder="Buscar sistema (nome, assunto ou seção)…" autocomplete="off" aria-label="Buscar sistema"></div>
+    <label class="sis-so bp-esconde" id="sis-so-wrap"><input type="checkbox" id="sis-so"> Só os liberados para mim</label>
   </div>
 
   <div id="lista"></div>
-  <div id="vazio" class="vazio hidden">Nenhum sistema encontrado.</div>
+  <div id="vazio" class="bp-vazio sis-nada bp-esconde">Nenhum sistema encontrado.</div>
 </main>
 
 <script>
-/* 29/10/2026: a lista de sistemas é a do bp-casca.js (BPCasca.CATALOGO), a
-   mesma do Portal da Gestão e do menu ☰. Sistema novo = item no CATALOGO. */
+/* A lista de sistemas é a do bp-casca.js (BPCasca.CATALOGO / GRUPOS), a mesma
+   do Portal da Gestão e do menu ☰. Sistema novo = item no CATALOGO, com o
+   grupo da seção (cmd, p1…p6, efetivo, admin). */
+const C = window.BPCasca;
+const $ = (id) => document.getElementById(id);
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
 
-function render(){
-  const C = window.BPCasca, P = C.perfil();
-  const q = norm(document.getElementById('q').value.trim());
-  let html = '', total = 0;
-  C.GRUPOS.forEach(g => {
-    const itens = C.CATALOGO.filter(s => s.grupo === g.id && s.id !== 'sistemas' && (!q || norm(s.nome + ' ' + s.desc + ' ' + g.nome).includes(q)));
-    if (!itens.length) return;
-    total += itens.length;
-    html += '<div class="sec"><i style="background:' + g.cor + '"></i>' + esc(g.nome) + '</div><div class="grid">'
-      + itens.map(s => {
-          const pode = C.pode(s, P), pa = C.papel(s, P);
-          const chip = s.acesso === 'pub' ? '<span class="chip pub">Aberto ao efetivo</span>'
-            : !P.logado ? '<span class="chip res">🔒 Requer login</span>'
-            : pode ? '<span class="chip lib">✓ Liberado para você' + (pa === 'gestor' ? ' · gestor' : pa === 'ver' ? ' · só ver' : '') + '</span>'
-            : '<span class="chip nao">Sem acesso neste login</span>';
-          return '<a class="card' + (P.logado && !pode ? ' fora' : '') + '" href="' + esc(C.hrefCom(s.href)) + '" style="--c:' + g.cor + '">'
-            +   '<div class="card-top"><span class="ic">' + s.ic + '</span><h2>' + esc(s.nome) + '</h2></div>'
-            +   '<p>' + esc(s.desc) + '</p>'
-            +   '<div class="card-foot">' + chip + '<span class="go">Acessar →</span></div>'
-            + '</a>';
-        }).join('')
-      + '</div>';
-  });
-  document.getElementById('lista').innerHTML = html;
-  document.getElementById('vazio').classList.toggle('hidden', total > 0);
-  const pt = document.getElementById('portal');
-  pt.href = C.hrefCom(C.PORTAL.href);
-  document.getElementById('portal-sub').textContent = P.logado
-    ? 'Você está como ' + P.nome + '. Abra o portal para ver só os seus sistemas, fixar favoritos e escolher o tema do site.'
-    : 'Entre com o login do dashboard e veja só os sistemas liberados para você, com atalhos e tema do site.';
+let SEL = '';   // seção escolhida nos atalhos ('' = todas)
+try { $('sis-so').checked = localStorage.getItem('bp_sis_so') === '1'; } catch (e) {}
+
+function chip(s, P){
+  const pode = C.pode(s, P), pa = C.papel(s, P);
+  if (s.acesso === 'pub') return '<span class="bp-sl ok">Aberto ao efetivo</span>';
+  if (!P.logado) return '<span class="bp-sl pend">' + C.ic('cadeado') + 'Requer login</span>';
+  if (pode) return '<span class="bp-sl info">' + C.ic('check') + (pa === 'gestor' ? 'Gestor' : pa === 'ver' ? 'Só ver' : 'Liberado') + '</span>';
+  return '<span class="bp-sl">Sem acesso neste login</span>';
 }
 
-document.getElementById('q').addEventListener('input', render);
-BPCasca.aoMudarPerfil(render);
+function render(){
+  const P = C.perfil();
+  const q = norm($('q').value.trim());
+  const so = P.logado && $('sis-so').checked;
+  $('sis-so-wrap').classList.toggle('bp-esconde', !P.logado);
+
+  const base = C.CATALOGO.filter(s => s.id !== 'sistemas' && (!so || C.pode(s, P)));
+  const daSec = (g) => base.filter(s => s.grupo === g.id);
+
+  // atalhos das seções
+  $('sis-atalhos').innerHTML = C.GRUPOS.map((g, n) => {
+    const k = daSec(g).length;
+    return '<button type="button" class="sis-at' + (SEL === g.id ? ' on' : '') + (k ? '' : ' vazio') + '" data-g="' + g.id + '" style="--c:' + g.cor + ';--i:' + n + '" title="' + esc(g.desc || g.nome) + '">'
+      + '<span class="ic" aria-hidden="true">' + g.ic + '</span><span class="sg">' + esc(g.sigla || g.nome) + '</span>'
+      + '<b>' + esc(g.nome.replace(/^P\d · /, '')) + '</b><small>' + k + (k === 1 ? ' sistema' : ' sistemas') + '</small></button>';
+  }).join('');
+
+  let html = '', total = 0, n = 0;
+  C.GRUPOS.forEach(g => {
+    if (SEL && SEL !== g.id) return;
+    const itens = daSec(g).filter(s => !q || norm(s.nome + ' ' + s.desc + ' ' + g.nome + ' ' + (g.sigla || '')).includes(q));
+    if (!itens.length) return;
+    total += itens.length;
+    html += '<section class="sis-sec" id="sec-' + g.id + '" style="--c:' + g.cor + '">'
+      + '<div class="sis-cab"><span class="sg">' + esc(g.sigla || g.ic) + '</span><div><h2>' + esc(g.nome) + '</h2><small>' + esc(g.desc || '') + '</small></div>'
+      + '<span class="bp-sl">' + itens.length + '</span></div><div class="sis-grade">'
+      + itens.map(s => {
+          const fora = P.logado && !C.pode(s, P);
+          return '<a class="sis-cd' + (fora ? ' fora' : '') + '" href="' + esc(C.hrefCom(s.href)) + '" style="--c:' + g.cor + ';--i:' + (n++) + '">'
+            + '<div class="lin"><span class="bp-tile" style="--c:' + g.cor + '">' + s.ic + '</span><h3>' + esc(s.nome) + '</h3></div>'
+            + '<p>' + esc(s.desc) + '</p>'
+            + '<div class="ro">' + chip(s, P) + '<span class="seta" aria-hidden="true">→</span></div></a>';
+        }).join('')
+      + '</div></section>';
+  });
+  $('lista').innerHTML = html;
+  $('vazio').classList.toggle('bp-esconde', total > 0);
+  $('vazio').textContent = so && !q ? 'Nenhum sistema desta seção está liberado para o seu login.' : 'Nenhum sistema encontrado.';
+
+  $('sis-portal').href = C.hrefCom(C.PORTAL.href);
+  $('sis-portal-tx').textContent = P.logado ? 'Meu Portal da Gestão' : 'Entrar no Portal da Gestão';
+  $('sis-texto').textContent = P.logado
+    ? 'Você está como ' + P.nome + '. Os sistemas estão separados por seção; os que aparecem apagados não estão liberados para este login.'
+    : 'Escolha a seção e abra o sistema. As páginas restritas pedem o login do dashboard ao entrar; o ☰ no alto abre esta lista de qualquer página.';
+}
+
+$('sis-atalhos').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-g]'); if (!b) return;
+  SEL = SEL === b.dataset.g ? '' : b.dataset.g;
+  render();
+  const alvo = SEL ? $('sec-' + SEL) : $('lista');
+  if (alvo) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+$('q').addEventListener('input', () => { if ($('q').value.trim()) SEL = ''; render(); });
+$('sis-so').addEventListener('change', () => { try { localStorage.setItem('bp_sis_so', $('sis-so').checked ? '1' : '0'); } catch (e) {} render(); });
+C.aoMudarPerfil(render);
 render();
 </script>
 </body>
