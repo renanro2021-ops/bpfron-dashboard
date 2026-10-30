@@ -1,104 +1,124 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
 <meta name="robots" content="noindex,nofollow">
 <title>Reserva de Armamento · BPFRON/RO</title>
 <script src="conta.js"></script>
 <script src="cautela-acesso.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#060912;--bg2:#0b0f1a;--yellow:#F5C518;--text:#dde3f0;--muted:#94a3b8;--line:rgba(148,163,184,.16);--card:rgba(12,17,30,.88);
-  --red:#ef4444;--redsoft:rgba(239,68,68,.13);--green:#34d399;--greensoft:rgba(52,211,153,.12);--orange:#fb923c;--orangesoft:rgba(251,146,60,.13);--blue:#60a5fa}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;min-height:100vh;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(29,78,216,.12) 0%,transparent 60%);background-attachment:fixed}
-.hdr{background:linear-gradient(100deg,#05070d,#0b0f1a 55%,#0d1220);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:50}
-.hdr-in{max-width:1500px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px}.brand img{height:42px;mix-blend-mode:screen}
-.t{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff;line-height:1.1}.t em{font-style:normal;color:var(--yellow)}
-.sub{font-size:12px;color:var(--muted)}
-.right{display:flex;align-items:center;gap:14px}.right a,.right button{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:none}
-.right a:hover,.right button:hover{color:var(--yellow)}#userchip{color:var(--yellow);font-weight:600;font-size:13.5px}
-.wrap{max-width:1500px;margin:0 auto;padding:18px 22px 80px}
-.faixa{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:12px;padding:10px 16px;margin-bottom:14px}
-.faixa b{color:#fff}
+/* =====================================================================
+   cautela-reserva.html — só o que é desta página. O visual comum (cores
+   dos temas, cabeçalho, ícones) vem do bp-ui.css (30/10/2026). As classes
+   que o JS monta (.card, .btn, .ac, .pill, .chip, .t1, .res, .ovl/.modal,
+   .msg, .dica) seguem com o mesmo nome, redesenhadas com as cores do tema.
+   ===================================================================== */
+.res-wrap{max-width:1500px}
+.bp-pg{font-size:15px}
+.faixa{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--info-soft);border:1px solid var(--info-line);border-radius:16px;padding:12px 16px;margin-bottom:14px;color:var(--t2)}
+.faixa b{color:var(--t1)}
 /* as ações: botões grandes, com o que fazem escrito embaixo */
 .acoesG{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
-.ac{position:relative;text-align:left;background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--text);font-family:inherit;cursor:pointer}
-.ac b{display:block;font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;line-height:1.15}.ac span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
-.ac .ico{font-size:24px;display:block;margin-bottom:4px}
-.ac:hover{border-color:rgba(245,197,24,.4)}
-.ac.on{background:rgba(245,197,24,.13);border-color:rgba(245,197,24,.6)}.ac.on b{color:var(--yellow)}
-.ac .n{position:absolute;top:10px;right:12px;min-width:24px;padding:1px 8px;border-radius:999px;background:var(--red);color:#fff;font-size:13px;font-weight:800;text-align:center}.ac .n.zero{display:none}
-.pane{display:none}.pane.on{display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-h2{font-family:'Rajdhani',sans-serif;font-size:20px;color:#fff;margin-bottom:8px}
-h3{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--yellow);margin:4px 0 8px}
-.passo{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--yellow);color:#111;font-weight:800;font-size:14px;margin-right:8px}
+.ac{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;color:var(--t2);cursor:pointer;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .25s,transform .25s var(--ease),box-shadow .25s,background .25s}
+.ac b{display:block;font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1);line-height:1.15}
+.ac>span:not(.ico):not(.n){display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+.ac .ico{margin-bottom:10px}
+.ac:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:var(--sh2)}
+.ac.on{background:linear-gradient(135deg,var(--acc-soft),var(--card));border-color:var(--acc-line);box-shadow:inset 0 0 0 1px var(--acc-line)}
+.ac.on b{color:var(--acc)}
+.ac .n{position:absolute;top:12px;right:12px;min-width:24px;padding:1px 8px;border-radius:999px;background:var(--crit);color:#fff;font-size:13px;font-weight:800;text-align:center}
+.ac .n.zero{display:none}
+.pane{display:none}
+.pane.on{display:block;animation:bp-sobe .4s var(--ease) both}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.bp-pg h2{font-family:'Rajdhani',sans-serif;font-size:21px;color:var(--t1);margin:0 0 8px;display:flex;align-items:center;gap:8px;line-height:1.2}
+.bp-pg h3{font-family:'Rajdhani',sans-serif;font-size:17px;color:var(--acc);margin:4px 0 8px}
+.bp-pg p{margin:0}
+.passo{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);font-weight:800;font-size:14px;flex:none}
 .muted{color:var(--muted);font-size:13px}
+.muted b{color:var(--t1)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .row>div{flex:1;min-width:150px}
-label{display:block;font-size:12.5px;font-weight:600;color:#cbd5e1;margin:8px 0 4px}
-input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:#e2e8f0;font-family:inherit;font-size:14.5px;outline:none}
-input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
-input[type=checkbox]{width:auto}
-.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a;text-decoration:none}
-.btn.big{padding:13px 22px;font-size:15.5px}
-.btn.sec{background:rgba(148,163,184,.12);color:#cbd5e1;border:1px solid var(--line)}
-.btn.red{background:var(--redsoft);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
-.btn.verde{background:var(--greensoft);color:#6ee7b7;border:1px solid rgba(52,211,153,.45)}
-.btn.sm{padding:6px 11px;font-size:13px}.btn:disabled{opacity:.5;cursor:default}
-.pill{background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-.pill.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700;border:1px solid var(--line);white-space:nowrap}
-.chip.ok{background:var(--greensoft);border-color:rgba(52,211,153,.4);color:#6ee7b7}
-.chip.wait{background:var(--orangesoft);border-color:rgba(251,146,60,.45);color:#fdba74}
-.chip.bad{background:var(--redsoft);border-color:rgba(239,68,68,.45);color:#fca5a5}
-.chip.neu{background:rgba(148,163,184,.1);color:#cbd5e1}
-.msg{font-size:13.5px;margin-top:8px;min-height:18px}.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
-table.t1{width:100%;border-collapse:collapse}
-.t1 th{position:sticky;top:62px;background:#0d1220;color:var(--yellow);font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;text-align:left;padding:8px;border-bottom:1px solid rgba(245,197,24,.3);z-index:5}
-.t1 td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-.t1 tr.grupo td{background:rgba(245,197,24,.07);color:var(--yellow);font-weight:700;font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:1px}
-.t1 tr.l:hover{background:rgba(148,163,184,.05);cursor:pointer}
+.card label,.modal label{display:block;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+.card input:not([type=checkbox]),.card select,.card textarea,.modal input:not([type=checkbox]),.modal select,.modal textarea{width:100%;background:var(--surf2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;color:var(--t1);font:inherit;font-size:14.5px;outline:none;min-height:44px;transition:border-color .2s,box-shadow .2s}
+.card input:focus,.card select:focus,.card textarea:focus,.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--acc-line);box-shadow:0 0 0 4px var(--acc-soft)}
+.bp-pg select option{background:var(--surf);color:var(--t1)}
+input[type=checkbox]{width:auto;accent-color:var(--acc)}
+.res-busca{position:relative}
+.res-busca>.bp-i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none;width:18px;height:18px}
+.card .res-busca input{padding-left:40px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;min-height:42px;font-size:14px;font-weight:800;cursor:pointer;text-decoration:none;white-space:nowrap;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);box-shadow:0 8px 24px var(--acc-soft);transition:transform .2s var(--ease),filter .2s,border-color .2s,color .2s,background .2s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn:active{transform:scale(.98)}
+.btn.big{padding:13px 22px;font-size:15.5px;min-height:50px;border-radius:14px}
+.btn.sec{background:var(--surf2);color:var(--t2);border:1px solid var(--line2);box-shadow:none}
+.btn.sec:hover{border-color:var(--acc-line);color:var(--t1)}
+.btn.red{background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit-line);box-shadow:none}
+.btn.verde{background:var(--good-soft);color:var(--good);border:1px solid var(--good-line);box-shadow:none}
+.btn.sm{padding:6px 11px;font-size:13px;min-height:34px;border-radius:10px;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:7px 14px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.pill:hover{color:var(--t1);border-color:var(--acc-line)}
+.pill.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border:1px solid var(--line2);background:var(--surf2);color:var(--t3);white-space:nowrap}
+.chip.ok{background:var(--good-soft);border-color:var(--good-line);color:var(--good)}
+.chip.wait{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
+.chip.bad{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
+.msg{font-size:13.5px;margin-top:8px;min-height:18px;color:var(--muted)}
+.msg.err{color:var(--crit)}.msg.ok{color:var(--good)}
+table.t1{width:100%;border-collapse:collapse;color:var(--t2)}
+.t1 th{position:sticky;top:66px;background:var(--surf);color:var(--acc);font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:10px 8px;border-bottom:1px solid var(--acc-line);z-index:5}
+.t1 td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.t1 tr.grupo td{background:var(--acc-soft);color:var(--acc);font-weight:700;font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:1px}
+.t1 tr.l{transition:background .15s}
+.t1 tr.l:hover{background:color-mix(in srgb,var(--acc) 6%,transparent);cursor:pointer}
 .t1 td.n,.t1 th.n{text-align:center;font-variant-numeric:tabular-nums}
-.t1 td.neg{color:#fca5a5;font-weight:700}.t1 td.div input{border-color:var(--orange);background:var(--orangesoft)}
+.t1 td.neg{color:var(--crit);font-weight:700}
+.t1 td.div input{border-color:var(--warn)!important;background:var(--warn-soft)!important}
 .t1 input.cnt{width:90px;text-align:center}
-.t1 .obs{font-size:12.5px;max-width:380px;white-space:pre-line}.t1 .obs.v{color:#fca5a5}
-.det{background:rgba(2,6,14,.55);padding:12px 16px;border-left:3px solid var(--yellow)}
+.t1 .obs{font-size:12.5px;max-width:380px;white-space:pre-line}.t1 .obs.v{color:var(--crit)}
+.det{background:var(--surf2);padding:12px 16px;border-left:3px solid var(--acc)}
 .det table{width:100%;border-collapse:collapse;margin-top:6px}.det th,.det td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
-.cod{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--yellow);font-size:13px}
-.res{border:1px solid var(--line);border-radius:10px;max-height:300px;overflow:auto;margin-top:6px}
-.res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);color:var(--text);padding:9px 12px;font-family:inherit;font-size:14px;cursor:pointer}
-.res button:hover{background:rgba(245,197,24,.08)}
-.sel-box{background:var(--greensoft);border:1px solid rgba(52,211,153,.4);border-radius:10px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
-.lista-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.cod{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--acc);font-size:13px}
+.res{border:1px solid var(--line2);border-radius:14px;max-height:300px;overflow:auto;margin-top:6px;background:var(--surf)}
+.res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);color:var(--t2);padding:10px 12px;font-size:14px;cursor:pointer}
+.res button:hover{background:var(--acc-soft)}
+.sel-box{background:var(--good-soft);border:1px solid var(--good-line);border-radius:14px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--t2)}
+.lista-item{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;background:var(--surf2)}
 .lista-item .txt{flex:1;min-width:260px}
-.lista-item pre{font-family:inherit;white-space:pre-line;font-size:13px;color:#cbd5e1;margin-top:4px}
-.ovl{position:fixed;inset:0;background:rgba(2,6,14,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:#0d1220;border:1px solid rgba(245,197,24,.4);border-radius:16px;padding:20px;width:100%;max-width:640px;max-height:92vh;overflow:auto}
-.modal .acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
-#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:11px 18px;border-radius:10px;z-index:300;display:none;max-width:90vw}
+.lista-item pre{font-family:inherit;white-space:pre-line;font-size:13px;color:var(--t3);margin:4px 0 0}
+.ovl{position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:2147470000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surf);border:1px solid var(--line2);box-shadow:var(--sh);border-radius:22px;padding:22px;width:100%;max-width:640px;max-height:92vh;overflow:auto;color:var(--t2);animation:bp-sobe .3s var(--ease) both}
+.modal .acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--surf);border:1px solid var(--line2);box-shadow:var(--sh2);color:var(--t1);padding:12px 16px;border-radius:14px;z-index:2147475000;display:none;max-width:min(520px,90vw);font-size:14px;font-weight:600}
 .hidden{display:none!important}
-.bloqueio{max-width:560px;margin:60px auto;text-align:center}
-.dica{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:10px}
-.dica ol{margin:6px 0 0 20px}.dica li{margin:3px 0}
-iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line);border-radius:8px;background:#fff}
+.bloqueio{max-width:560px;margin:40px auto;text-align:center}
+.bloqueio h2{justify-content:center}
+.dica{background:var(--info-soft);border:1px solid var(--info-line);border-radius:14px;padding:11px 14px;font-size:13.5px;margin-top:10px;color:var(--t2)}
+.dica b{color:var(--t1)}
+.dica ol{margin:6px 0 0 20px;padding:0}.dica li{margin:3px 0}
+iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line2);border-radius:14px;background:#fff}
 .rolar{overflow-x:auto}
-@media(max-width:900px){.hdr-in{padding:8px 12px}}
+/* ícone no meio do texto (o JS troca o emoji antigo por <i data-ic>): um respiro antes da palavra */
+:where(.faixa,.sel-box,.muted,.card,.dica,.lista-item,.modal,pre,td,h2) :not(.btn):not(.pill):not(.bp-btn):not(.bp-tile):not(.chip):not(.ac)>.bp-i,:where(.faixa,.sel-box,.muted,.dica,pre,td)>.bp-i{margin-right:.35em}
+details summary{color:var(--muted)}
+.bp-pg a:not(.btn):not(.bp-marca):not(.bp-btn){color:var(--acc)}
 /* celular: o armeiro acompanha e confere (29/10/2026) */
 @media(max-width:760px){
-  body{font-size:14.5px}
-  .wrap{padding:12px 10px 80px}
-  .brand img{height:34px}.t{font-size:18px}.right{gap:10px}
-  input,select,textarea{font-size:16px}
+  .bp-pg{font-size:14.5px}
+  .card input:not([type=checkbox]),.card select,.card textarea{font-size:16px}
   .acoesG{grid-template-columns:repeat(2,1fr);gap:8px}
-  .ac{padding:10px 11px}.ac b{font-size:16.5px}.ac span{font-size:11.5px}.ac .ico{font-size:20px}
-  .card{padding:12px}
-  .faixa{gap:8px;padding:9px 12px}
+  .ac{padding:11px}.ac b{font-size:16.5px}.ac>span:not(.ico):not(.n){font-size:11.5px}
+  .ac .ico{margin-bottom:6px}
+  .card{padding:13px}
+  .faixa{gap:8px;padding:10px 12px}
   .tres thead,.tcnt thead{display:none}
   .tres tr.grupo,.tres tr.grupo td{display:block}
   .tres tr:not(.l):not(.grupo),.tres tr:not(.l):not(.grupo)>td{display:block}
@@ -113,58 +133,80 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
   .tcnt td:first-child,.tcnt td:last-child{grid-column:1/-1}
   .tcnt td.n{text-align:left;font-size:18px}
   .t1 input.cnt{width:100%;font-size:20px;padding:10px;text-align:center}
-  .fim-cnt{position:sticky;bottom:8px;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-color:rgba(245,197,24,.45)}
+  .fim-cnt{position:sticky;bottom:8px;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-color:var(--acc-line)}
   .fim-cnt .btn{flex:1;justify-content:center}
   .lista-item .txt{min-width:0}
   iframe#parte-ver{height:70vh}
+  #res-topo-cau span{display:none}
 }
 </style>
+<!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
+     cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-30", "titulo": "Página de cara nova", "quem": "todos", "itens": [
+    "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
+    "Botões de ação (Reserva, Entregar, Receber de volta, Conferir…) com ícones novos.",
+    "Tabelas, janelas e avisos com as cores do tema. O jeito de usar continua o mesmo."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr"><div class="hdr-in">
-  <div class="brand"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><div><div class="t">Reserva de <em>Armamento</em></div><div class="sub">BPFRON/RO · armeiro de serviço</div></div></div>
-  <div class="right"><span id="userchip"></span><a href="cautela.html">📱 Minhas cautelas</a><button id="btn-senha" class="hidden" type="button">🔑 Senha</button><button id="btn-sair" class="hidden" type="button">Sair</button></div>
-</div></div>
+<header class="bp-topo">
+  <div class="bp-topo-in res-wrap" data-bp-menu style="max-width:1500px">
+    <a class="bp-marca" href="cautela.html" title="Cautela de Armamento">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Armeiro de serviço</small><b>Reserva de Armamento</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <a class="bp-btn sm sec" id="res-topo-cau" href="cautela.html" title="Minhas cautelas"><i data-ic="usuario"></i><span>Minhas cautelas</span></a>
+      <span id="userchip"></span>
+      <button id="btn-senha" class="bp-btn ic sec hidden" type="button" title="Trocar a minha senha" aria-label="Trocar a minha senha"><i data-ic="cadeado"></i></button>
+      <button id="btn-sair" class="bp-btn ic sec hidden" type="button" title="Sair" aria-label="Sair"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
 
-<main class="wrap">
+<main class="bp-wrap res-wrap">
   <div id="login-box" class="card bloqueio hidden">
-    <h2>Entrar na reserva de armamento</h2>
+    <h2><span class="bp-tile sm"><i data-ic="cadeado"></i></span>Entrar na reserva de armamento</h2>
     <p class="muted" style="margin:6px 0 14px" id="login-dica"></p>
     <div id="login-form" style="text-align:left"></div>
   </div>
 
   <div id="sem-papel" class="card bloqueio hidden">
-    <h2 id="sem-papel-h">🔒 Você não é o armeiro de serviço</h2>
+    <h2 id="sem-papel-h">Você não é o armeiro de serviço</h2>
     <p class="muted" style="margin-top:6px" id="sem-papel-txt"></p>
-    <button class="btn hidden" id="sem-papel-re" type="button" style="margin-top:14px">Sair e entrar pelo RE</button>
-    <a class="btn" href="cautela.html" style="margin-top:14px">Ir para as minhas cautelas</a>
+    <button class="btn hidden" id="sem-papel-re" type="button" style="margin-top:14px"><i data-ic="sair"></i>Sair e entrar pelo RE</button>
+    <a class="btn" href="cautela.html" style="margin-top:14px"><i data-ic="usuario"></i>Ir para as minhas cautelas</a>
   </div>
 
   <div id="app" class="hidden">
     <div class="faixa" id="faixa"></div>
     <div id="avisos"></div>
     <div class="acoesG" id="acoes">
-      <button class="ac on" data-p="reserva"><span class="ico">📦</span><b>Reserva</b><span>o que tem e onde está</span></button>
-      <button class="ac" data-p="entregar" id="ac-entregar"><span class="ico">📤</span><b>Entregar</b><span>material para um policial</span></button>
-      <button class="ac" data-p="receber" id="ac-receber"><span class="ico">📥</span><b id="ac-receber-t">Receber de volta</b><span id="ac-receber-s">o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
-      <button class="ac" data-p="conferir" id="ac-conferir"><span class="ico">🔢</span><b>Conferir</b><span>contar a reserva</span></button>
-      <button class="ac" data-p="ver"><span class="ico">👁️</span><b>Ver Parte Diária</b><span>como ela está agora</span></button>
-      <button class="ac" data-p="passar" id="ac-passar"><span class="ico">📄</span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
-      <button class="ac" data-p="historico"><span class="ico">🕘</span><b>Histórico</b><span>todas as cautelas</span></button>
-      <button class="ac hidden" data-p="admin" id="ac-admin"><span class="ico">⚙️</span><b>Administração</b><span>cadastrar e corrigir</span></button>
+      <button class="ac on" data-p="reserva"><span class="ico bp-tile sm"><i data-ic="arquivar"></i></span><b>Reserva</b><span>o que tem e onde está</span></button>
+      <button class="ac" data-p="entregar" id="ac-entregar"><span class="ico bp-tile sm info"><i data-ic="enviar"></i></span><b>Entregar</b><span>material para um policial</span></button>
+      <button class="ac" data-p="receber" id="ac-receber"><span class="ico bp-tile sm ok"><i data-ic="baixar"></i></span><b id="ac-receber-t">Receber de volta</b><span id="ac-receber-s">o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
+      <button class="ac" data-p="conferir" id="ac-conferir"><span class="ico bp-tile sm ok"><i data-ic="check"></i></span><b>Conferir</b><span>contar a reserva</span></button>
+      <button class="ac" data-p="ver"><span class="ico bp-tile sm info"><i data-ic="olho"></i></span><b>Ver Parte Diária</b><span>como ela está agora</span></button>
+      <button class="ac" data-p="passar" id="ac-passar"><span class="ico bp-tile sm"><i data-ic="arquivo"></i></span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
+      <button class="ac" data-p="historico"><span class="ico bp-tile sm info"><i data-ic="relogio"></i></span><b>Histórico</b><span>todas as cautelas</span></button>
+      <button class="ac hidden" data-p="admin" id="ac-admin"><span class="ico bp-tile sm pend"><i data-ic="grade"></i></span><b>Administração</b><span>cadastrar e corrigir</span></button>
     </div>
 
     <!-- ===== RESERVA (mesmas colunas da Parte) ===== -->
     <section class="pane on" id="p-reserva">
       <div class="card">
         <div class="row">
-          <div style="flex:3"><input id="q-res" placeholder="🔎 Procurar: nome (PT 100, ARAD, granada), código (ARM-0012) ou nº de série"></div>
+          <div style="flex:3" class="res-busca"><i data-ic="buscar"></i><input id="q-res" placeholder="Procurar: nome (PT 100, ARAD, granada), código (ARM-0012) ou nº de série"></div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="f-grupos"></div>
         <p class="muted" style="margin-top:8px">Clique numa linha para ver cada peça, com o código e com quem está.</p>
       </div>
-      <div class="card" style="padding:0"><table class="t1 tres"><thead><tr>
+      <div class="card" style="padding:0;overflow:hidden"><table class="t1 tres"><thead><tr>
         <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva</th><th class="n">Missões</th><th>Obs</th>
       </tr></thead><tbody id="tb-res"></tbody></table></div>
     </section>
@@ -173,15 +215,15 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
     <section class="pane" id="p-entregar">
       <div class="card">
         <h2><span class="passo">1</span>Quem vai receber?</h2>
-        <input id="c-q" placeholder="🔎 Digite o RE ou o nome do policial" autocomplete="off">
+        <div class="res-busca"><i data-ic="buscar"></i><input id="c-q" placeholder="Digite o RE ou o nome do policial" autocomplete="off"></div>
         <div class="res hidden" id="c-res"></div>
         <div id="c-pol"></div>
       </div>
       <div class="card">
         <h2><span class="passo">2</span>Para quê e até quando?</h2>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="pill on" data-tipo="missao" type="button">🚓 Missão / operação</button>
-          <button class="pill" data-tipo="servico" type="button">🕐 Serviço do dia</button>
+          <button class="pill on" data-tipo="missao" type="button"><i data-ic="foguete"></i>Missão / operação</button>
+          <button class="pill" data-tipo="servico" type="button"><i data-ic="relogio"></i>Serviço do dia</button>
         </div>
         <div id="c-missao-box"><label>Nome da missão (é o título da tabela na Parte)</label><input id="c-missao" list="dl-missoes" placeholder="ex.: 27º OPERAÇÃO PROTETOR"><datalist id="dl-missoes"></datalist></div>
         <label>Devolve até</label>
@@ -195,13 +237,13 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
       </div>
       <div class="card">
         <h2><span class="passo">3</span>O que vai levar?</h2>
-        <input id="c-qi" placeholder="🔎 Nome do material, código (ARM-0012) ou nº de série" autocomplete="off">
+        <div class="res-busca"><i data-ic="buscar"></i><input id="c-qi" placeholder="Nome do material, código (ARM-0012) ou nº de série" autocomplete="off"></div>
         <div class="res hidden" id="c-resi"></div>
         <table class="t1" style="margin-top:10px"><thead><tr><th>Material</th><th>Qual peça / quantos</th><th class="n">Na reserva</th><th></th></tr></thead><tbody id="c-carrinho"></tbody></table>
         <div class="muted" id="c-vazio" style="margin-top:6px">Nada ainda. Procure acima e clique para incluir.</div>
         <label>Observação (opcional)</label><input id="c-obs" maxlength="300">
         <div class="msg" id="c-msg"></div>
-        <button class="btn big" id="btn-cautelar" type="button" style="margin-top:6px">✍️ Entregar e gerar a cautela</button>
+        <button class="btn big" id="btn-cautelar" type="button" style="margin-top:6px"><i data-ic="assinar"></i>Entregar e gerar a cautela</button>
       </div>
       <div id="c-ok"></div>
     </section>
@@ -209,36 +251,36 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
     <!-- ===== RECEBER DE VOLTA ===== -->
     <section class="pane" id="p-receber">
       <div class="card">
-        <input id="q-rec" placeholder="🔎 Procurar: policial, RE, missão, material, código (ARM-0012) ou nº de série" autocomplete="off">
+        <div class="res-busca"><i data-ic="buscar"></i><input id="q-rec" placeholder="Procurar: policial, RE, missão, material, código (ARM-0012) ou nº de série" autocomplete="off"></div>
         <div class="muted" id="rec-info" style="margin-top:6px"></div>
-        <div class="dica hidden" id="rec-so-ver">👁️ Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.</div>
+        <div class="dica hidden" id="rec-so-ver">Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.</div>
       </div>
-      <div class="card"><h2>Cautelas no sistema</h2><p class="muted">Quem vence primeiro aparece em cima. Clique em <b>📥 Receber</b> quando o material voltar.</p><div id="lista-cautelas" style="margin-top:10px"></div></div>
-      <div class="card"><h2>Missões que já estavam na Parte</h2><p class="muted">Material que saiu antes do sistema começar (veio da última Parte Diária). Quando voltar, clique em <b>📥 Voltou</b>: o sistema já sugere o que entra de volta na reserva — é só conferir.</p><div id="lista-anteriores" style="margin-top:10px"></div></div>
+      <div class="card"><h2>Cautelas no sistema</h2><p class="muted">Quem vence primeiro aparece em cima. Clique em <b>Receber</b> quando o material voltar.</p><div id="lista-cautelas" style="margin-top:10px"></div></div>
+      <div class="card"><h2>Missões que já estavam na Parte</h2><p class="muted">Material que saiu antes do sistema começar (veio da última Parte Diária). Quando voltar, clique em <b>Voltou</b>: o sistema já sugere o que entra de volta na reserva — é só conferir.</p><div id="lista-anteriores" style="margin-top:10px"></div></div>
     </section>
 
     <!-- ===== CONFERIR ===== -->
     <section class="pane" id="p-conferir">
       <div class="card">
         <h2>Conferir a reserva</h2>
-        <p class="muted">Conte o que está na reserva e digite na coluna <b>Contei</b>. Se bateu tudo, clique em <b>✔️ Tudo confere</b>. O que você contar passa a ser o número <b>NA RESERVA</b> da Parte.</p>
+        <p class="muted">Conte o que está na reserva e digite na coluna <b>Contei</b>. Se bateu tudo, clique em <b>Tudo confere</b>. O que você contar passa a ser o número <b>NA RESERVA</b> da Parte.</p>
         <div class="row" style="margin-top:8px">
-          <div style="flex:2"><input id="q-cnt" placeholder="🔎 Procurar material…"></div>
-          <div style="flex:none"><button class="btn verde" id="btn-tudo" type="button">✔️ Tudo confere</button></div>
-          <div style="flex:none"><button class="btn" id="btn-contagem" type="button">💾 Salvar a conferência</button></div>
+          <div style="flex:2" class="res-busca"><i data-ic="buscar"></i><input id="q-cnt" placeholder="Procurar material…"></div>
+          <div style="flex:none"><button class="btn verde" id="btn-tudo" type="button"><i data-ic="check"></i>Tudo confere</button></div>
+          <div style="flex:none"><button class="btn" id="btn-contagem" type="button"><i data-ic="ok"></i>Salvar a conferência</button></div>
         </div>
         <div class="muted" id="info-contagem" style="margin-top:8px"></div>
       </div>
-      <div class="card" style="padding:0"><table class="t1 tcnt"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
-      <div class="card fim-cnt"><button class="btn big" id="btn-contagem2" type="button">💾 Salvar a conferência</button> <span class="muted" id="info-contagem2"></span></div>
+      <div class="card" style="padding:0;overflow:hidden"><table class="t1 tcnt"><thead><tr><th>Descrição</th><th class="n">Na reserva (sistema)</th><th class="n">Contei</th><th>Observação desta contagem</th></tr></thead><tbody id="tb-cnt"></tbody></table></div>
+      <div class="card fim-cnt"><button class="btn big" id="btn-contagem2" type="button"><i data-ic="ok"></i>Salvar a conferência</button> <span class="muted" id="info-contagem2"></span></div>
     </section>
 
     <!-- ===== VER A PARTE DIÁRIA (só olhar) ===== -->
     <section class="pane" id="p-ver">
       <div class="card">
-        <h2>👁️ Parte Diária de agora</h2>
+        <h2><span class="bp-tile sm info"><i data-ic="olho"></i></span>Parte Diária de agora</h2>
         <p class="muted">É a Parte exatamente como sairia se o serviço fosse passado neste momento: os números da reserva, as OBS e as missões. Só para olhar — nada é gravado. O nome de quem assume aparece na hora de <b>Passar o serviço</b>.</p>
-        <div class="row" style="margin-top:8px"><div style="flex:none"><button class="btn sec" id="btn-ver-atualizar" type="button">🔄 Atualizar</button></div></div>
+        <div class="row" style="margin-top:8px"><div style="flex:none"><button class="btn sec" id="btn-ver-atualizar" type="button"><i data-ic="atualizar"></i>Atualizar</button></div></div>
         <div class="msg" id="ver-msg"></div>
       </div>
       <iframe id="parte-ver" title="Parte Diária de agora"></iframe>
@@ -248,7 +290,7 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
     <section class="pane" id="p-passar">
       <div class="card">
         <h2><span class="passo">1</span>Quem assume a reserva?</h2>
-        <input id="s-q" placeholder="🔎 RE ou nome de quem te rende" autocomplete="off"><div class="res hidden" id="s-res"></div><div id="s-pol"></div>
+        <div class="res-busca"><i data-ic="buscar"></i><input id="s-q" placeholder="RE ou nome de quem te rende" autocomplete="off"></div><div class="res hidden" id="s-res"></div><div id="s-pol"></div>
         <div class="row">
           <div><label>Serviço do dia</label><input id="s-de" placeholder="dd/mm/aaaa"></div>
           <div><label>Para o dia</label><input id="s-para" placeholder="dd/mm/aaaa"></div>
@@ -256,22 +298,22 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         <label>Alterações do plantão (opcional — uma por linha)</label><textarea id="s-extras" rows="2" placeholder="ex.: Sem alterações."></textarea>
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">O que entra em "Cautela Missões" (<span id="s-nmis">0</span>)</summary><div id="s-missoes" style="margin-top:6px"></div></details>
         <div class="msg" id="s-msg"></div>
-        <button class="btn big" id="btn-previa" type="button" style="margin-top:6px">📄 Montar a Parte Diária</button>
+        <button class="btn big" id="btn-previa" type="button" style="margin-top:6px"><i data-ic="arquivo"></i>Montar a Parte Diária</button>
       </div>
       <div id="s-pronta" class="hidden">
         <div class="card">
           <h2><span class="passo">2</span>Copie para o SEI</h2>
           <div class="row">
-            <div style="flex:none"><button class="btn big" id="btn-copiar" type="button">📋 Copiar a Parte</button></div>
+            <div style="flex:none"><button class="btn big" id="btn-copiar" type="button"><i data-ic="arquivo"></i>Copiar a Parte</button></div>
           </div>
           <div class="dica"><b>Como colar no SEI:</b>
-            <ol><li>Clique em <b>📋 Copiar a Parte</b>.</li>
+            <ol><li>Clique em <b>Copiar a Parte</b>.</li>
             <li>No SEI, abra a Parte Diária no editor e clique dentro do texto (a área branca embaixo do número da Parte).</li>
             <li>Cole com <b>Ctrl+V</b> e salve. As tabelas já vão centralizadas, com borda 1 — igual ao modelo.</li></ol></div>
           <div id="s-resumo" style="margin-top:10px"></div>
         </div>
         <div class="card"><h2><span class="passo">3</span>Confirme a passagem</h2><p class="muted">Depois de colar no SEI, assine aqui. Quem te rende aceita o plantão pelo celular dele (Portal do Policial → Cautela).</p>
-          <button class="btn big" id="btn-passar" type="button" style="margin-top:8px">✍️ Confirmar e assinar a passagem</button></div>
+          <button class="btn big" id="btn-passar" type="button" style="margin-top:8px"><i data-ic="assinar"></i>Confirmar e assinar a passagem</button></div>
         <iframe id="parte" title="Prévia da Parte Diária"></iframe>
       </div>
     </section>
@@ -283,8 +325,8 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
           <div style="flex:2"><label>Procurar</label><input id="h-q" placeholder="policial, RE, missão, material, código ou nº de série"></div>
           <div><label>De</label><input id="h-de" type="date"></div><div><label>Até</label><input id="h-ate" type="date"></div>
           <div><label>Situação</label><select id="h-st"><option value="">Todas</option><option value="aguardando">Aguardando assinatura</option><option value="ativa">Com o policial</option><option value="parcial">Voltou só uma parte</option><option value="devolvida">Devolvida</option><option value="cancelada">Cancelada</option></select></div>
-          <div style="flex:none"><button class="btn" id="btn-hist" type="button">Procurar</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-csv" type="button">⬇️ Planilha (CSV)</button></div>
+          <div style="flex:none"><button class="btn" id="btn-hist" type="button"><i data-ic="buscar"></i>Procurar</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-csv" type="button"><i data-ic="baixar"></i>Planilha (CSV)</button></div>
         </div>
         <div class="muted" id="h-escopo" style="margin-top:6px"></div>
       </div>
@@ -297,10 +339,10 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         <h2>Administração</h2>
         <p class="muted">Tudo fica na mesma planilha da reserva (a mesma que a página <b>Material Bélico</b> do dashboard mostra). Cadastrar aqui ou lá dá no mesmo.</p>
         <div class="row" style="margin-top:10px">
-          <div style="flex:none"><button class="btn" id="btn-nova-peca" type="button">➕ Cadastrar arma / equipamento</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-nova-mun" type="button">➕ Lote de munição</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-corrigir" type="button">✏️ Corrigir os números de uma linha</button></div>
-          <div style="flex:none"><button class="btn sec" id="btn-nova-linha" type="button">➕ Linha nova na Parte</button></div>
+          <div style="flex:none"><button class="btn" id="btn-nova-peca" type="button"><i data-ic="mais"></i>Cadastrar arma / equipamento</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-nova-mun" type="button"><i data-ic="mais"></i>Lote de munição</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-corrigir" type="button"><i data-ic="editar"></i>Corrigir os números de uma linha</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-nova-linha" type="button"><i data-ic="mais"></i>Linha nova na Parte</button></div>
         </div>
         <div class="msg" id="adm-msg"></div>
       </div>
@@ -308,22 +350,22 @@ iframe#parte,iframe#parte-ver{width:100%;height:78vh;border:1px solid var(--line
         <h3>Armeiro de serviço</h3>
         <div class="row">
           <div style="flex:none;min-width:240px"><label>Designar armeiro (RE)</label><input id="d-re" placeholder="RE do policial"></div>
-          <div style="flex:none"><button class="btn sec" id="btn-designar" type="button">Designar</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-designar" type="button"><i data-ic="usuario"></i>Designar</button></div>
         </div>
         <h3 style="margin-top:14px">Policial esqueceu a senha</h3>
         <div class="row">
           <div style="flex:none;min-width:240px"><label>RE</label><input id="z-re" placeholder="RE do policial"></div>
           <div style="flex:none;min-width:280px"><label>O que fazer</label><select id="z-modo"><option value="zerar">Zerar — ele cria outra no 1º acesso (CPF)</option><option value="provisoria">Senha provisória (sem CPF no cadastro ou de outra unidade)</option></select></div>
-          <div style="flex:none"><button class="btn sec" id="btn-zerar" type="button">🔑 Aplicar</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-zerar" type="button"><i data-ic="cadeado"></i>Aplicar</button></div>
         </div>
         <h3 style="margin-top:14px">Segurança do livro</h3>
-        <button class="btn sec" id="btn-integ" type="button">🛡️ Verificar se alguém mexeu na planilha</button>
+        <button class="btn sec" id="btn-integ" type="button"><i data-ic="escudo"></i>Verificar se alguém mexeu na planilha</button>
         <div class="msg" id="cat-msg"></div>
       </div>
     </section>
   </div>
 </main>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* Entrada: armeiro pelo RE + senha do Portal; administrador pelo login do dashboard — ver cautela-acesso.js. */
@@ -356,7 +398,7 @@ function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura, depois 
     o.innerHTML = `<div class="modal" ${largura ? `style="max-width:${largura}px"` : ''}><h2>${esc(titulo)}</h2><div id="mb">${corpo || ''}</div>
       ${senha ? '<label>Sua senha (assina esta ação)</label><input id="m-senha" type="password" autocomplete="current-password">' : ''}
       <div class="msg err" id="m-msg"></div>
-      <div class="acoes"><button class="btn sec" id="m-nao" type="button">Cancelar</button><button class="btn" id="m-ok" type="button">${esc(ok)}</button></div></div>`;
+      <div class="acoes"><button class="btn sec" id="m-nao" type="button">Cancelar</button><button class="btn" id="m-ok" type="button">${ok}</button></div></div>`;
     document.body.appendChild(o);
     const fechar = (v) => { o.remove(); resolve(v); };
     o.querySelector('#m-nao').onclick = () => fechar(null);
@@ -391,7 +433,7 @@ function boot(){
     $('login-dica').innerHTML = MOBILE
       ? '<b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br>No celular você acompanha a reserva e faz a conferência. Entregar, receber e passar o serviço são no computador.'
       : '<b>Armeiro de serviço:</b> seu RE e a senha do <b>Portal do Policial</b>.<br><b>Administrador (P4 / comando):</b> login do dashboard.';
-    CA.montar($('login-form'), { aoEntrar: boot, soRE: MOBILE, rotuloRE: '🪪 Armeiro (RE e senha)', rotuloDash: '🔑 Administrador (dashboard)',
+    CA.montar($('login-form'), { aoEntrar: boot, soRE: MOBILE, rotuloRE: '<i data-ic="usuario"></i>Armeiro (RE e senha)', rotuloDash: '<i data-ic="cadeado"></i>Administrador (dashboard)',
       notaDash: 'Só para o administrador (P4 / comando). O armeiro de serviço entra pela aba ao lado, com o RE e a senha do Portal do Policial.' });
     return;
   }
@@ -409,16 +451,17 @@ async function carregar(){
     if (e.status === 403){
       show('sem-papel', true);
       show('sem-papel-re', e.code === 'use_re' || e.code === 'somente_computador');
-      $('sem-papel-h').textContent = e.code === 'use_re' ? '🪪 Armeiro: entre pelo seu RE'
-        : e.code === 'somente_computador' ? '📱 No celular, só o armeiro de serviço' : '🔒 Você não é o armeiro de serviço';
+      $('sem-papel-h').textContent = e.code === 'use_re' ? 'Armeiro: entre pelo seu RE'
+        : e.code === 'somente_computador' ? 'No celular, só o armeiro de serviço' : 'Você não é o armeiro de serviço';
       $('sem-papel-txt').textContent = e.code === 'somente_computador' || e.code === 'use_re' ? e.message
         : 'Só o armeiro de serviço e o administrador (P4 / comando) abrem a reserva. Quem está de serviço te indica na passagem; depois você aceita em "Minhas cautelas", no celular.';
       return;
     }
-    show('app', true); $('faixa').innerHTML = '⚠️ ' + esc(e.message) + (e.status === 503 ? ' <button class="btn sm sec" onclick="carregar()">Tentar de novo</button>' : ''); return;
+    show('app', true); $('faixa').innerHTML = '<i data-ic="alerta"></i>' + esc(e.message) + (e.status === 503 ? ' <button class="btn sm sec" onclick="carregar()">Tentar de novo</button>' : ''); return;
   }
   show('app', true);
-  $('userchip').textContent = '👤 ' + (R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome);
+  { const nome = R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome;
+    $('userchip').innerHTML = `<span class="bp-eu" title="${esc(nome)}"><b>${esc(String(R.eu.guerra || R.eu.nome || '?').trim().split(/s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase())}</b><span>${esc(nome)}</span></span>`; }
   CONTAGEM = {};
   if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
   $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
@@ -430,8 +473,8 @@ async function carregar(){
   $('ac-receber-t').textContent = PODE ? 'Receber de volta' : 'Com policiais';
   $('ac-receber-s').textContent = PODE ? 'o que está com policiais' : 'quem está com material (só ver)';
   $('rec-so-ver').innerHTML = R.papel.armeiro
-    ? '📱 No celular você acompanha quem está com material. Para <b>receber de volta</b>, use o computador da reserva.'
-    : '👁️ Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.';
+    ? '<i data-ic="info"></i>No celular você acompanha quem está com material. Para <b>receber de volta</b>, use o computador da reserva.'
+    : '<i data-ic="olho"></i>Você entrou como <b>administrador</b>: aqui você só acompanha quem está com material. Quem entrega e recebe de volta é o <b>armeiro de serviço</b>, entrando pelo RE e a senha.';
   show('rec-so-ver', !PODE);
   const ativo = document.querySelector('#acoes .ac.on');
   if (ativo && ativo.classList.contains('hidden')) abrirPane('reserva');
@@ -442,16 +485,16 @@ async function carregar(){
 
 function renderFaixa(){
   const a = R.plantao.armeiro, p = R.plantao.pendente;
-  $('faixa').innerHTML = `<span>🛡️ Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
+  $('faixa').innerHTML = `<span><i data-ic="escudo"></i>Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
     + (p ? `<span class="chip wait">Serviço passado — falta RE ${esc(p.re)} aceitar</span>` : '')
     + (R.papel.chefia ? '<span class="chip neu">Você: administrador (só acompanha)</span>' : '')
-    + (MOBILE && R.papel.armeiro ? '<span class="chip neu">📱 Celular: acompanhar e conferir</span>' : '')
-    + (!a && R.papel.chefia ? '<span class="muted">Designe o armeiro em ⚙️ Administração.</span>' : '');
+    + (MOBILE && R.papel.armeiro ? '<span class="chip neu"><i data-ic="info"></i>Celular: acompanhar e conferir</span>' : '')
+    + (!a && R.papel.chefia ? '<span class="muted">Designe o armeiro em <i data-ic="grade"></i>Administração.</span>' : '');
   const av = [];
-  if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--orange)">⚠️ <b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker.</div>');
-  if (R.pecas_sem_linha && R.papel.chefia) av.push(`<div class="card" style="border-color:var(--orange)">⚠️ ${R.pecas_sem_linha} peça(s) do Material Bélico sem <b>linha da Parte</b> (ex.: Taser). Elas não podem ser cauteladas até alguém escolher a linha na página Material Bélico do dashboard.</div>`);
+  if (R.chave_derivada && R.papel.chefia) av.push('<div class="card" style="border-color:var(--warn)"><i data-ic="alerta"></i><b>Chave de assinatura derivada.</b> Configure o segredo <code>CAUTELA_SECRET</code> no Worker.</div>');
+  if (R.pecas_sem_linha && R.papel.chefia) av.push(`<div class="card" style="border-color:var(--warn)"><i data-ic="alerta"></i>${R.pecas_sem_linha} peça(s) do Material Bélico sem <b>linha da Parte</b> (ex.: Taser). Elas não podem ser cauteladas até alguém escolher a linha na página Material Bélico do dashboard.</div>`);
   const neg = R.linhas.filter(l => l.reserva < 0);
-  if (neg.length) av.push(`<div class="card" style="border-color:var(--red)">⚠️ Reserva negativa em: ${neg.map(l => esc(l.descricao)).join(', ')}. Saiu mais do que a Parte dizia ter — confira e corrija na <b>🔢 Conferir</b>.</div>`);
+  if (neg.length) av.push(`<div class="card" style="border-color:var(--crit)"><i data-ic="alerta"></i>Reserva negativa em: ${neg.map(l => esc(l.descricao)).join(', ')}. Saiu mais do que a Parte dizia ter — confira e corrija na <b><i data-ic="check"></i>Conferir</b>.</div>`);
   $('avisos').innerHTML = av.join('');
 }
 
@@ -482,7 +525,7 @@ function renderReserva(){
   $('tb-res').querySelectorAll('tr.l').forEach(tr => tr.onclick = () => { ABERTO = ABERTO === tr.dataset.id ? '' : tr.dataset.id; renderReserva(); });
 }
 function detalheLinha(l){
-  if (!l.pecas.length) return `<div class="muted">Este material é controlado só pela quantidade (sem código por peça).${R.papel.chefia ? ' Para dar código a cada peça, cadastre-as em ⚙️ Administração.' : ''}</div>`;
+  if (!l.pecas.length) return `<div class="muted">Este material é controlado só pela quantidade (sem código por peça).${R.papel.chefia ? ' Para dar código a cada peça, cadastre-as em <i data-ic="grade"></i>Administração.' : ''}</div>`;
   return `<table><tr><th>Código</th><th>Nº de série</th><th>Patrimônio</th><th>Modelo</th><th>Onde está</th></tr>` + l.pecas.map(p => `<tr><td class="cod">${esc(p.codigo)}</td><td><b>${esc(p.serie || '-')}</b></td><td>${esc(p.patrimonio || '-')}</td><td>${esc(p.modelo)}</td>
     <td>${p.em_cautela ? `<span class="chip wait">com ${esc(p.com)}</span> <span class="muted">${esc(p.em_cautela)}</span>` : p.disponivel ? '<span class="chip ok">na reserva</span>' : `<span class="chip neu">${esc(p.situacao)}</span> <span class="muted">${esc(p.responsavel)}</span>`}</td></tr>`).join('') + '</table>'
     + `<div class="muted" style="margin-top:6px">${l.pecas.length} de ${l.total} peças têm código. ${l.total > l.pecas.length ? 'As outras são controladas só pela quantidade.' : ''}</div>`;
@@ -505,7 +548,7 @@ function picker({ campo, res, onPick, todos }){
 }
 picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); $('c-missao').focus(); }, todos: true });
 function renderPol(){
-  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '✅ Assina o recebimento pelo celular, com a senha do Portal.' : '⚠️ Ainda não criou a senha do Portal: peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF).'}</span></div><button class="btn sm sec" id="c-troca" type="button">trocar</button></div>` : '';
+  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '<i data-ic="ok"></i>Assina o recebimento pelo celular, com a senha do Portal.' : '<i data-ic="alerta"></i>Ainda não criou a senha do Portal: peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF).'}</span></div><button class="btn sm sec" id="c-troca" type="button">trocar</button></div>` : '';
   if (POL) $('c-troca').onclick = () => { POL = null; renderPol(); };
 }
 function dtLocal(ms){ const d = new Date(ms - 4 * 3600e3); return d.toISOString().slice(0, 16); }
@@ -557,7 +600,7 @@ function renderCarrinho(){
     const livres = l.pecas.filter(p => p.disponivel && !CARRO.some((y, j) => j !== i && y.codigo === p.codigo));
     const campo = livres.length || x.codigo ? `<select data-i="${i}" data-k="codigo">${l.pecas.length > 0 ? '' : ''}<option value="">sem código (só a quantidade)</option>${livres.map(p => `<option value="${esc(p.codigo)}" ${x.codigo === p.codigo ? 'selected' : ''}>${esc(p.codigo)}${p.serie ? ' · Nº ' + esc(p.serie) : ''}</option>`).join('')}</select>` : '';
     const qtd = x.codigo ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:120px;margin-top:${campo ? 6 : 0}px"> <span class="muted">unidade(s)</span>`;
-    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${qtd}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}" type="button">✕</button></td></tr>`;
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${qtd}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}" type="button"><i data-ic="x"></i></button></td></tr>`;
   }).join('');
   $('c-carrinho').querySelectorAll('[data-k]').forEach(el => el.onchange = el.oninput = () => {
     const x = CARRO[el.dataset.i], k = el.dataset.k;
@@ -573,7 +616,7 @@ $('btn-cautelar').onclick = async () => {
   if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Passo 2: informe a saída e a volta prevista.'; return; }
   if (!CARRO.length){ m.textContent = 'Passo 3: inclua pelo menos um material.'; return; }
   const resumo = `<div class="muted"><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> vai levar:</div><div style="margin-top:6px;line-height:1.7">` + CARRO.map(x => `• ${x.qtd}× ${esc(linha(x.item_id).descricao)}${x.codigo ? ` <span class="cod">${esc(x.codigo)}</span>` : ''}`).join('<br>') + '</div>';
-  const mm = await modal({ titulo: 'Entregar o material', corpo: resumo, ok: '✍️ Assinar e entregar' });
+  const mm = await modal({ titulo: 'Entregar o material', corpo: resumo, ok: '<i data-ic="assinar"></i>Assinar e entregar' });
   if (!mm) return;
   const corpo = { re: POL.re, tipo: TIPO, missao: TIPO === 'missao' ? $('c-missao').value : '', inicio: doLocal($('c-ini').value), fim_previsto: doLocal($('c-fim').value), obs: $('c-obs').value,
     itens: CARRO.map(x => x.codigo ? { item_id: x.item_id, codigo: x.codigo } : { item_id: x.item_id, qtd: x.qtd }), senha: mm.senha };
@@ -585,9 +628,9 @@ $('btn-cautelar').onclick = async () => {
       else throw e;
     }
     const url = new URL('cautela.html?c=' + d.cautela_id, location.href).href;
-    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--green)"><h2>✅ Entregue · cautela ${esc(d.cautela_id)}</h2>
-      <p class="muted">${d.policial_tem_conta ? 'Agora o policial abre a <b>Cautela no Portal do Policial</b> (celular), confere e assina com a senha dele.' : '⚠️ O policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) no Portal do Policial → Cautela antes de assinar.'}${d.sem_saldo ? '<br>⚠️ Saiu mais do que o sistema tinha na reserva — confira na 🔢 Conferir.' : ''}</p>
-      <p class="muted" style="margin-top:6px">Link para o policial: <a style="color:var(--yellow)" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p></div>`;
+    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--good)"><h2><i data-ic="ok"></i>Entregue · cautela ${esc(d.cautela_id)}</h2>
+      <p class="muted">${d.policial_tem_conta ? 'Agora o policial abre a <b>Cautela no Portal do Policial</b> (celular), confere e assina com a senha dele.' : '<i data-ic="alerta"></i>O policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) no Portal do Policial → Cautela antes de assinar.'}${d.sem_saldo ? '<br><i data-ic="alerta"></i>Saiu mais do que o sistema tinha na reserva — confira na <i data-ic="check"></i>Conferir.' : ''}</p>
+      <p class="muted" style="margin-top:6px">Link para o policial: <a style="color:var(--acc)" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p></div>`;
     resetEntregar(); toast('Material entregue.'); await carregar();
   } catch(e){ falha(e); }
 };
@@ -609,15 +652,15 @@ function renderReceber(){
   const vazio = (t) => `<div class="muted">${q ? `Nada com "${esc(bruto)}".` : t}</div>`;
   $('lista-cautelas').innerHTML = lista.map(c => `<div class="lista-item"><div class="txt">
       <b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b> <span class="muted">· ${esc(c.missao)} · volta até ${fQ(c.fim_previsto)}</span><br>
-      <pre>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '✔ '}${i.qtd}× ${i.descricao}${i.codigo ? ' [' + i.codigo + ']' : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join('\n')}</pre>
+      <pre>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '<i data-ic="check"></i>'}${i.qtd}× ${i.descricao}${i.codigo ? ' [' + i.codigo + ']' : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join('\n')}</pre>
       <div style="margin-top:4px">${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'} <span class="muted">${esc(c.cautela_id)}</span></div></div>
-    ${PODE ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button">📥 Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div>` : ''}</div>`).join('')
-    || vazio('Nenhuma cautela aberta. 👍');
+    ${PODE ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button"><i data-ic="baixar"></i>Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div>` : ''}</div>`).join('')
+    || vazio('Nenhuma cautela aberta.');
   $('lista-cautelas').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCautela(b.dataset.a, b.dataset.id));
   $('lista-anteriores').innerHTML = ant.map(m => `<div class="lista-item"><div class="txt">
       <b>${esc(m.posto)} ${esc(m.nome)}</b> <span class="muted">· ${esc(m.titulo)} · desde ${esc(m.inicio)}</span>
-      <pre>${esc([m.armamento, m.municao, m.acessorios].filter(Boolean).join('\n'))}</pre>${m.alteracoes ? `<div class="muted" style="color:#fca5a5">${esc(m.alteracoes)}</div>` : ''}</div>
-    ${PODE ? `<div><button class="btn" data-ant="${esc(m.id)}" type="button">📥 Voltou</button></div>` : ''}</div>`).join('') || vazio('Todas as missões antigas já voltaram. 👍');
+      <pre>${esc([m.armamento, m.municao, m.acessorios].filter(Boolean).join('\n'))}</pre>${m.alteracoes ? `<div class="muted" style="color:var(--crit)">${esc(m.alteracoes)}</div>` : ''}</div>
+    ${PODE ? `<div><button class="btn" data-ant="${esc(m.id)}" type="button"><i data-ic="baixar"></i>Voltou</button></div>` : ''}</div>`).join('') || vazio('Todas as missões antigas já voltaram.');
   $('lista-anteriores').querySelectorAll('[data-ant]').forEach(b => b.onclick = () => voltouAnterior(b.dataset.ant));
 }
 $('q-rec').oninput = renderReceber;
@@ -626,9 +669,9 @@ async function acaoCautela(a, id){
   if (a === 'devolver'){
     const corpo = '<div class="muted">Está tudo voltando? Se sim, só assine. Se faltou algo, diminua a quantidade; se veio estragado ou se perdeu, escolha ao lado e escreva o que houve.</div><table class="t1" style="margin-top:8px"><tr><th>Material</th><th>Voltou</th><th>Como</th><th>O que houve</th></tr>' + c.itens.map((i, k) => {
       const resta = i.qtd - i.devolvido;
-      return resta > 0 ? `<tr><td>${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? '<br><span class="muted">Nº ' + esc(i.serie) + '</span>' : ''}</td><td><input type="number" min="0" max="${resta}" value="${resta}" data-q="${k}" style="width:76px"></td><td><select data-e="${k}"><option value="ok">✅ OK</option><option value="danificado">⚠️ Estragado</option><option value="extraviado">❌ Perdido</option></select></td><td><input data-o="${k}" placeholder="só se estragou/perdeu"></td></tr>` : '';
+      return resta > 0 ? `<tr><td>${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? '<br><span class="muted">Nº ' + esc(i.serie) + '</span>' : ''}</td><td><input type="number" min="0" max="${resta}" value="${resta}" data-q="${k}" style="width:76px"></td><td><select data-e="${k}"><option value="ok"><i data-ic="ok"></i>OK</option><option value="danificado"><i data-ic="alerta"></i>Estragado</option><option value="extraviado"><i data-ic="x"></i>Perdido</option></select></td><td><input data-o="${k}" placeholder="só se estragou/perdeu"></td></tr>` : '';
     }).join('') + '</table><label>Nota (opcional)</label><input id="d-nota">';
-    const m = await modal({ titulo: 'Receber de volta · ' + (c.policial.guerra || c.policial.nome), corpo, ok: '✍️ Assinar o recebimento', largura: 780 });
+    const m = await modal({ titulo: 'Receber de volta · ' + (c.policial.guerra || c.policial.nome), corpo, ok: '<i data-ic="assinar"></i>Assinar o recebimento', largura: 780 });
     if (!m) return;
     const itens = [...m.el.querySelectorAll('[data-q]')].map(i => ({ i: Number(i.dataset.q), qtd: Number(i.value), estado: m.el.querySelector(`[data-e="${i.dataset.q}"]`).value, obs: m.el.querySelector(`[data-o="${i.dataset.q}"]`).value })).filter(x => x.qtd > 0);
     try { const d = await apiPost('/api/cautela/devolver', { cautela_id: id, itens, nota: val(m, 'd-nota'), senha: m.senha }); toast(d.completa ? 'Recebido. O policial assina a entrega no celular dele.' : 'Recebido em parte. O resto continua com o policial.'); await carregar(); } catch(e){ falha(e); }
@@ -646,11 +689,11 @@ function opcoesLinhas(sel){ return R.linhas.map(l => `<option value="${esc(l.id)
 async function voltouAnterior(id){
   const m0 = R.missoes_anteriores.find(x => x.id === id);
   const itens = (m0.palpite && m0.palpite.itens) || [];
-  const linhaItem = (x) => `<tr><td><select data-l>${opcoesLinhas(x.id)}</select></td><td><input type="number" min="0" value="${x.qtd}" data-q style="width:90px"></td><td><button class="btn sm red" type="button" data-x>✕</button></td></tr>`;
+  const linhaItem = (x) => `<tr><td><select data-l>${opcoesLinhas(x.id)}</select></td><td><input type="number" min="0" value="${x.qtd}" data-q style="width:90px"></td><td><button class="btn sm red" type="button" data-x><i data-ic="x"></i></button></td></tr>`;
   const corpo = `<div class="muted">Na Parte estava:</div><pre style="white-space:pre-line;font-size:13px;margin:4px 0 10px">${esc([m0.armamento, m0.municao, m0.acessorios].filter(Boolean).join('\n'))}</pre>
     <div class="muted">O sistema entendeu assim. Confira — é o que <b>volta para a reserva</b>:</div>
     <table class="t1" style="margin-top:6px"><tbody id="v-itens">${itens.map(linhaItem).join('')}</tbody></table>
-    <button class="btn sm sec" type="button" id="v-mais" style="margin-top:6px">➕ outro material</button>
+    <button class="btn sm sec" type="button" id="v-mais" style="margin-top:6px"><i data-ic="mais"></i>outro material</button>
     ${m0.palpite && m0.palpite.nao_reconhecido.length ? `<div class="muted" style="margin-top:8px">Não reconheci: <b>${esc(m0.palpite.nao_reconhecido.join(', '))}</b> — inclua acima se for da reserva.</div>` : ''}
     <label>Nota (opcional)</label><input id="v-nota">`;
   const ligar = (o) => {
@@ -659,7 +702,7 @@ async function voltouAnterior(id){
     o.querySelector('#v-mais').onclick = () => { tb.insertAdjacentHTML('beforeend', linhaItem({ id: R.linhas[0].id, qtd: 1 })); religa(); };
     religa();
   };
-  const m = await modal({ titulo: `Voltou · ${m0.posto} ${m0.nome}`, corpo, ok: '✍️ Confirmar que voltou', largura: 720, depois: ligar });
+  const m = await modal({ titulo: `Voltou · ${m0.posto} ${m0.nome}`, corpo, ok: '<i data-ic="assinar"></i>Confirmar que voltou', largura: 720, depois: ligar });
   if (!m) return;
   const lista = [...m.el.querySelectorAll('#v-itens tr')].map(tr => ({ id: tr.querySelector('[data-l]').value, qtd: Number(tr.querySelector('[data-q]').value) })).filter(x => x.qtd > 0);
   try { const d = await apiPost('/api/cautela/missao-voltou', { id, itens: lista, nota: val(m, 'v-nota'), senha: m.senha }); toast(`Registrado: ${d.linhas} linha(s) da reserva atualizadas.`); await carregar(); } catch(e){ falha(e); }
@@ -687,7 +730,7 @@ function renderConferir(){
 function divergentes(){ return R.linhas.filter(l => { const c = CONTAGEM[l.id]; return c && c.contado !== '' && Number(c.contado) !== Math.max(0, l.reserva); }); }
 function infoContagem(){
   const n = R.linhas.filter(l => CONTAGEM[l.id] && CONTAGEM[l.id].contado !== '').length, dv = divergentes().length;
-  const resumo = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--orange)' : 'var(--green)'}">${dv ? dv + ' não bate(m)' : 'tudo bate'}</b>`;
+  const resumo = `${n} de ${R.linhas.length} linhas contadas · <b style="color:${dv ? 'var(--warn)' : 'var(--good)'}">${dv ? dv + ' não bate(m)' : 'tudo bate'}</b>`;
   $('info-contagem').innerHTML = resumo + (R.contagem ? ` · última conferência salva em ${fQ(R.contagem.em)}` : ' · ainda não conferido neste plantão');
   $('info-contagem2').innerHTML = resumo;
 }
@@ -696,7 +739,7 @@ $('btn-tudo').onclick = () => { R.linhas.forEach(l => { if (!CONTAGEM[l.id] || C
 $('btn-contagem').onclick = async () => {
   const dv = divergentes();
   const corpo = dv.length ? `<div class="muted">Estes números <b>não batem</b> e vão substituir o NA RESERVA:</div>` + dv.map(l => `<div style="margin-top:6px">• ${esc(l.descricao)}: sistema ${Math.max(0, l.reserva)} → contei <b>${esc(CONTAGEM[l.id].contado)}</b></div>`).join('') : '<div class="muted">Tudo bate. Salvar a conferência?</div>';
-  const m = await modal({ titulo: 'Salvar a conferência', corpo, senha: false, ok: '💾 Salvar' });
+  const m = await modal({ titulo: 'Salvar a conferência', corpo, senha: false, ok: '<i data-ic="ok"></i>Salvar' });
   if (!m) return;
   try {
     const linhas = {}; for (const [id, c] of Object.entries(CONTAGEM)) if (c.contado !== '' || c.obs) linhas[id] = { contado: c.contado === '' ? null : Number(c.contado), obs: c.obs };
@@ -709,7 +752,7 @@ $('btn-contagem2').onclick = () => $('btn-contagem').onclick();
 let SUB = null, HTML_PARTE = '';
 picker({ campo: 's-q', res: 's-res', onPick: (p) => { SUB = p; renderSub(); }, todos: false });
 function renderSub(){
-  $('s-pol').innerHTML = SUB ? `<div class="sel-box"><div><b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b> · RE ${esc(SUB.re)}<br><span class="muted">${SUB.tem_conta ? '✅ Vai aceitar o plantão no celular.' : '⚠️ Ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) para aceitar.'}</span></div><button class="btn sm sec" id="s-troca" type="button">trocar</button></div>` : '';
+  $('s-pol').innerHTML = SUB ? `<div class="sel-box"><div><b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b> · RE ${esc(SUB.re)}<br><span class="muted">${SUB.tem_conta ? '<i data-ic="ok"></i>Vai aceitar o plantão no celular.' : '<i data-ic="alerta"></i>Ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) para aceitar.'}</span></div><button class="btn sm sec" id="s-troca" type="button">trocar</button></div>` : '';
   if (SUB) $('s-troca').onclick = () => { SUB = null; renderSub(); };
 }
 function renderPassarInfo(){
@@ -742,19 +785,19 @@ $('btn-previa').onclick = async () => {
     $('parte').srcdoc = `<!doctype html><meta charset="utf-8"><style>${CSS_SEI}</style><body>${d.html}</body>`;
     show('s-pronta', true);
     const p = d.parte, aviso = [];
-    if (!R.contagem) aviso.push('Você ainda <b>não conferiu</b> a reserva neste plantão (botão 🔢 Conferir).');
+    if (!R.contagem) aviso.push('Você ainda <b>não conferiu</b> a reserva neste plantão (botão <i data-ic="check"></i>Conferir).');
     if (p.resumo.negativos) aviso.push(`${p.resumo.negativos} linha(s) com reserva negativa — confira.`);
-    $('s-resumo').innerHTML = `<div class="muted">${p.resumo.linhas} linhas de material · ${p.missoes.length} tabela(s) de missão${aviso.length ? '<br>⚠️ ' + aviso.join('<br>⚠️ ') : ''}</div>`;
+    $('s-resumo').innerHTML = `<div class="muted">${p.resumo.linhas} linhas de material · ${p.missoes.length} tabela(s) de missão${aviso.length ? '<br><i data-ic="alerta"></i>' + aviso.join('<br><i data-ic="alerta"></i>') : ''}</div>`;
     $('s-pronta').scrollIntoView({ behavior: 'smooth' });
   } catch(e){ m.textContent = e.message; if (e.status === 401) sair(); }
 };
-// 👁️ Ver Parte Diária: a Parte de agora, sem escolher substituto e sem gravar nada
+// Ver Parte Diária: a Parte de agora, sem escolher substituto e sem gravar nada
 async function verParte(){
   const m = $('ver-msg'); m.className = 'msg'; m.textContent = 'Montando…';
   try {
     const d = await api('/api/cautela/parte-atual');
     $('parte-ver').srcdoc = `<!doctype html><meta charset="utf-8"><style>${CSS_SEI}</style><body>${d.html}</body>`;
-    m.textContent = d.armeiro ? '' : '⚠️ Ninguém designado como armeiro de serviço: o nome do armeiro sai em branco.';
+    m.textContent = d.armeiro ? '' : 'Ninguém designado como armeiro de serviço: o nome do armeiro sai em branco.';
   } catch(e){ m.className = 'msg err'; m.textContent = e.message; if (e.status === 401) falha(e); }
 }
 $('btn-ver-atualizar').onclick = verParte;
@@ -777,12 +820,12 @@ async function copiar(){
 }
 $('btn-copiar').onclick = () => copiar();
 $('btn-passar').onclick = async () => {
-  const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte fica guardada e assinada aqui; ele aceita o plantão no celular dele.</div>`, ok: '✍️ Assinar a passagem' });
+  const m = await modal({ titulo: 'Confirmar a passagem de serviço', corpo: `<div class="muted">Você passa a reserva para <b>${esc(SUB.posto)} ${esc(SUB.guerra || SUB.nome)}</b>. A Parte fica guardada e assinada aqui; ele aceita o plantão no celular dele.</div>`, ok: '<i data-ic="assinar"></i>Assinar a passagem' });
   if (!m) return;
   try {
     const d = await apiPost('/api/cautela/passagem', corpoPassagem(true, m.senha));
     HTML_PARTE = d.html;
-    $('s-resumo').innerHTML = `<div class="card" style="border-color:var(--green);margin:0"><h2>✅ Serviço passado · ${esc(d.codigo)}</h2><p class="muted">Assinatura ${esc(d.assinatura)}. Para conferir depois: <a style="color:var(--yellow)" href="cautela-validar.html?id=${esc(d.codigo)}" target="_blank">cautela-validar.html</a>. Quem te rende precisa aceitar o plantão em <b>cautela.html</b>.</p></div>`;
+    $('s-resumo').innerHTML = `<div class="card" style="border-color:var(--good);margin:0"><h2><i data-ic="ok"></i>Serviço passado · ${esc(d.codigo)}</h2><p class="muted">Assinatura ${esc(d.assinatura)}. Para conferir depois: <a style="color:var(--acc)" href="cautela-validar.html?id=${esc(d.codigo)}" target="_blank">cautela-validar.html</a>. Quem te rende precisa aceitar o plantão em <b>cautela.html</b>.</p></div>`;
     $('btn-passar').disabled = true; toast('Serviço passado.'); await carregar();
   } catch(e){ falha(e); }
 };
@@ -818,20 +861,20 @@ $('btn-nova-peca').onclick = async () => {
     <div class="row"><div><label>Nº de série</label><input id="np-serie"></div><div><label>Patrimônio (tombo)</label><input id="np-pat"></div></div>
     <label>Linha da Parte (onde ela conta)</label><select id="np-linha"><option value="">— o sistema escolhe pelo modelo —</option>${opcoesLinhas('')}</select>
     <div class="row"><div><label>Situação</label><select id="np-sit">${SITUACOES.map(s => `<option>${esc(s)}</option>`).join('')}</select></div><div><label>Responsável</label><input id="np-resp" value="RES. DE ARMAMENTO"></div></div>`;
-  const m = await modal({ titulo: 'Cadastrar arma / equipamento', corpo, ok: '➕ Cadastrar', largura: 720 });
+  const m = await modal({ titulo: 'Cadastrar arma / equipamento', corpo, ok: '<i data-ic="mais"></i>Cadastrar', largura: 720 });
   if (!m) return;
   const values = { 'Categoria': val(m, 'np-cat'), 'Subtipo': val(m, 'np-sub'), 'Marca / Modelo': val(m, 'np-mod'), 'Calibre / Espec.': val(m, 'np-cal'), 'Nº de Série': val(m, 'np-serie'), 'Patrimônio': val(m, 'np-pat'), 'Linha da Parte': val(m, 'np-linha'), 'Situação': val(m, 'np-sit'), 'Responsável': val(m, 'np-resp') };
-  try { const d = await apiPost('/api/cautela/peca', { tab: 'dados', op: 'add', values, senha: m.senha }); admMsg(`✅ Cadastrado com o código <b class="cod">${esc(d.codigo)}</b>.`, true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
+  try { const d = await apiPost('/api/cautela/peca', { tab: 'dados', op: 'add', values, senha: m.senha }); admMsg(`<i data-ic="ok"></i>Cadastrado com o código <b class="cod">${esc(d.codigo)}</b>.`, true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
 };
 $('btn-nova-mun').onclick = async () => {
   const corpo = `<div class="row"><div><label>Calibre / tipo</label><input id="nm-tipo" placeholder="ex.: 5,56 / .40 S&W"></div><div><label>Fabricante</label><input id="nm-fab"></div></div>
     <div class="row"><div><label>Lote</label><input id="nm-lote"></div><div><label>Quantidade</label><input id="nm-qtd" type="number" min="1"></div><div><label>Validade</label><input id="nm-val" placeholder="mm/aaaa"></div></div>
-    <div class="muted" style="margin-top:8px">Isto registra o lote (código MUN-…). Para somar as munições na Parte, use também <b>✏️ Corrigir os números de uma linha</b>.</div>`;
-  const m = await modal({ titulo: 'Lote de munição', corpo, ok: '➕ Cadastrar', largura: 640 });
+    <div class="muted" style="margin-top:8px">Isto registra o lote (código MUN-…). Para somar as munições na Parte, use também <b><i data-ic="editar"></i>Corrigir os números de uma linha</b>.</div>`;
+  const m = await modal({ titulo: 'Lote de munição', corpo, ok: '<i data-ic="mais"></i>Cadastrar', largura: 640 });
   if (!m) return;
   const q = val(m, 'nm-qtd');
   const values = { 'Categoria': 'Munição', 'Tipo / Calibre': val(m, 'nm-tipo'), 'Fabricante': val(m, 'nm-fab'), 'Lote': val(m, 'nm-lote'), 'Qtd. Entrada': q, 'Qtd. Consumida': '0', 'Saldo Atual': q, 'Validade': val(m, 'nm-val'), 'Responsável': 'RES. DE ARMAMENTO' };
-  try { const d = await apiPost('/api/cautela/peca', { tab: 'municao', op: 'add', values, senha: m.senha }); admMsg(`✅ Lote cadastrado: <b class="cod">${esc(d.codigo)}</b>.`, true); } catch(e){ admMsg(esc(e.message)); falha(e); }
+  try { const d = await apiPost('/api/cautela/peca', { tab: 'municao', op: 'add', values, senha: m.senha }); admMsg(`<i data-ic="ok"></i>Lote cadastrado: <b class="cod">${esc(d.codigo)}</b>.`, true); } catch(e){ admMsg(esc(e.message)); falha(e); }
 };
 async function editarLinha(id){
   const l = id ? linha(id) : { descricao: '', grupo: R.grupos[0], tabela: 2, total: 0, p4: 0, reserva: 0, legado: 0, nota_reserva: '', obs: '', obs_vermelha: false };
@@ -843,10 +886,10 @@ async function editarLinha(id){
     <label>OBS (uma frase por linha)</label><textarea id="e-obs" rows="4">${esc(l.obs)}</textarea>
     <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-verm" ${l.obs_vermelha ? 'checked' : ''}> OBS em vermelho</label>
     ${id ? '<label>Por que está corrigindo? (fica no histórico)</label><input id="e-mot">' : ''}`;
-  const m = await modal({ titulo: id ? 'Corrigir · ' + l.descricao : 'Linha nova na Parte', corpo, largura: 760, ok: id ? '💾 Corrigir' : '➕ Criar' });
+  const m = await modal({ titulo: id ? 'Corrigir · ' + l.descricao : 'Linha nova na Parte', corpo, largura: 760, ok: id ? '<i data-ic="ok"></i>Corrigir' : '<i data-ic="mais"></i>Criar' });
   if (!m) return;
   const campos = { descricao: val(m, 'e-desc'), grupo: val(m, 'e-grupo'), tabela: Number(val(m, 'e-tab')), total: val(m, 'e-tot'), p4: val(m, 'e-p4'), reserva: val(m, 'e-res'), legado: val(m, 'e-leg'), nota_reserva: val(m, 'e-nota'), obs: val(m, 'e-obs'), obs_vermelha: m.el.querySelector('#e-verm').checked };
-  try { await apiPost('/api/cautela/linha', { id: id || undefined, campos, motivo: id ? val(m, 'e-mot') : 'linha nova', senha: m.senha }); admMsg('✅ Salvo.', true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
+  try { await apiPost('/api/cautela/linha', { id: id || undefined, campos, motivo: id ? val(m, 'e-mot') : 'linha nova', senha: m.senha }); admMsg('<i data-ic="ok"></i>Salvo.', true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
 }
 $('btn-nova-linha').onclick = () => editarLinha('');
 $('btn-corrigir').onclick = async () => {
@@ -858,8 +901,8 @@ $('btn-integ').onclick = async () => {
     const d = await api('/api/cautela/integridade');
     $('cat-msg').className = 'msg ' + (d.invalidos.length || d.buracos.length ? 'err' : 'ok');
     $('cat-msg').innerHTML = d.invalidos.length || d.buracos.length
-      ? `⚠️ ${d.invalidos.length} registro(s) alterado(s) na planilha e ${d.buracos.length} apagado(s). ` + d.invalidos.map(x => esc(`${x.tipo} #${x.seq} (${fQ(x.em)})`)).join('; ')
-      : `✅ ${d.eventos} registro(s) no livro e nenhum foi mexido.`;
+      ? `<i data-ic="alerta"></i>${d.invalidos.length} registro(s) alterado(s) na planilha e ${d.buracos.length} apagado(s). ` + d.invalidos.map(x => esc(`${x.tipo} #${x.seq} (${fQ(x.em)})`)).join('; ')
+      : `<i data-ic="ok"></i>${d.eventos} registro(s) no livro e nenhum foi mexido.`;
   } catch(e){ falha(e); }
 };
 $('btn-designar').onclick = async () => {
@@ -876,7 +919,7 @@ $('btn-zerar').onclick = async () => {
   try {
     const d = await apiPost('/api/cautela/senha', { re, modo, senha: m.senha });
     $('z-re').value = '';
-    if (d.codigo) await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar', corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Vale uma vez e não fica guardada.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--yellow);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
+    if (d.codigo) await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar', corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Vale uma vez e não fica guardada.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--acc);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
     else toast(`Senha de ${d.nome} zerada: ele cria outra no 1º acesso.`);
   } catch(e){ falha(e); }
 };
@@ -890,6 +933,11 @@ function abrirPane(p){
   if (p === 'ver') verParte();
 }
 document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => abrirPane(t.dataset.p));
+/* Ícones: o HTML montado pelo JS traz <i data-ic="…">; o bp-casca.js troca pelo SVG. */
+if (window.BPCasca && BPCasca.icones){
+  new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); })
+    .observe(document.body, { childList: true, subtree: true });
+}
 boot();
 </script>
 </body>

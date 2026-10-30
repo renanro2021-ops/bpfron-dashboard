@@ -1,110 +1,135 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
 <meta name="robots" content="noindex,nofollow">
 <title>Cautela de Armamento · BPFRON/RO</title>
 <script>try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
 <script src="conta.js"></script>
 <script src="cautela-acesso.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
-  --border:rgba(245,197,24,0.10); --line:rgba(148,163,184,.16); --card:rgba(12,17,30,0.85);
-  --red:#ef4444; --redsoft:rgba(239,68,68,.12); --green:#34d399; --greensoft:rgba(52,211,153,.12);
-  --orange:#fb923c; --orangesoft:rgba(251,146,60,.13); --blue:#60a5fa;
-}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);background-attachment:fixed}
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:50;box-shadow:0 8px 48px rgba(0,0,0,.8)}
-.hdr-inner{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:12px}
-.hdr-logo{height:40px;width:auto;mix-blend-mode:screen}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.1}
-.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
-.hdr-sub{font-size:11.5px;color:var(--muted)}
-.hdr-right{display:flex;align-items:center;gap:12px}
-#userchip{font-size:13px;color:var(--yellow);font-weight:600}
-.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;min-height:36px}
-.hdr-link:hover{color:var(--yellow)}
-.wrap{max-width:760px;margin:0 auto;padding:18px 16px 80px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
-h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff;line-height:1.15}
-h2{font-family:'Rajdhani',sans-serif;font-size:19px;color:#fff;margin-bottom:6px}
+/* =====================================================================
+   cautela.html — só o que é desta página. O visual comum (cores dos
+   temas, botões, janela, aviso rápido) vem do bp-ui.css (30/10/2026).
+   As classes que o JS e o cautela-acesso.js montam (.card, .btn, .seg,
+   .chip, .itens, .ovl/.modal, .msg) seguem com o mesmo nome, só
+   redesenhadas com as cores do tema.
+   ===================================================================== */
+.cau-wrap{max-width:760px}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(16px,2.4vw,20px);margin-bottom:14px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .3s,box-shadow .3s}
+.card.destaque{border-color:var(--acc-line);box-shadow:0 0 0 1px var(--acc-line) inset}
+.bp-pg h1{font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,32px);color:var(--t1);line-height:1.1;margin:0}
+.bp-pg h2{font-family:'Rajdhani',sans-serif;font-size:21px;color:var(--t1);margin:0 0 6px;line-height:1.2}
+.bp-pg p{margin:0}
 .muted{color:var(--muted);font-size:14px}
-label{display:block;font-size:13px;font-weight:600;color:#cbd5e1;margin:12px 0 5px}
-input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:inherit;font-size:16px;outline:none;min-height:46px}
-input:focus,select:focus,textarea:focus{border-color:rgba(245,197,24,.6)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 18px;font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;min-height:48px;background:linear-gradient(135deg,#F5C518,#e0a800);color:#1a1a1a}
-.btn:disabled{opacity:.55;cursor:default}
-.btn.sec{background:rgba(148,163,184,.12);color:#cbd5e1;border:1px solid var(--line)}
+.muted b{color:var(--t1)}
+.cau-ab{display:flex;gap:14px;align-items:flex-start}
+.cau-ab>div{min-width:0}
+.card label:not(.chk),.modal label:not(.chk){display:block;font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:14px 0 7px}
+.card input:not([type=checkbox]),.card select,.card textarea,.modal input:not([type=checkbox]){width:100%;background:var(--surf2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;color:var(--t1);font:inherit;font-size:16px;outline:none;min-height:50px;transition:border-color .2s,box-shadow .2s}
+.card input:focus,.card select:focus,.card textarea:focus,.modal input:focus{border-color:var(--acc-line);box-shadow:0 0 0 4px var(--acc-soft)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:14px;padding:13px 18px;min-height:48px;font-size:15.5px;font-weight:800;cursor:pointer;text-decoration:none;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);box-shadow:0 10px 30px var(--acc-soft);transition:transform .2s var(--ease),filter .2s,border-color .2s,color .2s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none}
+.btn.sec{background:var(--surf2);color:var(--t2);border:1px solid var(--line2);box-shadow:none}
+.btn.sec:hover{border-color:var(--acc-line);color:var(--t1)}
 .btn.full{width:100%}
-.btn.sm{min-height:38px;padding:8px 14px;font-size:14px}
-.msg{font-size:14px;margin-top:10px;min-height:20px}
-.msg.err{color:#fca5a5}.msg.ok{color:#6ee7b7}
-.seg{display:flex;gap:6px;margin-bottom:14px}
-.seg button{flex:1;background:rgba(148,163,184,.08);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;min-height:48px}
-.seg button.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-.seg .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:12px}
-.seg .n.zero{background:rgba(148,163,184,.2)}
-.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;border:1px solid var(--line)}
-.chip.ok{background:var(--greensoft);border-color:rgba(52,211,153,.4);color:#6ee7b7}
-.chip.wait{background:var(--orangesoft);border-color:rgba(251,146,60,.45);color:#fdba74}
-.chip.bad{background:var(--redsoft);border-color:rgba(239,68,68,.45);color:#fca5a5}
-.chip.neu{background:rgba(148,163,184,.1);color:#cbd5e1}
+.btn.sm{min-height:40px;padding:9px 14px;font-size:14px;border-radius:12px}
+.msg{font-size:14px;margin-top:10px;min-height:20px;color:var(--muted)}
+.msg.err{color:var(--crit)}.msg.ok{color:var(--good)}
+.seg{display:flex;gap:6px;padding:6px;margin-bottom:14px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.seg button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;border-radius:13px;padding:11px;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;min-height:46px;transition:background .2s,color .2s}
+.seg button:hover{color:var(--t1);background:var(--surf2)}
+.seg button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);box-shadow:0 8px 22px var(--acc-soft)}
+.seg .n{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:var(--crit);color:#fff;font-size:12px;text-align:center}
+.seg .n.zero{background:var(--surf2);color:var(--t3)}
+.seg button.on .n.zero{background:rgba(0,0,0,.18);color:inherit}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border:1px solid var(--line2);background:var(--surf2);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--good-soft);border-color:var(--good-line);color:var(--good)}
+.chip.wait{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
+.chip.bad{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
+.chip.neu{color:var(--t3)}
 .cau-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
-.cau-id{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow);letter-spacing:.5px}
-.itens{margin:10px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.itens div{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:15px}
+.cau-id{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--acc);letter-spacing:.5px}
+.itens{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surf2)}
+.itens div{display:flex;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);font-size:15px;color:var(--t2)}
 .itens div:last-child{border-bottom:none}
-.itens b{color:#fff;white-space:nowrap}
+.itens b{color:var(--t1);white-space:nowrap}
 .itens small{color:var(--muted);display:block;font-size:12.5px}
-.aviso{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14.5px}
-.aviso.amarelo{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4)}
-.aviso.laranja{background:var(--orangesoft);border:1px solid rgba(251,146,60,.4)}
-.tl{margin-top:10px;font-size:13.5px;color:var(--muted)}
-.tl div{padding:3px 0}
-.tl b{color:#cbd5e1}
+.aviso{display:block;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:14.5px;border:1px solid var(--line2);background:var(--surf2);color:var(--t2)}
+.aviso>b:first-child{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--t1)}
+.aviso.amarelo{background:var(--acc-soft);border-color:var(--acc-line)}
+.aviso.amarelo>b:first-child .bp-i{color:var(--acc)}
+.aviso.laranja{background:var(--warn-soft);border-color:var(--warn-line)}
+.aviso.azul{background:var(--info-soft);border-color:var(--info-line)}
+.aviso.azul>b:first-child .bp-i{color:var(--info)}
+.tl{margin-top:12px;font-size:13.5px;color:var(--muted);border-left:2px solid var(--line2);padding-left:12px}
+.tl div{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
+.tl .bp-i{margin-top:3px;color:var(--dim)}
+.tl b{color:var(--t2)}
 .hidden{display:none!important}
-.sel-qr{display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.qr{background:#fff;padding:6px;border-radius:8px;min-width:140px;min-height:140px;display:grid;place-items:center}
-.ovl{position:fixed;inset:0;background:rgba(2,6,14,.82);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0}
-.modal{background:#0d1220;border:1px solid rgba(245,197,24,.4);border-radius:18px 18px 0 0;padding:20px 18px 26px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
-@media(min-width:640px){.ovl{align-items:center;padding:16px}.modal{border-radius:18px}}
-.chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:15px}
-.chk input{width:24px;min-height:24px;margin-top:2px;flex:none}
-#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1220;border:1px solid rgba(52,211,153,.5);color:#d1fae5;padding:12px 18px;border-radius:12px;z-index:300;max-width:92vw;font-size:14.5px;display:none}
-a{color:var(--yellow)}
+.sel-qr{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.qr{background:#fff;padding:6px;border-radius:10px;min-width:140px;min-height:140px;display:grid;place-items:center}
+.ovl{position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:2147470000;display:flex;align-items:flex-end;justify-content:center;padding:0;animation:cau-fade .2s both}
+.modal{background:var(--surf);border:1px solid var(--line2);box-shadow:var(--sh);border-radius:22px 22px 0 0;padding:22px 18px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:560px;max-height:92vh;overflow:auto;color:var(--t2);animation:bp-sobe .3s var(--ease) both}
+@keyframes cau-fade{from{opacity:0}to{opacity:1}}
+@media(min-width:640px){.ovl{align-items:center;padding:16px}.modal{border-radius:22px;padding:22px}}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:15px;color:var(--t2);cursor:pointer}
+.chk input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);align-items:center;gap:10px;background:var(--surf);border:1px solid var(--line2);box-shadow:var(--sh2);color:var(--t1);
+  padding:12px 16px;border-radius:14px;z-index:2147475000;max-width:min(460px,calc(100vw - 24px));font-size:14px;font-weight:600;display:none}
+#toast::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--good);flex:none}
+.bp-pg a:not(.btn):not(.bp-marca):not(.bp-btn){color:var(--acc)}
 /* dentro do Portal do Policial (aba Cautela): o portal já tem o cabeçalho */
-html.portal .hdr{display:none}
-html.portal .wrap{padding-top:14px}
+html.portal .bp-topo,html.portal .bp-fundo{display:none}
+html.portal .bp-wrap{padding-top:14px}
 </style>
+<!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
+     cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-30", "titulo": "Página de cara nova", "quem": "todos", "itens": [
+    "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
+    "Botões, cartões e janela de assinatura redesenhados, com ícones novos.",
+    "O jeito de conferir e assinar a cautela continua o mesmo."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr"><div class="hdr-inner">
-  <div class="hdr-brand">
-    <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-    <div><div class="hdr-title">Cautela de <em>Armamento</em></div><div class="hdr-sub">BPFRON/RO · reserva de armamento</div></div>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="policial.html" title="Portal do Policial">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Reserva de armamento</small><b>Cautela de Armamento</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <span id="userchip"></span>
+      <button class="bp-btn ic sec hidden" id="btn-senha" type="button" title="Trocar a minha senha" aria-label="Trocar a minha senha"><i data-ic="cadeado"></i></button>
+      <button class="bp-btn ic sec hidden" id="btn-sair" type="button" title="Sair" aria-label="Sair"><i data-ic="sair"></i></button>
+    </div>
   </div>
-  <div class="hdr-right">
-    <span id="userchip"></span>
-    <button class="hdr-link hidden" id="btn-senha" type="button">🔑 Senha</button>
-    <button class="hdr-link hidden" id="btn-sair" type="button">Sair</button>
-  </div>
-</div></div>
+</header>
 
-<main class="wrap">
+<main class="bp-wrap cau-wrap">
 
   <!-- ============ deslogado ============ -->
   <section id="login-box" class="hidden">
-    <div class="card">
-      <h1>Cautela de material bélico</h1>
-      <p class="muted" style="margin-top:6px">Aqui você confere e <b>assina com a sua senha</b> o material que recebe e o que devolve à reserva de armamento. Essa senha é a sua assinatura eletrônica — a mesma do <b>Portal do Policial</b>.</p>
+    <div class="card cau-ab">
+      <span class="bp-tile"><i data-ic="escudo"></i></span>
+      <div>
+        <h1>Cautela de material bélico</h1>
+        <p class="muted" style="margin-top:6px">Aqui você confere e <b>assina com a sua senha</b> o material que recebe e o que devolve à reserva de armamento. Essa senha é a sua assinatura eletrônica — a mesma do <b>Portal do Policial</b>.</p>
+      </div>
     </div>
     <div class="card" id="login-form"></div>
   </section>
@@ -123,32 +148,32 @@ html.portal .wrap{padding-top:14px}
     </div>
 
     <div id="box-indicado" class="aviso amarelo hidden">
-      <b>📋 Você foi indicado para assumir a reserva de armamento.</b>
+      <b><i data-ic="escudo"></i>Você foi indicado para assumir a reserva de armamento.</b>
       <p class="muted" style="margin:6px 0 10px">Ao aceitar, com a sua senha, você passa a ser o armeiro de serviço e responde pelo material carga da reserva.</p>
-      <button class="btn full" id="btn-assumir" type="button">Aceitar o plantão de armeiro</button>
+      <button class="btn full" id="btn-assumir" type="button"><i data-ic="assinar"></i>Aceitar o plantão de armeiro</button>
     </div>
 
     <div id="box-use-re" class="aviso amarelo hidden">
-      <b>📋 Reserva de armamento: entre pelo seu RE.</b>
+      <b><i data-ic="info"></i>Reserva de armamento: entre pelo seu RE.</b>
       <p class="muted" style="margin:6px 0 10px">Você está com o login do dashboard. Para aceitar o plantão ou abrir a reserva como armeiro, saia e entre com o seu <b>RE e a senha do Portal do Policial</b>.</p>
-      <button class="btn full" id="btn-use-re" type="button">Sair e entrar pelo RE</button>
+      <button class="btn full" id="btn-use-re" type="button"><i data-ic="sair"></i>Sair e entrar pelo RE</button>
     </div>
 
-    <div id="box-reserva" class="aviso hidden" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35)">
-      <b>🛡️ Reserva de armamento</b> <span class="muted" id="papel-txt"></span>
+    <div id="box-reserva" class="aviso azul hidden">
+      <b><i data-ic="escudo"></i>Reserva de armamento <span class="muted" id="papel-txt" style="font-weight:500"></span></b>
       <p class="muted" style="margin-top:4px">A tela do armeiro (estoque, contagem, cautela e Parte Diária) só funciona <b>no computador</b>.</p>
-      <a class="btn sm" id="link-reserva" href="cautela-reserva.html" style="margin-top:8px;text-decoration:none">Abrir a reserva (computador)</a>
+      <a class="btn sm" id="link-reserva" href="cautela-reserva.html" style="margin-top:10px"><i data-ic="seta"></i>Abrir a reserva (computador)</a>
     </div>
 
     <div class="seg" id="seg-abas">
-      <button type="button" data-aba="assinar" class="on">Para assinar <span class="n zero" id="n-assinar">0</span></button>
-      <button type="button" data-aba="minhas">Minhas cautelas</button>
+      <button type="button" data-aba="assinar" class="on"><i data-ic="assinar"></i>Para assinar <span class="n zero" id="n-assinar">0</span></button>
+      <button type="button" data-aba="minhas"><i data-ic="pasta"></i>Minhas cautelas</button>
     </div>
     <div id="lista"></div>
   </section>
 </main>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* Entrada: senha ÚNICA do Portal do Policial (RE) ou login do dashboard — ver cautela-acesso.js.
@@ -162,7 +187,10 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&a
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
 const fQuando = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { timeZone:'America/Porto_Velho', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
 const fDia = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { timeZone:'America/Porto_Velho' }); };
-function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 4200); }
+// ícone desenhado pelo bp-casca.js (nada de emoji: no Windows vira quadrado)
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const iniciais = (s) => String(s || '').trim().split(/s+/).filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || '?';
+function toast(t){ const el = $('toast'); el.textContent = t; el.style.display = 'flex'; clearTimeout(toast._t); toast._t = setTimeout(() => el.style.display = 'none', 4200); }
 
 function cab(extra){ const h = Object.assign({}, extra || {}); if (AUTH.token) h['Authorization'] = 'Bearer ' + AUTH.token; return h; }
 async function api(path, opt){
@@ -195,7 +223,7 @@ function boot(){
   show('login-box', !AUTH.logged); show('app', AUTH.logged);
   $('btn-sair').classList.toggle('hidden', !AUTH.logged);
   $('btn-senha').classList.toggle('hidden', !AUTH.logged);
-  $('userchip').textContent = '';
+  $('userchip').innerHTML = '';
   if (AUTH.logged) carregar(); else telaEntrada();
 }
 
@@ -206,7 +234,7 @@ async function carregar(){
     D = { eu: eu.eu, papel: eu.papel, plantao: eu.plantao, aviso: eu.aviso, cautelas: mi.cautelas || [], sem_vinculo: !!mi.sem_vinculo, configurado: eu.configurado };
   } catch(e){
     if (e.status === 401){ CA.esquecer(); boot(); return; }
-    show('estado', true); $('estado').innerHTML = '⚠️ ' + esc(e.message); return;
+    show('estado', true); $('estado').innerHTML = IC('alerta') + ' ' + esc(e.message); return;
   }
   // no portal, sessão de outra pessoa: pede a senha de quem está no portal (não apaga a sessão dela)
   if (PORTAL_RE && D.eu.re && D.eu.re !== PORTAL_RE){
@@ -214,10 +242,11 @@ async function carregar(){
     D = null; show('app', false); show('login-box', true); $('btn-sair').classList.add('hidden'); $('btn-senha').classList.add('hidden');
     telaEntrada(); return;
   }
-  $('userchip').textContent = '👤 ' + (D.eu.guerra ? `${D.eu.posto} ${D.eu.guerra}` : D.eu.nome);
+  { const nome = D.eu.guerra ? `${D.eu.posto} ${D.eu.guerra}` : D.eu.nome;
+    $('userchip').innerHTML = `<span class="bp-eu" title="${esc(nome)}"><b>${esc(iniciais(D.eu.guerra || D.eu.nome))}</b><span>${esc(nome)}</span></span>`; }
   if (!D.eu.vinculado && PORTAL_RE && !$('v-re').value) $('v-re').value = PORTAL_RE;
   show('estado', !D.configurado);
-  if (!D.configurado) $('estado').innerHTML = '⚙️ A planilha da Cautela ainda não foi configurada no servidor. Avise a P4.';
+  if (!D.configurado) $('estado').innerHTML = IC('alerta') + ' A planilha da Cautela ainda não foi configurada no servidor. Avise a P4.';
   show('box-vinculo', !D.eu.vinculado);
   show('box-indicado', !!(D.plantao && D.plantao.indicado_a_mim));
   show('box-use-re', !!D.papel.use_re);
@@ -243,23 +272,23 @@ function cartao(c, completo){
   const [cls, txt] = STATUS[c.status] || ['neu', c.status];
   const chips = c.alertas.filter(a => ALERTAS[a]).map(a => `<span class="chip ${ALERTAS[a][0]}">${ALERTAS[a][1]}</span>`).join(' ');
   const botoes = [];
-  if (c.status === 'aguardando') botoes.push(`<button class="btn full" data-act="receber" data-id="${esc(c.cautela_id)}">✍️ Conferi — assinar o recebimento</button>`);
-  c.devolucoes.filter(d => !d.assinada).forEach(d => botoes.push(`<button class="btn full" data-act="devolver" data-id="${esc(c.cautela_id)}" data-ref="${esc(d.evento)}">✍️ Assinar a entrega (devolução) de ${d.itens.length} item(ns)</button>`));
+  if (c.status === 'aguardando') botoes.push(`<button class="btn full" data-act="receber" data-id="${esc(c.cautela_id)}">${IC('assinar')}Conferi — assinar o recebimento</button>`);
+  c.devolucoes.filter(d => !d.assinada).forEach(d => botoes.push(`<button class="btn full" data-act="devolver" data-id="${esc(c.cautela_id)}" data-ref="${esc(d.evento)}">${IC('assinar')}Assinar a entrega (devolução) de ${d.itens.length} item(ns)</button>`));
   const tl = [];
-  tl.push(`<div>📌 Cautela lançada em <b>${fQuando(c.criada_em)}</b> por ${esc((c.armeiro && (c.armeiro.guerra || c.armeiro.nome)) || c.criada_por)}</div>`);
-  if (c.recebimento) tl.push(`<div>✅ Recebimento assinado em <b>${fQuando(c.recebimento.em)}</b></div>`);
-  c.prorrogacoes.forEach(p => tl.push(`<div>⏱️ Prorrogada para <b>${fQuando(p.para)}</b> — ${esc(p.motivo)}</div>`));
-  c.devolucoes.forEach(d => tl.push(`<div>↩️ Devolução registrada em ${fQuando(d.em)}${d.itens.some(x => x.estado !== 'ok') ? ' (com ocorrência)' : ''} — ${d.assinada ? `assinada em <b>${fQuando(d.assinada.em)}</b>` : '<b>aguarda a sua assinatura</b>'}</div>`));
-  if (c.cancelada) tl.push(`<div>🚫 Cancelada: ${esc(c.cancelada.motivo)}</div>`);
-  return `<div class="card" id="c-${esc(c.cautela_id)}" ${DESTAQUE === c.cautela_id ? 'style="border-color:var(--yellow)"' : ''}>
+  tl.push(`<div>${IC('arquivo')}<span>Cautela lançada em <b>${fQuando(c.criada_em)}</b> por ${esc((c.armeiro && (c.armeiro.guerra || c.armeiro.nome)) || c.criada_por)}</span></div>`);
+  if (c.recebimento) tl.push(`<div>${IC('check')}<span>Recebimento assinado em <b>${fQuando(c.recebimento.em)}</b></span></div>`);
+  c.prorrogacoes.forEach(p => tl.push(`<div>${IC('relogio')}<span>Prorrogada para <b>${fQuando(p.para)}</b> — ${esc(p.motivo)}</span></div>`));
+  c.devolucoes.forEach(d => tl.push(`<div>${IC('voltar')}<span>Devolução registrada em ${fQuando(d.em)}${d.itens.some(x => x.estado !== 'ok') ? ' (com ocorrência)' : ''} — ${d.assinada ? `assinada em <b>${fQuando(d.assinada.em)}</b>` : '<b>aguarda a sua assinatura</b>'}</span></div>`));
+  if (c.cancelada) tl.push(`<div>${IC('x')}<span>Cancelada: ${esc(c.cancelada.motivo)}</span></div>`);
+  return `<div class="card" id="c-${esc(c.cautela_id)}" ${DESTAQUE === c.cautela_id ? 'data-destaque="1" style="border-color:var(--acc-line);box-shadow:inset 0 0 0 1px var(--acc-line)"' : ''}>
     <div class="cau-top"><div><div class="cau-id">${esc(c.cautela_id)}</div>
-      <div class="muted">${esc(c.tipo === 'servico' ? 'Serviço' : 'Missão')}: <b style="color:#fff">${esc(c.missao)}</b></div>
+      <div class="muted">${esc(c.tipo === 'servico' ? 'Serviço' : 'Missão')}: <b>${esc(c.missao)}</b></div>
       <div class="muted">${fQuando(c.inicio)} → ${fQuando(c.fim_previsto)}</div></div>
       <div style="text-align:right"><span class="chip ${cls}">${txt}</span><div style="margin-top:6px">${chips}</div></div></div>
     ${itensHtml(c)}
     ${botoes.join('<div style="height:8px"></div>')}
     ${completo ? `<div class="tl">${tl.join('')}</div>
-      <div class="sel-qr"><button class="btn sm sec" data-act="auth" data-id="${esc(c.cautela_id)}">🔎 Autenticação do documento</button><span class="muted">Assinatura ${esc(c.assinatura)}</span></div>
+      <div class="sel-qr"><button class="btn sm sec" data-act="auth" data-id="${esc(c.cautela_id)}">${IC('escudo')}Autenticação do documento</button><span class="muted">Assinatura ${esc(c.assinatura)}</span></div>
       <div id="auth-${esc(c.cautela_id)}"></div>` : ''}
   </div>`;
 }
@@ -271,7 +300,7 @@ function render(){
   let html;
   if (ABA === 'assinar'){
     html = aGuardar.length ? aGuardar.map(c => cartao(c, false)).join('')
-      : '<div class="card muted">Nada aguardando a sua assinatura. 👍</div>';
+      : '<div class="card muted">Nada aguardando a sua assinatura.</div>';
   } else {
     html = D.cautelas.length ? D.cautelas.map(c => cartao(c, true)).join('')
       : '<div class="card muted">Você ainda não tem cautelas registradas.</div>';
@@ -291,7 +320,7 @@ function pedirSenha({ titulo, texto, conferir }){
       <label for="m-senha">Sua senha (é a sua assinatura)</label>
       <input id="m-senha" type="password" autocomplete="current-password">
       <div class="msg err" id="m-msg"></div>
-      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn sec" id="m-nao" type="button" style="flex:1">Cancelar</button><button class="btn" id="m-ok" type="button" style="flex:2">✍️ Assinar</button></div></div>`;
+      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn sec" id="m-nao" type="button" style="flex:1">Cancelar</button><button class="btn" id="m-ok" type="button" style="flex:2">${IC('assinar')}Assinar</button></div></div>`;
     document.body.appendChild(o);
     const fechar = (v) => { o.remove(); resolve(v); };
     o.querySelector('#m-nao').onclick = () => fechar(null);
@@ -324,7 +353,7 @@ async function acao(b){
   b.disabled = true;
   try {
     const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, senha });
-    toast('Assinado ✔  código ' + d.assinatura);
+    toast('Assinado — código ' + d.assinatura);
     await carregar();
   } catch(e){
     b.disabled = false;

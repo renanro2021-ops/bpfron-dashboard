@@ -25,14 +25,17 @@
     set: function (k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
   };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  // ícone SVG do bp-casca.js quando ele está na página (senão o emoji de antes)
+  var ic = function (n) { return (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : ''; };
   var re5 = function (v) { return String(v || '').replace(/\D/g, '').slice(-5); };
 
   var CSS = '.ca-seg{display:flex;gap:6px;margin-bottom:14px}' +
-    '.ca-seg button{flex:1;background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.16);border-radius:12px;padding:11px 8px;color:#94a3b8;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;min-height:46px}' +
-    '.ca-seg button.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:#F5C518}' +
-    '.ca-pa{border-radius:12px;padding:11px 13px;margin:12px 0 2px;font-size:14px;line-height:1.5;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.35);color:#e2e8f0}' +
-    '.ca-link{background:none;border:none;color:#F5C518;font:inherit;font-size:14px;cursor:pointer;padding:10px 0 0;text-decoration:underline}' +
-    '.ca-nota{font-size:13px;color:#94a3b8;margin-top:12px;line-height:1.55}' +
+    // cores do tema do site (bp-ui.css); o 2º valor é o de antes, para página sem o bp-ui.css
+    '.ca-seg button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--surf2,rgba(148,163,184,.08));border:1px solid var(--line2,rgba(148,163,184,.16));border-radius:13px;padding:11px 8px;color:var(--muted,#94a3b8);font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;min-height:46px}' +
+    '.ca-seg button.on{background:var(--acc-soft,rgba(245,197,24,.14));border-color:var(--acc-line,rgba(245,197,24,.45));color:var(--acc,#F5C518)}' +
+    '.ca-pa{border-radius:14px;padding:11px 13px;margin:12px 0 2px;font-size:14px;line-height:1.5;background:var(--acc-soft,rgba(245,197,24,.08));border:1px solid var(--acc-line,rgba(245,197,24,.35));color:var(--t2,#e2e8f0)}' +
+    '.ca-link{background:none;border:none;color:var(--acc,#F5C518);font:inherit;font-size:14px;cursor:pointer;padding:10px 0 0;text-decoration:underline}' +
+    '.ca-nota{font-size:13px;color:var(--muted,#94a3b8);margin-top:12px;line-height:1.55}' +
     '.ca-hide{display:none!important}';
   function estilo() {
     if (document.getElementById('ca-css')) return;
@@ -59,7 +62,7 @@
     var MODO = '';            // '' (normal) | 'primeiro' | 'trocar'
     var PRECISA = 'cpf4';
     el.innerHTML =
-      '<div class="ca-seg"><button type="button" data-m="re" class="on">' + (opt.rotuloRE || '🪪 RE e senha') + '</button><button type="button" data-m="dash">' + (opt.rotuloDash || '🔑 Login do dashboard') + '</button></div>' +
+      '<div class="ca-seg"><button type="button" data-m="re" class="on">' + (opt.rotuloRE || (ic('usuario') || '🪪 ') + 'RE e senha') + '</button><button type="button" data-m="dash">' + (opt.rotuloDash || (ic('cadeado') || '🔑 ') + 'Login do dashboard') + '</button></div>' +
       (opt.aviso ? '<div class="ca-pa">' + opt.aviso + '</div>' : '') +
       '<form data-p="re" onsubmit="return false">' +
       '  <label for="ca-re">RE</label><input id="ca-re" name="username" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="ex.: 94186">' +

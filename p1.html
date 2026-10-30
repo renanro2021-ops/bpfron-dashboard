@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
@@ -7,179 +7,162 @@
 <title>P1 · Seção Pessoal · BPFRON/RO</title>
 <script>/* aberta dentro do Portal do Policial (policial.html) */ try{ if (new URLSearchParams(location.search).has('portal')) document.documentElement.classList.add('portal'); }catch(e){}</script>
 <script src="conta.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:       #060912;
-  --bg2:      #0b0f1a;
-  --yellow:   #F5C518;
-  --gold:     #c9a030;
-  --text:     #dde3f0;
-  --muted:    #94a3b8;
-  --border:   rgba(245,197,24,0.10);
-  --card:     rgba(12,17,30,0.85);
-}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  font-size:15.5px;
-  line-height:1.5;
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
-  background-attachment:fixed;
-}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg2)}
-::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+/* =====================================================================
+   p1.html — só o que é desta página. O visual comum (cores dos temas,
+   cabeçalho, botões, cartões de número) vem do bp-ui.css (30/10/2026).
+   As classes que o JS monta (.p1-*, .sec) seguem com o mesmo nome, só
+   redesenhadas com as cores do tema.
+   ===================================================================== */
+.p1-wrap{max-width:940px}
+.p1-heroi{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;margin-bottom:6px}
 
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
-.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
-.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
-.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
-.hdr-sub{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--muted)}
-.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
-.hdr-back:hover{color:var(--yellow)}
-.hdr-right{display:flex;align-items:center;gap:12px}
-#p1-userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+.sec{display:flex;align-items:center;gap:10px;margin:32px 0 14px;font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:var(--t1);line-height:1.15}
+.sec>.bp-i{width:20px;height:20px;padding:8px;box-sizing:content-box;border-radius:12px;background:var(--acc-soft);color:var(--acc);flex:none}
+.sec small{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--muted)}
 
-.wrap{max-width:920px;margin:0 auto;padding:clamp(24px,5vw,44px) clamp(18px,4vw,24px) 70px}
-
-.p1-hero{text-align:center;padding:clamp(20px,4vw,32px) 10px clamp(30px,5vw,42px)}
-.p1-hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,38px);font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:12px}
-.p1-hero p{color:var(--muted);font-size:16px;max-width:600px;margin:0 auto;line-height:1.7}
-
-.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:36px 0 16px;display:flex;align-items:center;gap:10px}
-.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
-
-.p1-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.p1-box{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(16px,2.4vw,22px);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .p1-hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
 
-.p1-fg{display:flex;flex-direction:column;gap:5px}
-.p1-fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-.p1-fg input,.p1-fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px;width:100%}
-.p1-fg input:focus,.p1-fg select:focus{border-color:rgba(245,197,24,.6)}
+.p1-fg{display:flex;flex-direction:column;gap:7px;min-width:0}
+.p1-fg label{font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+.p1-fg input,.p1-fg select,.p1-add-sistema input,.p1-search{background:var(--surf2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;color:var(--t1);font:inherit;font-size:16px;outline:none;min-height:50px;width:100%;transition:border-color .2s,box-shadow .2s}
+.p1-search{margin-bottom:14px}
+.p1-fg select option{background:var(--surf);color:var(--t1)}
+.p1-fg input:focus,.p1-fg select:focus,.p1-add-sistema input:focus,.p1-search:focus{border-color:var(--acc-line);box-shadow:0 0 0 4px var(--acc-soft)}
 .p1-fg input:read-only{opacity:.65}
 
 .p1-form-inline{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
 .p1-form-inline .p1-fg{flex:1;min-width:200px}
 
-.p1-btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:46px;transition:background .12s,border-color .12s}
-.p1-btn:hover{background:rgba(245,197,24,.22)}
-.p1-btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
-.p1-btn.small{padding:8px 14px;font-size:13px;min-height:36px}
-.p1-btn.danger{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
+.p1-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--surf2);border:1px solid var(--line2);color:var(--t2);border-radius:14px;padding:12px 18px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:48px;transition:border-color .2s,color .2s,transform .2s var(--ease)}
+.p1-btn:hover{border-color:var(--acc-line);color:var(--t1)}
+.p1-btn.ghost{background:transparent}
+.p1-btn.small{padding:8px 14px;font-size:13px;min-height:38px}
+.p1-btn.danger{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
 .p1-btn:disabled{opacity:.45;cursor:not-allowed}
-.p1-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:14px 26px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;min-height:50px}
-.p1-send:disabled{opacity:.4;cursor:not-allowed}
+.p1-send{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;border-radius:14px;padding:14px 26px;color:var(--acc-ink);font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;min-height:50px;box-shadow:0 10px 30px var(--acc-soft);transition:transform .2s var(--ease),filter .2s}
+.p1-send:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.p1-send:active{transform:scale(.98)}
+.p1-send:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.p1-btn .bp-i,.p1-send .bp-i{width:18px;height:18px}
 
-.p1-msg{font-size:14px;min-height:18px;margin-top:10px}
-.p1-msg.err{color:#fca5a5}
-.p1-msg.ok{color:#6ee7b7}
-.p1-quem{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.35);border-radius:12px;padding:12px 16px;font-size:14.5px;color:#bfdbfe;margin-top:14px}
-.p1-aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 16px;font-size:13.5px;color:#fcd34d;margin-top:14px}
+.p1-msg{font-size:14px;min-height:18px;margin-top:10px;color:var(--muted)}
+.p1-msg.err{color:var(--crit)}
+.p1-msg.ok{color:var(--good)}
+.p1-quem{background:var(--info-soft);border:1px solid var(--info-line);border-radius:14px;padding:12px 16px;font-size:14.5px;color:var(--t2);margin-top:14px}
+.p1-quem b{color:var(--t1)}
+.p1-aviso{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:14px;padding:12px 16px;font-size:14px;color:var(--t2);margin-bottom:14px}
+.p1-aviso>.bp-i{width:20px;height:20px;flex:none;color:var(--warn)}
 
 #p1-form{display:none}
-/* Portal do Policial: dentro do portal o cabeçalho é o dele */
-html.portal .hdr{display:none}
 
 .p1-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .p1-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .p1-grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
 
-.p1-curso-row{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:grid;grid-template-columns:2fr .9fr .6fr .6fr .7fr .6fr auto;gap:10px;align-items:end}
-.p1-curso-row .p1-fg input,.p1-curso-row .p1-fg select{min-height:42px;font-size:14.5px}
-.p1-curso-x{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.4);color:#fca5a5;border-radius:8px;width:42px;height:42px;cursor:pointer;font-size:16px}
+.p1-curso-row{background:var(--surf2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;display:grid;grid-template-columns:2fr .9fr .6fr .6fr .7fr .6fr auto;gap:10px;align-items:end}
+.p1-curso-row .p1-fg input,.p1-curso-row .p1-fg select{min-height:44px;font-size:14.5px;background:var(--surf)}
+.p1-curso-row a{color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.p1-curso-row a .bp-i{width:13px;height:13px}
+.p1-curso-x{display:grid;place-items:center;background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit);border-radius:12px;width:44px;height:44px;cursor:pointer}
+.p1-curso-x .bp-i{width:18px;height:18px}
 
 .p1-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.p1-chip{background:var(--bg);border:1px solid var(--border);color:#cbd5e1;border-radius:999px;padding:9px 16px;font-size:13.5px;cursor:pointer;user-select:none;transition:background .12s,border-color .12s,color .12s}
-.p1-chip:hover{border-color:rgba(245,197,24,.4)}
-.p1-chip.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.55);color:var(--yellow);font-weight:700}
-.p1-chip.custom{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.35);color:#bfdbfe}
-.p1-chip .rm{margin-left:6px;opacity:.7}
+.p1-chips:empty{display:none}
+.p1-chip{display:inline-flex;align-items:center;background:var(--surf2);border:1px solid var(--line2);color:var(--t2);border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none;transition:background .2s,border-color .2s,color .2s}
+.p1-chip:hover{border-color:var(--acc-line);color:var(--t1)}
+.p1-chip.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc);font-weight:800}
+.p1-chip.custom{background:var(--info-soft);border-color:var(--info-line);color:var(--info)}
+.p1-chip .rm{display:inline-grid;place-items:center;margin-left:6px;opacity:.75}
+.p1-chip .rm .bp-i{width:14px;height:14px}
 .p1-add-sistema{display:flex;gap:10px;margin-top:8px}
 .p1-add-sistema input{flex:1;text-transform:uppercase}
 
 .p1-gest-toggle{margin-top:50px;text-align:center}
-#p1-login{max-width:420px;margin:18px auto 0}
-.p1-user-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px;font-size:15px;color:var(--muted)}
+#p1-login{max-width:440px;margin:18px auto 0}
+.p1-user-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:15px;color:var(--muted)}
+.p1-user-bar b{color:var(--t1)}
+.p1-user-bar a{color:var(--acc)}
 
-.p1-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-.p1-kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
-.p1-kpi b{display:block;font-family:'Rajdhani',sans-serif;font-size:26px;color:#fff;font-weight:700}
-.p1-kpi span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.p1-kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px}
+.p1-kpis .bp-num .r{padding-right:26px}
 
-.p1-search{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-size:15px;margin-bottom:14px;min-height:46px}
 .p1-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto;padding-right:4px}
-.p1-row{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 14px;cursor:pointer;font-size:14.5px}
-.p1-row:hover{border-color:rgba(245,197,24,.4)}
+.p1-row{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--good-line);border-radius:14px;padding:12px 14px;cursor:pointer;font-size:14.5px;color:var(--t2);transition:border-color .2s,background .2s,transform .2s var(--ease)}
+.p1-row b{color:var(--t1)}
+.p1-row:hover{border-color:var(--acc-line);background:var(--card-h);transform:translateX(2px)}
 .p1-row .re{color:var(--muted);font-size:12.5px}
-.p1-row.pend{border-color:rgba(220,38,38,.3)}
-.p1-detail{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-top:16px}
+.p1-row.pend{border-left-color:var(--crit-line)}
+.p1-detail{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin-top:4px;color:var(--t2)}
 .p1-detail-empty{color:var(--muted);text-align:center;padding:24px}
-.p1-tag{display:inline-block;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:var(--yellow);border-radius:999px;padding:4px 12px;font-size:12.5px;margin:3px 6px 3px 0}
-.p1-tag.gray{background:rgba(148,163,184,.12);border-color:var(--border);color:#cbd5e1}
-.p1-tag.red{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.4);color:#fca5a5}
+.p1-tag{display:inline-flex;align-items:center;gap:5px;background:var(--acc-soft);border:1px solid var(--acc-line);color:var(--acc);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;margin:3px 6px 3px 0}
+.p1-tag .bp-i{width:14px;height:14px}
+.p1-tag.gray{background:var(--surf2);border-color:var(--line2);color:var(--t3)}
+.p1-tag.red{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
 .p1-freq{display:flex;flex-wrap:wrap;gap:8px}
-.p1-freq-item{background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:#cbd5e1}
-.p1-freq-item b{color:var(--yellow)}
+.p1-freq-item{background:var(--surf2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--t2)}
+.p1-freq-item b{color:var(--acc)}
+
+/* Portal do Policial: dentro do portal o cabeçalho é o dele */
+html.portal .bp-topo,html.portal .bp-fundo{display:none}
+html.portal .bp-wrap{padding-top:14px}
+html.portal .bp-selo{display:none}
+html.portal .p1-heroi{grid-template-columns:1fr}
 
 @media(max-width:760px){
-  body{font-size:15px}
-  .hdr-inner{padding:10px 14px;gap:10px}
-  .hdr-logo{height:38px}
-  .hdr-title{font-size:16.5px}
-  .hdr-sub{font-size:10.5px}
-  .wrap{padding:20px 14px 56px}
-  .p1-hero{padding:14px 4px 26px}
-  .p1-hero h1{font-size:25px;margin-bottom:10px}
-  .p1-hero p{font-size:14.5px}
-  .sec{margin:28px 0 14px;font-size:12px}
-  .p1-box{padding:16px}
+  .p1-heroi{grid-template-columns:1fr}
+  .p1-heroi .bp-selo{display:none}
+  .sec{margin:26px 0 12px;font-size:19px}
   .p1-form-inline{flex-direction:column;align-items:stretch}
   .p1-grid2,.p1-grid3,.p1-grid4{grid-template-columns:1fr}
-  .p1-curso-row{grid-template-columns:1fr;gap:8px}
-  .p1-curso-x{width:100%}
-}
-@media(max-width:380px){
-  .hdr-sub{display:none}
+  .p1-curso-row{grid-template-columns:1fr 1fr;gap:10px}
+  .p1-curso-x{grid-column:span 2;width:100%}
+  .sec{flex-wrap:wrap;row-gap:2px}
+  .sec small{flex-basis:100%;padding-left:46px}
+  .p1-add-sistema{flex-direction:column}
 }
 </style>
+<!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
+     cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-30", "titulo": "Ficha de cara nova", "quem": "todos", "itens": [
+    "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
+    "Campos, botões e listas redesenhados, com ícones novos.",
+    "O jeito de preencher a ficha continua o mesmo: RE, cursos e sistemas."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-      <div class="hdr-brand-text">
-        <div class="hdr-title">P1 <em>Seção Pessoal</em></div>
-        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="sistemas.html" title="Sistemas do BPFRON">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · P1 Seção Pessoal</small><b>Atualização Cadastral</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
       <span id="p1-userchip"></span>
     </div>
   </div>
-</div>
+</header>
 
-<div class="wrap">
+<main class="bp-wrap p1-wrap">
 
-  <div class="p1-hero">
-    <h1>Atualização Cadastral</h1>
-    <p>Preencha (ou atualize) seus dados pessoais, os cursos que já fez na PM e os sistemas a que você tem acesso. Não precisa de senha — só o seu RE.</p>
-  </div>
+  <section class="bp-heroi p1-heroi">
+    <div>
+      <span class="bp-selo-tx"><b></b>P1 · Seção Pessoal</span>
+      <h1>Atualização <em>Cadastral</em></h1>
+      <p>Preencha (ou atualize) seus dados pessoais, os cursos que já fez na PM e os sistemas a que você tem acesso. Não precisa de senha — só o seu RE.</p>
+    </div>
+    <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+  </section>
 
-  <div class="sec">🔎 Identificação</div>
+  <div class="sec"><i data-ic="buscar"></i>Identificação</div>
   <div class="p1-box">
     <div class="p1-form-inline">
       <div class="p1-fg">
@@ -190,7 +173,7 @@ html.portal .hdr{display:none}
         <label>4 últimos dígitos do CPF</label>
         <input id="p1-cpf4" inputmode="numeric" maxlength="4" placeholder="0000" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1Continuar();}">
       </div>
-      <button class="p1-send" onclick="p1Continuar()">Continuar</button>
+      <button class="p1-send" onclick="p1Continuar()">Continuar<i data-ic="seta"></i></button>
     </div>
     <div id="p1-id-hint"></div>
     <div class="p1-msg err" id="p1-id-msg"></div>
@@ -199,9 +182,9 @@ html.portal .hdr{display:none}
 
   <div id="p1-form">
 
-    <div class="sec">👤 Informações Pessoais</div>
+    <div class="sec"><i data-ic="usuario"></i>Informações Pessoais</div>
     <div class="p1-box">
-      <div id="p1-sem-cadastro" class="p1-aviso" style="display:none">⚠️ Seu RE ainda não está no cadastro oficial de policiais — seus dados serão salvos mesmo assim, mas não foi possível confirmar automaticamente seu nome/posto.</div>
+      <div id="p1-sem-cadastro" class="p1-aviso" style="display:none"><i data-ic="alerta"></i><span>Seu RE ainda não está no cadastro oficial de policiais — seus dados serão salvos mesmo assim, mas não foi possível confirmar automaticamente seu nome/posto.</span></div>
       <div class="p1-grid4">
         <div class="p1-fg"><label>RE</label><input id="p1-f-re" readonly></div>
         <div class="p1-fg"><label>Posto ou Graduação</label><input id="p1-f-posto" placeholder="Ex.: 3º SGT QPPM"></div>
@@ -215,37 +198,37 @@ html.portal .hdr{display:none}
       <div class="p1-fg" style="margin-top:14px"><label>Nome completo</label><input id="p1-f-nome" placeholder="Seu nome completo"></div>
     </div>
 
-    <div class="sec">🎓 Cursos na PM <small>coloque mesmo que não concluiu</small></div>
+    <div class="sec"><i data-ic="assinar"></i>Cursos na PM <small>coloque mesmo que não concluiu</small></div>
     <div class="p1-box">
       <div id="p1-cursos-list"></div>
-      <button type="button" class="p1-btn" onclick="p1AddCurso()">➕ Adicionar curso</button>
+      <button type="button" class="p1-btn" onclick="p1AddCurso()"><i data-ic="mais"></i>Adicionar curso</button>
       <div class="p1-hint">Digite o nome completo do curso — a sigla é sugerida automaticamente (pode editar se estiver errada).</div>
     </div>
 
-    <div class="sec">💻 Sistemas com Acesso <small>tudo em CAIXA ALTA</small></div>
+    <div class="sec"><i data-ic="grade"></i>Sistemas com Acesso <small>tudo em CAIXA ALTA</small></div>
     <div class="p1-box">
       <div class="p1-chips" id="p1-sistemas-comuns"></div>
       <div class="p1-chips" id="p1-sistemas-extra"></div>
       <div class="p1-add-sistema">
         <input id="p1-sistema-novo" placeholder="Outro sistema (ex.: SEI)" onkeydown="if(event.key==='Enter'){event.preventDefault(); p1AddSistemaCustom();}">
-        <button type="button" class="p1-btn" onclick="p1AddSistemaCustom()">➕ Adicionar</button>
+        <button type="button" class="p1-btn" onclick="p1AddSistemaCustom()"><i data-ic="mais"></i>Adicionar</button>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:26px">
-      <button class="p1-send" onclick="p1Salvar()">💾 Salvar minha ficha</button>
+      <button class="p1-send" onclick="p1Salvar()"><i data-ic="ok"></i>Salvar minha ficha</button>
       <div class="p1-msg" id="p1-save-msg" style="text-align:center"></div>
     </div>
 
   </div>
 
   <div class="p1-gest-toggle">
-    <button class="p1-btn ghost" id="p1-gest-btn" onclick="gestToggle()">🔐 Área da gestão (P1)</button>
+    <button class="p1-btn ghost" id="p1-gest-btn" onclick="gestToggle()"><i data-ic="cadeado"></i>Área da gestão (P1)</button>
   </div>
 
   <div id="p1-login" style="display:none">
     <div class="p1-box">
-      <div class="sec" style="margin-top:0">🔐 Área da gestão</div>
+      <div class="sec" style="margin-top:0"><i data-ic="cadeado"></i>Área da gestão</div>
       <form onsubmit="return gestDoLogin(event)">
         <div class="p1-fg" style="margin-bottom:10px">
           <label>Usuário</label>
@@ -262,13 +245,13 @@ html.portal .hdr{display:none}
   </div>
 
   <div id="p1-gestao" style="display:none">
-    <div class="p1-user-bar">Logado como <b id="p1-gest-user"></b> · <a href="#" onclick="apiLogout();return false" style="color:var(--muted)">sair</a></div>
+    <div class="p1-user-bar">Logado como <b id="p1-gest-user"></b> · <a href="#" onclick="apiLogout();return false">sair</a></div>
 
-    <div class="sec">📊 Painel Consolidado</div>
+    <div class="sec"><i data-ic="grade"></i>Painel Consolidado</div>
     <div id="p1-painel"><div class="p1-detail-empty">Carregando…</div></div>
   </div>
 
-</div>
+</main>
 
 <script>
 /* ?api= só aceita localhost (testes) */
@@ -357,13 +340,17 @@ async function apiPostJSONPublic(path, body){
   return d;
 }
 
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+function iniciais(t){ const p = String(t || '').trim().split(/[s._-]+/).filter(Boolean); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : (p[0] || '')[1] || '')).toUpperCase(); }
+
 function renderUserChip(){
   const el = document.getElementById('p1-userchip');
-  el.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
+  el.className = AUTH.logged ? 'bp-eu' : '';
+  el.innerHTML = AUTH.logged ? '<b>' + esc(iniciais(AUTH.user)) + '</b><span>' + esc(AUTH.user) + '</span>' : '';
   const semAcesso = AUTH.logged && !p1PodeGerir();
   const gestBtn = document.getElementById('p1-gest-btn');
   gestBtn.style.display = semAcesso ? 'none' : '';
-  gestBtn.textContent = AUTH.logged ? '📋 Painel da gestão' : '🔐 Área da gestão (P1)';
+  gestBtn.innerHTML = AUTH.logged ? IC('grade') + 'Painel da gestão' : IC('cadeado') + 'Área da gestão (P1)';
   if (semAcesso) document.getElementById('p1-gestao').style.display = 'none';
 }
 
@@ -669,11 +656,11 @@ function renderCursos(){
           <input list="p1-siglas-dl" data-campo="sigla" value="${esc(c.sigla)}" placeholder="Sigla" style="flex:1"
             oninput="p1CursoInput(${i},'sigla',this)">
         </div>
-        <div style="margin-top:4px"><a href="#" onclick="p1CursoModoLista(${i});return false" style="font-size:11.5px;color:var(--muted)">↩ Escolher da lista</a></div>` : `
+        <div style="margin-top:4px"><a href="#" onclick="p1CursoModoLista(${i});return false" style="font-size:11.5px">${IC('voltar')}Escolher da lista</a></div>` : `
         <select data-campo="cursoSel" onchange="p1CursoSelecionar(${i},this)">
           <option value="">— selecione o curso —</option>
           ${lista.map((cc) => `<option value="${esc(cc.sigla)}" ${chave === cc.sigla.toUpperCase() ? 'selected' : ''}>${esc(cc.sigla)} — ${esc(cc.nome)}</option>`).join('')}
-          <option value="__novo__">➕ Cadastrar novo curso…</option>
+          <option value="__novo__">+ Cadastrar novo curso…</option>
         </select>`;
     return `
     <div class="p1-curso-row" data-idx="${i}">
@@ -697,7 +684,7 @@ function renderCursos(){
           <option value="NÃO" ${c.concluiu==='NÃO'?'selected':''}>Não</option>
         </select>
       </div>
-      <button type="button" class="p1-curso-x" onclick="p1RemoverCurso(${i})" title="Remover">✕</button>
+      <button type="button" class="p1-curso-x" onclick="p1RemoverCurso(${i})" title="Remover" aria-label="Remover">${IC('x') || '✕'}</button>
     </div>`;
   }).join('')
     // O label faz o navegador mostrar o nome do curso ao lado da sigla na lista
@@ -749,7 +736,7 @@ function renderSistemas(){
   ).join('');
   const extras = [...P1_ACESSOS].filter((s) => !conhecidos.includes(s));
   document.getElementById('p1-sistemas-extra').innerHTML = extras.map((s) =>
-    `<div class="p1-chip on custom">${esc(s)} <span class="rm" onclick="p1RemoverSistemaExtra('${esc(s)}')">✕</span></div>`
+    `<div class="p1-chip on custom">${esc(s)} <span class="rm" onclick="p1RemoverSistemaExtra('${esc(s)}')">${IC('x') || '✕'}</span></div>`
   ).join('');
 }
 
@@ -794,10 +781,11 @@ async function p1Salvar(){
   try {
     await apiPostJSONPublic('/api/p1/salvar', body);
     msg.className = 'p1-msg ok';
-    msg.textContent = '✅ Ficha salva com sucesso!';
+    msg.textContent = 'Ficha salva com sucesso!';
+    if (window.BPCasca && BPCasca.toast) BPCasca.toast('Ficha salva');
   } catch(e){
     msg.className = 'p1-msg err';
-    msg.textContent = '❌ ' + (e.message || 'Falha ao salvar.');
+    msg.textContent = e.message || 'Falha ao salvar.';
   }
 }
 
@@ -860,27 +848,27 @@ function renderPainel(){
   const d = P1_PAINEL;
   const k = d.kpis;
   let html = `
-    <div class="p1-kpis">
-      <div class="p1-kpi"><b>${k.total_efetivo}</b><span>Efetivo total</span></div>
-      <div class="p1-kpi"><b>${k.total_preenchidos}</b><span>Fichas preenchidas</span></div>
-      <div class="p1-kpi"><b>${k.total_pendentes}</b><span>Ainda faltam</span></div>
-      <div class="p1-kpi"><b>${k.percentual.toFixed(0)}%</b><span>Completude</span></div>
-      <div class="p1-kpi"><b>${k.total_cursos}</b><span>Cursos registrados</span></div>
+    <div class="bp-nums p1-kpis">
+      <div class="bp-num" style="--i:0;--c:var(--info)">${IC('usuarios')}<div class="r">Efetivo total</div><div class="v">${k.total_efetivo}</div></div>
+      <div class="bp-num" style="--i:1;--c:var(--good)">${IC('ok')}<div class="r">Fichas preenchidas</div><div class="v">${k.total_preenchidos}</div></div>
+      <div class="bp-num" style="--i:2;--c:var(--warn)">${IC('relogio')}<div class="r">Ainda faltam</div><div class="v">${k.total_pendentes}</div></div>
+      <div class="bp-num" style="--i:3;--c:var(--acc)">${IC('check')}<div class="r">Completude</div><div class="v">${k.percentual.toFixed(0)}%</div></div>
+      <div class="bp-num" style="--i:4;--c:var(--info)">${IC('assinar')}<div class="r">Cursos registrados</div><div class="v">${k.total_cursos}</div></div>
     </div>
-    <input class="p1-search" id="p1-busca" placeholder="🔎 Buscar por nome, RE ou posto…" oninput="renderLista()">
+    <input class="p1-search" id="p1-busca" placeholder="Buscar por nome, RE ou posto…" oninput="renderLista()">
     <div class="p1-grid2">
       <div>
-        <div class="sec" style="margin-top:0">✅ Preencheram</div>
+        <div class="sec" style="margin-top:0"><i data-ic="ok"></i>Preencheram</div>
         <div class="p1-list" id="p1-lista-ok"></div>
-        <div class="sec">⏳ Ainda não preencheram</div>
+        <div class="sec"><i data-ic="relogio"></i>Ainda não preencheram</div>
         <div class="p1-list" id="p1-lista-pend"></div>
       </div>
       <div>
-        <div class="sec" style="margin-top:0">👤 Detalhe</div>
+        <div class="sec" style="margin-top:0"><i data-ic="usuario"></i>Detalhe</div>
         <div class="p1-detail" id="p1-detail"><div class="p1-detail-empty">Clique num nome na lista ao lado.</div></div>
-        <div class="sec">🎓 Cursos mais comuns</div>
+        <div class="sec"><i data-ic="assinar"></i>Cursos mais comuns</div>
         <div class="p1-freq">${d.cursos_frequentes.map((c) => `<div class="p1-freq-item"><b>${c.qtd}</b> ${esc(c.nome)}</div>`).join('') || '<div class="p1-detail-empty">—</div>'}</div>
-        <div class="sec">💻 Sistemas mais comuns</div>
+        <div class="sec"><i data-ic="grade"></i>Sistemas mais comuns</div>
         <div class="p1-freq">${d.sistemas_frequentes.map((c) => `<div class="p1-freq-item"><b>${c.qtd}</b> ${esc(c.nome)}</div>`).join('') || '<div class="p1-detail-empty">—</div>'}</div>
       </div>
     </div>`;
@@ -904,7 +892,7 @@ function renderLista(){
       <b>${esc(p.nome || '(sem nome)')}</b><br>
       <span class="re">RE ${esc(p.re)}${p.posto_grad ? ' · ' + esc(p.posto_grad) : ''}${p.opm ? ' · ' + esc(p.opm) : ''}</span>
     </div>`
-  ).join('') || '<div class="p1-detail-empty">Ninguém pendente 🎉</div>';
+  ).join('') || '<div class="p1-detail-empty">Ninguém pendente.</div>';
 }
 
 function p1SelecionarRE(re){
@@ -918,9 +906,9 @@ function p1SelecionarRE(re){
     ? p.acessos.map((s) => `<div class="p1-tag">${esc(s)}</div>`).join('')
     : '<span style="color:var(--muted)">Nenhum sistema informado.</span>';
   document.getElementById('p1-detail').innerHTML = `
-    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${esc(p.nome || '(sem nome)')}</div>
+    <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:4px">${esc(p.nome || '(sem nome)')}</div>
     <div style="color:var(--muted);font-size:13.5px;margin-bottom:14px">RE ${esc(p.re)}${p.posto_grad ? ' · ' + esc(p.posto_grad) : ''}${p.opm ? ' · ' + esc(p.opm) : ''}${p.data_nascimento ? ' · nasc. ' + esc(p.data_nascimento) : ''}${p.telefone ? ' · ' + esc(p.telefone) : ''}</div>
-    ${p.sem_cadastro ? '<div class="p1-tag red">⚠️ fora do cadastro oficial</div><br>' : ''}
+    ${p.sem_cadastro ? '<div class="p1-tag red">' + IC('alerta') + 'fora do cadastro oficial</div><br>' : ''}
     <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px">Cursos</div>
     ${cursosHtml}
     <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">Sistemas</div>
@@ -929,6 +917,11 @@ function p1SelecionarRE(re){
   `;
 }
 
+// ícones <i data-ic> que o JS escreve depois do carregamento
+if (window.BPCasca && BPCasca.icones){
+  new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); })
+    .observe(document.body, { childList: true, subtree: true });
+}
 renderUserChip();
 renderCursos();
 renderSistemas();

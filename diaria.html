@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
@@ -9,48 +9,64 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- pdf.js (UMD) — lê o texto do PDF do SEI direto no navegador; nada sai da máquina -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060912; --bg2:#0b0f1a; --yellow:#F5C518; --text:#dde3f0; --muted:#94a3b8;
-  --border:rgba(245,197,24,0.12); --line:#1e293b; --card:rgba(12,17,30,0.88);
-  --ok:#34d399; --warn:#fbbf24; --err:#f87171; --blue:#93c5fd;
-}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%);background-attachment:fixed}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8)}
-.hdr-inner{max-width:1400px;margin:0 auto;padding:12px clamp(16px,3vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.hdr-logo{height:44px;width:auto;mix-blend-mode:screen}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff}
-.hdr-title em{font-style:normal;color:var(--yellow)}
-.hdr-sub{font-size:12px;color:var(--muted)}
-.hdr-right{display:flex;align-items:center;gap:14px;font-size:13px}
-.hdr-right a{color:var(--muted);text-decoration:none}.hdr-right a:hover{color:var(--yellow)}
-#userchip{color:var(--yellow);font-weight:600}
-.wrap{max-width:1400px;margin:0 auto;padding:24px clamp(16px,3vw,28px) 70px}
-.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:28px 0 12px;display:flex;align-items:center;gap:10px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
-.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
-.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:10px 18px;font:700 14px 'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:background .12s}
-.btn:hover{background:rgba(245,197,24,.24)} .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.gray{background:rgba(148,163,184,.1);border-color:#334155;color:#cbd5e1}
-.btn.red{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fca5a5}
-.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
-.btn-main{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:11px;padding:13px 24px;color:#1a1a1a;font:800 15px 'Inter',sans-serif;cursor:pointer}
-.btn-main:disabled{opacity:.45;cursor:not-allowed}
-.btn-main.orange{background:linear-gradient(135deg,#fb923c,#f97316)}
-.fg{display:flex;flex-direction:column;gap:5px;min-width:0}
-.fg label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-.fg label .req{color:var(--err)}
-input,select{background:var(--bg);border:1px solid #273244;border-radius:9px;padding:9px 11px;color:#e2e8f0;font:14px 'Inter',sans-serif;outline:none;min-width:0}
-input:focus,select:focus{border-color:rgba(245,197,24,.6)}
-input[readonly]{opacity:.8;cursor:not-allowed}
+/* =====================================================================
+   diaria.html — só o que é desta página. O visual comum (cores dos
+   temas, cabeçalho, botões do topo, aviso de novidades) vem do
+   bp-ui.css (30/10/2026). As classes que o JS monta (.card, .btn, .pill,
+   .aviso, .conf, .lote, table.pol, .sg, .kpi…) seguem com o mesmo nome,
+   só redesenhadas com as cores do tema.
+   ===================================================================== */
+/* nomes antigos que o JS ainda usa → cores do tema */
+:root{--yellow:var(--acc);--text:var(--t2);--border:var(--line);--ok:var(--good);--err:var(--crit);--blue:var(--info)}
+.bp-pg{font-size:14.5px;line-height:1.5}
+.di-wrap{max-width:1400px;padding-bottom:70px}
+.bp-pg h4,.bp-pg h5,.bp-pg p{margin:0}
+.di-heroi{padding:clamp(18px,2.6vw,26px) clamp(20px,3vw,30px);margin-bottom:4px}
+.di-heroi h1{font-size:clamp(26px,3.4vw,36px)}
+.di-heroi p{max-width:820px;font-size:14px}
+.sec{display:flex;align-items:center;gap:10px;margin:28px 0 12px;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--t1);line-height:1.15}
+.sec>.bp-i:first-child{width:18px;height:18px;padding:7px;box-sizing:content-box;border-radius:11px;background:var(--acc-soft);color:var(--acc);flex:none}
+.sec .di-n{display:grid;place-items:center;width:32px;height:32px;border-radius:11px;flex:none;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);font:800 16px 'Inter',sans-serif;box-shadow:0 6px 18px var(--acc-soft)}
+.dash .sec{font-size:16px;margin:4px 0 10px!important}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.muted{color:var(--muted)} .ok{color:var(--good)} .warn{color:var(--warn)} .err{color:var(--crit)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--acc-soft);border:1px solid var(--acc-line);color:var(--acc);border-radius:12px;padding:9px 16px;min-height:40px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;transition:border-color .2s,background .2s,color .2s}
+.btn:hover{background:var(--acc-line)} .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn .bp-i,.btn-main .bp-i{width:17px;height:17px;flex:none}
+.btn.gray{background:var(--surf2);border-color:var(--line2);color:var(--t2)}
+.btn.gray:hover{border-color:var(--acc-line);color:var(--t1)}
+.btn.red{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
+.btn.sm{padding:5px 11px;min-height:32px;font-size:12.5px;border-radius:10px}
+.btn.sm .bp-i{width:15px;height:15px}
+.btn-main{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;border-radius:13px;padding:12px 24px;min-height:46px;color:var(--acc-ink);font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 10px 26px var(--acc-soft);transition:transform .2s var(--ease),filter .2s}
+.btn-main:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.btn-main.orange{background:linear-gradient(135deg,#fb923c,#ea580c);color:#fff;box-shadow:0 10px 26px var(--warn-soft)}
+.fg{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fg label{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.fg label .req{color:var(--crit)}
+.bp-pg input:not([type=checkbox]):not([type=radio]):not([type=file]),.bp-pg select,.bp-pg textarea{background:var(--surf2);border:1px solid var(--line2);border-radius:11px;padding:9px 11px;color:var(--t1);font:inherit;font-size:14px;outline:none;min-width:0;transition:border-color .2s,box-shadow .2s}
+.bp-pg select option{background:var(--surf);color:var(--t1)}
+.bp-pg input:focus,.bp-pg select:focus,.bp-pg textarea:focus{border-color:var(--acc-line);box-shadow:0 0 0 3px var(--acc-soft)}
+.bp-pg input[readonly]{opacity:.75;cursor:not-allowed}
+.bp-pg input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
+.bp-pg input[type=date]{color-scheme:dark}
+:root[data-tema="claro"] .bp-pg input[type=date]{color-scheme:light}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .grid .wide{grid-column:span 2}
-.hint{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
-.hint b{color:#cbd5e1}
+.hint{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+.hint b{color:var(--t2)}
+/* ícone solto no meio de um texto (avisos, pílulas, tabelas, mensagens) */
+.di-wrap :not(.btn):not(.btn-main):not(.sec):not(.bp-btn):not(.di-na-ic):not(.drop)>svg.bp-i{width:1.1em;height:1.1em;vertical-align:-.2em;margin-right:.3em;flex:none}
+.bp-pg a:not(.btn):not(.bp-marca):not(.bp-btn){color:var(--acc)}
+/* sem permissão */
+.di-na-ic{display:grid;place-items:center;width:58px;height:58px;margin:0 auto;border-radius:18px;background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit)}
+.di-na-ic .bp-i{width:28px;height:28px}
+#noaccess .btn{margin:4px}
+/* quadro de exclusão com senha (montado no body) */
+body.bp-pg>div>form svg.bp-i{width:18px;height:18px;vertical-align:-.25em;margin-right:6px}
 
 /* login */
 #login-box{max-width:420px;margin:40px auto}
@@ -58,22 +74,24 @@ input[readonly]{opacity:.8;cursor:not-allowed}
 #noaccess{max-width:560px;margin:40px auto;text-align:center}
 
 /* passo 1: dropzone */
-.drop{border:2px dashed #334155;border-radius:16px;padding:38px 22px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;font-size:15px;line-height:1.7}
-.drop:hover,.drop.over{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.05);color:#e2e8f0}
-.drop b{color:#fff;font-size:17px}
+.drop{border:2px dashed var(--line2);border-radius:18px;background:var(--surf2);padding:38px 22px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;font-size:15px;line-height:1.7}
+.drop:hover,.drop.over{border-color:var(--acc-line);background:var(--acc-soft);color:var(--t2)}
+.drop b{color:var(--t1);font-size:17px}
+.drop>.bp-i:first-child{display:block;width:34px;height:34px;margin:0 auto 8px;color:var(--acc)}
+.drop small{display:block;max-width:720px;margin:6px auto 0;font-size:13px;line-height:1.55}
 #read-status{margin-top:12px;font-size:13.5px;min-height:20px}
-.prog{height:6px;background:#111827;border-radius:99px;overflow:hidden;margin-top:8px;display:none}
-.prog>div{height:100%;width:0;background:linear-gradient(90deg,#F5C518,#e0a800);transition:width .2s}
+.prog{height:6px;background:var(--surf2);border-radius:99px;overflow:hidden;margin-top:8px;display:none}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .2s}
 
 /* tela de carregamento (leitura do PDF / OCR / lançamento) — escala de 100+ nomes demora */
-#load-ovl{position:fixed;inset:0;z-index:99998;background:rgba(2,6,15,.82);display:none;align-items:center;justify-content:center;padding:16px}
-.load-card{background:var(--bg2);border:1px solid rgba(245,197,24,.35);border-radius:16px;padding:26px 28px;width:100%;max-width:430px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.load-spin{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid rgba(245,197,24,.18);border-top-color:var(--yellow);animation:load-rot .8s linear infinite}
+#load-ovl{position:fixed;inset:0;z-index:2147470000;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+.load-card{background:var(--surf);border:1px solid var(--line2);border-radius:22px;padding:26px 28px;width:100%;max-width:430px;text-align:center;box-shadow:var(--sh);color:var(--t2)}
+.load-spin{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid var(--acc-soft);border-top-color:var(--yellow);animation:load-rot .8s linear infinite}
 @keyframes load-rot{to{transform:rotate(360deg)}}
 .load-tit{font:800 16px 'Inter',sans-serif;color:var(--yellow);margin-bottom:6px}
 .load-sub{font-size:13.5px;color:var(--text);min-height:20px;line-height:1.5}
-.load-bar{height:8px;background:#111827;border-radius:99px;overflow:hidden;margin:14px 0 8px}
-.load-bar>div{height:100%;width:0;background:linear-gradient(90deg,#F5C518,#e0a800);transition:width .25s}
+.load-bar{height:8px;background:var(--surf2);border-radius:99px;overflow:hidden;margin:14px 0 8px}
+.load-bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .25s}
 .load-bar.ind>div{width:38%;animation:load-slide 1.1s ease-in-out infinite}
 @keyframes load-slide{0%{margin-left:-38%}100%{margin-left:100%}}
 .load-pct{font:700 12px 'Inter',sans-serif;color:var(--muted);min-height:15px}
@@ -83,41 +101,42 @@ input[readonly]{opacity:.8;cursor:not-allowed}
 /* pendências de cada escala já lançada (seção ③) */
 td.pend{font-size:11.5px;line-height:1.8;max-width:240px}
 td.pend span{display:inline-block;border-radius:999px;padding:1px 8px;margin:1px 3px 1px 0;white-space:nowrap}
-td.pend .bad{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.45);color:#fca5a5}
-td.pend .war{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:var(--warn)}
-td.pend .okb{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:var(--ok)}
+td.pend .bad{background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit)}
+td.pend .war{background:var(--warn-soft);border:1px solid var(--warn-line);color:var(--warn)}
+td.pend .okb{background:var(--good-soft);border:1px solid var(--good-line);color:var(--ok)}
 
 /* passo 2: revisão */
 .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.pill{border:1px solid #334155;background:rgba(148,163,184,.08);color:#cbd5e1;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
-.pill.on{border-color:rgba(245,197,24,.6);background:rgba(245,197,24,.14);color:var(--yellow)}
-.pill.done{border-color:rgba(52,211,153,.5);color:var(--ok)}
-.doc-strip{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;color:#cbd5e1}
-.doc-strip span b{color:#fff}
+.pill{display:inline-flex;align-items:center;border:1px solid var(--line2);background:var(--surf2);color:var(--t3);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .2s,color .2s}
+.pill:hover{border-color:var(--acc-line);color:var(--t1)}
+.pill.on{border-color:var(--acc-line);background:var(--acc-soft);color:var(--acc)}
+.pill.done{border-color:var(--good-line);color:var(--ok)}
+.doc-strip{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;color:var(--t3)}
+.doc-strip span b{color:var(--t1)}
 .avisos{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.aviso{font-size:13px;border-radius:9px;padding:8px 12px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fde68a}
-.aviso.ok{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35);color:#a7f3d0}
-.aviso.err{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fecaca}
-.conf{display:flex;gap:10px 26px;align-items:baseline;flex-wrap:wrap;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13.5px}
-.conf b.n{font:700 26px 'Rajdhani',sans-serif;color:#fff;margin-left:4px}
+.aviso{font-size:13px;border-radius:12px;padding:8px 12px;background:var(--warn-soft);border:1px solid var(--warn-line);color:var(--warn)}
+.aviso.ok{background:var(--good-soft);border-color:var(--good-line);color:var(--good)}
+.aviso.err{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
+.conf{display:flex;gap:10px 26px;align-items:baseline;flex-wrap:wrap;border-radius:16px;padding:12px 16px;margin-bottom:12px;font-size:13.5px}
+.conf b.n{font:700 26px 'Rajdhani',sans-serif;color:var(--t1);margin-left:4px}
 .conf .msg{flex-basis:100%;font-size:14px;font-weight:600}
-.conf.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.45);color:#a7f3d0}
-.conf.bad{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);color:#fecaca}
-.conf.na{background:rgba(148,163,184,.08);border:1px solid #334155;color:#cbd5e1}
+.conf.ok{background:var(--good-soft);border:1px solid var(--good-line);color:var(--good)}
+.conf.bad{background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit)}
+.conf.na{background:var(--surf2);border:1px solid var(--line2);color:var(--t3)}
 /* ⚡ Lançar todas — painel do PDF com várias escalas (21/09/2026) */
 .lote-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.lote{border:1px solid rgba(96,165,250,.45);background:rgba(96,165,250,.06);border-radius:12px;padding:14px 16px;margin-bottom:14px}
-.lote h4{margin:0 0 4px;font:800 15px 'Inter',sans-serif;color:#bfdbfe}
-.lote .sub{font-size:12.5px;color:#94a3b8;margin-bottom:12px}
-.lote .cfg{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;font-size:13px;color:#cbd5e1;border-bottom:1px solid #1e293b;padding-bottom:12px;margin-bottom:12px}
-.lote .cfg b{color:#fff}
+.lote{border:1px solid var(--info-line);background:var(--info-soft);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.lote h4{display:flex;align-items:center;gap:8px;margin:0 0 4px;font:800 15px 'Inter',sans-serif;color:var(--info)}
+.lote .sub{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.lote .cfg{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--t3);border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px}
+.lote .cfg b{color:var(--t1)}
 table.lote-tb{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
-table.lote-tb th{background:#0d1322;color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-table.lote-tb td{padding:7px 6px;border-bottom:1px solid #131b2b;vertical-align:top}
+table.lote-tb th{background:var(--surf);color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.lote-tb td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 table.lote-tb tr.off td{opacity:.45}
 table.lote-tb input[type=text]{width:74px;padding:5px 7px;font-size:13px;border-radius:7px}
 table.lote-tb .msg{font-size:12px;margin-top:2px}
-table.lote-tb .msg .err{color:#fca5a5} table.lote-tb .msg .warn{color:#fcd34d} table.lote-tb .msg .ok{color:#a7f3d0}
+table.lote-tb .msg .err{color:var(--crit)} table.lote-tb .msg .warn{color:var(--warn)} table.lote-tb .msg .ok{color:var(--good)}
 .lote .foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .op-match{font-size:12px;margin-top:4px}
 .nova-op{display:none;margin-top:8px;gap:8px;flex-wrap:wrap;align-items:center}
@@ -125,87 +144,88 @@ table.lote-tb .msg .err{color:#fca5a5} table.lote-tb .msg .warn{color:#fcd34d} t
 .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:16px 0 10px}
 .tools .fg input{width:150px}
 
-.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
 table.pol{border-collapse:collapse;width:100%;min-width:1250px;font-size:13px}
-table.pol th{position:sticky;top:0;background:#0d1322;color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-table.pol td{padding:5px 6px;border-bottom:1px solid #131b2b;vertical-align:top}
-table.pol tr.eq td{background:rgba(96,165,250,.06);color:var(--blue);font-weight:700;font-size:12px;padding:7px 10px}
+table.pol th{position:sticky;top:0;background:var(--surf);color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.pol td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.pol tr.eq td{background:var(--info-soft);color:var(--blue);font-weight:700;font-size:12px;padding:7px 10px}
 table.pol tr.off td{opacity:.4}
-table.pol tr.div td{background:rgba(248,113,113,.06)}
+table.pol tr.div td{background:var(--crit-soft)}
 table.pol input{width:100%;padding:6px 7px;font-size:13px;border-radius:7px}
 table.pol .c-re input{width:74px} table.pol .c-posto input{width:108px}
 table.pol .c-opm input{width:80px} table.pol .c-fun input{width:60px}
 table.pol .c-dt input{width:128px} table.pol .c-dd input{width:62px}
 table.pol .c-loc input{width:130px} table.pol .c-guerra input{width:120px}
 .st{font-size:11px;margin-top:3px;line-height:1.35}
-.nome-esc{font-weight:600;color:#e2e8f0;font-size:12.5px;min-width:210px}
-.val{white-space:nowrap;text-align:right;font-weight:700;color:#fff;padding-top:11px!important}
-.rm{background:none;border:none;color:#64748b;cursor:pointer;font-size:15px;padding:6px}
+.nome-esc{font-weight:600;color:var(--t2);font-size:12.5px;min-width:210px}
+.val{white-space:nowrap;text-align:right;font-weight:700;color:var(--t1);padding-top:11px!important}
+.rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:6px}
 .rm:hover{color:var(--err)}
 .foot{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
-.foot .calc{flex:1;min-width:260px;font-size:14px;color:#cbd5e1}
-.foot .calc b{color:#fff}
+.foot .calc{flex:1;min-width:260px;font-size:14px;color:var(--t3)}
+.foot .calc b{color:var(--t1)}
 #save-err{width:100%;font-size:13.5px;line-height:1.5}
 .extra{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
 #pdf-view{display:none;margin-top:12px;max-height:80vh;overflow:auto;background:#fff;border-radius:10px;padding:8px}
 #pdf-view canvas{display:block;margin:0 auto 8px;max-width:100%;height:auto;box-shadow:0 1px 6px rgba(0,0,0,.25)}
-#raw-view{display:none;margin-top:12px;max-height:50vh;overflow:auto;background:#020409;border:1px solid var(--line);border-radius:10px;padding:12px;font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;color:#9fb0c8}
+#raw-view{display:none;margin-top:12px;max-height:50vh;overflow:auto;background:var(--surf2);border:1px solid var(--line);border-radius:12px;padding:12px;font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;color:var(--t3)}
 
 /* passo 3: lotes */
 table.lotes{border-collapse:collapse;width:100%;font-size:13px;min-width:900px}
 table.lotes th{text-align:left;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
-table.lotes td{padding:9px 8px;border-bottom:1px solid #131b2b}
+table.lotes td{padding:9px 8px;border-bottom:1px solid var(--line)}
 table.lotes td.num{text-align:right;white-space:nowrap}
 table.lotes td:nth-child(2){min-width:320px}
 #log table.lotes td:nth-child(2){min-width:0}
 #log table.lotes td:nth-child(4){min-width:240px}
-.acao{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:999px;white-space:nowrap;background:rgba(148,163,184,.12);color:#cbd5e1}
-.acao.add{background:rgba(52,211,153,.14);color:#6ee7b7}
-.acao.del{background:rgba(248,113,113,.14);color:#fca5a5}
-.acao.cad{background:rgba(96,165,250,.14);color:#93c5fd}
-.acao.op{background:rgba(245,197,24,.14);color:#fcd34d}
+.acao{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--surf2);color:var(--t3)}
+.acao.add{background:var(--good-soft);color:var(--good)}
+.acao.del{background:var(--crit-soft);color:var(--crit)}
+.acao.cad{background:var(--info-soft);color:var(--info)}
+.acao.op{background:var(--acc-soft);color:var(--acc)}
 .empty{text-align:center;color:var(--muted);padding:26px}
 
 /* modo manual (sem PDF) */
-.manbox{border:1px dashed rgba(245,197,24,.45);background:rgba(245,197,24,.04);border-radius:12px;padding:14px 16px;margin-bottom:12px}
-.manbox h4{font:800 14px 'Inter',sans-serif;color:var(--yellow);margin-bottom:4px}
-.manbox textarea{background:var(--bg);border:1px solid #273244;border-radius:9px;padding:9px 11px;color:#e2e8f0;font:13px 'Inter',sans-serif;outline:none;width:100%;min-height:62px;resize:vertical}
-.manbox textarea:focus{border-color:rgba(245,197,24,.6)}
+.manbox{border:1px dashed var(--acc-line);background:var(--acc-soft);border-radius:18px;padding:14px 16px;margin-bottom:12px}
+.manbox h4{display:flex;align-items:center;gap:8px;font:800 14px 'Inter',sans-serif;color:var(--yellow);margin-bottom:4px}
+.manbox textarea{width:100%;min-height:62px;resize:vertical;font-size:13px}
 .manual-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
 
 /* ② em duas colunas: conferência à esquerda, painel de possíveis erros à direita */
 .rev-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
-.rev-side{position:sticky;top:96px;max-height:calc(100vh - 116px);overflow:auto;border:1px solid var(--line);border-radius:14px;background:rgba(6,9,18,.7);padding:14px}
-.side-h{font:700 13px 'Rajdhani',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);margin-bottom:8px}
+.rev-side{position:sticky;top:126px;max-height:calc(100vh - 142px);overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--surf);padding:14px;box-shadow:var(--sh2)}
+.side-h{display:flex;align-items:center;gap:6px;font:700 13px 'Rajdhani',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);margin-bottom:8px}
 .side-sum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .side-sum span{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
-.side-sum .e{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.45);color:#fca5a5}
-.side-sum .w{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:var(--warn)}
-.side-sum .o{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:var(--ok)}
-.sg{border-left:3px solid var(--warn);background:rgba(148,163,184,.05);border-radius:0 9px 9px 0;padding:7px 10px;margin-bottom:8px;font-size:12.5px}
+.side-sum .e{background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit)}
+.side-sum .w{background:var(--warn-soft);border:1px solid var(--warn-line);color:var(--warn)}
+.side-sum .o{background:var(--good-soft);border:1px solid var(--good-line);color:var(--ok)}
+.sg{border-left:3px solid var(--warn);background:var(--surf2);border-radius:0 11px 11px 0;padding:7px 10px;margin-bottom:8px;font-size:12.5px}
 .sg.err{border-left-color:var(--err)}
-.sg b{display:block;color:#e2e8f0;margin-bottom:3px}
+.sg b{display:block;color:var(--t2);margin-bottom:3px}
 .sg a{display:inline-block;color:var(--blue);text-decoration:none;margin:1px 8px 1px 0;font-size:12px;cursor:pointer}
 .sg a:hover{text-decoration:underline}
 .side-empty{font-size:12.5px;color:var(--muted)}
 table.pol tr.rerr td:first-child{box-shadow:inset 4px 0 0 var(--err)}
 table.pol tr.rwar td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
-table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
+table.pol tr.flash td{background:var(--acc-soft)!important}
 
 /* dashboard de valores */
 .dash{margin-bottom:14px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
-.kpi{background:rgba(148,163,184,.06);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.kpi{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 14px 13px}
+.kpi::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;background:linear-gradient(90deg,var(--line2),transparent)}
+.kpi.main::after{background:linear-gradient(90deg,var(--acc),transparent)}
 .kpi small{display:block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:700}
-.kpi b{font:700 22px 'Rajdhani',sans-serif;color:#fff;white-space:nowrap}
+.kpi b{font:700 23px 'Rajdhani',sans-serif;color:var(--t1);white-space:nowrap}
 .kpi.main b{color:var(--yellow)}
 .bars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
 .bars h5{font:700 11px 'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .bar-l{display:grid;grid-template-columns:minmax(80px,1.1fr) 2fr auto;gap:8px;align-items:center;font-size:12px;margin-bottom:4px}
-.bar-l span.n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cbd5e1}
-.bar-l span.t{height:9px;background:#111827;border-radius:99px;overflow:hidden}
-.bar-l span.t i{display:block;height:100%;background:linear-gradient(90deg,#F5C518,#e0a800);border-radius:99px}
-.bar-l span.v{color:#fff;font-weight:700;white-space:nowrap}
+.bar-l span.n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t3)}
+.bar-l span.t{height:9px;background:var(--surf2);border-radius:99px;overflow:hidden}
+.bar-l span.t i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:99px}
+.bar-l span.v{color:var(--t1);font-weight:700;white-space:nowrap}
 
 @media(max-width:1100px){
   .rev-grid{grid-template-columns:1fr}
@@ -213,35 +233,52 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
 }
 @media(max-width:760px){
   .grid .wide{grid-column:auto}
-  .hdr-sub{display:none}
+  .di-dash span{display:none}
+  .di-dash{width:40px;height:40px;min-height:40px;padding:0}
   .tools .fg input{width:100%}
 }
 </style>
+<!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
+     cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-30", "titulo": "Diária de cara nova", "quem": "todos", "itens": [
+    "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
+    "Passos numerados, avisos, tabelas e o painel de possíveis erros redesenhados, com ícones novos (sem emoji).",
+    "Tudo continua no mesmo lugar e funciona igual: escala em PDF ou HTML do SEI, lançamento manual, lançar todas, escalas já lançadas e histórico."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-      <div>
-        <div class="hdr-title">Diária por Policial <em>· Lançar escala</em></div>
-        <div class="hdr-sub">Envie o PDF da escala do SEI — a página lê e preenche sozinha — ou lance manualmente. Você confere e lança.</div>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <a href="index.html">⬅ Dashboard</a>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="diaria.html" title="Lançar diárias">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Diária por Policial</small><b>Lançar escala</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <a class="bp-btn sec sm di-dash" href="index.html" title="Voltar ao dashboard"><i data-ic="voltar"></i><span>Dashboard</span></a>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if (window.BPCasca && BPCasca.novidades) BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
       <span id="userchip"></span>
-      <a href="#" id="logout-link" onclick="apiLogout();return false" style="display:none">sair</a>
+      <a class="bp-btn ic sec" href="#" id="logout-link" onclick="apiLogout();return false" style="display:none" title="Sair" aria-label="Sair"><i data-ic="sair"></i></a>
     </div>
   </div>
-</div>
+</header>
 
-<div class="wrap">
+<main class="bp-wrap di-wrap">
+
+  <section class="bp-heroi di-heroi">
+    <div>
+    <span class="bp-selo-tx"><b></b>P3 · Diária por Policial</span>
+    <h1>Lançar <em>escala</em></h1>
+    <p>Envie o PDF (ou o HTML) da escala do SEI — a página lê e preenche sozinha — ou lance manualmente. Você confere e lança.</p>
+    </div>
+  </section>
 
   <!-- LOGIN -->
   <div id="login-box" class="card" style="display:none">
-    <div class="sec" style="margin-top:0">🔐 Área dos gestores</div>
+    <div class="sec" style="margin-top:0"><i data-ic="cadeado"></i>Área dos gestores</div>
     <form onsubmit="return doLogin(event)">
       <div class="fg"><label>Usuário</label><input id="l-user" autocomplete="username" required></div>
       <div class="fg"><label>Senha</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
@@ -252,36 +289,36 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
   </div>
 
   <div id="noaccess" class="card" style="display:none">
-    <div style="font-size:34px">🚫</div>
+    <div class="di-na-ic"><i data-ic="proibido"></i></div>
     <p style="margin:10px 0 16px">O login <b id="na-user"></b> não tem permissão para lançar diárias.<br><span class="muted">A consulta continua no dashboard, em Gestão › Diária por Policial.</span></p>
-    <a class="btn" href="index.html">⬅ Voltar ao dashboard</a>
+    <a class="btn" href="index.html"><i data-ic="voltar"></i>Voltar ao dashboard</a>
     <button class="btn gray" onclick="apiLogout()">Trocar de usuário</button>
   </div>
 
   <!-- APP -->
   <div id="app" style="display:none">
 
-    <div class="sec" style="margin-top:4px">① Escala em PDF</div>
+    <div class="sec" style="margin-top:14px"><span class="di-n">1</span>Escala em PDF</div>
     <div class="card">
       <div class="drop" id="drop"
            onclick="document.getElementById('f-pdf').click()"
            ondragover="event.preventDefault(); this.classList.add('over')"
            ondragleave="this.classList.remove('over')"
            ondrop="event.preventDefault(); this.classList.remove('over'); lerArquivo(event.dataTransfer.files[0])">
-        📄 <b>Arraste aqui a escala</b> (PDF ou HTML do SEI) ou clique para escolher<br>
+        <i data-ic="arquivo"></i><b>Arraste aqui a escala</b> (PDF ou HTML do SEI) ou clique para escolher<br>
         <small>O <b>HTML</b> que o SEI exporta é o melhor: as tabelas vêm exatas e o RE não sai tarjado. PDF também funciona; se for escaneado, a leitura é por OCR — mais lenta e sujeita a erro, confira com atenção.</small>
         <input type="file" id="f-pdf" accept="application/pdf,text/html,.html,.htm" style="display:none" onchange="lerArquivo(this.files[0]); this.value=''">
       </div>
       <div id="read-status" class="muted"></div>
       <div class="prog" id="prog"><div></div></div>
       <div class="manual-row">
-        <button class="btn gray" onclick="iniciarManual()">✍️ Lançar manualmente (sem PDF)</button>
+        <button class="btn gray" onclick="iniciarManual()"><i data-ic="assinar"></i>Lançar manualmente (sem PDF)</button>
         <span class="hint">Preencha a missão e adicione os policiais à mão ou colando uma lista de REs — as mesmas conferências do PDF valem aqui.</span>
       </div>
     </div>
 
     <div id="rev" style="display:none">
-      <div class="sec">② Conferir e completar</div>
+      <div class="sec"><span class="di-n">2</span>Conferir e completar</div>
       <div class="card">
        <div class="rev-grid"><div class="rev-main">
         <div class="pills" id="pills"></div>
@@ -289,7 +326,7 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
         <div class="lote" id="lote-box" style="display:none"></div>
         <div class="doc-strip" id="doc-strip"></div>
         <div class="manbox" id="man-box" style="display:none">
-          <h4>✍️ Lançamento manual</h4>
+          <h4><i data-ic="assinar"></i>Lançamento manual</h4>
           <div class="hint" style="margin:0 0 10px">Sem documento para ler: preencha abaixo. Tudo é opcional, mas SEI e efetivo previsto ativam a conferência e o aviso de relançamento.</div>
           <div class="grid">
             <div class="fg"><label>SEI nº</label><input id="man-sei" oninput="onManual()" placeholder="Ex.: 75833966"></div>
@@ -299,7 +336,7 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
           </div>
           <div class="fg" style="margin-top:10px"><label>Colar lista de REs (um por linha ou separados por espaço/vírgula)</label>
             <textarea id="man-res" placeholder="Ex.:&#10;94040&#10;92531&#10;200094233"></textarea></div>
-          <div style="margin-top:8px"><button class="btn sm" onclick="addREs()">➕ Adicionar REs do cadastro</button> <span class="hint" id="man-st"></span></div>
+          <div style="margin-top:8px"><button class="btn sm" onclick="addREs()"><i data-ic="mais"></i>Adicionar REs do cadastro</button> <span class="hint" id="man-st"></span></div>
         </div>
         <div id="conf-box" class="conf na"></div>
         <div class="dash" id="dash"></div>
@@ -312,7 +349,7 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
             <div class="op-match" id="op-match"></div>
             <div class="nova-op" id="nova-op">
               <input id="nova-op-nome" style="flex:1;min-width:220px" placeholder="Nome da operação">
-              <button class="btn sm" id="nova-op-btn" onclick="cadastrarOperacao()">➕ Cadastrar na lista</button>
+              <button class="btn sm" id="nova-op-btn" onclick="cadastrarOperacao()"><i data-ic="mais"></i>Cadastrar na lista</button>
               <span id="nova-op-st" class="hint"></span>
             </div>
           </div>
@@ -327,10 +364,10 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
         <div class="tools">
           <div class="fg"><label>Início (todos)</label><input type="date" id="t-ini" oninput="onManual()"></div>
           <div class="fg"><label>Término (todos)</label><input type="date" id="t-fim" oninput="onManual()"></div>
-          <button class="btn gray sm" onclick="aplicarPeriodoTodos()">🗓️ Aplicar período a todos</button>
+          <button class="btn gray sm" onclick="aplicarPeriodoTodos()"><i data-ic="calendario"></i>Aplicar período a todos</button>
           <div class="fg"><label>Localidade (vazios)</label><input id="t-loc" list="dl-locs" placeholder="Ex.: NOVA MUTUM"></div>
-          <button class="btn gray sm" onclick="aplicarLocalVazios()">📍 Preencher vazios</button>
-          <button class="btn gray sm" onclick="addLinha()">➕ Policial</button>
+          <button class="btn gray sm" onclick="aplicarLocalVazios()"><i data-ic="local"></i>Preencher vazios</button>
+          <button class="btn gray sm" onclick="addLinha()"><i data-ic="mais"></i>Policial</button>
           <datalist id="dl-locs"></datalist>
         </div>
 
@@ -345,7 +382,7 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
           </table>
         </div>
 
-        <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:#cbd5e1;cursor:pointer">
+        <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--t3);cursor:pointer">
           <input type="checkbox" id="cad-faltantes" checked style="width:auto">
           Cadastrar na aba POLICIAIS quem não está no cadastro (usa o nome de guerra digitado)
         </label>
@@ -353,13 +390,13 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
         <div class="foot">
           <div class="calc" id="calc"></div>
           <button class="btn gray" onclick="descartar()">Descartar</button>
-          <button class="btn-main" id="save-btn" onclick="salvar()">💾 Lançar</button>
+          <button class="btn-main" id="save-btn" onclick="salvar()"><i data-ic="enviar"></i>Lançar</button>
           <div id="save-err"></div>
         </div>
 
         <div class="extra">
-          <button class="btn gray sm" id="btn-ver-pdf" onclick="togglePdf()">👁️ Ver o PDF ao lado</button>
-          <button class="btn gray sm" onclick="toggleRaw()">📝 Texto lido do PDF</button>
+          <button class="btn gray sm" id="btn-ver-pdf" onclick="togglePdf()"><i data-ic="olho"></i>Ver o PDF ao lado</button>
+          <button class="btn gray sm" onclick="toggleRaw()"><i data-ic="arquivo"></i>Texto lido do PDF</button>
         </div>
         <div id="pdf-view"></div>
         <pre id="raw-view"></pre>
@@ -369,21 +406,21 @@ table.pol tr.flash td{background:rgba(245,197,24,.16)!important}
       </div>
     </div>
 
-    <div class="sec">③ Escalas já lançadas <small class="muted" id="lotes-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
+    <div class="sec"><span class="di-n">3</span>Escalas já lançadas <small class="muted" id="lotes-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
     <div class="card">
       <div class="dash" id="dash-geral"></div>
       <div class="tbl-wrap" style="border:none"><div id="lotes"><div class="empty">Carregando…</div></div></div>
       <div class="hint" style="margin-top:10px">Cada linha é uma escala (PDF) lançada de uma vez. <b>Excluir escala</b> apaga todos os policiais daquele lançamento — use se lançou errado e relance o PDF.</div>
     </div>
 
-    <div class="sec">④ Histórico de alterações <small class="muted" id="log-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
+    <div class="sec"><span class="di-n">4</span>Histórico de alterações <small class="muted" id="log-count" style="letter-spacing:0;text-transform:none;font-family:Inter"></small></div>
     <div class="card">
-      <input id="log-busca" placeholder="🔎 Filtrar por usuário, ação, operação, SEI, RE…" oninput="renderLog()" style="width:100%;margin-bottom:10px">
+      <input id="log-busca" type="search" placeholder="Filtrar por usuário, ação, operação, SEI, RE…" oninput="renderLog()" style="width:100%;margin-bottom:10px">
       <div class="tbl-wrap" style="border:none"><div id="log"><div class="empty">Carregando…</div></div></div>
       <div class="hint" style="margin-top:10px">Tudo que muda na Diária fica registrado aqui — lançar e excluir escala, excluir lançamento, cadastro de policial e operações — com quem fez e quando. Registros com mais de <b>90 dias</b> são apagados sozinhos.</div>
     </div>
   </div>
-</div>
+</main>
 
 <script>
 const API_BASE = "https://bpfron-api.bpfron.workers.dev";
@@ -391,6 +428,8 @@ const API_BASE = "https://bpfron-api.bpfron.workers.dev";
 // diariaEditors() do worker.js (e o Worker devolve a lista em /api/diaria, que prevalece).
 const DIARIA_GESTORES = ['desousa','p3','p301','p3aux'];
 const NOMES = { desousa:'CB QPPM De Sousa', p3:'2º SGT QPPM Camilo', p301:'1º SGT QPPM Fonseca', p3aux:'3º SGT QPPM Juliana' };
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+function iniciais(t){ const p = String(t || '').trim().split(/[\s._-]+/).filter(Boolean); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : (p[0] || '')[1] || '')).toUpperCase(); }
 
 const AUTH = {
   get token(){ try{ return localStorage.getItem('bp_token') || ''; }catch(e){ return ''; } },
@@ -453,22 +492,22 @@ async function apiPostJSON(path, body){
    pra tentar de novo. Resolve true = excluiu, false = cancelou. (Mesma função no index/intel.) */
 function confirmarExclusao({ titulo, texto, acao }){
   const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const inp = 'width:100%;box-sizing:border-box;background:#060912;border:1px solid #334155;border-radius:9px;padding:10px 12px;color:#e2e8f0;font:14px Inter,system-ui,sans-serif;outline:none;margin-bottom:12px';
-  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px';
+  const inp = 'width:100%;box-sizing:border-box;background:var(--surf2);border:1px solid var(--line2);border-radius:9px;padding:10px 12px;color:var(--t2);font:14px Inter,system-ui,sans-serif;outline:none;margin-bottom:12px';
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px';
   return new Promise(resolve => {
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,15,.75);display:flex;align-items:center;justify-content:center;padding:16px';
-    ov.innerHTML = `<form style="background:#0d1322;border:1px solid rgba(248,113,113,.5);border-radius:16px;padding:20px 22px;width:100%;max-width:440px;color:#e2e8f0;font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">
-      <div style="font-weight:800;font-size:16px;color:#fca5a5;margin-bottom:8px">🗑️ ${e(titulo || 'Confirmar exclusão')}</div>
-      <div style="font-size:13.5px;line-height:1.55;color:#cbd5e1;margin-bottom:14px;white-space:pre-line">${e(texto)}</div>
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `<form style="background:var(--surf);border:1px solid var(--crit-line);border-radius:20px;padding:20px 22px;width:100%;max-width:440px;color:var(--t2);font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="font-weight:800;font-size:16px;color:var(--crit);margin-bottom:8px"><i data-ic="lixeira"></i>${e(titulo || 'Confirmar exclusão')}</div>
+      <div style="font-size:13.5px;line-height:1.55;color:var(--t3);margin-bottom:14px;white-space:pre-line">${e(texto)}</div>
       <label style="${lbl}">Sua senha${AUTH && AUTH.user ? ' (' + e(AUTH.user) + ')' : ''} — confirma a exclusão</label>
       <input type="password" name="senha" autocomplete="current-password" style="${inp}">
       <label style="${lbl}">Motivo (opcional)</label>
       <input name="motivo" maxlength="300" placeholder="Ex.: lançado em duplicidade" style="${inp}">
-      <div data-err style="color:#fca5a5;font-size:13px;min-height:18px;margin-bottom:8px"></div>
+      <div data-err style="color:var(--crit);font-size:13px;min-height:18px;margin-bottom:8px"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" data-x style="background:rgba(148,163,184,.12);border:1px solid #334155;color:#cbd5e1;border-radius:9px;padding:9px 16px;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer">Cancelar</button>
-        <button type="submit" data-ok style="background:#dc2626;border:none;color:#fff;border-radius:9px;padding:9px 18px;font:800 13.5px Inter,system-ui,sans-serif;cursor:pointer">Excluir</button>
+        <button type="button" data-x style="background:var(--surf2);border:1px solid var(--line2);color:var(--t3);border-radius:9px;padding:9px 16px;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer">Cancelar</button>
+        <button type="submit" data-ok style="background:#dc2626;border:none;color:#fff;border-radius:11px;padding:9px 18px;font:800 13.5px Inter,system-ui,sans-serif;cursor:pointer">Excluir</button>
       </div></form>`;
     document.body.appendChild(ov);
     const f = ov.querySelector('form'), err = ov.querySelector('[data-err]'), ok = ov.querySelector('[data-ok]');
@@ -509,7 +548,9 @@ function apiLogout(){ AUTH.token=''; AUTH.user=''; DATA=null; boot(); }
 function boot(){
   const logged = AUTH.logged, user = AUTH.user;
   const ps = permsSessao();
-  $('userchip').textContent = logged ? '👤 ' + ((ps && ps.nome !== user && ps.nome) || NOMES[user] || user) : '';
+  const nomeU = (ps && ps.nome !== user && ps.nome) || NOMES[user] || user;
+  $('userchip').className = logged ? 'bp-eu' : '';
+  $('userchip').innerHTML = logged ? '<b>' + esc(iniciais(nomeU)) + '</b><span>' + esc(nomeU) + '</span>' : '';
   $('logout-link').style.display = logged ? '' : 'none';
   $('login-box').style.display = logged ? 'none' : '';
   const pode = logged && temPerm('diaria', DIARIA_GESTORES);
@@ -527,7 +568,7 @@ async function carregar(){
   try{
     DATA = await apiFetchJSON('/api/diaria');
   }catch(e){
-    $('lotes').innerHTML = `<div class="empty err">⚠️ ${esc(e.message)}</div>`;
+    $('lotes').innerHTML = `<div class="empty err"><i data-ic="alerta"></i>${esc(e.message)}</div>`;
     return;
   }
   if (Array.isArray(DATA.editores) && !DATA.editores.includes(AUTH.user)){   // o Worker manda
@@ -598,12 +639,12 @@ function problemasDoLote(id){
 }
 function badgesLote(id){
   const p = problemasDoLote(id), b = [];
-  if (p.div)     b.push(`<span class="bad">⛔ ${p.div} RE de outra pessoa</span>`);
-  if (p.rep)     b.push(`<span class="bad">⛔ ${p.rep} RE repetido</span>`);
-  if (p.semNome) b.push(`<span class="bad">⛔ ${p.semNome} sem nome</span>`);
-  if (p.semLoc)  b.push(`<span class="war">⚠️ ${p.semLoc} sem localidade</span>`);
-  if (p.fora)    b.push(`<span class="war">⚠️ ${p.fora} fora do cadastro</span>`);
-  return b.length ? b.join(' ') : '<span class="okb">✅ sem pendências</span>';
+  if (p.div)     b.push(`<span class="bad"><i data-ic="proibido"></i>${p.div} RE de outra pessoa</span>`);
+  if (p.rep)     b.push(`<span class="bad"><i data-ic="proibido"></i>${p.rep} RE repetido</span>`);
+  if (p.semNome) b.push(`<span class="bad"><i data-ic="proibido"></i>${p.semNome} sem nome</span>`);
+  if (p.semLoc)  b.push(`<span class="war"><i data-ic="alerta"></i>${p.semLoc} sem localidade</span>`);
+  if (p.fora)    b.push(`<span class="war"><i data-ic="alerta"></i>${p.fora} fora do cadastro</span>`);
+  return b.length ? b.join(' ') : '<span class="okb"><i data-ic="ok"></i>sem pendências</span>';
 }
 
 function renderLotes(){
@@ -628,14 +669,14 @@ function renderLotes(){
     </tr></thead><tbody>${lotes.map(l=>`<tr>
       <td style="white-space:nowrap">${esc(l.lancado_em||'—')}</td>
       <td><b>${esc(l.operacao||'—')}</b><div class="muted" style="font-size:12px">${esc(l.id_missao||'')}</div>
-        ${(l.guarnicoes||[]).length ? `<div class="muted" style="font-size:11.5px;margin-top:2px">👥 ${l.guarnicoes.map(g=>esc(g.equipe + (g.localidade ? ' · ' + g.localidade : ''))).join(' | ')}</div>` : ''}</td>
+        ${(l.guarnicoes||[]).length ? `<div class="muted" style="font-size:11.5px;margin-top:2px"><i data-ic="usuarios"></i>${l.guarnicoes.map(g=>esc(g.equipe + (g.localidade ? ' · ' + g.localidade : ''))).join(' | ')}</div>` : ''}</td>
       <td>${esc(l.orgao||'')}<div class="muted" style="font-size:12px">${esc(l.tipo_diaria||'')}</div></td>
       <td style="white-space:nowrap">${esc(l.inicio||'?')} → ${esc(l.fim||'?')}</td>
       <td>${esc(l.sei_doc||'—')}<div class="muted" style="font-size:11.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.arquivo||'')}">${esc(l.arquivo||'')}</div></td>
       <td class="num">${l.policiais}</td><td class="num">${fN(l.diarias)}</td><td class="num"><b>${fR(l.valor_total)}</b></td>
       <td>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</td>
       <td class="pend">${badgesLote(l.id_lote)}</td>
-      <td style="white-space:nowrap"><button class="btn sm" onclick="editarLote('${esc(l.id_lote)}')" style="margin-right:6px">✏️ Editar</button><button class="btn red sm" onclick="excluirLote('${esc(l.id_lote)}', this)">🗑️ Excluir</button></td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="editarLote('${esc(l.id_lote)}')" style="margin-right:6px"><i data-ic="editar"></i>Editar</button><button class="btn red sm" onclick="excluirLote('${esc(l.id_lote)}', this)"><i data-ic="lixeira"></i>Excluir</button></td>
     </tr>`).join('')}</tbody></table>`;
 }
 /* Abre uma escala JÁ LANÇADA na mesma tela de conferência, montada com o que está
@@ -643,7 +684,7 @@ function renderLotes(){
    (op:"update_lote" no Worker), preservando quem/quando lançou. 11/09/2026. */
 function editarLote(id){
   const l = (DATA.lotes||[]).find(x=>x.id_lote===id);
-  if (!l){ setStatus('❌ Escala não encontrada. Atualize a página.', 'err'); return; }
+  if (!l){ setStatus('<i data-ic="x"></i>Escala não encontrada. Atualize a página.', 'err'); return; }
   const linhas = [];
   (DATA.policiais||[]).forEach(p=>{
     (p.missoes||[]).forEach(m=>{
@@ -658,7 +699,7 @@ function editarLote(id){
     });
   });
   if (!linhas.length){
-    setStatus('❌ Não achei os policiais dessa escala. Se o Worker ainda não foi atualizado, a edição não funciona.', 'err');
+    setStatus('<i data-ic="x"></i>Não achei os policiais dessa escala. Se o Worker ainda não foi atualizado, a edição não funciona.', 'err');
     return;
   }
   linhas.sort((a,b)=> String(a.equipe).localeCompare(String(b.equipe),'pt-BR') || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
@@ -679,7 +720,7 @@ function editarLote(id){
   CUR = 0; DUP_OK = false;
   renderEscala();
   $('rev').style.display = '';
-  setStatus(`✏️ Editando a escala lançada em <b>${esc(l.lancado_em||'')}</b> por <b>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</b> — ${linhas.length} policial(is).`, 'warn');
+  setStatus(`<i data-ic="editar"></i>Editando a escala lançada em <b>${esc(l.lancado_em||'')}</b> por <b>${esc(NOMES[l.lancado_por]||l.lancado_por||'')}</b> — ${linhas.length} policial(is).`, 'warn');
   $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
@@ -693,7 +734,7 @@ async function excluirLote(id, btn){
   });
   if (!ok) return;
   await carregar();
-  setStatus(`🗑️ Escala excluída (${r.removidos} linha(s) removidas da planilha).`, 'ok');
+  setStatus(`<i data-ic="lixeira"></i>Escala excluída (${r.removidos} linha(s) removidas da planilha).`, 'ok');
 }
 
 /* ─────────────── ④ histórico de alterações (aba LOG, 90 dias) ─────────────── */
@@ -722,7 +763,7 @@ function renderLog(){
         <td>${esc(l.sei_doc||'')}</td>
         <td class="num">${l.policiais != null ? l.policiais : ''}</td>
         <td class="num">${l.valor != null ? fR(l.valor) : ''}</td>
-        <td style="font-size:12.5px;color:#cbd5e1;min-width:220px">${esc(l.detalhe||'')}</td>
+        <td style="font-size:12.5px;color:var(--t3);min-width:220px">${esc(l.detalhe||'')}</td>
       </tr>`; }).join('')}</tbody></table>`;
 }
 
@@ -1308,7 +1349,7 @@ function loadShow(titulo, sub){
       <div class="load-sub"></div>
       <div class="load-bar"><div></div></div>
       <div class="load-pct"></div>
-      <div class="load-hint">⚠️ Não feche nem atualize esta página.</div>
+      <div class="load-hint"><i data-ic="alerta"></i>Não feche nem atualize esta página.</div>
     </div>`;
     document.body.appendChild(LOAD_EL);
   }
@@ -1385,12 +1426,12 @@ async function lerArquivo(file){
   if (!file) return;
   const ehHTML = /\.x?html?$/i.test(file.name) || /html/i.test(file.type || '');
   const ehPDF = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
-  if (!ehPDF && !ehHTML){ setStatus('⚠️ Envie a escala em PDF ou o HTML exportado pelo SEI.', 'err'); return; }
-  if (ehPDF && !window.pdfjsLib){ setStatus('⚠️ O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
+  if (!ehPDF && !ehHTML){ setStatus('<i data-ic="alerta"></i>Envie a escala em PDF ou o HTML exportado pelo SEI.', 'err'); return; }
+  if (ehPDF && !window.pdfjsLib){ setStatus('<i data-ic="alerta"></i>O leitor de PDF não carregou (sem internet?). Recarregue a página.', 'err'); return; }
   EDIT = null;   // subir um arquivo novo sai do modo edição
   LOTE_ON = false; $('lote-box').style.display='none'; $('lote-bar').style.display='none';
   $('rev').style.display = 'none'; $('pdf-view').style.display='none'; $('pdf-view').innerHTML=''; $('raw-view').style.display='none';
-  setStatus('📖 Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
+  setStatus('<i data-ic="arquivo"></i>Lendo <b>'+esc(file.name)+'</b>…'); setProg(0.05);
   loadShow(ehHTML ? 'Lendo a escala (HTML do SEI)' : 'Lendo o PDF', 'Abrindo ' + file.name + '…');
   try{
     // sem o cadastro em mãos as linhas nasceriam sem nome de guerra (22/09/2026)
@@ -1432,11 +1473,11 @@ async function lerArquivo(file){
     ESCALAS = escalas.map(e=>({ ...e, rows: e.policiais.map(novaLinha), form:null, lancado:false }));
     setProg(null);
     if (!ESCALAS.length || !ESCALAS.some(e=>e.rows.length)){
-      setStatus('⚠️ Não encontrei a tabela de policiais neste PDF. Confira se é a escala do SEI — ou lance à mão com <b>➕ Policial</b>. Veja o <b>📝 Texto lido</b> abaixo.', 'warn');
+      setStatus('<i data-ic="alerta"></i>Não encontrei a tabela de policiais neste PDF. Confira se é a escala do SEI — ou lance à mão com <b><i data-ic="mais"></i>Policial</b>. Veja o <b><i data-ic="arquivo"></i>Texto lido</b> abaixo.', 'warn');
       if (!ESCALAS.length) ESCALAS = [{ evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null, processo:'', sei_doc:'', equipes:[], policiais:[], avisos:[], rows:[], form:null, lancado:false }];
     } else {
       const n = ESCALAS.reduce((a,e)=>a+e.rows.length,0);
-      setStatus(`✅ <b>${esc(file.name)}</b> lido${viaOCR?' por OCR (PDF escaneado — confira nome e RE com atenção)':''}: ${n} policial(is) em ${ESCALAS.length} escala(s). Confira abaixo e lance.`, viaOCR ? 'warn' : 'ok');
+      setStatus(`<i data-ic="ok"></i><b>${esc(file.name)}</b> lido${viaOCR?' por OCR (PDF escaneado — confira nome e RE com atenção)':''}: ${n} policial(is) em ${ESCALAS.length} escala(s). Confira abaixo e lance.`, viaOCR ? 'warn' : 'ok');
     }
     CUR = 0; DUP_OK = false;
     loadStep('Montando a tabela de conferência…'); loadProg(1); await pausa();
@@ -1446,7 +1487,7 @@ async function lerArquivo(file){
     $('rev').scrollIntoView({ behavior:'smooth', block:'start' });
   }catch(e){
     setProg(null);
-    setStatus('❌ Não consegui ler o PDF: ' + esc(e.message || e), 'err');
+    setStatus('<i data-ic="x"></i>Não consegui ler o PDF: ' + esc(e.message || e), 'err');
   } finally {
     loadHide();   // sem isto a página fica coberta pela tela de carregamento
   }
@@ -1455,7 +1496,7 @@ async function lerArquivo(file){
 // OCR de reserva (PDF escaneado): renderiza cada página e passa no Tesseract em português.
 // As palavras voltam com caixa (bbox) e entram no MESMO parser, na mesma escala do pdf.js.
 async function ocrPdf(doc){
-  setStatus('🔎 PDF sem texto (escaneado) — fazendo OCR. Pode levar cerca de 1 minuto…', 'warn');
+  setStatus('<i data-ic="buscar"></i>PDF sem texto (escaneado) — fazendo OCR. Pode levar cerca de 1 minuto…', 'warn');
   loadShow('Reconhecendo o texto (OCR)', 'Este PDF é escaneado. Carregando o leitor de OCR…');
   if (!window.Tesseract) await loadScript(TESSERACT_JS);
   const worker = await Tesseract.createWorker('por');
@@ -1466,7 +1507,7 @@ async function ocrPdf(doc){
       const vp = page.getViewport({ scale: SCALE });
       const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
       await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
-      setStatus(`🔎 OCR da página ${p} de ${doc.numPages}…`, 'warn');
+      setStatus(`<i data-ic="buscar"></i>OCR da página ${p} de ${doc.numPages}…`, 'warn');
       loadStep(`Reconhecendo a página ${p} de ${doc.numPages}… (esta é a parte mais lenta)`);
       loadProg(0.55 + 0.4 * (p - 1) / doc.numPages);
       const { data } = await worker.recognize(cv);
@@ -1554,8 +1595,8 @@ function corrigirREsPeloNome(){
   let n = 0;
   e.rows.forEach((r,i)=>{ if (r.on && candidatoRE(r)){ usarRE(i, shortRE(candidatoRE(r).re), true); n++; } });
   DUP_OK = false; resetSaveBtn(); renderTabela(); renderAvisos();
-  setStatus(n ? `✅ ${n} RE corrigido(s) pelo nome no cadastro. Confira as linhas antes de lançar.`
-              : '⚠️ Nenhum RE pôde ser resolvido pelo nome — os nomes que faltam não estão no cadastro.', n ? 'ok' : 'warn');
+  setStatus(n ? `<i data-ic="ok"></i>${n} RE corrigido(s) pelo nome no cadastro. Confira as linhas antes de lançar.`
+              : '<i data-ic="alerta"></i>Nenhum RE pôde ser resolvido pelo nome — os nomes que faltam não estão no cadastro.', n ? 'ok' : 'warn');
 }
 // troca o RE da linha pelo do cadastro e puxa o nome de guerra junto
 function usarRE(i, re, semRender){
@@ -1594,12 +1635,12 @@ function renderDocStrip(){
   const per = e.periodo ? `${isoToBR(e.periodo.ini)} a ${isoToBR(e.periodo.fim)}` : '—';
   const decl = e.efetivo_declarado;
   $('doc-strip').innerHTML = [
-    `📄 <b>${esc(PDF_META.arquivo)}</b>`,
+    `<i data-ic="arquivo"></i><b>${esc(PDF_META.arquivo)}</b>`,
     e.sei_doc ? `SEI nº <b>${esc(e.sei_doc)}</b>` : '',
     e.evento ? `Evento: <b>${esc(e.evento)}</b>` : '',
     `Período: <b>${esc(per)}</b>`,
     e.local ? `Patrulhamento: <b>${esc(e.local)}</b>` : '',
-    `${e.manual ? 'Lançados à mão' : 'Lidos'}: <b>${e.rows.length}</b>${decl!=null ? ` de <b>${decl}</b> ${e.manual ? 'previstos' : 'declarados'} ${decl===e.rows.length?'✅':'⚠️'}` : ''}`,
+    `${e.manual ? 'Lançados à mão' : 'Lidos'}: <b>${e.rows.length}</b>${decl!=null ? ` de <b>${decl}</b> ${e.manual ? 'previstos' : 'declarados'} ${decl===e.rows.length?'<i data-ic="ok"></i>':'<i data-ic="alerta"></i>'}` : ''}`,
   ].filter(Boolean).map(s=>`<span>${s}</span>`).join('');
 }
 
@@ -1612,7 +1653,7 @@ function iniciarManual(){
   ESCALAS = [{ evento:'', etapa:'', operacao:'', orgao_hint:'', local:'', periodo:null, efetivo_declarado:null, processo:'', sei_doc:'',
     equipes:[], policiais:[], avisos:[], rows:[], form:null, lancado:false, manual:true }];
   CUR = 0; DUP_OK = false;
-  setStatus('✍️ Lançamento manual aberto. Preencha a missão, o período e adicione os policiais (➕ Policial ou colando REs).', 'ok');
+  setStatus('<i data-ic="assinar"></i>Lançamento manual aberto. Preencha a missão, o período e adicione os policiais (<i data-ic="mais"></i>Policial ou colando REs).', 'ok');
   $('btn-ver-pdf').style.display = 'none';
   renderEscala();
   $('rev').style.display = '';
@@ -1651,7 +1692,7 @@ function renderEscala(){
   const e = ESCALAS[CUR]; if (!e) return;
   // abas quando o PDF tem mais de um EVENTO
   $('pills').innerHTML = ESCALAS.length > 1 ? ESCALAS.map((x,j)=>
-    `<span class="pill${j===CUR?' on':''}${x.lancado?' done':''}" onclick="trocarEscala(${j})">${x.lancado?'✅ ':''}${j+1}. ${esc((x.evento||'Escala').slice(0,60))} (${x.rows.length})</span>`).join('') : '';
+    `<span class="pill${j===CUR?' on':''}${x.lancado?' done':''}" onclick="trocarEscala(${j})">${x.lancado?'<i data-ic="ok"></i>':''}${j+1}. ${esc((x.evento||'Escala').slice(0,60))} (${x.rows.length})</span>`).join('') : '';
   renderDocStrip();
   const mb = $('man-box');
   mb.style.display = e.manual ? '' : 'none';
@@ -1690,7 +1731,7 @@ function onMissao(){
     box.innerHTML = e.operacao && norm(op) !== norm(e.operacao) ? `<span class="muted">No PDF: "${esc(e.operacao)}"</span>` : '';
     nova.classList.remove('open');
   } else if (e.operacao){
-    box.innerHTML = `<span class="warn">⚠️ A operação do PDF ("${esc(e.operacao)}") não está na lista. Escolha uma parecida ou cadastre:</span>`;
+    box.innerHTML = `<span class="warn"><i data-ic="alerta"></i>A operação do PDF ("${esc(e.operacao)}") não está na lista. Escolha uma parecida ou cadastre:</span>`;
     nova.classList.add('open');
   } else { box.innerHTML = ''; nova.classList.remove('open'); }
   sugerirTipoPeloOrgao();   // o gestor pode ter corrigido o órgão no campo
@@ -1728,7 +1769,7 @@ function sugerirTipoPeloOrgao(){
     dica.innerHTML = `<span class="muted">Sugerido pelo órgão <b>${esc($('m-orgao').value.trim())}</b> (${alvo.toLowerCase()}) — troque se não for.</span>`;
   } else if (cand.length > 1){
     if (TIPO_AUTO){ sel.value = ''; TIPO_AUTO = false; }
-    dica.innerHTML = `<span class="warn">⚠️ ${esc($('m-orgao').value.trim())} é ${alvo.toLowerCase()} — escolha qual das ${cand.length} diárias ${alvo.toLowerCase()}.</span>`;
+    dica.innerHTML = `<span class="warn"><i data-ic="alerta"></i>${esc($('m-orgao').value.trim())} é ${alvo.toLowerCase()} — escolha qual das ${cand.length} diárias ${alvo.toLowerCase()}.</span>`;
   } else dica.innerHTML = '';
 }
 
@@ -1739,8 +1780,8 @@ function renderTabela(){
     if (r.equipe !== ultEq){
       ultEq = r.equipe;
       const eq = (e.equipes||[]).find(q=>q.nome===r.equipe);
-      const extra = eq ? [eq.area, eq.localidade && '📍 '+eq.localidade, eq.periodo && '🗓️ '+isoToBR(eq.periodo.ini)+' a '+isoToBR(eq.periodo.fim)].filter(Boolean).join(' · ') : '';
-      html += `<tr class="eq"><td colspan="13">👥 ${esc(r.equipe || 'Sem equipe')}${extra?` <span style="font-weight:500;color:#94a3b8">— ${esc(extra)}</span>`:''}</td></tr>`;
+      const extra = eq ? [eq.area, eq.localidade && '<i data-ic="local"></i>'+eq.localidade, eq.periodo && '<i data-ic="calendario"></i>'+isoToBR(eq.periodo.ini)+' a '+isoToBR(eq.periodo.fim)].filter(Boolean).join(' · ') : '';
+      html += `<tr class="eq"><td colspan="13"><i data-ic="usuarios"></i>${esc(r.equipe || 'Sem equipe')}${extra?` <span style="font-weight:500;color:var(--muted)">— ${esc(extra)}</span>`:''}</td></tr>`;
     }
     const inp = (k, cls, extra) => `<td class="${cls||''}"><input data-i="${i}" data-k="${k}" value="${esc(r[k])}" oninput="onCell(this)" ${extra||''}></td>`;
     html += `<tr id="r-${i}" class="${r.on?'':'off'}">
@@ -1759,7 +1800,7 @@ function renderTabela(){
       <td><button class="rm" title="Tirar da lista" onclick="rmLinha(${i})">✕</button></td>
     </tr>`;
   });
-  tb.innerHTML = html || '<tr><td colspan="13" class="empty">Nenhum policial. Use ➕ Policial para lançar à mão.</td></tr>';
+  tb.innerHTML = html || '<tr><td colspan="13" class="empty">Nenhum policial. Use <i data-ic="mais"></i>Policial para lançar à mão.</td></tr>';
   e.rows.forEach((r,i)=>atualizaStatus(i));
   recalcAll();
 }
@@ -1768,27 +1809,27 @@ function atualizaStatus(i){
   const e = ESCALAS[CUR], r = e.rows[i], el = $('st-'+i); if (!el) return;
   const reg = regDe(r), tr = $('r-'+i);
   const partes = [];
-  if (!r.re && r.reMasc) partes.push(`<span class="err">⛔ o documento tarjou o RE (…${esc(r.reMasc)}) e não achei este nome no cadastro — digite o RE</span>`);
+  if (!r.re && r.reMasc) partes.push(`<span class="err"><i data-ic="proibido"></i>o documento tarjou o RE (…${esc(r.reMasc)}) e não achei este nome no cadastro — digite o RE</span>`);
   else if (!r.re) partes.push('<span class="warn">sem RE</span>');
-  else if (r.reAchado) partes.push(`<span class="warn">⚠️ RE tarjado no documento (…${esc(r.reMasc)}) — este veio do cadastro pelo nome, confira</span>`);
+  else if (r.reAchado) partes.push(`<span class="warn"><i data-ic="alerta"></i>RE tarjado no documento (…${esc(r.reMasc)}) — este veio do cadastro pelo nome, confira</span>`);
   // RE × NOME é erro de verdade (RE digitado errado) e continua sendo cobrado TAMBÉM na
   // edição. O que é histórico e não se cobra é posto/OPM, que mudam com o tempo.
   else if (reg && isDivergente(r)){
     const alt = acharPorNome(r.nome);
-    partes.push(`<span class="err">⛔ o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`
+    partes.push(`<span class="err"><i data-ic="proibido"></i>o RE ${esc(r.re)} é de <b>${esc(reg.nome||reg.guerra)}</b> no cadastro — confira o RE</span>`
       + (alt && shortRE(alt.re) !== shortRE(r.re)
          ? ` <span class="ok">no cadastro, ${esc(alt.nome||alt.guerra)} é o RE <b>${esc(shortRE(alt.re))}</b></span>`
            + ` <button class="btn sm" style="padding:2px 8px" onclick="usarRE(${i},'${esc(shortRE(alt.re))}')">usar ${esc(shortRE(alt.re))}</button>`
          : ''));
   }
   else if (reg) partes.push(`<span class="ok">✓ cadastro: ${esc(reg.guerra||reg.nome)}${reg.posto_grad?' · '+esc(reg.posto_grad):''}</span>`
-    + (r.nomeDoCadastro ? ' <span class="warn">⚠️ o documento não trouxe o nome inteiro — este veio do cadastro, pelo RE</span>' : ''));
-  else partes.push('<span class="warn">⚠️ fora do cadastro — digite o nome de guerra</span>');
+    + (r.nomeDoCadastro ? ' <span class="warn"><i data-ic="alerta"></i>o documento não trouxe o nome inteiro — este veio do cadastro, pelo RE</span>' : ''));
+  else partes.push('<span class="warn"><i data-ic="alerta"></i>fora do cadastro — digite o nome de guerra</span>');
   const reps = r.re ? e.rows.filter(x=>x.on && shortRE(x.re)===shortRE(r.re)).length : 0;
   if (r.on && reps > 1) partes.push('<span class="err">RE repetido nesta escala</span>');
   // término escrito errado no PDF e ajustado pela leitura — some assim que o gestor digita outra data
-  if (r.fimPdf && r.fim !== r.fimPdf) partes.push(`<span class="warn">⚠️ no documento o término é <b>${esc(isoToBR(r.fimPdf))}</b> (antes do início) — ajustado para ${esc(isoToBR(r.fim))}, confira</span>`);
-  conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn">⚠️ já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
+  if (r.fimPdf && r.fim !== r.fimPdf) partes.push(`<span class="warn"><i data-ic="alerta"></i>no documento o término é <b>${esc(isoToBR(r.fimPdf))}</b> (antes do início) — ajustado para ${esc(isoToBR(r.fim))}, confira</span>`);
+  conflitos(r).slice(0,2).forEach(m=>partes.push(`<span class="warn"><i data-ic="alerta"></i>já tem "${esc(m.operacao||m.id_missao)}" em ${esc(m.data_inicio)} → ${esc(m.data_fim)}</span>`));
   el.innerHTML = partes.join('<br>');
   if (tr){
     const ps = probsLinha(e, r, contRE(e));
@@ -1850,9 +1891,9 @@ function recalcAll(){
   });
   $('calc').innerHTML = `<b>${n}</b> policial(is) · <b>${fN(dd)}</b> diárias × <b>${fR(valor)}</b> = <b>${fR(tot)}</b>`;
   const btn = $('save-btn');
-  if (!DUP_OK) btn.textContent = EDIT ? `💾 Salvar alterações (${n})` : `💾 Lançar ${n} policial(is)`;
+  if (!DUP_OK) btn.innerHTML = EDIT ? `<i data-ic="enviar"></i>Salvar alterações (${n})` : `<i data-ic="enviar"></i>Lançar ${n} policial(is)`;
   btn.disabled = !n || e.lancado;
-  if (e.lancado) btn.textContent = EDIT ? '✅ Alterações salvas' : '✅ Já lançada';
+  if (e.lancado) btn.innerHTML = EDIT ? '<i data-ic="ok"></i>Alterações salvas' : '<i data-ic="ok"></i>Já lançada';
   renderAvisos();
   renderConf();
   if (LOTE_ON && !LOTE_RODANDO) renderLote();   // mexeu na missão/valor: o lote acompanha
@@ -1864,14 +1905,14 @@ function renderConf(){
   const decl = e.efetivo_declarado, lidos = e.rows.length, marc = e.rows.filter(r=>r.on).length;
   const eqs = new Set(e.rows.map(r=>r.equipe)).size;
   let cls = 'na', msg;
-  if (EDIT) msg = '✏️ Editando uma escala já lançada — a conferência com o documento não se aplica; confira pela tabela.';
-  else if (e.manual && decl == null) msg = '✍️ Lançamento manual — não há documento para conferir. Informe o "Efetivo previsto" se quiser que a página confira a contagem.';
-  else if (decl == null) msg = '⚠️ O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
-  else if (decl === marc) { cls = 'ok'; msg = `✅ Os números batem: o documento declara ${decl} e serão lançados ${marc}.`; }
-  else { cls = 'bad'; msg = `⛔ Não bate: o documento declara ${decl}, a leitura achou ${lidos}${marc!==lidos ? ` e estão marcados ${marc}` : ''}. Confira quem falta ou sobra antes de lançar.`; }
+  if (EDIT) msg = '<i data-ic="editar"></i>Editando uma escala já lançada — a conferência com o documento não se aplica; confira pela tabela.';
+  else if (e.manual && decl == null) msg = '<i data-ic="assinar"></i>Lançamento manual — não há documento para conferir. Informe o "Efetivo previsto" se quiser que a página confira a contagem.';
+  else if (decl == null) msg = '<i data-ic="alerta"></i>O documento não informa o total do efetivo escalado — confira a contagem pela tabela.';
+  else if (decl === marc) { cls = 'ok'; msg = `<i data-ic="ok"></i>Os números batem: o documento declara ${decl} e serão lançados ${marc}.`; }
+  else { cls = 'bad'; msg = `<i data-ic="proibido"></i>Não bate: o documento declara ${decl}, a leitura achou ${lidos}${marc!==lidos ? ` e estão marcados ${marc}` : ''}. Confira quem falta ou sobra antes de lançar.`; }
   box.className = 'conf ' + cls;
-  box.innerHTML = `<span>📋 No documento:<b class="n">${decl==null ? '—' : decl}</b></span><span>📖 Lidos:<b class="n">${lidos}</b></span>`
-    + `<span>✔️ A lançar:<b class="n">${marc}</b></span><span>👥 Guarnições:<b class="n">${eqs}</b></span><span class="msg">${msg}</span>`;
+  box.innerHTML = `<span><i data-ic="check"></i>No documento:<b class="n">${decl==null ? '—' : decl}</b></span><span><i data-ic="arquivo"></i>Lidos:<b class="n">${lidos}</b></span>`
+    + `<span><i data-ic="check"></i>A lançar:<b class="n">${marc}</b></span><span><i data-ic="usuarios"></i>Guarnições:<b class="n">${eqs}</b></span><span class="msg">${msg}</span>`;
 }
 function resetSaveBtn(){ const b=$('save-btn'); b.classList.remove('orange'); $('save-err').innerHTML=''; }
 
@@ -1880,22 +1921,22 @@ function renderAvisos(){
   const e = ESCALAS[CUR]; if (!e) return;
   const on = e.rows.filter(r=>r.on);
   // (a contagem declarada × lida fica no quadro de conferência, não repete aqui)
-  const av = e.avisos.filter(t=>!/^O documento declara/.test(t)).map(t=>`<div class="aviso">⚠️ ${esc(t)}</div>`);
+  const av = e.avisos.filter(t=>!/^O documento declara/.test(t)).map(t=>`<div class="aviso"><i data-ic="alerta"></i>${esc(t)}</div>`);
   const jaLote = EDIT ? null : jaLancado(e);   // editando é o MESMO lote: não é relançamento
-  if (jaLote) av.unshift(`<div class="aviso err">⛔ Este documento (SEI ${esc(e.sei_doc)}) já foi lançado em ${esc(jaLote.lancado_em)} por ${esc(NOMES[jaLote.lancado_por]||jaLote.lancado_por)} — ${jaLote.policiais} policiais, ${fR(jaLote.valor_total)}. Não lance de novo; se precisar corrigir, exclua a escala em ③ e relance.</div>`);
-  if (EDIT) av.unshift(`<div class="aviso">✏️ Editando a escala lançada em <b>${esc(EDIT.lancado_em||'')}</b>. <b>Posto e OPM</b> são os gravados na época e não são cobrados (o policial pode ter mudado de unidade ou sido promovido); o <b>RE × nome</b> continua conferido contra o cadastro.</div>`);
+  if (jaLote) av.unshift(`<div class="aviso err"><i data-ic="proibido"></i>Este documento (SEI ${esc(e.sei_doc)}) já foi lançado em ${esc(jaLote.lancado_em)} por ${esc(NOMES[jaLote.lancado_por]||jaLote.lancado_por)} — ${jaLote.policiais} policiais, ${fR(jaLote.valor_total)}. Não lance de novo; se precisar corrigir, exclua a escala em ③ e relance.</div>`);
+  if (EDIT) av.unshift(`<div class="aviso"><i data-ic="editar"></i>Editando a escala lançada em <b>${esc(EDIT.lancado_em||'')}</b>. <b>Posto e OPM</b> são os gravados na época e não são cobrados (o policial pode ter mudado de unidade ou sido promovido); o <b>RE × nome</b> continua conferido contra o cadastro.</div>`);
   const div = on.filter(isDivergente).length;
   const corrigiveis = on.filter(candidatoRE).length;   // dá para achar pelo nome no cadastro
-  if (div) av.push(`<div class="aviso err">⛔ ${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE${EDIT ? ' — dá para salvar assim, mas confira.' : ' antes de lançar.'}</div>`);
+  if (div) av.push(`<div class="aviso err"><i data-ic="proibido"></i>${div} policial(is) com RE que no cadastro é de OUTRA pessoa (linha vermelha). Confira o RE${EDIT ? ' — dá para salvar assim, mas confira.' : ' antes de lançar.'}</div>`);
   const tarj = on.filter(r=>!r.re && r.reMasc).length;
-  if (tarj) av.push(`<div class="aviso err">⛔ ${tarj} policial(is) com o RE tarjado no documento e sem correspondência no cadastro — digite o RE na linha.</div>`);
-  if (corrigiveis) av.push(`<div class="aviso">🔎 ${corrigiveis} RE(s) podem ser resolvidos pelo nome no cadastro (RE trocado ou tarjado). `
+  if (tarj) av.push(`<div class="aviso err"><i data-ic="proibido"></i>${tarj} policial(is) com o RE tarjado no documento e sem correspondência no cadastro — digite o RE na linha.</div>`);
+  if (corrigiveis) av.push(`<div class="aviso"><i data-ic="buscar"></i>${corrigiveis} RE(s) podem ser resolvidos pelo nome no cadastro (RE trocado ou tarjado). `
     + `<button class="btn sm" style="padding:3px 10px;margin-left:4px" onclick="corrigirREsPeloNome()">Corrigir os ${corrigiveis} pelo nome</button></div>`);
   const fora = on.filter(r=>r.re && !regDe(r)).length;
-  if (fora) av.push(`<div class="aviso">⚠️ ${fora} policial(is) fora do cadastro POLICIAIS. Digite o nome de guerra — com a caixa marcada lá embaixo, eles são cadastrados ao lançar.</div>`);
+  if (fora) av.push(`<div class="aviso"><i data-ic="alerta"></i>${fora} policial(is) fora do cadastro POLICIAIS. Digite o nome de guerra — com a caixa marcada lá embaixo, eles são cadastrados ao lançar.</div>`);
   const conf = on.filter(r=>conflitos(r).length).length;
-  if (conf) av.push(`<div class="aviso">⚠️ ${conf} policial(is) já têm outra missão lançada em período que cruza com este (2+ dias).</div>`);
-  if (!av.length && on.length) av.push('<div class="aviso ok">✅ Tudo conferido: todos no cadastro, sem período sobreposto.</div>');
+  if (conf) av.push(`<div class="aviso"><i data-ic="alerta"></i>${conf} policial(is) já têm outra missão lançada em período que cruza com este (2+ dias).</div>`);
+  if (!av.length && on.length) av.push('<div class="aviso ok"><i data-ic="ok"></i>Tudo conferido: todos no cadastro, sem período sobreposto.</div>');
   $('avisos').innerHTML = av.join('');
   renderSide(e);
   renderDash(e);
@@ -1951,12 +1992,12 @@ function renderSide(e){
   const nErr = form.filter(x=>x.sev==='err').length + gl.filter(g=>g.sev==='err').reduce((a,g)=>a+g.itens.length, 0);
   const nWar = form.filter(x=>x.sev==='warn').length + gl.filter(g=>g.sev==='warn').reduce((a,g)=>a+g.itens.length, 0);
   const nome = i => { const r = e.rows[i]; return esc(r.guerra || r.nome || ('RE ' + (r.re || '?'))); };
-  let h = `<div class="side-h">⚠️ Possíveis erros</div><div class="side-sum">`
-    + (nErr ? `<span class="e">⛔ ${nErr} travam</span>` : '') + (nWar ? `<span class="w">⚠️ ${nWar} atenção</span>` : '')
-    + (!nErr && !nWar ? '<span class="o">✅ nada a corrigir</span>' : '') + '</div>';
-  form.forEach(x=>{ h += `<div class="sg ${x.sev==='err'?'err':''}">${x.sev==='err'?'⛔':'⚠️'} ${esc(x.txt)}</div>`; });
+  let h = `<div class="side-h"><i data-ic="alerta"></i>Possíveis erros</div><div class="side-sum">`
+    + (nErr ? `<span class="e"><i data-ic="proibido"></i>${nErr} travam</span>` : '') + (nWar ? `<span class="w"><i data-ic="alerta"></i>${nWar} atenção</span>` : '')
+    + (!nErr && !nWar ? '<span class="o"><i data-ic="ok"></i>nada a corrigir</span>' : '') + '</div>';
+  form.forEach(x=>{ h += `<div class="sg ${x.sev==='err'?'err':''}">${x.sev==='err'?'<i data-ic="proibido"></i>':'<i data-ic="alerta"></i>'} ${esc(x.txt)}</div>`; });
   gl.forEach(g=>{
-    h += `<div class="sg ${g.sev==='err'?'err':''}"><b>${g.sev==='err'?'⛔':'⚠️'} ${esc(g.k)} (${g.itens.length})</b>`
+    h += `<div class="sg ${g.sev==='err'?'err':''}"><b>${g.sev==='err'?'<i data-ic="proibido"></i>':'<i data-ic="alerta"></i>'} ${esc(g.k)} (${g.itens.length})</b>`
       + g.itens.slice(0, 8).map(i=>`<a onclick="irLinha(${i})">${nome(i)}</a>`).join('')
       + (g.itens.length > 8 ? `<span class="muted">+${g.itens.length - 8}</span>` : '') + '</div>';
   });
@@ -1992,7 +2033,7 @@ function renderDash(e){
     eq[ke] = (eq[ke]||0) + v; loc[kl] = (loc[kl]||0) + v;
   });
   const tot = dd * valor;
-  box.innerHTML = `<div class="sec" style="margin:4px 0 8px">💰 Valores desta escala</div><div class="kpis">`
+  box.innerHTML = `<div class="sec" style="margin:4px 0 8px"><i data-ic="etiqueta"></i>Valores desta escala</div><div class="kpis">`
     + kpiHTML('Valor total', valor ? fR(tot) : '—', 'main') + kpiHTML('Policiais', fN(on.length)) + kpiHTML('Diárias', fN(dd))
     + kpiHTML('Valor da diária', valor ? fR(valor) : '—') + kpiHTML('Média por policial', valor ? fR(tot / on.length) : '—') + '</div>'
     + (valor ? `<div class="bars-grid">${barrasHTML('Por guarnição', eq)}${barrasHTML('Por localidade', loc)}</div>`
@@ -2144,7 +2185,7 @@ function renderLoteBar(){
   bar.style.display = varias ? 'flex' : 'none';
   if (!varias){ LOTE_ON = false; $('lote-box').style.display = 'none'; return; }
   const falta = ESCALAS.filter(e=>!e.lancado).length;
-  bar.innerHTML = `<button class="btn sm" onclick="toggleLote()">${LOTE_ON ? '✕ Fechar o lançamento em lote' : `⚡ Lançar todas (${falta} escala(s))`}</button>`
+  bar.innerHTML = `<button class="btn sm" onclick="toggleLote()">${LOTE_ON ? '<i data-ic="x"></i>Fechar o lançamento em lote' : `<i data-ic="foguete"></i>Lançar todas (${falta} escala(s))`}</button>`
     + `<span class="hint">Este PDF tem <b>${ESCALAS.length}</b> escalas. Preencha a missão abaixo uma vez e lance todas de uma vez.</span>`;
   if (LOTE_ON) renderLote(); else $('lote-box').style.display = 'none';
 }
@@ -2199,13 +2240,13 @@ function renderLote(){
   const tr = visiveis.map(({e,j,st})=>{
     const res = e.loteRes;
     const marcada = !!e.loteOn && !e.lancado;
-    const msg = e.lancado ? `<span class="ok">✅ ${esc((res && res.msg) || 'já lançada')}</span>`
-      : res && !res.ok ? `<span class="err">❌ ${esc(res.msg)}</span>`
-      : st.erros.length ? `<span class="err">⛔ ${esc(st.erros.join(' · '))}</span>`
-      : st.avisos.length ? `<span class="warn">⚠️ ${esc(st.avisos.join(' · '))}</span>`
+    const msg = e.lancado ? `<span class="ok"><i data-ic="ok"></i>${esc((res && res.msg) || 'já lançada')}</span>`
+      : res && !res.ok ? `<span class="err"><i data-ic="x"></i>${esc(res.msg)}</span>`
+      : st.erros.length ? `<span class="err"><i data-ic="proibido"></i>${esc(st.erros.join(' · '))}</span>`
+      : st.avisos.length ? `<span class="warn"><i data-ic="alerta"></i>${esc(st.avisos.join(' · '))}</span>`
         + (e.loteOk ? ' <span class="ok">— conferido, vai ser lançada</span>'
-          : ` <button class="btn sm" style="padding:3px 9px;margin-left:6px" onclick="loteConferir(${j})">✔️ conferi, pode lançar</button>`)
-      : '<span class="ok">✅ pronta para lançar</span>';
+          : ` <button class="btn sm" style="padding:3px 9px;margin-left:6px" onclick="loteConferir(${j})"><i data-ic="check"></i>conferi, pode lançar</button>`)
+      : '<span class="ok"><i data-ic="ok"></i>pronta para lançar</span>';
     return `<tr class="${marcada || e.lancado ? '' : 'off'}">
       <td><input type="checkbox" ${marcada?'checked':''} ${e.lancado||LOTE_RODANDO?'disabled':''} onchange="loteToggleLinha(${j})" style="width:auto"></td>
       <td>${j+1}</td>
@@ -2219,21 +2260,21 @@ function renderLote(){
       <td><button class="btn sm" style="padding:4px 10px" onclick="trocarEscala(${j})">abrir</button></td>
     </tr>`;
   }).join('');
-  box.innerHTML = `<h4>⚡ Lançar todas as escalas deste PDF</h4>
+  box.innerHTML = `<h4><i data-ic="foguete"></i>Lançar todas as escalas deste PDF</h4>
     <div class="sub">A lista começa mostrando <b>só o que precisa de você</b>: clique em <b>abrir</b>, corrija a escala e ela sai daqui sozinha.
       Quando a lista zerar, clique em <b>Lançar</b> — cada escala vira um lançamento próprio na planilha, com o nº do documento SEI dela.
-      <b>⚠️</b> é conferência (o botão “conferi” resolve) e <b>⛔</b> é problema que trava o lançamento.</div>
+      <b><i data-ic="alerta"></i></b> é conferência (o botão “conferi” resolve) e <b><i data-ic="proibido"></i></b> é problema que trava o lançamento.</div>
     <div class="cfg">
       <span>Operação: <b>${esc(cfg.op || '— escolha acima —')}</b></span>
       <span>Órgão: <b>${esc(cfg.orgao || '—')}</b></span>
       <span>Tipo: <b>${esc(cfg.tipo || '—')}</b></span>
       <span>Valor: <b>${cfg.valor ? fR(cfg.valor) : '—'}</b></span>
       <span>Processo: <b>${esc(cfg.proc || 'NÃO')}</b></span>
-      <button class="btn sm" style="padding:5px 12px" onclick="loteAplicar()">🔄 Reaplicar o que está acima</button>
+      <button class="btn sm" style="padding:5px 12px" onclick="loteAplicar()"><i data-ic="atualizar"></i>Reaplicar o que está acima</button>
     </div>
     <div class="pills" style="margin:0 0 10px">
-      <span class="pill${LOTE_FILTRO==='pend'?' on':''}" onclick="loteFiltro('pend')">⚠️ Precisam de você (${pendentes.length})</span>
-      <span class="pill${LOTE_FILTRO==='ok'?' on':''}" onclick="loteFiltro('ok')">✅ Em ordem (${emOrdem.length})</span>
+      <span class="pill${LOTE_FILTRO==='pend'?' on':''}" onclick="loteFiltro('pend')"><i data-ic="alerta"></i>Precisam de você (${pendentes.length})</span>
+      <span class="pill${LOTE_FILTRO==='ok'?' on':''}" onclick="loteFiltro('ok')"><i data-ic="ok"></i>Em ordem (${emOrdem.length})</span>
       <span class="pill${LOTE_FILTRO==='todas'?' on':''}" onclick="loteFiltro('todas')">Todas (${linhas.length})</span>
     </div>
     ${visiveis.length ? `<div class="tbl-wrap" style="border:none">
@@ -2246,13 +2287,13 @@ function renderLote(){
         <tbody>${tr}</tbody>
       </table>
     </div>`
-    : `<div class="aviso ok">✅ Nada pendente: as ${prontas.length} escala(s) marcadas estão prontas. Clique em <b>Lançar</b> aqui embaixo.</div>`}
+    : `<div class="aviso ok"><i data-ic="ok"></i>Nada pendente: as ${prontas.length} escala(s) marcadas estão prontas. Clique em <b>Lançar</b> aqui embaixo.</div>`}
     <div class="foot">
-      <div style="flex:1;font-size:13.5px;color:#cbd5e1"><b>${prontas.length}</b> escala(s) prontas · <b>${nPol}</b> policial(is) · <b>${fR(tot)}</b>
-        ${aConferir.length ? `<span class="warn"> · ⚠️ ${aConferir.length} esperando a sua conferência</span>
-          <button class="btn sm" style="padding:3px 10px;margin-left:8px" onclick="loteConferirTodas()">✔️ conferi todas</button>` : ''}
-        ${comErro.length ? `<span class="err"> · ⛔ ${comErro.length} com problema</span>` : ''}</div>
-      <button class="btn-main" id="lote-btn" onclick="lancarLote()" ${prontas.length && !LOTE_RODANDO ? '' : 'disabled'}>🚀 Lançar ${prontas.length} escala(s)</button>
+      <div style="flex:1;font-size:13.5px;color:var(--t3)"><b>${prontas.length}</b> escala(s) prontas · <b>${nPol}</b> policial(is) · <b>${fR(tot)}</b>
+        ${aConferir.length ? `<span class="warn"> · <i data-ic="alerta"></i>${aConferir.length} esperando a sua conferência</span>
+          <button class="btn sm" style="padding:3px 10px;margin-left:8px" onclick="loteConferirTodas()"><i data-ic="check"></i>conferi todas</button>` : ''}
+        ${comErro.length ? `<span class="err"> · <i data-ic="proibido"></i>${comErro.length} com problema</span>` : ''}</div>
+      <button class="btn-main" id="lote-btn" onclick="lancarLote()" ${prontas.length && !LOTE_RODANDO ? '' : 'disabled'}><i data-ic="foguete"></i>Lançar ${prontas.length} escala(s)</button>
     </div>
     <div id="lote-err" style="margin-top:8px"></div>`;
 }
@@ -2315,7 +2356,7 @@ async function lancarLote(){
   await carregar();
   renderLote(); renderLoteBar(); renderEscala();
   loadHide();
-  setStatus(`✅ Lote concluído: <b>${ok}</b> escala(s) e <b>${pol}</b> policial(is) lançados`
+  setStatus(`<i data-ic="ok"></i>Lote concluído: <b>${ok}</b> escala(s) e <b>${pol}</b> policial(is) lançados`
     + `${falhou ? ` · <span class="err">${falhou} falharam (veja o motivo na lista)</span>` : ''}`
     + `${cad ? ` · ${cad} cadastrado(s) na aba POLICIAIS` : ''}${cadErr ? ` <span class="err">(${cadErr} cadastro(s) falharam)</span>` : ''}.`
     + `${ESCALAS.some(e=>!e.lancado) ? ' Ainda há escala(s) não lançadas neste PDF.' : ' Todas as escalas do PDF foram lançadas.'}`, ok ? 'ok' : 'err');
@@ -2358,8 +2399,8 @@ async function salvar(){
     if (e.efetivo_declarado!=null && e.efetivo_declarado!==on.length) motivos.push(`o documento declara ${e.efetivo_declarado} policiais e serão lançados ${on.length}`);
     if (motivos.length){
       DUP_OK = true;
-      err.innerHTML = `<span class="warn">⚠️ Confira antes de lançar: ${motivos.join('; ')}. Se estiver certo, clique de novo em <b>Lançar mesmo assim</b>.</span>`;
-      const b = $('save-btn'); b.textContent = '⚠️ Lançar mesmo assim'; b.classList.add('orange');
+      err.innerHTML = `<span class="warn"><i data-ic="alerta"></i>Confira antes de lançar: ${motivos.join('; ')}. Se estiver certo, clique de novo em <b>Lançar mesmo assim</b>.</span>`;
+      const b = $('save-btn'); b.innerHTML = '<i data-ic="alerta"></i>Lançar mesmo assim'; b.classList.add('orange');
       return;
     }
   }
@@ -2377,7 +2418,7 @@ async function salvar(){
     if ($('cad-faltantes').checked){
       const falt = on.filter(r=>r.re && !regDe(r) && String(r.guerra||'').trim());
       for (const [k, r] of falt.entries()){
-        setStatus(`✅ ${out.inseridos} lançados · cadastrando na aba POLICIAIS ${k+1} de ${falt.length}…`, 'ok');
+        setStatus(`<i data-ic="ok"></i>${out.inseridos} lançados · cadastrando na aba POLICIAIS ${k+1} de ${falt.length}…`, 'ok');
         loadStep(`Lançado! Agora cadastrando quem faltava na aba POLICIAIS: ${k+1} de ${falt.length}…`);
         loadProg((k + 1) / falt.length);
         try{
@@ -2392,21 +2433,21 @@ async function salvar(){
     await carregar();
     const prox = ESCALAS.findIndex(x=>!x.lancado);
     const decl = e.efetivo_declarado;
-    const bate = decl == null ? '' : (decl === out.inseridos ? ` — <b>bateu</b> com os ${decl} do documento ✅` : ` — <span class="err">o documento declarava ${decl} ⚠️</span>`);
-    setStatus(`✅ Lançado: <b>${out.inseridos}</b> policial(is) em "${esc(idm)}"${bate}${cad?` · ${cad} cadastrado(s) na aba POLICIAIS`:''}${cadErr?` <span class="err">(${cadErr} cadastro(s) falharam)</span>`:''}.` +
+    const bate = decl == null ? '' : (decl === out.inseridos ? ` — <b>bateu</b> com os ${decl} do documento <i data-ic="ok"></i>` : ` — <span class="err">o documento declarava ${decl} <i data-ic="alerta"></i></span>`);
+    setStatus(`<i data-ic="ok"></i>Lançado: <b>${out.inseridos}</b> policial(is) em "${esc(idm)}"${bate}${cad?` · ${cad} cadastrado(s) na aba POLICIAIS`:''}${cadErr?` <span class="err">(${cadErr} cadastro(s) falharam)</span>`:''}.` +
       (prox >= 0 ? ' Falta lançar a próxima escala deste PDF.' : ' Pode enviar outro PDF.'), 'ok');
     if (EDIT){
-      setStatus(`✅ Escala atualizada: <b>${out.inseridos}</b> policial(is) gravados${out.removidos ? ` (substituíram ${out.removidos})` : ''}. Quem lançou e quando foram preservados; a alteração ficou registrada no histórico.`, 'ok');
+      setStatus(`<i data-ic="ok"></i>Escala atualizada: <b>${out.inseridos}</b> policial(is) gravados${out.removidos ? ` (substituíram ${out.removidos})` : ''}. Quem lançou e quando foram preservados; a alteração ficou registrada no histórico.`, 'ok');
       EDIT = null; $('rev').style.display='none'; ESCALAS=[]; window.scrollTo({ top:0, behavior:'smooth' });
     }
     else if (prox >= 0){ CUR = prox; renderEscala(); }
     else { $('rev').style.display='none'; ESCALAS=[]; window.scrollTo({ top:0, behavior:'smooth' }); }
   }catch(x){
-    btn.disabled = false; btn.textContent = '💾 Lançar';
+    btn.disabled = false; btn.innerHTML = '<i data-ic="enviar"></i>Lançar';
     if (x.code === 'ja_lancado'){
-      DUP_OK = true; btn.textContent = '⚠️ Lançar mesmo assim'; btn.classList.add('orange');
-      err.innerHTML = `<span class="warn">⚠️ ${esc(x.message)}</span>`;
-    } else err.innerHTML = `<span class="err">❌ ${esc(x.message || 'Erro ao lançar.')}</span>`;
+      DUP_OK = true; btn.innerHTML = '<i data-ic="alerta"></i>Lançar mesmo assim'; btn.classList.add('orange');
+      err.innerHTML = `<span class="warn"><i data-ic="alerta"></i>${esc(x.message)}</span>`;
+    } else err.innerHTML = `<span class="err"><i data-ic="x"></i>${esc(x.message || 'Erro ao lançar.')}</span>`;
   } finally {
     loadHide();   // sem isto a página fica coberta pela tela de carregamento
   }
@@ -2435,6 +2476,11 @@ async function togglePdf(){
 function toggleRaw(){ const b=$('raw-view'); const vis = b.style.display==='block'; b.style.display = vis?'none':'block'; if(!vis) b.textContent = RAW_TEXT || '(nada lido)'; }
 
 boot();
+// ícones <i data-ic> que o JS escreve depois do carregamento
+if (window.BPCasca && BPCasca.icones){
+  new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); })
+    .observe(document.body, { childList: true, subtree: true });
+}
 </script>
 </body>
 </html>
