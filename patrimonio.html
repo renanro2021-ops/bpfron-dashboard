@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P4 · Patrimônio (30/10/2026). Bens do batalhão: código, descrição, nº de
+     série, tombamento, quantidade, tipo e departamento. Dados no Worker
+     (backend/patrimonio.js, planilha BPFRON_P4_Patrimonio). Fechado:
+     "Patrimônio (ver)" consulta; "Patrimônio (gestor)" cadastra/importa/exclui. -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P4 · Patrimônio · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1240px}
+.bp-topo-in{max-width:1300px}
+.pat-filtros{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end}
+.pat-conta{margin-top:10px;color:var(--muted);font-size:13px}
+.pat-conta b{color:var(--t1)}
+.pat-tabwrap{margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+.pat-tab{width:100%;border-collapse:collapse;font-size:14px}
+.pat-tab th{position:sticky;top:0;text-align:left;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--surf2);padding:11px 12px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+.pat-tab th:hover{color:var(--t1)}
+.pat-tab th .seta{opacity:.7;margin-left:4px}
+.pat-tab td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top}
+.pat-tab tbody tr{cursor:pointer;transition:background .15s}
+.pat-tab tbody tr:hover{background:var(--card-h)}
+.pat-tab tbody tr:last-child td{border-bottom:0}
+.pat-tab td.cod{font-weight:800;color:var(--t1);white-space:nowrap}
+.pat-tab td.desc{color:var(--t1);min-width:220px}
+.pat-tab td.qtd,.pat-tab th.qtd{text-align:right;white-space:nowrap}
+.pat-tab td.mono{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pat-tab td.vz{color:var(--dim)}
+.pat-mais{display:flex;justify-content:center;padding:14px}
+.pat-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pat-form .inteira{grid-column:1/-1}
+.pat-dica{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pat-ficha{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}
+.pat-ficha dt{color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;padding-top:2px}
+.pat-ficha dd{margin:0;color:var(--t1);font-weight:600;word-break:break-word}
+.pat-hist{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:240px;overflow:auto}
+.pat-hist div{border-left:3px solid var(--acc-line);padding:2px 0 2px 10px;font-size:13px;color:var(--t2)}
+.pat-hist small{display:block;color:var(--muted);font-size:12px}
+.pat-res{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.pat-res button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surf);color:var(--t1);font:inherit;cursor:pointer}
+.pat-res button:hover{border-color:var(--acc-line);background:var(--card-h)}
+.pat-res button b{flex:1;min-width:0}
+.pat-res button small{color:var(--muted);white-space:nowrap}
+.pat-imp-prev{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.pat-imp-prev table{width:100%;min-width:780px;border-collapse:collapse;font-size:12.5px}
+.pat-imp-prev th,.pat-imp-prev td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;color:var(--t2);vertical-align:top}
+.pat-imp-prev th{background:var(--surf2);color:var(--t3);font-size:11px;text-transform:uppercase;position:sticky;top:0}
+.pat-imp-prev tr.erro td{background:var(--crit-soft)}
+.pat-imp-prev td.st{white-space:nowrap}
+.pat-imp-prev td.st{width:28px}
+.pat-imp-prev td.erro-tx{color:var(--crit);font-size:12px;min-width:200px}
+.pat-imp-prev td.ok-tx{color:var(--good);font-size:12px}
+.pat-imp-prev td.aviso-tx{color:var(--warn);font-size:12px;min-width:200px}
+#pat-imp-txt{width:100%;min-height:120px;resize:vertical;font:13px/1.4 ui-monospace,Consolas,monospace;padding:10px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--surf);color:var(--t1)}
+.bp-modal-cx.larga{width:min(920px,100%)}
+@media (max-width:760px){ .bp-modal-cx.larga{width:100%} }
+@media (max-width:860px){ .pat-filtros{grid-template-columns:1fr 1fr} .pat-filtros .busca{grid-column:1/-1} }
+@media (max-width:760px){
+  .pat-form{grid-template-columns:1fr}
+  .pat-ficha{grid-template-columns:1fr;gap:2px}
+  .pat-ficha dd{margin-bottom:8px}
+  .pat-tabwrap{border:0;background:none;border-radius:0}
+  .pat-tab thead{display:none}
+  .pat-tab,.pat-tab tbody,.pat-tab tr,.pat-tab td{display:block;width:100%}
+  .pat-tab tbody{display:flex;flex-direction:column;gap:10px}
+  .pat-tab tbody tr{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:10px 12px}
+  .pat-tab td{border:0;padding:3px 0;display:flex;gap:10px}
+  .pat-tab td::before{content:attr(data-r);flex:0 0 108px;color:var(--muted);font-size:12px;text-transform:uppercase;padding-top:1px}
+  .pat-tab td.desc{min-width:0}
+  .pat-tab td.qtd{text-align:left}
+}
+
+/* ---------------- relação impressa (A4) ---------------- */
+#relatorio{display:none}
+@media print{
+  html,body{background:#fff !important;color:#000}
+  body > *:not(#relatorio){display:none !important}
+  #relatorio{display:block;background:#fff;font-family:'Inter',Arial,sans-serif;font-size:10pt;color:#000}
+  #relatorio .rcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
+  #relatorio .rcab img{height:62px}
+  #relatorio .rcab small{display:block;font-size:8.5pt;letter-spacing:.3px}
+  #relatorio h1{font-size:14pt;margin:4px 0 0}
+  #relatorio .rfil{font-size:9pt;margin:6px 0}
+  #relatorio .rres{display:flex;gap:10px;margin:10px 0}
+  #relatorio .rres div{flex:1;border:1px solid #000;padding:6px 8px}
+  #relatorio .rres span{display:block;font-size:8pt;text-transform:uppercase}
+  #relatorio .rres b{font-size:13pt}
+  #relatorio h3{font-size:10.5pt;margin:14px 0 5px;border-bottom:1.5px solid #000;padding-bottom:3px;text-transform:uppercase;letter-spacing:.4px;break-after:avoid}
+  #relatorio table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #relatorio th,#relatorio td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top;color:#000;background:none}
+  #relatorio th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7.5pt;text-transform:uppercase}
+  #relatorio td.v,#relatorio th.v{text-align:right;white-space:nowrap}
+  #relatorio tr{break-inside:avoid}
+  #relatorio tfoot td{font-weight:700}
+  #relatorio .rass{margin-top:46px;display:flex;justify-content:space-around;gap:30px;text-align:center;font-size:9pt;break-inside:avoid}
+  #relatorio .rass div{flex:1;border-top:1px solid #000;padding-top:4px}
+  #relatorio .rrod{margin-top:16px;font-size:8pt;color:#444}
+  @page{size:A4 landscape;margin:12mm 10mm}
+}
+</style>
+<!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
+     visível ganha uma entrada; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-30", "titulo": "Patrimônio da P4 no ar", "quem": "todos", "itens": [
+    "Relação dos bens do batalhão com código, descrição, nº de série, tombamento, quantidade, tipo e departamento.",
+    "Busca por qualquer campo, filtro por tipo e por departamento, e totais clicáveis no topo.",
+    "Exportar para o Excel (CSV) e imprimir a relação em A4, separada por departamento."
+  ] },
+  { "data": "2026-10-30", "titulo": "Para o gestor do Patrimônio", "quem": "gestor", "itens": [
+    "Cadastrar bem um a um (com “Salvar e cadastrar outro”) ou importar de uma vez colando do Excel ou escolhendo o arquivo.",
+    "Código vazio vira o próximo automático (PAT-0001…); código e tombamento repetidos são barrados.",
+    "Corrigir e excluir (com a sua senha). Cada mudança fica no histórico do bem."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P4 · Patrimônio</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="pat-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="pat-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="pat-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P4 · Patrimônio</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="pat-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>O Patrimônio é liberado login por login</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="pat-negado-tx">Seu login não tem acesso ao Patrimônio.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“Patrimônio (ver)”</b> (só consultar) ou <b>“Patrimônio (gestor)”</b> (cadastrar) no Painel de Controle.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="pat-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="pat-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P4 · Logística</span>
+        <h1>Patrimônio do <em>batalhão</em></h1>
+        <p>Todos os bens com código, tombamento e nº de série, por tipo e por departamento. <span class="pat-ges">Como gestor, você cadastra, corrige e importa.</span><span class="pat-ver">Você está no modo consulta.</span></p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn pat-ges" onclick="novoBem()"><i data-ic="mais"></i>Cadastrar bem</button>
+          <button type="button" class="bp-btn sec pat-ges" onclick="abrirImportar()"><i data-ic="enviar"></i>Importar planilha</button>
+          <button type="button" class="bp-btn sec" onclick="exportarCsv()"><i data-ic="baixar"></i>Exportar (Excel)</button>
+          <button type="button" class="bp-btn sec" onclick="imprimir()"><i data-ic="arquivo"></i>Imprimir relação</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Resumo</h2><small>Bens ativos no cadastro</small></div></div>
+    <div class="bp-nums" id="pat-nums"></div>
+
+    <div class="bp-sec"><span class="bp-tile info"><i data-ic="buscar"></i></span><div><h2>Bens</h2><small>Toque num bem para ver a ficha completa</small></div><span class="bp-cont bp-sl" id="pat-cont">0</span></div>
+    <div class="bp-card">
+      <div class="pat-filtros">
+        <div class="bp-campo busca"><label for="pat-q">Buscar</label>
+          <div class="bp-in"><i data-ic="buscar"></i><input id="pat-q" placeholder="Código, descrição, nº de série, tombamento…" autocomplete="off" oninput="pintarLista()"></div></div>
+        <div class="bp-campo"><label for="pat-ftipo">Tipo</label>
+          <div class="bp-in"><i data-ic="pasta"></i><select id="pat-ftipo" onchange="pintarLista()"></select></div></div>
+        <div class="bp-campo"><label for="pat-fdep">Departamento</label>
+          <div class="bp-in"><i data-ic="usuarios"></i><select id="pat-fdep" onchange="pintarLista()"></select></div></div>
+        <button type="button" class="bp-btn ghost" onclick="limparFiltros()"><i data-ic="x"></i>Limpar</button>
+      </div>
+      <div class="pat-conta" id="pat-conta"></div>
+    </div>
+    <div class="pat-tabwrap">
+      <table class="pat-tab" id="pat-tab">
+        <thead><tr id="pat-cab"></tr></thead>
+        <tbody id="pat-corpo"></tbody>
+      </table>
+    </div>
+    <div class="bp-vazio" id="pat-vazio" style="display:none;margin-top:14px"></div>
+    <div class="pat-mais" id="pat-mais" style="display:none"><button type="button" class="bp-btn sec" onclick="LIMITE += 150; pintarLista()"><i data-ic="abaixo"></i>Mostrar mais</button></div>
+  </div>
+</main>
+
+<datalist id="dl-tipo"></datalist>
+<datalist id="dl-dep"></datalist>
+
+<!-- CADASTRO / EDIÇÃO -->
+<div class="bp-modal" id="m-bem" onclick="if(event.target===this)fechar('m-bem')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-bem-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="mais"></i></span>
+      <div><h3 id="m-bem-tit">Cadastrar bem</h3><small id="m-bem-sub">Campos com * são obrigatórios</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-bem')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <form class="pat-form" id="f-bem" onsubmit="event.preventDefault(); salvarBem(false)">
+      <div class="bp-campo"><label for="b-codigo">Código</label>
+        <div class="bp-in"><i data-ic="escudo"></i><input id="b-codigo" autocomplete="off" maxlength="40" oninput="conferirBem()"></div>
+        <div class="pat-dica" id="b-codigo-dica"></div></div>
+      <div class="bp-campo"><label for="b-quantidade">Quantidade *</label>
+        <div class="bp-in"><i data-ic="grade"></i><input id="b-quantidade" type="number" min="1" step="1" inputmode="numeric" value="1" required oninput="conferirBem()"></div></div>
+      <div class="bp-campo inteira"><label for="b-descricao">Descrição do bem *</label>
+        <div class="bp-in"><i data-ic="editar"></i><input id="b-descricao" maxlength="500" required autocomplete="off" placeholder="Ex.: Notebook Dell Latitude 3420, i5, 8 GB" oninput="conferirBem()"></div></div>
+      <div class="bp-campo"><label for="b-serie">Nº de série</label>
+        <div class="bp-in"><i data-ic="buscar"></i><input id="b-serie" maxlength="80" autocomplete="off" oninput="conferirBem()"></div></div>
+      <div class="bp-campo"><label for="b-tombamento">Tombamento</label>
+        <div class="bp-in"><i data-ic="arquivar"></i><input id="b-tombamento" maxlength="40" autocomplete="off" oninput="conferirBem()"></div></div>
+      <div class="bp-campo"><label for="b-tipo">Tipo *</label>
+        <div class="bp-in"><i data-ic="pasta"></i><input id="b-tipo" list="dl-tipo" maxlength="80" required autocomplete="off" placeholder="Ex.: INFORMÁTICA, MOBILIÁRIO" oninput="conferirBem()"></div></div>
+      <div class="bp-campo"><label for="b-departamento">Departamento *</label>
+        <div class="bp-in"><i data-ic="usuarios"></i><input id="b-departamento" list="dl-dep" maxlength="80" required autocomplete="off" placeholder="Ex.: P4, P3, RESERVA" oninput="conferirBem()"></div></div>
+      <div class="inteira" id="b-avisos"></div>
+      <div class="bp-msg err inteira" id="b-msg"></div>
+      <div class="bp-modal-pe inteira" style="margin-top:0">
+        <button type="button" class="bp-btn ghost" onclick="fechar('m-bem')">Cancelar</button>
+        <button type="button" class="bp-btn sec" id="b-outro" onclick="salvarBem(true)"><i data-ic="mais"></i>Salvar e cadastrar outro</button>
+        <button type="submit" class="bp-btn" id="b-salvar"><i data-ic="check"></i>Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- FICHA DO BEM -->
+<div class="bp-modal" id="m-ficha" onclick="if(event.target===this)fechar('m-ficha')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-ficha-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="arquivo"></i></span>
+      <div><h3 id="m-ficha-tit">Bem</h3><small id="m-ficha-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ficha')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <dl class="pat-ficha" id="ficha-dl"></dl>
+    <div class="bp-sec" style="margin-top:16px"><span class="bp-tile sm"><i data-ic="relogio"></i></span><div><h2 style="font-size:16px">Histórico</h2></div></div>
+    <div class="pat-hist" id="ficha-hist"></div>
+    <div class="bp-modal-pe pat-ges">
+      <button type="button" class="bp-btn perigo-l" onclick="excluirBem()"><i data-ic="lixeira"></i>Excluir</button>
+      <button type="button" class="bp-btn" onclick="editarBem()"><i data-ic="editar"></i>Corrigir</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESUMO POR TIPO / DEPARTAMENTO -->
+<div class="bp-modal" id="m-res" onclick="if(event.target===this)fechar('m-res')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-res-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="grade"></i></span>
+      <div><h3 id="m-res-tit">Por tipo</h3><small>Toque para filtrar a lista</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-res')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="pat-res" id="res-lista"></div>
+  </div>
+</div>
+
+<!-- IMPORTAR -->
+<div class="bp-modal" id="m-imp" onclick="if(event.target===this)fechar('m-imp')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-imp-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="enviar"></i></span>
+      <div><h3 id="m-imp-tit">Importar planilha</h3><small>Vários bens de uma vez, do Excel ou do Google Planilhas</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-imp')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (CÓDIGO, DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. Código vazio vira o próximo automático.</div></div>
+    <label class="bp-arquivo" id="imp-arq" style="margin-top:12px" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerArquivoImp(event.dataTransfer.files)">
+      <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
+      <span class="tx"><b>Escolher arquivo (.xlsx ou .csv)</b><small>ou arraste para cá</small></span>
+      <span class="bp-trocar"></span>
+      <input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt,.tsv" onchange="lerArquivoImp(this.files)">
+    </label>
+    <div class="bp-campo" style="margin-top:12px"><label for="pat-imp-txt">Ou cole aqui</label>
+      <textarea id="pat-imp-txt" placeholder="CÓDIGO&#9;DESCRIÇÃO DO BEM&#9;Nº DE SÉRIE&#9;TOMBAMENTO&#9;QUANTIDADE&#9;TIPO&#9;DEPARTAMENTO" oninput="lerTextoImp()"></textarea></div>
+    <div id="imp-res"></div>
+    <div class="bp-msg err" id="imp-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-imp')">Cancelar</button>
+      <button type="button" class="bp-btn" id="imp-btn" disabled onclick="importar()"><i data-ic="check"></i>Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SENHA (exclusão) -->
+<div class="bp-modal" id="m-senha" onclick="if(event.target===this)fechar('m-senha')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-senha-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile crit"><i data-ic="lixeira"></i></span>
+      <div><h3 id="m-senha-tit">Excluir bem</h3><small id="m-senha-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-senha')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <form onsubmit="event.preventDefault(); confirmarSenha()" style="display:flex;flex-direction:column;gap:12px">
+      <div class="bp-campo"><label for="sx-motivo">Motivo (opcional)</label><div class="bp-in"><i data-ic="editar"></i><input id="sx-motivo" maxlength="300" autocomplete="off" placeholder="Ex.: baixa patrimonial, lançado em duplicidade"></div></div>
+      <div class="bp-campo"><label for="sx-pass">Sua senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="sx-pass" type="password" autocomplete="current-password" required></div></div>
+      <div class="bp-msg err" id="sx-msg"></div>
+      <div class="bp-modal-pe" style="margin-top:0">
+        <button type="button" class="bp-btn ghost" onclick="fechar('m-senha')">Cancelar</button>
+        <button type="submit" class="bp-btn perigo" id="sx-btn"><i data-ic="lixeira"></i>Excluir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- relação impressa (montada na hora de imprimir) -->
+<div id="relatorio"></div>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+// mesma comparação do Worker para código/tombamento: sem acento, espaço, ponto, traço ou barra
+const chave = (s) => sem(s).replace(/[\s.\-\/]+/g, '');
+const fNum = (n) => Number(n || 0).toLocaleString('pt-BR');
+const fQuando = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null ? '' : b), 'pt-BR', { numeric: true, sensitivity: 'base' });
+
+const CAMPOS = [
+  ['codigo', 'Código'], ['descricao', 'Descrição do bem'], ['serie', 'Nº de série'], ['tombamento', 'Tombamento'],
+  ['quantidade', 'Qtd.'], ['tipo', 'Tipo'], ['departamento', 'Departamento'],
+];
+const MODAIS = ['m-senha', 'm-bem', 'm-imp', 'm-res', 'm-ficha'];
+
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') MODAIS.some((id) => $(id).classList.contains('on') && (fechar(id), true)); });
+
+/* ============================== API / login ============================== */
+async function api(path, opt) {
+  const h = Object.assign({}, (opt && opt.headers) || {});
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, Object.assign({}, opt || {}, { headers: h }));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  return r;
+}
+async function apiJson(path, body) {
+  const r = await api(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+
+function nomeLogado() {
+  try { const p = JSON.parse(ls('bp_perms') || 'null'); if (p && p.nome) return p.nome; } catch (e) {}
+  return ls('bp_user');
+}
+function mostrar(qual) {
+  ['pat-login', 'pat-negado', 'pat-estado', 'pat-app'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; });
+}
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'pat-login');
+  $('pat-sair').style.display = logado ? '' : 'none';
+  $('pat-eu').style.display = logado ? '' : 'none';
+  if (logado) {
+    const n = nomeLogado();
+    $('pat-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P4';
+    $('pat-eu').querySelector('span').textContent = n;
+    carregar();
+  }
+}
+
+/* ============================== dados ============================== */
+let D = null;           // { gestor, proximo_codigo, bens:[…] }
+let SORT = { k: 'codigo', dir: 1 };
+let LIMITE = 150;
+let ATUAL = null;       // bem aberto na ficha
+let EDITANDO = null;    // id em edição (null = novo)
+
+async function carregar() {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo o patrimônio') : null;
+  try { D = await apiJson('/api/patrimonio'); }
+  catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { $('pat-negado-tx').textContent = e.message; mostrar('pat-negado'); return; }
+    mostrar('pat-estado');
+    $('pat-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  mostrar('pat-app');
+  if (window.BPCasca && BPCasca.novidades) BPCasca.novidades.gestor = () => !!(D && D.gestor);
+  document.querySelectorAll('.pat-ges').forEach((el) => { el.style.display = D.gestor ? '' : 'none'; });
+  document.querySelectorAll('.pat-ver').forEach((el) => { el.style.display = D.gestor ? 'none' : ''; });
+  pintarTudo();
+}
+
+const valores = (k) => [...new Set(D.bens.map((b) => b[k]).filter(Boolean))].sort(cmp);
+const somaQtd = (l) => l.reduce((n, b) => n + (Number(b.quantidade) || 0), 0);
+
+function pintarTudo() {
+  const opts = (sel, k, rot) => {
+    const atual = $(sel).value;
+    $(sel).innerHTML = `<option value="">${rot}</option>` + valores(k).map((v) => `<option${v === atual ? ' selected' : ''}>${esc(v)}</option>`).join('');
+  };
+  opts('pat-ftipo', 'tipo', 'Todos os tipos'); opts('pat-fdep', 'departamento', 'Todos os departamentos');
+  $('dl-tipo').innerHTML = valores('tipo').map((v) => `<option value="${esc(v)}">`).join('');
+  $('dl-dep').innerHTML = valores('departamento').map((v) => `<option value="${esc(v)}">`).join('');
+  const bs = D.bens;
+  $('pat-nums').innerHTML = [
+    `<button type="button" class="bp-num clica" style="--i:0;--c:var(--info)" onclick="limparFiltros()">${IC('pasta')}<div class="r">Bens cadastrados</div><div class="v">${fNum(bs.length)}</div><small class="bp-ver">ver todos${IC('seta')}</small></button>`,
+    `<div class="bp-num" style="--i:1;--c:var(--good)">${IC('grade')}<div class="r">Unidades (quantidade)</div><div class="v">${fNum(somaQtd(bs))}</div></div>`,
+    `<button type="button" class="bp-num clica" style="--i:2;--c:var(--acc)" onclick="abrirResumo('tipo')">${IC('arquivar')}<div class="r">Tipos</div><div class="v">${fNum(valores('tipo').length)}</div><small class="bp-ver">ver por tipo${IC('seta')}</small></button>`,
+    `<button type="button" class="bp-num clica" style="--i:3;--c:var(--warn)" onclick="abrirResumo('departamento')">${IC('usuarios')}<div class="r">Departamentos</div><div class="v">${fNum(valores('departamento').length)}</div><small class="bp-ver">ver por departamento${IC('seta')}</small></button>`,
+  ].join('');
+  pintarLista();
+}
+
+function filtrados() {
+  const termos = sem($('pat-q').value).split(/\s+/).filter(Boolean);
+  const ft = $('pat-ftipo').value, fd = $('pat-fdep').value;
+  return D.bens.filter((b) => {
+    if (ft && b.tipo !== ft) return false;
+    if (fd && b.departamento !== fd) return false;
+    if (!termos.length) return true;
+    const alvo = sem(CAMPOS.map(([k]) => b[k]).join(' '));
+    const alvoJunto = chave(alvo);
+    return termos.every((t) => alvo.includes(t) || alvoJunto.includes(chave(t)));
+  }).sort((a, b) => {
+    const k = SORT.k;
+    const r = k === 'quantidade' ? (a.quantidade - b.quantidade) : cmp(a[k], b[k]);
+    return (r || cmp(a.codigo, b.codigo)) * SORT.dir;
+  });
+}
+
+function ordenar(k) { SORT = { k, dir: SORT.k === k ? -SORT.dir : 1 }; pintarLista(); }
+
+function pintarLista() {
+  if (!D) return;
+  const l = filtrados();
+  $('pat-cab').innerHTML = CAMPOS.map(([k, r]) => `<th class="${k === 'quantidade' ? 'qtd' : ''}" onclick="ordenar('${k}')">${r}${SORT.k === k ? `<span class="seta">${SORT.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
+  const vz = (v) => v ? esc(v) : '—';
+  $('pat-corpo').innerHTML = l.slice(0, LIMITE).map((b) => `<tr data-id="${esc(b.id)}" onclick="abrirFicha('${esc(b.id)}')">
+    <td class="cod" data-r="Código">${esc(b.codigo)}</td>
+    <td class="desc" data-r="Descrição">${esc(b.descricao)}</td>
+    <td class="mono${b.serie ? '' : ' vz'}" data-r="Nº de série">${vz(b.serie)}</td>
+    <td class="mono${b.tombamento ? '' : ' vz'}" data-r="Tombamento">${vz(b.tombamento)}</td>
+    <td class="qtd" data-r="Quantidade">${fNum(b.quantidade)}</td>
+    <td data-r="Tipo">${esc(b.tipo)}</td>
+    <td data-r="Departamento">${esc(b.departamento)}</td></tr>`).join('');
+  $('pat-tab').style.display = l.length ? '' : 'none';
+  $('pat-vazio').style.display = l.length ? 'none' : '';
+  $('pat-vazio').innerHTML = D.bens.length ? 'Nenhum bem com esse filtro.' : (D.gestor ? 'Nenhum bem cadastrado ainda. Use <b>Cadastrar bem</b> ou <b>Importar planilha</b>.' : 'Nenhum bem cadastrado ainda.');
+  $('pat-mais').style.display = l.length > LIMITE ? '' : 'none';
+  $('pat-cont').textContent = fNum(l.length);
+  const filtro = $('pat-q').value || $('pat-ftipo').value || $('pat-fdep').value;
+  $('pat-conta').innerHTML = `<b>${fNum(l.length)}</b> ${l.length === 1 ? 'bem' : 'bens'} · <b>${fNum(somaQtd(l))}</b> unidades${filtro ? ' no filtro' : ''}${l.length > LIMITE ? ` · mostrando os ${fNum(LIMITE)} primeiros` : ''}`;
+}
+
+function limparFiltros() { $('pat-q').value = ''; $('pat-ftipo').value = ''; $('pat-fdep').value = ''; LIMITE = 150; pintarLista(); }
+
+function abrirResumo(k) {
+  $('m-res-tit').textContent = k === 'tipo' ? 'Por tipo' : 'Por departamento';
+  const por = {};
+  D.bens.forEach((b) => { const v = b[k] || '—'; (por[v] = por[v] || []).push(b); });
+  $('res-lista').innerHTML = Object.keys(por).sort(cmp).map((v) =>
+    `<button type="button" data-v="${esc(v)}" onclick="filtrarPor('${k}', this.dataset.v)"><b>${esc(v)}</b><small>${fNum(por[v].length)} ${por[v].length === 1 ? 'bem' : 'bens'} · ${fNum(somaQtd(por[v]))} un.</small>${IC('seta')}</button>`).join('') || '<div class="bp-vazio">Nada cadastrado.</div>';
+  abrir('m-res');
+}
+function filtrarPor(k, v) {
+  $(k === 'tipo' ? 'pat-ftipo' : 'pat-fdep').value = v;
+  fechar('m-res'); pintarLista();
+  $('pat-tab').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================== ficha ============================== */
+async function abrirFicha(id) {
+  const b = D.bens.find((x) => x.id === id); if (!b) return;
+  ATUAL = b;
+  $('m-ficha-tit').textContent = b.codigo;
+  $('m-ficha-sub').textContent = b.descricao;
+  const linha = (r, v) => `<dt>${r}</dt><dd>${v ? esc(v) : '<span style="color:var(--dim)">—</span>'}</dd>`;
+  $('ficha-dl').innerHTML = linha('Código', b.codigo) + linha('Descrição do bem', b.descricao) + linha('Nº de série', b.serie) +
+    linha('Tombamento', b.tombamento) + linha('Quantidade', fNum(b.quantidade)) + linha('Tipo', b.tipo) + linha('Departamento', b.departamento) +
+    linha('Cadastrado', [b.criado_por, fQuando(b.criado_em)].filter(Boolean).join(' · ')) +
+    (b.atualizado_em ? linha('Última mudança', [b.atualizado_por, fQuando(b.atualizado_em)].filter(Boolean).join(' · ')) : '');
+  $('ficha-hist').innerHTML = '<div><small>carregando…</small></div>';
+  abrir('m-ficha');
+  try {
+    const h = await apiJson('/api/patrimonio/historico?id=' + encodeURIComponent(id));
+    if (ATUAL !== b) return;
+    $('ficha-hist').innerHTML = h.historico.length ? h.historico.map((x) =>
+      `<div><b>${esc(x.acao)}</b> por ${esc(x.quem)}<small>${fQuando(x.quando)}</small>${x.acao === 'editou' ? `<small>${esc(x.resumo)}</small>` : ''}</div>`).join('') : '<div><small>Sem registros.</small></div>';
+  } catch (e) { $('ficha-hist').innerHTML = `<div><small>${esc(e.message)}</small></div>`; }
+}
+
+/* ============================== cadastro ============================== */
+const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento'];
+function preencherForm(b) { CB.forEach((k) => { $('b-' + k).value = b[k] == null ? '' : b[k]; }); }
+function lerForm() { const o = {}; CB.forEach((k) => { o[k] = $('b-' + k).value.trim(); }); return o; }
+
+function novoBem(manter) {
+  EDITANDO = null;
+  const fica = manter ? { tipo: $('b-tipo').value, departamento: $('b-departamento').value } : {};
+  preencherForm(Object.assign({ quantidade: 1 }, fica));
+  $('m-bem-tit').textContent = 'Cadastrar bem';
+  $('m-bem-sub').textContent = 'Campos com * são obrigatórios';
+  $('b-outro').style.display = '';
+  $('b-msg').textContent = '';
+  conferirBem(); abrir('m-bem');
+  setTimeout(() => $('b-descricao').focus(), 100);
+}
+function editarBem() {
+  const b = ATUAL; if (!b) return;
+  EDITANDO = b.id; preencherForm(b);
+  $('m-bem-tit').textContent = 'Corrigir ' + b.codigo;
+  $('m-bem-sub').textContent = 'A mudança fica no histórico do bem';
+  $('b-outro').style.display = 'none';
+  $('b-msg').textContent = '';
+  fechar('m-ficha'); conferirBem(); abrir('m-bem');
+}
+
+/* avisos ao vivo: código/tombamento repetidos barram (o Worker também barra); série repetida só avisa */
+function problemasDe(o, outros) {
+  const bloq = [], aviso = [];
+  if (o.codigo) { const x = outros.find((b) => chave(b.codigo) === chave(o.codigo)); if (x) bloq.push(`O código <b>${esc(o.codigo)}</b> já é de outro bem (${esc(x.descricao)}).`); }
+  if (o.tombamento) { const x = outros.find((b) => b.tombamento && chave(b.tombamento) === chave(o.tombamento)); if (x) bloq.push(`O tombamento <b>${esc(o.tombamento)}</b> já está no bem ${esc(x.codigo)} (${esc(x.descricao)}).`); }
+  if (o.serie) { const x = outros.find((b) => b.serie && chave(b.serie) === chave(o.serie)); if (x) aviso.push(`O nº de série <b>${esc(o.serie)}</b> também aparece no bem ${esc(x.codigo)} (${esc(x.descricao)}). Confira se não é o mesmo bem.`); }
+  return { bloq, aviso };
+}
+function conferirBem() {
+  const o = lerForm();
+  const outros = D.bens.filter((b) => b.id !== EDITANDO);
+  $('b-codigo').placeholder = EDITANDO ? '' : D.proximo_codigo;
+  $('b-codigo-dica').textContent = EDITANDO ? '' : `Deixe vazio para usar o próximo automático (${D.proximo_codigo}).`;
+  const p = problemasDe(o, outros);
+  $('b-avisos').innerHTML = p.bloq.map((t) => `<div class="bp-aviso crit" style="margin-bottom:8px">${IC('alerta')}<div>${t}</div></div>`).join('') +
+    p.aviso.map((t) => `<div class="bp-aviso pend" style="margin-bottom:8px">${IC('info')}<div>${t}</div></div>`).join('');
+  $('b-salvar').disabled = $('b-outro').disabled = p.bloq.length > 0;
+  return p;
+}
+async function salvarBem(outro) {
+  const f = $('f-bem');
+  if (!f.reportValidity()) return;
+  if (conferirBem().bloq.length) return;
+  const bt = outro ? $('b-outro') : $('b-salvar'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…'; $('b-msg').textContent = '';
+  try {
+    const r = await apiJson('/api/patrimonio/salvar', { op: 'salvar', id: EDITANDO || '', bem: lerForm() });
+    toast(EDITANDO ? `${r.bem.codigo} corrigido.` : `${r.bem.codigo} cadastrado.`);
+    await carregar();
+    if (outro) novoBem(true); else fechar('m-bem');
+  } catch (e) { $('b-msg').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+
+/* ---------- exclusão com senha ---------- */
+function excluirBem() {
+  const b = ATUAL; if (!b) return;
+  $('m-senha-sub').textContent = `${b.codigo} · ${b.descricao} sai da lista (fica no histórico da planilha).`;
+  $('sx-pass').value = ''; $('sx-motivo').value = ''; $('sx-msg').textContent = '';
+  abrir('m-senha'); setTimeout(() => $('sx-motivo').focus(), 100);
+}
+async function confirmarSenha() {
+  const bt = $('sx-btn'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Excluindo…';
+  try {
+    await apiJson('/api/patrimonio/salvar', { op: 'excluir', id: ATUAL.id, senha: $('sx-pass').value, motivo: $('sx-motivo').value.trim() });
+    fechar('m-senha'); fechar('m-ficha'); toast(ATUAL.codigo + ' excluído da lista.'); await carregar();
+  } catch (e) { $('sx-msg').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+
+/* ============================== importar ============================== */
+let IMP = [];   // [{ bem, erros:[] }]
+function abrirImportar() {
+  IMP = []; $('pat-imp-txt').value = ''; $('imp-file').value = ''; $('imp-msg').textContent = ''; $('imp-res').innerHTML = '';
+  marcarArquivo(null); $('imp-btn').disabled = true; $('imp-btn').innerHTML = IC('check') + 'Importar';
+  abrir('m-imp');
+}
+function marcarArquivo(f) {
+  const box = $('imp-arq');
+  box.classList.toggle('tem', !!f);
+  box.querySelector('.tx b').textContent = f ? f.name : 'Escolher arquivo (.xlsx ou .csv)';
+  box.querySelector('.tx small').textContent = f ? (f.size / 1024).toFixed(0) + ' KB' : 'ou arraste para cá';
+  box.querySelector('.bp-trocar').textContent = f ? 'Trocar' : '';
+}
+
+/* texto separado por TAB (colado do Excel), ";" (CSV do Excel em português) ou "," — com aspas */
+function lerDelimitado(t) {
+  t = String(t || '').replace(/^﻿/, '');
+  const prim = t.split(/\r?\n/, 1)[0] || '';
+  const sep = prim.includes('\t') ? '\t' : prim.includes(';') ? ';' : ',';
+  const linhas = []; let lin = [], cel = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cel += '"'; i++; } else q = false; } else cel += c; continue; }
+    if (c === '"' && cel === '') q = true;
+    else if (c === sep) { lin.push(cel); cel = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; lin.push(cel); linhas.push(lin); lin = []; cel = ''; }
+    else cel += c;
+  }
+  if (cel !== '' || lin.length) { lin.push(cel); linhas.push(lin); }
+  return linhas;
+}
+
+const CAB_RE = {
+  codigo: /^(COD|CODIGO|COD\.?|CODIGO DO BEM)$/, descricao: /^DESCRI/, serie: /SERIE/, tombamento: /^(TOMB|N DE TOMB|PATRIMONIO$)/,
+  quantidade: /^(QT|QTD|QTDE|QUANT)/, tipo: /^TIPO/, departamento: /^(DEPART|DEPTO|SETOR|SECAO|LOTACAO|LOCAL)/,
+};
+function montarImp(linhas) {
+  linhas = (linhas || []).map((l) => (l || []).map((c) => String(c == null ? '' : c).trim())).filter((l) => l.some(Boolean));
+  if (!linhas.length) { IMP = []; pintarImp(); return; }
+  const cab = linhas[0].map((c) => sem(c).replace(/[º°ª.]/g, '').replace(/\s+/g, ' ').trim());
+  const mapa = {};
+  cab.forEach((c, i) => { for (const k of Object.keys(CAB_RE)) if (!(k in mapa) && CAB_RE[k].test(c)) { mapa[k] = i; break; } });
+  const temCab = Object.keys(mapa).length >= 2;
+  if (!temCab) CB.forEach((k, i) => { mapa[k] = i; });
+  const corpo = temCab ? linhas.slice(1) : linhas;
+  const ja = D.bens.slice();
+  let n = Number((D.proximo_codigo.match(/\d+/) || [1])[0]);
+  IMP = corpo.map((l) => {
+    const bem = {}; CB.forEach((k) => { bem[k] = k in mapa ? (l[mapa[k]] || '') : ''; });
+    ['codigo', 'serie', 'tombamento', 'tipo', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
+    const qt = String(bem.quantidade).replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
+    bem.quantidade = qt === '' ? '1' : qt;
+    const erros = [];
+    if (!bem.descricao) erros.push('falta a descrição');
+    if (!/^\d{1,6}$/.test(bem.quantidade) || Number(bem.quantidade) < 1) erros.push('quantidade inválida');
+    if (!bem.tipo) erros.push('falta o tipo');
+    if (!bem.departamento) erros.push('falta o departamento');
+    const auto = !bem.codigo;
+    const p = problemasDe(Object.assign({}, bem, { codigo: bem.codigo || '' }), ja);
+    p.bloq.forEach((t) => erros.push(t.replace(/<[^>]+>/g, '')));
+    if (!erros.length) { if (auto) bem.codigo = 'PAT-' + String(n++).padStart(4, '0'); ja.push(bem); }
+    return { bem, erros, auto, aviso: p.aviso.map((t) => t.replace(/<[^>]+>/g, '')) };
+  });
+  pintarImp(temCab ? Object.keys(mapa).length : 0);
+}
+function pintarImp(nCab) {
+  const ok = IMP.filter((x) => !x.erros.length), ruins = IMP.length - ok.length;
+  $('imp-btn').disabled = !ok.length;
+  $('imp-btn').innerHTML = IC('check') + (ok.length ? `Importar ${fNum(ok.length)} ${ok.length === 1 ? 'bem' : 'bens'}` : 'Importar');
+  if (!IMP.length) { $('imp-res').innerHTML = ''; return; }
+  const cab = nCab ? `Cabeçalho reconhecido (${nCab} colunas).` : 'Sem cabeçalho: colunas lidas na ordem CÓDIGO, DESCRIÇÃO, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO.';
+  const resumo = ruins
+    ? `<div class="bp-aviso pend" style="margin-top:12px">${IC('alerta')}<div><b>${fNum(ok.length)}</b> prontas e <b>${fNum(ruins)}</b> com problema (em vermelho) — as com problema ficam de fora. Corrija na planilha e importe de novo depois. ${cab}</div></div>`
+    : `<div class="bp-aviso ok" style="margin-top:12px">${IC('ok')}<div><b>${fNum(ok.length)}</b> ${ok.length === 1 ? 'linha pronta' : 'linhas prontas'} para importar. ${cab}</div></div>`;
+  const mostra = IMP.slice().sort((a, b) => (b.erros.length > 0) - (a.erros.length > 0)).slice(0, 300);
+  $('imp-res').innerHTML = resumo + `<div class="pat-imp-prev"><table><thead><tr><th></th>${CAMPOS.map(([, r]) => `<th>${r}</th>`).join('')}<th>Situação</th></tr></thead><tbody>` +
+    mostra.map((x) => `<tr class="${x.erros.length ? 'erro' : ''}"><td class="st">${IC(x.erros.length ? 'alerta' : 'check')}</td>` +
+      CB.map((k) => `<td>${esc(x.bem[k])}${k === 'codigo' && x.auto && !x.erros.length ? ' <span class="bp-sl info">auto</span>' : ''}</td>`).join('') +
+      (x.erros.length ? `<td class="erro-tx">${esc(x.erros.join('; '))}</td>` : (x.aviso.length ? `<td class="aviso-tx">${esc(x.aviso.join(' '))}</td>` : '<td class="ok-tx">pronta</td>')) + '</tr>').join('') +
+    '</tbody></table></div>' + (IMP.length > 300 ? `<div class="pat-dica">Mostrando 300 de ${fNum(IMP.length)} linhas.</div>` : '');
+}
+function lerTextoImp() { $('imp-msg').textContent = ''; marcarArquivo(null); montarImp(lerDelimitado($('pat-imp-txt').value)); }
+function carregarScript(src) {
+  return new Promise((ok, no) => { if (window.XLSX) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('Não consegui abrir o leitor de Excel. Salve como CSV ou cole as linhas.')); document.head.appendChild(s); });
+}
+async function lerArquivoImp(files) {
+  const f = files && files[0]; if (!f) return;
+  $('imp-msg').textContent = ''; marcarArquivo(f); $('pat-imp-txt').value = '';
+  try {
+    if (/\.xlsx?$/i.test(f.name)) {
+      await carregarScript(XLSX_URL);
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      montarImp(XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' }));
+    } else {
+      const buf = await f.arrayBuffer();
+      let t = new TextDecoder('utf-8').decode(buf);
+      if (t.includes('�')) t = new TextDecoder('windows-1252').decode(buf); // CSV antigo do Excel
+      montarImp(lerDelimitado(t));
+    }
+  } catch (e) { $('imp-msg').textContent = e.message || 'Não consegui ler esse arquivo.'; }
+}
+async function importar() {
+  // o código automático é dado pelo Worker (o daqui é só prévia)
+  const ok = IMP.filter((x) => !x.erros.length).map((x) => Object.assign({}, x.bem, { codigo: x.auto ? '' : x.bem.codigo }));
+  if (!ok.length) return;
+  const bt = $('imp-btn');
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Importando…'; $('imp-msg').textContent = '';
+  try {
+    const r = await apiJson('/api/patrimonio/salvar', { op: 'importar', bens: ok });
+    fechar('m-imp'); toast(`${fNum(r.importados)} ${r.importados === 1 ? 'bem importado' : 'bens importados'}.`); await carregar();
+  } catch (e) {
+    const lis = e.d && Array.isArray(e.d.erros) ? e.d.erros.slice(0, 8).map((x) => `linha ${x.linha}: ${x.erros.join(' ')}`).join(' · ') : '';
+    $('imp-msg').textContent = e.message + (lis ? ' ' + lis : '');
+    pintarImp();
+  }
+}
+
+/* ============================== exportar / imprimir ============================== */
+function exportarCsv() {
+  const l = filtrados();
+  const c = (v) => { const s = String(v == null ? '' : v); return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const linhas = [['CÓDIGO', 'DESCRIÇÃO DO BEM', 'Nº DE SÉRIE', 'TOMBAMENTO', 'QUANTIDADE', 'TIPO', 'DEPARTAMENTO'].join(';')]
+    .concat(l.map((b) => CB.map((k) => c(b[k])).join(';')));
+  const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'patrimonio_BPFRON_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`${fNum(l.length)} ${l.length === 1 ? 'bem exportado' : 'bens exportados'}.`);
+}
+
+function montarRelatorio() {
+  const l = filtrados();
+  const fil = [];
+  if ($('pat-ftipo').value) fil.push('Tipo: ' + $('pat-ftipo').value);
+  if ($('pat-fdep').value) fil.push('Departamento: ' + $('pat-fdep').value);
+  if ($('pat-q').value.trim()) fil.push('Busca: “' + $('pat-q').value.trim() + '”');
+  const por = {};
+  l.forEach((b) => { (por[b.departamento || '—'] = por[b.departamento || '—'] || []).push(b); });
+  let n = 0;
+  const secoes = Object.keys(por).sort(cmp).map((dep) => {
+    const bs = por[dep];
+    return `<h3>${esc(dep)} — ${fNum(bs.length)} ${bs.length === 1 ? 'bem' : 'bens'}, ${fNum(somaQtd(bs))} un.</h3>
+      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo</th></tr></thead><tbody>` +
+      bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td></td></tr></tfoot></table>`;
+  }).join('');
+  const tipos = new Set(l.map((b) => b.tipo)).size, deps = Object.keys(por).length;
+  $('relatorio').innerHTML = `<div class="rcab"><img src="LOGOS/bpfron_transp.avif" alt="">
+      <div><small>POLÍCIA MILITAR DO ESTADO DE RONDÔNIA</small><small>BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS — BPFRON · P4 · LOGÍSTICA</small><h1>RELAÇÃO DE BENS PATRIMONIAIS</h1></div></div>
+    <div class="rfil">${fil.length ? 'Filtro: ' + esc(fil.join(' · ')) : 'Todos os bens ativos do cadastro.'}</div>
+    <div class="rres"><div><span>Bens</span><b>${fNum(l.length)}</b></div><div><span>Unidades</span><b>${fNum(somaQtd(l))}</b></div><div><span>Tipos</span><b>${fNum(tipos)}</b></div><div><span>Departamentos</span><b>${fNum(deps)}</b></div></div>
+    ${secoes || '<p>Nenhum bem no filtro.</p>'}
+    <div class="rass"><div>Responsável pelo levantamento</div><div>Chefe da P4</div></div>
+    <div class="rrod">Emitido por ${esc(nomeLogado())} em ${fQuando(new Date().toISOString())} · Patrimônio BPFRON (patrimonio.html)</div>`;
+  return l.length;
+}
+function imprimir() {
+  montarRelatorio();
+  setTimeout(() => window.print(), 300);
+}
+
+boot();
+</script>
+</body>
+</html>
