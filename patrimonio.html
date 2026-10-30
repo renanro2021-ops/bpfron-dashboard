@@ -109,13 +109,14 @@
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
   { "data": "2026-10-30", "titulo": "Patrimônio da P4 no ar", "quem": "todos", "itens": [
-    "Relação dos bens do batalhão com código, descrição, nº de série, tombamento, quantidade, tipo e departamento.",
+    "Relação dos bens do batalhão com código, descrição, nº de série, tombamento, quantidade, tipo (origem do bem: E-Estado, Leilão, Doação…) e departamento.",
     "Busca por qualquer campo, filtro por tipo e por departamento, e totais clicáveis no topo.",
     "Exportar para o Excel (CSV) e imprimir a relação em A4, separada por departamento."
   ] },
   { "data": "2026-10-30", "titulo": "Para o gestor do Patrimônio", "quem": "gestor", "itens": [
     "Cadastrar bem um a um (com “Salvar e cadastrar outro”) ou importar de uma vez colando do Excel ou escolhendo o arquivo.",
     "Código vazio vira o próximo automático (PAT-0001…); código e tombamento repetidos são barrados.",
+    "Tipo é a origem do bem, escolhida numa lista (E-Estado, Leilão, Doação ou outra origem que você digitar).",
     "Corrigir e excluir (com a sua senha). Cada mudança fica no histórico do bem."
   ] }
 ]</script>
@@ -190,7 +191,7 @@
       <div class="pat-filtros">
         <div class="bp-campo busca"><label for="pat-q">Buscar</label>
           <div class="bp-in"><i data-ic="buscar"></i><input id="pat-q" placeholder="Código, descrição, nº de série, tombamento…" autocomplete="off" oninput="pintarLista()"></div></div>
-        <div class="bp-campo"><label for="pat-ftipo">Tipo</label>
+        <div class="bp-campo"><label for="pat-ftipo">Tipo (origem)</label>
           <div class="bp-in"><i data-ic="pasta"></i><select id="pat-ftipo" onchange="pintarLista()"></select></div></div>
         <div class="bp-campo"><label for="pat-fdep">Departamento</label>
           <div class="bp-in"><i data-ic="usuarios"></i><select id="pat-fdep" onchange="pintarLista()"></select></div></div>
@@ -209,7 +210,6 @@
   </div>
 </main>
 
-<datalist id="dl-tipo"></datalist>
 <datalist id="dl-dep"></datalist>
 
 <!-- CADASTRO / EDIÇÃO -->
@@ -232,8 +232,9 @@
         <div class="bp-in"><i data-ic="buscar"></i><input id="b-serie" maxlength="80" autocomplete="off" oninput="conferirBem()"></div></div>
       <div class="bp-campo"><label for="b-tombamento">Tombamento</label>
         <div class="bp-in"><i data-ic="arquivar"></i><input id="b-tombamento" maxlength="40" autocomplete="off" oninput="conferirBem()"></div></div>
-      <div class="bp-campo"><label for="b-tipo">Tipo *</label>
-        <div class="bp-in"><i data-ic="pasta"></i><input id="b-tipo" list="dl-tipo" maxlength="80" required autocomplete="off" placeholder="Ex.: INFORMÁTICA, MOBILIÁRIO" oninput="conferirBem()"></div></div>
+      <div class="bp-campo"><label for="b-tipo-sel">Tipo (origem do bem) *</label>
+        <div class="bp-in"><i data-ic="pasta"></i><select id="b-tipo-sel" required onchange="tipoMudou()"></select></div>
+        <div class="bp-in" id="b-tipo-outro" style="display:none;margin-top:8px"><i data-ic="editar"></i><input id="b-tipo" maxlength="80" autocomplete="off" placeholder="Qual a origem do bem?" oninput="conferirBem()"></div></div>
       <div class="bp-campo"><label for="b-departamento">Departamento *</label>
         <div class="bp-in"><i data-ic="usuarios"></i><input id="b-departamento" list="dl-dep" maxlength="80" required autocomplete="off" placeholder="Ex.: P4, P3, RESERVA" oninput="conferirBem()"></div></div>
       <div class="inteira" id="b-avisos"></div>
@@ -285,7 +286,7 @@
       <div><h3 id="m-imp-tit">Importar planilha</h3><small>Vários bens de uma vez, do Excel ou do Google Planilhas</small></div>
       <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-imp')" aria-label="Fechar"><i data-ic="x"></i></button>
     </div>
-    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (CÓDIGO, DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. Código vazio vira o próximo automático.</div></div>
+    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (CÓDIGO, DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. Código vazio vira o próximo automático. No TIPO vale <b>E-Estado</b>, <b>Leilão</b>, <b>Doação</b> ou outra origem.</div></div>
     <label class="bp-arquivo" id="imp-arq" style="margin-top:12px" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerArquivoImp(event.dataTransfer.files)">
       <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
       <span class="tx"><b>Escolher arquivo (.xlsx ou .csv)</b><small>ou arraste para cá</small></span>
@@ -352,8 +353,17 @@ const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null 
 
 const CAMPOS = [
   ['codigo', 'Código'], ['descricao', 'Descrição do bem'], ['serie', 'Nº de série'], ['tombamento', 'Tombamento'],
-  ['quantidade', 'Qtd.'], ['tipo', 'Tipo'], ['departamento', 'Departamento'],
+  ['quantidade', 'Qtd.'], ['tipo', 'Tipo (origem)'], ['departamento', 'Departamento'],
 ];
+/* TIPO = origem do bem (pedido da P4, 30/10/2026). Mesma tabela do backend/patrimonio.js (normTipo). */
+/* E-ESTADO = patrimônio do Estado documentado eletronicamente (um tipo só). */
+const TIPOS_PADRAO = [['E-ESTADO', 'E-Estado (do Estado, documentado eletronicamente)'], ['LEILÃO', 'Leilão'], ['DOAÇÃO', 'Doação']];
+const TIPO_ALIAS = { 'E ESTADO': 'E-ESTADO', EESTADO: 'E-ESTADO', LEILAO: 'LEILÃO', DOACAO: 'DOAÇÃO' };
+function normTipo(v) {
+  const t = String(v || '').replace(/\s+/g, ' ').trim().toUpperCase();
+  const s = sem(t).replace(/[^A-Z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return TIPO_ALIAS[s] || t;
+}
 const MODAIS = ['m-senha', 'm-bem', 'm-imp', 'm-res', 'm-ficha'];
 
 function abrir(id) { $(id).classList.add('on'); }
@@ -444,14 +454,13 @@ function pintarTudo() {
     const atual = $(sel).value;
     $(sel).innerHTML = `<option value="">${rot}</option>` + valores(k).map((v) => `<option${v === atual ? ' selected' : ''}>${esc(v)}</option>`).join('');
   };
-  opts('pat-ftipo', 'tipo', 'Todos os tipos'); opts('pat-fdep', 'departamento', 'Todos os departamentos');
-  $('dl-tipo').innerHTML = valores('tipo').map((v) => `<option value="${esc(v)}">`).join('');
+  opts('pat-ftipo', 'tipo', 'Todas as origens'); opts('pat-fdep', 'departamento', 'Todos os departamentos');
   $('dl-dep').innerHTML = valores('departamento').map((v) => `<option value="${esc(v)}">`).join('');
   const bs = D.bens;
   $('pat-nums').innerHTML = [
     `<button type="button" class="bp-num clica" style="--i:0;--c:var(--info)" onclick="limparFiltros()">${IC('pasta')}<div class="r">Bens cadastrados</div><div class="v">${fNum(bs.length)}</div><small class="bp-ver">ver todos${IC('seta')}</small></button>`,
     `<div class="bp-num" style="--i:1;--c:var(--good)">${IC('grade')}<div class="r">Unidades (quantidade)</div><div class="v">${fNum(somaQtd(bs))}</div></div>`,
-    `<button type="button" class="bp-num clica" style="--i:2;--c:var(--acc)" onclick="abrirResumo('tipo')">${IC('arquivar')}<div class="r">Tipos</div><div class="v">${fNum(valores('tipo').length)}</div><small class="bp-ver">ver por tipo${IC('seta')}</small></button>`,
+    `<button type="button" class="bp-num clica" style="--i:2;--c:var(--acc)" onclick="abrirResumo('tipo')">${IC('arquivar')}<div class="r">Tipos (origem)</div><div class="v">${fNum(valores('tipo').length)}</div><small class="bp-ver">ver por origem${IC('seta')}</small></button>`,
     `<button type="button" class="bp-num clica" style="--i:3;--c:var(--warn)" onclick="abrirResumo('departamento')">${IC('usuarios')}<div class="r">Departamentos</div><div class="v">${fNum(valores('departamento').length)}</div><small class="bp-ver">ver por departamento${IC('seta')}</small></button>`,
   ].join('');
   pintarLista();
@@ -501,7 +510,7 @@ function pintarLista() {
 function limparFiltros() { $('pat-q').value = ''; $('pat-ftipo').value = ''; $('pat-fdep').value = ''; LIMITE = 150; pintarLista(); }
 
 function abrirResumo(k) {
-  $('m-res-tit').textContent = k === 'tipo' ? 'Por tipo' : 'Por departamento';
+  $('m-res-tit').textContent = k === 'tipo' ? 'Por tipo (origem do bem)' : 'Por departamento';
   const por = {};
   D.bens.forEach((b) => { const v = b[k] || '—'; (por[v] = por[v] || []).push(b); });
   $('res-lista').innerHTML = Object.keys(por).sort(cmp).map((v) =>
@@ -537,12 +546,35 @@ async function abrirFicha(id) {
 
 /* ============================== cadastro ============================== */
 const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento'];
-function preencherForm(b) { CB.forEach((k) => { $('b-' + k).value = b[k] == null ? '' : b[k]; }); }
-function lerForm() { const o = {}; CB.forEach((k) => { o[k] = $('b-' + k).value.trim(); }); return o; }
+function montarTipos(atual) {
+  const padrao = TIPOS_PADRAO.map((t) => t[0]);
+  const outros = valores('tipo').filter((v) => !padrao.includes(v));
+  $('b-tipo-sel').innerHTML = '<option value="">Escolha a origem</option>' +
+    TIPOS_PADRAO.map(([v, r]) => `<option value="${esc(v)}">${esc(r)}</option>`).join('') +
+    outros.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('') +
+    '<option value="__outro">Outra origem…</option>';
+  $('b-tipo-sel').value = atual || '';
+  $('b-tipo').value = '';
+  tipoMudou(true);
+}
+function tipoMudou(quieto) {
+  const outro = $('b-tipo-sel').value === '__outro';
+  $('b-tipo-outro').style.display = outro ? '' : 'none';
+  $('b-tipo').required = outro;
+  if (outro && !quieto) setTimeout(() => $('b-tipo').focus(), 50);
+  if (!quieto) conferirBem();
+}
+function preencherForm(b) { CB.forEach((k) => { if (k !== 'tipo') $('b-' + k).value = b[k] == null ? '' : b[k]; }); montarTipos(b.tipo); }
+function lerForm() {
+  const o = {}; CB.forEach((k) => { if (k !== 'tipo') o[k] = $('b-' + k).value.trim(); });
+  const sel = $('b-tipo-sel').value;
+  o.tipo = sel === '__outro' ? normTipo($('b-tipo').value) : sel;
+  return o;
+}
 
 function novoBem(manter) {
   EDITANDO = null;
-  const fica = manter ? { tipo: $('b-tipo').value, departamento: $('b-departamento').value } : {};
+  const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value } : {};
   preencherForm(Object.assign({ quantidade: 1 }, fica));
   $('m-bem-tit').textContent = 'Cadastrar bem';
   $('m-bem-sub').textContent = 'Campos com * são obrigatórios';
@@ -662,7 +694,8 @@ function montarImp(linhas) {
   let n = Number((D.proximo_codigo.match(/\d+/) || [1])[0]);
   IMP = corpo.map((l) => {
     const bem = {}; CB.forEach((k) => { bem[k] = k in mapa ? (l[mapa[k]] || '') : ''; });
-    ['codigo', 'serie', 'tombamento', 'tipo', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
+    ['codigo', 'serie', 'tombamento', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
+    bem.tipo = normTipo(bem.tipo);
     const qt = String(bem.quantidade).replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
     bem.quantidade = qt === '' ? '1' : qt;
     const erros = [];
@@ -758,7 +791,7 @@ function montarRelatorio() {
   const secoes = Object.keys(por).sort(cmp).map((dep) => {
     const bs = por[dep];
     return `<h3>${esc(dep)} — ${fNum(bs.length)} ${bs.length === 1 ? 'bem' : 'bens'}, ${fNum(somaQtd(bs))} un.</h3>
-      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo</th></tr></thead><tbody>` +
+      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo (origem)</th></tr></thead><tbody>` +
       bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td></tr>`).join('') +
       `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td></td></tr></tfoot></table>`;
   }).join('');
