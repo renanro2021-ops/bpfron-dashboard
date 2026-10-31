@@ -910,6 +910,12 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Números animados na Visão Geral", "quem": "todos", "itens": [
+    "Todos os números dos cards e do prejuízo ao crime contam até o valor quando o painel abre.",
+    "Ao trocar o período ou um filtro, cada número vai do valor antigo até o novo, sem voltar a zero.",
+    "O card de Veículos volta a mostrar o valor em reais dos veículos apreendidos.",
+    "O detalhe que abre ao clicar num card agora abre e fecha suavemente."
+  ] },
   { "data": "2026-10-31", "titulo": "Painel de cara nova", "quem": "todos", "itens": [
     "Brasão novo do BPFRON no painel, na tela de carregamento e em todo o site.",
     "Menu lateral organizado por seção: Painel Analítico, Comando, P1 a P6, Para todo o efetivo e Administração.",
@@ -2032,6 +2038,24 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       #vg-detail-wrap{margin-bottom:14px}
       .vg-detail{background:var(--card);border:1px solid rgba(245,197,24,.35);border-radius:14px;overflow:hidden;animation:vgIn .18s ease-out}
       @keyframes vgIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+      /* ── animações da Visão Geral (31/10/2026) ── */
+      #page-visao-geral.active{animation:vgPagina .26s ease-out}
+      @keyframes vgPagina{from{opacity:0}to{opacity:1}}
+      #page-visao-geral .vg-ent{animation:vgEnt .5s cubic-bezier(.2,.8,.2,1) both}
+      @keyframes vgEnt{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+      #page-visao-geral .vg-detail{animation:vgAbre .3s cubic-bezier(.2,.8,.2,1);transform-origin:top center}
+      @keyframes vgAbre{from{opacity:0;transform:translateY(-10px) scaleY(.97)}to{opacity:1;transform:none}}
+      #page-visao-geral .vg-detail.vg-sai{animation:vgFecha .17s ease-in forwards}
+      @keyframes vgFecha{to{opacity:0;transform:translateY(-8px)}}
+      #page-visao-geral .kpi-val,#page-visao-geral .prej-val,#page-visao-geral .prej-cat-val{font-variant-numeric:tabular-nums}
+      #page-visao-geral .kpi{transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .25s,background .2s}
+      #page-visao-geral .kpi:active{transform:translateY(-1px) scale(.985);transition-duration:.08s}
+      #page-visao-geral .kpi-ico{transform-origin:left bottom;transition:transform .35s ease}   /* cresce para cima, sem cobrir o texto */
+      #page-visao-geral .kpi:hover .kpi-ico{transform:scale(1.08)}
+      #page-visao-geral .prej-cat{transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s}
+      #page-visao-geral .prej-cat:hover{transform:translateY(-2px);border-color:rgba(251,146,60,.6);background:rgba(0,0,0,.42)}
+      #page-visao-geral .prej-cat:active{transform:scale(.97);transition-duration:.08s}
+      @media(prefers-reduced-motion:reduce){#page-visao-geral,#page-visao-geral *{animation:none!important;transition:none!important}}
       .vg-det-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 18px;background:rgba(245,197,24,.07);border-bottom:1px solid rgba(245,197,24,.2)}
       .vg-det-head .di{font-size:22px;line-height:1}
       .vg-det-head .dt{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;color:var(--yellow);letter-spacing:.3px}
@@ -4713,16 +4737,83 @@ function animCount(elId, target, dur=900, fmt='int') {
   requestAnimationFrame(tick);
 }
 
-/* Substitui renderKPIs para disparar animações */
+/* ── ANIMAÇÕES DA VISÃO GERAL (31/10/2026) ──
+   • todo número dos cards e do prejuízo conta até o valor (mantém o formato: R$, kg, L, m³…)
+   • ao trocar o filtro o número sai do valor que estava na tela e vai até o novo (não volta a zero)
+   • 1ª abertura: os cards entram em sequência, só depois que a tela de carregamento some
+   • quem pede menos movimento no sistema (prefers-reduced-motion) vê os números direto */
+const VG_REDUZ = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const VG_NUM_SEL = '#page-visao-geral .kpi-val, #page-visao-geral .prej-cat-val, #page-visao-geral .prej-val';
+let VG_ANIM_FEITA = false;
+function vgLerNum(txt){
+  txt = String(txt || '');
+  const m = txt.match(/-?\d[\d.]*(?:,\d+)?/);
+  if (!m) return null;
+  const s = m[0];
+  return { v: parseFloat(s.replace(/\./g,'').replace(',','.')), dec: s.includes(',') ? s.split(',')[1].length : 0,
+           pre: txt.slice(0, m.index), suf: txt.slice(m.index + s.length), txt };
+}
+function vgContar(el, de, alvo, dur){
+  if (el._vgRaf) cancelAnimationFrame(el._vgRaf);
+  if (VG_REDUZ || de === alvo.v) { el.textContent = alvo.txt; return; }
+  const t0 = performance.now();
+  const tick = now => {
+    const p = Math.min((now - t0) / dur, 1);
+    if (p >= 1) { el.textContent = alvo.txt; el._vgRaf = 0; return; }
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = alvo.pre + fD(de + (alvo.v - de) * e, alvo.dec) + alvo.suf;
+    el._vgRaf = requestAnimationFrame(tick);
+  };
+  el._vgRaf = requestAnimationFrame(tick);
+}
+function vgTelaLivre(){
+  const sp = document.getElementById('splash');
+  if (sp) { const cs = getComputedStyle(sp); if (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.05) return false; }
+  const wc = document.getElementById('welcome-ov');
+  return !(wc && wc.classList.contains('show'));
+}
+function vgEntrada(){
+  const pg = document.getElementById('page-visao-geral');
+  if (!pg || !pg.offsetParent || VG_REDUZ) return false;
+  const itens = pg.querySelectorAll('.kpi, .kpi-prej-banner, .insights');
+  itens.forEach((el, i) => {
+    el.style.animationDelay = Math.min(i * 28, 700) + 'ms';
+    el.classList.add('vg-ent');
+    el.addEventListener('animationend', function fim(ev){ if (ev.target !== el) return; el.classList.remove('vg-ent'); el.style.animationDelay = ''; el.removeEventListener('animationend', fim); });
+  });
+  return true;
+}
 const _origRenderKPIs = renderKPIs;
 renderKPIs = function() {
+  const els = [...document.querySelectorAll(VG_NUM_SEL)];
+  const antes = els.map(el => { const p = vgLerNum(el.textContent); return p ? p.v : 0; });
   _origRenderKPIs();
-  const s = f => FIL.reduce((a,r)=>a+(r[f]||0),0);
-  animCount('k-oc',  FIL.length);
-  animCount('k-pr',  s('no_presos'));
-  animCount('k-ar',  s('armas'));
-  animCount('k-ve',  s('veiculos'));
-  animCount('k-mun', s('municoes'));
+  const alvos = els.map(el => vgLerNum(el.textContent));
+  if (VG_ANIM_FEITA) {   // filtro mudou: do valor que estava na tela até o novo
+    els.forEach((el, i) => { if (alvos[i]) vgContar(el, antes[i], alvos[i], 650); });
+    return;
+  }
+  VG_ANIM_FEITA = true;  // 1ª vez: espera a tela de carregamento sair e conta a partir do zero
+  let n = 0;
+  const vai = () => {
+    if (!vgTelaLivre() && ++n < 100) { setTimeout(vai, 150); return; }
+    const entrou = vgEntrada();
+    els.forEach((el, i) => {
+      const a = vgLerNum(el.textContent);          // relê: o valor pode ter mudado enquanto esperava
+      if (!a) return;
+      if (!VG_REDUZ) el.textContent = a.pre + fD(0, a.dec) + a.suf;   // começa do zero, sem piscar o valor final
+      setTimeout(() => vgContar(el, 0, a, 1100), entrou ? Math.min(i * 28, 700) : 0);
+    });
+  };
+  vai();
+};
+/* painel de detalhe: fecha com um esmaecer curto em vez de sumir de uma vez */
+const _origVgClear = vgClear;
+vgClear = function(){
+  const d = document.querySelector('#vg-detail-wrap .vg-detail');
+  if (!d || VG_REDUZ || d.classList.contains('vg-sai')) { _origVgClear(); return; }
+  d.classList.add('vg-sai');
+  setTimeout(_origVgClear, 170);
 };
 
 /* ════════════════════════════════════════════════════════
