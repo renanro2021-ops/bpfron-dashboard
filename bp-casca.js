@@ -703,7 +703,7 @@
     };
     var bMeus = mk('nav-bpc-sistemas', '☰', 'Meus sistemas', function () { abrirMenu(); });
     var bTema = mk('nav-bpc-tema', '🎨', 'Tema do site', function () { abrirMenu(true); });
-    if (ref && ref.parentNode === sb) { sb.insertBefore(bMeus, ref); sb.insertBefore(bTema, ref); }
+    if (ref && sb.contains(ref)) { ref.parentNode.insertBefore(bMeus, ref); ref.parentNode.insertBefore(bTema, ref); } // rodapé da barra (31/10/2026)
     else { sb.appendChild(bMeus); sb.appendChild(bTema); }
   }
 

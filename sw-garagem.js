@@ -4,7 +4,7 @@
    - bibliotecas/fontes/ícones (CDN): cache primeiro — abrem na hora a partir da 2ª vez,
      inclusive o leitor de OCR, que é pesado
    - API do Worker: nunca passa por aqui (dados sempre frescos, trava de uso no servidor) */
-const VERSAO = 'garagem-v1';
+const VERSAO = 'garagem-v2'; // v2 (31/10/2026): brasão novo e ícones novos
 const PAGINAS = ['garagem.html', 'garagem-gestao.html'];
 const CDN = /^https:\/\/(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com|tessdata\.projectnaptha\.com)\//;
 
