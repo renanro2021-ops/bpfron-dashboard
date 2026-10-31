@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <!-- P4 · Patrimônio (30/10/2026). Bens do batalhão: código, descrição, nº de
-     série, tombamento, quantidade, tipo e departamento. Dados no Worker
+     série, tombamento, quantidade, tipo, departamento e (opcional, 31/10/2026)
+     o nº do processo SEI. Dados no Worker
      (backend/patrimonio.js, planilha BPFRON_P4_Patrimonio). Fechado:
      "Patrimônio (ver)" consulta; "Patrimônio (gestor)" cadastra/importa/exclui. -->
 <script src="bp-casca.js"></script>
@@ -108,6 +109,16 @@
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Nº do processo SEI no bem", "quem": "todos", "itens": [
+    "Cada bem pode ter o número do processo SEI (ex.: 0021.000131/2026-96). Ele aparece na lista, na ficha do bem, no Excel e na relação impressa.",
+    "A busca também acha o bem pelo nº do processo, com ou sem ponto, barra e traço."
+  ] },
+  { "data": "2026-10-31", "titulo": "Processo SEI no cadastro", "quem": "gestor", "itens": [
+    "Caixa nova “Processo SEI” no cadastro e na correção do bem. Não é obrigatória.",
+    "Pode digitar só os números: os 16 dígitos ganham o formato do SEI sozinhos.",
+    "No “Salvar e cadastrar outro” o processo continua preenchido, para lançar vários bens do mesmo processo.",
+    "Na importação, a coluna PROCESSO SEI da planilha é lida (também é opcional)."
+  ] },
   { "data": "2026-10-30", "titulo": "Patrimônio da P4 no ar", "quem": "todos", "itens": [
     "Relação dos bens do batalhão com código, descrição, nº de série, tombamento, quantidade, tipo (origem do bem: E-Estado, Leilão, Doação…) e departamento.",
     "Busca por qualquer campo, filtro por tipo e por departamento, e totais clicáveis no topo.",
@@ -237,6 +248,9 @@
         <div class="bp-in" id="b-tipo-outro" style="display:none;margin-top:8px"><i data-ic="editar"></i><input id="b-tipo" maxlength="80" autocomplete="off" placeholder="Qual a origem do bem?" oninput="conferirBem()"></div></div>
       <div class="bp-campo"><label for="b-departamento">Departamento *</label>
         <div class="bp-in"><i data-ic="usuarios"></i><input id="b-departamento" list="dl-dep" maxlength="80" required autocomplete="off" placeholder="Ex.: P4, P3, RESERVA" oninput="conferirBem()"></div></div>
+      <div class="bp-campo inteira"><label for="b-processo_sei">Processo SEI</label>
+        <div class="bp-in"><i data-ic="arquivo"></i><input id="b-processo_sei" maxlength="40" autocomplete="off" inputmode="numeric" placeholder="Ex.: 0021.000131/2026-96" oninput="conferirBem()" onblur="this.value = normSei(this.value); conferirBem()"></div>
+        <div class="pat-dica">Opcional. Pode digitar só os números.</div></div>
       <div class="inteira" id="b-avisos"></div>
       <div class="bp-msg err inteira" id="b-msg"></div>
       <div class="bp-modal-pe inteira" style="margin-top:0">
@@ -286,7 +300,7 @@
       <div><h3 id="m-imp-tit">Importar planilha</h3><small>Vários bens de uma vez, do Excel ou do Google Planilhas</small></div>
       <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-imp')" aria-label="Fechar"><i data-ic="x"></i></button>
     </div>
-    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. O código é gerado pelo sistema: se a planilha tiver uma coluna CÓDIGO, ela é ignorada. No TIPO vale <b>E-Estado</b>, <b>Leilão</b>, <b>Doação</b> ou outra origem.</div></div>
+    <div class="bp-aviso"><i data-ic="info"></i><div>Selecione as linhas na planilha <b>com o cabeçalho</b> (DESCRIÇÃO DO BEM, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO e, se tiver, PROCESSO SEI), copie e cole abaixo — ou escolha o arquivo (.xlsx ou .csv). Sem cabeçalho, as colunas são lidas nessa ordem. O código é gerado pelo sistema: se a planilha tiver uma coluna CÓDIGO, ela é ignorada. No TIPO vale <b>E-Estado</b>, <b>Leilão</b>, <b>Doação</b> ou outra origem.</div></div>
     <label class="bp-arquivo" id="imp-arq" style="margin-top:12px" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerArquivoImp(event.dataTransfer.files)">
       <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
       <span class="tx"><b>Escolher arquivo (.xlsx ou .csv)</b><small>ou arraste para cá</small></span>
@@ -294,7 +308,7 @@
       <input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt,.tsv" onchange="lerArquivoImp(this.files)">
     </label>
     <div class="bp-campo" style="margin-top:12px"><label for="pat-imp-txt">Ou cole aqui</label>
-      <textarea id="pat-imp-txt" placeholder="DESCRIÇÃO DO BEM&#9;Nº DE SÉRIE&#9;TOMBAMENTO&#9;QUANTIDADE&#9;TIPO&#9;DEPARTAMENTO" oninput="lerTextoImp()"></textarea></div>
+      <textarea id="pat-imp-txt" placeholder="DESCRIÇÃO DO BEM&#9;Nº DE SÉRIE&#9;TOMBAMENTO&#9;QUANTIDADE&#9;TIPO&#9;DEPARTAMENTO&#9;PROCESSO SEI" oninput="lerTextoImp()"></textarea></div>
     <div id="imp-res"></div>
     <div class="bp-msg err" id="imp-msg"></div>
     <div class="bp-modal-pe">
@@ -353,8 +367,16 @@ const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null 
 
 const CAMPOS = [
   ['codigo', 'Código'], ['descricao', 'Descrição do bem'], ['serie', 'Nº de série'], ['tombamento', 'Tombamento'],
-  ['quantidade', 'Qtd.'], ['tipo', 'Tipo (origem)'], ['departamento', 'Departamento'],
+  ['quantidade', 'Qtd.'], ['tipo', 'Tipo (origem)'], ['departamento', 'Departamento'], ['processo_sei', 'Processo SEI'],
 ];
+/* nº do processo SEI (opcional, 31/10/2026). Mesma regra do backend/patrimonio.js (normSei):
+   16 dígitos seguidos ganham a máscara 0000.000000/0000-00; o resto fica como veio. */
+const SEI_RE = /^\d{4}\.\d{6}\/\d{4}-\d{2}$/;
+function normSei(v) {
+  const t = String(v || '').replace(/\s+/g, ' ').trim().toUpperCase();
+  const d = t.replace(/\D/g, '');
+  return /^[\d\s.\/-]+$/.test(t) && d.length === 16 ? `${d.slice(0, 4)}.${d.slice(4, 10)}/${d.slice(10, 14)}-${d.slice(14)}` : t;
+}
 /* TIPO = origem do bem (pedido da P4, 30/10/2026). Mesma tabela do backend/patrimonio.js (normTipo). */
 /* E-ESTADO = patrimônio do Estado documentado eletronicamente (um tipo só). */
 const TIPOS_PADRAO = [['E-ESTADO', 'E-Estado (do Estado, documentado eletronicamente)'], ['LEILÃO', 'Leilão'], ['DOAÇÃO', 'Doação']];
@@ -497,7 +519,8 @@ function pintarLista() {
     <td class="mono${b.tombamento ? '' : ' vz'}" data-r="Tombamento">${vz(b.tombamento)}</td>
     <td class="qtd" data-r="Quantidade">${fNum(b.quantidade)}</td>
     <td data-r="Tipo">${esc(b.tipo)}</td>
-    <td data-r="Departamento">${esc(b.departamento)}</td></tr>`).join('');
+    <td data-r="Departamento">${esc(b.departamento)}</td>
+    <td class="mono${b.processo_sei ? '' : ' vz'}" data-r="Processo SEI">${vz(b.processo_sei)}</td></tr>`).join('');
   $('pat-tab').style.display = l.length ? '' : 'none';
   $('pat-vazio').style.display = l.length ? 'none' : '';
   $('pat-vazio').innerHTML = D.bens.length ? 'Nenhum bem com esse filtro.' : (D.gestor ? 'Nenhum bem cadastrado ainda. Use <b>Cadastrar bem</b> ou <b>Importar planilha</b>.' : 'Nenhum bem cadastrado ainda.');
@@ -532,6 +555,7 @@ async function abrirFicha(id) {
   const linha = (r, v) => `<dt>${r}</dt><dd>${v ? esc(v) : '<span style="color:var(--dim)">—</span>'}</dd>`;
   $('ficha-dl').innerHTML = linha('Código', b.codigo) + linha('Descrição do bem', b.descricao) + linha('Nº de série', b.serie) +
     linha('Tombamento', b.tombamento) + linha('Quantidade', fNum(b.quantidade)) + linha('Tipo', b.tipo) + linha('Departamento', b.departamento) +
+    linha('Processo SEI', b.processo_sei) +
     linha('Cadastrado', [b.criado_por, fQuando(b.criado_em)].filter(Boolean).join(' · ')) +
     (b.atualizado_em ? linha('Última mudança', [b.atualizado_por, fQuando(b.atualizado_em)].filter(Boolean).join(' · ')) : '');
   $('ficha-hist').innerHTML = '<div><small>carregando…</small></div>';
@@ -545,7 +569,7 @@ async function abrirFicha(id) {
 }
 
 /* ============================== cadastro ============================== */
-const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento'];
+const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento', 'processo_sei'];
 const CF = CB.filter((k) => k !== 'codigo'); // o código é sempre do sistema (PAT-0001…), ninguém digita
 function montarTipos(atual) {
   const padrao = TIPOS_PADRAO.map((t) => t[0]);
@@ -570,12 +594,13 @@ function lerForm() {
   const o = {}; CF.forEach((k) => { if (k !== 'tipo') o[k] = $('b-' + k).value.trim(); });
   const sel = $('b-tipo-sel').value;
   o.tipo = sel === '__outro' ? normTipo($('b-tipo').value) : sel;
+  o.processo_sei = normSei(o.processo_sei);
   return o;
 }
 
 function novoBem(manter) {
   EDITANDO = null;
-  const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value } : {};
+  const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value, processo_sei: lerForm().processo_sei } : {};
   preencherForm(Object.assign({ quantidade: 1 }, fica));
   $('m-bem-tit').textContent = 'Cadastrar bem';
   $('m-bem-sub').textContent = 'Campos com * são obrigatórios';
@@ -599,6 +624,7 @@ function problemasDe(o, outros) {
   const bloq = [], aviso = [];
   if (o.tombamento) { const x = outros.find((b) => b.tombamento && chave(b.tombamento) === chave(o.tombamento)); if (x) bloq.push(`O tombamento <b>${esc(o.tombamento)}</b> já está no bem ${esc(x.codigo)} (${esc(x.descricao)}).`); }
   if (o.serie) { const x = outros.find((b) => b.serie && chave(b.serie) === chave(o.serie)); if (x) aviso.push(`O nº de série <b>${esc(o.serie)}</b> também aparece no bem ${esc(x.codigo)} (${esc(x.descricao)}). Confira se não é o mesmo bem.`); }
+  if (o.processo_sei && !SEI_RE.test(o.processo_sei)) aviso.push(`Confira o processo SEI <b>${esc(o.processo_sei)}</b>: o número do SEI tem 16 dígitos (0000.000000/0000-00). Se estiver certo assim, pode salvar.`);
   return { bloq, aviso };
 }
 function conferirBem() {
@@ -680,6 +706,7 @@ function lerDelimitado(t) {
 const CAB_RE = {
   codigo: /^(COD|CODIGO|COD\.?|CODIGO DO BEM)$/, descricao: /^DESCRI/, serie: /SERIE/, tombamento: /^(TOMB|N DE TOMB|PATRIMONIO$)/,
   quantidade: /^(QT|QTD|QTDE|QUANT)/, tipo: /^TIPO/, departamento: /^(DEPART|DEPTO|SETOR|SECAO|LOTACAO|LOCAL)/,
+  processo_sei: /PROCESSO|^SEI\b|^NUP\b/,
 };
 function montarImp(linhas) {
   linhas = (linhas || []).map((l) => (l || []).map((c) => String(c == null ? '' : c).trim())).filter((l) => l.some(Boolean));
@@ -688,8 +715,15 @@ function montarImp(linhas) {
   const mapa = {};
   cab.forEach((c, i) => { for (const k of Object.keys(CAB_RE)) if (!(k in mapa) && CAB_RE[k].test(c)) { mapa[k] = i; break; } });
   const temCab = Object.keys(mapa).length >= 2;
-  // sem cabeçalho: 6 colunas na ordem do formulário; com 7, a 1ª é um código antigo e é pulada
-  if (!temCab) { const pula = Math.max(...linhas.map((l) => l.length)) >= 7 ? 1 : 0; CF.forEach((k, i) => { mapa[k] = i + pula; }); }
+  // sem cabeçalho: 6 colunas na ordem do formulário (+ PROCESSO SEI opcional no fim);
+  // com uma coluna a mais que isso, a 1ª é um código antigo e é pulada.
+  // 7 colunas: é o processo SEI no fim se a 7ª tiver cara de nº do SEI; senão é código antigo + 6.
+  if (!temCab) {
+    const larg = Math.max(...linhas.map((l) => l.length));
+    const seiNo7 = larg === 7 && linhas.some((l) => SEI_RE.test(normSei(l[6])));
+    const pula = larg >= 8 || (larg === 7 && !seiNo7) ? 1 : 0;
+    CF.forEach((k, i) => { mapa[k] = i + pula; });
+  }
   const corpo = temCab ? linhas.slice(1) : linhas;
   const ja = D.bens.slice();
   let n = Number((D.proximo_codigo.match(/\d+/) || [1])[0]);
@@ -697,6 +731,7 @@ function montarImp(linhas) {
     const bem = {}; CF.forEach((k) => { bem[k] = k in mapa ? (l[mapa[k]] || '') : ''; });
     ['serie', 'tombamento', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
     bem.tipo = normTipo(bem.tipo);
+    bem.processo_sei = normSei(bem.processo_sei);
     const qt = String(bem.quantidade).replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
     bem.quantidade = qt === '' ? '1' : qt;
     const erros = [];
@@ -717,7 +752,7 @@ function pintarImp(nCab) {
   $('imp-btn').disabled = !ok.length;
   $('imp-btn').innerHTML = IC('check') + (ok.length ? `Importar ${fNum(ok.length)} ${ok.length === 1 ? 'bem' : 'bens'}` : 'Importar');
   if (!IMP.length) { $('imp-res').innerHTML = ''; return; }
-  const cab = nCab ? `Cabeçalho reconhecido (${nCab} colunas).` : 'Sem cabeçalho: colunas lidas na ordem DESCRIÇÃO, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO.';
+  const cab = nCab ? `Cabeçalho reconhecido (${nCab} colunas).` : 'Sem cabeçalho: colunas lidas na ordem DESCRIÇÃO, Nº DE SÉRIE, TOMBAMENTO, QUANTIDADE, TIPO, DEPARTAMENTO, PROCESSO SEI.';
   const resumo = ruins
     ? `<div class="bp-aviso pend" style="margin-top:12px">${IC('alerta')}<div><b>${fNum(ok.length)}</b> prontas e <b>${fNum(ruins)}</b> com problema (em vermelho) — as com problema ficam de fora. Corrija na planilha e importe de novo depois. ${cab}</div></div>`
     : `<div class="bp-aviso ok" style="margin-top:12px">${IC('ok')}<div><b>${fNum(ok.length)}</b> ${ok.length === 1 ? 'linha pronta' : 'linhas prontas'} para importar. ${cab}</div></div>`;
@@ -769,7 +804,7 @@ async function importar() {
 function exportarCsv() {
   const l = filtrados();
   const c = (v) => { const s = String(v == null ? '' : v); return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const linhas = [['CÓDIGO', 'DESCRIÇÃO DO BEM', 'Nº DE SÉRIE', 'TOMBAMENTO', 'QUANTIDADE', 'TIPO', 'DEPARTAMENTO'].join(';')]
+  const linhas = [['CÓDIGO', 'DESCRIÇÃO DO BEM', 'Nº DE SÉRIE', 'TOMBAMENTO', 'QUANTIDADE', 'TIPO', 'DEPARTAMENTO', 'PROCESSO SEI'].join(';')]
     .concat(l.map((b) => CB.map((k) => c(b[k])).join(';')));
   const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
@@ -792,9 +827,9 @@ function montarRelatorio() {
   const secoes = Object.keys(por).sort(cmp).map((dep) => {
     const bs = por[dep];
     return `<h3>${esc(dep)} — ${fNum(bs.length)} ${bs.length === 1 ? 'bem' : 'bens'}, ${fNum(somaQtd(bs))} un.</h3>
-      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo (origem)</th></tr></thead><tbody>` +
-      bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td></tr>`).join('') +
-      `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td></td></tr></tfoot></table>`;
+      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo (origem)</th><th>Processo SEI</th></tr></thead><tbody>` +
+      bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td><td>${esc(b.processo_sei)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td colspan="2"></td></tr></tfoot></table>`;
   }).join('');
   const tipos = new Set(l.map((b) => b.tipo)).size, deps = Object.keys(por).length;
   $('relatorio').innerHTML = `<div class="rcab"><img src="LOGOS/bpfron_transp.avif" alt="">
