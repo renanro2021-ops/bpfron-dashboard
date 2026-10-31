@@ -9,7 +9,9 @@
      "Patrimônio (ver)" consulta; "Patrimônio (gestor)" cadastra/importa/exclui.
      31/10/2026: quadro "Ao vivo" (WebSocket /api/patrimonio/ao-vivo, Durable Object
      PatrimonioVivoDO em backend/patrimonio-vivo.js): quem está na página, o que está
-     fazendo e cada bem gravado na hora; a lista se atualiza sozinha. -->
+     fazendo e cada bem gravado na hora; a lista se atualiza sozinha.
+     31/10/2026: janela "Excluídos" (GET /api/patrimonio/excluidos): quem excluiu,
+     quando e o motivo; o gestor recupera (op "recuperar", mesmo código). -->
 <script src="bp-casca.js"></script>
 <script src="conta.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -95,10 +97,25 @@
 .pat-ev time{font-size:12px;color:var(--dim);white-space:nowrap}
 .pat-vivo-mais{margin-top:8px;align-self:flex-start}
 .pat-tab tbody tr.pat-novo td{animation:pat-linha 3.2s var(--ease)}
+/* excluídos (31/10/2026) */
+.pat-exc-lista{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;margin-top:12px}
+.pat-exc{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surf)}
+.pat-exc .tx{flex:1;min-width:0;color:var(--t2);font-size:14px}
+.pat-exc .tx > b{color:var(--t1)}
+.pat-exc .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+.pat-exc .tx small.quem{color:var(--t3)}
+.pat-exc .tx small.quem b{color:var(--t1)}
+.pat-exc .tx small.quem svg{color:var(--crit)}
+.pat-exc .bp-aviso{margin-top:8px;padding:8px 10px;font-size:12.5px}
+.pat-exc .bts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:none}
+.bp-btn.conf{background:var(--good);border-color:var(--good);color:#04210f}
+.pat-nexc{margin-left:2px}
 @keyframes pat-linha{0%,45%{background:var(--good-soft)}100%{background:transparent}}
 @media (max-width:760px){ .bp-modal-cx.larga{width:100%} }
 @media (max-width:860px){ .pat-filtros{grid-template-columns:1fr 1fr} .pat-filtros .busca{grid-column:1/-1} }
 @media (max-width:760px){
+  .pat-exc{flex-direction:column}
+  .pat-exc .bts{justify-content:flex-start}
   .pat-vivo-hoje{margin-left:0;width:100%}
   .pat-pessoa .nm{max-width:130px}
   .pat-form{grid-template-columns:1fr}
@@ -146,6 +163,11 @@
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Excluídos: ver e recuperar", "quem": "todos", "itens": [
+    "Botão “Excluídos” no topo: lista dos bens que saíram, com quem excluiu, quando e o motivo.",
+    "O gestor pode recuperar um bem excluído: ele volta para a lista com o mesmo código, e o histórico do bem mostra a exclusão e a recuperação.",
+    "Se o tombamento do bem excluído já estiver em outro bem, o sistema avisa e não deixa recuperar até resolver."
+  ] },
   { "data": "2026-10-31", "titulo": "Patrimônio ao vivo", "quem": "todos", "itens": [
     "Quadro “Ao vivo” no topo: mostra quem está com o Patrimônio aberto e o que está fazendo agora (cadastrando, corrigindo, importando planilha).",
     "Cada bem cadastrado, corrigido, importado ou excluído aparece na hora, com quem fez — e quantos bens cada um cadastrou hoje.",
@@ -231,6 +253,7 @@
           <button type="button" class="bp-btn sec pat-ges" onclick="abrirImportar()"><i data-ic="enviar"></i>Importar planilha</button>
           <button type="button" class="bp-btn sec" onclick="exportarCsv()"><i data-ic="baixar"></i>Exportar (Excel)</button>
           <button type="button" class="bp-btn sec" onclick="imprimir()"><i data-ic="arquivo"></i>Imprimir relação</button>
+          <button type="button" class="bp-btn ghost" id="pat-bt-exc" onclick="abrirExcluidos()"><i data-ic="lixeira"></i>Excluídos<span class="bp-sl pat-nexc" id="pat-nexc" style="display:none">0</span></button>
         </div>
       </div>
       <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
@@ -315,6 +338,19 @@
   </div>
 </div>
 
+<!-- EXCLUÍDOS (31/10/2026) -->
+<div class="bp-modal" id="m-exc" onclick="if(event.target===this)fechar('m-exc')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-exc-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile crit"><i data-ic="lixeira"></i></span>
+      <div><h3 id="m-exc-tit">Excluídos <span class="bp-sl" id="exc-cont">0</span></h3><small>Nada é apagado de verdade. <span class="pat-ges">Recupere o bem e ele volta para a lista com o mesmo código.</span><span class="pat-ver">Só o gestor pode recuperar.</span></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-exc')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-campo"><div class="bp-in"><i data-ic="buscar"></i><input id="exc-q" placeholder="Buscar nos excluídos: código, descrição, tombamento, quem excluiu, motivo…" autocomplete="off" oninput="pintarExc()"></div></div>
+    <div class="pat-exc-lista" id="exc-lista"></div>
+  </div>
+</div>
+
 <!-- FICHA DO BEM -->
 <div class="bp-modal" id="m-ficha" onclick="if(event.target===this)fechar('m-ficha')">
   <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-ficha-tit">
@@ -327,8 +363,9 @@
     <div class="bp-sec" style="margin-top:16px"><span class="bp-tile sm"><i data-ic="relogio"></i></span><div><h2 style="font-size:16px">Histórico</h2></div></div>
     <div class="pat-hist" id="ficha-hist"></div>
     <div class="bp-modal-pe pat-ges">
-      <button type="button" class="bp-btn perigo-l" onclick="excluirBem()"><i data-ic="lixeira"></i>Excluir</button>
-      <button type="button" class="bp-btn" onclick="editarBem()"><i data-ic="editar"></i>Corrigir</button>
+      <button type="button" class="bp-btn perigo-l" id="ficha-exc" onclick="excluirBem()"><i data-ic="lixeira"></i>Excluir</button>
+      <button type="button" class="bp-btn" id="ficha-cor" onclick="editarBem()"><i data-ic="editar"></i>Corrigir</button>
+      <button type="button" class="bp-btn" id="ficha-rec" style="display:none" onclick="recuperarBem(ATUAL.id, this)"><i data-ic="atualizar"></i>Recuperar</button>
     </div>
   </div>
 </div>
@@ -439,7 +476,7 @@ function normTipo(v) {
   const s = sem(t).replace(/[^A-Z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
   return TIPO_ALIAS[s] || t;
 }
-const MODAIS = ['m-senha', 'm-bem', 'm-imp', 'm-res', 'm-ficha'];
+const MODAIS = ['m-senha', 'm-bem', 'm-imp', 'm-res', 'm-ficha', 'm-exc'];
 
 function abrir(id) { $(id).classList.add('on'); }
 function fechar(id) { $(id).classList.remove('on'); if (id === 'm-bem' || id === 'm-imp') vivoFaz(''); }
@@ -531,6 +568,8 @@ function pintarTudo() {
     $(sel).innerHTML = `<option value="">${rot}</option>` + valores(k).map((v) => `<option${v === atual ? ' selected' : ''}>${esc(v)}</option>`).join('');
   };
   opts('pat-ftipo', 'tipo', 'Todas as origens'); opts('pat-fdep', 'departamento', 'Todos os departamentos');
+  $('pat-nexc').textContent = fNum(D.excluidos || 0);
+  $('pat-nexc').style.display = D.excluidos ? '' : 'none';
   $('dl-dep').innerHTML = valores('departamento').map((v) => `<option value="${esc(v)}">`).join('');
   const bs = D.bens;
   $('pat-nums').innerHTML = [
@@ -604,24 +643,104 @@ function filtrarPor(k, v) {
 
 /* ============================== ficha ============================== */
 async function abrirFicha(id) {
-  const b = D.bens.find((x) => x.id === id); if (!b) return;
+  const b = D.bens.find((x) => x.id === id) || (EXC || []).find((x) => x.id === id); if (!b) return;
+  const exc = !D.bens.includes(b);
   ATUAL = b;
-  $('m-ficha-tit').textContent = b.codigo;
+  $('m-ficha-tit').textContent = b.codigo + (exc ? ' · excluído' : '');
+  $('ficha-exc').style.display = $('ficha-cor').style.display = exc ? 'none' : '';
+  const rec = $('ficha-rec');
+  rec.style.display = exc ? '' : 'none'; rec.disabled = !!(exc && b.conflito); rec.dataset.conf = ''; rec.classList.remove('conf');
+  rec.innerHTML = IC('atualizar') + 'Recuperar';
+  rec.title = exc && b.conflito ? b.conflito : '';
   $('m-ficha-sub').textContent = b.descricao;
   const linha = (r, v) => `<dt>${r}</dt><dd>${v ? esc(v) : '<span style="color:var(--dim)">—</span>'}</dd>`;
   $('ficha-dl').innerHTML = linha('Código', b.codigo) + linha('Descrição do bem', b.descricao) + linha('Nº de série', b.serie) +
     linha('Tombamento', b.tombamento) + linha('Quantidade', fNum(b.quantidade)) + linha('Tipo', b.tipo) + linha('Departamento', b.departamento) +
     linha('Processo SEI', b.processo_sei) +
     linha('Cadastrado', [b.criado_por, fQuando(b.criado_em)].filter(Boolean).join(' · ')) +
-    (b.atualizado_em ? linha('Última mudança', [b.atualizado_por, fQuando(b.atualizado_em)].filter(Boolean).join(' · ')) : '');
+    (b.atualizado_em && !exc ? linha('Última mudança', [b.atualizado_por, fQuando(b.atualizado_em)].filter(Boolean).join(' · ')) : '') +
+    (exc ? linha('Excluído', [b.excluido_por, fQuando(b.excluido_em), b.motivo ? 'motivo: ' + b.motivo : ''].filter(Boolean).join(' · ')) : '') +
+    (exc && b.conflito ? linha('Não dá para recuperar', b.conflito) : '');
   $('ficha-hist').innerHTML = '<div><small>carregando…</small></div>';
   abrir('m-ficha');
   try {
     const h = await apiJson('/api/patrimonio/historico?id=' + encodeURIComponent(id));
     if (ATUAL !== b) return;
     $('ficha-hist').innerHTML = h.historico.length ? h.historico.map((x) =>
-      `<div><b>${esc(x.acao)}</b> por ${esc(x.quem)}<small>${fQuando(x.quando)}</small>${x.acao === 'editou' ? `<small>${esc(x.resumo)}</small>` : ''}</div>`).join('') : '<div><small>Sem registros.</small></div>';
+      `<div class="h-${esc(x.acao)}"><b>${esc(x.acao)}</b> por ${esc(x.quem)}<small>${fQuando(x.quando)}</small>${histDetalhe(x)}</div>`).join('') : '<div><small>Sem registros.</small></div>';
   } catch (e) { $('ficha-hist').innerHTML = `<div><small>${esc(e.message)}</small></div>`; }
+}
+
+/* o que mostrar embaixo de cada linha do histórico */
+function histDetalhe(x) {
+  if (x.acao === 'editou') return `<small>${esc(x.resumo)}</small>`;
+  const m = /· motivo: (.*)$/.exec(x.resumo || '');
+  return (x.acao === 'excluiu' || x.acao === 'recuperou') && m ? `<small>motivo: ${esc(m[1])}</small>` : '';
+}
+
+/* ============================== excluídos (31/10/2026) ==============================
+   Excluir nunca apaga: o bem fica ATIVO=NAO na planilha. Aqui aparecem com quem
+   excluiu, quando e o motivo; o gestor recupera (volta com o mesmo código).
+   Barrado se o tombamento dele já estiver em outro bem ativo (o Worker confere). */
+let EXC = null;
+async function abrirExcluidos() {
+  $('exc-q').value = '';
+  if (!EXC) $('exc-lista').innerHTML = '<div class="bp-vazio">carregando…</div>';
+  abrir('m-exc');
+  await carregarExcluidos();
+}
+async function carregarExcluidos() {
+  try { EXC = (await apiJson('/api/patrimonio/excluidos')).excluidos || []; }
+  catch (e) { $('exc-lista').innerHTML = `<div class="bp-vazio">${esc(e.message)}</div>`; return; }
+  pintarExc();
+}
+function pintarExc() {
+  if (!EXC) return;
+  $('exc-cont').textContent = fNum(EXC.length);
+  if (!EXC.length) { $('exc-lista').innerHTML = '<div class="bp-vazio">Nenhum bem excluído. Quando alguém excluir um bem, ele aparece aqui e pode ser recuperado.</div>'; return; }
+  const termos = sem($('exc-q').value).split(/\s+/).filter(Boolean);
+  const l = EXC.filter((b) => {
+    if (!termos.length) return true;
+    const alvo = sem([b.codigo, b.descricao, b.serie, b.tombamento, b.tipo, b.departamento, b.processo_sei, b.motivo, b.excluido_por].join(' '));
+    return termos.every((t) => alvo.includes(t) || chave(alvo).includes(chave(t)));
+  });
+  if (!l.length) { $('exc-lista').innerHTML = '<div class="bp-vazio">Nenhum excluído com essa busca.</div>'; return; }
+  const gestor = !!(D && D.gestor);
+  $('exc-lista').innerHTML = l.map((b) => `<div class="pat-exc" data-cod="${esc(b.codigo)}">
+      <div class="tx"><b>${esc(b.codigo)}</b> · ${esc(b.descricao)}
+        <small>${[b.tombamento ? 'Tombamento ' + b.tombamento : '', b.serie ? 'Série ' + b.serie : '', fNum(b.quantidade) + ' un.', b.tipo, b.departamento].filter(Boolean).map(esc).join(' · ')}</small>
+        <small class="quem">${IC('lixeira')} Excluído por <b>${esc(b.excluido_por || '—')}</b>${b.excluido_em ? ' em ' + esc(fQuando(b.excluido_em)) : ''}${b.motivo ? ' · motivo: ' + esc(b.motivo) : ''}</small>
+        ${b.conflito ? `<div class="bp-aviso crit">${IC('alerta')}<div>${esc(b.conflito)}</div></div>` : ''}
+      </div>
+      <div class="bts">
+        <button type="button" class="bp-btn sm ghost" onclick="abrirFicha('${esc(b.id)}')">${IC('relogio')}Histórico</button>
+        ${gestor ? `<button type="button" class="bp-btn sm" data-rec="${esc(b.id)}"${b.conflito ? ' disabled title="' + esc(b.conflito) + '"' : ''} onclick="recuperarBem('${esc(b.id)}', this)">${IC('atualizar')}Recuperar</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+/* 1º toque pede confirmação (6 s); o 2º recupera */
+async function recuperarBem(id, bt) {
+  const b = (EXC || []).find((x) => x.id === id); if (!b || !bt) return;
+  const normal = IC('atualizar') + 'Recuperar';
+  if (bt.dataset.conf !== '1') {
+    bt.dataset.conf = '1'; bt.classList.add('conf');
+    bt.innerHTML = IC('atualizar') + 'Confirmar: recuperar ' + esc(b.codigo);
+    setTimeout(() => { if (bt.isConnected && bt.dataset.conf === '1') { bt.dataset.conf = ''; bt.classList.remove('conf'); bt.innerHTML = normal; } }, 6000);
+    return;
+  }
+  bt.dataset.conf = ''; bt.classList.remove('conf'); bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Recuperando…';
+  try {
+    VIVO_MEU = Date.now();
+    await apiJson('/api/patrimonio/salvar', { op: 'recuperar', id });
+    VIVO_NOVOS.add(b.codigo);
+    toast(`${b.codigo} recuperado: voltou para a lista.`);
+    if (ATUAL && ATUAL.id === id) fechar('m-ficha');
+    await carregar();
+  } catch (e) {
+    toast(e.message, 'err');
+    if (bt.isConnected) { bt.disabled = false; bt.innerHTML = normal; }
+  }
+  if ($('m-exc').classList.contains('on')) await carregarExcluidos(); else EXC = null;
 }
 
 /* ============================== cadastro ============================== */
@@ -715,7 +834,7 @@ async function salvarBem(outro) {
 /* ---------- exclusão com senha ---------- */
 function excluirBem() {
   const b = ATUAL; if (!b) return;
-  $('m-senha-sub').textContent = `${b.codigo} · ${b.descricao} sai da lista (fica no histórico da planilha).`;
+  $('m-senha-sub').textContent = `${b.codigo} · ${b.descricao} sai da lista e vai para Excluídos (dá para recuperar depois).`;
   $('sx-pass').value = ''; $('sx-motivo').value = ''; $('sx-msg').textContent = '';
   abrir('m-senha'); setTimeout(() => $('sx-motivo').focus(), 100);
 }
@@ -725,7 +844,7 @@ async function confirmarSenha() {
   try {
     VIVO_MEU = Date.now();
     await apiJson('/api/patrimonio/salvar', { op: 'excluir', id: ATUAL.id, senha: $('sx-pass').value, motivo: $('sx-motivo').value.trim() });
-    fechar('m-senha'); fechar('m-ficha'); toast(ATUAL.codigo + ' excluído da lista.'); await carregar();
+    fechar('m-senha'); fechar('m-ficha'); toast(ATUAL.codigo + ' excluído. Se precisar, recupere em Excluídos.'); EXC = null; await carregar();
   } catch (e) { $('sx-msg').textContent = e.message; }
   finally { bt.disabled = false; bt.innerHTML = antes; }
 }
@@ -921,6 +1040,7 @@ const VIVO_TIPO = {
   editou:    { ic: 'editar',  c: 'var(--info)', tx: (e) => `<b>${esc(e.nome)}</b> corrigiu <b>${esc(e.codigo)}</b>` },
   importou:  { ic: 'enviar',  c: 'var(--acc)',  tx: (e) => `<b>${esc(e.nome)}</b> importou <b>${fNum(e.n)} ${e.n === 1 ? 'bem' : 'bens'}</b>` },
   excluiu:   { ic: 'lixeira', c: 'var(--crit)', tx: (e) => `<b>${esc(e.nome)}</b> excluiu <b>${esc(e.codigo)}</b>` },
+  recuperou: { ic: 'atualizar', c: 'var(--good)', tx: (e) => `<b>${esc(e.nome)}</b> recuperou <b>${esc(e.codigo)}</b>` },
 };
 const FAZ_TX = { cadastrando: 'cadastrando agora', corrigindo: 'corrigindo', importando: 'importando planilha' };
 const iniciais = (n) => String(n || '').split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || '?';
@@ -991,11 +1111,13 @@ function vivoMsg(m) {
   const meu = e.por === ls('bp_user');
   if (!meu) {
     const t = e.tipo === 'importou' ? `${e.nome} importou ${fNum(e.n)} ${e.n === 1 ? 'bem' : 'bens'}.`
-      : `${e.nome} ${e.tipo === 'cadastrou' ? 'cadastrou' : e.tipo === 'editou' ? 'corrigiu' : 'excluiu'} ${e.codigo}${e.descricao ? ' · ' + e.descricao : ''}.`;
+      : `${e.nome} ${{ cadastrou: 'cadastrou', editou: 'corrigiu', recuperou: 'recuperou' }[e.tipo] || 'excluiu'} ${e.codigo}${e.descricao ? ' · ' + e.descricao : ''}.`;
     toast(t);
   }
   if (VIVO_NOVOS.size > 600) VIVO_NOVOS.clear();
   if (e.tipo !== 'excluiu') codigosDe(e).forEach((c) => VIVO_NOVOS.add(c));
+  // a janela Excluídos aberta acompanha (exclusão/recuperação de outra pessoa)
+  if ((e.tipo === 'excluiu' || e.tipo === 'recuperou') && !meu) { if ($('m-exc').classList.contains('on')) carregarExcluidos(); else EXC = null; }
   // o que eu mesmo acabei de gravar já recarregou (salvarBem/importar/excluir)
   if (meu && Date.now() - VIVO_MEU < 8000) { if (D) pintarLista(); return; }
   vivoRecarregar();
