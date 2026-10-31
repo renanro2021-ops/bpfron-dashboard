@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="bp-rodovias.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -149,6 +150,13 @@ button,input,select{font-family:inherit}
   .f-assin-linha{border-top:1px solid #000;width:70%;margin-top:34px;padding-top:4px}
 }
 </style>
+<!-- Novidades desta página (bp-casca.js mostra uma vez a cada pessoa) -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Rodovias BR e RO no mapa", "quem": "todos", "itens": [
+    "O mapa do local da operação mostra as rodovias BR (laranja) e RO (azul) oficiais, as mesmas da Central de Inteligência, com placas ao longo da via.",
+    "Linha cheia = asfalto; linha tracejada = estrada de terra. Ligue ou desligue no botão de camadas, no canto do mapa."
+  ] }
+]</script>
 </head>
 <body>
 <script src="conta.js"></script>
@@ -820,7 +828,16 @@ function initMapaAro(){
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, opacity:.85})
   ]);
   ruas.addTo(mapaAro);
-  L.control.layers({'🗺️ Ruas e nomes': ruas, '🛰️ Satélite': satelite}, null, {position:'topright'}).addTo(mapaAro);
+  // Rodovias BR/RO oficiais (bp-rodovias.js, as mesmas da Inteligência e do painel — 31/10/2026).
+  // Sem clique na via: aqui o clique no mapa marca o ponto da operação.
+  const rodBR = buildRoadLayer(mapaAro, 'BR', {interativo:false}), rodRO = buildRoadLayer(mapaAro, 'RO', {interativo:false});
+  mapaAro._geoLayers = {br:rodBR, ro:rodRO}; mapaAro._geoOn = {br:true, ro:true};
+  rodBR.addTo(mapaAro); rodRO.addTo(mapaAro); rodLigar(mapaAro);
+  mapaAro.on('overlayadd overlayremove', e => {
+    const k = e.layer === rodBR ? 'br' : e.layer === rodRO ? 'ro' : null;
+    if(k){ mapaAro._geoOn[k] = e.type === 'overlayadd'; rodRotular(mapaAro); }
+  });
+  L.control.layers({'🗺️ Ruas e nomes': ruas, '🛰️ Satélite': satelite}, {'🟧 Rodovias BR': rodBR, '🟦 Rodovias RO': rodRO}, {position:'topright'}).addTo(mapaAro);
   mapaAro.on('click', e => definirPonto(e.latlng.lat, e.latlng.lng, true));
 
   const gpsSalvo = txt('f-gps');

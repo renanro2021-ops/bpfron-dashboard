@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="bp-rodovias.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -910,6 +911,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Rodovias BR e RO novas nos mapas", "quem": "todos", "itens": [
+    "Os mapas de Ocorrências e de Policiais em Campo usam as mesmas rodovias da Central de Inteligência: BR pelo DNIT e RO pelo IBGE 2025, em cima da estrada real.",
+    "Linha cheia = asfalto; linha tracejada = estrada de terra. Placas BR/RO ao longo da via.",
+    "Toque numa rodovia para ver quantos km tem em Rondônia, quanto é asfaltado e a fonte."
+  ] },
   { "data": "2026-10-31", "titulo": "Números animados na Visão Geral", "quem": "todos", "itens": [
     "Todos os números dos cards e do prejuízo ao crime contam até o valor quando o painel abre.",
     "Ao trocar o período ou um filtro, cada número vai do valor antigo até o novo, sem voltar a zero.",
@@ -2947,22 +2953,11 @@ function getCrimeCor(cat) {
   return CRIME_PALETTE[h % CRIME_PALETTE.length];
 }
 
-/* ── Camadas geográficas (municípios + rodovias BR/RO) — camadas independentes p/ qualquer mapa ── */
-// Grupo de rodovias de um tipo ('BR' ou 'RO'): casing escuro + linha colorida + rótulo permanente
-function buildRoadLayer(tipo) {
-  const feats = { type:'FeatureCollection', features: GEO_RODOVIAS.features.filter(f => f.properties.t === tipo) };
-  const g = L.layerGroup();
-  L.geoJSON(feats, { interactive:false, style:{ color:'#0a0f1a', weight:5, opacity:.5 } }).addTo(g); // casing
-  L.geoJSON(feats, {
-    interactive:false,
-    style: tipo === 'BR' ? { color:'#ff7a18', weight:3, opacity:.95 } : { color:'#22d3ee', weight:2.4, opacity:.9 },
-    onEachFeature: (f, lyr) => lyr.bindTooltip(f.properties.ref, {
-      permanent:true, direction:'center', className:'road-tip ' + (tipo === 'BR' ? 'br' : 'ro'), opacity:1
-    })
-  }).addTo(g);
-  return g;
-}
-function buildGeoLayers() {
+/* ── Camadas geográficas: municípios (abaixo) + rodovias BR/RO do bp-rodovias.js ──
+   31/10/2026: as rodovias passaram a ser as mesmas da Inteligência — bases oficiais (DNIT/SNV + IBGE),
+   traçado sobre a estrada real, terra tracejada e placas ao longo da via. O GEO_RODOVIAS acima fica
+   só como reserva (o bp-rodovias.js usa ele se o bp-rodovias.json não carregar). */
+function buildGeoLayers(map) {
   // Municípios — preenchimento leve translúcido + borda fina; realce no hover
   const mun = L.geoJSON(GEO_MUNICIPIOS, {
     style: { color:'#F5C518', weight:1, opacity:.4, fillColor:'#F5C518', fillOpacity:.05 },
@@ -2972,7 +2967,7 @@ function buildGeoLayers() {
       lyr.on('mouseout',  () => lyr.setStyle({ fillOpacity:.05, weight:1, opacity:.4 }));
     }
   });
-  return { mun, br: buildRoadLayer('BR'), ro: buildRoadLayer('RO') };
+  return { mun, br: buildRoadLayer(map, 'BR'), ro: buildRoadLayer(map, 'RO') };
 }
 // Estado inicial das camadas: municípios + BR ligados; RO desligada (menos poluição)
 const GEO_DEFAULT_ON = { mun:true, br:true, ro:false };
@@ -2980,10 +2975,12 @@ const GEO_KEYS = ['mun','br','ro'];
 function ensureGeoLayers(map) {
   if (!map) return;
   if (!map._geoLayers) {
-    map._geoLayers = buildGeoLayers();
+    map._geoLayers = buildGeoLayers(map);
     map._geoOn = Object.assign({}, GEO_DEFAULT_ON);
+    rodLigar(map);
   }
   GEO_KEYS.forEach(k => { if (map._geoOn[k] && !map.hasLayer(map._geoLayers[k])) map._geoLayers[k].addTo(map); });
+  rodRotular(map);
 }
 function toggleGeoLayer(map, key, btn, label) {
   if (!map) return;
@@ -2993,6 +2990,7 @@ function toggleGeoLayer(map, key, btn, label) {
   if (on) map.removeLayer(lyr); else lyr.addTo(map);
   map._geoOn[key] = !on;
   if (btn) { const now = !on; btn.classList.toggle('active', now); btn.innerHTML = label + (now ? ' ✓' : ''); }
+  rodRotular(map);
 }
 
 function initMap() {
