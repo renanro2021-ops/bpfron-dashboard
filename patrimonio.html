@@ -6,7 +6,10 @@
      série, tombamento, quantidade, tipo, departamento e (opcional, 31/10/2026)
      o nº do processo SEI. Dados no Worker
      (backend/patrimonio.js, planilha BPFRON_P4_Patrimonio). Fechado:
-     "Patrimônio (ver)" consulta; "Patrimônio (gestor)" cadastra/importa/exclui. -->
+     "Patrimônio (ver)" consulta; "Patrimônio (gestor)" cadastra/importa/exclui.
+     31/10/2026: quadro "Ao vivo" (WebSocket /api/patrimonio/ao-vivo, Durable Object
+     PatrimonioVivoDO em backend/patrimonio-vivo.js): quem está na página, o que está
+     fazendo e cada bem gravado na hora; a lista se atualiza sozinha. -->
 <script src="bp-casca.js"></script>
 <script src="conta.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -61,9 +64,43 @@
 .pat-imp-prev td.aviso-tx{color:var(--warn);font-size:12px;min-width:200px}
 #pat-imp-txt{width:100%;min-height:120px;resize:vertical;font:13px/1.4 ui-monospace,Consolas,monospace;padding:10px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--surf);color:var(--t1)}
 .bp-modal-cx.larga{width:min(920px,100%)}
+/* ao vivo (31/10/2026) */
+.pat-vivo{margin-top:16px;padding:14px 18px}
+.pat-vivo-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pat-vivo-cab > b{font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1)}
+.pat-vivo-st{font-size:12.5px;color:var(--muted)}
+.pat-vivo-hoje{margin-left:auto;font-size:13px;color:var(--t3)}
+.pat-vivo-hoje b{color:var(--good)}
+.pat-vivo-on{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.pat-vivo-on:empty{display:none}
+.pat-vivo-on .r{font-size:12px;color:var(--muted)}
+.pat-pessoa{display:inline-flex;align-items:center;gap:7px;padding:3px 11px 3px 3px;border-radius:999px;border:1px solid var(--line2);background:var(--surf);font-size:12.5px;color:var(--t1);max-width:100%;min-width:0}
+.pat-pessoa .ini{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--acc-ink);background:linear-gradient(135deg,var(--acc),var(--acc2));flex:none}
+.pat-pessoa .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.pat-pessoa em{font-style:normal;color:var(--good);font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.pat-pessoa em::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--good);animation:bp-pulso-v 1.8s infinite}
+.pat-pessoa small{color:var(--muted);white-space:nowrap}
+.pat-pessoa.ativa{border-color:var(--good-line);background:var(--good-soft)}
+#pat-vivo-lista{margin-top:8px;display:flex;flex-direction:column;max-height:290px;overflow-y:auto}
+.pat-vivo-vazio{font-size:13.5px;color:var(--dim);padding:6px 0}
+.pat-ev{display:flex;align-items:center;gap:12px;padding:8px 4px;border-top:1px solid var(--line);border-radius:8px}
+.pat-ev:first-child{border-top:0}
+.pat-ev.clica{cursor:pointer}
+.pat-ev.clica:hover{background:var(--card-h)}
+.pat-ev.novo{animation:pat-chega 1.6s var(--ease)}
+@keyframes pat-chega{0%{background:var(--acc-soft);transform:translateX(-6px)}100%{background:transparent;transform:none}}
+.pat-ev .tx{min-width:0;flex:1;font-size:14px;color:var(--t2)}
+.pat-ev .tx b{color:var(--t1)}
+.pat-ev .tx small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pat-ev time{font-size:12px;color:var(--dim);white-space:nowrap}
+.pat-vivo-mais{margin-top:8px;align-self:flex-start}
+.pat-tab tbody tr.pat-novo td{animation:pat-linha 3.2s var(--ease)}
+@keyframes pat-linha{0%,45%{background:var(--good-soft)}100%{background:transparent}}
 @media (max-width:760px){ .bp-modal-cx.larga{width:100%} }
 @media (max-width:860px){ .pat-filtros{grid-template-columns:1fr 1fr} .pat-filtros .busca{grid-column:1/-1} }
 @media (max-width:760px){
+  .pat-vivo-hoje{margin-left:0;width:100%}
+  .pat-pessoa .nm{max-width:130px}
   .pat-form{grid-template-columns:1fr}
   .pat-ficha{grid-template-columns:1fr;gap:2px}
   .pat-ficha dd{margin-bottom:8px}
@@ -109,6 +146,11 @@
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Patrimônio ao vivo", "quem": "todos", "itens": [
+    "Quadro “Ao vivo” no topo: mostra quem está com o Patrimônio aberto e o que está fazendo agora (cadastrando, corrigindo, importando planilha).",
+    "Cada bem cadastrado, corrigido, importado ou excluído aparece na hora, com quem fez — e quantos bens cada um cadastrou hoje.",
+    "A lista de bens se atualiza sozinha, sem precisar recarregar a página; o bem novo pisca em verde. Toque numa atividade para abrir a ficha do bem."
+  ] },
   { "data": "2026-10-31", "titulo": "Nº do processo SEI no bem", "quem": "todos", "itens": [
     "Cada bem pode ter o número do processo SEI (ex.: 0021.000131/2026-96). Ele aparece na lista, na ficha do bem, no Excel e na relação impressa.",
     "A busca também acha o bem pelo nº do processo, com ou sem ponto, barra e traço."
@@ -193,6 +235,17 @@
       </div>
       <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
     </section>
+
+    <div class="bp-card pat-vivo" id="pat-vivo">
+      <div class="pat-vivo-cab">
+        <span class="bp-vivo espera" id="pat-vivo-pt"></span>
+        <b>Ao vivo</b>
+        <span class="pat-vivo-st" id="pat-vivo-st">conectando…</span>
+        <span class="pat-vivo-hoje" id="pat-vivo-hoje"></span>
+      </div>
+      <div class="pat-vivo-on" id="pat-vivo-on"></div>
+      <div id="pat-vivo-lista"><div class="pat-vivo-vazio">Quando alguém cadastrar, corrigir ou importar um bem, aparece aqui na hora.</div></div>
+    </div>
 
     <div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Resumo</h2><small>Bens ativos no cadastro</small></div></div>
     <div class="bp-nums" id="pat-nums"></div>
@@ -389,7 +442,7 @@ function normTipo(v) {
 const MODAIS = ['m-senha', 'm-bem', 'm-imp', 'm-res', 'm-ficha'];
 
 function abrir(id) { $(id).classList.add('on'); }
-function fechar(id) { $(id).classList.remove('on'); }
+function fechar(id) { $(id).classList.remove('on'); if (id === 'm-bem' || id === 'm-imp') vivoFaz(''); }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') MODAIS.some((id) => $(id).classList.contains('on') && (fechar(id), true)); });
 
 /* ============================== API / login ============================== */
@@ -422,7 +475,7 @@ async function entrar() {
   } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
   finally { bt.disabled = false; bt.textContent = 'Entrar'; }
 }
-function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+function sair() { vivoDesligar(); ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
 
 function nomeLogado() {
   try { const p = JSON.parse(ls('bp_perms') || 'null'); if (p && p.nome) return p.nome; } catch (e) {}
@@ -466,6 +519,7 @@ async function carregar() {
   document.querySelectorAll('.pat-ges').forEach((el) => { el.style.display = D.gestor ? '' : 'none'; });
   document.querySelectorAll('.pat-ver').forEach((el) => { el.style.display = D.gestor ? 'none' : ''; });
   pintarTudo();
+  vivoLigar();
 }
 
 const valores = (k) => [...new Set(D.bens.map((b) => b[k]).filter(Boolean))].sort(cmp);
@@ -512,7 +566,8 @@ function pintarLista() {
   const l = filtrados();
   $('pat-cab').innerHTML = CAMPOS.map(([k, r]) => `<th class="${k === 'quantidade' ? 'qtd' : ''}" onclick="ordenar('${k}')">${r}${SORT.k === k ? `<span class="seta">${SORT.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
   const vz = (v) => v ? esc(v) : '—';
-  $('pat-corpo').innerHTML = l.slice(0, LIMITE).map((b) => `<tr data-id="${esc(b.id)}" onclick="abrirFicha('${esc(b.id)}')">
+  const piscou = [];
+  $('pat-corpo').innerHTML = l.slice(0, LIMITE).map((b) => `<tr data-id="${esc(b.id)}"${VIVO_NOVOS.has(b.codigo) && piscou.push(b.codigo) ? ' class="pat-novo"' : ''} onclick="abrirFicha('${esc(b.id)}')">
     <td class="cod" data-r="Código">${esc(b.codigo)}</td>
     <td class="desc" data-r="Descrição">${esc(b.descricao)}</td>
     <td class="mono${b.serie ? '' : ' vz'}" data-r="Nº de série">${vz(b.serie)}</td>
@@ -521,6 +576,7 @@ function pintarLista() {
     <td data-r="Tipo">${esc(b.tipo)}</td>
     <td data-r="Departamento">${esc(b.departamento)}</td>
     <td class="mono${b.processo_sei ? '' : ' vz'}" data-r="Processo SEI">${vz(b.processo_sei)}</td></tr>`).join('');
+  piscou.forEach((c) => VIVO_NOVOS.delete(c)); // cada bem que chegou ao vivo pisca uma vez só
   $('pat-tab').style.display = l.length ? '' : 'none';
   $('pat-vazio').style.display = l.length ? 'none' : '';
   $('pat-vazio').innerHTML = D.bens.length ? 'Nenhum bem com esse filtro.' : (D.gestor ? 'Nenhum bem cadastrado ainda. Use <b>Cadastrar bem</b> ou <b>Importar planilha</b>.' : 'Nenhum bem cadastrado ainda.');
@@ -602,6 +658,7 @@ function novoBem(manter) {
   EDITANDO = null;
   const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value, processo_sei: lerForm().processo_sei } : {};
   preencherForm(Object.assign({ quantidade: 1 }, fica));
+  vivoFaz('cadastrando');
   $('m-bem-tit').textContent = 'Cadastrar bem';
   $('m-bem-sub').textContent = 'Campos com * são obrigatórios';
   $('b-outro').style.display = '';
@@ -612,6 +669,7 @@ function novoBem(manter) {
 function editarBem() {
   const b = ATUAL; if (!b) return;
   EDITANDO = b.id; preencherForm(b);
+  vivoFaz('corrigindo', b.codigo);
   $('m-bem-tit').textContent = 'Corrigir ' + b.codigo;
   $('m-bem-sub').textContent = 'A mudança fica no histórico do bem';
   $('b-outro').style.display = 'none';
@@ -645,6 +703,7 @@ async function salvarBem(outro) {
   const bt = outro ? $('b-outro') : $('b-salvar'), antes = bt.innerHTML;
   bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…'; $('b-msg').textContent = '';
   try {
+    VIVO_MEU = Date.now();
     const r = await apiJson('/api/patrimonio/salvar', { op: 'salvar', id: EDITANDO || '', bem: lerForm() });
     toast(EDITANDO ? `${r.bem.codigo} corrigido.` : `${r.bem.codigo} cadastrado.`);
     await carregar();
@@ -664,6 +723,7 @@ async function confirmarSenha() {
   const bt = $('sx-btn'), antes = bt.innerHTML;
   bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Excluindo…';
   try {
+    VIVO_MEU = Date.now();
     await apiJson('/api/patrimonio/salvar', { op: 'excluir', id: ATUAL.id, senha: $('sx-pass').value, motivo: $('sx-motivo').value.trim() });
     fechar('m-senha'); fechar('m-ficha'); toast(ATUAL.codigo + ' excluído da lista.'); await carregar();
   } catch (e) { $('sx-msg').textContent = e.message; }
@@ -675,7 +735,7 @@ let IMP = [];   // [{ bem, erros:[] }]
 function abrirImportar() {
   IMP = []; $('pat-imp-txt').value = ''; $('imp-file').value = ''; $('imp-msg').textContent = ''; $('imp-res').innerHTML = '';
   marcarArquivo(null); $('imp-btn').disabled = true; $('imp-btn').innerHTML = IC('check') + 'Importar';
-  abrir('m-imp');
+  abrir('m-imp'); vivoFaz('importando');
 }
 function marcarArquivo(f) {
   const box = $('imp-arq');
@@ -791,6 +851,7 @@ async function importar() {
   const bt = $('imp-btn');
   bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Importando…'; $('imp-msg').textContent = '';
   try {
+    VIVO_MEU = Date.now();
     const r = await apiJson('/api/patrimonio/salvar', { op: 'importar', bens: ok });
     fechar('m-imp'); toast(`${fNum(r.importados)} ${r.importados === 1 ? 'bem importado' : 'bens importados'}.`); await carregar();
   } catch (e) {
@@ -845,6 +906,164 @@ function imprimir() {
   montarRelatorio();
   setTimeout(() => window.print(), 300);
 }
+
+/* ============================== ao vivo ==============================
+   WebSocket /api/patrimonio/ao-vivo (Durable Object PatrimonioVivoDO, 31/10/2026).
+   Pedido do usuário: o policial estava cadastrando e ele só via depois de recarregar.
+   Agora: quem está na página e o que está fazendo, cada bem gravado na hora (com o
+   total de hoje por pessoa) e a lista relida sozinha. Sem WebSocket (rede que
+   bloqueia), a lista é relida a cada 45 s com a aba visível. */
+let VIVO_EV = [], VIVO_ON = [], VIVO_WS = null, VIVO_ESPERA = 2000, VIVO_TIMER = 0, VIVO_PING = 0, VIVO_RECARGA = 0;
+let VIVO_FAZ = { faz: '', ref: '' }, VIVO_MEU = 0, VIVO_RELIGA = false;
+const VIVO_NOVOS = new Set();   // códigos que chegaram ao vivo: piscam na lista na 1ª vez que aparecem
+const VIVO_TIPO = {
+  cadastrou: { ic: 'mais',    c: 'var(--good)', tx: (e) => `<b>${esc(e.nome)}</b> cadastrou <b>${esc(e.codigo)}</b>` },
+  editou:    { ic: 'editar',  c: 'var(--info)', tx: (e) => `<b>${esc(e.nome)}</b> corrigiu <b>${esc(e.codigo)}</b>` },
+  importou:  { ic: 'enviar',  c: 'var(--acc)',  tx: (e) => `<b>${esc(e.nome)}</b> importou <b>${fNum(e.n)} ${e.n === 1 ? 'bem' : 'bens'}</b>` },
+  excluiu:   { ic: 'lixeira', c: 'var(--crit)', tx: (e) => `<b>${esc(e.nome)}</b> excluiu <b>${esc(e.codigo)}</b>` },
+};
+const FAZ_TX = { cadastrando: 'cadastrando agora', corrigindo: 'corrigindo', importando: 'importando planilha' };
+const iniciais = (n) => String(n || '').split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || '?';
+const ehHoje = (ms) => new Date(ms).toDateString() === new Date().toDateString();
+const qtdEv = (e) => e.tipo === 'cadastrou' ? 1 : e.tipo === 'importou' ? (Number(e.n) || 0) : 0;
+const hojePor = (login) => VIVO_EV.filter((e) => ehHoje(e.em) && (!login || e.por === login)).reduce((n, e) => n + qtdEv(e), 0);
+function haQuanto(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return 'agora';
+  const m = Math.round(s / 60); if (m < 60) return `há ${m} min`;
+  const h = Math.round(m / 60); if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24); return `há ${d} dia${d > 1 ? 's' : ''}`;
+}
+/* PAT-0013 … PAT-0042 de uma importação: todos piscam */
+function codigosDe(e) {
+  const a = /^PAT-(\d+)$/.exec(e.codigo || ''), b = /^PAT-(\d+)$/.exec(e.ate || '');
+  if (!a) return e.codigo ? [e.codigo] : [];
+  const fim = b ? Math.min(Number(b[1]), Number(a[1]) + 500) : Number(a[1]);
+  const l = []; for (let n = Number(a[1]); n <= fim; n++) l.push('PAT-' + String(n).padStart(4, '0'));
+  return l;
+}
+
+function vivoStatus(estado, texto) {
+  $('pat-vivo-pt').className = 'bp-vivo' + (estado === 'on' ? ' on' : estado === 'espera' ? ' espera' : '');
+  $('pat-vivo-st').textContent = texto;
+}
+function vivoPintar(novoId) {
+  const h = hojePor();
+  $('pat-vivo-hoje').innerHTML = h ? `Hoje: <b>${fNum(h)}</b> ${h === 1 ? 'bem cadastrado' : 'bens cadastrados'}` : '';
+  const box = $('pat-vivo-lista');
+  if (!VIVO_EV.length) { box.innerHTML = '<div class="pat-vivo-vazio">Quando alguém cadastrar, corrigir ou importar um bem, aparece aqui na hora.</div>'; return; }
+  const tudo = box.dataset.tudo === '1';
+  const lista = tudo ? VIVO_EV : VIVO_EV.slice(0, 8);
+  box.innerHTML = lista.map((e) => {
+    const t = VIVO_TIPO[e.tipo] || VIVO_TIPO.cadastrou;
+    const sub = e.tipo === 'importou' ? [e.codigo && e.ate && e.ate !== e.codigo ? `${e.codigo} a ${e.ate}` : e.codigo, e.descricao ? 'a partir de ' + e.descricao : ''].filter(Boolean).join(' · ') : e.descricao;
+    const abre = e.tipo !== 'excluiu' && e.codigo;
+    return `<div class="pat-ev${e.id === novoId ? ' novo' : ''}${abre ? ' clica' : ''}" data-tipo="${esc(e.tipo)}"${abre ? ` data-cod="${esc(e.codigo)}" onclick="vivoAbrir(this.dataset.cod)" title="Abrir a ficha de ${esc(e.codigo)}"` : ''}>
+      <span class="bp-tile sm" style="--c:${t.c}">${IC(t.ic)}</span>
+      <div class="tx">${t.tx(e)}${sub ? `<small>${esc(sub)}</small>` : ''}</div>
+      <time datetime="${new Date(e.em).toISOString()}" title="${esc(new Date(e.em).toLocaleString('pt-BR'))}">${haQuanto(e.em)}</time>
+    </div>`;
+  }).join('') + (VIVO_EV.length > 8 ? `<button type="button" class="bp-btn sm ghost pat-vivo-mais" onclick="event.stopPropagation(); this.parentNode.dataset.tudo='${tudo ? '' : '1'}'; vivoPintar()">${tudo ? 'Mostrar menos' : 'Ver tudo (' + fNum(VIVO_EV.length) + ')'}</button>` : '');
+}
+function vivoAbrir(cod) {
+  const b = D && D.bens.find((x) => x.codigo === cod);
+  if (b) abrirFicha(b.id); else toast(cod + ' não está mais na lista.', 'err');
+}
+function vivoOnline() {
+  const el = $('pat-vivo-on');
+  if (!VIVO_ON.length) { el.innerHTML = ''; return; }
+  const eu = ls('bp_user');
+  const l = VIVO_ON.slice().sort((a, b) => (!!b.faz - !!a.faz) || ((a.login === eu) - (b.login === eu)) || cmp(a.nome, b.nome));
+  el.innerHTML = '<span class="r">Na página agora:</span>' + l.map((u) => {
+    const h = hojePor(u.login);
+    const faz = u.faz ? `<em>${esc(FAZ_TX[u.faz] || u.faz)}${u.ref ? ' ' + esc(u.ref) : ''}</em>` : '';
+    return `<span class="pat-pessoa${u.faz ? ' ativa' : ''}" data-login="${esc(u.login)}" title="${esc(u.login)}"><b class="ini">${esc(iniciais(u.nome || u.login))}</b><span class="nm">${esc(u.login === eu ? 'você' : (u.nome || u.login))}</span>${faz}${h ? `<small>· ${fNum(h)} hoje</small>` : ''}</span>`;
+  }).join('');
+}
+
+function vivoMsg(m) {
+  if (m.t === 'hist') { VIVO_EV = Array.isArray(m.eventos) ? m.eventos : []; vivoPintar(); vivoOnline(); return; }
+  if (m.t === 'online') { VIVO_ON = Array.isArray(m.lista) ? m.lista : []; vivoOnline(); return; }
+  if (m.t !== 'evento' || !m.e) return;
+  const e = m.e;
+  VIVO_EV.unshift(e); VIVO_EV = VIVO_EV.slice(0, 200);
+  vivoPintar(e.id); vivoOnline();
+  const meu = e.por === ls('bp_user');
+  if (!meu) {
+    const t = e.tipo === 'importou' ? `${e.nome} importou ${fNum(e.n)} ${e.n === 1 ? 'bem' : 'bens'}.`
+      : `${e.nome} ${e.tipo === 'cadastrou' ? 'cadastrou' : e.tipo === 'editou' ? 'corrigiu' : 'excluiu'} ${e.codigo}${e.descricao ? ' · ' + e.descricao : ''}.`;
+    toast(t);
+  }
+  if (VIVO_NOVOS.size > 600) VIVO_NOVOS.clear();
+  if (e.tipo !== 'excluiu') codigosDe(e).forEach((c) => VIVO_NOVOS.add(c));
+  // o que eu mesmo acabei de gravar já recarregou (salvarBem/importar/excluir)
+  if (meu && Date.now() - VIVO_MEU < 8000) { if (D) pintarLista(); return; }
+  vivoRecarregar();
+}
+function vivoRecarregar() {
+  clearTimeout(VIVO_RECARGA);
+  VIVO_RECARGA = setTimeout(carregarQuieto, 600);
+}
+/* relê a lista sem a tela de carregamento e sem mexer em filtro, busca ou formulário aberto */
+async function carregarQuieto() {
+  if (!D || !ls('bp_token')) return;
+  try {
+    const d = await apiJson('/api/patrimonio');
+    if (!D) return;
+    D = d; pintarTudo();
+    if ($('m-bem').classList.contains('on')) conferirBem();
+  } catch (e) { /* tenta de novo no próximo aviso */ }
+}
+
+function vivoFaz(faz, ref) {
+  VIVO_FAZ = { faz: faz || '', ref: ref || '' };
+  if (VIVO_WS && VIVO_WS.readyState === 1) try { VIVO_WS.send(JSON.stringify({ t: 'faz', faz: VIVO_FAZ.faz, ref: VIVO_FAZ.ref })); } catch (e) {}
+}
+function vivoLigar() {
+  if (VIVO_WS || !ls('bp_token') || !D || typeof WebSocket === 'undefined') return;
+  clearTimeout(VIVO_TIMER);
+  vivoStatus('espera', 'conectando…');
+  let ws;
+  try { ws = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/patrimonio/ao-vivo?t=' + encodeURIComponent(ls('bp_token'))); }
+  catch (e) { vivoStatus('', 'indisponível'); return; }
+  VIVO_WS = ws;
+  ws.onopen = () => {
+    VIVO_ESPERA = 2000;
+    vivoStatus('on', 'ao vivo');
+    if (VIVO_FAZ.faz) vivoFaz(VIVO_FAZ.faz, VIVO_FAZ.ref);
+    clearInterval(VIVO_PING);
+    VIVO_PING = setInterval(() => { try { ws.send('{"t":"ping"}'); } catch (e) {} }, 25000);
+    if (VIVO_RELIGA) carregarQuieto(); // o que mudou enquanto estava sem conexão
+    VIVO_RELIGA = true;
+  };
+  ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } vivoMsg(m); };
+  ws.onclose = () => {
+    clearInterval(VIVO_PING);
+    if (VIVO_WS !== ws) return;
+    VIVO_WS = null; VIVO_ON = []; vivoOnline();
+    if (!ls('bp_token') || !D) { vivoStatus('', 'desligado'); return; }
+    vivoStatus('espera', 'reconectando…');
+    VIVO_TIMER = setTimeout(vivoLigar, VIVO_ESPERA);
+    VIVO_ESPERA = Math.min(VIVO_ESPERA * 2, 30000);
+  };
+}
+function vivoDesligar() {
+  clearTimeout(VIVO_TIMER); clearInterval(VIVO_PING);
+  const ws = VIVO_WS; VIVO_WS = null;
+  if (ws) try { ws.close(1000, 'saiu'); } catch (e) {}
+  VIVO_ON = []; VIVO_EV = []; VIVO_RELIGA = false; vivoOnline(); vivoStatus('', 'desligado');
+}
+// voltou para a aba: reconecta na hora, sem esperar a contagem
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !D) return;
+  if (!VIVO_WS) { VIVO_ESPERA = 2000; vivoLigar(); }
+});
+// sem WebSocket: relê a lista a cada 45 s (só com a aba visível)
+setInterval(() => { if (D && !document.hidden && !(VIVO_WS && VIVO_WS.readyState === 1)) carregarQuieto(); }, 45000);
+// o "há X min" envelhece sozinho
+setInterval(() => {
+  document.querySelectorAll('.pat-ev time').forEach((t) => { t.textContent = haQuanto(Date.parse(t.getAttribute('datetime'))); });
+}, 30000);
 
 boot();
 </script>
