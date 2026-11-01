@@ -154,6 +154,10 @@ html.portal .bp-heroi .bp-selo{display:none}
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-01", "titulo": "Dias contados sozinhos e recompensa pelo Portal", "quem": "todos", "itens": [
+    "Coloque o primeiro dia e quantos dias: o último dia aparece sozinho (ou o contrário).",
+    "O policial também informa recompensa ou elogio pelo Portal, com o documento; a P1 confere e entra na ficha."
+  ] },
   { "data": "2026-11-01", "titulo": "P1 · Seção Pessoal no ar", "quem": "todos", "itens": [
     "Afastamentos por saúde, férias, licenças, recompensas e outras alterações de cada policial num lugar só.",
     "Calendário do mês com tudo o que foi lançado e o mapa da força de hoje (quem está disponível, de férias, afastado ou de licença).",
@@ -284,11 +288,11 @@ html.portal .bp-heroi .bp-selo{display:none}
         <div class="bp-in"><i data-ic="editar"></i><input id="la-sub" list="la-sub-dl" autocomplete="off" oninput="mostrarCampos()" placeholder="Escolha ou escreva"></div>
         <datalist id="la-sub-dl"></datalist></div>
       <div class="bp-campo"><label for="la-ini" id="la-ini-l">Início</label>
-        <div class="bp-in"><i data-ic="calendario"></i><input id="la-ini" type="date" oninput="contarDias()"></div></div>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="la-ini" type="date"></div></div>
       <div class="bp-campo" id="la-fim-w"><label for="la-fim">Término</label>
-        <div class="bp-in"><i data-ic="calendario"></i><input id="la-fim" type="date" oninput="contarDias()"></div></div>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="la-fim" type="date"></div></div>
       <div class="bp-campo" id="la-dias-w"><label for="la-dias">Quantos dias</label>
-        <div class="bp-in"><i data-ic="relogio"></i><input id="la-dias" type="number" min="1" max="800" oninput="diasParaFim()" placeholder="ex.: 30"></div></div>
+        <div class="bp-in"><i data-ic="relogio"></i><input id="la-dias" type="number" min="1" max="800" inputmode="numeric" placeholder="ex.: 30"></div></div>
       <div class="bp-campo" id="la-exe-w"><label for="la-exe">Exercício (ano de referência)</label>
         <div class="bp-in"><i data-ic="calendario"></i><input id="la-exe" inputmode="numeric" maxlength="9" placeholder="ex.: 2025"></div></div>
       <div class="bp-campo" id="la-com-w"><label for="la-com">Comportamento</label>
@@ -328,13 +332,15 @@ html.portal .bp-heroi .bp-selo{display:none}
         <div class="bp-in"><i data-ic="pasta"></i><select id="en-cat" onchange="trocouCatEnvio()"></select></div></div>
       <div class="bp-campo inteira"><label for="en-tit">Descrição curta</label>
         <div class="bp-in"><i data-ic="editar"></i><input id="en-tit" maxlength="200" autocomplete="off" placeholder="ex.: Atestado de 3 dias · Certidão de nascimento do filho"></div></div>
-      <label class="bp-check inteira"><input type="checkbox" id="en-afast" onchange="mostrarAfast()"> É um afastamento (atestado médico, licença, dispensa)</label>
+      <label class="bp-check inteira"><input type="checkbox" id="en-afast" onchange="mostrarAfast()"> Vai para a minha ficha (atestado, licença, dispensa ou recompensa)</label>
       <div class="bp-campo inteira en-af"><label for="en-sub">Qual</label>
-        <div class="bp-in"><i data-ic="alerta"></i><select id="en-sub"></select></div></div>
-      <div class="bp-campo en-af"><label for="en-ini">Primeiro dia</label>
+        <div class="bp-in"><i data-ic="alerta"></i><select id="en-sub" onchange="mostrarAfast()"></select></div></div>
+      <div class="bp-campo en-af"><label for="en-ini" id="en-ini-l">Primeiro dia</label>
         <div class="bp-in"><i data-ic="calendario"></i><input id="en-ini" type="date"></div></div>
-      <div class="bp-campo en-af"><label for="en-fim">Último dia</label>
+      <div class="bp-campo en-af en-per"><label for="en-fim">Último dia</label>
         <div class="bp-in"><i data-ic="calendario"></i><input id="en-fim" type="date"></div></div>
+      <div class="bp-campo en-af en-per"><label for="en-dias">Quantos dias</label>
+        <div class="bp-in"><i data-ic="relogio"></i><input id="en-dias" type="number" min="1" max="800" inputmode="numeric" placeholder="ex.: 3"></div></div>
       <div class="bp-campo inteira en-af"><label for="en-obs">Observação (opcional)</label>
         <div class="bp-in"><i data-ic="editar"></i><input id="en-obs" maxlength="500" autocomplete="off" placeholder="ex.: atestado do Dr. Fulano, UPA de Guajará-Mirim"></div></div>
       <div class="bp-campo inteira"><span class="bp-rot">Arquivo</span>
@@ -459,7 +465,7 @@ async function carregar() { await boot(); }
 function mostrarEu(nome, sub) {
   $('ps-eu').style.display = ''; $('ps-sair').style.display = PORTAL ? 'none' : '';
   const n = String(nome || '');
-  $('ps-eu').querySelector('b').textContent = n.split(/s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P1';
+  $('ps-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P1';
   $('ps-eu').querySelector('span').textContent = n + (sub ? ' · ' + sub : '');
 }
 
@@ -833,8 +839,9 @@ function conferir(id) {
   $('m-conf-corpo').innerHTML = `<div class="ps-form">
       <div class="bp-campo inteira"><label for="cf-sub">O que é</label><div class="bp-in"><i data-ic="editar"></i><input id="cf-sub" list="cf-dl" value="${esc(a.subtipo)}"></div>
         <datalist id="cf-dl">${gr.subtipos.map((s) => `<option value="${esc(s)}">`).join('')}</datalist></div>
-      <div class="bp-campo"><label for="cf-ini">Início</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-ini" type="date" value="${esc(a.inicio)}"></div></div>
-      <div class="bp-campo"><label for="cf-fim">Término</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-fim" type="date" value="${esc(a.fim)}"></div></div>
+      <div class="bp-campo"><label for="cf-ini">${temPeriodo(a) ? 'Início' : 'Data'}</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-ini" type="date" value="${esc(a.inicio)}"></div></div>
+      <div class="bp-campo" ${temPeriodo(a) ? '' : 'style="display:none"'}><label for="cf-fim">Término</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-fim" type="date" value="${esc(a.fim)}"></div></div>
+      <div class="bp-campo" ${temPeriodo(a) ? '' : 'style="display:none"'}><label for="cf-dias">Quantos dias</label><div class="bp-in"><i data-ic="relogio"></i><input id="cf-dias" type="number" min="1" max="800" inputmode="numeric" value="${esc(a.dias || '')}"></div></div>
       <div class="bp-campo inteira"><label for="cf-pub">Publicação (opcional)</label><div class="bp-in"><i data-ic="arquivo"></i><input id="cf-pub" value="${esc(a.publicacao)}" placeholder="ex.: BI nº 41/2026"></div></div>
       <div class="bp-campo inteira"><label for="cf-mot">Motivo da recusa (só se for recusar)</label><div class="bp-in"><i data-ic="alerta"></i><input id="cf-mot" maxlength="500" placeholder="ex.: atestado sem carimbo do médico"></div></div>
     </div>
@@ -845,6 +852,7 @@ function conferir(id) {
   const btn = $('m-conf-btn'); btn.style.display = ''; btn.innerHTML = IC('check') + 'Homologar';
   btn.onclick = () => decidir(a, 'homologar');
   $('cf-rec').onclick = () => decidir(a, 'recusar');
+  ligaDias('cf');
   if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-conf-corpo'));
   abrir('m-conf');
 }
@@ -852,7 +860,7 @@ async function decidir(a, op) {
   const msg = $('m-conf-msg'); msg.textContent = '';
   const corpo = { op, id: a.id };
   if (op === 'recusar') { corpo.motivo = $('cf-mot').value.trim(); if (!corpo.motivo) { msg.textContent = 'Escreva o motivo da recusa (o policial vai ver).'; $('cf-mot').focus(); return; } }
-  else corpo.alteracao = { grupo: a.grupo, subtipo: $('cf-sub').value, inicio: $('cf-ini').value, fim: $('cf-fim').value, publicacao: $('cf-pub').value, descricao: a.descricao, exercicio: a.exercicio };
+  else corpo.alteracao = { grupo: a.grupo, subtipo: $('cf-sub').value, inicio: $('cf-ini').value, fim: temPeriodo(a) ? $('cf-fim').value : $('cf-ini').value, publicacao: $('cf-pub').value, descricao: a.descricao, exercicio: a.exercicio };
   const btn = $('m-conf-btn'); btn.disabled = true;
   try { await api('/api/p1sec/salvar', corpo); fechar('m-conf'); toast(op === 'recusar' ? 'Recusado. O policial vai ver o motivo.' : 'Homologado — entrou no calendário.'); await recarregar(); }
   catch (e) { msg.textContent = e.message; }
@@ -971,7 +979,7 @@ function abrirLanc(re, id, dia) {
     if (dia) $('la-ini').value = dia;
     if (re) escolherPol(re); else { $('la-pol-busca').style.display = ''; $('la-pol-sel').innerHTML = ''; }
   }
-  mostrarCampos(); contarDias();
+  ligaDias('la'); mostrarCampos(); contarDias();
   abrir('m-lanc');
   if (!re && !a) setTimeout(() => $('la-pol-q').focus(), 60);
 }
@@ -993,8 +1001,18 @@ function mostrarCampos() {
   $('la-exe-w').style.display = a.grupo === 'FERIAS' ? '' : 'none';
   $('la-com-w').style.display = a.grupo === 'PUNICAO' && /comportamento/i.test(a.subtipo) ? '' : 'none';
 }
+/* contagem de dias (lançamento, envio e conferência): início + dias → término; início + término → dias.
+   Mudar o início com os dias já preenchidos mantém os dias e anda o término. */
+function ligaDias(pre) {
+  const I = $(pre + '-ini'), F = $(pre + '-fim'), N = $(pre + '-dias');
+  if (!I || !F || !N || I.dataset.dias) return;
+  I.dataset.dias = 1;
+  const deIni = () => { const n = +N.value; if (I.value && n >= 1) F.value = somaDia(I.value, n - 1); else if (I.value && F.value && F.value >= I.value) N.value = diasEntre(I.value, F.value); };
+  const deFim = () => { N.value = I.value && F.value && F.value >= I.value ? diasEntre(I.value, F.value) : ''; };
+  const deN = () => { const n = +N.value; if (I.value && n >= 1 && n <= 800) F.value = somaDia(I.value, n - 1); };
+  for (const ev of ['input', 'change']) { I.addEventListener(ev, deIni); F.addEventListener(ev, deFim); N.addEventListener(ev, deN); }
+}
 function contarDias() { const i = $('la-ini').value, f = $('la-fim').value; $('la-dias').value = i && f && f >= i ? diasEntre(i, f) : ''; }
-function diasParaFim() { const i = $('la-ini').value, n = +$('la-dias').value; if (i && n >= 1) $('la-fim').value = somaDia(i, n - 1); }
 function buscarPol() {
   const q = sem($('la-pol-q').value).trim();
   if (q.length < 2) { $('la-pol-res').innerHTML = ''; return; }
@@ -1114,7 +1132,8 @@ function abrirEnvio(re) {
   const cats = MODO === 'gestao' ? D.categorias : D.categorias;
   $('en-cat').innerHTML = cats.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
   if (!cats.length) { toast('Nenhuma categoria aberta para envio.', 'err'); return; }
-  ['en-tit', 'en-ini', 'en-fim', 'en-obs'].forEach((i) => { $(i).value = ''; });
+  ligaDias('en');
+  ['en-tit', 'en-ini', 'en-fim', 'en-dias', 'en-obs'].forEach((i) => { $(i).value = ''; });
   $('en-msg').textContent = '';
   const grs = Object.keys(G()).filter((k) => (G()[k] || {}).policialEnvia);
   $('en-sub').innerHTML = grs.map((k) => `<optgroup label="${esc(nomeG(k))}">${G()[k].subtipos.map((s) => `<option value="${k}|${esc(s)}">${esc(s)}</option>`).join('')}</optgroup>`).join('');
@@ -1125,21 +1144,28 @@ function abrirEnvio(re) {
 }
 function trocouCatEnvio() {
   const c = D.categorias.find((x) => x.id === $('en-cat').value);
-  $('en-afast').checked = !!c && /ATESTADO|LICEN/.test(sem(c.nome)) && !EN.re;
-  if (c && /LICEN/.test(sem(c.nome))) { const o = [...$('en-sub').options].find((x) => x.value.startsWith('LICENCA|')); if (o) $('en-sub').value = o.value; }
-  else { const o = [...$('en-sub').options].find((x) => x.value.startsWith('SAUDE|')); if (o) $('en-sub').value = o.value; }
+  const n = c ? sem(c.nome) : '';
+  $('en-afast').checked = !!c && /ATESTADO|LICEN|RECOMPENS|ELOGIO/.test(n) && !EN.re;
+  const gr = /LICEN/.test(n) ? 'LICENCA|' : /RECOMPENS|ELOGIO/.test(n) ? 'RECOMPENSA|' : 'SAUDE|';
+  const o = [...$('en-sub').options].find((x) => x.value.startsWith(gr)); if (o) $('en-sub').value = o.value;
   mostrarAfast();
 }
-function mostrarAfast() { document.querySelectorAll('.en-af').forEach((x) => { x.style.display = $('en-afast').checked ? '' : 'none'; }); }
+function enPeriodo() { const [grupo, subtipo] = ($('en-sub').value || '').split('|'); return { grupo, subtipo, per: temPeriodo({ grupo, subtipo }) }; }
+function mostrarAfast() {
+  const on = $('en-afast').checked, { per } = enPeriodo();
+  document.querySelectorAll('.en-af').forEach((x) => { x.style.display = on && (per || !x.classList.contains('en-per')) ? '' : 'none'; });
+  $('en-ini-l').textContent = per ? 'Primeiro dia' : 'Data (da publicação ou do elogio)';
+}
 async function enviarDoc() {
   const msg = $('en-msg'); msg.textContent = '';
   if (!EN.arq) { msg.textContent = 'Escolha o arquivo ou tire a foto do documento.'; return; }
   const corpo = { categoria: $('en-cat').value, titulo: $('en-tit').value.trim(), arquivo: EN.arq };
   if (EN.re) corpo.re = EN.re;
   if ($('en-afast').checked) {
-    const [grupo, subtipo] = $('en-sub').value.split('|');
-    corpo.alteracao = { grupo, subtipo, inicio: $('en-ini').value, fim: $('en-fim').value, descricao: $('en-obs').value };
-    if (!corpo.alteracao.inicio || !corpo.alteracao.fim) { msg.textContent = 'Diga o primeiro e o último dia do afastamento.'; return; }
+    const { grupo, subtipo, per } = enPeriodo();
+    corpo.alteracao = { grupo, subtipo, inicio: $('en-ini').value, fim: per ? $('en-fim').value : $('en-ini').value, descricao: $('en-obs').value };
+    if (per && (!corpo.alteracao.inicio || !corpo.alteracao.fim)) { msg.textContent = 'Diga o primeiro dia e quantos dias (ou o último dia).'; return; }
+    if (!per && !corpo.alteracao.inicio) { msg.textContent = 'Diga a data.'; return; }
     if (!corpo.titulo) corpo.titulo = subtipo;
   }
   const btn = $('en-btn'), antes = btn.innerHTML;
