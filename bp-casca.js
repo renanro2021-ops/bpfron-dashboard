@@ -157,6 +157,8 @@
       desc: 'Confira e assine o material que recebe e devolve na reserva.' },
     { id: 'patrimonio', href: 'patrimonio.html', ic: '🏷️', nome: 'Patrimônio', grupo: 'p4', acesso: { perm: ['patrimonio', 'patrimoniover'] }, gestor: 'patrimonio', ver: 'patrimoniover',
       desc: 'Bens do batalhão com código, tombamento, nº de série, tipo e departamento.' },
+    { id: 'carga', href: 'carga.html', ic: '🎒', nome: 'Carga Pessoal', grupo: 'p4', acesso: { perm: ['carga', 'cargaver', 'cautela', 'material'] }, gestor: ['carga', 'cautela', 'material'], ver: 'cargaver',
+      desc: 'Quem está com cada bem: pistola, colete, celular, barraca… Entregar, transferir e receber de volta.' },
     { id: 'leilao', href: 'leilao.html', ic: '🔨', nome: 'Leilão · Prestação de Contas', grupo: 'p4', acesso: { perm: ['leilao', 'leilaover'] }, gestor: 'leilao', ver: 'leilaover',
       desc: 'Processo, entradas com comprovante, gastos com nota e relatório.' },
     { id: 'emborrachados', href: 'emborrachados.html', ic: '🛒', nome: 'Pedido de Emborrachados', grupo: 'p4', acesso: 'pub', gestor: 'emborrachados',

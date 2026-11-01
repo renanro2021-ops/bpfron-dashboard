@@ -49,6 +49,7 @@
 .seg button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;border-radius:13px;padding:11px;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;min-height:46px;transition:background .2s,color .2s}
 .seg button:hover{color:var(--t1);background:var(--surf2)}
 .seg button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);box-shadow:0 8px 22px var(--acc-soft)}
+@media (max-width:520px){.seg{gap:4px;padding:5px}.seg button{font-size:13px;padding:8px 4px;gap:4px;flex-direction:column}}
 .seg .n{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:var(--crit);color:#fff;font-size:12px;text-align:center}
 .seg .n.zero{background:var(--surf2);color:var(--t3)}
 .seg button.on .n.zero{background:rgba(0,0,0,.18);color:inherit}
@@ -95,6 +96,11 @@ html.portal .bp-wrap{padding-top:14px}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Carga pessoal", "quem": "todos", "itens": [
+    "Aba nova “Carga pessoal”: os bens que a P4 entregou para ficar com você (pistola, colete, celular, barraca, lanterna…).",
+    "Quando a P4 entregar um bem, ele aparece em “Para assinar”: confira e aceite com a sua senha — ou diga o que está errado.",
+    "Os bens que já saíram da sua carga (devolvidos ou transferidos) ficam listados embaixo."
+  ] },
   { "data": "2026-10-30", "titulo": "Página de cara nova", "quem": "todos", "itens": [
     "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
     "Botões, cartões e janela de assinatura redesenhados, com ícones novos.",
@@ -168,6 +174,7 @@ html.portal .bp-wrap{padding-top:14px}
     <div class="seg" id="seg-abas">
       <button type="button" data-aba="assinar" class="on"><i data-ic="assinar"></i>Para assinar <span class="n zero" id="n-assinar">0</span></button>
       <button type="button" data-aba="minhas"><i data-ic="pasta"></i>Minhas cautelas</button>
+      <button type="button" data-aba="carga"><i data-ic="escudo"></i>Carga pessoal</button>
     </div>
     <div id="lista"></div>
   </section>
@@ -231,7 +238,10 @@ async function carregar(){
   try {
     const eu = await api('/api/cautela/eu');
     const mi = await api('/api/cautela/minhas');
-    D = { eu: eu.eu, papel: eu.papel, plantao: eu.plantao, aviso: eu.aviso, cautelas: mi.cautelas || [], sem_vinculo: !!mi.sem_vinculo, configurado: eu.configurado };
+    // Carga pessoal (bens permanentes entregues pela P4, 31/10/2026): se falhar, a cautela segue normal
+    let cg = null; try { cg = await api('/api/carga/minhas'); } catch(e){ cg = null; }
+    D = { eu: eu.eu, papel: eu.papel, plantao: eu.plantao, aviso: eu.aviso, cautelas: mi.cautelas || [], sem_vinculo: !!mi.sem_vinculo, configurado: eu.configurado,
+      carga: cg ? (cg.cargas || []) : [], cargaFim: cg ? (cg.encerradas || []) : [], cargaOk: !!cg };
   } catch(e){
     if (e.status === 401){ CA.esquecer(); boot(); return; }
     show('estado', true); $('estado').innerHTML = IC('alerta') + ' ' + esc(e.message); return;
@@ -293,20 +303,101 @@ function cartao(c, completo){
   </div>`;
 }
 
+/* ---------------- carga pessoal (bens permanentes da P4, 31/10/2026) ---------------- */
+const FIM_CG = { DEVOLVIDA: 'Devolvido à P4', TRANSFERIDA: 'Transferido', RECUSADA: 'Você recusou', CANCELADA: 'Entrega cancelada pela P4' };
+const cgLinha = (c, extra) => `<div><span>${esc(c.descricao)}<small>${esc(c.bem)}${c.serie ? ' · Nº de série ' + esc(c.serie) : ''}${c.tombamento ? ' · Tomb. ' + esc(c.tombamento) : ''}</small>${extra || ''}</span><b>${c.qtd}×</b></div>`;
+function cargaLotes(){
+  const m = new Map();
+  (D.carga || []).filter(c => c.status === 'AGUARDANDO').forEach(c => { if (!m.has(c.lote)) m.set(c.lote, []); m.get(c.lote).push(c); });
+  return [...m.entries()];
+}
+function cartaoCargaLote([lote, itens]){
+  const c0 = itens[0];
+  return `<div class="card" id="cg-${esc(lote)}">
+    <div class="cau-top"><div><div class="cau-id">Carga pessoal</div>
+      <div class="muted">Entregue pela P4 em <b>${fQuando(c0.entregue_em)}</b> por ${esc(c0.entregue_por)}</div>
+      ${c0.obs ? `<div class="muted">${esc(c0.obs)}</div>` : ''}</div>
+      <div style="text-align:right"><span class="chip wait">Aguardando o seu aceite</span></div></div>
+    <div class="itens">${itens.map(c => cgLinha(c)).join('')}</div>
+    <p class="muted" style="margin:6px 0 10px">Estes bens ficam com você <b>de forma permanente</b> (carga pessoal), até a P4 receber de volta ou transferir.</p>
+    <button class="btn full" data-act="cg-aceitar" data-lote="${esc(lote)}">${IC('assinar')}Conferi — aceitar a carga</button>
+    <div style="height:8px"></div>
+    <button class="btn full sec" data-act="cg-recusar" data-lote="${esc(lote)}">${IC('x')}Não recebi / está errado</button>
+  </div>`;
+}
+function renderCarga(){
+  if (!D.cargaOk) return '<div class="card muted">Não consegui abrir a carga pessoal agora. Tente de novo daqui a pouco.</div>';
+  const ativas = D.carga.filter(c => c.status === 'ATIVA');
+  let h = cargaLotes().map(cartaoCargaLote).join('');
+  h += `<div class="card"><div class="cau-top"><div><div class="cau-id">Bens com você</div><div class="muted">Carga pessoal entregue pela P4 e aceita por você</div></div>
+    <div style="text-align:right"><span class="chip ${ativas.length ? 'ok' : 'neu'}">${ativas.length} ${ativas.length === 1 ? 'bem' : 'bens'}</span></div></div>
+    ${ativas.length ? `<div class="itens">${ativas.map(c => cgLinha(c, `<small>aceito em ${fQuando(c.aceite_em)} · assinatura ${esc(c.assinatura)}</small>`)).join('')}</div>` : '<p class="muted" style="margin-top:8px">Nenhum bem em carga pessoal com você.</p>'}</div>`;
+  if (D.cargaFim.length) h += `<div class="card"><div class="cau-id">Já saíram da sua carga</div><div class="itens">${D.cargaFim.map(c => `<div><span>${esc(c.descricao)}<small>${esc(c.bem)} · ${esc(FIM_CG[c.fim_tipo] || c.fim_tipo)} em ${fDia(c.fim_em)}${c.fim_estado && c.fim_estado !== 'bom' ? ' · ' + esc(c.fim_estado) : ''}${c.fim_obs ? ' · ' + esc(c.fim_obs) : ''}</small></span><b>${c.qtd}×</b></div>`).join('')}</div></div>`;
+  return h;
+}
+function pedirMotivo(itens){
+  return new Promise((resolve) => {
+    const o = document.createElement('div'); o.className = 'ovl';
+    o.innerHTML = `<div class="modal"><h2>Não aceitar a carga</h2><div class="muted">Os bens voltam para a P4, que vai conferir. Conte o que está errado.</div>
+      <div class="itens" style="margin:10px 0">${itens.map(c => cgLinha(c)).join('')}</div>
+      <label for="m-mot">O que aconteceu</label><input id="m-mot" maxlength="300" placeholder="Ex.: não recebi a lanterna">
+      <label for="m-senha2">Sua senha (é a sua assinatura)</label><input id="m-senha2" type="password" autocomplete="current-password">
+      <div class="msg err" id="m-msg2"></div>
+      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn sec" id="m-nao2" type="button" style="flex:1">Voltar</button><button class="btn" id="m-ok2" type="button" style="flex:2">${IC('assinar')}Recusar</button></div></div>`;
+    document.body.appendChild(o);
+    const fechar = (v) => { o.remove(); resolve(v); };
+    o.querySelector('#m-nao2').onclick = () => fechar(null);
+    o.querySelector('#m-ok2').onclick = () => {
+      const motivo = o.querySelector('#m-mot').value.trim(), senha = o.querySelector('#m-senha2').value;
+      if (!motivo){ o.querySelector('#m-msg2').textContent = 'Conte o que está errado.'; return; }
+      if (!senha){ o.querySelector('#m-msg2').textContent = 'Digite a sua senha.'; return; }
+      fechar({ motivo, senha });
+    };
+    setTimeout(() => o.querySelector('#m-mot').focus(), 50);
+  });
+}
+async function acaoCarga(b){
+  const itens = D.carga.filter(c => c.lote === b.dataset.lote && c.status === 'AGUARDANDO');
+  if (!itens.length) return;
+  let corpo;
+  if (b.dataset.act === 'cg-aceitar'){
+    const senha = await pedirSenha({ titulo: 'Aceitar a carga pessoal', texto: `<div class="itens" style="margin:10px 0">${itens.map(c => cgLinha(c)).join('')}</div>`, conferir: 'Conferi e estou recebendo exatamente estes bens, em carga pessoal.' });
+    if (!senha) return;
+    corpo = { ids: itens.map(c => c.id), acao: 'aceitar', senha };
+  } else {
+    const r = await pedirMotivo(itens);
+    if (!r) return;
+    corpo = { ids: itens.map(c => c.id), acao: 'recusar', motivo: r.motivo, senha: r.senha };
+  }
+  b.disabled = true;
+  try {
+    await apiPost('/api/carga/aceitar', corpo);
+    toast(corpo.acao === 'aceitar' ? 'Carga aceita e assinada.' : 'Recusa registrada. A P4 vai conferir.');
+    await carregar();
+  } catch(e){
+    b.disabled = false;
+    if (e.status === 401){ CA.esquecer(); D = null; boot(); return; }
+    toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi assinado.' : e.message);
+  }
+}
+
 function render(){
   const aGuardar = D.cautelas.filter(precisaAssinar);
-  $('n-assinar').textContent = aGuardar.length; $('n-assinar').classList.toggle('zero', !aGuardar.length);
+  const lotes = cargaLotes();
+  $('n-assinar').textContent = aGuardar.length + lotes.length; $('n-assinar').classList.toggle('zero', !(aGuardar.length + lotes.length));
   document.querySelectorAll('#seg-abas button').forEach(b => b.classList.toggle('on', b.dataset.aba === ABA));
   let html;
   if (ABA === 'assinar'){
-    html = aGuardar.length ? aGuardar.map(c => cartao(c, false)).join('')
+    html = (aGuardar.length || lotes.length) ? lotes.map(cartaoCargaLote).join('') + aGuardar.map(c => cartao(c, false)).join('')
       : '<div class="card muted">Nada aguardando a sua assinatura.</div>';
+  } else if (ABA === 'carga'){
+    html = renderCarga();
   } else {
     html = D.cautelas.length ? D.cautelas.map(c => cartao(c, true)).join('')
       : '<div class="card muted">Você ainda não tem cautelas registradas.</div>';
   }
   $('lista').innerHTML = html;
-  $('lista').querySelectorAll('[data-act]').forEach(b => b.onclick = () => acao(b));
+  $('lista').querySelectorAll('[data-act]').forEach(b => b.onclick = () => (b.dataset.act.startsWith('cg-') ? acaoCarga(b) : acao(b)));
   if (DESTAQUE){ const el = document.getElementById('c-' + DESTAQUE); if (el) el.scrollIntoView({ block:'center' }); }
 }
 document.querySelectorAll('#seg-abas button').forEach(b => b.onclick = () => { ABA = b.dataset.aba; render(); });

@@ -557,6 +557,16 @@ async function carregarCautela(){
     const cs = d.cautelas || [];
     const assinar = cs.filter(c => c.status === 'aguardando' || (c.devolucoes || []).some(x => !x.assinada));
     const comigo = cs.filter(c => c.status === 'ativa' || c.status === 'parcial');
+    // carga pessoal (bens permanentes da P4, 31/10/2026): entra no mesmo cartão da Cautela
+    try {
+      const g = await getJ('/api/carga/minhas', { headers: { Authorization: 'Bearer ' + tk } });
+      const cg = g.cargas || [];
+      const lotes = {};
+      cg.filter(c => c.status === 'AGUARDANDO').forEach(c => { (lotes[c.lote] ||= []).push(c); });
+      Object.values(lotes).forEach(l => assinar.push({ missao: 'Carga pessoal (P4)', cautela_id: 'aceite pendente', itens: l, status: 'aguardando', devolucoes: [] }));
+      const at = cg.filter(c => c.status === 'ATIVA');
+      if (at.length) comigo.push({ missao: 'Carga pessoal (P4)', cautela_id: 'bens permanentes', itens: at, status: 'ativa', alertas: [], devolucoes: [] });
+    } catch(e){ /* sem carga pessoal: segue só a cautela */ }
     const vencidas = comigo.filter(c => (c.alertas || []).includes('vencida'));
     return { estado: 'ok', assinar, comigo, vencidas };
   } catch(e){

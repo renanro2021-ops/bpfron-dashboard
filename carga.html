@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P4 · Carga Pessoal (31/10/2026). Cautela PERMANENTE de bens para o policial:
+     pistola, colete, celular, barraca, lanterna… (não é a cautela do armeiro).
+     O chefe da P4 / do Material Bélico entrega, transfere e recebe de volta;
+     o policial aceita com a senha do Portal do Policial (cautela.html, aba Carga pessoal).
+     Só bem já cadastrado: Material Bélico (ARM-/PRO-/COM-/EQP-…) ou Patrimônio (PAT-…).
+     Dados no Worker (backend/carga.js, abas CARGA/CARGA_HIST da planilha da Cautela).
+     Permissões: "Carga Pessoal (gestor)" (ou chefia da Cautela) e "Carga Pessoal (ver)". -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P4 · Carga Pessoal · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1240px}
+.bp-topo-in{max-width:1300px}
+.cg-filtros{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:12px;align-items:end}
+.cg-conta{margin-top:10px;color:var(--muted);font-size:13px}
+.cg-conta b{color:var(--t1)}
+.cg-abas{margin-top:14px}
+.cg-seg{display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--surf);border:1px solid var(--line);flex-wrap:wrap}
+.cg-seg button{flex:1;min-width:120px;background:transparent;border:0;border-radius:11px;padding:10px;color:var(--muted);font:700 14px Inter,sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.cg-seg button:hover{color:var(--t1);background:var(--surf2)}
+.cg-seg button.on{background:var(--acc);color:var(--acc-ink)}
+.cg-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.cg-pol{display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.cg-pol:hover{border-color:var(--acc-line)}
+.cg-pol .ini{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--acc-ink);background:linear-gradient(135deg,var(--acc),var(--acc2));flex:none}
+.cg-pol .tx{flex:1;min-width:0}
+.cg-pol .tx b{display:block;color:var(--t1);font-size:15.5px}
+.cg-pol .tx small{display:block;color:var(--muted);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-pol .sls{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cg-tabwrap{margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+.cg-tab{width:100%;border-collapse:collapse;font-size:14px}
+.cg-tab th{text-align:left;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--surf2);padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cg-tab td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top}
+.cg-tab tbody tr:last-child td{border-bottom:0}
+.cg-tab tbody tr.clica{cursor:pointer}
+.cg-tab tbody tr.clica:hover{background:var(--card-h)}
+.cg-tab td.cod{font-weight:800;color:var(--t1);white-space:nowrap}
+.cg-tab td.desc{color:var(--t1);min-width:200px}
+.cg-tab td.desc small{display:block;color:var(--muted);font-size:12.5px}
+.cg-tab td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cg-tab td.vz{color:var(--dim)}
+.cg-item{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surf)}
+.cg-item.sel{border-color:var(--acc-line);background:var(--acc-soft)}
+.cg-item input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--acc);flex:none}
+.cg-item .tx{flex:1;min-width:0;font-size:14px;color:var(--t2)}
+.cg-item .tx > b{color:var(--t1)}
+.cg-item .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.cg-itens{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;margin-top:10px}
+.cg-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cg-res{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-top:8px}
+.cg-res:empty{display:none}
+.cg-res button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surf);color:var(--t1);font:inherit;cursor:pointer}
+.cg-res button:hover{border-color:var(--acc-line);background:var(--card-h)}
+.cg-res button .tx{flex:1;min-width:0}
+.cg-res button .tx small{display:block;color:var(--muted);font-size:12.5px}
+.cg-res button:disabled{opacity:.55;cursor:not-allowed}
+.cg-escolhido{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--good-line);background:var(--good-soft);border-radius:14px;margin-top:8px}
+.cg-escolhido .tx{flex:1;min-width:0}
+.cg-escolhido .tx small{display:block;color:var(--muted);font-size:12.5px}
+.cg-carrinho .cg-item{align-items:center}
+.cg-qtd{width:74px;padding:7px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--surf);color:var(--t1);font:inherit;text-align:center}
+.cg-est{padding:7px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--surf);color:var(--t1);font:inherit}
+.cg-passo{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--t1);margin:16px 0 4px;display:flex;align-items:center;gap:8px}
+.cg-passo .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--acc);color:var(--acc-ink)}
+.cg-hist{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto;margin-top:6px}
+.cg-hist div{border-left:3px solid var(--acc-line);padding:2px 0 2px 10px;font-size:13px;color:var(--t2)}
+.cg-hist small{display:block;color:var(--muted);font-size:12px}
+.bp-modal-cx.larga{width:min(920px,100%)}
+@media (max-width:860px){ .cg-filtros{grid-template-columns:1fr} }
+@media (max-width:760px){
+  .bp-modal-cx.larga{width:100%}
+  .cg-pol{flex-wrap:wrap}
+  .cg-pol .sls{justify-content:flex-start;width:100%}
+  .cg-tabwrap{border:0;background:none;border-radius:0}
+  .cg-tab thead{display:none}
+  .cg-tab,.cg-tab tbody,.cg-tab tr,.cg-tab td{display:block;width:100%}
+  .cg-tab tbody{display:flex;flex-direction:column;gap:10px}
+  .cg-tab tbody tr{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:10px 12px}
+  .cg-tab td{border:0;padding:3px 0;display:flex;gap:10px}
+  .cg-tab td::before{content:attr(data-r);flex:0 0 100px;color:var(--muted);font-size:12px;text-transform:uppercase;padding-top:1px}
+  .cg-tab td.desc{min-width:0;display:block}
+  .cg-tab td.desc::before{display:none}
+  .cg-tab td.n{text-align:left}
+}
+
+/* ---------------- Termo de Carga Pessoal (A4 retrato) ---------------- */
+#termo{display:none}
+@media print{
+  html,body{background:#fff !important;color:#000}
+  body > *:not(#termo){display:none !important}
+  #termo{display:block;background:#fff;font-family:'Inter',Arial,sans-serif;font-size:10pt;color:#000}
+  #termo .tcab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px}
+  #termo .tcab img{height:66px}
+  #termo .tcab small{display:block;font-size:8.5pt;letter-spacing:.3px}
+  #termo h1{font-size:14pt;margin:4px 0 0;letter-spacing:.5px}
+  #termo .tdados{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 14px;border:1px solid #000;padding:8px 10px;font-size:9.5pt}
+  #termo .tdados span{display:block;font-size:7.5pt;text-transform:uppercase;color:#333}
+  #termo .tdados b{font-size:10.5pt}
+  #termo p.tdecl{text-align:justify;line-height:1.45;margin:12px 0}
+  #termo table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #termo th,#termo td{border:1px solid #777;padding:4px 5px;text-align:left;vertical-align:top;color:#000;background:none}
+  #termo th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7.5pt;text-transform:uppercase}
+  #termo td.n,#termo th.n{text-align:center;white-space:nowrap}
+  #termo td small{display:block;font-size:7pt;color:#333}
+  #termo tr{break-inside:avoid}
+  #termo .tlocal{margin-top:22px;text-align:right}
+  #termo .tass{margin-top:50px;display:flex;justify-content:space-around;gap:40px;text-align:center;font-size:9pt;break-inside:avoid}
+  #termo .tass div{flex:1;border-top:1px solid #000;padding-top:4px}
+  #termo .trod{margin-top:22px;font-size:7.5pt;color:#444;border-top:1px solid #aaa;padding-top:5px}
+  @page{size:A4 portrait;margin:14mm 12mm}
+}
+</style>
+<!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
+     visível ganha uma entrada; quem abre a página vê uma vez. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-10-31", "titulo": "Carga Pessoal no ar", "quem": "todos", "itens": [
+    "Quem está com cada bem do batalhão em carga pessoal: pistola, colete, celular, barraca, lanterna…",
+    "Busca por policial, por código, nº de série ou tombamento. Toque no policial para ver tudo o que está com ele.",
+    "Termo de Carga Pessoal em A4 de cada policial, com os bens e a data do aceite eletrônico."
+  ] },
+  { "data": "2026-10-31", "titulo": "Para o gestor da Carga Pessoal", "quem": "gestor", "itens": [
+    "Entregar bens: escolha o policial e os bens (do Material Bélico ou do Patrimônio). O policial confirma no Portal do Policial com a senha dele.",
+    "Transferir de um policial para outro e receber de volta (bom, danificado ou extraviado) — a peça do Material Bélico muda de situação sozinha.",
+    "Peças que a planilha já dava como “Cautelado” aparecem como carga antiga, para você regularizar em nome do policial."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P4 · Carga Pessoal</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="cg-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="cg-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="cg-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P4 · Carga Pessoal</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+      <div class="bp-aviso" style="margin-top:14px"><i data-ic="info"></i><div>É policial e quer ver ou aceitar a sua carga? Use o <a href="policial.html" style="color:var(--acc)">Portal do Policial</a> (aba Cautela), com o seu RE e senha.</div></div>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="cg-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>A Carga Pessoal é liberada login por login</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="cg-negado-tx">Seu login não tem acesso à Carga Pessoal.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“Carga Pessoal (ver)”</b> (só consultar) ou <b>“Carga Pessoal (gestor)”</b> no Painel de Controle. A chefia da Cautela (P4) já é gestor.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="cg-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="cg-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P4 · Logística</span>
+        <h1>Carga pessoal do <em>efetivo</em></h1>
+        <p>Quem está com cada bem do batalhão — pistola, colete, celular, barraca, lanterna. <span class="cg-ges">Você entrega, transfere e recebe de volta; o policial confirma com a senha dele.</span><span class="cg-ver">Você está no modo consulta.</span></p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn cg-ges" onclick="abrirEntregar()"><i data-ic="mais"></i>Entregar bens</button>
+          <button type="button" class="bp-btn sec" onclick="carregar()"><i data-ic="atualizar"></i>Atualizar</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div id="cg-div" class="bp-aviso crit cg-ges" style="display:none;margin-top:14px"><i data-ic="alerta"></i><div id="cg-div-tx"></div></div>
+    <div id="cg-falta" class="bp-aviso pend" style="display:none;margin-top:14px"><i data-ic="info"></i><div id="cg-falta-tx"></div></div>
+
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Resumo</h2><small>Bens hoje com policiais</small></div></div>
+    <div class="bp-nums" id="cg-nums"></div>
+
+    <div class="bp-sec"><span class="bp-tile info"><i data-ic="buscar"></i></span><div><h2 id="cg-tit">Por policial</h2><small id="cg-sub">Toque no policial para ver os bens, imprimir o termo, transferir ou receber de volta</small></div><span class="bp-cont bp-sl" id="cg-cont">0</span></div>
+    <div class="bp-card">
+      <div class="cg-filtros">
+        <div class="bp-campo"><label for="cg-q">Buscar</label>
+          <div class="bp-in"><i data-ic="buscar"></i><input id="cg-q" placeholder="Nome, RE, código, nº de série, tombamento…" autocomplete="off" oninput="pintar()"></div></div>
+        <div class="bp-campo"><label for="cg-forig">Origem</label>
+          <div class="bp-in"><i data-ic="pasta"></i><select id="cg-forig" onchange="pintar()">
+            <option value="">Material Bélico e Patrimônio</option><option value="MATERIAL">Só Material Bélico</option><option value="PATRIMONIO">Só Patrimônio</option></select></div></div>
+        <button type="button" class="bp-btn ghost" onclick="$('cg-q').value='';$('cg-forig').value='';pintar()"><i data-ic="x"></i>Limpar</button>
+      </div>
+      <div class="cg-seg cg-abas" id="cg-abas">
+        <button type="button" data-v="pol" class="on">Por policial</button>
+        <button type="button" data-v="bem">Por bem</button>
+        <button type="button" data-v="disp">Disponíveis</button>
+        <button type="button" data-v="enc">Encerradas</button>
+      </div>
+      <div class="cg-conta" id="cg-conta"></div>
+    </div>
+    <div id="cg-corpo"></div>
+  </div>
+</main>
+
+<!-- FICHA DO POLICIAL -->
+<div class="bp-modal" id="m-pol" onclick="if(event.target===this)fechar('m-pol')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-pol-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-pol-tit">Policial</h3><small id="m-pol-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-pol')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="pol-aviso"></div>
+    <div class="cg-itens" id="pol-itens"></div>
+    <div class="cg-acoes">
+      <button type="button" class="bp-btn sec" onclick="imprimirTermo(POL.re)"><i data-ic="arquivo"></i>Imprimir termo</button>
+      <button type="button" class="bp-btn ghost" onclick="verHistorico()"><i data-ic="relogio"></i>Histórico</button>
+      <span style="flex:1"></span>
+      <button type="button" class="bp-btn sec cg-ges" onclick="abrirEntregar(POL.re)"><i data-ic="mais"></i>Entregar mais</button>
+      <button type="button" class="bp-btn sec cg-ges" id="pol-trf" onclick="abrirTransferir()" disabled><i data-ic="usuarios"></i>Transferir</button>
+      <button type="button" class="bp-btn cg-ges" id="pol-dev" onclick="abrirDevolver()" disabled><i data-ic="voltar"></i>Receber de volta</button>
+      <button type="button" class="bp-btn perigo-l cg-ges" id="pol-can" onclick="cancelarEntrega()" style="display:none"><i data-ic="x"></i>Cancelar entrega</button>
+    </div>
+    <div id="pol-hist-box" style="display:none">
+      <div class="bp-sec" style="margin-top:16px"><span class="bp-tile sm"><i data-ic="relogio"></i></span><div><h2 style="font-size:16px">Histórico</h2></div></div>
+      <div class="cg-hist" id="pol-hist"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTREGAR -->
+<div class="bp-modal" id="m-ent" onclick="if(event.target===this)fechar('m-ent')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-ent-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="mais"></i></span>
+      <div><h3 id="m-ent-tit">Entregar bens</h3><small>O policial confirma no Portal do Policial, com a senha dele</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ent')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="cg-passo"><span class="n">1</span>Para quem</div>
+    <div id="ent-pol-busca"><div class="bp-in"><i data-ic="usuario"></i><input id="ent-pol-q" placeholder="Nome de guerra, nome ou RE" autocomplete="off" oninput="buscarPol('ent')"></div>
+      <div class="cg-res" id="ent-pol-res"></div></div>
+    <div id="ent-pol-sel"></div>
+    <div class="cg-passo"><span class="n">2</span>Quais bens</div>
+    <div class="bp-in"><i data-ic="buscar"></i><input id="ent-bem-q" placeholder="Código, descrição, nº de série ou tombamento (ex.: pistola, colete, PAT-0012)" autocomplete="off" oninput="buscarBem()"></div>
+    <div class="cg-res" id="ent-bem-res"></div>
+    <div class="cg-itens cg-carrinho" id="ent-carrinho"></div>
+    <div class="bp-campo" style="margin-top:12px"><label for="ent-obs">Observação (opcional)</label>
+      <div class="bp-in"><i data-ic="editar"></i><input id="ent-obs" maxlength="300" autocomplete="off" placeholder="Ex.: kit do curso, missão de fronteira, sem capa"></div></div>
+    <div class="bp-msg err" id="ent-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-ent')">Cancelar</button>
+      <button type="button" class="bp-btn" id="ent-btn" onclick="entregar()"><i data-ic="check"></i>Entregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEBER DE VOLTA -->
+<div class="bp-modal" id="m-dev" onclick="if(event.target===this)fechar('m-dev')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-dev-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="voltar"></i></span>
+      <div><h3 id="m-dev-tit">Receber de volta</h3><small>Diga em que estado cada bem voltou</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-dev')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="cg-itens" id="dev-itens"></div>
+    <div class="bp-campo" style="margin-top:12px"><label for="dev-obs">Observação (opcional)</label>
+      <div class="bp-in"><i data-ic="editar"></i><input id="dev-obs" maxlength="300" autocomplete="off" placeholder="Ex.: transferido para outra unidade, colete com capa rasgada"></div></div>
+    <div class="bp-msg err" id="dev-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-dev')">Cancelar</button>
+      <button type="button" class="bp-btn" id="dev-btn" onclick="devolver()"><i data-ic="check"></i>Confirmar o recebimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSFERIR -->
+<div class="bp-modal" id="m-trf" onclick="if(event.target===this)fechar('m-trf')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-trf-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="usuarios"></i></span>
+      <div><h3 id="m-trf-tit">Transferir</h3><small id="m-trf-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-trf')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="cg-itens" id="trf-itens" style="max-height:24vh"></div>
+    <div class="cg-passo"><span class="n">→</span>Para quem</div>
+    <div id="trf-pol-busca"><div class="bp-in"><i data-ic="usuario"></i><input id="trf-pol-q" placeholder="Nome de guerra, nome ou RE" autocomplete="off" oninput="buscarPol('trf')"></div>
+      <div class="cg-res" id="trf-pol-res"></div></div>
+    <div id="trf-pol-sel"></div>
+    <div class="bp-campo" style="margin-top:12px"><label for="trf-obs">Observação (opcional)</label>
+      <div class="bp-in"><i data-ic="editar"></i><input id="trf-obs" maxlength="300" autocomplete="off" placeholder="Ex.: troca de equipe"></div></div>
+    <div class="bp-aviso" style="margin-top:12px"><i data-ic="info"></i><div>O bem sai da carga de quem está com ele agora e fica <b>aguardando o aceite</b> do novo policial.</div></div>
+    <div class="bp-msg err" id="trf-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-trf')">Cancelar</button>
+      <button type="button" class="bp-btn" id="trf-btn" onclick="transferir()"><i data-ic="check"></i>Transferir</button>
+    </div>
+  </div>
+</div>
+
+<!-- termo (montado na hora de imprimir) -->
+<div id="termo"></div>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const so = (s) => sem(s).replace(/[\s.\-\/]+/g, '');
+const fData = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' }); };
+const fQuando = (s) => { const d = new Date(s); return isNaN(d) ? '' : fData(s) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Porto_Velho' }); };
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null ? '' : b), 'pt-BR', { numeric: true, sensitivity: 'base' });
+const nomePol = (p) => [p.posto, p.guerra || p.nome].filter(Boolean).join(' ') || ('RE ' + p.re);
+const iniciais = (p) => String(p.guerra || p.nome || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
+const ORIGEM = { MATERIAL: 'Material Bélico', PATRIMONIO: 'Patrimônio' };
+const FIM = { DEVOLVIDA: 'Devolvida', TRANSFERIDA: 'Transferida', RECUSADA: 'Recusada pelo policial', CANCELADA: 'Entrega cancelada' };
+const MODAIS = ['m-trf', 'm-dev', 'm-ent', 'm-pol'];
+
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') MODAIS.some((id) => $(id).classList.contains('on') && (fechar(id), true)); });
+
+/* ============================== API / login ============================== */
+async function api(path, body) {
+  const h = { 'Content-Type': 'application/json' };
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+function mostrar(qual) { ['cg-login', 'cg-negado', 'cg-estado', 'cg-app'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; }); }
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'cg-login');
+  $('cg-sair').style.display = logado ? '' : 'none';
+  $('cg-eu').style.display = logado ? '' : 'none';
+  if (logado) carregar();
+}
+
+/* ============================== dados ============================== */
+let D = null;        // resposta do /api/carga
+let VISTA = 'pol';
+let POL = null;      // policial aberto na ficha
+let SEL = new Set(); // ids marcados na ficha
+let ENT = { pol: null, itens: [] };
+let TRF = { pol: null };
+let FILTRO = '';     // filtro vindo dos números do topo
+
+async function carregar() {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo a carga pessoal') : null;
+  try { D = await api('/api/carga'); }
+  catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { $('cg-negado-tx').textContent = e.message; mostrar('cg-negado'); return; }
+    mostrar('cg-estado');
+    $('cg-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  mostrar('cg-app');
+  const n = (D.eu && D.eu.nome) || ls('bp_user');
+  $('cg-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P4';
+  $('cg-eu').querySelector('span').textContent = n;
+  if (window.BPCasca && BPCasca.novidades) BPCasca.novidades.gestor = () => !!(D && D.gestor);
+  document.querySelectorAll('.cg-ges').forEach((el) => { el.style.display = D.gestor ? '' : 'none'; });
+  document.querySelectorAll('.cg-ver').forEach((el) => { el.style.display = D.gestor ? 'none' : ''; });
+  const falta = [];
+  if (!D.material_ok) falta.push('o Material Bélico');
+  if (!D.patrimonio_ok) falta.push('o Patrimônio');
+  $('cg-falta').style.display = falta.length ? '' : 'none';
+  $('cg-falta-tx').textContent = falta.length ? `Não consegui ler ${falta.join(' nem ')} agora; os bens de lá não aparecem para entregar. Tente atualizar daqui a pouco.` : '';
+  const dv = D.divergencias || [];
+  $('cg-div').style.display = D.gestor && dv.length ? '' : 'none';
+  $('cg-div-tx').innerHTML = dv.length ? `<b>${dv.length} peça${dv.length > 1 ? 's' : ''} do Material Bélico</b> em carga pessoal não ${dv.length > 1 ? 'estão' : 'está'} marcada${dv.length > 1 ? 's' : ''} assim na planilha (${esc(dv.map((x) => x.bem).join(', '))}). <button type="button" class="bp-btn sm" style="margin-left:8px" onclick="sincronizar(this)">${IC('atualizar')}Acertar agora</button>` : '';
+  pintarNums();
+  pintar();
+  if (POL && $('m-pol').classList.contains('on')) abrirPol(POL.re, true);
+}
+
+function grupos() {
+  const m = new Map();
+  for (const c of D.cargas) {
+    if (!m.has(c.re)) m.set(c.re, { re: c.re, nome: c.nome, posto: c.posto, guerra: c.guerra, itens: [] });
+    m.get(c.re).itens.push(c);
+  }
+  return [...m.values()];
+}
+function pintarNums() {
+  const g = grupos();
+  const aguard = D.cargas.filter((c) => c.status === 'AGUARDANDO');
+  const legado = D.bens.filter((b) => b.legado);
+  const qtd = D.cargas.reduce((n, c) => n + c.qtd, 0);
+  const num = (i, cor, ic, r, v, ver, f) => `<button type="button" class="bp-num clica" style="--i:${i};--c:${cor}" onclick="filtrarTopo('${f}')"><i data-ic="${ic}"></i><div class="r">${r}</div><div class="v">${v}</div><small class="bp-ver">${ver}<i data-ic="seta"></i></small></button>`;
+  $('cg-nums').innerHTML = [
+    num(0, 'var(--info)', 'usuarios', 'Policiais com carga', g.length, 'ver por policial', 'pol'),
+    num(1, 'var(--acc)', 'escudo', 'Bens em carga', qtd, 'ver por bem', 'bem'),
+    num(2, 'var(--warn)', 'relogio', 'Aguardando aceite', aguard.length, 'ver quem falta', 'aguard'),
+    num(3, 'var(--crit)', 'alerta', 'Carga antiga sem termo', legado.length, 'regularizar', 'legado'),
+  ].join('');
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('cg-nums'));
+}
+function filtrarTopo(f) {
+  FILTRO = f === 'aguard' || f === 'legado' ? f : '';
+  VISTA = f === 'aguard' ? 'bem' : f === 'legado' ? 'disp' : f;
+  pintar();
+  $('cg-corpo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.querySelectorAll('#cg-abas button').forEach((b) => b.onclick = () => { VISTA = b.dataset.v; FILTRO = ''; pintar(); });
+
+function casaBusca(q, ...campos) {
+  if (!q) return true;
+  const t = sem(campos.join(' ')), s = so(campos.join(' '));
+  return q.split(/\s+/).filter(Boolean).every((p) => t.includes(sem(p)) || s.includes(so(p)));
+}
+const origemOk = (o) => !$('cg-forig').value || o === $('cg-forig').value;
+const ondeBem = (c) => [c.serie ? 'Nº ' + c.serie : '', c.tombamento ? 'Tomb. ' + c.tombamento : ''].filter(Boolean).join(' · ');
+const selStatus = (c) => c.status === 'AGUARDANDO' ? '<span class="bp-sl pend">aguardando aceite</span>' : '<span class="bp-sl ok">aceito</span>';
+
+function pintar() {
+  if (!D) return;
+  document.querySelectorAll('#cg-abas button').forEach((b) => b.classList.toggle('on', b.dataset.v === VISTA));
+  const q = $('cg-q').value.trim();
+  const T = { pol: ['Por policial', 'Toque no policial para ver os bens, imprimir o termo, transferir ou receber de volta'],
+    bem: ['Por bem', FILTRO === 'aguard' ? 'Só o que o policial ainda não aceitou' : 'Cada bem em carga e com quem está'],
+    disp: ['Disponíveis', FILTRO === 'legado' ? 'Cargas antigas da planilha, sem termo no sistema' : 'Bens cadastrados que podem ir para a carga de alguém'],
+    enc: ['Encerradas', 'Devolvidas, transferidas, recusadas e canceladas (as mais recentes)'] }[VISTA];
+  $('cg-tit').textContent = T[0]; $('cg-sub').textContent = T[1];
+  let html = '', n = 0;
+  if (VISTA === 'pol') {
+    const g = grupos().filter((p) => casaBusca(q, p.re, p.nome, p.guerra, p.posto, ...p.itens.map((c) => [c.bem, c.descricao, c.serie, c.tombamento].join(' '))))
+      .filter((p) => p.itens.some((c) => origemOk(c.origem))).sort((a, b) => cmp(a.guerra || a.nome, b.guerra || b.nome));
+    n = g.length;
+    html = g.map((p) => {
+      const ag = p.itens.filter((c) => c.status === 'AGUARDANDO').length;
+      const tot = p.itens.reduce((s, c) => s + c.qtd, 0);
+      const resumo = p.itens.slice(0, 4).map((c) => (c.qtd > 1 ? c.qtd + '× ' : '') + c.descricao).join(' · ') + (p.itens.length > 4 ? ' · …' : '');
+      return `<button type="button" class="bp-card cg-pol" onclick="abrirPol('${esc(p.re)}')"><span class="ini">${esc(iniciais(p))}</span>
+        <span class="tx"><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)} · ${esc(resumo)}</small></span>
+        <span class="sls"><span class="bp-sl info">${tot} ${tot === 1 ? 'bem' : 'bens'}</span>${ag ? `<span class="bp-sl pend">${ag} aguardando aceite</span>` : ''}</span></button>`;
+    }).join('');
+    html = html ? `<div class="cg-lista">${html}</div>` : `<div class="bp-vazio" style="margin-top:14px">${q ? 'Ninguém encontrado com essa busca.' : 'Nenhum bem em carga pessoal ainda.' + (D.gestor ? ' Use “Entregar bens”.' : '')}</div>`;
+  } else if (VISTA === 'bem') {
+    const l = D.cargas.filter((c) => origemOk(c.origem) && (FILTRO !== 'aguard' || c.status === 'AGUARDANDO'))
+      .filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra)).sort((a, b) => cmp(a.bem, b.bem));
+    n = l.length;
+    html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th class="n">Qtd.</th><th>Com quem</th><th>Situação</th><th>Desde</th></tr></thead><tbody>${l.map((c) => `
+      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(c.bem)}</td>
+      <td class="desc" data-r="Bem">${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></td>
+      <td class="n" data-r="Qtd.">${c.qtd}</td><td data-r="Com quem">${esc(nomePol(c))}<br><small class="vz">RE ${esc(c.re)}</small></td>
+      <td data-r="Situação">${selStatus(c)}</td><td data-r="Desde">${esc(fData(c.aceite_em || c.entregue_em))}</td></tr>`).join('')}</tbody></table></div>`
+      : `<div class="bp-vazio" style="margin-top:14px">${FILTRO === 'aguard' ? 'Nada aguardando aceite.' : 'Nenhum bem em carga com essa busca.'}</div>`;
+  } else if (VISTA === 'disp') {
+    const l = D.bens.filter((b) => origemOk(b.origem) && (FILTRO === 'legado' ? b.legado : (b.livre > 0 || b.legado)))
+      .filter((b) => casaBusca(q, b.codigo, b.descricao, b.serie, b.tombamento, b.categoria, b.responsavel)).sort((a, b) => (b.legado - a.legado) || cmp(a.codigo, b.codigo));
+    n = l.length;
+    html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th class="n">Livre</th><th>Situação</th>${D.gestor ? '<th></th>' : ''}</tr></thead><tbody>${l.slice(0, 400).map((b) => `
+      <tr><td class="cod" data-r="Código">${esc(b.codigo)}</td>
+      <td class="desc" data-r="Bem">${esc(b.descricao)}<small>${esc(ORIGEM[b.origem])}${ondeBem(b) ? ' · ' + esc(ondeBem(b)) : ''}</small></td>
+      <td class="n" data-r="Livre">${b.origem === 'PATRIMONIO' ? `${b.livre} de ${b.total}` : b.livre}</td>
+      <td data-r="Situação">${b.legado ? `<span class="bp-sl crit">carga antiga</span><br><small class="vz">${esc(b.responsavel || 'sem responsável')}</small>` : esc(b.situacao || (b.em_carga ? b.em_carga + ' em carga' : 'disponível'))}</td>
+      ${D.gestor ? `<td data-r=""><button type="button" class="bp-btn sm ${b.legado ? '' : 'sec'}" onclick="abrirEntregar('', '${esc(b.codigo)}')">${IC('mais')}${b.legado ? 'Regularizar' : 'Entregar'}</button></td>` : ''}</tr>`).join('')}</tbody></table></div>
+      ${l.length > 400 ? '<div class="cg-conta">Mostrando 400. Use a busca para achar o bem.</div>' : ''}`
+      : `<div class="bp-vazio" style="margin-top:14px">${FILTRO === 'legado' ? 'Nenhuma carga antiga sem termo.' : 'Nenhum bem disponível com essa busca.'}</div>`;
+  } else {
+    const l = (D.encerradas || []).filter((c) => origemOk(c.origem)).filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra, c.fim_obs));
+    n = l.length;
+    html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th>Estava com</th><th>Como saiu</th><th>Quando</th></tr></thead><tbody>${l.map((c) => `
+      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(c.bem)}</td>
+      <td class="desc" data-r="Bem">${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}</small></td>
+      <td data-r="Estava com">${esc(nomePol(c))}</td>
+      <td data-r="Como saiu">${esc(FIM[c.fim_tipo] || c.fim_tipo)}${c.fim_estado && c.fim_estado !== 'bom' ? ` <span class="bp-sl crit">${esc(c.fim_estado)}</span>` : ''}${c.fim_obs ? `<br><small class="vz">${esc(c.fim_obs)}</small>` : ''}</td>
+      <td data-r="Quando">${esc(fQuando(c.fim_em))}<br><small class="vz">${esc(c.fim_por)}</small></td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="bp-vazio" style="margin-top:14px">Nada encerrado ainda.</div>';
+  }
+  $('cg-cont').textContent = n;
+  $('cg-conta').innerHTML = FILTRO ? `Filtro do topo: <b>${FILTRO === 'aguard' ? 'aguardando aceite' : 'carga antiga sem termo'}</b> · <a href="#" onclick="FILTRO='';pintar();return false" style="color:var(--acc)">tirar</a>` : '';
+  $('cg-corpo').innerHTML = html;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('cg-corpo'));
+}
+
+/* ============================== ficha do policial ============================== */
+function policial(re) {
+  return (D.policiais || []).find((p) => p.re === re) || (D.cargas.concat(D.encerradas || [])).find((c) => c.re === re) || { re, nome: 'RE ' + re };
+}
+function abrirPol(re, manter) {
+  POL = policial(re);
+  if (!manter) { SEL = new Set(); $('pol-hist-box').style.display = 'none'; }
+  const itens = D.cargas.filter((c) => c.re === re);
+  SEL = new Set([...SEL].filter((id) => itens.some((c) => c.id === id)));
+  $('m-pol-tit').textContent = nomePol(POL);
+  $('m-pol-sub').textContent = `RE ${re}${POL.opm ? ' · ' + POL.opm : ''} · ${itens.length} ${itens.length === 1 ? 'bem' : 'bens'} em carga`;
+  const ag = itens.filter((c) => c.status === 'AGUARDANDO').length;
+  $('pol-aviso').innerHTML = ag ? `<div class="bp-aviso pend"><i data-ic="relogio"></i><div><b>${ag} ${ag === 1 ? 'bem aguarda' : 'bens aguardam'} o aceite do policial.</b> Ele confirma no Portal do Policial (aba Cautela), com o RE e a senha dele.</div></div>` : '';
+  $('pol-itens').innerHTML = itens.length ? itens.map((c) => `<label class="cg-item ${SEL.has(c.id) ? 'sel' : ''}">
+      ${D.gestor ? `<input type="checkbox" data-id="${esc(c.id)}" ${SEL.has(c.id) ? 'checked' : ''} onchange="marcar(this)">` : ''}
+      <span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b>
+        <small>${esc(c.bem)} · ${esc(ORIGEM[c.origem])}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small>
+        <small>Entregue em ${esc(fQuando(c.entregue_em))} por ${esc(c.entregue_por)}${c.aceite_em ? ` · aceito em ${esc(fQuando(c.aceite_em))} (assinatura ${esc(c.assinatura)})` : ''}</small>
+        ${c.obs ? `<small>${esc(c.obs)}</small>` : ''}</span>
+      ${selStatus(c)}</label>`).join('') : '<div class="bp-vazio">Nada em carga com este policial agora.</div>';
+  marcar();
+  abrir('m-pol');
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-pol'));
+}
+function marcar(cb) {
+  if (cb) { cb.checked ? SEL.add(cb.dataset.id) : SEL.delete(cb.dataset.id); cb.closest('.cg-item').classList.toggle('sel', cb.checked); }
+  const sel = D.cargas.filter((c) => SEL.has(c.id));
+  $('pol-dev').disabled = !sel.length; $('pol-trf').disabled = !sel.length;
+  const soAguard = sel.length && sel.every((c) => c.status === 'AGUARDANDO');
+  $('pol-can').style.display = D.gestor && soAguard ? '' : 'none';
+  $('pol-dev').innerHTML = IC('voltar') + (sel.length ? `Receber de volta (${sel.length})` : 'Receber de volta');
+  $('pol-trf').innerHTML = IC('usuarios') + (sel.length ? `Transferir (${sel.length})` : 'Transferir');
+}
+async function verHistorico() {
+  $('pol-hist-box').style.display = '';
+  $('pol-hist').innerHTML = '<div><span class="bp-gira"></span> carregando…</div>';
+  try {
+    const d = await api('/api/carga/historico?re=' + encodeURIComponent(POL.re));
+    $('pol-hist').innerHTML = d.historico.length ? d.historico.map((h) => `<div><b>${esc(h.acao)}</b> — ${esc(h.resumo)}<small>${esc(fQuando(h.quando))} · ${esc(h.quem)}</small></div>`).join('') : '<div>Sem histórico.</div>';
+  } catch (e) { $('pol-hist').innerHTML = `<div>${esc(e.message)}</div>`; }
+  $('pol-hist-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ============================== busca de policial ============================== */
+function buscarPol(pre) {
+  const q = $(pre + '-pol-q').value.trim();
+  const res = $(pre + '-pol-res');
+  if (q.length < 2) { res.innerHTML = ''; return; }
+  const dig = q.replace(/\D/g, '');
+  const l = (D.policiais || []).filter((p) => (dig.length >= 3 && String(p.re).includes(dig)) || casaBusca(q, p.nome, p.guerra, p.posto))
+    .sort((a, b) => (/BPFRON/i.test(b.opm) - /BPFRON/i.test(a.opm)) || cmp(a.guerra || a.nome, b.guerra || b.nome)).slice(0, 8);
+  res.innerHTML = l.length ? l.map((p) => `<button type="button" onclick="escolherPol('${pre}','${esc(p.re)}')"><span class="tx"><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)} · ${esc(p.nome)}${p.opm ? ' · ' + esc(p.opm) : ''}</small></span></button>`).join('')
+    : '<div class="bp-vazio" style="padding:10px">Ninguém com esse nome ou RE no cadastro.</div>';
+}
+function escolherPol(pre, re) {
+  const p = policial(re);
+  (pre === 'ent' ? ENT : TRF).pol = p;
+  $(pre + '-pol-busca').style.display = 'none';
+  const tem = D.cargas.filter((c) => c.re === re).length;
+  $(pre + '-pol-sel').innerHTML = `<div class="cg-escolhido"><span class="bp-tile sm ok"><i data-ic="usuario"></i></span><span class="tx"><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)}${p.opm ? ' · ' + esc(p.opm) : ''}${tem ? ` · já tem ${tem} ${tem === 1 ? 'bem' : 'bens'} em carga` : ''}</small></span>
+    <button type="button" class="bp-btn sm ghost" onclick="trocarPol('${pre}')">Trocar</button></div>`;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($(pre + '-pol-sel'));
+  if (pre === 'ent') setTimeout(() => $('ent-bem-q').focus(), 30);
+}
+function trocarPol(pre) {
+  (pre === 'ent' ? ENT : TRF).pol = null;
+  $(pre + '-pol-sel').innerHTML = ''; $(pre + '-pol-busca').style.display = '';
+  $(pre + '-pol-q').value = ''; $(pre + '-pol-res').innerHTML = ''; $(pre + '-pol-q').focus();
+}
+
+/* ============================== entregar ============================== */
+function abrirEntregar(re, codigo) {
+  ENT = { pol: null, itens: [] };
+  $('ent-obs').value = ''; $('ent-msg').textContent = ''; $('ent-bem-q').value = ''; $('ent-bem-res').innerHTML = '';
+  trocarPol('ent');
+  if (re) escolherPol('ent', re);
+  if (codigo) addBem(codigo);
+  pintarCarrinho();
+  abrir('m-ent');
+  setTimeout(() => (re ? $('ent-bem-q') : $('ent-pol-q')).focus(), 60);
+}
+function livreDe(b) { return b.livre - ENT.itens.filter((i) => i.codigo === b.codigo).reduce((n, i) => n + i.qtd, 0); }
+function buscarBem() {
+  const q = $('ent-bem-q').value.trim();
+  const res = $('ent-bem-res');
+  if (q.length < 2) { res.innerHTML = ''; return; }
+  const l = D.bens.filter((b) => casaBusca(q, b.codigo, b.descricao, b.serie, b.tombamento, b.categoria))
+    .sort((a, b) => ((b.livre > 0) - (a.livre > 0)) || cmp(a.codigo, b.codigo)).slice(0, 12);
+  res.innerHTML = l.length ? l.map((b) => {
+    const livre = livreDe(b);
+    const motivo = livre > 0 ? (b.legado ? `carga antiga: ${b.responsavel || 'sem responsável'} — regulariza` : b.origem === 'PATRIMONIO' ? `${livre} de ${b.total} livre(s)` : 'disponível')
+      : b.em_carga ? (b.origem === 'PATRIMONIO' ? 'toda a quantidade já está em carga' : 'já está em carga pessoal') : (b.bloqueio || 'já escolhido');
+    return `<button type="button" ${livre > 0 ? '' : 'disabled'} onclick="addBem('${esc(b.codigo)}')"><span class="tx"><b>${esc(b.codigo)} · ${esc(b.descricao)}</b><small>${esc(ORIGEM[b.origem])}${ondeBem(b) ? ' · ' + esc(ondeBem(b)) : ''} · ${esc(motivo)}</small></span>${livre > 0 ? IC('mais') : ''}</button>`;
+  }).join('') : '<div class="bp-vazio" style="padding:10px">Nenhum bem com essa busca. Bem sem cadastro tem que ser cadastrado antes no Patrimônio.</div>';
+}
+function addBem(codigo) {
+  const b = D.bens.find((x) => x.codigo === codigo);
+  if (!b || livreDe(b) <= 0) return;
+  const ja = ENT.itens.find((i) => i.codigo === codigo);
+  if (ja && b.origem === 'PATRIMONIO') ja.qtd++; else if (!ja) ENT.itens.push({ codigo, qtd: 1 });
+  pintarCarrinho(); buscarBem();
+}
+function qtdBem(codigo, v) {
+  const b = D.bens.find((x) => x.codigo === codigo), i = ENT.itens.find((x) => x.codigo === codigo);
+  if (!b || !i) return;
+  i.qtd = Math.max(1, Math.min(b.livre, parseInt(v, 10) || 1));
+  pintarCarrinho();
+}
+function tirarBem(codigo) { ENT.itens = ENT.itens.filter((i) => i.codigo !== codigo); pintarCarrinho(); buscarBem(); }
+function pintarCarrinho() {
+  const el = $('ent-carrinho');
+  el.innerHTML = ENT.itens.length ? ENT.itens.map((i) => {
+    const b = D.bens.find((x) => x.codigo === i.codigo) || {};
+    return `<div class="cg-item"><span class="tx"><b>${esc(i.codigo)} · ${esc(b.descricao)}</b><small>${esc(ORIGEM[b.origem])}${ondeBem(b) ? ' · ' + esc(ondeBem(b)) : ''}${b.legado ? ' · regulariza a carga antiga' : ''}</small></span>
+      ${b.origem === 'PATRIMONIO' ? `<input class="cg-qtd" type="number" min="1" max="${b.livre}" value="${i.qtd}" aria-label="Quantidade" onchange="qtdBem('${esc(i.codigo)}', this.value)">` : ''}
+      <button type="button" class="bp-btn ic sm ghost" title="Tirar" aria-label="Tirar" onclick="tirarBem('${esc(i.codigo)}')">${IC('x')}</button></div>`;
+  }).join('') : '<div class="bp-vazio" style="padding:12px">Nenhum bem escolhido ainda.</div>';
+  const n = ENT.itens.reduce((s, i) => s + i.qtd, 0);
+  $('ent-btn').innerHTML = IC('check') + (n ? `Entregar ${n} ${n === 1 ? 'bem' : 'bens'}` : 'Entregar');
+}
+async function entregar() {
+  const msg = $('ent-msg'); msg.textContent = '';
+  if (!ENT.pol) { msg.textContent = 'Escolha o policial.'; return; }
+  if (!ENT.itens.length) { msg.textContent = 'Escolha pelo menos um bem.'; return; }
+  const bt = $('ent-btn'); bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entregando…';
+  try {
+    const d = await api('/api/carga/salvar', { op: 'entregar', re: ENT.pol.re, itens: ENT.itens, obs: $('ent-obs').value });
+    fechar('m-ent');
+    toast(`Entregue a ${nomePol(ENT.pol)}. Falta o aceite dele no Portal do Policial.`);
+    if (d.avisos && d.avisos.length) toast('Atenção: ' + d.avisos.join(' · '), 'err');
+    await carregar();
+  } catch (e) { msg.textContent = e.message; if (e.status === 409) carregar(); }
+  finally { bt.disabled = false; pintarCarrinho(); }
+}
+
+/* ============================== receber de volta / transferir / cancelar ============================== */
+function selecionados() { return D.cargas.filter((c) => SEL.has(c.id)); }
+function abrirDevolver() {
+  const l = selecionados(); if (!l.length) return;
+  $('dev-obs').value = ''; $('dev-msg').textContent = '';
+  $('dev-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(c.bem)}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span>
+    <select class="cg-est" data-id="${esc(c.id)}" aria-label="Estado"><option value="bom">Em bom estado</option><option value="danificado">Danificado</option><option value="extraviado">Extraviado</option></select></div>`).join('');
+  abrir('m-dev');
+}
+async function devolver() {
+  const ids = selecionados().map((c) => c.id);
+  const estados = {}; $('dev-itens').querySelectorAll('select').forEach((s) => { estados[s.dataset.id] = s.value; });
+  const bt = $('dev-btn'), msg = $('dev-msg'); msg.textContent = '';
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Gravando…';
+  try {
+    const d = await api('/api/carga/salvar', { op: 'devolver', ids, estados, obs: $('dev-obs').value });
+    fechar('m-dev'); SEL.clear();
+    toast(`${ids.length} ${ids.length === 1 ? 'bem recebido' : 'bens recebidos'} de volta.`);
+    if (d.avisos && d.avisos.length) toast('Atenção: ' + d.avisos.join(' · '), 'err');
+    await carregar();
+  } catch (e) { msg.textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = IC('check') + 'Confirmar o recebimento'; }
+}
+function abrirTransferir() {
+  const l = selecionados(); if (!l.length) return;
+  TRF = { pol: null }; $('trf-obs').value = ''; $('trf-msg').textContent = '';
+  $('m-trf-sub').textContent = 'Hoje com ' + nomePol(POL);
+  $('trf-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(c.bem)}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span></div>`).join('');
+  trocarPol('trf');
+  abrir('m-trf');
+}
+async function transferir() {
+  const msg = $('trf-msg'); msg.textContent = '';
+  if (!TRF.pol) { msg.textContent = 'Escolha para quem vai.'; return; }
+  const ids = selecionados().map((c) => c.id);
+  const bt = $('trf-btn'); bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Transferindo…';
+  try {
+    const d = await api('/api/carga/salvar', { op: 'transferir', ids, re: TRF.pol.re, obs: $('trf-obs').value });
+    fechar('m-trf'); SEL.clear();
+    toast(`Transferido para ${nomePol(TRF.pol)}. Falta o aceite dele.`);
+    if (d.avisos && d.avisos.length) toast('Atenção: ' + d.avisos.join(' · '), 'err');
+    await carregar();
+  } catch (e) { msg.textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = IC('check') + 'Transferir'; }
+}
+async function cancelarEntrega() {
+  const l = selecionados(); if (!l.length) return;
+  const bt = $('pol-can');
+  if (!bt.dataset.conf) { bt.dataset.conf = '1'; bt.innerHTML = IC('alerta') + 'Confirmar: cancelar ' + l.length; setTimeout(() => { delete bt.dataset.conf; marcar(); bt.innerHTML = IC('x') + 'Cancelar entrega'; }, 6000); return; }
+  delete bt.dataset.conf; bt.disabled = true;
+  try {
+    await api('/api/carga/salvar', { op: 'cancelar', ids: l.map((c) => c.id) });
+    SEL.clear(); toast('Entrega cancelada.'); await carregar();
+  } catch (e) { toast(e.message, 'err'); }
+  finally { bt.disabled = false; bt.innerHTML = IC('x') + 'Cancelar entrega'; }
+}
+async function sincronizar(bt) {
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Acertando…';
+  try { const d = await api('/api/carga/salvar', { op: 'sincronizar' }); toast(d.avisos && d.avisos.length ? 'Ficou pendente: ' + d.avisos.join(' · ') : 'Material Bélico acertado.'); await carregar(); }
+  catch (e) { toast(e.message, 'err'); bt.disabled = false; }
+}
+
+/* ============================== Termo de Carga Pessoal (A4) ============================== */
+function imprimirTermo(re) {
+  const p = policial(re);
+  const itens = D.cargas.filter((c) => c.re === re).sort((a, b) => cmp(a.bem, b.bem));
+  if (!itens.length) { toast('Este policial não tem bens em carga para o termo.', 'err'); return; }
+  const agoraTx = new Date().toLocaleString('pt-BR', { timeZone: 'America/Porto_Velho' });
+  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho', day: 'numeric', month: 'long', year: 'numeric' });
+  const quem = (D.eu && D.eu.nome) || ls('bp_user');
+  const linhas = itens.map((c, i) => `<tr><td class="n">${i + 1}</td><td>${esc(c.bem)}</td><td>${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}</small></td>
+    <td>${esc(c.serie || '—')}</td><td>${esc(c.tombamento || '—')}</td><td class="n">${c.qtd}</td>
+    <td>${esc(fData(c.entregue_em))}</td><td>${c.aceite_em ? esc(fQuando(c.aceite_em)) + `<small>${esc(c.assinatura)}</small>` : '<b>aguardando aceite</b>'}</td></tr>`).join('');
+  const qtd = itens.reduce((n, c) => n + c.qtd, 0);
+  $('termo').innerHTML = `
+    <div class="tcab"><img src="LOGOS/bpfron_transp.png" alt="">
+      <div><small>POLÍCIA MILITAR DO ESTADO DE RONDÔNIA</small><small>BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS — BPFRON</small><small>P4 · SEÇÃO DE LOGÍSTICA E PATRIMÔNIO</small><h1>TERMO DE CARGA PESSOAL</h1></div></div>
+    <div class="tdados">
+      <div><span>Posto / graduação</span><b>${esc(p.posto || '—')}</b></div>
+      <div><span>Nome</span><b>${esc(p.nome || '—')}</b></div>
+      <div><span>RE</span><b>${esc(p.re)}</b></div>
+      <div><span>Nome de guerra</span><b>${esc(p.guerra || '—')}</b></div>
+      <div><span>OPM</span><b>${esc(p.opm || 'BPFRON')}</b></div>
+      <div><span>Bens em carga</span><b>${qtd}</b></div>
+    </div>
+    <p class="tdecl">Declaro ter recebido do Batalhão de Polícia de Fronteira e Divisas, em <b>carga pessoal</b>, os bens relacionados abaixo, comprometendo-me a zelar pela sua guarda, uso adequado e conservação, a apresentá-los sempre que solicitado e a devolvê-los à P4 quando determinado ou em caso de movimentação, ciente de que respondo pelo extravio ou dano a que der causa, na forma da legislação vigente.</p>
+    <table><thead><tr><th class="n">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="n">Qtd.</th><th>Entregue em</th><th>Aceite eletrônico</th></tr></thead><tbody>${linhas}</tbody></table>
+    <div class="tlocal">Porto Velho/RO, ${esc(hoje)}.</div>
+    <div class="tass"><div>${esc(nomePol(p))}<br>RE ${esc(p.re)}<br>Policial que recebe</div><div>Chefe da P4<br>&nbsp;<br>Responsável pela entrega</div></div>
+    <div class="trod">Emitido por ${esc(quem)} em ${esc(agoraTx)} pelo sistema BPFRON (Carga Pessoal). O aceite eletrônico foi feito pelo próprio policial com a senha pessoal do Portal do Policial; o código ao lado da data identifica a assinatura.</div>`;
+  const img = $('termo').querySelector('img');
+  const ir = () => setTimeout(() => window.print(), 80);
+  if (img.complete) ir(); else { img.onload = ir; img.onerror = ir; }
+}
+
+boot();
+</script>
+</body>
+</html>
