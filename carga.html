@@ -70,6 +70,12 @@
 .cg-est{padding:7px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--surf);color:var(--t1);font:inherit}
 .cg-passo{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--t1);margin:16px 0 4px;display:flex;align-items:center;gap:8px}
 .cg-passo .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--acc);color:var(--acc-ink)}
+.cg-leg{padding:14px 16px}
+.cg-leg .cg-pol:hover{border-color:transparent}
+.cg-leg-itens{display:flex;flex-direction:column;gap:4px;margin:10px 0 0 58px;font-size:13.5px;color:var(--t2)}
+.cg-leg-itens b{color:var(--t1)}
+.cg-leg-itens small{color:var(--muted)}
+@media (max-width:760px){ .cg-leg-itens{margin-left:0} }
 .cg-hist{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto;margin-top:6px}
 .cg-hist div{border-left:3px solid var(--acc-line);padding:2px 0 2px 10px;font-size:13px;color:var(--t2)}
 .cg-hist small{display:block;color:var(--muted);font-size:12px}
@@ -121,6 +127,11 @@
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-01", "titulo": "Carga antiga agrupada por policial", "quem": "gestor", "itens": [
+    "As peças que já estavam lançadas como “Cautelado” na planilha agora aparecem juntas, por policial (não mais uma linha por equipamento com o nome repetido).",
+    "O sistema procura o policial no cadastro pelo nome ou RE escrito na planilha. Um botão regulariza todos os bens dele de uma vez.",
+    "Clique no número “Carga antiga sem termo” no topo, ou na aba Disponíveis."
+  ] },
   { "data": "2026-10-31", "titulo": "Carga Pessoal no ar", "quem": "todos", "itens": [
     "Quem está com cada bem do batalhão em carga pessoal: pistola, colete, celular, barraca, lanterna…",
     "Busca por policial, por código, nº de série ou tombamento. Toque no policial para ver tudo o que está com ele.",
@@ -443,10 +454,73 @@ function pintarNums() {
     num(0, 'var(--info)', 'usuarios', 'Policiais com carga', g.length, 'ver por policial', 'pol'),
     num(1, 'var(--acc)', 'escudo', 'Bens em carga', qtd, 'ver por bem', 'bem'),
     num(2, 'var(--warn)', 'relogio', 'Aguardando aceite', aguard.length, 'ver quem falta', 'aguard'),
-    num(3, 'var(--crit)', 'alerta', 'Carga antiga sem termo', legado.length, 'regularizar', 'legado'),
+    num(3, 'var(--crit)', 'alerta', 'Carga antiga sem termo', legado.length, legado.length ? `${gruposLegado().length} policia${gruposLegado().length === 1 ? 'l' : 'is'} · regularizar` : 'regularizar', 'legado'),
   ].join('');
   if (window.BPCasca && BPCasca.icones) BPCasca.icones($('cg-nums'));
 }
+/* ---- carga antiga (planilha já dizia "Cautelado") agrupada POR POLICIAL (01/11/2026) ----
+   A coluna Responsável é texto livre: junta pelo RE quando o texto tem número, senão pelo
+   nome sem posto/graduação, e tenta achar o policial no cadastro sozinho. */
+const POSTOS = /\b(CEL|TC|TCEL|TEN|1TEN|2TEN|MAJ|CAP|ASP|SUBTEN|SUB|ST|SGT|CB|SD|AL|QOPM|QPPM|QOAPM|QOSPM|QPEPM|PM|PMRO|RES|RR|BPFRON|RE)\b/g;
+function nomeLimpo(t) {
+  return sem(t).replace(/[^A-Z0-9 ]+/g, ' ').replace(/\b\d+\b/g, ' ').replace(/\b\d+[OA]\b/g, ' ').replace(POSTOS, ' ').replace(/\s+/g, ' ').trim();
+}
+function acharPolDoTexto(t) {
+  const pols = D.policiais || [];
+  const dig = String(t || '').replace(/\D/g, '');
+  if (dig.length >= 4) {
+    const porRe = pols.filter((p) => p.re && (dig === String(p.re) || dig.endsWith(String(p.re))));
+    if (porRe.length === 1) return porRe[0];
+  }
+  const n = nomeLimpo(t);
+  if (n.length < 3) return null;
+  const bp = (l) => { const b = l.filter((p) => /BPFRON/i.test(p.opm)); return b.length === 1 ? b[0] : l.length === 1 ? l[0] : null; };
+  const guerra = pols.filter((p) => nomeLimpo(p.guerra) === n);
+  if (guerra.length) return bp(guerra);
+  const nome = pols.filter((p) => nomeLimpo(p.nome) === n);
+  if (nome.length) return bp(nome);
+  const partes = n.split(' ');
+  const contem = pols.filter((p) => { const w = ' ' + nomeLimpo(p.nome) + ' ' + nomeLimpo(p.guerra) + ' '; return partes.every((x) => x.length < 2 || w.includes(' ' + x + ' ')); });
+  return contem.length ? bp(contem) : null;
+}
+let _legCache = null;
+function gruposLegado() {
+  if (_legCache && _legCache.d === D) return _legCache.g;
+  const m = new Map();
+  for (const b of D.bens.filter((x) => x.legado)) {
+    const pol = acharPolDoTexto(b.responsavel);
+    const chave = pol ? 'RE' + pol.re : 'TX' + (nomeLimpo(b.responsavel) || '—');
+    if (!m.has(chave)) m.set(chave, { pol, textos: new Set(), itens: [] });
+    const g = m.get(chave);
+    g.textos.add(String(b.responsavel || 'sem responsável').trim());
+    g.itens.push(b);
+  }
+  const g = [...m.values()].sort((a, b) => (b.itens.length - a.itens.length) || cmp(a.pol ? (a.pol.guerra || a.pol.nome) : [...a.textos][0], b.pol ? (b.pol.guerra || b.pol.nome) : [...b.textos][0]));
+  _legCache = { d: D, g };
+  return g;
+}
+let LEG = [];   // grupos desenhados (o botão Regularizar usa o índice)
+function htmlLegado(q) {
+  LEG = gruposLegado().filter((g) => g.itens.some((b) => origemOk(b.origem)))
+    .filter((g) => casaBusca(q, ...g.textos, g.pol ? [g.pol.re, g.pol.nome, g.pol.guerra].join(' ') : '', ...g.itens.map((b) => [b.codigo, b.descricao, b.serie, b.tombamento].join(' '))));
+  return LEG.map((g, i) => {
+    const titulo = g.pol ? nomePol(g.pol) : [...g.textos][0];
+    const sub = g.pol ? `RE ${g.pol.re}${g.pol.opm ? ' · ' + g.pol.opm : ''}` : 'Não achei no cadastro — escolha o policial ao regularizar';
+    const variantes = [...g.textos];
+    return `<div class="bp-card cg-leg">
+      <div class="cg-pol" style="cursor:default"><span class="ini">${esc(g.pol ? iniciais(g.pol) : (titulo || '?').replace(/[^A-Za-zÀ-ú]/g, '').slice(0, 2).toUpperCase() || '?')}</span>
+        <span class="tx"><b>${esc(titulo)}</b><small>${esc(sub)}</small>${variantes.length > 1 || g.pol ? `<small>Na planilha: ${esc(variantes.join(' · '))}</small>` : ''}</span>
+        <span class="sls"><span class="bp-sl crit">${g.itens.length} ${g.itens.length === 1 ? 'bem' : 'bens'} sem termo</span></span></div>
+      <div class="cg-leg-itens">${g.itens.map((b) => `<div><b>${esc(b.codigo)}</b> · ${esc(b.descricao)}${ondeBem(b) ? ` <small>${esc(ondeBem(b))}</small>` : ''}</div>`).join('')}</div>
+      ${D.gestor ? `<div class="cg-acoes" style="margin-top:10px"><button type="button" class="bp-btn sm" onclick="regularizar(${i})">${IC('assinar')}Regularizar ${g.itens.length === 1 ? 'o bem' : 'os ' + g.itens.length + ' bens'} em nome ${g.pol ? 'dele' : 'do policial'}</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+function regularizar(i) {
+  const g = LEG[i]; if (!g) return;
+  abrirEntregar(g.pol ? g.pol.re : '', g.itens.map((b) => b.codigo), g.pol ? '' : nomeLimpo([...g.textos][0]));
+}
+
 function filtrarTopo(f) {
   FILTRO = f === 'aguard' || f === 'legado' ? f : '';
   VISTA = f === 'aguard' ? 'bem' : f === 'legado' ? 'disp' : f;
@@ -487,6 +561,8 @@ function pintar() {
         <span class="sls"><span class="bp-sl info">${tot} ${tot === 1 ? 'bem' : 'bens'}</span>${ag ? `<span class="bp-sl pend">${ag} aguardando aceite</span>` : ''}</span></button>`;
     }).join('');
     html = html ? `<div class="cg-lista">${html}</div>` : `<div class="bp-vazio" style="margin-top:14px">${q ? 'Ninguém encontrado com essa busca.' : 'Nenhum bem em carga pessoal ainda.' + (D.gestor ? ' Use “Entregar bens”.' : '')}</div>`;
+    const nl = gruposLegado().length;
+    if (nl && !q) html = `<div class="bp-aviso pend" style="margin-top:14px"><i data-ic="alerta"></i><div><b>${nl} policia${nl === 1 ? 'l tem' : 'is têm'} carga antiga</b> (lançada como “Cautelado” na planilha, sem termo). <a href="#" style="color:var(--acc)" onclick="filtrarTopo('legado');return false">Ver por policial e regularizar</a></div></div>` + html;
   } else if (VISTA === 'bem') {
     const l = D.cargas.filter((c) => origemOk(c.origem) && (FILTRO !== 'aguard' || c.status === 'AGUARDANDO'))
       .filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra)).sort((a, b) => cmp(a.bem, b.bem));
@@ -498,17 +574,20 @@ function pintar() {
       <td data-r="Situação">${selStatus(c)}</td><td data-r="Desde">${esc(fData(c.aceite_em || c.entregue_em))}</td></tr>`).join('')}</tbody></table></div>`
       : `<div class="bp-vazio" style="margin-top:14px">${FILTRO === 'aguard' ? 'Nada aguardando aceite.' : 'Nenhum bem em carga com essa busca.'}</div>`;
   } else if (VISTA === 'disp') {
-    const l = D.bens.filter((b) => origemOk(b.origem) && (FILTRO === 'legado' ? b.legado : (b.livre > 0 || b.legado)))
-      .filter((b) => casaBusca(q, b.codigo, b.descricao, b.serie, b.tombamento, b.categoria, b.responsavel)).sort((a, b) => (b.legado - a.legado) || cmp(a.codigo, b.codigo));
-    n = l.length;
-    html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th class="n">Livre</th><th>Situação</th>${D.gestor ? '<th></th>' : ''}</tr></thead><tbody>${l.slice(0, 400).map((b) => `
+    const leg = htmlLegado(q);
+    const l = FILTRO === 'legado' ? [] : D.bens.filter((b) => origemOk(b.origem) && b.livre > 0 && !b.legado)
+      .filter((b) => casaBusca(q, b.codigo, b.descricao, b.serie, b.tombamento, b.categoria)).sort((a, b) => cmp(a.codigo, b.codigo));
+    n = FILTRO === 'legado' ? LEG.length : l.length;
+    const cabLeg = leg ? `<div class="bp-sec" style="margin-top:18px"><span class="bp-tile crit"><i data-ic="alerta"></i></span><div><h2 style="font-size:17px">Carga antiga, por policial</h2><small>Já lançadas como “Cautelado” na planilha, sem termo no sistema. Regularize tudo de cada policial de uma vez.</small></div><span class="bp-cont bp-sl">${LEG.length}</span></div><div class="cg-lista">${leg}</div>` : '';
+    const cabLivre = FILTRO === 'legado' ? '' : (leg ? '<div class="bp-sec" style="margin-top:18px"><span class="bp-tile ok"><i data-ic="check"></i></span><div><h2 style="font-size:17px">Livres para entregar</h2></div></div>' : '');
+    html = cabLeg + cabLivre + (FILTRO === 'legado' ? (leg ? '' : '<div class="bp-vazio" style="margin-top:14px">Nenhuma carga antiga sem termo.</div>') : l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th class="n">Livre</th><th>Situação</th>${D.gestor ? '<th></th>' : ''}</tr></thead><tbody>${l.slice(0, 400).map((b) => `
       <tr><td class="cod" data-r="Código">${esc(b.codigo)}</td>
       <td class="desc" data-r="Bem">${esc(b.descricao)}<small>${esc(ORIGEM[b.origem])}${ondeBem(b) ? ' · ' + esc(ondeBem(b)) : ''}</small></td>
       <td class="n" data-r="Livre">${b.origem === 'PATRIMONIO' ? `${b.livre} de ${b.total}` : b.livre}</td>
       <td data-r="Situação">${b.legado ? `<span class="bp-sl crit">carga antiga</span><br><small class="vz">${esc(b.responsavel || 'sem responsável')}</small>` : esc(b.situacao || (b.em_carga ? b.em_carga + ' em carga' : 'disponível'))}</td>
-      ${D.gestor ? `<td data-r=""><button type="button" class="bp-btn sm ${b.legado ? '' : 'sec'}" onclick="abrirEntregar('', '${esc(b.codigo)}')">${IC('mais')}${b.legado ? 'Regularizar' : 'Entregar'}</button></td>` : ''}</tr>`).join('')}</tbody></table></div>
+      ${D.gestor ? `<td data-r=""><button type="button" class="bp-btn sm sec" onclick="abrirEntregar('', '${esc(b.codigo)}')">${IC('mais')}Entregar</button></td>` : ''}</tr>`).join('')}</tbody></table></div>
       ${l.length > 400 ? '<div class="cg-conta">Mostrando 400. Use a busca para achar o bem.</div>' : ''}`
-      : `<div class="bp-vazio" style="margin-top:14px">${FILTRO === 'legado' ? 'Nenhuma carga antiga sem termo.' : 'Nenhum bem disponível com essa busca.'}</div>`;
+      : '<div class="bp-vazio" style="margin-top:14px">Nenhum bem livre com essa busca.</div>');
   } else {
     const l = (D.encerradas || []).filter((c) => origemOk(c.origem)).filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra, c.fim_obs));
     n = l.length;
@@ -597,12 +676,13 @@ function trocarPol(pre) {
 }
 
 /* ============================== entregar ============================== */
-function abrirEntregar(re, codigo) {
+function abrirEntregar(re, codigos, busca) {
   ENT = { pol: null, itens: [] };
   $('ent-obs').value = ''; $('ent-msg').textContent = ''; $('ent-bem-q').value = ''; $('ent-bem-res').innerHTML = '';
   trocarPol('ent');
   if (re) escolherPol('ent', re);
-  if (codigo) addBem(codigo);
+  else if (busca) { $('ent-pol-q').value = busca; buscarPol('ent'); }
+  (Array.isArray(codigos) ? codigos : codigos ? [codigos] : []).forEach((c) => addBem(c));
   pintarCarrinho();
   abrir('m-ent');
   setTimeout(() => (re ? $('ent-bem-q') : $('ent-pol-q')).focus(), 60);
