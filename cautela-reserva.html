@@ -139,10 +139,50 @@ details summary{color:var(--muted)}
   iframe#parte-ver{height:70vh}
   #res-topo-cau span{display:none}
 }
+/* ao vivo (01/11/2026): quem está assinando e quem assinou, sem atualizar a página */
+.cv{padding:14px 18px;margin-bottom:14px}
+.cv-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cv-cab > b{font-family:'Rajdhani',sans-serif;font-size:19px;color:var(--t1)}
+.cv-st{font-size:12.5px;color:var(--muted)}
+.cv-on{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.cv-on .p{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--surf);color:var(--t1);font-size:12px}
+.cv-on .p::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--good)}
+.cv-grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px;margin-top:10px}
+.cv-grade h4{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:700}
+.cv-vazio{font-size:13.5px;color:var(--dim);padding:6px 0}
+.cv-ass{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--warn-line);background:var(--warn-soft);margin-bottom:6px;font-size:14px;color:var(--t2)}
+.cv-ass b{color:var(--t1)}
+.cv-ass small{display:block;color:var(--muted);font-size:12px}
+.cv-ass.agora{border-color:var(--good-line);background:var(--good-soft)}
+.cv-ass .bola{width:10px;height:10px;border-radius:50%;background:var(--warn);flex:none}
+.cv-ass.agora .bola{background:var(--good);animation:bp-pulso-v 1.4s infinite}
+.cv-ass .tx{flex:1;min-width:0}
+#cv-lista{display:flex;flex-direction:column;max-height:300px;overflow-y:auto}
+.cv-ev{display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid var(--line);border-radius:8px}
+.cv-ev:first-child{border-top:0}
+.cv-ev.novo{animation:cv-chega 1.8s var(--ease)}
+@keyframes cv-chega{0%{background:var(--good-soft);transform:translateX(-6px)}100%{background:transparent;transform:none}}
+.cv-ev .tx{min-width:0;flex:1;font-size:14px;color:var(--t2)}
+.cv-ev .tx b{color:var(--t1)}
+.cv-ev .tx small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-ev time{font-size:12px;color:var(--dim);white-space:nowrap}
+.cv-mais{margin-top:6px;align-self:flex-start}
+@media(max-width:760px){
+  .cv{padding:12px 13px}
+  .cv-grade{grid-template-columns:minmax(0,1fr);gap:12px}
+  .cv-ev .tx{font-size:13.5px}
+  .cv-on{margin-left:0;width:100%}
+  #cv-lista{max-height:260px}
+}
 </style>
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-01", "titulo": "Assinaturas ao vivo", "quem": "todos", "itens": [
+    "Quadro “Ao vivo” no topo: mostra na hora quem está com a janela de assinar aberta no celular e quem já assinou — sem precisar atualizar a página.",
+    "Também lista quem ainda falta assinar (recebimento ou devolução) e as últimas ações da reserva: entregas, recebimentos, cancelamentos, conferências e passagens.",
+    "Quando o policial assina, aparece um aviso e a reserva e as listas se atualizam sozinhas."
+  ] },
   { "data": "2026-10-30", "titulo": "Página de cara nova", "quem": "todos", "itens": [
     "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
     "Botões de ação (Reserva, Entregar, Receber de volta, Conferir…) com ícones novos.",
@@ -186,6 +226,16 @@ details summary{color:var(--muted)}
   <div id="app" class="hidden">
     <div class="faixa" id="faixa"></div>
     <div id="avisos"></div>
+    <div class="card cv" id="cv">
+      <div class="cv-cab">
+        <span class="bp-vivo espera" id="cv-pt"></span><b>Ao vivo</b><span class="cv-st" id="cv-st">conectando…</span>
+        <span class="cv-on" id="cv-on"></span>
+      </div>
+      <div class="cv-grade">
+        <div><h4><i data-ic="assinar"></i>Assinando agora / falta assinar</h4><div id="cv-assinando"><div class="cv-vazio">Ninguém precisa assinar nada agora.</div></div></div>
+        <div><h4><i data-ic="relogio"></i>Últimas assinaturas e ações</h4><div id="cv-lista"><div class="cv-vazio">Quando alguém assinar, entregar ou receber material, aparece aqui na hora.</div></div></div>
+      </div>
+    </div>
     <div class="acoesG" id="acoes">
       <button class="ac on" data-p="reserva"><span class="ico bp-tile sm"><i data-ic="arquivar"></i></span><b>Reserva</b><span>o que tem e onde está</span></button>
       <button class="ac" data-p="entregar" id="ac-entregar"><span class="ico bp-tile sm info"><i data-ic="enviar"></i></span><b>Entregar</b><span>material para um policial</span></button>
@@ -389,7 +439,7 @@ async function api(path, opt){
   return d;
 }
 const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
-function falha(e){ if (e.status === 401){ CA.esquecer(); R = null; boot(); return; } toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi feito.' : e.message); }
+function falha(e){ if (e.status === 401){ vivoDesligar(); CA.esquecer(); R = null; boot(); return; } toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi feito.' : e.message); }
 
 /* ---------------- janela (modal) ---------------- */
 function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura, depois }){
@@ -416,7 +466,7 @@ function modal({ titulo, corpo, ok = 'Confirmar', senha = true, largura, depois 
 const val = (m, id) => m.el.querySelector('#' + id).value;
 
 /* ---------------- entrada ---------------- */
-function sair(){ CA.sair(); R = null; boot(); }
+function sair(){ vivoDesligar(); CA.sair(); R = null; boot(); }
 $('btn-sair').onclick = sair;
 $('sem-papel-re').onclick = sair;
 $('btn-senha').onclick = () => CA.trocarSenha();
@@ -444,9 +494,11 @@ function boot(){
 let R = null, GRUPO = '', CONTAGEM = {}, ABERTO = '', PODE = false;
 const linha = (id) => R.linhas.find(l => l.id === id);
 
-async function carregar(){
-  try { R = await api('/api/cautela/reserva'); }
+async function carregar(quieto){
+  let novo;
+  try { novo = await api('/api/cautela/reserva'); }
   catch(e){
+    if (quieto) return;   // atualização automática: tenta de novo no próximo aviso
     if (e.status === 401){ CA.esquecer(); R = null; boot(); return; }
     if (e.status === 403){
       show('sem-papel', true);
@@ -459,11 +511,14 @@ async function carregar(){
     }
     show('app', true); $('faixa').innerHTML = '<i data-ic="alerta"></i>' + esc(e.message) + (e.status === 503 ? ' <button class="btn sm sec" onclick="carregar()">Tentar de novo</button>' : ''); return;
   }
+  R = novo;
   show('app', true);
   { const nome = R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome;
     $('userchip').innerHTML = `<span class="bp-eu" title="${esc(nome)}"><b>${esc(String(R.eu.guerra || R.eu.nome || '?').trim().split(/s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase())}</b><span>${esc(nome)}</span></span>`; }
+  const digitado = quieto ? CONTAGEM : null;   // atualização automática não apaga a conferência em andamento
   CONTAGEM = {};
   if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
+  if (digitado) Object.assign(CONTAGEM, digitado);
   $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
   // só o armeiro de serviço mexe no material; o administrador acompanha (29/10/2026)
   // no celular o armeiro só acompanha e confere; entregar, receber e passar o serviço são no computador
@@ -479,8 +534,13 @@ async function carregar(){
   const ativo = document.querySelector('#acoes .ac.on');
   if (ativo && ativo.classList.contains('hidden')) abrirPane('reserva');
   $('dl-missoes').innerHTML = R.nomes_missao.map(n => `<option value="${esc(n)}">`).join('');
-  renderFaixa(); renderReserva(); renderCarrinho(); renderReceber(); renderConferir(); renderPassarInfo();
+  renderFaixa(); renderReserva(); renderCarrinho(); renderReceber();
+  // quem está digitando a conferência ou montando a passagem não perde o que fez
+  if (!(quieto && $('tb-cnt').contains(document.activeElement))) renderConferir();
+  if (!(quieto && $('p-passar').classList.contains('on'))) renderPassarInfo();
   if ($('p-ver').classList.contains('on')) verParte();
+  cvFaltam();
+  vivoLigar();
 }
 
 function renderFaixa(){
@@ -933,6 +993,127 @@ function abrirPane(p){
   if (p === 'ver') verParte();
 }
 document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => abrirPane(t.dataset.p));
+/* ============================== ao vivo ==============================
+   WebSocket /api/cautela/ao-vivo (Durable Object CautelaVivoDO, backend/cautela-vivo.js, 01/11/2026).
+   Pedido do usuário: ver na hora quem está assinando e quem assinou, sem atualizar a página.
+   - "assinando": o policial abriu a janela de assinar no celular (o cautela.html avisa);
+   - "falta assinar": cautelas aguardando a assinatura do recebimento ou da devolução;
+   - lista das últimas ações; a reserva é relida sozinha a cada aviso.
+   Sem WebSocket (rede que bloqueia), a reserva é relida a cada 30 s com a aba visível. */
+let VIVO_EV = [], VIVO_ASS = [], VIVO_ON = [], VIVO_EU = '', VIVO_WS = null, VIVO_ESPERA = 2000, VIVO_TIMER = 0, VIVO_PING = 0, VIVO_RECARGA = 0, VIVO_RELIGA = false;
+const quem = (t) => `<b>${esc(t || '?')}</b>`;
+const CV_TIPO = {
+  entregou:     { ic: 'enviar',  c: 'var(--info)', tx: (e) => `${quem(e.por)} entregou material a ${quem(e.pol)}`, sub: (e) => [e.missao, e.resumo].filter(Boolean).join(' · ') },
+  assinou:      { ic: 'assinar', c: 'var(--good)', tx: (e) => `${quem(e.pol)} <span style="color:var(--good)">assinou o recebimento</span>`, sub: (e) => [e.missao, e.aparelho, e.cautela].filter(Boolean).join(' · ') },
+  recebeu:      { ic: 'baixar',  c: 'var(--info)', tx: (e) => `${quem(e.por)} recebeu de volta de ${quem(e.pol)}`, sub: (e) => [e.resumo, e.nota].filter(Boolean).join(' · ') },
+  assinou_dev:  { ic: 'assinar', c: 'var(--good)', tx: (e) => `${quem(e.pol)} <span style="color:var(--good)">assinou a devolução</span>`, sub: (e) => [e.missao, e.aparelho, e.cautela].filter(Boolean).join(' · ') },
+  cancelou:     { ic: 'x',       c: 'var(--crit)', tx: (e) => `${quem(e.por)} cancelou a cautela de ${quem(e.pol)}`, sub: (e) => [e.nota, e.cautela].filter(Boolean).join(' · ') },
+  prorrogou:    { ic: 'relogio', c: 'var(--warn)', tx: (e) => `${quem(e.por)} deu mais prazo a ${quem(e.pol)}`, sub: (e) => [e.nota, e.missao].filter(Boolean).join(' · ') },
+  conferiu:     { ic: 'check',   c: 'var(--good)', tx: (e) => `${quem(e.por)} conferiu a reserva`, sub: (e) => e.n ? `${e.n} número(s) corrigido(s)` : 'tudo bateu' },
+  passou:       { ic: 'arquivo', c: 'var(--acc)',  tx: (e) => `${quem(e.por)} passou o serviço para ${quem(e.pol)}`, sub: () => '' },
+  assumiu:      { ic: 'escudo',  c: 'var(--acc)',  tx: (e) => `${quem(e.por)} assumiu a reserva`, sub: () => '' },
+  designou:     { ic: 'usuario', c: 'var(--acc)',  tx: (e) => `${quem(e.por)} designou ${quem(e.pol)} armeiro`, sub: () => '' },
+  voltou:       { ic: 'baixar',  c: 'var(--info)', tx: (e) => `${quem(e.por)} registrou a volta de uma missão da Parte`, sub: (e) => e.missao || '' },
+  senha_errada: { ic: 'alerta',  c: 'var(--warn)', tx: (e) => `${quem(e.pol)} <span style="color:var(--warn)">errou a senha ao assinar</span>`, sub: (e) => [e.nota, e.cautela].filter(Boolean).join(' · ') },
+};
+function haQuanto(ms){
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return 'agora';
+  const m = Math.round(s / 60); if (m < 60) return `há ${m} min`;
+  const h = Math.round(m / 60); if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24); return `há ${d} dia${d > 1 ? 's' : ''}`;
+}
+function cvStatus(estado, texto){
+  $('cv-pt').className = 'bp-vivo' + (estado === 'on' ? ' on' : estado === 'espera' ? ' espera' : '');
+  $('cv-st').textContent = texto;
+}
+function cvLista(novoId){
+  const box = $('cv-lista');
+  if (!VIVO_EV.length){ box.innerHTML = '<div class="cv-vazio">Quando alguém assinar, entregar ou receber material, aparece aqui na hora.</div>'; return; }
+  const tudo = box.dataset.tudo === '1';
+  box.innerHTML = (tudo ? VIVO_EV : VIVO_EV.slice(0, 8)).map(e => {
+    const t = CV_TIPO[e.tipo]; if (!t) return '';
+    const sub = t.sub(e);
+    return `<div class="cv-ev${e.id === novoId ? ' novo' : ''}" data-tipo="${esc(e.tipo)}"><span class="bp-tile sm" style="--c:${t.c}"><i data-ic="${t.ic}"></i></span>
+      <div class="tx">${t.tx(e)}${sub ? `<small title="${esc(sub)}">${esc(sub)}</small>` : ''}</div>
+      <time data-em="${e.em}" title="${esc(new Date(e.em).toLocaleString('pt-BR'))}">${haQuanto(e.em)}</time></div>`;
+  }).join('') + (VIVO_EV.length > 8 ? `<button type="button" class="btn sm sec cv-mais" onclick="this.parentNode.dataset.tudo='${tudo ? '' : '1'}'; cvLista()">${tudo ? 'Mostrar menos' : 'Ver tudo (' + VIVO_EV.length + ')'}</button>` : '');
+}
+/* quem está com a janela de assinar aberta (ao vivo) + quem ainda falta assinar (da reserva) */
+function cvFaltam(){
+  if (!R) return;
+  const agora = new Map(VIVO_ASS.map(a => [a.cautela, a]));
+  const linhas = [];
+  for (const a of VIVO_ASS) linhas.push(`<div class="cv-ass agora" data-cau="${esc(a.cautela)}"><span class="bola"></span><div class="tx">${quem(a.pol)} está <b>assinando ${a.acao === 'devolver' ? 'a devolução' : 'o recebimento'}</b> agora
+    <small>${esc([a.missao, a.aparelho, 'abriu ' + haQuanto(a.em)].filter(Boolean).join(' · '))}</small></div></div>`);
+  for (const f of R.falta_assinar || []){
+    if (agora.has(f.cautela_id)) continue;
+    const rec = f.acao === 'receber';
+    linhas.push(`<div class="cv-ass" data-cau="${esc(f.cautela_id)}"><span class="bola"></span><div class="tx">Falta ${quem(`${f.policial.posto || ''} ${f.policial.guerra || f.policial.nome}`.trim())} assinar ${rec ? 'o recebimento' : 'a devolução'}
+      <small>${esc([f.missao, f.desde ? (rec ? 'entregue ' : 'devolvido ') + haQuanto(Date.parse(f.desde)) : ''].filter(Boolean).join(' · '))}</small></div></div>`);
+  }
+  $('cv-assinando').innerHTML = linhas.join('') || '<div class="cv-vazio">Ninguém precisa assinar nada agora.</div>';
+}
+function cvOnline(){
+  const l = VIVO_ON.filter(u => u.id !== VIVO_EU);
+  $('cv-on').innerHTML = l.length ? 'Também com a reserva aberta: ' + l.map(u => `<span class="p" title="${u.papel === 'chefia' ? 'administrador' : 'armeiro'}">${esc(u.nome)}</span>`).join('') : '';
+}
+function vivoMsg(m){
+  if (m.t === 'hist'){ VIVO_EU = m.voce || ''; VIVO_EV = Array.isArray(m.eventos) ? m.eventos : []; VIVO_ASS = Array.isArray(m.assinando) ? m.assinando : []; cvLista(); cvFaltam(); cvOnline(); return; }
+  if (m.t === 'online'){ VIVO_ON = Array.isArray(m.lista) ? m.lista : []; cvOnline(); return; }
+  if (m.t === 'assinando'){
+    const antes = new Set(VIVO_ASS.map(a => a.cautela));
+    VIVO_ASS = Array.isArray(m.lista) ? m.lista : []; cvFaltam();
+    const novo = VIVO_ASS.find(a => !antes.has(a.cautela));
+    if (novo) toast(`${novo.pol} abriu a cautela no celular e está assinando ${novo.acao === 'devolver' ? 'a devolução' : 'o recebimento'}…`);
+    return;
+  }
+  if (m.t !== 'evento' || !m.e) return;
+  const e = m.e;
+  VIVO_EV.unshift(e); VIVO_EV = VIVO_EV.slice(0, 200);
+  cvLista(e.id);
+  if (e.tipo === 'assinou' || e.tipo === 'assinou_dev') toast(`✔ ${e.pol} assinou ${e.tipo === 'assinou' ? 'o recebimento' : 'a devolução'}.`);
+  else if (e.tipo === 'senha_errada') toast(`${e.pol} errou a senha ao tentar assinar.`);
+  if (e.tipo !== 'senha_errada') vivoRecarregar();
+}
+function vivoRecarregar(){ clearTimeout(VIVO_RECARGA); VIVO_RECARGA = setTimeout(() => carregar(true), 700); }
+function vivoLigar(){
+  if (VIVO_WS || !AUTH.logged || !R || typeof WebSocket === 'undefined') return;
+  clearTimeout(VIVO_TIMER);
+  cvStatus('espera', 'conectando…');
+  let ws;
+  try { ws = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/cautela/ao-vivo?t=' + encodeURIComponent(AUTH.token)); }
+  catch(e){ cvStatus('', 'indisponível — a página se atualiza a cada 30 s'); return; }
+  VIVO_WS = ws;
+  ws.onopen = () => {
+    VIVO_ESPERA = 2000; cvStatus('on', 'ao vivo — não precisa atualizar a página');
+    clearInterval(VIVO_PING); VIVO_PING = setInterval(() => { try { ws.send('{"t":"ping"}'); } catch(e){} }, 25000);
+    if (VIVO_RELIGA) carregar(true);   // o que mudou enquanto estava sem conexão
+    VIVO_RELIGA = true;
+  };
+  ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch(e){ return; } vivoMsg(m); };
+  ws.onclose = () => {
+    clearInterval(VIVO_PING);
+    if (VIVO_WS !== ws) return;
+    VIVO_WS = null; VIVO_ON = []; cvOnline();
+    if (!AUTH.logged || !R){ cvStatus('', 'desligado'); return; }
+    cvStatus('espera', 'reconectando…');
+    VIVO_TIMER = setTimeout(vivoLigar, VIVO_ESPERA);
+    VIVO_ESPERA = Math.min(VIVO_ESPERA * 2, 30000);
+  };
+}
+function vivoDesligar(){
+  clearTimeout(VIVO_TIMER); clearInterval(VIVO_PING);
+  const ws = VIVO_WS; VIVO_WS = null;
+  if (ws) try { ws.close(1000, 'saiu'); } catch(e){}
+  VIVO_EV = []; VIVO_ASS = []; VIVO_ON = []; VIVO_RELIGA = false;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && R && !VIVO_WS){ VIVO_ESPERA = 2000; vivoLigar(); } });
+// sem WebSocket: relê a reserva a cada 30 s (só com a aba visível)
+setInterval(() => { if (R && AUTH.logged && !document.hidden && !(VIVO_WS && VIVO_WS.readyState === 1)) carregar(true); }, 30000);
+// o "há X min" envelhece sozinho
+setInterval(() => { if (!R) return; document.querySelectorAll('#cv-lista time[data-em]').forEach(t => { t.textContent = haQuanto(Number(t.dataset.em)); }); cvFaltam(); }, 30000);
+
 /* Ícones: o HTML montado pelo JS traz <i data-ic="…">; o bp-casca.js troca pelo SVG. */
 if (window.BPCasca && BPCasca.icones){
   new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); })

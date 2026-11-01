@@ -119,6 +119,52 @@ body{
 .user-chip.anon{opacity:.55;border-color:rgba(148,163,184,.28);color:var(--muted);box-shadow:none;
   background:rgba(148,163,184,.07)}
 
+/* ── TOPO: Entrar / nome do policial com menu (01/11/2026) ── */
+.btn-topo,.btn-entrar{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:9px 14px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.3px;white-space:nowrap;text-decoration:none;transition:all .18s}
+.btn-topo{background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.3);color:var(--text)}
+.btn-topo:hover{background:rgba(148,163,184,.18);border-color:rgba(245,197,24,.45)}
+.btn-entrar{background:linear-gradient(135deg,#c9a030,#F5C518);border:0;color:#000;font-weight:800;box-shadow:0 0 18px rgba(245,197,24,.22)}
+.btn-entrar:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(245,197,24,.4)}
+.btn-entrar[hidden],.um-wrap[hidden],.user-menu[hidden]{display:none}
+.um-wrap{position:relative}
+button.user-chip{cursor:pointer}
+button.user-chip:hover{border-color:rgba(245,197,24,.6)}
+.uc-seta{font-size:11px;opacity:.75;margin-left:2px;transition:transform .18s}
+.user-chip[aria-expanded="true"] .uc-seta{transform:rotate(180deg)}
+.user-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:240px;z-index:1200;padding:6px;border-radius:12px;
+  background:#0d1322;border:1px solid rgba(245,197,24,.28);box-shadow:0 16px 44px rgba(0,0,0,.6);animation:umIn .16s ease}
+@keyframes umIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.user-menu .um-quem{padding:8px 10px 9px;border-bottom:1px solid rgba(148,163,184,.16);margin-bottom:4px;font-size:11px;color:var(--muted);line-height:1.35}
+.user-menu .um-quem b{display:block;font-size:13px;color:var(--text)}
+.user-menu a,.user-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:8px;border:0;background:none;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;text-align:left;text-decoration:none;cursor:pointer}
+.user-menu a:hover,.user-menu button:hover{background:rgba(245,197,24,.1)}
+.user-menu #um-admin{color:var(--yellow)}
+.user-menu #btn-sair{color:#f87171}
+.user-menu #btn-sair:hover{background:rgba(220,38,38,.14)}
+.user-menu .btn-sair[hidden]{display:none}
+/* janela de login */
+#login-topo{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;padding:16px;
+  background:rgba(4,7,14,.78);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+#login-topo.on{display:flex;animation:wcFade .2s ease}
+#login-topo .lt-box{width:100%;max-width:380px;background:#0d1322;border:1px solid rgba(245,197,24,.28);border-radius:16px;
+  padding:26px 24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.6);position:relative}
+#login-topo .lt-brasao{display:block;height:74px;width:auto;margin:0 auto 10px}
+#login-topo h2{text-align:center;font-family:'Rajdhani',sans-serif;font-size:22px;color:var(--yellow);letter-spacing:.6px;margin:0}
+#login-topo .lt-sub{text-align:center;font-size:12px;color:var(--muted);margin:4px 0 18px}
+#login-topo label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+#login-topo input{width:100%;box-sizing:border-box;padding:11px 12px;margin-bottom:12px;background:#151d30;border:1px solid #2a3550;
+  border-radius:9px;color:var(--text);font-size:15px}
+#login-topo input:focus{outline:none;border-color:rgba(245,197,24,.6);box-shadow:0 0 0 3px rgba(245,197,24,.14)}
+#login-topo .lt-erro{color:#f87171;font-size:13px;min-height:18px;margin-bottom:8px}
+#login-topo .lt-ok{width:100%;padding:12px;border:0;border-radius:9px;background:linear-gradient(135deg,#c9a030,#F5C518);color:#000;
+  font-weight:800;font-size:15px;cursor:pointer}
+#login-topo .lt-ok:disabled{opacity:.6;cursor:wait}
+#login-topo .lt-x{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+#login-topo .lt-nota{text-align:center;font-size:11px;color:var(--muted);margin-top:12px;line-height:1.4}
+#mobile-topbar .mt-user{cursor:pointer}
+
 /* ── ANIMAÇÃO DE BOAS-VINDAS (pós-login) ── */
 #welcome-ov{
   position:fixed;inset:0;z-index:9999;display:none;
@@ -195,6 +241,7 @@ body{padding-left:268px}
 .sb-pe{padding:10px 12px 12px;border-top:1px solid var(--border2);display:flex;flex-direction:column;gap:2px;background:var(--sb-pe)}
 .sb-pe .sb-item{padding:8px 10px}
 #nav-bpc-sistemas{display:none!important}   /* a própria barra já lista todos os sistemas */
+#nav-bpc-tema{display:none!important}       /* 01/11/2026: tema saiu do painel (pedido do usuário) */
 .sb-apres{color:var(--yellow)}
 .sb-spacer{display:none}
 @media(max-width:900px){
@@ -911,6 +958,12 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-01", "titulo": "Menu só com os painéis e login no topo", "quem": "todos", "itens": [
+    "O menu lateral do painel mostra só o que é analítico: indicadores, mapa, gráficos e os painéis de cada seção (P1 a P4).",
+    "Botão Entrar no topo da tela: você entra uma vez e as outras ferramentas do site abrem sem pedir a senha de novo.",
+    "Depois de entrar, toque no seu nome para abrir a Área administrativa, trocar a senha ou sair.",
+    "Todos os Sistemas agora fica no topo, ao lado do seu nome."
+  ] },
   { "data": "2026-10-31", "titulo": "Rodovias BR e RO novas nos mapas", "quem": "todos", "itens": [
     "Os mapas de Ocorrências e de Policiais em Campo usam as mesmas rodovias da Central de Inteligência: BR pelo DNIT e RO pelo IBGE 2025, em cima da estrada real.",
     "Linha cheia = asfalto; linha tracejada = estrada de terra. Placas BR/RO ao longo da via.",
@@ -949,6 +1002,23 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 <div class="classif-banner">⚠ USO RESTRITO — INFORMAÇÃO OPERACIONAL — POLÍCIA MILITAR DO ESTADO DE RONDÔNIA ⚠</div>
 
 <!-- ANIMAÇÃO DE BOAS-VINDAS (aparece após o login) -->
+<!-- Janela de login do topo (01/11/2026): entra uma vez e vale para todo o site -->
+<div id="login-topo" aria-hidden="true" onclick="if(event.target===this)fecharLoginTopo()">
+  <form class="lt-box" id="lt-form" onsubmit="return enviarLoginTopo(event)" role="dialog" aria-modal="true" aria-labelledby="lt-titulo">
+    <button type="button" class="lt-x" onclick="fecharLoginTopo()" aria-label="Fechar">×</button>
+    <img class="lt-brasao" src="LOGOS/bpfron_transp.avif" alt="">
+    <h2 id="lt-titulo">Entrar no BPFRON</h2>
+    <div class="lt-sub">Use o seu login e senha do painel.</div>
+    <label for="lt-user">Usuário</label>
+    <input id="lt-user" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    <label for="lt-pass">Senha</label>
+    <input id="lt-pass" type="password" autocomplete="current-password" required>
+    <div class="lt-erro" id="lt-erro"></div>
+    <button type="submit" class="lt-ok" id="lt-btn">Entrar</button>
+    <div class="lt-nota">Depois de entrar, as outras ferramentas do site abrem sem pedir a senha de novo (a sessão dura 8 horas).</div>
+  </form>
+</div>
+
 <div id="welcome-ov" onclick="hideWelcome()">
   <div class="wc-box">
     <img class="wc-brasao" id="wc-brasao" alt="Brasão BPFRON" src="LOGOS/bpfron_transp.avif">
@@ -964,14 +1034,15 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   <button class="mt-burger" onclick="toggleNav()" aria-label="Menu">☰</button>
   <img class="mt-logo" src="LOGOS/bpfron_transp.avif" alt="">
   <div class="mt-title">BPFRON<small>Painel Analítico</small></div>
-  <div class="mt-user" id="mt-user"></div>
+  <div class="mt-user" id="mt-user" role="button" tabindex="0" onclick="mtUserClique()">Entrar</div>
 </div>
 <div id="nav-backdrop" onclick="closeNav()"></div>
 
 <!-- BARRA LATERAL DE NAVEGAÇÃO (31/10/2026): Painel Analítico + as seções do batalhão.
      As seções CMD, P1…P6, efetivo e administração saem do CATALOGO do bp-casca.js
      (o mesmo do sistemas.html e do Portal da Gestão): sistema novo entra lá, não aqui.
-     Páginas internas do painel (index.html?pg=X) viram botão nav-X (showPage). -->
+     Páginas internas do painel (index.html?pg=X) viram botão nav-X (showPage).
+     01/11/2026: só entram as páginas internas (analíticas); ferramentas de gestão ficam fora. -->
 <nav id="sidebar" aria-label="Menu do painel">
   <div class="sb-brand">
     <img class="sb-emblem-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão do BPFRON">
@@ -994,7 +1065,6 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     </section>
   </div>
   <div class="sb-pe">
-    <a class="sb-item" id="nav-sistemas" href="sistemas.html"><span class="ic">🧭</span> <span class="t">Todos os Sistemas</span></a>
     <button class="sb-item sb-apres" id="btn-apresentacao" onclick="toggleApresentacao()"><span class="ic">▶</span> Apresentação</button>
   </div>
 </nav>
@@ -1006,15 +1076,22 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
   if (!C || !corpo) return;
   var IDS = { busca: 'nav-busca-oc', pesquisas: 'nav-pesquisas', admin: 'nav-admin' }; // ids antigos (applyUserRestrictions)
   var PULA = { painel: 1, sistemas: 1 };                    // o próprio painel e o "Todos os Sistemas" do rodapé
+  // 01/11/2026 (pedido do usuário): o menu do dashboard mostra só o que é analítico,
+  // ou seja, os painéis do próprio dashboard (index.html?pg=X). As ferramentas de
+  // gestão (outras páginas) ficam no Portal da Gestão e no "Todos os Sistemas".
+  var ANALITICO = function (i) { return /^index\.html\?pg=[a-z0-9-]+$/.test(i.href); };
+  // legenda da seção no menu do painel (a do bp-casca.js cita as ferramentas de gestão)
+  var LEGENDA = { p1: 'Ficha consolidada do efetivo.', p2: 'Consultas de envolvidos e veículos.',
+    p3: 'Policiais em campo, recursos obtidos e diárias.', p4: 'Situação da frota e material bélico.' };
   var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var semAc = function (t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); };
   var porId = {};
   C.GRUPOS.forEach(function (g) {
-    var itens = C.CATALOGO.filter(function (i) { return i.grupo === g.id && !PULA[i.id]; });
+    var itens = C.CATALOGO.filter(function (i) { return i.grupo === g.id && !PULA[i.id] && ANALITICO(i); });
     if (!itens.length) return;
     var titulo = g.nome.replace(/^P\d\s*·\s*/, '');
     var h = '<button type="button" class="sb-sec-h" aria-expanded="false"><span class="sb-sig">' + esc(g.sigla) + '</span>' +
-      '<span class="sb-sec-t">' + esc(titulo) + '<small>' + esc(g.desc) + '</small></span><span class="sb-seta"></span></button><div class="sb-sec-b"><div>';
+      '<span class="sb-sec-t">' + esc(titulo) + '<small>' + esc(LEGENDA[g.id] || g.desc) + '</small></span><span class="sb-seta"></span></button><div class="sb-sec-b"><div>';
     itens.forEach(function (i) {
       porId[i.id] = i;
       var m = /^index\.html\?pg=([a-z0-9-]+)$/.exec(i.href);
@@ -1097,13 +1174,25 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
     <div class="hdr-right">
       <div class="hdr-right-inner">
         <div class="hdr-actions">
+          <!-- 01/11/2026: login como num site comum. Deslogado: Todos os Sistemas + Entrar.
+               Logado: o nome vira menu (Área administrativa, Trocar senha, Sair).
+               O login fica guardado (bp_token) e vale para todas as páginas do site. -->
           <div class="user-box">
-                        <div class="user-chip" id="user-chip">
-              <span class="uc-ico">👤</span>
-              <span class="uc-nome" id="uc-nome">Visitante</span>
+            <a class="btn-topo" id="btn-sistemas" href="sistemas.html" title="Lista completa dos sistemas do BPFRON">🧭 Todos os Sistemas</a>
+            <button type="button" class="btn-entrar" id="btn-entrar" onclick="abrirLoginTopo()">🔐 Entrar</button>
+            <div class="um-wrap" id="um-wrap" hidden>
+              <button type="button" class="user-chip" id="user-chip" onclick="toggleUserMenu(event)" aria-haspopup="true" aria-expanded="false" title="Minha conta">
+                <span class="uc-ico">👤</span>
+                <span class="uc-nome" id="uc-nome">Visitante</span>
+                <span class="uc-seta" aria-hidden="true">▾</span>
+              </button>
+              <div class="user-menu" id="user-menu" role="menu" hidden>
+                <div class="um-quem" id="um-quem"></div>
+                <a href="gestao.html" id="um-admin" role="menuitem">🏛️ Área administrativa</a>
+                <button type="button" class="btn-sair" id="btn-senha" role="menuitem" onclick="fecharUserMenu();window.bpTrocarSenha&&bpTrocarSenha()" hidden>🔑 Trocar senha</button>
+                <button type="button" class="btn-sair" id="btn-sair" role="menuitem" onclick="fecharUserMenu();apiLogout()">⎋ Sair</button>
+              </div>
             </div>
-            <button class="btn-sair" id="btn-senha" onclick="window.bpTrocarSenha&&bpTrocarSenha()" title="Trocar minha senha" hidden style="background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.35);color:#cbd5e1">🔑 Senha</button>
-            <button class="btn-sair" id="btn-sair" onclick="apiLogout()" title="Encerrar sessão">⎋ Sair</button>
           </div>
           <div class="last-upd" id="last-upd">Nunca atualizado</div>
         </div>
@@ -3407,8 +3496,73 @@ function renderUserChip(){
   if (sair) sair.hidden = !logged;      // só aparece com sessão aberta
   const senha = document.getElementById("btn-senha");
   if (senha) senha.hidden = !logged;
+  // topo (01/11/2026): deslogado = botão Entrar; logado = nome com menu
+  const ent = document.getElementById('btn-entrar');
+  if (ent) ent.hidden = logged;
+  const um = document.getElementById('um-wrap');
+  if (um) um.hidden = !logged;
+  const quem = document.getElementById('um-quem');
+  if (quem) quem.innerHTML = logged ? '<b></b>Login: ' : '';
+  if (quem && logged){ quem.firstChild.textContent = nome; quem.appendChild(document.createTextNode(AUTH.user)); }
+  if (!logged) fecharUserMenu();
   const mt = document.getElementById('mt-user');
-  if (mt) mt.textContent = nome;
+  if (mt) mt.textContent = logged ? nome : '🔐 Entrar';
+}
+
+/* ── Menu do usuário e janela de login do topo (01/11/2026) ── */
+function toggleUserMenu(ev){
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('user-menu'), b = document.getElementById('user-chip');
+  if (!m) return;
+  const abrir = m.hidden;
+  m.hidden = !abrir;
+  if (b) b.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+}
+function fecharUserMenu(){
+  const m = document.getElementById('user-menu'), b = document.getElementById('user-chip');
+  if (m) m.hidden = true;
+  if (b) b.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#um-wrap')) fecharUserMenu(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  fecharUserMenu();
+  if (document.getElementById('login-topo')?.classList.contains('on')) fecharLoginTopo();
+});
+function abrirLoginTopo(){
+  const ov = document.getElementById('login-topo');
+  if (!ov) return;
+  if (typeof closeNav === 'function') closeNav();
+  document.getElementById('lt-erro').textContent = '';
+  ov.classList.add('on'); ov.setAttribute('aria-hidden', 'false');
+  setTimeout(() => { const u = document.getElementById('lt-user'); (u.value ? document.getElementById('lt-pass') : u).focus(); }, 60);
+}
+function fecharLoginTopo(){
+  const ov = document.getElementById('login-topo');
+  if (!ov) return;
+  ov.classList.remove('on'); ov.setAttribute('aria-hidden', 'true');
+  document.getElementById('lt-pass').value = '';
+}
+async function enviarLoginTopo(ev){
+  ev.preventDefault();
+  const ok = await submitLogin(
+    (document.getElementById('lt-user').value || '').trim(),
+    document.getElementById('lt-pass').value || '',
+    document.getElementById('lt-btn'),
+    document.getElementById('lt-erro')
+  );
+  if (ok){
+    fecharLoginTopo();
+    gateConsultas();
+    if (GESTAO_PAGES.includes(currentPage) || currentPage === 'consultas') showPage(currentPage);
+  }
+  return false;
+}
+// celular: o selo do topo abre o login ou o menu da conta
+function mtUserClique(){
+  if (!(typeof AUTH !== 'undefined' && AUTH.logged)){ abrirLoginTopo(); return; }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => toggleUserMenu(), 220);
 }
 
 // Overlay de boas-vindas: aparece após o login e some sozinho.

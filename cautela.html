@@ -207,6 +207,10 @@ async function api(path, opt){
   return d;
 }
 const apiPost = (path, body) => api(path, { method:'POST', headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify(body || {}) });
+// a reserva vê ao vivo quem está com a janela de assinar aberta (01/11/2026). Só um aviso: se falhar, nada muda aqui.
+function avisarAssinando(id, acao, aberto){
+  try { fetch(API_BASE + '/api/cautela/assinando', { method:'POST', keepalive: true, headers: cab({ 'Content-Type':'application/json' }), body: JSON.stringify({ cautela_id: id, acao, aberto }) }).catch(() => {}); } catch(e){}
+}
 
 /* ---------------- entrada ---------------- */
 let OUTRO = '';   // no portal: a sessão deste aparelho é de outra pessoa
@@ -435,12 +439,13 @@ async function acao(b){
   const dev = receber ? null : c.devolucoes.find(d => d.evento === b.dataset.ref);
   const lista = receber ? c.itens.map(i => `${i.qtd}× ${i.descricao}${i.serie ? ' (Nº ' + i.serie + ')' : ''}`)
     : dev.itens.map(x => `${x.qtd}× ${c.itens[x.i].descricao}${x.estado !== 'ok' ? ' — ' + x.estado.toUpperCase() + (x.obs ? ': ' + x.obs : '') : ''}`);
+  avisarAssinando(id, a, true);
   const senha = await pedirSenha({
     titulo: receber ? 'Assinar o recebimento' : 'Assinar a entrega (devolução)',
     texto: `<div class="itens" style="margin:10px 0">${lista.map(t => `<div><span>${esc(t)}</span></div>`).join('')}</div>`,
     conferir: receber ? 'Conferi e estou recebendo exatamente estes itens.' : 'Entreguei exatamente estes itens à reserva.',
   });
-  if (!senha) return;
+  if (!senha){ avisarAssinando(id, a, false); return; }
   b.disabled = true;
   try {
     const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, senha });
@@ -448,6 +453,7 @@ async function acao(b){
     await carregar();
   } catch(e){
     b.disabled = false;
+    avisarAssinando(id, a, false);
     if (e.status === 401){ CA.esquecer(); D = null; boot(); return; }
     toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi assinado.' : e.message);
   }
