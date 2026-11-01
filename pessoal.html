@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P1 · Seção Pessoal (01/11/2026). Vida funcional do efetivo num lugar só:
+     afastamentos por saúde, férias, licenças e dispensas, recompensas, punições e
+     comportamento, outras alterações, calendário, mapa da força do dia e os
+     documentos de cada policial no Google Drive (categoria › "RE - NOME" › arquivo).
+     Cursos e sistemas vêm da ficha antiga (p1.html); material bélico vem da Carga Pessoal.
+     Dois modos:
+       gestão  — login do dashboard com "P1 · Ficha do Efetivo" (gestor) ou
+                 "P1 · Seção Pessoal (ver)" (consulta, sem punições/saúde/documentos);
+       policial — RE + senha do Portal (ou ?portal=1 dentro do Portal do Policial):
+                 vê o que é dele e envia atestado/documento para a P1 conferir.
+     Dados no Worker (backend/p1sec.js). -->
+<script>try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<script src="cautela-acesso.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P1 · Seção Pessoal · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1240px}
+.bp-topo-in{max-width:1300px}
+html.portal .bp-topo,html.portal .bp-fundo{display:none}
+html.portal .bp-wrap{padding-top:14px}
+html.portal .bp-heroi .bp-selo{display:none}
+
+/* entrada (o cautela-acesso.js monta .btn/.msg/label/input) */
+.ps-login label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:14px 0 7px}
+.ps-login input{width:100%;background:var(--surf2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;color:var(--t1);font:inherit;font-size:16px;outline:none;min-height:50px}
+.ps-login input:focus{border-color:var(--acc-line);box-shadow:0 0 0 4px var(--acc-soft)}
+.ps-login .btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;padding:13px 18px;min-height:48px;font-size:15.5px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--acc-ink);margin-top:14px}
+.ps-login .btn.full{width:100%}
+.ps-login .btn:disabled{opacity:.55}
+.ps-login .msg{font-size:14px;margin-top:10px;min-height:20px;color:var(--muted)}
+.ps-login .msg.err{color:var(--crit)}.ps-login .msg.ok{color:var(--good)}
+
+.ps-seg{display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--surf);border:1px solid var(--line);flex-wrap:wrap;margin-top:14px}
+.ps-seg button{flex:1;min-width:110px;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:0;border-radius:11px;padding:10px;color:var(--muted);font:700 14px Inter,sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.ps-seg button:hover{color:var(--t1);background:var(--surf2)}
+.ps-seg button.on{background:var(--acc);color:var(--acc-ink)}
+.ps-seg .n{min-width:20px;padding:1px 7px;border-radius:999px;background:var(--crit);color:#fff;font-size:11.5px}
+.ps-seg .n:empty{display:none}
+.ps-filtros{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr)) auto;gap:12px;align-items:end}
+.ps-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ps-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin-top:14px}
+.ps-pol{display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.ps-pol:hover{border-color:var(--acc-line)}
+.ps-pol .ini{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-weight:800;font-size:14px;color:var(--acc-ink);background:linear-gradient(135deg,var(--acc),var(--acc2));flex:none}
+.ps-pol .tx{flex:1;min-width:0}
+.ps-pol .tx b{display:block;color:var(--t1);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-pol .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-cor{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c,#94a3b8);flex:none}
+.ps-tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;border:1px solid color-mix(in srgb,var(--c,#94a3b8) 45%,transparent);background:color-mix(in srgb,var(--c,#94a3b8) 14%,transparent);color:var(--t1);white-space:nowrap}
+.ps-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--c,#94a3b8);border-radius:14px;background:var(--surf)}
+.ps-item .tx{flex:1;min-width:0;font-size:14px;color:var(--t2)}
+.ps-item .tx > b{color:var(--t1)}
+.ps-item .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+.ps-item .tx p{margin:6px 0 0;white-space:pre-wrap;color:var(--t2);font-size:13.5px}
+.ps-item .ac{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ps-duas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ps-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ps-form .inteira{grid-column:1/-1}
+.ps-form textarea{width:100%;min-height:80px;resize:vertical;background:transparent;border:0;color:var(--t1);font:inherit;outline:none;padding:10px 0}
+.ps-res{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;margin-top:8px}
+.ps-res:empty{display:none}
+.ps-res button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surf);color:var(--t1);font:inherit;cursor:pointer}
+.ps-res button:hover{border-color:var(--acc-line);background:var(--card-h)}
+.ps-res button small{display:block;color:var(--muted);font-size:12.5px}
+.ps-esc{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--good-line);background:var(--good-soft);border-radius:14px}
+.ps-esc .tx{flex:1;min-width:0}
+.ps-esc .tx small{display:block;color:var(--muted);font-size:12.5px}
+.ps-dados{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 16px;font-size:14px;color:var(--t1)}
+.ps-dados span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.ps-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ps-hist{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow:auto}
+.ps-hist div{border-left:3px solid var(--acc-line);padding:2px 0 2px 10px;font-size:13px;color:var(--t2)}
+.ps-hist small{display:block;color:var(--muted);font-size:12px}
+.bp-modal-cx.larga{width:min(980px,100%)}
+
+/* calendário */
+.ps-cal-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ps-cal-cab h3{font-family:'Rajdhani',sans-serif;font-size:22px;color:var(--t1);margin:0;min-width:190px}
+.ps-leg{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ps-leg button{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font:700 12.5px Inter,sans-serif;cursor:pointer;border:1px solid var(--line2);background:var(--surf);color:var(--t2)}
+.ps-leg button.off{opacity:.38;text-decoration:line-through}
+.ps-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px}
+.ps-cal .dsem{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);text-align:center;padding:4px 0}
+.ps-dia{min-height:104px;border:1px solid var(--line);border-radius:12px;background:var(--surf);padding:6px;display:flex;flex-direction:column;gap:3px;cursor:pointer;text-align:left;font:inherit;color:inherit;overflow:hidden}
+.ps-dia:hover{border-color:var(--acc-line)}
+.ps-dia.fora{opacity:.35}
+.ps-dia.hoje{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.ps-dia .n{font-size:12.5px;font-weight:800;color:var(--t2)}
+.ps-ev{display:block;font-size:11px;line-height:1.25;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--c) 22%,transparent);border-left:3px solid var(--c);color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-ev.ag{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 18%,transparent) 0 5px,transparent 5px 10px)}
+.ps-mais{font-size:11px;color:var(--muted);font-weight:700}
+.ps-agenda{display:none;flex-direction:column;gap:8px;margin-top:12px}
+.ps-agenda .dia{border:1px solid var(--line);border-radius:14px;background:var(--surf);padding:10px 12px}
+.ps-agenda .dia.hoje{border-color:var(--acc)}
+.ps-agenda .dia > b{display:block;color:var(--t1);font-size:13.5px;margin-bottom:6px;text-transform:capitalize}
+.ps-agenda .ps-ev{font-size:12.5px;padding:4px 8px;margin-top:3px;white-space:normal}
+
+.ps-tabwrap{margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:auto;background:var(--card)}
+.ps-tab{width:100%;border-collapse:collapse;font-size:14px}
+.ps-tab th{text-align:left;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--surf2);padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ps-tab td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top}
+.ps-tab tbody tr:last-child td{border-bottom:0}
+.ps-tab tbody tr.clica{cursor:pointer}
+.ps-tab tbody tr.clica:hover{background:var(--card-h)}
+.ps-tab td.nm{color:var(--t1);font-weight:700}
+.ps-tab td.nm small,.ps-tab td small{display:block;color:var(--muted);font-weight:400;font-size:12.5px}
+.ps-tab td.n{white-space:nowrap;font-variant-numeric:tabular-nums}
+
+@media (max-width:900px){ .ps-filtros{grid-template-columns:1fr 1fr} .ps-filtros .bp-campo:first-child{grid-column:1/-1} .ps-duas{grid-template-columns:1fr} }
+@media (max-width:760px){
+  .bp-modal-cx.larga{width:100%}
+  .ps-form{grid-template-columns:1fr}
+  .ps-cal{display:none}
+  .ps-agenda{display:flex}
+  .ps-item{flex-wrap:wrap}
+  .ps-item .ac{width:100%;justify-content:flex-start}
+  .ps-tabwrap{border:0;background:none;border-radius:0}
+  .ps-tab thead{display:none}
+  .ps-tab,.ps-tab tbody,.ps-tab tr,.ps-tab td{display:block;width:100%}
+  .ps-tab tbody{display:flex;flex-direction:column;gap:10px}
+  .ps-tab tbody tr{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:10px 12px}
+  .ps-tab td{border:0;padding:3px 0;display:flex;gap:10px}
+  .ps-tab td::before{content:attr(data-r);flex:0 0 96px;color:var(--muted);font-size:12px;text-transform:uppercase;padding-top:1px}
+}
+
+/* ---------------- impressão (A4) ---------------- */
+#imp{display:none}
+@media print{
+  html,body{background:#fff !important;color:#000}
+  body > *:not(#imp){display:none !important}
+  #imp{display:block;background:#fff;font-family:'Inter',Arial,sans-serif;font-size:9.5pt;color:#000}
+  #imp .icab{display:flex;align-items:center;gap:14px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px}
+  #imp .icab img{height:62px}
+  #imp .icab small{display:block;font-size:8.5pt}
+  #imp h1{font-size:14pt;margin:3px 0 0}
+  #imp h2{font-size:10.5pt;margin:14px 0 5px;border-bottom:1px solid #999;padding-bottom:2px;text-transform:uppercase}
+  #imp .idados{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 14px;border:1px solid #000;padding:8px 10px}
+  #imp .idados span{display:block;font-size:7.5pt;text-transform:uppercase;color:#333}
+  #imp table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #imp th,#imp td{border:1px solid #777;padding:3px 5px;text-align:left;vertical-align:top;color:#000;background:none}
+  #imp th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7.5pt;text-transform:uppercase}
+  #imp tr{break-inside:avoid}
+  #imp .irod{margin-top:18px;font-size:7.5pt;color:#444;border-top:1px solid #aaa;padding-top:5px}
+  @page{size:A4 portrait;margin:13mm 11mm}
+}
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-01", "titulo": "P1 · Seção Pessoal no ar", "quem": "todos", "itens": [
+    "Afastamentos por saúde, férias, licenças, recompensas e outras alterações de cada policial num lugar só.",
+    "Calendário do mês com tudo o que foi lançado e o mapa da força de hoje (quem está disponível, de férias, afastado ou de licença).",
+    "O policial manda o atestado ou outro documento pelo Portal do Policial; a P1 confere e o afastamento entra no calendário."
+  ] },
+  { "data": "2026-11-01", "titulo": "Para a P1", "quem": "gestor", "itens": [
+    "Novo lançamento: férias, saúde, licenças e dispensas, recompensas, punições e comportamento (só a P1 vê) e outras alterações.",
+    "Aba Conferir: atestados e documentos enviados pelos policiais, para homologar (pode acertar as datas) ou recusar com motivo.",
+    "Aba Documentos: crie uma categoria nova e a pasta dela nasce sozinha no Drive; a pasta de cada policial nasce no 1º envio.",
+    "Ficha do policial com cursos, sistemas de acesso, material bélico em carga e documentos — e impressão em A4."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P1 · Seção Pessoal</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="ps-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="ps-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- ENTRADA -->
+  <div id="ps-login" style="display:none;max-width:460px;margin:24px auto 0">
+    <div class="bp-card topo-acc ps-login">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P1 · Seção Pessoal</h2><small>Policial: RE e senha do Portal · P1: login do dashboard</small></div></div>
+      <div id="ps-login-form"></div>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="ps-negado" style="display:none;max-width:580px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>A gestão da P1 é liberada login por login</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="ps-negado-tx">Seu login não tem acesso à P1 · Seção Pessoal.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“P1 · Seção Pessoal (ver)”</b> (só consultar) ou <b>“P1 · Ficha do Efetivo”</b> (gestor da P1) no Painel de Controle. É policial? Entre pelo <a href="policial.html" style="color:var(--acc)">Portal do Policial</a>.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="ps-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <!-- ===================== GESTÃO ===================== -->
+  <div id="ps-gestao" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P1 · Pessoal</span>
+        <h1>Vida funcional do <em>efetivo</em></h1>
+        <p>Afastamentos, férias, licenças, recompensas e documentos de cada policial, com o calendário e o mapa da força de hoje. <span class="ps-ges">Você lança, confere os atestados e organiza os documentos.</span><span class="ps-ver">Você está no modo consulta (sem punições, motivo de saúde e documentos).</span></p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn ps-ges" onclick="abrirLanc()"><i data-ic="mais"></i>Novo lançamento</button>
+          <button type="button" class="bp-btn sec ps-ges" onclick="irAba('conf')"><i data-ic="check"></i>Conferir <b id="ps-n-conf"></b></button>
+          <button type="button" class="bp-btn sec" onclick="carregar()"><i data-ic="atualizar"></i>Atualizar</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="ps-seg" id="ps-abas">
+      <button type="button" data-v="hoje" class="on"><i data-ic="grade"></i>Hoje</button>
+      <button type="button" data-v="cal"><i data-ic="calendario"></i>Calendário</button>
+      <button type="button" data-v="ef"><i data-ic="usuarios"></i>Efetivo</button>
+      <button type="button" data-v="lan"><i data-ic="arquivo"></i>Lançamentos</button>
+      <button type="button" data-v="conf" class="ps-ges"><i data-ic="check"></i>Conferir <span class="n" id="ps-n-conf2"></span></button>
+      <button type="button" data-v="doc" class="ps-ges"><i data-ic="pasta"></i>Documentos</button>
+    </div>
+    <div id="ps-corpo"></div>
+  </div>
+
+  <!-- ===================== POLICIAL ===================== -->
+  <div id="ps-pol" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P1 · Seção Pessoal</span>
+        <h1 id="pp-tit">Minha vida <em>funcional</em></h1>
+        <p>Seus afastamentos, férias, licenças e recompensas lançados pela P1, e os documentos que você mandou. Atestado ou outro documento? Envie por aqui: a P1 confere e lança.</p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn" onclick="abrirEnvio()"><i data-ic="enviar"></i>Enviar atestado ou documento</button>
+          <button type="button" class="bp-btn sec" onclick="carregar()"><i data-ic="atualizar"></i>Atualizar</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+    <div id="pp-corpo"></div>
+  </div>
+</main>
+
+<!-- FICHA DO POLICIAL -->
+<div class="bp-modal" id="m-ficha" onclick="if(event.target===this)fechar('m-ficha')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-ficha-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-ficha-tit">Policial</h3><small id="m-ficha-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ficha')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="ficha-corpo"></div>
+  </div>
+</div>
+
+<!-- LANÇAMENTO -->
+<div class="bp-modal" id="m-lanc" onclick="if(event.target===this)fechar('m-lanc')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-lanc-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="mais"></i></span>
+      <div><h3 id="m-lanc-tit">Novo lançamento</h3><small id="m-lanc-sub">O que a P1 lança já entra homologado</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-lanc')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="ps-form">
+      <div class="inteira">
+        <div id="la-pol-busca"><div class="bp-campo"><label for="la-pol-q">Policial</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="la-pol-q" placeholder="Nome de guerra, nome ou RE" autocomplete="off" oninput="buscarPol()"></div></div>
+          <div class="ps-res" id="la-pol-res"></div></div>
+        <div id="la-pol-sel"></div>
+      </div>
+      <div class="bp-campo"><label for="la-grupo">Tipo</label>
+        <div class="bp-in"><i data-ic="pasta"></i><select id="la-grupo" onchange="trocouGrupo()"></select></div></div>
+      <div class="bp-campo"><label for="la-sub">O que é</label>
+        <div class="bp-in"><i data-ic="editar"></i><input id="la-sub" list="la-sub-dl" autocomplete="off" oninput="mostrarCampos()" placeholder="Escolha ou escreva"></div>
+        <datalist id="la-sub-dl"></datalist></div>
+      <div class="bp-campo"><label for="la-ini" id="la-ini-l">Início</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="la-ini" type="date" oninput="contarDias()"></div></div>
+      <div class="bp-campo" id="la-fim-w"><label for="la-fim">Término</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="la-fim" type="date" oninput="contarDias()"></div></div>
+      <div class="bp-campo" id="la-dias-w"><label for="la-dias">Quantos dias</label>
+        <div class="bp-in"><i data-ic="relogio"></i><input id="la-dias" type="number" min="1" max="800" oninput="diasParaFim()" placeholder="ex.: 30"></div></div>
+      <div class="bp-campo" id="la-exe-w"><label for="la-exe">Exercício (ano de referência)</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="la-exe" inputmode="numeric" maxlength="9" placeholder="ex.: 2025"></div></div>
+      <div class="bp-campo" id="la-com-w"><label for="la-com">Comportamento</label>
+        <div class="bp-in"><i data-ic="escudo"></i><select id="la-com"><option value="">Escolha</option></select></div></div>
+      <div class="bp-campo"><label for="la-pub">Publicação (BI, SEI, portaria)</label>
+        <div class="bp-in"><i data-ic="arquivo"></i><input id="la-pub" maxlength="120" autocomplete="off" placeholder="ex.: BI nº 40/2026 · SEI 0021.000131/2026-96"></div></div>
+      <div class="bp-campo inteira"><label for="la-desc">Observação / texto</label>
+        <div class="bp-in"><textarea id="la-desc" maxlength="1500" placeholder="ex.: texto do elogio, motivo da licença, CID (só a P1 vê o de saúde)"></textarea></div></div>
+      <div class="bp-campo inteira" id="la-arq-w"><span class="bp-rot">Documento (opcional)</span>
+        <label class="bp-arquivo" id="la-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');pegarArq('la',event.dataTransfer.files)">
+          <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
+          <span class="tx"><b>Anexar o documento</b><small>PDF, foto ou Word · vai para a pasta do policial no Drive</small></span>
+          <span class="bp-trocar"></span>
+          <input type="file" id="la-file" accept="application/pdf,image/*,.doc,.docx" onchange="pegarArq('la',this.files)">
+        </label></div>
+      <div class="bp-campo inteira" id="la-cat-w" style="display:none"><label for="la-cat">Categoria do documento</label>
+        <div class="bp-in"><i data-ic="pasta"></i><select id="la-cat"></select></div></div>
+    </div>
+    <div class="bp-msg err" id="la-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-lanc')">Cancelar</button>
+      <button type="button" class="bp-btn" id="la-btn" onclick="salvarLanc()"><i data-ic="check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENVIAR DOCUMENTO (policial; o gestor também usa, com o policial escolhido) -->
+<div class="bp-modal" id="m-env" onclick="if(event.target===this)fechar('m-env')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-env-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="enviar"></i></span>
+      <div><h3 id="m-env-tit">Enviar documento</h3><small id="m-env-sub">Vai para a P1 conferir</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-env')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="ps-form">
+      <div class="bp-campo inteira"><label for="en-cat">Que documento é</label>
+        <div class="bp-in"><i data-ic="pasta"></i><select id="en-cat" onchange="trocouCatEnvio()"></select></div></div>
+      <div class="bp-campo inteira"><label for="en-tit">Descrição curta</label>
+        <div class="bp-in"><i data-ic="editar"></i><input id="en-tit" maxlength="200" autocomplete="off" placeholder="ex.: Atestado de 3 dias · Certidão de nascimento do filho"></div></div>
+      <label class="bp-check inteira"><input type="checkbox" id="en-afast" onchange="mostrarAfast()"> É um afastamento (atestado médico, licença, dispensa)</label>
+      <div class="bp-campo inteira en-af"><label for="en-sub">Qual</label>
+        <div class="bp-in"><i data-ic="alerta"></i><select id="en-sub"></select></div></div>
+      <div class="bp-campo en-af"><label for="en-ini">Primeiro dia</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="en-ini" type="date"></div></div>
+      <div class="bp-campo en-af"><label for="en-fim">Último dia</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="en-fim" type="date"></div></div>
+      <div class="bp-campo inteira en-af"><label for="en-obs">Observação (opcional)</label>
+        <div class="bp-in"><i data-ic="editar"></i><input id="en-obs" maxlength="500" autocomplete="off" placeholder="ex.: atestado do Dr. Fulano, UPA de Guajará-Mirim"></div></div>
+      <div class="bp-campo inteira"><span class="bp-rot">Arquivo</span>
+        <label class="bp-arquivo" id="en-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');pegarArq('en',event.dataTransfer.files)">
+          <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
+          <span class="tx"><b>Toque para escolher o arquivo ou a foto</b><small>PDF, foto ou Word · até 15 MB</small></span>
+          <span class="bp-trocar"></span>
+          <input type="file" id="en-file" accept="application/pdf,image/*,.doc,.docx" onchange="pegarArq('en',this.files)">
+        </label></div>
+    </div>
+    <div class="bp-msg err" id="en-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-env')">Cancelar</button>
+      <button type="button" class="bp-btn" id="en-btn" onclick="enviarDoc()"><i data-ic="enviar"></i>Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SENHA (excluir) / MOTIVO (recusar) / CATEGORIA / DIA -->
+<div class="bp-modal" id="m-conf" onclick="if(event.target===this)fechar('m-conf')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-conf-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile" id="m-conf-ic"><i data-ic="alerta"></i></span>
+      <div><h3 id="m-conf-tit">Confirmar</h3><small id="m-conf-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-conf')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="m-conf-corpo"></div>
+    <div class="bp-msg err" id="m-conf-msg"></div>
+    <div class="bp-modal-pe" id="m-conf-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-conf')">Cancelar</button>
+      <button type="button" class="bp-btn" id="m-conf-btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="imp"></div>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const PORTAL = (() => { try { return new URLSearchParams(location.search).has('portal'); } catch (e) { return false; } })();
+const PORTAL_RE = (() => { try { return (new URLSearchParams(location.search).get('re') || '').replace(/\D/g, '').slice(-5); } catch (e) { return ''; } })();
+
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null ? '' : b), 'pt-BR', { numeric: true, sensitivity: 'base' });
+const fD = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+const fQuando = (s) => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Porto_Velho' }); };
+const somaDia = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+const diasEntre = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000) + 1;
+const nomePol = (p) => [p.posto, p.guerra || p.nome].filter(Boolean).join(' ') || ('RE ' + p.re);
+const iniciais = (p) => String(p.guerra || p.nome || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
+const MODAIS = ['m-conf', 'm-env', 'm-lanc', 'm-ficha'];
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') MODAIS.some((id) => $(id).classList.contains('on') && (fechar(id), true)); });
+
+/* ============================== sessão ============================== */
+let MODO = '';      // 'gestao' | 'pol'
+let TOKEN = '';
+let D = null;       // painel (gestão) ou /eu (policial)
+function tokenPainel() { return ls('bp_token'); }
+function tokenPol() { return ls('tar_token') || ls('bp_token'); }
+
+async function api(path, body, cru) {
+  const h = { 'Content-Type': 'application/json' };
+  if (TOKEN) h.Authorization = 'Bearer ' + TOKEN;
+  const r = await fetch(API_BASE + path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  if (cru && r.ok) return r;
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { if (TOKEN && TOKEN === ls('tar_token')) { ls('tar_token', ''); ls('tar_user', ''); } else { ls('bp_token', ''); ls('bp_user', ''); ls('bp_perms', ''); } boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+function mostrar(qual) { ['ps-login', 'ps-negado', 'ps-estado', 'ps-gestao', 'ps-pol'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; }); }
+function sair() { if (window.CA) CA.sair(); else ['bp_token', 'bp_user', 'bp_perms', 'tar_token', 'tar_user'].forEach((k) => ls(k, '')); D = null; MODO = ''; TOKEN = ''; boot(); }
+function telaEntrada() {
+  mostrar('ps-login');
+  $('ps-sair').style.display = 'none'; $('ps-eu').style.display = 'none';
+  CA.montar($('ps-login-form'), { re: PORTAL_RE, aoEntrar: () => boot(),
+    notaDash: 'Mesmo usuário e senha do dashboard. A P1 entra por aqui; o policial com login do dashboard também (o RE vem da ligação feita no Portal do Policial).' });
+}
+
+async function boot() {
+  const bp = tokenPainel(), pol = tokenPol();
+  if (!bp && !pol) return telaEntrada();
+  const carga = window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo a P1') : null;
+  try {
+    // 1) login do dashboard fora do Portal: tenta a gestão
+    if (bp && !PORTAL) {
+      TOKEN = bp;
+      try { D = await api('/api/p1sec'); MODO = 'gestao'; return abrirGestao(); }
+      catch (e) { if (e.status === 401) return; if (e.status !== 403) throw e; }
+    }
+    // 2) o que é meu (sessão do RE ou login ligado ao RE)
+    TOKEN = PORTAL ? pol : (ls('tar_token') || bp);
+    D = await api('/api/p1sec/eu');
+    if (D.sem_vinculo) {
+      $('ps-negado-tx').textContent = 'Seu login ainda não está ligado a um RE e não tem acesso à gestão da P1.';
+      $('ps-sair').style.display = ''; return mostrar('ps-negado');
+    }
+    MODO = 'pol'; abrirPol();
+  } catch (e) {
+    if (e.status === 401) return;
+    mostrar('ps-estado');
+    $('ps-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+}
+async function carregar() { await boot(); }
+
+function mostrarEu(nome, sub) {
+  $('ps-eu').style.display = ''; $('ps-sair').style.display = PORTAL ? 'none' : '';
+  const n = String(nome || '');
+  $('ps-eu').querySelector('b').textContent = n.split(/s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P1';
+  $('ps-eu').querySelector('span').textContent = n + (sub ? ' · ' + sub : '');
+}
+
+/* ============================== tabela de tipos ============================== */
+const G = () => (D && D.grupos) || {};
+const corG = (g) => (G()[g] || {}).cor || '#94a3b8';
+const nomeG = (g) => (G()[g] || {}).nome || g;
+const temPeriodo = (a) => { const g = G()[a.grupo]; return !!g && (g.periodo || /dispensa/i.test(a.subtipo || '')); };
+const STATUS = { HOMOLOGADO: ['ok', 'Homologado'], AGUARDANDO: ['pend', 'Aguardando a P1'], RECUSADO: ['crit', 'Recusado'] };
+const slStatus = (s) => { const x = STATUS[s] || ['', s]; return `<span class="bp-sl ${x[0]}">${esc(x[1])}</span>`; };
+function periodoTx(a) {
+  if (!a.inicio) return '';
+  if (!temPeriodo(a) || !a.fim || a.fim === a.inicio) return fD(a.inicio) + (temPeriodo(a) ? ' (1 dia)' : '');
+  return `${fD(a.inicio)} a ${fD(a.fim)} (${a.dias} dia${a.dias === 1 ? '' : 's'})`;
+}
+const vale = (a) => a.status === 'HOMOLOGADO';
+const cobre = (a, dia) => temPeriodo(a) && a.inicio <= dia && (a.fim || a.inicio) >= dia;
+
+/* ============================== GESTÃO ============================== */
+let ABA = 'hoje';
+let CAL = null;
+let OFF = new Set();   // grupos escondidos no calendário
+let MOSTRAR_AG = true;
+let FL = { q: '', grupo: '', status: '', ano: '' };
+let FE = { q: '', sit: '' };
+
+function abrirGestao() {
+  mostrar('ps-gestao');
+  document.querySelectorAll('.ps-ges').forEach((x) => { x.style.display = D.gestor ? '' : 'none'; });
+  document.querySelectorAll('.ps-ver').forEach((x) => { x.style.display = D.gestor ? 'none' : ''; });
+  const p = (() => { try { return JSON.parse(ls('bp_perms') || 'null'); } catch (e) { return null; } })();
+  mostrarEu((p && p.nome) || ls('bp_user'), D.gestor ? 'Gestor da P1' : 'Consulta');
+  if (!CAL) { const h = D.hoje; CAL = { ano: +h.slice(0, 4), mes: +h.slice(5, 7) - 1 }; }
+  const n = D.alteracoes.filter((a) => a.status === 'AGUARDANDO').length;
+  $('ps-n-conf').textContent = n ? `(${n})` : ''; $('ps-n-conf2').textContent = n || '';
+  if (!D.gestor && (ABA === 'conf' || ABA === 'doc')) ABA = 'hoje';
+  irAba(ABA);
+}
+document.querySelectorAll('#ps-abas button').forEach((b) => { b.onclick = () => irAba(b.dataset.v); });
+function irAba(v) {
+  ABA = v;
+  document.querySelectorAll('#ps-abas button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  ({ hoje: pHoje, cal: pCal, ef: pEfetivo, lan: pLanc, conf: pConf, doc: pDocs }[v] || pHoje)();
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('ps-corpo'));
+}
+const polDe = (re) => (D.efetivo || []).find((p) => p.re === re) || { re, nome: (D.alteracoes.find((a) => a.re === re) || {}).nome || '', posto: '' };
+const ativos = () => D.efetivo.filter((p) => !p.fora);
+
+/* ---------- Hoje: mapa da força ---------- */
+function foraHoje(dia) {
+  const out = new Map();   // re → [alterações]
+  for (const a of D.alteracoes) if (vale(a) && cobre(a, dia)) { (out.get(a.re) || out.set(a.re, []).get(a.re)).push(a); }
+  return out;
+}
+function pHoje() {
+  const hoje = D.hoje, efe = ativos(), fora = foraHoje(hoje);
+  const reAtivo = new Set(efe.map((p) => p.re));
+  const porGrupo = {};
+  for (const [re, as] of fora) { if (!reAtivo.has(re)) continue; const g = as[0].grupo; (porGrupo[g] = porGrupo[g] || []).push({ re, a: as[0] }); }
+  const nFora = [...fora.keys()].filter((re) => reAtivo.has(re)).length;
+  const disp = efe.length - nFora;
+  const ag = D.alteracoes.filter((a) => a.status === 'AGUARDANDO');
+  const g = (k, ic, i) => `<button type="button" class="bp-num clica" style="--i:${i};--c:${corG(k)}" onclick="verGrupoHoje('${k}')"><i data-ic="${ic}"></i><div class="r">${esc(nomeG(k))}</div><div class="v">${(porGrupo[k] || []).length}</div><small class="bp-ver">ver quem<i data-ic="seta"></i></small></button>`;
+  const prox = (lista, campo) => lista.length ? lista.map((a) => itemAlt(a, { curto: true })).join('') : '<div class="bp-vazio">Ninguém.</div>';
+  const em7 = somaDia(hoje, 7);
+  const voltam = D.alteracoes.filter((a) => vale(a) && temPeriodo(a) && a.fim >= hoje && a.fim <= em7).sort((a, b) => cmp(a.fim, b.fim));
+  const comecam = D.alteracoes.filter((a) => vale(a) && temPeriodo(a) && a.inicio > hoje && a.inicio <= em7).sort((a, b) => cmp(a.inicio, b.inicio));
+  const mes = hoje.slice(5, 7);
+  const aniv = efe.filter((p) => p.nascimento && p.nascimento.slice(5, 7) === mes).sort((a, b) => cmp(a.nascimento.slice(8), b.nascimento.slice(8)));
+  $('ps-corpo').innerHTML = `
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Mapa da força · ${fD(hoje)}</h2><small>Só o que já foi homologado pela P1</small></div></div>
+    <div class="bp-nums">
+      <div class="bp-num" style="--i:0;--c:var(--info)"><i data-ic="usuarios"></i><div class="r">Efetivo</div><div class="v">${efe.length}</div></div>
+      <div class="bp-num" style="--i:1;--c:var(--good)"><i data-ic="ok"></i><div class="r">Disponíveis</div><div class="v">${disp}</div><small>${efe.length ? Math.round(disp * 100 / efe.length) : 0}% do efetivo</small></div>
+      ${g('FERIAS', 'calendario', 2)}${g('SAUDE', 'alerta', 3)}${g('LICENCA', 'relogio', 4)}${g('OUTRO', 'seta', 5)}
+      ${D.gestor ? `<button type="button" class="bp-num clica" style="--i:6;--c:var(--warn)" onclick="irAba('conf')"><i data-ic="check"></i><div class="r">Aguardando conferência</div><div class="v">${ag.length}</div><small class="bp-ver">conferir<i data-ic="seta"></i></small></button>` : ''}
+    </div>
+    ${porGrupo.RECOMPENSA ? `<div class="bp-aviso info" style="margin-top:12px"><i data-ic="info"></i><div><b>${porGrupo.RECOMPENSA.length}</b> em dispensa do serviço como recompensa hoje.</div></div>` : ''}
+    <div class="bp-sec"><span class="bp-tile pend"><i data-ic="usuarios"></i></span><div><h2>Fora do serviço hoje</h2><small>Férias, saúde, licença, dispensa ou outra alteração</small></div><span class="bp-cont bp-sl">${nFora}</span></div>
+    <div class="ps-lista" id="hoje-fora">${[...fora.values()].filter((as) => reAtivo.has(as[0].re)).map((as) => itemAlt(as[0], { curto: true })).join('') || '<div class="bp-vazio">Todo o efetivo disponível.</div>'}</div>
+    <div class="ps-duas">
+      <div><div class="bp-sec"><span class="bp-tile ok"><i data-ic="voltar"></i></span><div><h2>Voltam em até 7 dias</h2><small>Último dia do afastamento</small></div></div><div class="ps-lista">${prox(voltam)}</div></div>
+      <div><div class="bp-sec"><span class="bp-tile info"><i data-ic="seta"></i></span><div><h2>Começam em até 7 dias</h2><small>Férias, licenças e outros já lançados</small></div></div><div class="ps-lista">${prox(comecam)}</div></div>
+    </div>
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="estrela"></i></span><div><h2>Aniversariantes do mês</h2><small>Da ficha que o policial preencheu na P1</small></div><span class="bp-cont bp-sl">${aniv.length}</span></div>
+    <div class="ps-grade">${aniv.map((p) => cardPol(p, `${p.nascimento.slice(8)}/${mes}${p.nascimento.slice(5) === hoje.slice(5) ? ' · HOJE' : ''}`)).join('') || '<div class="bp-vazio">Nenhum aniversário com a data preenchida.</div>'}</div>`;
+}
+function verGrupoHoje(g) {
+  const fora = foraHoje(D.hoje);
+  const lista = [...fora.values()].map((as) => as[0]).filter((a) => a.grupo === g);
+  caixa(nomeG(g) + ' · hoje', lista.length + ' policial(is)', lista.length ? `<div class="ps-lista">${lista.map((a) => itemAlt(a, { curto: true })).join('')}</div>` : '<div class="bp-vazio">Ninguém hoje.</div>');
+}
+
+/* item de alteração (lista) */
+function itemAlt(a, o) {
+  o = o || {};
+  const p = polDe(a.re);
+  const quem = o.semNome ? '' : `<b>${esc(nomePol({ ...p, posto: p.posto || a.posto }))}</b> · `;
+  const acoes = [];
+  if (!o.curto && MODO === 'gestao' && D.gestor) {
+    if (a.status === 'AGUARDANDO') acoes.push(`<button type="button" class="bp-btn sm" onclick="conferir('${a.id}')"><i data-ic="check"></i>Conferir</button>`);
+    acoes.push(`<button type="button" class="bp-btn sm ghost" onclick="abrirLanc(null,'${a.id}')"><i data-ic="editar"></i>Editar</button>`);
+    acoes.push(`<button type="button" class="bp-btn sm perigo-l" onclick="excluirAlt('${a.id}')"><i data-ic="lixeira"></i></button>`);
+  }
+  if (!o.curto && (a.docs || []).length && (MODO === 'pol' || D.gestor)) acoes.push(...a.docs.map((id) => `<button type="button" class="bp-btn sm sec" onclick="abrirArq('${id}')"><i data-ic="olho"></i>Documento</button>`));
+  const clica = o.curto && MODO === 'gestao' ? ` style="--c:${corG(a.grupo)};cursor:pointer" onclick="abrirFicha('${a.re}')"` : ` style="--c:${corG(a.grupo)}"`;
+  return `<div class="ps-item"${clica}>
+    <div class="tx">${quem}<span>${esc(a.subtipo)}</span>
+      <small>${esc(nomeG(a.grupo))} · ${periodoTx(a)}${a.exercicio ? ' · exercício ' + esc(a.exercicio) : ''}${a.comportamento ? ' · comportamento ' + esc(a.comportamento) : ''}${a.publicacao ? ' · ' + esc(a.publicacao) : ''}</small>
+      ${!o.curto && a.descricao ? `<p>${esc(a.descricao)}</p>` : ''}
+      ${a.status === 'RECUSADO' && a.motivo ? `<small style="color:var(--crit)">Motivo da recusa: ${esc(a.motivo)}</small>` : ''}
+      ${!o.curto && a.origem === 'POLICIAL' ? `<small>Enviado pelo policial em ${fQuando(a.criado_em)}${a.conferido_por ? ' · conferido por ' + esc(a.conferido_por) : ''}</small>` : ''}
+    </div>
+    <div class="ac">${a.status !== 'HOMOLOGADO' ? slStatus(a.status) : ''}${acoes.join('')}</div>
+  </div>`;
+}
+function cardPol(p, extra) {
+  const sit = foraHoje(D.hoje).get(p.re);
+  const tags = [];
+  if (sit) tags.push(`<span class="ps-tag" style="--c:${corG(sit[0].grupo)}">${esc(nomeG(sit[0].grupo))}</span>`);
+  if (p.fora) tags.push('<span class="bp-sl">fora do BPFRON</span>');
+  return `<button type="button" class="bp-card ps-pol" onclick="abrirFicha('${p.re}')">
+    <span class="ini">${esc(iniciais(p))}</span>
+    <span class="tx"><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)}${p.opm ? ' · ' + esc(p.opm) : ''}${extra ? ' · ' + esc(extra) : ''}</small></span>
+    <span class="ps-chips">${tags.join('')}</span></button>`;
+}
+
+/* ---------- Calendário ---------- */
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+function eventosDoDia(dia) {
+  return D.alteracoes.filter((a) => !OFF.has(a.grupo) && (a.status === 'HOMOLOGADO' || (MOSTRAR_AG && a.status === 'AGUARDANDO'))
+    && (temPeriodo(a) ? cobre(a, dia) : a.inicio === dia));
+}
+function aniversarios(dia) { return OFF.has('ANIV') ? [] : ativos().filter((p) => p.nascimento && p.nascimento.slice(5) === dia.slice(5)); }
+function pCal() {
+  const { ano, mes } = CAL;
+  const primeiro = new Date(Date.UTC(ano, mes, 1));
+  const ini = somaDia(primeiro.toISOString().slice(0, 10), -primeiro.getUTCDay());
+  const ultimo = new Date(Date.UTC(ano, mes + 1, 0)).toISOString().slice(0, 10);
+  const mm = String(mes + 1).padStart(2, '0');
+  let grade = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].map((d) => `<div class="dsem">${d}</div>`).join('');
+  let agenda = '';
+  for (let dia = ini, i = 0; i < 42; i++, dia = somaDia(dia, 1)) {
+    if (i >= 35 && dia > ultimo && dia.slice(5, 7) !== mm) break;
+    const evs = eventosDoDia(dia), an = aniversarios(dia);
+    const doMes = dia.slice(5, 7) === mm;
+    const chips = evs.slice(0, 3).map((a) => evChip(a)).join('') + an.slice(0, Math.max(0, 3 - evs.length)).map((p) => `<span class="ps-ev" style="--c:#eab308">Aniversário · ${esc(p.guerra || p.nome)}</span>`).join('');
+    const resto = evs.length + an.length - Math.min(3, evs.length + an.length);
+    grade += `<button type="button" class="ps-dia${doMes ? '' : ' fora'}${dia === D.hoje ? ' hoje' : ''}" onclick="verDia('${dia}')"><span class="n">${+dia.slice(8)}</span>${chips}${resto > 0 ? `<span class="ps-mais">+${resto} mais</span>` : ''}</button>`;
+    if (doMes && (evs.length || an.length)) {
+      const dt = new Date(dia + 'T12:00:00Z').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', timeZone: 'UTC' });
+      agenda += `<div class="dia${dia === D.hoje ? ' hoje' : ''}"><b>${esc(dt)}</b>${evs.map((a) => evChip(a, true)).join('')}${an.map((p) => `<span class="ps-ev" style="--c:#eab308">Aniversário · ${esc(nomePol(p))}</span>`).join('')}</div>`;
+    }
+  }
+  const leg = Object.keys(G()).map((k) => `<button type="button" class="${OFF.has(k) ? 'off' : ''}" onclick="alternaLeg('${k}')"><span class="ps-cor" style="--c:${corG(k)}"></span>${esc(nomeG(k))}</button>`).join('')
+    + `<button type="button" class="${OFF.has('ANIV') ? 'off' : ''}" onclick="alternaLeg('ANIV')"><span class="ps-cor" style="--c:#eab308"></span>Aniversários</button>`
+    + (D.gestor ? `<button type="button" class="${MOSTRAR_AG ? '' : 'off'}" onclick="MOSTRAR_AG=!MOSTRAR_AG;pCal()"><span class="ps-cor" style="--c:var(--warn)"></span>Aguardando conferência (listrado)</button>` : '');
+  $('ps-corpo').innerHTML = `
+    <div class="bp-card" style="margin-top:14px">
+      <div class="ps-cal-cab">
+        <button type="button" class="bp-btn ic sec" aria-label="Mês anterior" onclick="mudaMes(-1)"><i data-ic="voltar"></i></button>
+        <h3>${MESES[mes][0].toUpperCase() + MESES[mes].slice(1)} de ${ano}</h3>
+        <button type="button" class="bp-btn ic sec" aria-label="Próximo mês" onclick="mudaMes(1)"><i data-ic="seta"></i></button>
+        <button type="button" class="bp-btn sm ghost" onclick="CAL={ano:+D.hoje.slice(0,4),mes:+D.hoje.slice(5,7)-1};pCal()">Hoje</button>
+        <span style="flex:1"></span>
+        <button type="button" class="bp-btn sm sec ps-ges" onclick="abrirLanc()"><i data-ic="mais"></i>Lançar</button>
+      </div>
+      <div class="ps-leg">${leg}</div>
+      <div class="ps-cal">${grade}</div>
+      <div class="ps-agenda">${agenda || '<div class="bp-vazio">Nada lançado neste mês.</div>'}</div>
+    </div>`;
+  document.querySelectorAll('#ps-corpo .ps-ges').forEach((x) => { x.style.display = D.gestor ? '' : 'none'; });
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('ps-corpo'));
+}
+function evChip(a, longo) {
+  const p = polDe(a.re);
+  const nm = longo ? nomePol({ ...p, posto: p.posto || a.posto }) : (p.guerra || p.nome || a.nome || 'RE ' + a.re);
+  return `<span class="ps-ev${a.status === 'AGUARDANDO' ? ' ag' : ''}" style="--c:${corG(a.grupo)}" title="${esc(nomePol(p) + ' · ' + a.subtipo)}">${esc(nm)}${longo ? ' · ' + esc(a.subtipo) : ''}</span>`;
+}
+function mudaMes(n) { let m = CAL.mes + n, a = CAL.ano; if (m < 0) { m = 11; a--; } if (m > 11) { m = 0; a++; } CAL = { ano: a, mes: m }; pCal(); }
+function alternaLeg(k) { OFF.has(k) ? OFF.delete(k) : OFF.add(k); pCal(); }
+function verDia(dia) {
+  const evs = eventosDoDia(dia), an = aniversarios(dia);
+  const dt = new Date(dia + 'T12:00:00Z').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  caixa(dt, `${evs.length} lançamento(s)`, (evs.length ? `<div class="ps-lista">${evs.map((a) => itemAlt(a, { curto: true })).join('')}</div>` : '<div class="bp-vazio">Nada lançado neste dia.</div>')
+    + (an.length ? `<div class="bp-sec"><span class="bp-tile sm"><i data-ic="estrela"></i></span><div><h2 style="font-size:16px">Aniversário</h2></div></div><div class="ps-lista">${an.map((p) => cardPol(p)).join('')}</div>` : '')
+    + (D.gestor ? `<div style="margin-top:12px"><button type="button" class="bp-btn sm sec" onclick="fechar('m-conf');abrirLanc(null,null,'${dia}')"><i data-ic="mais"></i>Lançar neste dia</button></div>` : ''));
+}
+
+/* caixa simples (usa a janela m-conf sem o botão de confirmar) */
+function caixa(tit, sub, html) {
+  $('m-conf-tit').textContent = tit; $('m-conf-sub').textContent = sub || '';
+  $('m-conf-ic').className = 'bp-tile info'; $('m-conf-ic').innerHTML = IC('info');
+  $('m-conf-corpo').innerHTML = html; $('m-conf-msg').textContent = '';
+  $('m-conf-btn').style.display = 'none';
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-conf-corpo'));
+  abrir('m-conf');
+}
+
+/* ---------- Efetivo ---------- */
+function pEfetivo() {
+  $('ps-corpo').innerHTML = `
+    <div class="bp-card" style="margin-top:14px">
+      <div class="ps-filtros" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto">
+        <div class="bp-campo"><label for="fe-q">Buscar policial</label>
+          <div class="bp-in"><i data-ic="buscar"></i><input id="fe-q" value="${esc(FE.q)}" placeholder="Nome, nome de guerra ou RE" autocomplete="off" oninput="FE.q=this.value;listaEfetivo()"></div></div>
+        <div class="bp-campo"><label for="fe-sit">Situação hoje</label>
+          <div class="bp-in"><i data-ic="grade"></i><select id="fe-sit" onchange="FE.sit=this.value;listaEfetivo()">
+            <option value="">Todos</option><option value="disp">Disponíveis</option><option value="fora">Fora do serviço</option><option value="ex">Fora do BPFRON (com lançamento)</option></select></div></div>
+        <button type="button" class="bp-btn ghost" onclick="FE={q:'',sit:''};pEfetivo()"><i data-ic="x"></i>Limpar</button>
+      </div>
+      <div style="margin-top:10px;color:var(--muted);font-size:13px" id="fe-conta"></div>
+    </div>
+    <div class="ps-grade" id="fe-lista"></div>`;
+  $('fe-sit').value = FE.sit;
+  listaEfetivo();
+}
+function listaEfetivo() {
+  const fora = foraHoje(D.hoje), q = sem(FE.q).trim();
+  const l = D.efetivo.filter((p) => {
+    if (q && !sem([p.nome, p.guerra, p.re, p.posto].join(' ')).includes(q)) return false;
+    if (FE.sit === 'disp') return !p.fora && !fora.has(p.re);
+    if (FE.sit === 'fora') return !p.fora && fora.has(p.re);
+    if (FE.sit === 'ex') return p.fora;
+    return !p.fora || !!q;   // quem saiu do BPFRON só aparece na busca
+  });
+  $('fe-conta').innerHTML = `<b style="color:var(--t1)">${l.length}</b> policial(is)`;
+  $('fe-lista').innerHTML = l.map((p) => cardPol(p)).join('') || '<div class="bp-vazio">Ninguém com esse filtro.</div>';
+}
+
+/* ---------- Ficha ---------- */
+let FICHA = null;
+async function abrirFicha(re) {
+  ['m-conf'].forEach(fechar);
+  const p = polDe(re);
+  $('m-ficha-tit').textContent = nomePol(p); $('m-ficha-sub').textContent = 'RE ' + re + (p.opm ? ' · ' + p.opm : '');
+  $('ficha-corpo').innerHTML = '<div class="bp-vazio"><span class="bp-gira"></span> Abrindo a ficha…</div>';
+  abrir('m-ficha');
+  try { FICHA = await api('/api/p1sec/ficha?re=' + encodeURIComponent(re)); }
+  catch (e) { $('ficha-corpo').innerHTML = `<div class="bp-aviso crit"><i data-ic="alerta"></i><div>${esc(e.message)}</div></div>`; return; }
+  pintarFicha();
+}
+let FICHA_G = '';
+function pintarFicha() {
+  const f = FICHA, p = f.policial;
+  $('m-ficha-tit').textContent = nomePol(p);
+  const sit = f.situacao.length ? f.situacao.map((a) => `<span class="ps-tag" style="--c:${corG(a.grupo)}">${esc(a.subtipo)} até ${fD(a.fim)}</span>`).join('') : '<span class="bp-sl ok">Disponível hoje</span>';
+  const grupos = Object.keys(G()).filter((k) => f.alteracoes.some((a) => a.grupo === k));
+  const alts = f.alteracoes.filter((a) => !FICHA_G || a.grupo === FICHA_G);
+  const ges = MODO === 'gestao' && D.gestor;
+  $('ficha-corpo').innerHTML = `
+    <div class="ps-chips" style="margin-bottom:12px">${sit}${f.comportamento ? `<span class="ps-tag" style="--c:${corG('PUNICAO')}">Comportamento ${esc(f.comportamento.valor)}</span>` : ''}</div>
+    <div class="ps-dados">
+      <div><span>Nome completo</span>${esc(p.nome || '—')}</div>
+      <div><span>Posto / graduação</span>${esc(p.posto || '—')}</div>
+      <div><span>RE</span>${esc(p.re)}</div>
+      <div><span>OPM</span>${esc(p.opm || '—')}</div>
+      <div><span>Nascimento</span>${p.nascimento ? fD(p.nascimento) : '—'}</div>
+      ${ges ? `<div><span>Telefone</span>${esc(p.telefone || '—')}</div>` : ''}
+    </div>
+    <div class="ps-acoes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      ${ges ? `<button type="button" class="bp-btn sm" onclick="abrirLanc('${p.re}')"><i data-ic="mais"></i>Novo lançamento</button>
+      <button type="button" class="bp-btn sm sec" onclick="abrirEnvio('${p.re}')"><i data-ic="enviar"></i>Enviar documento</button>` : ''}
+      <button type="button" class="bp-btn sm sec" onclick="imprimirFicha()"><i data-ic="arquivo"></i>Imprimir ficha</button>
+      ${ges ? `<button type="button" class="bp-btn sm ghost" onclick="verHistorico('${p.re}')"><i data-ic="relogio"></i>Histórico</button>` : ''}
+    </div>
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="arquivo"></i></span><div><h2>Alterações</h2><small>Tudo o que foi lançado para este policial</small></div><span class="bp-cont bp-sl">${f.alteracoes.length}</span></div>
+    ${grupos.length > 1 ? `<div class="ps-leg"><button type="button" class="${FICHA_G ? 'off' : ''}" onclick="FICHA_G='';pintarFicha()">Todas</button>${grupos.map((k) => `<button type="button" class="${FICHA_G && FICHA_G !== k ? 'off' : ''}" onclick="FICHA_G='${k}';pintarFicha()"><span class="ps-cor" style="--c:${corG(k)}"></span>${esc(nomeG(k))} (${f.alteracoes.filter((a) => a.grupo === k).length})</button>`).join('')}</div>` : ''}
+    <div class="ps-lista">${alts.map((a) => itemAlt(a, { semNome: true })).join('') || '<div class="bp-vazio">Nenhum lançamento.</div>'}</div>
+    <div class="ps-duas">
+      <div><div class="bp-sec"><span class="bp-tile info"><i data-ic="estrela"></i></span><div><h2>Cursos</h2><small>Da ficha que o policial preenche (P1 · Minha Ficha)</small></div><span class="bp-cont bp-sl">${f.cursos.length}</span></div>
+        <div class="ps-chips">${f.cursos.map((c) => `<span class="ps-tag" style="--c:#38bdf8" title="${esc(c.curso)}">${esc(c.sigla || c.curso)}${c.ano ? ' · ' + esc(c.ano) : ''}</span>`).join('') || '<span style="color:var(--muted)">Nenhum curso informado.</span>'}</div></div>
+      <div><div class="bp-sec"><span class="bp-tile info"><i data-ic="chave"></i></span><div><h2>Sistemas de acesso</h2><small>Da mesma ficha</small></div><span class="bp-cont bp-sl">${f.acessos.length}</span></div>
+        <div class="ps-chips">${f.acessos.map((s) => `<span class="ps-tag" style="--c:#22c55e">${esc(s)}</span>`).join('') || '<span style="color:var(--muted)">Nenhum sistema informado.</span>'}</div></div>
+    </div>
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="escudo"></i></span><div><h2>Material bélico e bens em carga</h2><small>Da Carga Pessoal (P4)</small></div><span class="bp-cont bp-sl">${f.carga.length}</span></div>
+    <div class="ps-lista">${f.carga.map((c) => `<div class="ps-item" style="--c:#f59e0b"><div class="tx"><b>${esc(c.bem)}</b> · ${esc(c.descricao)}<small>${[c.serie && 'série ' + c.serie, c.tombamento && 'tomb. ' + c.tombamento, c.qtd > 1 && c.qtd + ' un.', c.status === 'AGUARDANDO' ? 'aguardando o aceite' : c.aceite_em && 'aceito em ' + fQuando(c.aceite_em)].filter(Boolean).map(esc).join(' · ')}</small></div></div>`).join('') || '<div class="bp-vazio">Nenhum bem em carga pessoal.</div>'}</div>
+    ${ges ? `<div class="bp-sec"><span class="bp-tile"><i data-ic="pasta"></i></span><div><h2>Documentos</h2><small>Na pasta do policial no Drive</small></div><span class="bp-cont bp-sl">${f.documentos.length}</span></div>
+    <div class="ps-lista">${f.documentos.map((x) => itemDoc(x, true)).join('') || '<div class="bp-vazio">Nenhum documento.</div>'}</div>` : ''}
+    <div id="ficha-hist"></div>`;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('ficha-corpo'));
+}
+function itemDoc(x, ges) {
+  return `<div class="ps-item" style="--c:var(--info)"><div class="tx"><b>${esc(x.titulo)}</b><small>${esc(x.categoria)} · ${esc(x.arq_nome)} · ${(x.tamanho / 1024).toFixed(0)} KB · enviado ${fQuando(x.enviado_em)} por ${esc(x.enviado_por)}</small></div>
+    <div class="ac"><button type="button" class="bp-btn sm sec" onclick="abrirArq('${x.id}')"><i data-ic="olho"></i>Abrir</button>${ges ? `<button type="button" class="bp-btn sm perigo-l" onclick="excluirDoc('${x.id}')"><i data-ic="lixeira"></i></button>` : ''}</div></div>`;
+}
+async function verHistorico(re) {
+  const box = $('ficha-hist');
+  box.innerHTML = '<div class="bp-vazio"><span class="bp-gira"></span></div>';
+  try {
+    const h = await api('/api/p1sec/historico?re=' + encodeURIComponent(re));
+    box.innerHTML = `<div class="bp-sec"><span class="bp-tile sm"><i data-ic="relogio"></i></span><div><h2 style="font-size:16px">Histórico</h2></div></div><div class="ps-hist">${h.historico.map((x) => `<div><b>${esc(x.acao)}</b> · ${esc(x.resumo)}<small>${fQuando(x.quando)} · ${esc(x.quem)}</small></div>`).join('') || '<div>Nada registrado.</div>'}</div>`;
+    if (window.BPCasca && BPCasca.icones) BPCasca.icones(box);
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) { box.innerHTML = `<div class="bp-msg err">${esc(e.message)}</div>`; }
+}
+
+/* ---------- Lançamentos ---------- */
+function pLanc() {
+  const anos = [...new Set(D.alteracoes.map((a) => (a.inicio || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  $('ps-corpo').innerHTML = `
+    <div class="bp-card" style="margin-top:14px">
+      <div class="ps-filtros">
+        <div class="bp-campo"><label for="fl-q">Buscar</label>
+          <div class="bp-in"><i data-ic="buscar"></i><input id="fl-q" value="${esc(FL.q)}" placeholder="Policial, RE, tipo, publicação…" autocomplete="off" oninput="FL.q=this.value;listaLanc()"></div></div>
+        <div class="bp-campo"><label for="fl-g">Tipo</label>
+          <div class="bp-in"><i data-ic="pasta"></i><select id="fl-g" onchange="FL.grupo=this.value;listaLanc()"><option value="">Todos</option>${Object.keys(G()).map((k) => `<option value="${k}">${esc(nomeG(k))}</option>`).join('')}</select></div></div>
+        <div class="bp-campo"><label for="fl-s">Situação</label>
+          <div class="bp-in"><i data-ic="check"></i><select id="fl-s" onchange="FL.status=this.value;listaLanc()"><option value="">Todas</option><option value="HOMOLOGADO">Homologados</option><option value="AGUARDANDO">Aguardando</option><option value="RECUSADO">Recusados</option></select></div></div>
+        <div class="bp-campo"><label for="fl-a">Ano</label>
+          <div class="bp-in"><i data-ic="calendario"></i><select id="fl-a" onchange="FL.ano=this.value;listaLanc()"><option value="">Todos</option>${anos.map((a) => `<option>${a}</option>`).join('')}</select></div></div>
+        <button type="button" class="bp-btn ghost" onclick="FL={q:'',grupo:'',status:'',ano:''};pLanc()"><i data-ic="x"></i>Limpar</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">
+        <span style="color:var(--muted);font-size:13px" id="fl-conta"></span><span style="flex:1"></span>
+        <button type="button" class="bp-btn sm sec" onclick="exportarCsv()"><i data-ic="baixar"></i>Planilha (CSV)</button>
+        <button type="button" class="bp-btn sm sec" onclick="imprimirRelacao()"><i data-ic="arquivo"></i>Imprimir</button>
+        <button type="button" class="bp-btn sm ps-ges" onclick="abrirLanc()"><i data-ic="mais"></i>Novo lançamento</button>
+      </div>
+    </div>
+    <div class="ps-tabwrap"><table class="ps-tab"><thead><tr><th>Policial</th><th>Tipo</th><th>Período</th><th>Publicação</th><th>Situação</th></tr></thead><tbody id="fl-lista"></tbody></table></div>`;
+  $('fl-g').value = FL.grupo; $('fl-s').value = FL.status; $('fl-a').value = FL.ano;
+  document.querySelectorAll('#ps-corpo .ps-ges').forEach((x) => { x.style.display = D.gestor ? '' : 'none'; });
+  listaLanc();
+}
+function filtradas() {
+  const q = sem(FL.q).trim();
+  return D.alteracoes.filter((a) => {
+    if (FL.grupo && a.grupo !== FL.grupo) return false;
+    if (FL.status && a.status !== FL.status) return false;
+    if (FL.ano && (a.inicio || '').slice(0, 4) !== FL.ano && (a.fim || '').slice(0, 4) !== FL.ano) return false;
+    if (q) { const p = polDe(a.re); if (!sem([p.nome, p.guerra, a.re, a.subtipo, nomeG(a.grupo), a.publicacao, a.descricao].join(' ')).includes(q)) return false; }
+    return true;
+  }).sort((a, b) => cmp(b.inicio, a.inicio));
+}
+function listaLanc() {
+  const l = filtradas();
+  $('fl-conta').innerHTML = `<b style="color:var(--t1)">${l.length}</b> lançamento(s)`;
+  $('fl-lista').innerHTML = l.map((a) => { const p = polDe(a.re); return `<tr class="clica" onclick="abrirFicha('${a.re}')">
+    <td class="nm" data-r="Policial">${esc(nomePol({ ...p, posto: p.posto || a.posto }))}<small>RE ${esc(a.re)}</small></td>
+    <td data-r="Tipo"><span class="ps-tag" style="--c:${corG(a.grupo)}">${esc(nomeG(a.grupo))}</span><small>${esc(a.subtipo)}</small></td>
+    <td class="n" data-r="Período">${periodoTx(a)}</td>
+    <td data-r="Publicação">${esc(a.publicacao || '—')}</td>
+    <td data-r="Situação">${slStatus(a.status)}</td></tr>`; }).join('') || '<tr><td colspan="5"><div class="bp-vazio">Nada com esse filtro.</div></td></tr>';
+}
+function exportarCsv() {
+  const l = filtradas();
+  const c = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const linhas = [['RE', 'Posto', 'Nome', 'Tipo', 'O que é', 'Início', 'Término', 'Dias', 'Exercício', 'Comportamento', 'Publicação', 'Observação', 'Situação', 'Origem']]
+    .concat(l.map((a) => { const p = polDe(a.re); return [a.re, p.posto || a.posto, p.nome || a.nome, nomeG(a.grupo), a.subtipo, fD(a.inicio), fD(a.fim), a.dias || '', a.exercicio, a.comportamento, a.publicacao, a.descricao, (STATUS[a.status] || [, a.status])[1], a.origem]; }));
+  const blob = new Blob(['﻿' + linhas.map((r) => r.map(c).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const u = URL.createObjectURL(blob), el = document.createElement('a');
+  el.href = u; el.download = `P1_lancamentos_${D.hoje}.csv`; document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 2000);
+}
+
+/* ---------- Conferir ---------- */
+function pConf() {
+  const l = D.alteracoes.filter((a) => a.status === 'AGUARDANDO').sort((a, b) => cmp(a.criado_em, b.criado_em));
+  $('ps-corpo').innerHTML = `
+    <div class="bp-sec"><span class="bp-tile pend"><i data-ic="check"></i></span><div><h2>Aguardando conferência</h2><small>Atestados e licenças enviados pelos policiais. Confira o documento, acerte as datas se precisar e homologue — ou recuse dizendo o motivo.</small></div><span class="bp-cont bp-sl">${l.length}</span></div>
+    <div class="ps-lista">${l.map((a) => itemAlt(a)).join('') || '<div class="bp-vazio">Nada para conferir.</div>'}</div>`;
+}
+function conferir(id) {
+  const a = D.alteracoes.find((x) => x.id === id);
+  if (!a) return;
+  const p = polDe(a.re), gr = G()[a.grupo] || { subtipos: [] };
+  $('m-conf-tit').textContent = 'Conferir · ' + nomePol({ ...p, posto: p.posto || a.posto });
+  $('m-conf-sub').textContent = 'Enviado em ' + fQuando(a.criado_em);
+  $('m-conf-ic').className = 'bp-tile pend'; $('m-conf-ic').innerHTML = IC('check');
+  $('m-conf-corpo').innerHTML = `<div class="ps-form">
+      <div class="bp-campo inteira"><label for="cf-sub">O que é</label><div class="bp-in"><i data-ic="editar"></i><input id="cf-sub" list="cf-dl" value="${esc(a.subtipo)}"></div>
+        <datalist id="cf-dl">${gr.subtipos.map((s) => `<option value="${esc(s)}">`).join('')}</datalist></div>
+      <div class="bp-campo"><label for="cf-ini">Início</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-ini" type="date" value="${esc(a.inicio)}"></div></div>
+      <div class="bp-campo"><label for="cf-fim">Término</label><div class="bp-in"><i data-ic="calendario"></i><input id="cf-fim" type="date" value="${esc(a.fim)}"></div></div>
+      <div class="bp-campo inteira"><label for="cf-pub">Publicação (opcional)</label><div class="bp-in"><i data-ic="arquivo"></i><input id="cf-pub" value="${esc(a.publicacao)}" placeholder="ex.: BI nº 41/2026"></div></div>
+      <div class="bp-campo inteira"><label for="cf-mot">Motivo da recusa (só se for recusar)</label><div class="bp-in"><i data-ic="alerta"></i><input id="cf-mot" maxlength="500" placeholder="ex.: atestado sem carimbo do médico"></div></div>
+    </div>
+    ${a.descricao ? `<div class="bp-aviso" style="margin-top:12px"><i data-ic="info"></i><div>${esc(a.descricao)}</div></div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${(a.docs || []).map((d) => `<button type="button" class="bp-btn sm sec" onclick="abrirArq('${d}')"><i data-ic="olho"></i>Abrir o documento</button>`).join('') || '<span style="color:var(--muted)">Sem documento anexado.</span>'}
+      <span style="flex:1"></span><button type="button" class="bp-btn sm perigo-l" id="cf-rec"><i data-ic="x"></i>Recusar</button></div>`;
+  $('m-conf-msg').textContent = '';
+  const btn = $('m-conf-btn'); btn.style.display = ''; btn.innerHTML = IC('check') + 'Homologar';
+  btn.onclick = () => decidir(a, 'homologar');
+  $('cf-rec').onclick = () => decidir(a, 'recusar');
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-conf-corpo'));
+  abrir('m-conf');
+}
+async function decidir(a, op) {
+  const msg = $('m-conf-msg'); msg.textContent = '';
+  const corpo = { op, id: a.id };
+  if (op === 'recusar') { corpo.motivo = $('cf-mot').value.trim(); if (!corpo.motivo) { msg.textContent = 'Escreva o motivo da recusa (o policial vai ver).'; $('cf-mot').focus(); return; } }
+  else corpo.alteracao = { grupo: a.grupo, subtipo: $('cf-sub').value, inicio: $('cf-ini').value, fim: $('cf-fim').value, publicacao: $('cf-pub').value, descricao: a.descricao, exercicio: a.exercicio };
+  const btn = $('m-conf-btn'); btn.disabled = true;
+  try { await api('/api/p1sec/salvar', corpo); fechar('m-conf'); toast(op === 'recusar' ? 'Recusado. O policial vai ver o motivo.' : 'Homologado — entrou no calendário.'); await recarregar(); }
+  catch (e) { msg.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+async function recarregar() {
+  D = await api('/api/p1sec'); abrirGestao();
+  if ($('m-ficha').classList.contains('on') && FICHA) { try { FICHA = await api('/api/p1sec/ficha?re=' + FICHA.policial.re); pintarFicha(); } catch (e) {} }
+}
+
+/* ---------- Documentos / categorias ---------- */
+function pDocs() {
+  const cats = D.categorias.slice().sort((a, b) => cmp(a.nome, b.nome));
+  $('ps-corpo').innerHTML = `
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="pasta"></i></span><div><h2>Categorias de documento</h2><small>Cada categoria é uma pasta no Drive; dentro dela, uma pasta por policial (RE - NOME).</small></div>
+      <span style="flex:1"></span>${D.pasta_raiz ? `<a class="bp-btn sm sec" href="${esc(D.pasta_raiz)}" target="_blank" rel="noopener"><i data-ic="pasta"></i>Abrir no Drive</a>` : ''}
+      <button type="button" class="bp-btn sm" onclick="editarCat()"><i data-ic="mais"></i>Nova categoria</button></div>
+    <div class="ps-grade">${cats.map((c) => `<div class="bp-card" style="display:flex;gap:12px;align-items:center">
+      <span class="bp-tile ${c.policial ? 'ok' : 'info'}"><i data-ic="pasta"></i></span>
+      <div style="flex:1;min-width:0"><b style="color:var(--t1);display:block">${esc(c.nome)}</b><small style="color:var(--muted)">${c.docs} documento(s) · ${c.policial ? 'o policial envia' : 'só a P1 envia'}${c.tem_pasta ? '' : ' · pasta nasce no 1º envio'}</small></div>
+      ${c.pasta_url ? `<a class="bp-btn ic sm ghost" href="${esc(c.pasta_url)}" target="_blank" rel="noopener" title="Abrir a pasta no Drive" aria-label="Abrir a pasta no Drive"><i data-ic="seta"></i></a>` : ''}
+      <button type="button" class="bp-btn ic sm ghost" title="Editar" aria-label="Editar" onclick="editarCat('${c.id}')"><i data-ic="editar"></i></button></div>`).join('')}</div>
+    <div class="bp-sec"><span class="bp-tile info"><i data-ic="arquivo"></i></span><div><h2>Últimos documentos</h2><small>De todo o efetivo</small></div><span class="bp-cont bp-sl">${D.documentos.length}</span></div>
+    <div class="bp-card"><div class="bp-in"><i data-ic="buscar"></i><input id="fd-q" placeholder="Policial, categoria, descrição…" autocomplete="off" oninput="listaDocs()"></div></div>
+    <div class="ps-lista" id="fd-lista"></div>`;
+  listaDocs();
+}
+function listaDocs() {
+  const q = sem(($('fd-q') || {}).value || '').trim();
+  const l = D.documentos.filter((x) => { const p = polDe(x.re); return !q || sem([p.nome, p.guerra, x.re, x.categoria, x.titulo, x.arq_nome].join(' ')).includes(q); }).slice(0, 150);
+  $('fd-lista').innerHTML = l.map((x) => { const p = polDe(x.re); return itemDoc({ ...x, titulo: nomePol(p) + ' · ' + x.titulo }, true); }).join('') || '<div class="bp-vazio">Nenhum documento.</div>';
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('fd-lista'));
+}
+function editarCat(id) {
+  const c = id ? D.categorias.find((x) => x.id === id) : null;
+  $('m-conf-tit').textContent = c ? 'Editar categoria' : 'Nova categoria';
+  $('m-conf-sub').textContent = c ? 'Renomear muda também o nome da pasta no Drive' : 'A pasta dela é criada no Drive na hora';
+  $('m-conf-ic').className = 'bp-tile ok'; $('m-conf-ic').innerHTML = IC('pasta');
+  $('m-conf-corpo').innerHTML = `<div class="bp-campo"><label for="ct-nome">Nome</label><div class="bp-in"><i data-ic="pasta"></i><input id="ct-nome" maxlength="80" value="${esc(c ? c.nome : '')}" placeholder="ex.: CERTIDÕES, DECLARAÇÕES DE DEPENDENTES"></div></div>
+    <label class="bp-check" style="margin-top:12px"><input type="checkbox" id="ct-pol" ${!c || c.policial ? 'checked' : ''}> O policial pode enviar documentos desta categoria pelo Portal</label>`;
+  $('m-conf-msg').textContent = '';
+  const btn = $('m-conf-btn'); btn.style.display = ''; btn.innerHTML = IC('check') + (c ? 'Salvar' : 'Criar categoria');
+  btn.onclick = async () => {
+    btn.disabled = true; $('m-conf-msg').textContent = '';
+    try {
+      const r = await api('/api/p1sec/salvar', { op: c ? 'cat_editar' : 'cat_criar', id: c && c.id, nome: $('ct-nome').value, policial: $('ct-pol').checked });
+      fechar('m-conf'); toast(r.aviso || (c ? 'Categoria salva.' : 'Categoria criada e pasta pronta no Drive.'), r.aviso ? 'err' : undefined); await recarregar();
+    } catch (e) { $('m-conf-msg').textContent = e.message; }
+    finally { btn.disabled = false; }
+  };
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-conf-corpo'));
+  abrir('m-conf'); setTimeout(() => $('ct-nome').focus(), 60);
+}
+
+/* ---------- senha (excluir) ---------- */
+function pedirSenha(tit, sub, acao) {
+  $('m-conf-tit').textContent = tit; $('m-conf-sub').textContent = sub;
+  $('m-conf-ic').className = 'bp-tile crit'; $('m-conf-ic').innerHTML = IC('lixeira');
+  $('m-conf-corpo').innerHTML = `<div class="bp-campo"><label for="sx-mot">Motivo (opcional)</label><div class="bp-in"><i data-ic="editar"></i><input id="sx-mot" maxlength="300" placeholder="ex.: lançado em duplicidade"></div></div>
+    <div class="bp-campo" style="margin-top:12px"><label for="sx-senha">Sua senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="sx-senha" type="password" autocomplete="current-password"></div></div>`;
+  $('m-conf-msg').textContent = '';
+  const btn = $('m-conf-btn'); btn.style.display = ''; btn.innerHTML = IC('lixeira') + 'Excluir';
+  btn.onclick = async () => {
+    btn.disabled = true; $('m-conf-msg').textContent = '';
+    try { await acao($('sx-senha').value, $('sx-mot').value); fechar('m-conf'); toast('Excluído.'); await recarregar(); }
+    catch (e) { $('m-conf-msg').textContent = e.message; }
+    finally { btn.disabled = false; }
+  };
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-conf-corpo'));
+  abrir('m-conf'); setTimeout(() => $('sx-senha').focus(), 60);
+}
+function excluirAlt(id) {
+  const a = D.alteracoes.find((x) => x.id === id) || (FICHA && FICHA.alteracoes.find((x) => x.id === id));
+  pedirSenha('Excluir lançamento', a ? `${a.subtipo} · ${periodoTx(a)}` : '', (senha, motivo) => api('/api/p1sec/salvar', { op: 'excluir', id, senha, motivo }));
+}
+function excluirDoc(id) {
+  pedirSenha('Excluir documento', 'O arquivo vai para a lixeira do Drive', (senha, motivo) => api('/api/p1sec/salvar', { op: 'doc_excluir', id, senha, motivo }));
+}
+
+/* ---------- abrir arquivo (com a sessão; o Drive não é público) ---------- */
+async function abrirArq(id) {
+  const w = window.open('', '_blank');
+  try {
+    const r = await api('/api/p1sec/arquivo?id=' + encodeURIComponent(id), null, true);
+    const u = URL.createObjectURL(await r.blob());
+    if (w) w.location.href = u; else location.href = u;
+    setTimeout(() => URL.revokeObjectURL(u), 120000);
+  } catch (e) { if (w) w.close(); toast(e.message, 'err'); }
+}
+
+/* ---------- novo lançamento / editar ---------- */
+let LA = { pol: null, id: null, arq: null };
+function opcoesGrupo(sel, so) {
+  sel.innerHTML = Object.keys(G()).filter((k) => !so || so.includes(k)).map((k) => `<option value="${k}">${esc(nomeG(k))}</option>`).join('');
+}
+function abrirLanc(re, id, dia) {
+  if (!D || !D.gestor) return;
+  const a = id ? (D.alteracoes.find((x) => x.id === id) || (FICHA && FICHA.alteracoes.find((x) => x.id === id))) : null;
+  LA = { pol: null, id: a ? a.id : null, arq: null };
+  opcoesGrupo($('la-grupo'));
+  $('la-com').innerHTML = '<option value="">Escolha</option>' + (D.comportamentos || []).map((c) => `<option>${c}</option>`).join('');
+  ['la-sub', 'la-ini', 'la-fim', 'la-dias', 'la-exe', 'la-pub', 'la-desc', 'la-pol-q'].forEach((i) => { $(i).value = ''; });
+  $('la-pol-res').innerHTML = ''; $('la-msg').textContent = '';
+  pegarArq('la', null);
+  $('la-cat').innerHTML = D.categorias.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  $('m-lanc-tit').textContent = a ? 'Editar lançamento' : 'Novo lançamento';
+  $('m-lanc-sub').textContent = a ? 'O policial não muda; para trocar, exclua e lance de novo' : 'O que a P1 lança já entra homologado';
+  $('la-arq-w').style.display = a ? 'none' : '';
+  if (a) {
+    $('la-grupo').value = a.grupo; trocouGrupo(true);
+    $('la-sub').value = a.subtipo; $('la-ini').value = a.inicio; $('la-fim').value = a.fim; $('la-exe').value = a.exercicio || '';
+    $('la-com').value = a.comportamento || ''; $('la-pub').value = a.publicacao || ''; $('la-desc').value = a.descricao || '';
+    escolherPol(a.re, true);
+  } else {
+    trocouGrupo();
+    if (dia) $('la-ini').value = dia;
+    if (re) escolherPol(re); else { $('la-pol-busca').style.display = ''; $('la-pol-sel').innerHTML = ''; }
+  }
+  mostrarCampos(); contarDias();
+  abrir('m-lanc');
+  if (!re && !a) setTimeout(() => $('la-pol-q').focus(), 60);
+}
+function trocouGrupo(manter) {
+  const g = G()[$('la-grupo').value] || { subtipos: [] };
+  $('la-sub-dl').innerHTML = g.subtipos.map((s) => `<option value="${esc(s)}">`).join('');
+  if (!manter) $('la-sub').value = g.subtipos[0] || '';
+  const cat = { SAUDE: 'ATESTADOS', LICENCA: 'LICEN', FERIAS: 'FÉRIAS', RECOMPENSA: 'RECOMPENSA' }[$('la-grupo').value] || 'OUTROS';
+  const c = D.categorias.find((x) => sem(x.nome).includes(sem(cat)));
+  if (c) $('la-cat').value = c.id;
+  mostrarCampos();
+}
+function mostrarCampos() {
+  const a = { grupo: $('la-grupo').value, subtipo: $('la-sub').value };
+  const per = temPeriodo(a);
+  $('la-fim-w').style.display = per ? '' : 'none';
+  $('la-dias-w').style.display = per ? '' : 'none';
+  $('la-ini-l').textContent = per ? 'Início' : 'Data';
+  $('la-exe-w').style.display = a.grupo === 'FERIAS' ? '' : 'none';
+  $('la-com-w').style.display = a.grupo === 'PUNICAO' && /comportamento/i.test(a.subtipo) ? '' : 'none';
+}
+function contarDias() { const i = $('la-ini').value, f = $('la-fim').value; $('la-dias').value = i && f && f >= i ? diasEntre(i, f) : ''; }
+function diasParaFim() { const i = $('la-ini').value, n = +$('la-dias').value; if (i && n >= 1) $('la-fim').value = somaDia(i, n - 1); }
+function buscarPol() {
+  const q = sem($('la-pol-q').value).trim();
+  if (q.length < 2) { $('la-pol-res').innerHTML = ''; return; }
+  const l = D.efetivo.filter((p) => sem([p.nome, p.guerra, p.re].join(' ')).includes(q)).slice(0, 12);
+  $('la-pol-res').innerHTML = l.map((p) => `<button type="button" onclick="escolherPol('${p.re}')"><span class="ps-pol" style="pointer-events:none"><span class="ini">${esc(iniciais(p))}</span></span><span><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)} · ${esc(p.nome)}</small></span></button>`).join('') || '<div class="bp-vazio">Ninguém com esse nome no efetivo do BPFRON.</div>';
+}
+function escolherPol(re, travado) {
+  const p = polDe(re);
+  LA.pol = p;
+  $('la-pol-busca').style.display = 'none';
+  $('la-pol-sel').innerHTML = `<div class="ps-esc"><span class="bp-tile sm ok"><i data-ic="usuario"></i></span><div class="tx"><b>${esc(nomePol(p))}</b><small>RE ${esc(p.re)} · ${esc(p.nome)}</small></div>${travado ? '' : `<button type="button" class="bp-btn sm ghost" onclick="LA.pol=null;$('la-pol-sel').innerHTML='';$('la-pol-busca').style.display='';$('la-pol-q').focus()">Trocar</button>`}</div>`;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('la-pol-sel'));
+}
+async function salvarLanc() {
+  const msg = $('la-msg'); msg.textContent = '';
+  if (!LA.pol) { msg.textContent = 'Escolha o policial.'; return; }
+  const alteracao = { re: LA.pol.re, grupo: $('la-grupo').value, subtipo: $('la-sub').value.trim(), inicio: $('la-ini').value, fim: $('la-fim').value,
+    exercicio: $('la-exe').value, comportamento: $('la-com').value, publicacao: $('la-pub').value, descricao: $('la-desc').value };
+  if (!temPeriodo(alteracao)) alteracao.fim = '';
+  const btn = $('la-btn'), antes = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Salvando…';
+  try {
+    if (LA.id) await api('/api/p1sec/salvar', { op: 'editar', id: LA.id, alteracao });
+    else if (LA.arq) await api('/api/p1sec/enviar', { re: LA.pol.re, categoria: $('la-cat').value, titulo: alteracao.subtipo, arquivo: LA.arq, alteracao });
+    else await api('/api/p1sec/salvar', { op: 'lancar', alteracao });
+    fechar('m-lanc'); toast(LA.id ? 'Lançamento corrigido.' : 'Lançado.');
+    await recarregar();
+  } catch (e) { msg.textContent = e.message; }
+  finally { btn.disabled = false; btn.innerHTML = antes; }
+}
+
+/* ---------- arquivo: lê e (se for foto) reduz antes de mandar ---------- */
+const MAX = 15 * 1024 * 1024;
+async function lerArquivo(f) {
+  let mime = f.type || '';
+  if (!mime && /\.pdf$/i.test(f.name)) mime = 'application/pdf';
+  if (!mime && /\.docx$/i.test(f.name)) mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  if (!mime && /\.doc$/i.test(f.name)) mime = 'application/msword';
+  if (/^image\/(jpeg|png|webp)$/.test(mime) && f.size > 600 * 1024) {
+    try {
+      const img = await createImageBitmap(f);
+      const k = Math.min(1, 2200 / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      const b = await new Promise((ok) => cv.toBlob(ok, 'image/jpeg', 0.85));
+      if (b && b.size < f.size) { f = b; mime = 'image/jpeg'; }
+    } catch (e) { /* manda a original */ }
+  }
+  if (f.size > MAX) throw new Error('Arquivo grande demais (máximo 15 MB).');
+  const b64 = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(new Error('Não consegui ler o arquivo.')); r.readAsDataURL(f); });
+  return { mime, b64, tamanho: f.size };
+}
+async function pegarArq(px, files) {
+  const f = files && files[0], box = $(px + '-arq');
+  const alvo = px === 'la' ? LA : EN;
+  alvo.arq = null;
+  box.classList.toggle('tem', !!f);
+  box.querySelector('.bp-trocar').textContent = f ? 'Trocar' : '';
+  if (px === 'la') $('la-cat-w').style.display = f ? '' : 'none';
+  if (!f) { box.querySelector('.tx b').textContent = px === 'la' ? 'Anexar o documento' : 'Toque para escolher o arquivo ou a foto'; box.querySelector('.tx small').textContent = px === 'la' ? 'PDF, foto ou Word · vai para a pasta do policial no Drive' : 'PDF, foto ou Word · até 15 MB'; $(px + '-file').value = ''; return; }
+  box.querySelector('.tx b').textContent = f.name;
+  box.querySelector('.tx small').textContent = 'Preparando…';
+  try { alvo.arq = await lerArquivo(f); box.querySelector('.tx small').textContent = (alvo.arq.tamanho / 1024).toFixed(0) + ' KB · pronto'; }
+  catch (e) { box.classList.remove('tem'); box.querySelector('.tx small').textContent = e.message; }
+}
+
+/* ---------- impressão ---------- */
+function cabImp(tit, sub) {
+  return `<div class="icab"><img src="LOGOS/bpfron_transp.png" alt=""><div><small>POLÍCIA MILITAR DO ESTADO DE RONDÔNIA</small><small>BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS — BPFRON</small><small>P1 · SEÇÃO PESSOAL</small><h1>${esc(tit)}</h1>${sub ? `<small>${esc(sub)}</small>` : ''}</div></div>`;
+}
+const rodImp = () => `<div class="irod">Emitido em ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Porto_Velho' })} por ${esc(ls('bp_user') || '')} · P1 · Seção Pessoal (pessoal.html)</div>`;
+function imprimir(html) { $('imp').innerHTML = html; setTimeout(() => window.print(), 150); }
+function imprimirFicha() {
+  const f = FICHA, p = f.policial;
+  const linhas = f.alteracoes.map((a) => `<tr><td>${esc(nomeG(a.grupo))}</td><td>${esc(a.subtipo)}${a.comportamento ? ' — ' + esc(a.comportamento) : ''}</td><td>${periodoTx(a)}</td><td>${esc(a.publicacao || '')}</td><td>${esc((STATUS[a.status] || [, a.status])[1])}</td></tr>`).join('');
+  imprimir(cabImp('FICHA DO POLICIAL', nomePol(p)) + `
+    <div class="idados"><div><span>Nome</span><b>${esc(p.nome)}</b></div><div><span>Posto/graduação</span><b>${esc(p.posto)}</b></div><div><span>RE</span><b>${esc(p.re)}</b></div>
+      <div><span>OPM</span>${esc(p.opm)}</div><div><span>Nascimento</span>${fD(p.nascimento)}</div><div><span>Situação em ${fD(f.hoje)}</span>${f.situacao.length ? f.situacao.map((a) => esc(a.subtipo)).join(', ') : 'Disponível'}</div></div>
+    <h2>Alterações</h2>${linhas ? `<table><thead><tr><th>Tipo</th><th>O que é</th><th>Período / data</th><th>Publicação</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table>` : '<p>Nenhum lançamento.</p>'}
+    <h2>Cursos</h2><p>${f.cursos.map((c) => esc((c.sigla ? c.sigla + ' — ' : '') + c.curso + (c.ano ? ' (' + c.ano + ')' : ''))).join('; ') || 'Nenhum informado.'}</p>
+    <h2>Sistemas de acesso</h2><p>${f.acessos.map(esc).join('; ') || 'Nenhum informado.'}</p>
+    <h2>Material bélico e bens em carga</h2>${f.carga.length ? `<table><thead><tr><th>Código</th><th>Descrição</th><th>Série / tombamento</th><th>Qtd</th></tr></thead><tbody>${f.carga.map((c) => `<tr><td>${esc(c.bem)}</td><td>${esc(c.descricao)}</td><td>${esc([c.serie, c.tombamento].filter(Boolean).join(' / '))}</td><td>${c.qtd}</td></tr>`).join('')}</tbody></table>` : '<p>Nenhum bem em carga.</p>'}
+    ${rodImp()}`);
+}
+function imprimirRelacao() {
+  const l = filtradas();
+  const filtro = [FL.grupo && nomeG(FL.grupo), FL.status && (STATUS[FL.status] || [])[1], FL.ano, FL.q && '"' + FL.q + '"'].filter(Boolean).join(' · ') || 'todos os lançamentos';
+  imprimir(cabImp('RELAÇÃO DE ALTERAÇÕES', filtro + ' · ' + l.length + ' lançamento(s)') +
+    `<table><thead><tr><th>Policial</th><th>RE</th><th>Tipo</th><th>O que é</th><th>Período / data</th><th>Publicação</th><th>Situação</th></tr></thead><tbody>${l.map((a) => { const p = polDe(a.re); return `<tr><td>${esc(nomePol({ ...p, posto: p.posto || a.posto }))}</td><td>${esc(a.re)}</td><td>${esc(nomeG(a.grupo))}</td><td>${esc(a.subtipo)}</td><td>${periodoTx(a)}</td><td>${esc(a.publicacao || '')}</td><td>${esc((STATUS[a.status] || [, a.status])[1])}</td></tr>`; }).join('')}</tbody></table>` + rodImp());
+}
+
+/* ============================== POLICIAL ============================== */
+let EN = { re: '', arq: null };
+function abrirPol() {
+  mostrar('ps-pol');
+  const e = D.eu;
+  mostrarEu(nomePol({ posto: e.posto, guerra: e.guerra, nome: e.nome, re: e.re }), 'RE ' + e.re);
+  $('pp-tit').innerHTML = `Olá, <em>${esc(e.guerra || e.nome || 'RE ' + e.re)}</em>`;
+  const sit = D.situacao.length ? D.situacao.map((a) => `<span class="ps-tag" style="--c:${corG(a.grupo)}">${esc(a.subtipo)} até ${fD(a.fim)}</span>`).join('') : '<span class="bp-sl ok">Sem afastamento hoje</span>';
+  const ag = D.alteracoes.filter((a) => a.status === 'AGUARDANDO'), rec = D.alteracoes.filter((a) => a.status === 'RECUSADO');
+  const hom = D.alteracoes.filter((a) => a.status === 'HOMOLOGADO');
+  $('pp-corpo').innerHTML = `
+    <div class="ps-chips" style="margin-top:14px">${sit}</div>
+    ${ag.length ? `<div class="bp-sec"><span class="bp-tile pend"><i data-ic="relogio"></i></span><div><h2>Aguardando a P1</h2><small>Você enviou; a P1 ainda vai conferir</small></div><span class="bp-cont bp-sl">${ag.length}</span></div><div class="ps-lista">${ag.map((a) => itemAlt(a, { semNome: true })).join('')}</div>` : ''}
+    ${rec.length ? `<div class="bp-sec"><span class="bp-tile crit"><i data-ic="alerta"></i></span><div><h2>Recusados</h2><small>Veja o motivo e envie de novo, se for o caso</small></div><span class="bp-cont bp-sl">${rec.length}</span></div><div class="ps-lista">${rec.map((a) => itemAlt(a, { semNome: true })).join('')}</div>` : ''}
+    <div class="bp-sec"><span class="bp-tile ok"><i data-ic="arquivo"></i></span><div><h2>Minhas alterações</h2><small>Férias, afastamentos, licenças e recompensas lançados pela P1</small></div><span class="bp-cont bp-sl">${hom.length}</span></div>
+    <div class="ps-lista">${hom.map((a) => itemAlt(a, { semNome: true })).join('') || '<div class="bp-vazio">Nada lançado ainda.</div>'}</div>
+    <div class="bp-sec"><span class="bp-tile info"><i data-ic="pasta"></i></span><div><h2>Meus documentos</h2><small>O que você (ou a P1) guardou na sua pasta</small></div><span class="bp-cont bp-sl">${D.documentos.length}</span></div>
+    <div class="ps-lista">${D.documentos.map((x) => itemDoc(x, false)).join('') || '<div class="bp-vazio">Nenhum documento.</div>'}</div>
+    <div class="bp-aviso" style="margin-top:16px"><i data-ic="info"></i><div>Cursos e sistemas de acesso continuam na <a href="p1.html${PORTAL ? '?portal=1&re=' + encodeURIComponent(e.re) : ''}" style="color:var(--acc)">P1 · Minha Ficha</a>.</div></div>`;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('pp-corpo'));
+}
+
+/* janela de envio: policial (o que é dele) ou gestor (por um policial) */
+function abrirEnvio(re) {
+  EN = { re: re || '', arq: null };
+  const cats = MODO === 'gestao' ? D.categorias : D.categorias;
+  $('en-cat').innerHTML = cats.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  if (!cats.length) { toast('Nenhuma categoria aberta para envio.', 'err'); return; }
+  ['en-tit', 'en-ini', 'en-fim', 'en-obs'].forEach((i) => { $(i).value = ''; });
+  $('en-msg').textContent = '';
+  const grs = Object.keys(G()).filter((k) => (G()[k] || {}).policialEnvia);
+  $('en-sub').innerHTML = grs.map((k) => `<optgroup label="${esc(nomeG(k))}">${G()[k].subtipos.map((s) => `<option value="${k}|${esc(s)}">${esc(s)}</option>`).join('')}</optgroup>`).join('');
+  $('m-env-sub').textContent = re ? ('Para ' + nomePol(polDe(re)) + ' — fica na pasta dele no Drive') : 'Vai para a P1 conferir';
+  pegarArq('en', null);
+  trocouCatEnvio();
+  abrir('m-env');
+}
+function trocouCatEnvio() {
+  const c = D.categorias.find((x) => x.id === $('en-cat').value);
+  $('en-afast').checked = !!c && /ATESTADO|LICEN/.test(sem(c.nome)) && !EN.re;
+  if (c && /LICEN/.test(sem(c.nome))) { const o = [...$('en-sub').options].find((x) => x.value.startsWith('LICENCA|')); if (o) $('en-sub').value = o.value; }
+  else { const o = [...$('en-sub').options].find((x) => x.value.startsWith('SAUDE|')); if (o) $('en-sub').value = o.value; }
+  mostrarAfast();
+}
+function mostrarAfast() { document.querySelectorAll('.en-af').forEach((x) => { x.style.display = $('en-afast').checked ? '' : 'none'; }); }
+async function enviarDoc() {
+  const msg = $('en-msg'); msg.textContent = '';
+  if (!EN.arq) { msg.textContent = 'Escolha o arquivo ou tire a foto do documento.'; return; }
+  const corpo = { categoria: $('en-cat').value, titulo: $('en-tit').value.trim(), arquivo: EN.arq };
+  if (EN.re) corpo.re = EN.re;
+  if ($('en-afast').checked) {
+    const [grupo, subtipo] = $('en-sub').value.split('|');
+    corpo.alteracao = { grupo, subtipo, inicio: $('en-ini').value, fim: $('en-fim').value, descricao: $('en-obs').value };
+    if (!corpo.alteracao.inicio || !corpo.alteracao.fim) { msg.textContent = 'Diga o primeiro e o último dia do afastamento.'; return; }
+    if (!corpo.titulo) corpo.titulo = subtipo;
+  }
+  const btn = $('en-btn'), antes = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Enviando…';
+  try {
+    await api('/api/p1sec/enviar', corpo);
+    fechar('m-env');
+    toast(corpo.alteracao && MODO === 'pol' ? 'Enviado. A P1 vai conferir e lançar.' : 'Documento guardado.');
+    if (MODO === 'gestao') await recarregar(); else { D = await api('/api/p1sec/eu'); abrirPol(); }
+  } catch (e) { msg.textContent = e.message; }
+  finally { btn.disabled = false; btn.innerHTML = antes; }
+}
+
+boot();
+</script>
+</body>
+</html>

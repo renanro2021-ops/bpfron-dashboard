@@ -105,6 +105,8 @@
     // ---- P1 · Pessoal
     { id: 'dp1', href: 'index.html?pg=p1', ic: '🗂️', nome: 'Ficha do Efetivo', grupo: 'p1', acesso: { perm: ['p1'] }, gestor: 'p1',
       desc: 'Painel consolidado da P1 com os dados de todo o efetivo.' },
+    { id: 'pessoal', href: 'pessoal.html', ic: '🗃️', nome: 'P1 · Seção Pessoal', grupo: 'p1', acesso: { perm: ['p1', 'p1ver'] }, gestor: 'p1', ver: 'p1ver',
+      desc: 'Afastamentos, férias, licenças, recompensas, calendário, mapa da força e documentos de cada policial.' },
     { id: 'p1', href: 'p1.html', ic: '🪪', nome: 'P1 · Minha Ficha', grupo: 'p1', acesso: 'pub',
       desc: 'Autoatualização da ficha cadastral: dados, cursos e acessos.' },
     { id: 'acessos', href: 'acessos.html', ic: '🔑', nome: 'Acesso a Sistemas', grupo: 'p1', acesso: 'pub', gestor: 'acessos',

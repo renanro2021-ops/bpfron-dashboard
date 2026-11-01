@@ -187,6 +187,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
   <button data-aba="viatura"><span class="i">🚓</span><span>Viatura</span><i class="bd az hide" id="bd-vtr"></i></button>
   <button data-aba="cautela"><span class="i">🛡️</span><span>Cautela</span><i class="bd hide" id="bd-cau"></i></button>
   <button data-aba="ficha"><span class="i">👤</span><span>Minha ficha</span></button>
+  <button data-aba="p1"><span class="i">📎</span><span>P1</span><i class="bd hide" id="bd-p1"></i></button>
 </nav>
 
 <main id="main">
@@ -262,6 +263,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 <div class="fr hide" id="v-viatura"><div class="carr">Carregando a frota…</div></div>
 <div class="fr hide" id="v-cautela"><div class="carr">Carregando a cautela…</div></div>
 <div class="fr hide" id="v-ficha"><div class="carr">Carregando a sua ficha…</div></div>
+<div class="fr hide" id="v-p1"><div class="carr">Carregando a P1…</div></div>
 
 <div class="md" id="md"><div class="cx" id="md-cx"></div></div>
 
@@ -441,17 +443,17 @@ $('bt-trocar').onclick = () => {
 $('md').addEventListener('click', (e) => { if (e.target === $('md')) $('md').classList.remove('on'); });
 
 /* ============================== abas ============================== */
-const ABAS = ['inicio', 'tarefas', 'viatura', 'cautela', 'ficha'];
-const FRAMES = ['tarefas', 'viatura', 'cautela', 'ficha'];
+const ABAS = ['inicio', 'tarefas', 'viatura', 'cautela', 'ficha', 'p1'];
+const FRAMES = ['tarefas', 'viatura', 'cautela', 'ficha', 'p1'];
 let ABA = 'inicio';
-const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', cautela: 'cautela.html', ficha: 'p1.html' };
+const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', cautela: 'cautela.html', ficha: 'p1.html', p1: 'pessoal.html' };
 function srcDe(aba){ return `${PAGINA[aba]}?portal=1&re=${encodeURIComponent(re5(EU.re))}${API_Q ? '&api=' + encodeURIComponent(API_Q) : ''}`; }
 function quadro(aba){
   const box = $('v-' + aba);
   let f = box.querySelector('iframe');
   if (!f){
     f = document.createElement('iframe');
-    f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', cautela:'Cautela de armamento', ficha:'Minha ficha (P1)' }[aba];
+    f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', cautela:'Cautela de armamento', ficha:'Minha ficha (P1)', p1:'P1 · afastamentos e documentos' }[aba];
     f.src = srcDe(aba);
     f.addEventListener('load', () => { const c = box.querySelector('.carr'); if (c) c.remove(); });
     box.appendChild(f);
@@ -470,7 +472,7 @@ function irAba(aba, opt){
     const f = quadro(aba);
     // a ficha e a cautela recarregam se a pessoa entrou com a senha em outra aba depois
     // (a ficha deixa de pedir o CPF; a cautela já abre logada)
-    if ((aba === 'ficha' || aba === 'cautela') && f.dataset.tok !== tokenTar()){ if (f.dataset.tok !== undefined) f.src = srcDe(aba); }
+    if ((aba === 'ficha' || aba === 'cautela' || aba === 'p1') && f.dataset.tok !== tokenTar()){ if (f.dataset.tok !== undefined) f.src = srcDe(aba); }
     f.dataset.tok = tokenTar();
     if (opt && opt.abrir) abrirNaCentral(f, opt.abrir);
   }
