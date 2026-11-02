@@ -39,6 +39,13 @@
 .pat-tab td.qtd,.pat-tab th.qtd{text-align:right;white-space:nowrap}
 .pat-tab td.mono{font-variant-numeric:tabular-nums;white-space:nowrap}
 .pat-tab td.vz{color:var(--dim)}
+/* estado de conservação (02/11/2026): selo com a cor do estado */
+.pat-est{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap;color:var(--c)}
+.pat-est::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+/* 5 totais no topo (o 5º é o estado de conservação): uma linha no computador */
+#pat-nums{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1100px){#pat-nums{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){#pat-nums{grid-template-columns:repeat(2,minmax(0,1fr))}#pat-nums>:last-child{grid-column:1/-1}}
 .pat-mais{display:flex;justify-content:center;padding:14px}
 .pat-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .pat-form .inteira{grid-column:1/-1}
@@ -177,6 +184,16 @@
     "Cada bem pode ter o número do processo SEI (ex.: 0021.000131/2026-96). Ele aparece na lista, na ficha do bem, no Excel e na relação impressa.",
     "A busca também acha o bem pelo nº do processo, com ou sem ponto, barra e traço."
   ] },
+  { "data": "2026-11-02", "titulo": "Estado de conservação", "quem": "todos", "itens": [
+    "Cada bem agora tem o estado de conservação: Excelente, Bom, Regular ou Péssimo — a mesma escala do Material Bélico.",
+    "Aparece na lista (com cor), na ficha do bem, no Excel e na relação impressa.",
+    "Filtro novo por estado e um total clicável no topo com quantos bens há em cada estado."
+  ] },
+  { "data": "2026-11-02", "titulo": "Estado de conservação no cadastro", "quem": "gestor", "itens": [
+    "Campo obrigatório ao cadastrar ou corrigir um bem (escolha na lista). Os bens já cadastrados ficam sem estado até alguém corrigir.",
+    "No “Salvar e cadastrar outro” o estado continua escolhido.",
+    "Na importação, a coluna ESTADO DE CONSERVAÇÃO da planilha é lida (opcional). Ótimo vira Excelente e Ruim vira Péssimo."
+  ] },
   { "data": "2026-10-31", "titulo": "Processo SEI no cadastro", "quem": "gestor", "itens": [
     "Caixa nova “Processo SEI” no cadastro e na correção do bem. Não é obrigatória.",
     "Pode digitar só os números: os 16 dígitos ganham o formato do SEI sozinhos.",
@@ -282,6 +299,8 @@
           <div class="bp-in"><i data-ic="pasta"></i><select id="pat-ftipo" onchange="pintarLista()"></select></div></div>
         <div class="bp-campo"><label for="pat-fdep">Departamento</label>
           <div class="bp-in"><i data-ic="usuarios"></i><select id="pat-fdep" onchange="pintarLista()"></select></div></div>
+        <div class="bp-campo"><label for="pat-fest">Estado de conservação</label>
+          <div class="bp-in"><i data-ic="estrela"></i><select id="pat-fest" onchange="pintarLista()"></select></div></div>
         <button type="button" class="bp-btn ghost" onclick="limparFiltros()"><i data-ic="x"></i>Limpar</button>
       </div>
       <div class="pat-conta" id="pat-conta"></div>
@@ -324,7 +343,11 @@
         <div class="bp-in" id="b-tipo-outro" style="display:none;margin-top:8px"><i data-ic="editar"></i><input id="b-tipo" maxlength="80" autocomplete="off" placeholder="Qual a origem do bem?" oninput="conferirBem()"></div></div>
       <div class="bp-campo"><label for="b-departamento">Departamento *</label>
         <div class="bp-in"><i data-ic="usuarios"></i><input id="b-departamento" list="dl-dep" maxlength="80" required autocomplete="off" placeholder="Ex.: P4, P3, RESERVA" oninput="conferirBem()"></div></div>
-      <div class="bp-campo inteira"><label for="b-processo_sei">Processo SEI</label>
+      <div class="bp-campo"><label for="b-estado">Estado de conservação *</label>
+        <div class="bp-in"><i data-ic="estrela"></i><select id="b-estado" required onchange="conferirBem()">
+          <option value="">Escolha o estado</option><option value="EXCELENTE">Excelente</option><option value="BOM">Bom</option><option value="REGULAR">Regular</option><option value="PÉSSIMO">Péssimo</option>
+        </select></div></div>
+      <div class="bp-campo"><label for="b-processo_sei">Processo SEI</label>
         <div class="bp-in"><i data-ic="arquivo"></i><input id="b-processo_sei" maxlength="40" autocomplete="off" inputmode="numeric" placeholder="Ex.: 0021.000131/2026-96" oninput="conferirBem()" onblur="this.value = normSei(this.value); conferirBem()"></div>
         <div class="pat-dica">Opcional. Pode digitar só os números.</div></div>
       <div class="inteira" id="b-avisos"></div>
@@ -458,7 +481,24 @@ const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null 
 const CAMPOS = [
   ['codigo', 'Código'], ['descricao', 'Descrição do bem'], ['serie', 'Nº de série'], ['tombamento', 'Tombamento'],
   ['quantidade', 'Qtd.'], ['tipo', 'Tipo (origem)'], ['departamento', 'Departamento'], ['processo_sei', 'Processo SEI'],
+  ['estado', 'Estado'],
 ];
+/* Estado de conservação (02/11/2026): a MESMA escala do Material Bélico — Excelente · Bom · Regular · Péssimo.
+   Mesma regra do backend/patrimonio.js (normEstado) e do worker.js (estadoConservacao):
+   Ótimo = Excelente, Ruim/Inservível = Péssimo. "" = vazio; null = fora da escala. */
+const ESTADOS = ['EXCELENTE', 'BOM', 'REGULAR', 'PÉSSIMO'];
+const EST_COR = { EXCELENTE: 'var(--good)', BOM: 'var(--info)', REGULAR: 'var(--warn)', 'PÉSSIMO': 'var(--crit)' };
+function normEstado(v) {
+  const e = String(v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!e || e === '-') return '';
+  if (/^(excelente|otimo)/.test(e)) return 'EXCELENTE';
+  if (/^bom/.test(e)) return 'BOM';
+  if (/^regular/.test(e)) return 'REGULAR';
+  if (/^(pessimo|ruim|inserviv)/.test(e)) return 'PÉSSIMO';
+  return null;
+}
+const rotEstado = (v) => { const n = normEstado(v); return n ? n.charAt(0) + n.slice(1).toLowerCase() : ''; };
+const seloEstado = (v) => { const n = normEstado(v); return n ? `<span class="pat-est" style="--c:${EST_COR[n]}">${rotEstado(n)}</span>` : ''; };
 /* nº do processo SEI (opcional, 31/10/2026). Mesma regra do backend/patrimonio.js (normSei):
    16 dígitos seguidos ganham a máscara 0000.000000/0000-00; o resto fica como veio. */
 const SEI_RE = /^\d{4}\.\d{6}\/\d{4}-\d{2}$/;
@@ -568,6 +608,9 @@ function pintarTudo() {
     $(sel).innerHTML = `<option value="">${rot}</option>` + valores(k).map((v) => `<option${v === atual ? ' selected' : ''}>${esc(v)}</option>`).join('');
   };
   opts('pat-ftipo', 'tipo', 'Todas as origens'); opts('pat-fdep', 'departamento', 'Todos os departamentos');
+  const fe = $('pat-fest').value;
+  $('pat-fest').innerHTML = '<option value="">Todos os estados</option>' + ESTADOS.map((v) => `<option value="${v}"${v === fe ? ' selected' : ''}>${rotEstado(v)}</option>`).join('') +
+    `<option value="__sem"${fe === '__sem' ? ' selected' : ''}>Sem estado informado</option>`;
   $('pat-nexc').textContent = fNum(D.excluidos || 0);
   $('pat-nexc').style.display = D.excluidos ? '' : 'none';
   $('dl-dep').innerHTML = valores('departamento').map((v) => `<option value="${esc(v)}">`).join('');
@@ -577,23 +620,26 @@ function pintarTudo() {
     `<div class="bp-num" style="--i:1;--c:var(--good)">${IC('grade')}<div class="r">Unidades (quantidade)</div><div class="v">${fNum(somaQtd(bs))}</div></div>`,
     `<button type="button" class="bp-num clica" style="--i:2;--c:var(--acc)" onclick="abrirResumo('tipo')">${IC('arquivar')}<div class="r">Tipos (origem)</div><div class="v">${fNum(valores('tipo').length)}</div><small class="bp-ver">ver por origem${IC('seta')}</small></button>`,
     `<button type="button" class="bp-num clica" style="--i:3;--c:var(--warn)" onclick="abrirResumo('departamento')">${IC('usuarios')}<div class="r">Departamentos</div><div class="v">${fNum(valores('departamento').length)}</div><small class="bp-ver">ver por departamento${IC('seta')}</small></button>`,
+    `<button type="button" class="bp-num clica" style="--i:4;--c:var(--good)" onclick="abrirResumo('estado')">${IC('estrela')}<div class="r">Estado de conservação</div><div class="v">${fNum(bs.filter((b) => normEstado(b.estado)).length)}</div><small class="bp-ver">${bs.some((b) => !normEstado(b.estado)) ? fNum(bs.filter((b) => !normEstado(b.estado)).length) + ' sem estado · ' : ''}ver por estado${IC('seta')}</small></button>`,
   ].join('');
   pintarLista();
 }
 
 function filtrados() {
   const termos = sem($('pat-q').value).split(/\s+/).filter(Boolean);
-  const ft = $('pat-ftipo').value, fd = $('pat-fdep').value;
+  const ft = $('pat-ftipo').value, fd = $('pat-fdep').value, fe = $('pat-fest').value;
   return D.bens.filter((b) => {
     if (ft && b.tipo !== ft) return false;
     if (fd && b.departamento !== fd) return false;
+    if (fe && (fe === '__sem' ? !!normEstado(b.estado) : normEstado(b.estado) !== fe)) return false;
     if (!termos.length) return true;
-    const alvo = sem(CAMPOS.map(([k]) => b[k]).join(' '));
+    const alvo = sem(CAMPOS.map(([k]) => b[k]).join(' ') + ' ' + rotEstado(b.estado));
     const alvoJunto = chave(alvo);
     return termos.every((t) => alvo.includes(t) || alvoJunto.includes(chave(t)));
   }).sort((a, b) => {
     const k = SORT.k;
-    const r = k === 'quantidade' ? (a.quantidade - b.quantidade) : cmp(a[k], b[k]);
+    const ordEst = (x) => { const i = ESTADOS.indexOf(normEstado(x.estado)); return i < 0 ? 9 : i; };
+    const r = k === 'quantidade' ? (a.quantidade - b.quantidade) : k === 'estado' ? (ordEst(a) - ordEst(b)) : cmp(a[k], b[k]);
     return (r || cmp(a.codigo, b.codigo)) * SORT.dir;
   });
 }
@@ -614,29 +660,33 @@ function pintarLista() {
     <td class="qtd" data-r="Quantidade">${fNum(b.quantidade)}</td>
     <td data-r="Tipo">${esc(b.tipo)}</td>
     <td data-r="Departamento">${esc(b.departamento)}</td>
-    <td class="mono${b.processo_sei ? '' : ' vz'}" data-r="Processo SEI">${vz(b.processo_sei)}</td></tr>`).join('');
+    <td class="mono${b.processo_sei ? '' : ' vz'}" data-r="Processo SEI">${vz(b.processo_sei)}</td>
+    <td class="${normEstado(b.estado) ? '' : 'vz'}" data-r="Estado">${seloEstado(b.estado) || '—'}</td></tr>`).join('');
   piscou.forEach((c) => VIVO_NOVOS.delete(c)); // cada bem que chegou ao vivo pisca uma vez só
   $('pat-tab').style.display = l.length ? '' : 'none';
   $('pat-vazio').style.display = l.length ? 'none' : '';
   $('pat-vazio').innerHTML = D.bens.length ? 'Nenhum bem com esse filtro.' : (D.gestor ? 'Nenhum bem cadastrado ainda. Use <b>Cadastrar bem</b> ou <b>Importar planilha</b>.' : 'Nenhum bem cadastrado ainda.');
   $('pat-mais').style.display = l.length > LIMITE ? '' : 'none';
   $('pat-cont').textContent = fNum(l.length);
-  const filtro = $('pat-q').value || $('pat-ftipo').value || $('pat-fdep').value;
+  const filtro = $('pat-q').value || $('pat-ftipo').value || $('pat-fdep').value || $('pat-fest').value;
   $('pat-conta').innerHTML = `<b>${fNum(l.length)}</b> ${l.length === 1 ? 'bem' : 'bens'} · <b>${fNum(somaQtd(l))}</b> unidades${filtro ? ' no filtro' : ''}${l.length > LIMITE ? ` · mostrando os ${fNum(LIMITE)} primeiros` : ''}`;
 }
 
-function limparFiltros() { $('pat-q').value = ''; $('pat-ftipo').value = ''; $('pat-fdep').value = ''; LIMITE = 150; pintarLista(); }
+function limparFiltros() { $('pat-q').value = ''; $('pat-ftipo').value = ''; $('pat-fdep').value = ''; $('pat-fest').value = ''; LIMITE = 150; pintarLista(); }
 
 function abrirResumo(k) {
-  $('m-res-tit').textContent = k === 'tipo' ? 'Por tipo (origem do bem)' : 'Por departamento';
+  $('m-res-tit').textContent = k === 'tipo' ? 'Por tipo (origem do bem)' : k === 'estado' ? 'Por estado de conservação' : 'Por departamento';
   const por = {};
-  D.bens.forEach((b) => { const v = b[k] || '—'; (por[v] = por[v] || []).push(b); });
-  $('res-lista').innerHTML = Object.keys(por).sort(cmp).map((v) =>
-    `<button type="button" data-v="${esc(v)}" onclick="filtrarPor('${k}', this.dataset.v)"><b>${esc(v)}</b><small>${fNum(por[v].length)} ${por[v].length === 1 ? 'bem' : 'bens'} · ${fNum(somaQtd(por[v]))} un.</small>${IC('seta')}</button>`).join('') || '<div class="bp-vazio">Nada cadastrado.</div>';
+  const valor = (b) => k === 'estado' ? (normEstado(b.estado) || '__sem') : (b[k] || '—');
+  D.bens.forEach((b) => { const v = valor(b); (por[v] = por[v] || []).push(b); });
+  const ordem = k === 'estado' ? ESTADOS.concat('__sem').filter((v) => por[v]) : Object.keys(por).sort(cmp);
+  const nome = (v) => k === 'estado' ? (v === '__sem' ? 'Sem estado informado' : rotEstado(v)) : v;
+  $('res-lista').innerHTML = ordem.map((v) =>
+    `<button type="button" data-v="${esc(v)}" onclick="filtrarPor('${k}', this.dataset.v)"><b>${esc(nome(v))}</b><small>${fNum(por[v].length)} ${por[v].length === 1 ? 'bem' : 'bens'} · ${fNum(somaQtd(por[v]))} un.</small>${IC('seta')}</button>`).join('') || '<div class="bp-vazio">Nada cadastrado.</div>';
   abrir('m-res');
 }
 function filtrarPor(k, v) {
-  $(k === 'tipo' ? 'pat-ftipo' : 'pat-fdep').value = v;
+  $(k === 'tipo' ? 'pat-ftipo' : k === 'estado' ? 'pat-fest' : 'pat-fdep').value = v;
   fechar('m-res'); pintarLista();
   $('pat-tab').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -656,7 +706,7 @@ async function abrirFicha(id) {
   const linha = (r, v) => `<dt>${r}</dt><dd>${v ? esc(v) : '<span style="color:var(--dim)">—</span>'}</dd>`;
   $('ficha-dl').innerHTML = linha('Código', b.codigo) + linha('Descrição do bem', b.descricao) + linha('Nº de série', b.serie) +
     linha('Tombamento', b.tombamento) + linha('Quantidade', fNum(b.quantidade)) + linha('Tipo', b.tipo) + linha('Departamento', b.departamento) +
-    linha('Processo SEI', b.processo_sei) +
+    linha('Processo SEI', b.processo_sei) + linha('Estado de conservação', rotEstado(b.estado)) +
     linha('Cadastrado', [b.criado_por, fQuando(b.criado_em)].filter(Boolean).join(' · ')) +
     (b.atualizado_em && !exc ? linha('Última mudança', [b.atualizado_por, fQuando(b.atualizado_em)].filter(Boolean).join(' · ')) : '') +
     (exc ? linha('Excluído', [b.excluido_por, fQuando(b.excluido_em), b.motivo ? 'motivo: ' + b.motivo : ''].filter(Boolean).join(' · ')) : '') +
@@ -708,7 +758,7 @@ function pintarExc() {
   const gestor = !!(D && D.gestor);
   $('exc-lista').innerHTML = l.map((b) => `<div class="pat-exc" data-cod="${esc(b.codigo)}">
       <div class="tx"><b>${esc(b.codigo)}</b> · ${esc(b.descricao)}
-        <small>${[b.tombamento ? 'Tombamento ' + b.tombamento : '', b.serie ? 'Série ' + b.serie : '', fNum(b.quantidade) + ' un.', b.tipo, b.departamento].filter(Boolean).map(esc).join(' · ')}</small>
+        <small>${[b.tombamento ? 'Tombamento ' + b.tombamento : '', b.serie ? 'Série ' + b.serie : '', fNum(b.quantidade) + ' un.', b.tipo, b.departamento, rotEstado(b.estado)].filter(Boolean).map(esc).join(' · ')}</small>
         <small class="quem">${IC('lixeira')} Excluído por <b>${esc(b.excluido_por || '—')}</b>${b.excluido_em ? ' em ' + esc(fQuando(b.excluido_em)) : ''}${b.motivo ? ' · motivo: ' + esc(b.motivo) : ''}</small>
         ${b.conflito ? `<div class="bp-aviso crit">${IC('alerta')}<div>${esc(b.conflito)}</div></div>` : ''}
       </div>
@@ -744,7 +794,7 @@ async function recuperarBem(id, bt) {
 }
 
 /* ============================== cadastro ============================== */
-const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento', 'processo_sei'];
+const CB = ['codigo', 'descricao', 'serie', 'tombamento', 'quantidade', 'tipo', 'departamento', 'processo_sei', 'estado'];
 const CF = CB.filter((k) => k !== 'codigo'); // o código é sempre do sistema (PAT-0001…), ninguém digita
 function montarTipos(atual) {
   const padrao = TIPOS_PADRAO.map((t) => t[0]);
@@ -764,7 +814,7 @@ function tipoMudou(quieto) {
   if (outro && !quieto) setTimeout(() => $('b-tipo').focus(), 50);
   if (!quieto) conferirBem();
 }
-function preencherForm(b) { CF.forEach((k) => { if (k !== 'tipo') $('b-' + k).value = b[k] == null ? '' : b[k]; }); montarTipos(b.tipo); }
+function preencherForm(b) { CF.forEach((k) => { if (k !== 'tipo') $('b-' + k).value = b[k] == null ? '' : b[k]; }); $('b-estado').value = normEstado(b.estado) || ''; montarTipos(b.tipo); }
 function lerForm() {
   const o = {}; CF.forEach((k) => { if (k !== 'tipo') o[k] = $('b-' + k).value.trim(); });
   const sel = $('b-tipo-sel').value;
@@ -775,7 +825,7 @@ function lerForm() {
 
 function novoBem(manter) {
   EDITANDO = null;
-  const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value, processo_sei: lerForm().processo_sei } : {};
+  const fica = manter ? { tipo: lerForm().tipo, departamento: $('b-departamento').value, processo_sei: lerForm().processo_sei, estado: $('b-estado').value } : {};
   preencherForm(Object.assign({ quantidade: 1 }, fica));
   vivoFaz('cadastrando');
   $('m-bem-tit').textContent = 'Cadastrar bem';
@@ -885,7 +935,7 @@ function lerDelimitado(t) {
 const CAB_RE = {
   codigo: /^(COD|CODIGO|COD\.?|CODIGO DO BEM)$/, descricao: /^DESCRI/, serie: /SERIE/, tombamento: /^(TOMB|N DE TOMB|PATRIMONIO$)/,
   quantidade: /^(QT|QTD|QTDE|QUANT)/, tipo: /^TIPO/, departamento: /^(DEPART|DEPTO|SETOR|SECAO|LOTACAO|LOCAL)/,
-  processo_sei: /PROCESSO|^SEI\b|^NUP\b/,
+  processo_sei: /PROCESSO|^SEI\b|^NUP\b/, estado: /^(ESTADO|CONSERVA|CONDICAO)/,
 };
 function montarImp(linhas) {
   linhas = (linhas || []).map((l) => (l || []).map((c) => String(c == null ? '' : c).trim())).filter((l) => l.some(Boolean));
@@ -901,7 +951,7 @@ function montarImp(linhas) {
     const larg = Math.max(...linhas.map((l) => l.length));
     const seiNo7 = larg === 7 && linhas.some((l) => SEI_RE.test(normSei(l[6])));
     const pula = larg >= 8 || (larg === 7 && !seiNo7) ? 1 : 0;
-    CF.forEach((k, i) => { mapa[k] = i + pula; });
+    CF.filter((k) => k !== 'estado').forEach((k, i) => { mapa[k] = i + pula; }); // sem cabeçalho o estado não entra (só com a coluna ESTADO)
   }
   const corpo = temCab ? linhas.slice(1) : linhas;
   const ja = D.bens.slice();
@@ -911,6 +961,7 @@ function montarImp(linhas) {
     ['serie', 'tombamento', 'departamento'].forEach((k) => { bem[k] = bem[k].replace(/\s+/g, ' ').toUpperCase(); });
     bem.tipo = normTipo(bem.tipo);
     bem.processo_sei = normSei(bem.processo_sei);
+    const estCru = bem.estado; bem.estado = normEstado(estCru);
     const qt = String(bem.quantidade).replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
     bem.quantidade = qt === '' ? '1' : qt;
     const erros = [];
@@ -918,6 +969,7 @@ function montarImp(linhas) {
     if (!/^\d{1,6}$/.test(bem.quantidade) || Number(bem.quantidade) < 1) erros.push('quantidade inválida');
     if (!bem.tipo) erros.push('falta o tipo');
     if (!bem.departamento) erros.push('falta o departamento');
+    if (bem.estado === null) { erros.push(`estado de conservação "${estCru}" não existe (use Excelente, Bom, Regular ou Péssimo)`); bem.estado = estCru; }
     const p = problemasDe(bem, ja);
     p.bloq.forEach((t) => erros.push(t.replace(/<[^>]+>/g, '')));
     bem.codigo = erros.length ? '' : 'PAT-' + String(n++).padStart(4, '0'); // prévia; quem dá o código é o Worker
@@ -938,7 +990,7 @@ function pintarImp(nCab) {
   const mostra = IMP.slice().sort((a, b) => (b.erros.length > 0) - (a.erros.length > 0)).slice(0, 300);
   $('imp-res').innerHTML = resumo + `<div class="pat-imp-prev"><table><thead><tr><th></th>${CAMPOS.map(([, r]) => `<th>${r}</th>`).join('')}<th>Situação</th></tr></thead><tbody>` +
     mostra.map((x) => `<tr class="${x.erros.length ? 'erro' : ''}"><td class="st">${IC(x.erros.length ? 'alerta' : 'check')}</td>` +
-      CB.map((k) => `<td>${esc(x.bem[k])}${k === 'codigo' && x.bem.codigo ? ' <span class="bp-sl info">auto</span>' : ''}</td>`).join('') +
+      CB.map((k) => `<td>${esc(k === 'estado' ? (rotEstado(x.bem.estado) || x.bem.estado) : x.bem[k])}${k === 'codigo' && x.bem.codigo ? ' <span class="bp-sl info">auto</span>' : ''}</td>`).join('') +
       (x.erros.length ? `<td class="erro-tx">${esc(x.erros.join('; '))}</td>` : (x.aviso.length ? `<td class="aviso-tx">${esc(x.aviso.join(' '))}</td>` : '<td class="ok-tx">pronta</td>')) + '</tr>').join('') +
     '</tbody></table></div>' + (IMP.length > 300 ? `<div class="pat-dica">Mostrando 300 de ${fNum(IMP.length)} linhas.</div>` : '');
 }
@@ -984,8 +1036,8 @@ async function importar() {
 function exportarCsv() {
   const l = filtrados();
   const c = (v) => { const s = String(v == null ? '' : v); return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const linhas = [['CÓDIGO', 'DESCRIÇÃO DO BEM', 'Nº DE SÉRIE', 'TOMBAMENTO', 'QUANTIDADE', 'TIPO', 'DEPARTAMENTO', 'PROCESSO SEI'].join(';')]
-    .concat(l.map((b) => CB.map((k) => c(b[k])).join(';')));
+  const linhas = [['CÓDIGO', 'DESCRIÇÃO DO BEM', 'Nº DE SÉRIE', 'TOMBAMENTO', 'QUANTIDADE', 'TIPO', 'DEPARTAMENTO', 'PROCESSO SEI', 'ESTADO DE CONSERVAÇÃO'].join(';')]
+    .concat(l.map((b) => CB.map((k) => c(k === 'estado' ? rotEstado(b.estado) : b[k])).join(';')));
   const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1000,6 +1052,7 @@ function montarRelatorio() {
   const fil = [];
   if ($('pat-ftipo').value) fil.push('Tipo: ' + $('pat-ftipo').value);
   if ($('pat-fdep').value) fil.push('Departamento: ' + $('pat-fdep').value);
+  if ($('pat-fest').value) fil.push('Estado: ' + ($('pat-fest').value === '__sem' ? 'sem estado informado' : rotEstado($('pat-fest').value)));
   if ($('pat-q').value.trim()) fil.push('Busca: “' + $('pat-q').value.trim() + '”');
   const por = {};
   l.forEach((b) => { (por[b.departamento || '—'] = por[b.departamento || '—'] || []).push(b); });
@@ -1007,9 +1060,9 @@ function montarRelatorio() {
   const secoes = Object.keys(por).sort(cmp).map((dep) => {
     const bs = por[dep];
     return `<h3>${esc(dep)} — ${fNum(bs.length)} ${bs.length === 1 ? 'bem' : 'bens'}, ${fNum(somaQtd(bs))} un.</h3>
-      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo (origem)</th><th>Processo SEI</th></tr></thead><tbody>` +
-      bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td><td>${esc(b.processo_sei)}</td></tr>`).join('') +
-      `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td colspan="2"></td></tr></tfoot></table>`;
+      <table><thead><tr><th class="v">Nº</th><th>Código</th><th>Descrição do bem</th><th>Nº de série</th><th>Tombamento</th><th class="v">Qtd.</th><th>Tipo (origem)</th><th>Processo SEI</th><th>Estado</th></tr></thead><tbody>` +
+      bs.map((b) => `<tr><td class="v">${++n}</td><td>${esc(b.codigo)}</td><td>${esc(b.descricao)}</td><td>${esc(b.serie)}</td><td>${esc(b.tombamento)}</td><td class="v">${fNum(b.quantidade)}</td><td>${esc(b.tipo)}</td><td>${esc(b.processo_sei)}</td><td>${esc(rotEstado(b.estado))}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="5">Subtotal ${esc(dep)}</td><td class="v">${fNum(somaQtd(bs))}</td><td colspan="3"></td></tr></tfoot></table>`;
   }).join('');
   const tipos = new Set(l.map((b) => b.tipo)).size, deps = Object.keys(por).length;
   $('relatorio').innerHTML = `<div class="rcab"><img src="LOGOS/bpfron_transp.avif" alt="">

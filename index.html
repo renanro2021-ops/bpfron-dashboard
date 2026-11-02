@@ -958,6 +958,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-02", "titulo": "Material Bélico: estado de conservação", "quem": "gestor", "itens": [
+    "O estado de conservação agora é uma escala só, igual à do Patrimônio: Excelente, Bom, Regular ou Péssimo.",
+    "Ao editar um item você escolhe numa lista (não precisa mais digitar).",
+    "O que estava gravado como Ótimo conta como Excelente, e Ruim ou Inservível como Péssimo."
+  ] },
   { "data": "2026-11-01", "titulo": "Menu só com os painéis e login no topo", "quem": "todos", "itens": [
     "O menu lateral do painel mostra só o que é analítico: indicadores, mapa, gráficos e os painéis de cada seção (P1 a P4).",
     "Botão Entrar no topo da tela: você entra uma vez e as outras ferramentas do site abrem sem pedir a senha de novo.",
@@ -1512,7 +1517,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <div id="mat-analytics">
       <div class="mt-grid">
         <div class="mt-card">
-          <div class="mt-card-ttl">📦 Resumo por Categoria &amp; Condição</div>
+          <div class="mt-card-ttl">📦 Resumo por Categoria &amp; Estado de Conservação</div>
           <div class="mt-cat-legend" id="mat-cat-legend"></div>
           <div class="mt-table-wrap" style="max-height:360px">
             <table class="mt-tb" id="mat-cat-table"></table>
@@ -1530,7 +1535,7 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
           <div class="mt-chart"><canvas id="c-mat-comp"></canvas></div>
         </div>
         <div class="mt-card">
-          <div class="mt-card-ttl">🛠️ Condição Física do Material</div>
+          <div class="mt-card-ttl">🛠️ Estado de Conservação do Material</div>
           <div class="mt-chart"><canvas id="c-mat-estado"></canvas></div>
         </div>
       </div>
@@ -6354,14 +6359,21 @@ function matSitClass(s){
   if (k.includes('perícia')||k.includes('pericia')||k.includes('judic')) return 'pericia';
   return 'gray';
 }
-function matEstClass(e){
-  const k = (e||'').toLowerCase();
-  if (k.startsWith('ótimo')||k.startsWith('otimo')) return 'otimo';
-  if (k.startsWith('bom')) return 'bom';
-  if (k.startsWith('regular')) return 'regular';
-  if (k.startsWith('ruim')||k.startsWith('inserv')) return 'ruim';
+/* Estado de conservação (02/11/2026): UMA escala para o Material Bélico e o Patrimônio —
+   Excelente · Bom · Regular · Péssimo (mesma regra do Worker, estadoConservacao).
+   Nome antigo continua valendo: Ótimo = Excelente, Ruim/Inservível = Péssimo.
+   As classes CSS seguem otimo/bom/regular/ruim. */
+const MAT_ESTADOS = ['EXCELENTE','BOM','REGULAR','PÉSSIMO'];
+function matEstNorm(e){
+  const k = String(e||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if (/^(excelente|otimo)/.test(k)) return 'EXCELENTE';
+  if (/^bom/.test(k)) return 'BOM';
+  if (/^regular/.test(k)) return 'REGULAR';
+  if (/^(pessimo|ruim|inserviv)/.test(k)) return 'PÉSSIMO';
   return '';
 }
+function matEstLabel(e){ const n=matEstNorm(e); return n ? n.charAt(0)+n.slice(1).toLowerCase() : String(e||''); }
+function matEstClass(e){ return ({EXCELENTE:'otimo',BOM:'bom',REGULAR:'regular','PÉSSIMO':'ruim'})[matEstNorm(e)] || ''; }
 
 function renderMaterialAll(){
   if (!MAT_DATA) return;
@@ -6397,13 +6409,13 @@ function renderMaterialAll(){
   // Resumo por categoria + condição (barra empilhada por condição física)
   const cats = MAT_DATA.por_categoria || [];
   const leg = document.getElementById('mat-cat-legend');
-  if (leg) leg.innerHTML = `<span><i style="background:#22c55e"></i>Ótimo</span><span><i style="background:#86efac"></i>Bom</span><span><i style="background:#fbbf24"></i>Regular</span><span><i style="background:#f87171"></i>Ruim</span><span><i style="background:rgba(148,163,184,.25)"></i>Sem registro</span>`;
+  if (leg) leg.innerHTML = `<span><i style="background:#22c55e"></i>Excelente</span><span><i style="background:#86efac"></i>Bom</span><span><i style="background:#fbbf24"></i>Regular</span><span><i style="background:#f87171"></i>Péssimo</span><span><i style="background:rgba(148,163,184,.25)"></i>Sem registro</span>`;
   document.getElementById('mat-cat-table').innerHTML =
-    `<thead><tr><th>Categoria</th><th class="num">Qtd</th><th style="min-width:140px">Condição física</th><th class="num" style="width:64px">Bom+Ót.</th></tr></thead><tbody>` +
+    `<thead><tr><th>Categoria</th><th class="num">Qtd</th><th style="min-width:140px">Estado de conservação</th><th class="num" style="width:64px" title="Excelente + Bom">Exc.+Bom</th></tr></thead><tbody>` +
     cats.map(c=>{
       const na = c.total - (c.otimo+c.bom+c.regular+c.ruim);
       const seg = (n,cl,lbl)=> n>0 ? `<span class="s-${cl}" style="width:${(n/c.total*100).toFixed(2)}%" title="${lbl}: ${n}"></span>` : '';
-      const stack = `<div class="mt-stack">${seg(c.otimo,'otimo','Ótimo')}${seg(c.bom,'bom','Bom')}${seg(c.regular,'regular','Regular')}${seg(c.ruim,'ruim','Ruim')}${seg(na,'na','Sem registro')}</div>`;
+      const stack = `<div class="mt-stack">${seg(c.otimo,'otimo','Excelente')}${seg(c.bom,'bom','Bom')}${seg(c.regular,'regular','Regular')}${seg(c.ruim,'ruim','Péssimo')}${seg(na,'na','Sem registro')}</div>`;
       const pctCol = c.ruim>0 ? '#fca5a5' : (c.pct_bom_otimo>=70?'#86efac':'var(--muted)');
       return `<tr><td>${ecEsc(c.categoria)}</td><td class="num">${c.total}</td><td>${stack}</td><td class="num" style="color:${pctCol};font-weight:600">${c.pct_bom_otimo}%</td></tr>`;
     }).join('') + `</tbody>`;
@@ -6669,10 +6681,10 @@ function matExplorerMini(){
   return `<div class="mt-mini">
     <span>Total: <b>${its.length}</b></span>
     <span>Modelos: <b>${Object.keys(byMod).length}</b></span>
-    ${est.otimo?`<span class="mt-est otimo">Ótimo: <b>${est.otimo}</b></span>`:''}
+    ${est.otimo?`<span class="mt-est otimo">Excelente: <b>${est.otimo}</b></span>`:''}
     ${est.bom?`<span class="mt-est bom">Bom: <b>${est.bom}</b></span>`:''}
     ${est.regular?`<span class="mt-est regular">Regular: <b>${est.regular}</b></span>`:''}
-    ${est.ruim?`<span class="mt-est ruim">Ruim: <b>${est.ruim}</b></span>`:''}
+    ${est.ruim?`<span class="mt-est ruim">Péssimo: <b>${est.ruim}</b></span>`:''}
     ${Object.entries(sit).slice(0,6).map(([s,n])=>`<span>${ecEsc(s)}: <b>${n}</b></span>`).join('')}
   </div>`;
 }
@@ -6717,7 +6729,7 @@ function matExplorerList(){
     return;
   }
   let rows=MAT_SEL.items||[];
-  if(q) rows=rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao} ${r.companhia} ${r.situacao} ${r.estado}`).toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>(`${r.categoria} ${r.subtipo} ${r.modelo} ${r.calibre} ${r.serie} ${r.patrimonio} ${r.responsavel} ${r.localizacao} ${r.companhia} ${r.situacao} ${r.estado} ${matEstLabel(r.estado)}`).toLowerCase().includes(q));
   if(cnt) cnt.textContent=`${fN(rows.length)} de ${fN((MAT_SEL.items||[]).length)} item(ns)`;
   el.innerHTML=`<thead><tr><th>Modelo</th><th>Subtipo</th><th>Calibre</th><th>Nº Série</th><th>Companhia</th><th>Situação</th><th>Estado</th><th>Responsável</th><th>Validade</th>${matActTh()}</tr></thead><tbody>`+
     rows.map(r=>`<tr>
@@ -6727,7 +6739,7 @@ function matExplorerList(){
       <td style="font-variant-numeric:tabular-nums">${ecHL(r.serie||'—',q)}</td>
       <td>${ecEsc(r.companhia||'—')}</td>
       <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}</td>
-      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
+      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(matEstLabel(r.estado))}</span>`:'—'}</td>
       <td>${ecHL(r.responsavel||'—',q)}</td>
       <td>${ecEsc(r.validade||'—')}</td>
       ${matActTd('dados', r._row)}
@@ -6756,7 +6768,7 @@ function renderMaterialTable(){
       <td style="font-variant-numeric:tabular-nums">${ecEsc(r.serie||'—')}</td>
       <td>${ecEsc(r.companhia||'—')}</td>
       <td>${r.situacao?`<span class="mt-chip ${matSitClass(r.situacao)}">${ecEsc(r.situacao)}</span>`:'—'}${r.em_cautela?`<div style="font-size:10.5px;color:#fdba74;margin-top:2px" title="${matAttr(r.em_cautela.cautela_id+' · '+r.em_cautela.missao)}">🛡️ em cautela: ${ecEsc(r.em_cautela.com)}</div>`:''}</td>
-      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(r.estado)}</span>`:'—'}</td>
+      <td>${r.estado?`<span class="mt-est ${matEstClass(r.estado)}">${ecEsc(matEstLabel(r.estado))}</span>`:'—'}</td>
       <td>${ecEsc(r.responsavel||'—')}</td>
       <td>${ecEsc(r.validade||'—')}</td>
       ${matActTd('dados', r._row)}
@@ -6845,6 +6857,14 @@ function openMatEditor(tab, row){
       const atual = (val.match(/^I\d+/)||[''])[0];
       const opts = (MAT_DATA.linhas_parte||[]).map(l=>`<option value="${matAttr(l.id+' - '+l.descricao)}"${l.id===atual?' selected':''}>${ecEsc(l.descricao)}</option>`).join('');
       return `<div class="me-fg wide"><label>Linha da Parte Diária (onde esta peça conta)</label><select id="me-f-${i}" data-col="${matAttr(c)}"><option value="">${isNew?'— o sistema escolhe pelo modelo —':'— nenhuma (não sai na Parte) —'}</option>${opts}</select></div>`;
+    }
+    if (c==='Estado' && tab!=='municao'){
+      // estado de conservação: só os 4 da escala única (02/11/2026). Nome antigo já vem marcado
+      // no equivalente (Ótimo → Excelente); valor fora da escala aparece como está, para não sumir.
+      const n = matEstNorm(val);
+      const fora = val.trim() && !n ? `<option value="${matAttr(val)}" selected>${ecEsc(val)} (fora da escala)</option>` : '';
+      const opts = MAT_ESTADOS.map(e=>`<option value="${e}"${e===n?' selected':''}>${matEstLabel(e)}</option>`).join('');
+      return `<div class="me-fg"><label>Estado de conservação</label><select id="me-f-${i}" data-col="Estado"><option value="">— não informado —</option>${fora}${opts}</select></div>`;
     }
     const longo = /obs|observa|altera|descri|localiza/i.test(c);
     // Sem sugestões na coluna-chave (Nº) nem em campos de valor único (série,
