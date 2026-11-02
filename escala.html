@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P3 · Escalas de serviço (02/11/2026).
+     A P3 monta a escala de PERMANÊNCIA ou de OPERAÇÃO só com o efetivo do BPFRON,
+     escolhe os policiais (a lista mostra há quantos dias cada um está de folga),
+     copia a escala pronta para o SEI (mesma tabela das escalas de operação) e,
+     na operação, lança na Diária por Policial ao informar o nº SEI.
+     Painel: dias de operação e de permanência de cada policial e a folga.
+     Dados no Worker (backend/p3escala.js): abas ESCALAS / ESCALA_POLICIAIS /
+     ESCALA_HIST na planilha das missões da Diária (BPFRON_Missoes_Diarias).
+     Permissões: "Escalas P3 (gestor)" (gestor da Diária já é) e "Escalas P3 (ver)". -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P3 · Escalas · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.bp-wrap{max-width:1240px}
+.bp-topo-in{max-width:1300px}
+.es-seg{display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--surf);border:1px solid var(--line);flex-wrap:wrap;margin-top:18px}
+.es-seg button{flex:1;min-width:120px;background:transparent;border:0;border-radius:11px;padding:10px;color:var(--muted);font:700 14px Inter,sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.es-seg button:hover{color:var(--t1);background:var(--surf2)}
+.es-seg button.on{background:var(--acc);color:var(--acc-ink)}
+.es-filtros{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end}
+.es-conta{margin-top:10px;color:var(--muted);font-size:13px}
+.es-conta b{color:var(--t1)}
+.es-tabwrap{margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:auto;background:var(--card)}
+.es-tab{width:100%;border-collapse:collapse;font-size:14px}
+.es-tab th{text-align:left;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--surf2);padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.es-tab td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:middle}
+.es-tab tbody tr:last-child td{border-bottom:0}
+.es-tab tbody tr.clica{cursor:pointer}
+.es-tab tbody tr.clica:hover{background:var(--card-h)}
+.es-tab td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.es-tab td b{color:var(--t1)}
+.es-tab td small{display:block;color:var(--muted);font-size:12.5px}
+.es-tab tr.grupo td{background:var(--surf);color:var(--muted);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}
+.es-folga{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.es-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.es-esc{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.es-esc .tx{flex:1;min-width:220px}
+.es-esc .tx b{display:block;color:var(--t1);font-size:15.5px}
+.es-esc .tx small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.es-esc .sls{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.es-esc .acs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* editor */
+.bp-modal-cx.tela{width:min(1180px,96vw);max-height:94vh}
+.es-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.es-form .d2{grid-column:span 2}.es-form .d4{grid-column:1/-1}
+.es-passo{display:flex;align-items:center;gap:10px;margin:20px 0 10px;font:700 15px Rajdhani,Inter,sans-serif;letter-spacing:.4px;color:var(--t1);text-transform:uppercase}
+.es-passo .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acc);color:var(--acc-ink);font:800 13px Inter,sans-serif}
+.es-eq{border:1px solid var(--line2);border-radius:16px;padding:14px;background:var(--surf);margin-top:12px}
+.es-eq-cab{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.es-eq-cab h4{margin:0;font:700 17px Rajdhani,Inter,sans-serif;letter-spacing:.4px;color:var(--acc);flex:1;min-width:160px}
+.es-eq-campos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px}
+.es-eq-campos .d2{grid-column:span 2}.es-eq-campos .d3{grid-column:span 3}
+.es-pols{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:12px}
+.es-pols th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+.es-pols td{padding:6px 8px;border-bottom:1px solid var(--line);color:var(--t2)}
+.es-pols td b{color:var(--t1)}
+.es-pols td small{display:block;font-size:11.5px;color:var(--muted)}
+.es-pols input{width:84px;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;color:var(--t1);padding:6px 8px;font:600 13px Inter,sans-serif;text-transform:uppercase}
+.es-add{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:10px;align-items:center}
+.es-res{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;margin-top:8px}
+.es-res:empty{display:none}
+.es-res button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--t1);font:inherit;cursor:pointer}
+.es-res button:hover{border-color:var(--acc-line);background:var(--card-h)}
+.es-res button .tx{flex:1;min-width:0}
+.es-res button .tx small{display:block;color:var(--muted);font-size:12.5px}
+.es-pe{position:sticky;bottom:-1px;background:var(--surf2);border-top:1px solid var(--line);margin:16px -4px -4px;padding:12px 4px 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;z-index:2}
+.es-pe .bp-msg{flex:1;min-width:200px;margin:0}
+textarea.es-obs{width:100%;min-height:150px;background:var(--bg2);border:1px solid var(--line2);border-radius:12px;color:var(--t1);padding:10px 12px;font:500 13.5px/1.45 Inter,sans-serif;resize:vertical}
+/* prévia do SEI (papel branco, como no editor do SEI) */
+.es-papel{background:#fff;color:#000;border-radius:10px;padding:22px 26px;max-height:62vh;overflow:auto;font-family:Calibri,Arial,sans-serif;font-size:13px}
+.es-papel table{color:#000}
+.es-hist{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.es-hist div{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:13.5px;color:var(--t2)}
+.es-hist small{color:var(--muted)}
+@media (max-width:860px){
+  .es-filtros{grid-template-columns:1fr}
+  .es-form{grid-template-columns:1fr 1fr}.es-form .d2,.es-form .d4,.es-form .cel-larga{grid-column:1/-1}
+  .es-eq-campos{grid-template-columns:1fr 1fr}.es-eq-campos .d2,.es-eq-campos .d3{grid-column:1/-1}
+  .es-add{grid-template-columns:1fr}
+  .es-pols .c-cont{display:none}
+}
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-02", "titulo": "Escalas da P3 no ar", "quem": "todos", "itens": [
+    "Escalas de permanência e de operação do BPFRON num lugar só.",
+    "Folga do efetivo: há quantos dias cada policial terminou o último serviço, com os dias de operação e de permanência no período.",
+    "As missões que já estão na Diária por Policial também contam."
+  ] },
+  { "data": "2026-11-02", "titulo": "Para quem monta a escala", "quem": "gestor", "itens": [
+    "Nova escala: escolha Permanência ou Operação, monte as equipes e adicione os policiais — a lista mostra primeiro quem está há mais tempo de folga e avisa quem já está em outro serviço.",
+    "CMT, MOT e AUX são distribuídos pela antiguidade (dá para trocar). NI e CANIL vão sempre por último.",
+    "“Copiar para o SEI”: cola a escala no editor do SEI com a mesma tabela das escalas de operação.",
+    "Operação: depois de publicada, “Lançar na Diária” grava na Diária por Policial sem precisar ler o PDF."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P3 · Escalas</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="es-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="es-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="es-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P3 · Escalas</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="es-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>As Escalas da P3 são liberadas login por login</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="es-negado-tx">Seu login não tem acesso às Escalas da P3.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“Escalas P3 (ver)”</b> (só consultar) ou <b>“Escalas P3 (gestor)”</b> no Painel de Controle. Quem lança a Diária já é gestor.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="es-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="es-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P3 · Divisão Operacional</span>
+        <h1>Escalas de <em>serviço</em></h1>
+        <p>Permanência e operação do BPFRON: monte a escala, copie para o SEI e acompanhe os dias trabalhados e a folga de cada policial. <span class="es-ver">Você está no modo consulta.</span></p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn es-ges" onclick="novaEscala('PERMANENCIA')"><i data-ic="mais"></i>Nova permanência</button>
+          <button type="button" class="bp-btn es-ges" onclick="novaEscala('OPERACAO')"><i data-ic="mais"></i>Nova operação</button>
+          <button type="button" class="bp-btn sec" onclick="carregar()"><i data-ic="atualizar"></i>Atualizar</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Resumo</h2><small id="es-hoje">Efetivo do BPFRON hoje</small></div></div>
+    <div class="bp-nums" id="es-nums"></div>
+
+    <div class="es-seg" id="es-abas">
+      <button type="button" data-v="folga" class="on">Folga do efetivo</button>
+      <button type="button" data-v="escalas">Escalas</button>
+      <button type="button" data-v="hist" class="es-ges">Histórico</button>
+    </div>
+
+    <!-- FOLGA -->
+    <div id="v-folga">
+      <div class="bp-sec"><span class="bp-tile info"><i data-ic="relogio"></i></span><div><h2>Folga do efetivo</h2><small>Quem está há mais tempo sem serviço aparece primeiro. Toque no policial para ver os serviços dele.</small></div><span class="bp-cont bp-sl" id="f-cont">0</span></div>
+      <div class="bp-card">
+        <div class="es-filtros">
+          <div class="bp-campo"><label for="f-q">Buscar</label>
+            <div class="bp-in"><i data-ic="buscar"></i><input id="f-q" placeholder="Nome, nome de guerra ou RE" autocomplete="off" oninput="pintarFolga()"></div></div>
+          <div class="bp-campo"><label for="f-per">Dias trabalhados em</label>
+            <div class="bp-in"><i data-ic="calendario"></i><select id="f-per" onchange="pintarFolga()">
+              <option value="mes">Este mês</option><option value="mesant">Mês passado</option><option value="ano">Este ano</option><option value="tudo">Tudo</option></select></div></div>
+          <div class="bp-campo"><label for="f-sit">Situação</label>
+            <div class="bp-in"><i data-ic="usuarios"></i><select id="f-sit" onchange="pintarFolga()">
+              <option value="">Todos</option><option value="folga">De folga</option><option value="servico">Em serviço hoje</option><option value="prox">Com escala marcada</option><option value="sem">Sem serviço registrado</option></select></div></div>
+        </div>
+        <div class="es-conta" id="f-conta"></div>
+      </div>
+      <div class="es-tabwrap"><table class="es-tab"><thead><tr>
+        <th>Policial</th><th>Situação</th><th>Último serviço</th><th class="n">Operação</th><th class="n">Permanência</th><th class="n">Total</th>
+      </tr></thead><tbody id="f-corpo"></tbody></table></div>
+    </div>
+
+    <!-- ESCALAS -->
+    <div id="v-escalas" style="display:none">
+      <div class="bp-sec"><span class="bp-tile ok"><i data-ic="calendario"></i></span><div><h2>Escalas</h2><small>A mais recente em cima</small></div><span class="bp-cont bp-sl" id="e-cont">0</span></div>
+      <div class="bp-card">
+        <div class="es-filtros">
+          <div class="bp-campo"><label for="e-q">Buscar</label>
+            <div class="bp-in"><i data-ic="buscar"></i><input id="e-q" placeholder="Evento, nº SEI ou policial" autocomplete="off" oninput="pintarEscalas()"></div></div>
+          <div class="bp-campo"><label for="e-tipo">Tipo</label>
+            <div class="bp-in"><i data-ic="pasta"></i><select id="e-tipo" onchange="pintarEscalas()"><option value="">Permanência e operação</option><option value="PERMANENCIA">Só permanência</option><option value="OPERACAO">Só operação</option></select></div></div>
+          <div class="bp-campo"><label for="e-st">Situação</label>
+            <div class="bp-in"><i data-ic="check"></i><select id="e-st" onchange="pintarEscalas()"><option value="">Todas</option><option value="RASCUNHO">Rascunho</option><option value="PUBLICADA">Publicada no SEI</option><option value="DIARIA">Lançada na Diária</option></select></div></div>
+        </div>
+      </div>
+      <div class="es-lista" id="e-lista"></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="v-hist" style="display:none">
+      <div class="bp-sec"><span class="bp-tile"><i data-ic="relogio"></i></span><div><h2>Histórico</h2><small>Quem criou, editou, publicou, lançou na Diária ou excluiu</small></div></div>
+      <div class="es-hist" id="h-lista"></div>
+    </div>
+  </div>
+</main>
+
+<!-- EDITOR -->
+<div class="bp-modal" id="m-ed">
+  <div class="bp-modal-cx tela" role="dialog" aria-modal="true" aria-labelledby="m-ed-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="calendario"></i></span>
+      <div><h3 id="m-ed-tit">Nova escala</h3><small id="m-ed-sub">Só efetivo do BPFRON</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fecharEditor()" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+
+    <div class="es-seg" id="ed-tipo" style="margin-top:0">
+      <button type="button" data-v="PERMANENCIA">Permanência</button>
+      <button type="button" data-v="OPERACAO">Operação</button>
+    </div>
+
+    <div class="es-passo"><span class="n">1</span>Cabeçalho</div>
+    <div class="es-form">
+      <div class="bp-campo d4"><label for="ed-evento">Evento</label>
+        <div class="bp-in"><i data-ic="bandeira"></i><input id="ed-evento" maxlength="300" autocomplete="off" oninput="ED.cab.evento=this.value"></div></div>
+      <div class="bp-campo d2 so-op"><label for="ed-operacao">Operação (para a Diária)</label>
+        <div class="bp-in"><i data-ic="pasta"></i><input id="ed-operacao" list="dl-ops" maxlength="200" autocomplete="off" oninput="ED.cab.operacao=this.value"></div></div>
+      <div class="bp-campo so-op"><label for="ed-etapa">Etapa</label>
+        <div class="bp-in"><i data-ic="etiqueta"></i><input id="ed-etapa" maxlength="40" placeholder="Ex.: 26ª ETAPA" autocomplete="off" oninput="ED.cab.etapa=this.value"></div></div>
+      <div class="bp-campo so-op"><label for="ed-orgao">Órgão</label>
+        <div class="bp-in"><i data-ic="escudo"></i><input id="ed-orgao" list="dl-org" maxlength="80" placeholder="Ex.: SENASP" autocomplete="off" oninput="ED.cab.orgao=this.value"></div></div>
+      <div class="bp-campo d2"><label for="ed-uniforme">Uniforme</label>
+        <div class="bp-in"><i data-ic="usuario"></i><input id="ed-uniforme" maxlength="300" autocomplete="off" oninput="ED.cab.uniforme=this.value"></div></div>
+      <div class="bp-campo d2"><label for="ed-armamento">Armamento</label>
+        <div class="bp-in"><i data-ic="escudo"></i><input id="ed-armamento" maxlength="300" autocomplete="off" oninput="ED.cab.armamento=this.value"></div></div>
+      <div class="bp-campo d2"><label for="ed-local" id="ed-local-rot">Local do patrulhamento</label>
+        <div class="bp-in"><i data-ic="local"></i><input id="ed-local" maxlength="200" autocomplete="off" oninput="ED.cab.local=this.value"></div></div>
+      <div class="bp-campo"><label for="ed-processo">Processo SEI</label>
+        <div class="bp-in"><i data-ic="arquivo"></i><input id="ed-processo" maxlength="40" placeholder="0021.000000/2026-00" autocomplete="off" oninput="ED.cab.processo=this.value"></div></div>
+      <div class="bp-campo"><label for="ed-sei">Nº do documento SEI</label>
+        <div class="bp-in"><i data-ic="etiqueta"></i><input id="ed-sei" maxlength="20" inputmode="numeric" placeholder="depois de publicar" autocomplete="off" oninput="ED.cab.sei_doc=this.value"></div></div>
+    </div>
+
+    <div class="es-passo"><span class="n">2</span>Período padrão das equipes</div>
+    <div class="es-form">
+      <div class="bp-campo"><label for="pd-ini" id="pd-ini-rot">Início</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="pd-ini" type="date" oninput="ED.pad.ini=this.value"></div></div>
+      <div class="bp-campo so-op"><label for="pd-fim">Término</label>
+        <div class="bp-in"><i data-ic="calendario"></i><input id="pd-fim" type="date" oninput="ED.pad.fim=this.value"></div></div>
+      <div class="bp-campo so-pe"><label for="pd-hora">Hora de início</label>
+        <div class="bp-in"><i data-ic="relogio"></i><input id="pd-hora" type="time" oninput="ED.pad.hora=this.value"></div></div>
+      <div class="bp-campo so-pe"><label for="pd-horas">Horas de serviço</label>
+        <div class="bp-in"><i data-ic="relogio"></i><select id="pd-horas" onchange="ED.pad.horas=+this.value"><option value="24">24 horas (1 dia)</option><option value="12">12 horas (0,5 dia)</option><option value="48">48 horas (2 dias)</option><option value="72">72 horas (3 dias)</option></select></div></div>
+      <div class="bp-campo cel-larga" style="align-self:end"><button type="button" class="bp-btn sec w" onclick="aplicarPadrao()"><i data-ic="atualizar"></i>Aplicar a todas as equipes</button></div>
+    </div>
+    <div class="bp-aviso" style="margin-top:10px"><i data-ic="info"></i><div id="ed-regra"></div></div>
+
+    <div class="es-passo"><span class="n">3</span>Equipes e policiais <span class="bp-sl" id="ed-tot" style="margin-left:auto;text-transform:none"></span></div>
+    <div id="ed-eqs"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button type="button" class="bp-btn sec" onclick="novaEquipe('comum')"><i data-ic="mais"></i>Equipe</button>
+      <button type="button" class="bp-btn sec so-pe" onclick="proximoDia()"><i data-ic="calendario"></i>Equipe do dia seguinte</button>
+      <button type="button" class="bp-btn ghost" onclick="novaEquipe('ni')"><i data-ic="mais"></i>Equipe NI</button>
+      <button type="button" class="bp-btn ghost" onclick="novaEquipe('canil')"><i data-ic="mais"></i>Equipe CANIL</button>
+    </div>
+
+    <div class="es-passo"><span class="n">4</span>Observações e assinatura</div>
+    <div class="bp-campo"><label for="ed-obs">Observações (uma por linha — a numeração OBS 01, 02… é automática)</label>
+      <textarea class="es-obs" id="ed-obs" oninput="ED.cab.obs=this.value"></textarea></div>
+    <div class="es-form" style="margin-top:12px">
+      <div class="bp-campo d4"><label for="ed-fecho">Local e data</label>
+        <div class="bp-in"><i data-ic="local"></i><input id="ed-fecho" maxlength="300" autocomplete="off" oninput="ED.cab.fecho=this.value"></div></div>
+      <div class="bp-campo d2"><label for="ed-ass">Quem assina</label>
+        <div class="bp-in"><i data-ic="assinar"></i><input id="ed-ass" maxlength="120" autocomplete="off" oninput="ED.cab.assinante=this.value"></div></div>
+      <div class="bp-campo d2"><label for="ed-cargo">Cargo</label>
+        <div class="bp-in"><i data-ic="usuario"></i><input id="ed-cargo" maxlength="160" autocomplete="off" oninput="ED.cab.assinante_cargo=this.value"></div></div>
+    </div>
+
+    <div class="es-pe">
+      <div class="bp-msg" id="ed-msg"></div>
+      <button type="button" class="bp-btn ghost" onclick="fecharEditor()">Fechar</button>
+      <button type="button" class="bp-btn sec" onclick="abrirSEI(montarEscala(), true)"><i data-ic="olho"></i>Ver como fica no SEI</button>
+      <button type="button" class="bp-btn" id="ed-salvar" onclick="salvarEscala()"><i data-ic="check"></i>Salvar escala</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRÉVIA / COPIAR PARA O SEI -->
+<div class="bp-modal" id="m-sei" onclick="if(event.target===this)fechar('m-sei')">
+  <div class="bp-modal-cx tela" role="dialog" aria-modal="true" aria-labelledby="m-sei-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="arquivo"></i></span>
+      <div><h3 id="m-sei-tit">Escala para o SEI</h3><small>No SEI: crie o documento “Escala”, clique dentro do texto e aperte Ctrl+V</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-sei')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="sei-aviso"></div>
+    <div class="es-papel" id="sei-papel"></div>
+    <div class="bp-modal-pe">
+      <span class="bp-msg" id="sei-msg" style="flex:1;margin:0"></span>
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-sei')">Fechar</button>
+      <button type="button" class="bp-btn" onclick="copiarSEI()"><i data-ic="arquivo"></i>Copiar para o SEI</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLICAR -->
+<div class="bp-modal" id="m-pub" onclick="if(event.target===this)fechar('m-pub')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-pub-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="check"></i></span>
+      <div><h3 id="m-pub-tit">Marcar como publicada</h3><small id="m-pub-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-pub')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="es-form" style="grid-template-columns:1fr 1fr">
+      <div class="bp-campo"><label for="pub-sei">Nº do documento SEI</label>
+        <div class="bp-in"><i data-ic="etiqueta"></i><input id="pub-sei" inputmode="numeric" maxlength="20" placeholder="Ex.: 75007222" autocomplete="off"></div></div>
+      <div class="bp-campo"><label for="pub-proc">Processo SEI</label>
+        <div class="bp-in"><i data-ic="arquivo"></i><input id="pub-proc" maxlength="40" placeholder="0021.046726/2026-98" autocomplete="off"></div></div>
+    </div>
+    <div class="bp-msg err" id="pub-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-pub')">Cancelar</button>
+      <button type="button" class="bp-btn" id="pub-btn" onclick="publicar()"><i data-ic="check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LANÇAR NA DIÁRIA -->
+<div class="bp-modal" id="m-dia" onclick="if(event.target===this)fechar('m-dia')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-dia-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile ok"><i data-ic="enviar"></i></span>
+      <div><h3 id="m-dia-tit">Lançar na Diária por Policial</h3><small id="m-dia-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-dia')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="es-form">
+      <div class="bp-campo d2"><label for="dia-op">Operação</label>
+        <div class="bp-in"><i data-ic="pasta"></i><input id="dia-op" list="dl-ops" maxlength="200" autocomplete="off"></div></div>
+      <div class="bp-campo"><label for="dia-etapa">Etapa</label>
+        <div class="bp-in"><i data-ic="etiqueta"></i><input id="dia-etapa" maxlength="40" autocomplete="off"></div></div>
+      <div class="bp-campo"><label for="dia-org">Órgão</label>
+        <div class="bp-in"><i data-ic="escudo"></i><input id="dia-org" list="dl-org" maxlength="80" autocomplete="off"></div></div>
+      <div class="bp-campo d2"><label for="dia-tipo">Tipo de diária</label>
+        <div class="bp-in"><i data-ic="estrela"></i><select id="dia-tipo" onchange="diaTipo()"></select></div></div>
+      <div class="bp-campo"><label for="dia-valor">Valor da diária (R$)</label>
+        <div class="bp-in"><i data-ic="estrela"></i><input id="dia-valor" type="number" min="0" step="0.01" oninput="diaResumo()"></div></div>
+      <div class="bp-campo"><label for="dia-sei">Nº do documento SEI</label>
+        <div class="bp-in"><i data-ic="etiqueta"></i><input id="dia-sei" inputmode="numeric" maxlength="20" autocomplete="off"></div></div>
+      <div class="bp-campo d2"><label for="dia-proc">Processo SEI</label>
+        <div class="bp-in"><i data-ic="arquivo"></i><input id="dia-proc" maxlength="40" autocomplete="off"></div></div>
+    </div>
+    <div class="bp-aviso" style="margin-top:12px"><i data-ic="info"></i><div id="dia-resumo"></div></div>
+    <div class="bp-msg err" id="dia-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-dia')">Cancelar</button>
+      <button type="button" class="bp-btn" id="dia-btn" onclick="lancarDiaria()"><i data-ic="enviar"></i>Lançar na Diária</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXCLUIR -->
+<div class="bp-modal" id="m-exc" onclick="if(event.target===this)fechar('m-exc')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-exc-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile crit"><i data-ic="lixeira"></i></span>
+      <div><h3 id="m-exc-tit">Excluir escala</h3><small id="m-exc-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-exc')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-campo"><label for="exc-mot">Motivo</label>
+      <div class="bp-in"><i data-ic="editar"></i><input id="exc-mot" maxlength="300" autocomplete="off" placeholder="Ex.: escala refeita, operação cancelada"></div></div>
+    <div class="bp-campo" style="margin-top:12px"><label for="exc-senha">Sua senha</label>
+      <div class="bp-in"><i data-ic="cadeado"></i><input id="exc-senha" type="password" autocomplete="current-password"></div></div>
+    <div class="bp-msg err" id="exc-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-exc')">Cancelar</button>
+      <button type="button" class="bp-btn perigo" id="exc-btn" onclick="excluir()"><i data-ic="lixeira"></i>Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- POLICIAL (serviços) -->
+<div class="bp-modal" id="m-pol" onclick="if(event.target===this)fechar('m-pol')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-pol-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-pol-tit">Policial</h3><small id="m-pol-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-pol')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-nums" id="pol-nums" style="margin-top:0"></div>
+    <div class="es-tabwrap"><table class="es-tab"><thead><tr><th>Serviço</th><th>Período</th><th class="n">Dias</th><th>De onde vem</th></tr></thead><tbody id="pol-corpo"></tbody></table></div>
+  </div>
+</div>
+
+<!-- POLICIAL FORA DO CADASTRO -->
+<div class="bp-modal" id="m-man" onclick="if(event.target===this)fechar('m-man')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-man-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-man-tit">Policial fora do cadastro</h3><small>Para quem ainda não está no cadastro POLICIAIS da Diária</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-man')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="es-form" style="grid-template-columns:1fr 1fr">
+      <div class="bp-campo"><label for="man-re">RE (completo)</label><div class="bp-in"><i data-ic="etiqueta"></i><input id="man-re" inputmode="numeric" maxlength="12"></div></div>
+      <div class="bp-campo"><label for="man-posto">Posto/graduação</label><div class="bp-in"><i data-ic="estrela"></i><input id="man-posto" maxlength="40" placeholder="Ex.: CB QPPM"></div></div>
+      <div class="bp-campo d2" style="grid-column:1/-1"><label for="man-nome">Nome completo</label><div class="bp-in"><i data-ic="usuario"></i><input id="man-nome" maxlength="120"></div></div>
+      <div class="bp-campo"><label for="man-cont">Contato</label><div class="bp-in"><i data-ic="celular"></i><input id="man-cont" maxlength="30" placeholder="69 99999-9999"></div></div>
+    </div>
+    <div class="bp-msg err" id="man-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-man')">Cancelar</button>
+      <button type="button" class="bp-btn" onclick="addManual()"><i data-ic="mais"></i>Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="dl-ops"></datalist><datalist id="dl-org"></datalist>
+<datalist id="dl-func"><option value="CMT"><option value="MOT"><option value="AUX"><option value="PERMANÊNCIA"><option value="OF DIA"><option value="SGT DIA"><option value="CMT GUARDA"><option value="SENTINELA"><option value="RÁDIO OPERADOR"></datalist>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const re5 = (v) => { const d = String(v || '').replace(/\D/g, ''); return d.length > 5 ? d.slice(-5) : d; };
+const T = (iso) => Date.parse(iso + 'T00:00:00Z');
+const dif = (a, b) => Math.round((T(b) - T(a)) / 86400000);
+const somaD = (iso, n) => new Date(T(iso) + n * 86400000).toISOString().slice(0, 10);
+const br = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const ddmm = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '';
+const fDias = (n) => { const v = Math.round((+n || 0) * 100) / 100; return String(v).replace('.', ','); };
+const fR = (n) => (+n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const MODAIS = ['m-man', 'm-pol', 'm-exc', 'm-dia', 'm-pub', 'm-sei', 'm-ed'];
+const TIPO = { OPERACAO: 'Operação', PERMANENCIA: 'Permanência' };
+const STATUS = { RASCUNHO: ['Rascunho', 'pend'], PUBLICADA: ['Publicada no SEI', 'info'], DIARIA: ['Lançada na Diária', 'ok'] };
+
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  for (const id of MODAIS) if ($(id).classList.contains('on')) { id === 'm-ed' ? fecharEditor() : fechar(id); break; }
+});
+
+/* ============================== API / login ============================== */
+async function api(path, body) {
+  const h = { 'Content-Type': 'application/json' };
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+function mostrar(qual) { ['es-login', 'es-negado', 'es-estado', 'es-app'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; }); }
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'es-login');
+  $('es-sair').style.display = logado ? '' : 'none';
+  $('es-eu').style.display = logado ? '' : 'none';
+  if (logado) carregar();
+}
+
+/* ============================== dados ============================== */
+let D = null;      // resposta do /api/p3escala
+let SERV = {};     // RE (5 dígitos) -> serviços
+let EF = {};       // RE (5 dígitos) -> policial do cadastro
+let VISTA = 'folga';
+let ED = null;     // escala aberta no editor
+let ATUAL = null;  // escala escolhida (publicar / diária / excluir)
+
+async function carregar() {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo as escalas') : null;
+  try { D = await api('/api/p3escala'); }
+  catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { $('es-negado-tx').textContent = e.message; mostrar('es-negado'); return; }
+    mostrar('es-estado');
+    $('es-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  mostrar('es-app');
+  const n = (D.eu && D.eu.nome) || ls('bp_user');
+  $('es-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P3';
+  $('es-eu').querySelector('span').textContent = n;
+  if (window.BPCasca && BPCasca.novidades) BPCasca.novidades.gestor = () => !!(D && D.gestor);
+  document.querySelectorAll('.es-ges').forEach((el) => { el.style.display = D.gestor ? '' : 'none'; });
+  document.querySelectorAll('.es-ver').forEach((el) => { el.style.display = D.gestor ? 'none' : ''; });
+  EF = {}; (D.efetivo || []).forEach((p) => { EF[re5(p.re)] = p; });
+  SERV = {}; (D.servicos || []).forEach((s) => { (SERV[s.re] = SERV[s.re] || []).push(s); });
+  $('dl-ops').innerHTML = (D.operacoes || []).map((o) => `<option value="${esc(o)}">`).join('');
+  $('dl-org').innerHTML = (D.orgaos || []).map((o) => `<option value="${esc(o)}">`).join('');
+  $('es-hoje').textContent = 'Efetivo do BPFRON em ' + br(D.hoje);
+  pintarNums(); pintarFolga(); pintarEscalas(); pintarHist();
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones(document.body);
+}
+
+/* Situação do policial: em serviço, de folga (dias desde o fim do último serviço) ou com escala marcada.
+   excl = id da escala que está sendo editada (não conta como "outro serviço"). */
+function situacao(re, excl) {
+  const hoje = D.hoje, lista = (SERV[re] || []).filter((s) => !excl || s.ref !== excl);
+  let atual = null, ult = null, prox = null;
+  for (const s of lista) {
+    if (s.ini <= hoje && s.fim >= hoje) { if (!atual || s.fim > atual.fim) atual = s; }
+    else if (s.fim < hoje) { if (!ult || s.fim > ult.fim) ult = s; }
+    else if (!prox || s.ini < prox.ini) prox = s;
+  }
+  return { atual, ult, prox, folga: ult ? dif(ult.fim, hoje) : null, lista };
+}
+function periodoFiltro() {
+  const v = $('f-per').value, h = D.hoje, y = +h.slice(0, 4), m = +h.slice(5, 7);
+  const mes = (yy, mm) => { const a = `${yy}-${String(mm).padStart(2, '0')}-01`; return [a, somaD(`${mm === 12 ? yy + 1 : yy}-${String(mm === 12 ? 1 : mm + 1).padStart(2, '0')}-01`, -1)]; };
+  if (v === 'mes') return mes(y, m);
+  if (v === 'mesant') return m === 1 ? mes(y - 1, 12) : mes(y, m - 1);
+  if (v === 'ano') return [`${y}-01-01`, `${y}-12-31`];
+  return ['2000-01-01', '2100-12-31'];
+}
+function somaPeriodo(lista, a, b) {
+  const t = { op: 0, pe: 0 };
+  lista.forEach((s) => { if (s.ini >= a && s.ini <= b) t[s.tipo === 'PERMANENCIA' ? 'pe' : 'op'] += +s.dias || 0; });
+  return t;
+}
+const nomePol = (p) => [p.posto, p.guerra || p.nome].filter(Boolean).join(' ');
+function txtSituacao(st) {
+  if (st.atual) return `<span class="bp-sl crit">Em serviço até ${ddmm(st.atual.fim)}</span>`;
+  if (st.folga != null) return `<span class="es-folga" style="color:${st.folga >= 10 ? 'var(--good)' : st.folga >= 4 ? 'var(--t1)' : 'var(--warn)'}">${st.folga} dia${st.folga === 1 ? '' : 's'} de folga</span>` + (st.prox ? `<small>escalado a partir de ${ddmm(st.prox.ini)}</small>` : '');
+  if (st.prox) return `<span class="bp-sl info">Escalado a partir de ${ddmm(st.prox.ini)}</span>`;
+  return '<span style="color:var(--dim)">Sem serviço registrado</span>';
+}
+
+function pintarNums() {
+  const ef = D.efetivo || [];
+  let servico = 0, folga = 0, maior = null;
+  ef.forEach((p) => {
+    const st = situacao(re5(p.re));
+    if (st.atual) servico++;
+    else if (st.folga != null) { folga++; if (!maior || st.folga > maior.folga) maior = { folga: st.folga, p }; }
+  });
+  const ym = D.hoje.slice(0, 7);
+  const noMes = (D.escalas || []).filter((e) => (e.inicio || '').slice(0, 7) === ym).length;
+  const rasc = (D.escalas || []).filter((e) => e.status === 'RASCUNHO').length;
+  const card = (i, c, ic, r, v, sub, on) => `<${on ? 'button type="button"' : 'div'} class="bp-num${on ? ' clica' : ''}" style="--i:${i};--c:${c}"${on ? ` onclick="${on}"` : ''}><i data-ic="${ic}"></i><div class="r">${r}</div><div class="v">${v}</div>${sub ? `<small class="bp-ver">${sub}${on ? '<i data-ic="seta"></i>' : ''}</small>` : ''}</${on ? 'button' : 'div'}>`;
+  $('es-nums').innerHTML =
+    card(0, 'var(--info)', 'usuarios', 'Efetivo BPFRON', ef.length, '', '') +
+    card(1, 'var(--crit)', 'escudo', 'Em serviço hoje', servico, 'ver quem', "irAba('folga');$('f-sit').value='servico';pintarFolga()") +
+    card(2, 'var(--good)', 'relogio', 'Maior folga', maior ? maior.folga + ' d' : '—', maior ? esc(nomePol(maior.p)) : '', maior ? "irAba('folga');$('f-sit').value='folga';pintarFolga()" : '') +
+    card(3, 'var(--acc)', 'calendario', 'Escalas no mês', noMes, rasc ? `${rasc} em rascunho` : '', "irAba('escalas')");
+}
+
+function pintarFolga() {
+  const q = sem($('f-q').value).trim(), sit = $('f-sit').value, [a, b] = periodoFiltro();
+  const linhas = (D.efetivo || []).map((p) => { const re = re5(p.re), st = situacao(re); return { p, re, st, t: somaPeriodo(st.lista, a, b) }; })
+    .filter((x) => !q || sem([x.p.nome, x.p.guerra, x.p.re, x.p.posto].join(' ')).includes(q))
+    .filter((x) => !sit || (sit === 'servico' ? !!x.st.atual : sit === 'folga' ? !x.st.atual && x.st.folga != null : sit === 'prox' ? !!x.st.prox : !x.st.atual && x.st.folga == null && !x.st.prox));
+  const peso = (x) => x.st.atual ? -1 : x.st.folga != null ? x.st.folga : -2;
+  const com = linhas.filter((x) => peso(x) >= 0).sort((m, n) => peso(n) - peso(m) || (m.p.guerra || m.p.nome).localeCompare(n.p.guerra || n.p.nome, 'pt-BR'));
+  const serv = linhas.filter((x) => x.st.atual).sort((m, n) => m.st.atual.fim.localeCompare(n.st.atual.fim));
+  const nada = linhas.filter((x) => !x.st.atual && x.st.folga == null);
+  const lin = (x) => {
+    const u = x.st.atual || x.st.ult;
+    return `<tr class="clica" onclick="verPolicial('${x.re}')"><td><b>${esc(nomePol(x.p))}</b><small>${esc(x.p.nome)} · RE ${esc(x.p.re)}</small></td>
+      <td>${txtSituacao(x.st)}</td>
+      <td>${u ? `${esc(TIPO[u.tipo] || '')} · ${esc(u.nome || '')}<small>${br(u.ini)} a ${br(u.fim)}</small>` : '<span style="color:var(--dim)">—</span>'}</td>
+      <td class="n">${fDias(x.t.op)}</td><td class="n">${fDias(x.t.pe)}</td><td class="n"><b>${fDias(x.t.op + x.t.pe)}</b></td></tr>`;
+  };
+  const grupo = (t, arr) => arr.length ? `<tr class="grupo"><td colspan="6">${t} (${arr.length})</td></tr>` + arr.map(lin).join('') : '';
+  $('f-corpo').innerHTML = (grupo('De folga — a maior folga primeiro', com) + grupo('Em serviço hoje', serv) + grupo('Sem serviço registrado no sistema', nada))
+    || '<tr><td colspan="6" class="bp-vazio">Ninguém com esse filtro.</td></tr>';
+  $('f-cont').textContent = linhas.length;
+  $('f-conta').innerHTML = `Dias trabalhados de <b>${br(a) === '01/01/2000' ? 'todo o período' : br(a) + ' a ' + br(b)}</b> (conta o serviço pelo dia em que começou). Operação: dias corridos − 0,5, como na Diária. Permanência: 24 h = 1 dia.`;
+}
+
+function verPolicial(re) {
+  const p = EF[re] || { re, nome: 'RE ' + re }, st = situacao(re), [a, b] = periodoFiltro(), t = somaPeriodo(st.lista, a, b);
+  $('m-pol-tit').textContent = nomePol(p) || p.nome;
+  $('m-pol-sub').textContent = `${p.nome} · RE ${p.re}${p.contato ? ' · ' + p.contato : ''}`;
+  const tudo = somaPeriodo(st.lista, '2000-01-01', '2100-12-31');
+  $('pol-nums').innerHTML = `<div class="bp-num" style="--c:var(--good)"><i data-ic="relogio"></i><div class="r">Situação</div><div class="v" style="font-size:18px">${st.atual ? 'Em serviço' : st.folga != null ? st.folga + ' d de folga' : '—'}</div></div>
+    <div class="bp-num" style="--c:var(--acc)"><i data-ic="bandeira"></i><div class="r">Operação (${esc($('f-per').selectedOptions[0].text.toLowerCase())})</div><div class="v">${fDias(t.op)}</div></div>
+    <div class="bp-num" style="--c:var(--info)"><i data-ic="escudo"></i><div class="r">Permanência (${esc($('f-per').selectedOptions[0].text.toLowerCase())})</div><div class="v">${fDias(t.pe)}</div></div>
+    <div class="bp-num" style="--c:var(--t3)"><i data-ic="grade"></i><div class="r">Total registrado</div><div class="v">${fDias(tudo.op + tudo.pe)}</div></div>`;
+  const ord = st.lista.slice().sort((x, y) => y.ini.localeCompare(x.ini));
+  $('pol-corpo').innerHTML = ord.map((s) => `<tr><td><b>${esc(TIPO[s.tipo])}</b> · ${esc(s.nome || '')}<small>${esc([s.equipe, s.funcao].filter(Boolean).join(' · '))}</small></td>
+    <td>${br(s.ini)} a ${br(s.fim)}${s.horas ? `<small>${s.horas} h</small>` : ''}</td><td class="n">${fDias(s.dias)}</td>
+    <td>${s.origem === 'diaria' ? 'Diária por Policial' : 'Escala P3' + (STATUS[s.status] ? ` <span class="bp-sl ${STATUS[s.status][1]}">${STATUS[s.status][0]}</span>` : '')}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="bp-vazio">Nenhum serviço registrado.</td></tr>';
+  abrir('m-pol');
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-pol'));
+}
+
+function pintarEscalas() {
+  const q = sem($('e-q').value).trim(), tp = $('e-tipo').value, stf = $('e-st').value;
+  const lista = (D.escalas || []).filter((e) => (!tp || e.tipo === tp) && (!stf || e.status === stf))
+    .filter((e) => !q || sem([e.evento, e.sei_doc, e.processo, ...((e.dados && e.dados.equipes) || []).flatMap((x) => x.pols.map((p) => p.nome + ' ' + p.guerra + ' ' + p.re))].join(' ')).includes(q));
+  $('e-cont').textContent = lista.length;
+  $('e-lista').innerHTML = lista.map((e) => {
+    const st = STATUS[e.status] || ['', ''];
+    const ges = D.gestor;
+    return `<div class="bp-card vivo ${e.status === 'DIARIA' ? 'ok' : e.status === 'RASCUNHO' ? 'pend' : ''} es-esc">
+      <span class="bp-tile ${e.tipo === 'OPERACAO' ? '' : 'info'}"><i data-ic="${e.tipo === 'OPERACAO' ? 'bandeira' : 'escudo'}"></i></span>
+      <div class="tx"><b>${esc(e.evento)}</b>
+        <small>${br(e.inicio)} a ${br(e.fim)} · ${e.policiais} policia${e.policiais === 1 ? 'l' : 'is'} em ${e.equipes} equipe${e.equipes === 1 ? '' : 's'} · ${fDias(e.dias_total)} dias de serviço</small>
+        <small>${e.sei_doc ? 'SEI ' + esc(e.sei_doc) : 'sem nº SEI'}${e.processo ? ' · processo ' + esc(e.processo) : ''} · por ${esc(e.atualizado_por || e.criado_por)}</small>
+        <div class="sls"><span class="bp-sl ${e.tipo === 'OPERACAO' ? '' : 'info'}">${TIPO[e.tipo]}</span><span class="bp-sl ${st[1]}">${st[0]}</span></div></div>
+      <div class="acs">
+        ${ges ? `<button type="button" class="bp-btn sm sec" onclick="editarEscala('${e.id}')"><i data-ic="editar"></i>Abrir</button>` : ''}
+        <button type="button" class="bp-btn sm sec" onclick="abrirSEI(escalaDe('${e.id}'))"><i data-ic="arquivo"></i>SEI</button>
+        ${ges && e.status === 'RASCUNHO' ? `<button type="button" class="bp-btn sm ghost" onclick="abrirPublicar('${e.id}')"><i data-ic="check"></i>Publicada</button>` : ''}
+        ${ges && e.tipo === 'OPERACAO' ? `<button type="button" class="bp-btn sm ${e.diaria_lote ? 'ghost' : ''}" onclick="abrirDiaria('${e.id}')"><i data-ic="enviar"></i>${e.diaria_lote ? 'Atualizar na Diária' : 'Lançar na Diária'}</button>` : ''}
+        ${ges ? `<button type="button" class="bp-btn sm perigo-l" onclick="abrirExcluir('${e.id}')" title="Excluir" aria-label="Excluir"><i data-ic="lixeira"></i></button>` : ''}
+      </div></div>`;
+  }).join('') || '<div class="bp-vazio">Nenhuma escala ainda. Use “Nova permanência” ou “Nova operação”.</div>';
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('e-lista'));
+}
+function pintarHist() {
+  $('h-lista').innerHTML = (D.historico || []).map((h) => `<div><b>${esc(h.acao)}</b> · ${esc(h.resumo)}<br><small>${esc(h.quando)} · ${esc(h.quem)} · ${esc(h.id)}</small></div>`).join('') || '<div class="bp-vazio">Nada registrado ainda.</div>';
+}
+function irAba(v) {
+  VISTA = v;
+  document.querySelectorAll('#es-abas button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  ['folga', 'escalas', 'hist'].forEach((x) => { $('v-' + x).style.display = x === v ? '' : 'none'; });
+}
+$('es-abas').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) irAba(b.dataset.v); });
+
+/* ============================== editor ============================== */
+const OBS_OP = [
+  'Os comandantes de cada área de divisa e fronteira, deverão confeccionar Relatórios Operacionais, com fotos e coordenadas, informando as ações executadas durante o período da operação;',
+  'Os comandantes da operação, deverão relacionar o efetivo em suas devidas viaturas, além dos armamentos utilizados pelas guarnições, lançando as possíveis alterações no Relatório Operacional.',
+  'Todo efetivo empregado, deverá observar as Ordens de Serviço da referida operação na qual está empregado.',
+  'Os motoristas do BPFRON deverão providenciar o checklist das viaturas, na entrada e saída de serviço, pelo link disponibilizado pela seção de transportes.',
+  'Após o término da missão, o policial militar empregado deverá, no prazo máximo de 72 (setenta e duas) horas, anexar o Relatório de Viagem Nacional (RVN) devidamente assinado pelo GOV, realizando a devida inserção no Processo SEI nº {PROCESSO}, para fins de prestação de contas e regularização administrativa.',
+  'As guarnições empregadas na presente missão poderão ser remanejadas para outras localidades, áreas de fronteira ou divisa, conforme a necessidade do serviço e interesse operacional do Comando da Operação, visando garantir a continuidade das ações de policiamento ostensivo, preventivo e repressivo no âmbito da operação.',
+];
+const OBS_PE = [
+  'O policial militar escalado deverá apresentar-se no horário previsto, devidamente uniformizado, armado e equipado.',
+  'A troca de serviço somente poderá ocorrer com autorização da Divisão Operacional - P3.',
+  'As alterações ocorridas durante o serviço deverão ser registradas e comunicadas ao Oficial de Dia.',
+];
+const PADRAO = {
+  OPERACAO: { evento: '', local: 'FRONTEIRA E DIVISAS', area: 'FRONTEIRA/NOVA MUTUM - BPFRON', viatura: 'A CARGO DA DIVISÃO DE TRANSPORTES', localidade: 'NOVA MUTUM', obs: OBS_OP },
+  PERMANENCIA: { evento: 'ESCALA DE PERMANÊNCIA', local: 'SEDE DO BPFRON - DISTRITO DE NOVA MUTUM PARANÁ', area: 'PERMANÊNCIA - SEDE DO BPFRON', viatura: '', localidade: 'NOVA MUTUM', obs: OBS_PE },
+};
+const CAB_FIXO = { uniforme: 'UNIFORME "A" C/ CHAPÉU E SHEMAGH (BPFRON).', armamento: 'O DE DOTAÇÃO DA PMRO e EPC (conforme equipamento especializado).',
+  fecho: 'Quartel no Distrito de Nova Mutum Paraná - Porto Velho/RO, na data da assinatura eletrônica.',
+  assinante: 'FELIPE SANTOS DAS CHAGAS - MAJ QOPM', assinante_cargo: 'Comandante do Batalhão de Polícia de Fronteira e Divisas - BPFron' };
+
+function novaEscala(tipo) {
+  const h = D.hoje;
+  ED = { id: '', versao: '', tipo, sujo: false,
+    cab: { evento: PADRAO[tipo].evento, operacao: '', etapa: '', orgao: '', local: PADRAO[tipo].local, processo: '', sei_doc: '', obs: PADRAO[tipo].obs.join('\n'), ...CAB_FIXO },
+    pad: { ini: h, fim: somaD(h, 7), hora: '08:00', horas: 24 }, equipes: [] };
+  ED.equipes.push(equipeVazia('comum'));
+  abrirEditor();
+}
+function equipeVazia(kind, base) {
+  const P = PADRAO[ED.tipo], pd = ED.pad;
+  return { kind, area: base ? base.area : (kind === 'ni' ? 'BPFRON - NI' : kind === 'canil' ? 'BPFRON - CANIL' : P.area), viatura: base ? base.viatura : P.viatura,
+    localidade: base ? base.localidade : (kind === 'ni' ? 'ITINERANTE' : P.localidade), ini: pd.ini, fim: ED.tipo === 'OPERACAO' ? pd.fim : '', hora: pd.hora, horas: pd.horas, pols: [], manual: false, q: '' };
+}
+function escalaDe(id) { const e = (D.escalas || []).find((x) => x.id === id); return e && e.dados ? { ...e.dados, id: e.id, status: e.status } : null; }
+function editarEscala(id) {
+  const e = (D.escalas || []).find((x) => x.id === id);
+  if (!e || !e.dados) return toast('Não consegui abrir essa escala.', 'erro');
+  const d = e.dados;
+  ED = { id: e.id, versao: e.atualizado_em, tipo: d.tipo, sujo: false,
+    cab: { evento: d.evento, operacao: d.operacao, etapa: d.etapa, orgao: d.orgao, uniforme: d.uniforme, armamento: d.armamento, local: d.local,
+      processo: d.processo, sei_doc: d.sei_doc, obs: (d.obs || []).join('\n'), fecho: d.fecho, assinante: d.assinante, assinante_cargo: d.assinante_cargo },
+    pad: { ini: (d.equipes[0] || {}).ini || D.hoje, fim: (d.equipes[0] || {}).fim || D.hoje, hora: (d.equipes[0] || {}).hora || '08:00', horas: (d.equipes[0] || {}).horas || 24 },
+    equipes: d.equipes.map((q) => ({ kind: /\bNI\b/.test(q.nome) ? 'ni' : /CANIL/.test(q.nome) ? 'canil' : 'comum', area: q.area, viatura: q.viatura, localidade: q.localidade,
+      ini: q.ini, fim: d.tipo === 'OPERACAO' ? q.fim : '', hora: q.hora || '08:00', horas: q.horas || 24, pols: q.pols.map((p) => ({ ...p })), manual: true, q: '' })) };
+  abrirEditor();
+  if (e.diaria_lote) msgEd('Esta escala já está na Diária. Depois de salvar, use “Atualizar na Diária” na lista para levar a mudança para lá.', 'pend');
+}
+function abrirEditor() {
+  $('m-ed-tit').textContent = ED.id ? 'Editar escala' : 'Nova escala';
+  $('m-ed-sub').textContent = ED.id ? ED.id : 'Só efetivo do BPFRON';
+  const c = ED.cab;
+  [['ed-evento', 'evento'], ['ed-operacao', 'operacao'], ['ed-etapa', 'etapa'], ['ed-orgao', 'orgao'], ['ed-uniforme', 'uniforme'], ['ed-armamento', 'armamento'],
+    ['ed-local', 'local'], ['ed-processo', 'processo'], ['ed-sei', 'sei_doc'], ['ed-obs', 'obs'], ['ed-fecho', 'fecho'], ['ed-ass', 'assinante'], ['ed-cargo', 'assinante_cargo']]
+    .forEach(([id, k]) => { $(id).value = c[k] || ''; });
+  $('pd-ini').value = ED.pad.ini; $('pd-fim').value = ED.pad.fim; $('pd-hora').value = ED.pad.hora; $('pd-horas').value = String(ED.pad.horas);
+  msgEd('');
+  pintarTipo();
+  abrir('m-ed');
+  $('m-ed').querySelector('.bp-modal-cx').scrollTop = 0;
+}
+function fecharEditor() { fechar('m-ed'); }
+function pintarTipo() {
+  const op = ED.tipo === 'OPERACAO';
+  document.querySelectorAll('#ed-tipo button').forEach((b) => b.classList.toggle('on', b.dataset.v === ED.tipo));
+  document.querySelectorAll('#m-ed .so-op').forEach((el) => { el.style.display = op ? '' : 'none'; });
+  document.querySelectorAll('#m-ed .so-pe').forEach((el) => { el.style.display = op ? 'none' : ''; });
+  $('ed-local-rot').textContent = op ? 'Local do patrulhamento' : 'Local';
+  $('pd-ini-rot').textContent = op ? 'Início' : 'Data do 1º serviço';
+  $('ed-regra').innerHTML = op ? 'Na <b>operação</b> cada policial conta <b>dias corridos − 0,5</b> (a mesma regra da Diária). Ex.: de 01 a 10 = 9,5 dias.'
+    : 'Na <b>permanência</b> cada serviço conta pelas horas: <b>24 h = 1 dia</b>. Para a escala da semana, crie uma equipe por dia com “Equipe do dia seguinte”.';
+  pintarEquipes();
+}
+$('ed-tipo').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b || b.dataset.v === ED.tipo) return;
+  const de = ED.tipo, para = b.dataset.v;
+  ED.tipo = para;
+  // troca os textos padrão só onde a pessoa não mexeu
+  if (!ED.cab.evento || ED.cab.evento === PADRAO[de].evento) ED.cab.evento = PADRAO[para].evento;
+  if (!ED.cab.local || ED.cab.local === PADRAO[de].local) ED.cab.local = PADRAO[para].local;
+  if (!ED.cab.obs || ED.cab.obs === PADRAO[de].obs.join('\n')) ED.cab.obs = PADRAO[para].obs.join('\n');
+  ED.equipes.forEach((q) => {
+    if (q.kind === 'comum' && q.area === PADRAO[de].area) q.area = PADRAO[para].area;
+    if (q.viatura === PADRAO[de].viatura) q.viatura = PADRAO[para].viatura;
+    if (para === 'OPERACAO' && !q.fim) q.fim = ED.pad.fim || q.ini;
+  });
+  $('ed-evento').value = ED.cab.evento; $('ed-local').value = ED.cab.local; $('ed-obs').value = ED.cab.obs;
+  pintarTipo();
+});
+function aplicarPadrao() {
+  ED.equipes.forEach((q) => { q.ini = ED.pad.ini; q.fim = ED.pad.fim; q.hora = ED.pad.hora; q.horas = ED.pad.horas; });
+  pintarEquipes();
+  toast('Período aplicado a todas as equipes.');
+}
+function novaEquipe(kind) { ED.equipes.push(equipeVazia(kind)); pintarEquipes(); }
+function proximoDia() {
+  const ult = ED.equipes[ED.equipes.length - 1];
+  const q = equipeVazia('comum', ult);
+  q.ini = ult && ult.ini ? somaD(ult.ini, Math.max(1, Math.ceil((+ult.horas || 24) / 24))) : ED.pad.ini;
+  q.hora = ult ? ult.hora : ED.pad.hora; q.horas = ult ? ult.horas : ED.pad.horas;
+  ED.equipes.push(q); pintarEquipes();
+}
+
+/* antiguidade: posto e, no mesmo posto, o RE menor é o mais antigo */
+const RANK = [[/^CEL/, 1], [/^(TC|TEN\.?\s*CEL)/, 2], [/^MAJ/, 3], [/^CAP/, 4], [/^1\S*\s*TEN/, 5], [/^2\S*\s*TEN/, 6], [/^ASP/, 7], [/^(ST|SUB)/, 8],
+  [/^1\S*\s*SGT/, 9], [/^2\S*\s*SGT/, 10], [/^3\S*\s*SGT/, 11], [/^CB/, 12], [/^SD/, 13]];
+const rank = (p) => { const s = sem(p.posto).trim(); for (const [r, n] of RANK) if (r.test(s)) return n; return 20; };
+const antig = (a, b) => rank(a) - rank(b) || (+re5(a.re) || 0) - (+re5(b.re) || 0);
+const FPRI = { CMT: 1, MOT: 2, AUX: 3 };
+function autoFuncoes(q) {
+  if (q.manual) return;
+  q.pols.sort(antig);
+  q.pols.forEach((p, i) => { p.funcao = i === 0 ? 'CMT' : (i === 1 && q.kind !== 'ni') ? 'MOT' : 'AUX'; });
+}
+/* equipes na ordem do SEI: comuns, depois CANIL, depois NI — com o nome de cada uma */
+function equipesOrdenadas(eqs) {
+  const ordem = { comum: 0, canil: 1, ni: 2 };
+  const lista = eqs.map((q, i) => ({ q, i })).sort((a, b) => ordem[a.q.kind] - ordem[b.q.kind] || a.i - b.i);
+  const cont = { comum: 0, canil: 0, ni: 0 }, tot = { comum: 0, canil: 0, ni: 0 };
+  lista.forEach((x) => tot[x.q.kind]++);
+  return lista.map((x) => {
+    cont[x.q.kind]++;
+    const nome = x.q.kind === 'comum' ? 'EQUIPE ' + String(cont.comum).padStart(2, '0')
+      : (x.q.kind === 'ni' ? 'EQUIPE NI' : 'EQUIPE CANIL') + (tot[x.q.kind] > 1 ? ' ' + String(cont[x.q.kind]).padStart(2, '0') : '');
+    return { ...x, nome };
+  });
+}
+function periodoQ(q) {
+  if (ED.tipo === 'OPERACAO') {
+    if (!q.ini) return null;
+    const fim = q.fim && q.fim >= q.ini ? q.fim : q.ini;
+    return { ini: q.ini, fim, dias: dif(q.ini, fim) + 1 - 0.5, t0: T(q.ini) / 60000, t1: T(fim) / 60000 + 1440 };
+  }
+  if (!q.ini) return null;
+  const [hh, mm] = String(q.hora || '08:00').split(':').map(Number);
+  const fimMin = (hh || 0) * 60 + (mm || 0) + (+q.horas || 24) * 60;
+  const t0 = T(q.ini) / 60000 + (hh || 0) * 60 + (mm || 0);
+  return { ini: q.ini, fim: somaD(q.ini, Math.floor((fimMin - 1) / 1440)), dias: (+q.horas || 24) / 24, t0, t1: t0 + (+q.horas || 24) * 60 };
+}
+/* intervalo em minutos de um serviço já registrado (permanência pela hora; operação/Diária pelo dia inteiro) */
+function intervalo(s) {
+  if (s.tipo === 'PERMANENCIA' && s.hora && s.horas) { const [hh, mm] = String(s.hora).split(':').map(Number); const t0 = T(s.ini) / 60000 + (hh || 0) * 60 + (mm || 0); return [t0, t0 + s.horas * 60]; }
+  return [T(s.ini) / 60000, T(s.fim) / 60000 + 1440];
+}
+function conflito(re, q) {
+  const per = periodoQ(q); if (!per) return null;
+  const outros = (SERV[re] || []).filter((s) => { if (s.ref === ED.id) return false; const [a, b] = intervalo(s); return a < per.t1 && per.t0 < b; });
+  if (outros.length) return outros[0];
+  for (const o of ED.equipes) if (o !== q && o.pols.some((p) => re5(p.re) === re)) { const po = periodoQ(o); if (po && po.t0 < per.t1 && per.t0 < po.t1) return { nome: 'outra equipe desta escala', ini: po.ini, fim: po.fim }; }
+  return null;
+}
+
+function pintarEquipes() {
+  const op = ED.tipo === 'OPERACAO';
+  const nomes = new Map(equipesOrdenadas(ED.equipes).map((x) => [x.q, x.nome]));
+  let tot = 0, dias = 0;
+  $('ed-eqs').innerHTML = ED.equipes.map((q, qi) => {
+    const per = periodoQ(q);
+    tot += q.pols.length; dias += per ? per.dias * q.pols.length : 0;
+    const linhas = q.pols.map((p, pi) => {
+      const c = conflito(re5(p.re), q);
+      return `<tr><td>${esc(p.posto)}</td><td>${esc(p.re)}</td><td><b>${esc(p.nome)}</b>${c ? `<small style="color:var(--warn)">também em ${esc(c.nome)} (${ddmm(c.ini)} a ${ddmm(c.fim)})</small>` : ''}</td>
+        <td><input list="dl-func" value="${esc(p.funcao)}" maxlength="30" onchange="mudaFuncao(${qi},${pi},this.value)" aria-label="Função"></td>
+        <td class="c-cont">${esc(p.contato)}</td>
+        <td style="text-align:right;white-space:nowrap"><button type="button" class="bp-btn ic sm ghost" title="Subir" aria-label="Subir" onclick="moverPol(${qi},${pi},-1)"${pi ? '' : ' disabled'}><i data-ic="seta" style="transform:rotate(-90deg)"></i></button><button type="button" class="bp-btn ic sm ghost" title="Tirar da equipe" aria-label="Tirar da equipe" onclick="tirarPol(${qi},${pi})"><i data-ic="x"></i></button></td></tr>`;
+    }).join('');
+    return `<div class="es-eq" data-q="${qi}">
+      <div class="es-eq-cab"><h4>${esc(nomes.get(q))}${per ? ` <small style="color:var(--muted);font:600 13px Inter">· ${op ? `${br(per.ini)} a ${br(per.fim)}` : `${br(per.ini)} ${esc(q.hora)} · ${q.horas} h`} · ${fDias(per.dias)} dia${per.dias === 1 ? '' : 's'} por policial</small>` : ''}</h4>
+        <span class="bp-sl">${q.pols.length} policia${q.pols.length === 1 ? 'l' : 'is'}</span>
+        <button type="button" class="bp-btn sm ghost" onclick="reordenar(${qi})" title="Refaz CMT, MOT e AUX pela antiguidade"><i data-ic="atualizar"></i>CMT/MOT/AUX</button>
+        <button type="button" class="bp-btn ic sm perigo-l" title="Tirar a equipe" aria-label="Tirar a equipe" onclick="tirarEquipe(${qi})"><i data-ic="lixeira"></i></button></div>
+      <div class="es-eq-campos">
+        <div class="bp-campo d3"><label>Área (1ª linha do título)</label><div class="bp-in"><input value="${esc(q.area)}" maxlength="160" oninput="ED.equipes[${qi}].area=this.value"></div></div>
+        <div class="bp-campo d3"><label>Viatura</label><div class="bp-in"><input value="${esc(q.viatura)}" maxlength="160" placeholder="${op ? '' : 'em branco = sem viatura'}" oninput="ED.equipes[${qi}].viatura=this.value"></div></div>
+        <div class="bp-campo d2"><label>Localidade</label><div class="bp-in"><input value="${esc(q.localidade)}" maxlength="80" oninput="ED.equipes[${qi}].localidade=this.value"></div></div>
+        <div class="bp-campo"><label>${op ? 'Início' : 'Data'}</label><div class="bp-in"><input type="date" value="${esc(q.ini)}" onchange="ED.equipes[${qi}].ini=this.value;pintarEquipes()"></div></div>
+        ${op ? `<div class="bp-campo"><label>Término</label><div class="bp-in"><input type="date" value="${esc(q.fim)}" onchange="ED.equipes[${qi}].fim=this.value;pintarEquipes()"></div></div>`
+          : `<div class="bp-campo"><label>Hora</label><div class="bp-in"><input type="time" value="${esc(q.hora)}" onchange="ED.equipes[${qi}].hora=this.value;pintarEquipes()"></div></div>
+             <div class="bp-campo"><label>Horas</label><div class="bp-in"><input type="number" min="1" max="240" value="${esc(q.horas)}" onchange="ED.equipes[${qi}].horas=+this.value||24;pintarEquipes()"></div></div>`}
+        <div class="bp-campo"><label>Tipo</label><div class="bp-in"><select onchange="ED.equipes[${qi}].kind=this.value;pintarEquipes()">
+          <option value="comum"${q.kind === 'comum' ? ' selected' : ''}>Comum</option><option value="canil"${q.kind === 'canil' ? ' selected' : ''}>CANIL</option><option value="ni"${q.kind === 'ni' ? ' selected' : ''}>NI</option></select></div></div>
+      </div>
+      ${q.pols.length ? `<table class="es-pols"><thead><tr><th>Posto</th><th>RE</th><th>Nome</th><th>Função</th><th class="c-cont">Contato</th><th></th></tr></thead><tbody>${linhas}</tbody></table>` : ''}
+      <div class="es-add">
+        <div class="bp-in"><i data-ic="buscar"></i><input id="busca-${qi}" placeholder="Adicionar policial: nome, nome de guerra ou RE (vazio = mais descansados)" autocomplete="off" value="${esc(q.q)}" oninput="ED.equipes[${qi}].q=this.value;buscar(${qi})" onfocus="buscar(${qi})"></div>
+        <button type="button" class="bp-btn sm sec" onclick="sugerir(${qi})" title="Põe na equipe os 4 que estão há mais tempo de folga e livres no período"><i data-ic="estrela"></i>4 mais descansados</button>
+        <button type="button" class="bp-btn sm ghost" onclick="abrirManual(${qi})"><i data-ic="mais"></i>Fora do cadastro</button>
+      </div>
+      <div class="es-res" id="res-${qi}"></div>
+    </div>`;
+  }).join('') || '<div class="bp-vazio">Nenhuma equipe. Use “Equipe”.</div>';
+  $('ed-tot').textContent = `${new Set(ED.equipes.flatMap((q) => q.pols.map((p) => re5(p.re)))).size} policiais · ${fDias(dias)} dias de serviço`;
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('ed-eqs'));
+}
+function candidatos(qi) {
+  const q = ED.equipes[qi], termo = sem(q.q).trim(), noEq = new Set(q.pols.map((p) => re5(p.re)));
+  return (D.efetivo || []).filter((p) => !noEq.has(re5(p.re)))
+    .filter((p) => !termo || sem([p.nome, p.guerra, p.re, p.posto].join(' ')).includes(termo))
+    .map((p) => { const re = re5(p.re), st = situacao(re, ED.id); return { p, re, st, c: conflito(re, q) }; })
+    .sort((a, b) => (!!a.c - !!b.c) || ((b.st.folga ?? -1) - (a.st.folga ?? -1)) || antig(a.p, b.p));
+}
+function buscar(qi) {
+  const lista = candidatos(qi).slice(0, 10);
+  $('res-' + qi).innerHTML = lista.map((x) => `<button type="button" onclick="addPol(${qi},'${x.re}')">
+    <span class="tx"><b>${esc(nomePol(x.p))}</b><small>${esc(x.p.nome)} · RE ${esc(x.p.re)}</small></span>
+    ${x.c ? `<span class="bp-sl pend">em ${esc(x.c.nome || 'outro serviço')} ${ddmm(x.c.ini)}–${ddmm(x.c.fim)}</span>` : x.st.atual ? `<span class="bp-sl crit">em serviço até ${ddmm(x.st.atual.fim)}</span>` : x.st.folga != null ? `<span class="bp-sl ok">${x.st.folga} d de folga</span>` : '<span class="bp-sl">sem registro</span>'}</button>`).join('')
+    || '<div class="bp-vazio" style="padding:10px">Ninguém com esse nome no efetivo do BPFRON. Use “Fora do cadastro”.</div>';
+}
+function addPol(qi, re) {
+  const p = EF[re]; if (!p) return;
+  const q = ED.equipes[qi];
+  q.pols.push({ re: p.re, posto: p.posto, nome: p.nome, guerra: p.guerra, opm: 'BPFRON', contato: p.contato, funcao: 'AUX' });
+  q.manual = false; autoFuncoes(q);
+  q.q = ''; ED.sujo = true;
+  pintarEquipes();
+  const inp = $('busca-' + qi); if (inp) { inp.focus(); buscar(qi); }
+}
+function sugerir(qi) {
+  const q = ED.equipes[qi];
+  const livres = candidatos(qi).filter((x) => !x.c && !x.st.atual).slice(0, 4);
+  if (!livres.length) return toast('Ninguém livre nesse período.', 'erro');
+  livres.forEach((x) => q.pols.push({ re: x.p.re, posto: x.p.posto, nome: x.p.nome, guerra: x.p.guerra, opm: 'BPFRON', contato: x.p.contato, funcao: 'AUX' }));
+  q.manual = false; autoFuncoes(q); ED.sujo = true; pintarEquipes();
+}
+let MAN_Q = 0;
+function abrirManual(qi) { MAN_Q = qi; ['man-re', 'man-posto', 'man-nome', 'man-cont'].forEach((id) => { $(id).value = ''; }); $('man-msg').textContent = ''; abrir('m-man'); $('man-re').focus(); }
+function addManual() {
+  const re = $('man-re').value.replace(/\D/g, ''), nome = $('man-nome').value.trim().toUpperCase();
+  if (re.length < 4 || !nome) { $('man-msg').textContent = 'Informe o RE e o nome completo.'; return; }
+  const q = ED.equipes[MAN_Q];
+  if (q.pols.some((p) => re5(p.re) === re5(re))) { $('man-msg').textContent = 'Esse RE já está na equipe.'; return; }
+  q.pols.push({ re, posto: $('man-posto').value.trim().toUpperCase(), nome, guerra: '', opm: 'BPFRON', contato: $('man-cont').value.trim(), funcao: 'AUX' });
+  q.manual = false; autoFuncoes(q); ED.sujo = true; fechar('m-man'); pintarEquipes();
+}
+function mudaFuncao(qi, pi, v) { const q = ED.equipes[qi]; q.pols[pi].funcao = v.trim().toUpperCase(); q.manual = true; ED.sujo = true; }
+function moverPol(qi, pi, d) { const a = ED.equipes[qi].pols, j = pi + d; if (j < 0 || j >= a.length) return; [a[pi], a[j]] = [a[j], a[pi]]; ED.equipes[qi].manual = true; pintarEquipes(); }
+function tirarPol(qi, pi) { const q = ED.equipes[qi]; q.pols.splice(pi, 1); autoFuncoes(q); ED.sujo = true; pintarEquipes(); }
+function reordenar(qi) { const q = ED.equipes[qi]; q.manual = false; autoFuncoes(q); pintarEquipes(); }
+function tirarEquipe(qi) {
+  const q = ED.equipes[qi];
+  if (q.pols.length && !confirmarSimples(`Tirar a equipe com ${q.pols.length} policial(is)?`)) return;
+  ED.equipes.splice(qi, 1); pintarEquipes();
+}
+/* confirmação dentro da página (sem alert/confirm do navegador): 2º clique em 4 s */
+let _conf = { t: 0, m: '' };
+function confirmarSimples(m) { const ok = _conf.m === m && Date.now() - _conf.t < 4000; _conf = ok ? { t: 0, m: '' } : { t: Date.now(), m }; if (!ok) toast(m + ' Clique de novo para confirmar.'); return ok; }
+
+/* escala no formato que vai para o Worker (e para o SEI) */
+function montarEscala() {
+  const c = ED.cab;
+  return { id: ED.id, tipo: ED.tipo, evento: c.evento, operacao: c.operacao, etapa: c.etapa, orgao: c.orgao, uniforme: c.uniforme, armamento: c.armamento, local: c.local,
+    processo: c.processo, sei_doc: c.sei_doc, obs: String(c.obs || '').split(/\n+/).map((x) => x.trim()).filter(Boolean),
+    fecho: c.fecho, assinante: c.assinante, assinante_cargo: c.assinante_cargo,
+    equipes: equipesOrdenadas(ED.equipes).map(({ q, nome }) => {
+      const per = periodoQ(q) || { ini: q.ini, fim: q.fim };
+      return { nome, area: q.area, viatura: q.viatura, localidade: q.localidade, ini: per.ini, fim: per.fim, hora: q.hora, horas: q.horas, dias: per.dias,
+        pols: q.pols.slice().sort((a, b) => (FPRI[a.funcao] || 9) - (FPRI[b.funcao] || 9)) };
+    }) };
+}
+function msgEd(t, tipo) { const m = $('ed-msg'); m.className = 'bp-msg' + (tipo ? ' ' + tipo : ''); m.textContent = t; }
+async function salvarEscala() {
+  const e = montarEscala();
+  if (!String(e.evento || '').trim()) return msgEd('Falta o EVENTO.', 'err');
+  if (!e.equipes.length || e.equipes.some((q) => !q.pols.length)) return msgEd('Toda equipe precisa de pelo menos um policial (tire as equipes vazias).', 'err');
+  const bt = $('ed-salvar'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…'; msgEd('');
+  try {
+    const r = await api('/api/p3escala/salvar', { op: 'salvar', id: ED.id, versao: ED.versao, escala: e });
+    ED.id = r.id; ED.versao = r.versao; ED.sujo = false;
+    $('m-ed-tit').textContent = 'Editar escala'; $('m-ed-sub').textContent = r.id;
+    msgEd(r.aviso || 'Escala salva. Agora é só copiar para o SEI.', r.aviso ? 'pend' : 'ok');
+    toast('Escala salva.');
+    await carregar();
+  } catch (x) { msgEd(x.message, 'err'); }
+  finally { bt.disabled = false; bt.innerHTML = antes; if (window.BPCasca && BPCasca.icones) BPCasca.icones(bt); }
+}
+
+/* ============================== SEI ============================== */
+/* DATA da equipe como nas escalas: "01 A 08/08", "28/10 A 03/11", "02/11"; permanência com a hora. */
+function dataEquipe(tipo, q) {
+  if (tipo === 'PERMANENCIA') {
+    const h = String(q.hora || '08:00').replace(':', 'H');
+    const fimH = (() => { const [hh, mm] = String(q.hora || '08:00').split(':').map(Number); const t = ((hh || 0) * 60 + (mm || 0) + (+q.horas || 24) * 60) % 1440; return String(Math.floor(t / 60)).padStart(2, '0') + 'H' + String(t % 60).padStart(2, '0'); })();
+    return `${br(q.ini)} - ${h} ÀS ${fimH}${q.fim !== q.ini ? ' DO DIA ' + ddmm(q.fim) : ''} (${q.horas} HORAS)`;
+  }
+  if (q.ini === q.fim) return ddmm(q.ini);
+  if (q.ini.slice(0, 7) === q.fim.slice(0, 7)) return `${q.ini.slice(8, 10)} A ${ddmm(q.fim)}`;
+  return `${ddmm(q.ini)} A ${ddmm(q.fim)}`;
+}
+function htmlSEI(e) {
+  const H = (s) => esc(String(s || '').toUpperCase());
+  const op = e.tipo === 'OPERACAO';
+  const qtd = new Set(e.equipes.flatMap((q) => q.pols.map((p) => re5(p.re)))).size;
+  const ini = e.equipes.reduce((a, q) => (!a || q.ini < a ? q.ini : a), ''), fim = e.equipes.reduce((a, q) => (!a || q.fim > a ? q.fim : a), '');
+  const P = (t, est) => `<p style="${est || ''}">${t}</p>`;
+  const C = 'text-align:center;';
+  let h = P('<b>COMANDO DE POLICIAMENTO ESPECIALIZADO</b>', C) + P('<b>BATALHÃO DE POLÍCIA DE FRONTEIRA E DIVISAS - BPFRON</b>', C) + P('<b>DIVISÃO OPERACIONAL - P3</b>', C);
+  h += P('<b>1. ADMINISTRAÇÃO</b>');
+  h += P(`<b>EVENTO:</b> ${H(e.evento)}`);
+  if (e.uniforme) h += P(`<b>UNIFORME:</b> ${esc(e.uniforme)}`);
+  if (e.armamento) h += P(`<b>ARMAMENTO:</b> ${esc(e.armamento)}`);
+  if (e.local) h += P(`<b>${op ? 'LOCAL DO PATRULHAMENTO' : 'LOCAL'}:</b> ${H(e.local)}`);
+  h += P(`<b>PERÍODO:</b> ${ini === fim ? br(ini) : br(ini) + ' a ' + br(fim)}`);
+  if (e.processo) h += P(`<b>${op ? 'PROCESSO SEI PARA PRESTAÇÃO DE CONTAS' : 'REF.'}:</b> ${esc(e.processo)}`);
+  h += P(`<b>TOTAL DE POLICIAIS ESCALADOS:</b> ${qtd} PPMM`);
+  h += P(`<b>2. EFETIVO ESCALADO: ${qtd} PPMM DO BPFRON</b>`);
+  const td = 'border:1px solid #000;padding:2px 4px;text-align:center;vertical-align:middle;';
+  e.equipes.forEach((q) => {
+    const tit = [q.area ? H(q.area) : '', H(q.nome) + (q.viatura ? ' (VIATURA - ' + H(q.viatura) + ')' : ''), 'DATA: ' + esc(dataEquipe(e.tipo, q))].filter(Boolean).join('<br>');
+    let t = `<table align="center" border="1" cellpadding="1" cellspacing="0" style="border-collapse:collapse;width:100%;"><tbody>`;
+    t += `<tr><td colspan="7" style="${td}background-color:#d9d9d9;"><b>${tit}</b></td></tr>`;
+    t += '<tr>' + ['POST/GRAD', 'RE', 'NOME', 'OPM', 'FUNÇÃO', 'CONTATO', 'LOCALIDADE'].map((x) => `<td style="${td}"><b>${x}</b></td>`).join('') + '</tr>';
+    q.pols.forEach((p, i) => {
+      t += `<tr><td style="${td}">${H(p.posto)}</td><td style="${td}">${esc(p.re)}</td><td style="${td}text-align:left;">${H(p.nome)}</td><td style="${td}">${H(p.opm || 'BPFRON')}</td><td style="${td}">${H(p.funcao)}</td><td style="${td}">${esc(p.contato)}</td>`
+        + (i === 0 ? `<td rowspan="${q.pols.length}" style="${td}">${H(q.localidade)}</td>` : '') + '</tr>';
+    });
+    t += '</tbody></table>';
+    h += t + '<p><br></p>';
+  });
+  (e.obs || []).forEach((o, i) => { h += P(`<b>OBS ${String(i + 1).padStart(2, '0')}:</b> ${esc(String(o).replace(/\{PROCESSO\}/g, e.processo || '____________'))}`, 'text-align:justify;'); });
+  if (e.fecho) h += P(esc(e.fecho), C);
+  if (e.assinante) h += P('<br>', C) + P(`<b>${esc(e.assinante)}</b>`, C) + (e.assinante_cargo ? P(esc(e.assinante_cargo), C) : '');
+  return h;
+}
+let SEI_HTML = '';
+function abrirSEI(e, doEditor) {
+  if (!e) return toast('Não consegui montar essa escala.', 'erro');
+  const avisos = [];
+  if (doEditor && ED && ED.sujo) avisos.push('Você ainda não salvou as últimas mudanças — a prévia já mostra como está agora.');
+  if (e.equipes.some((q) => !q.pols.length)) avisos.push('Tem equipe sem policial.');
+  if (e.tipo === 'OPERACAO' && !e.processo) avisos.push('Falta o nº do processo SEI (aparece na OBS do RVN como “____________”).');
+  const semCont = e.equipes.flatMap((q) => q.pols).filter((p) => !p.contato).length;
+  if (semCont) avisos.push(`${semCont} policial(is) sem telefone no cadastro.`);
+  $('sei-aviso').innerHTML = avisos.length ? `<div class="bp-aviso pend" style="margin-bottom:12px"><i data-ic="alerta"></i><div>${avisos.map(esc).join('<br>')}</div></div>` : '';
+  SEI_HTML = htmlSEI(e);
+  $('sei-papel').innerHTML = SEI_HTML;
+  $('sei-msg').textContent = '';
+  abrir('m-sei');
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones($('m-sei'));
+}
+async function copiarSEI() {
+  const txt = $('sei-papel').innerText;
+  try {
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([SEI_HTML], { type: 'text/html' }), 'text/plain': new Blob([txt], { type: 'text/plain' }) })]);
+    } else throw new Error('sem ClipboardItem');
+  } catch (e) {
+    // plano B: seleciona a própria prévia e copia (mantém a formatação)
+    const sel = window.getSelection(), r = document.createRange();
+    r.selectNodeContents($('sei-papel')); sel.removeAllRanges(); sel.addRange(r);
+    try { document.execCommand('copy'); } catch (x) { /* nada */ }
+    sel.removeAllRanges();
+  }
+  $('sei-msg').className = 'bp-msg ok'; $('sei-msg').textContent = 'Copiado. No SEI, clique dentro do texto do documento e aperte Ctrl+V.';
+  toast('Escala copiada para o SEI.');
+}
+
+/* ============================== publicar / diária / excluir ============================== */
+function abrirPublicar(id) {
+  ATUAL = (D.escalas || []).find((x) => x.id === id); if (!ATUAL) return;
+  $('m-pub-sub').textContent = ATUAL.evento;
+  $('pub-sei').value = ATUAL.sei_doc || ''; $('pub-proc').value = ATUAL.processo || ''; $('pub-msg').textContent = '';
+  abrir('m-pub'); $('pub-sei').focus();
+}
+async function publicar() {
+  const bt = $('pub-btn'); bt.disabled = true; $('pub-msg').textContent = '';
+  try {
+    await api('/api/p3escala/salvar', { op: 'publicar', id: ATUAL.id, sei_doc: $('pub-sei').value, processo: $('pub-proc').value });
+    fechar('m-pub'); toast('Escala marcada como publicada.'); await carregar();
+  } catch (e) { $('pub-msg').textContent = e.message; }
+  finally { bt.disabled = false; }
+}
+function abrirDiaria(id) {
+  ATUAL = (D.escalas || []).find((x) => x.id === id); if (!ATUAL || !ATUAL.dados) return;
+  if (!D.pode_diaria) return toast('Seu login não lança na Diária. Peça a permissão “Diária” no Painel de Controle.', 'erro');
+  const d = ATUAL.dados;
+  $('m-dia-tit').textContent = ATUAL.diaria_lote ? 'Atualizar na Diária por Policial' : 'Lançar na Diária por Policial';
+  $('m-dia-sub').textContent = `${ATUAL.evento} · ${br(ATUAL.inicio)} a ${br(ATUAL.fim)}`;
+  $('dia-op').value = d.operacao || ''; $('dia-etapa').value = d.etapa || ''; $('dia-org').value = d.orgao || '';
+  $('dia-sei').value = ATUAL.sei_doc || ''; $('dia-proc').value = ATUAL.processo || '';
+  const tabs = D.tabela_diarias || [];
+  $('dia-tipo').innerHTML = '<option value="">Escolha o tipo de diária</option>' + tabs.map((t, i) => `<option value="${i}">${esc(t.tipo)} — ${fR(t.valor)}</option>`).join('');
+  const guard = ls('esc_tipo_diaria'), gi = tabs.findIndex((t) => t.tipo === guard);
+  $('dia-tipo').value = gi >= 0 ? String(gi) : ''; diaTipo();
+  $('dia-msg').textContent = ''; $('dia-btn').dataset.forcar = '';
+  abrir('m-dia');
+}
+function diaTipo() { const t = (D.tabela_diarias || [])[+$('dia-tipo').value]; if ($('dia-tipo').value !== '' && t) $('dia-valor').value = t.valor; diaResumo(); }
+function diaResumo() {
+  const d = ATUAL && ATUAL.dados; if (!d) return;
+  const v = +$('dia-valor').value || 0, n = d.equipes.reduce((a, q) => a + q.pols.length, 0), dias = d.equipes.reduce((a, q) => a + q.dias * q.pols.length, 0);
+  $('dia-resumo').innerHTML = `<b>${n} lançamento${n === 1 ? '' : 's'}</b> (um por policial em cada equipe) · <b>${fDias(dias)} diárias</b> · total <b>${fR(dias * v)}</b>.`
+    + (ATUAL.diaria_lote ? ' A escala já está na Diária: o lançamento antigo é trocado por este.' : '');
+}
+async function lancarDiaria() {
+  const d = ATUAL.dados, ti = $('dia-tipo').value, tab = (D.tabela_diarias || [])[+ti];
+  const op = $('dia-op').value.trim(), etapa = $('dia-etapa').value.trim(), org = $('dia-org').value.trim(), sei = $('dia-sei').value.replace(/\D/g, '');
+  if (!op) return ($('dia-msg').textContent = 'Informe a operação.');
+  if (!org) return ($('dia-msg').textContent = 'Informe o órgão (ex.: SENASP, ESTADO).');
+  if (ti === '' || !tab) return ($('dia-msg').textContent = 'Escolha o tipo de diária.');
+  if (sei.length < 6) return ($('dia-msg').textContent = 'Informe o nº do documento SEI da escala publicada.');
+  const valor = +$('dia-valor').value || 0;
+  const missao = { operacao: op, etapa, id_missao: (etapa ? etapa + ' ' : '') + op, orgao: org, tipo_diaria: tab.tipo, valor_diaria: valor, sei_doc: sei,
+    processo: $('dia-proc').value.trim(), evento: d.evento, local: d.local, data_inicio: ATUAL.inicio, data_fim: ATUAL.fim, efetivo_declarado: ATUAL.policiais,
+    arquivo: 'Escala P3 ' + ATUAL.id };
+  const policiais = [], guarnicoes = [];
+  d.equipes.forEach((q) => {
+    q.pols.forEach((p) => policiais.push({ re: p.re, posto_grad: p.posto, guerra: p.guerra || p.nome, opm: 'BPFRON', data_inicio: q.ini, data_fim: q.fim,
+      funcao: p.funcao, nome_completo: p.nome, contato: p.contato, equipe: q.nome, localidade: q.localidade }));
+    const cmt = q.pols.find((p) => p.funcao === 'CMT') || q.pols[0];
+    guarnicoes.push({ equipe: q.nome, area: q.area, localidade: q.localidade, inicio: q.ini, fim: q.fim, comandante: cmt ? [cmt.posto, cmt.guerra || cmt.nome].join(' ') : '',
+      qtd: q.pols.length, diarias: q.dias * q.pols.length, valor_total: q.dias * q.pols.length * valor });
+  });
+  const bt = $('dia-btn'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Lançando…'; $('dia-msg').textContent = '';
+  try {
+    const corpo = ATUAL.diaria_lote ? { op: 'update_lote', id_lote: ATUAL.diaria_lote, missao, policiais, guarnicoes }
+      : { op: 'add', missao, policiais, guarnicoes, forcar: bt.dataset.forcar === '1' };
+    let r;
+    try { r = await api('/api/diaria/save', corpo); }
+    catch (e) {
+      if (e.status === 409 && e.d && e.d.error === 'ja_lancado') { bt.dataset.forcar = '1'; $('dia-msg').textContent = e.message + ' Clique de novo para lançar assim mesmo.'; return; }
+      throw e;
+    }
+    ls('esc_tipo_diaria', tab.tipo);
+    await api('/api/p3escala/salvar', { op: 'diaria', id: ATUAL.id, id_lote: r.id_lote, atualizou: !!ATUAL.diaria_lote });
+    fechar('m-dia');
+    toast(ATUAL.diaria_lote ? 'Diária atualizada.' : 'Escala lançada na Diária por Policial.');
+    await carregar();
+  } catch (e) { $('dia-msg').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; if (window.BPCasca && BPCasca.icones) BPCasca.icones(bt); }
+}
+function abrirExcluir(id) {
+  ATUAL = (D.escalas || []).find((x) => x.id === id); if (!ATUAL) return;
+  $('m-exc-sub').textContent = `${ATUAL.evento} · ${br(ATUAL.inicio)} a ${br(ATUAL.fim)}`;
+  $('exc-mot').value = ''; $('exc-senha').value = ''; $('exc-msg').textContent = ATUAL.diaria_lote ? 'Esta escala está na Diária: exclua o lançamento lá primeiro.' : '';
+  abrir('m-exc');
+}
+async function excluir() {
+  const bt = $('exc-btn'); bt.disabled = true; $('exc-msg').textContent = '';
+  try {
+    await api('/api/p3escala/salvar', { op: 'excluir', id: ATUAL.id, senha: $('exc-senha').value, motivo: $('exc-mot').value });
+    fechar('m-exc'); toast('Escala excluída.'); await carregar();
+  } catch (e) { $('exc-msg').textContent = e.message; }
+  finally { bt.disabled = false; $('exc-senha').value = ''; }
+}
+
+boot();
+</script>
+</body>
+</html>

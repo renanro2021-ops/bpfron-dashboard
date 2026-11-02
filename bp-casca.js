@@ -133,6 +133,8 @@
       desc: 'Ranking de diárias, missões e cadastro.' },
     { id: 'diaria', href: 'diaria.html', ic: '🧮', nome: 'Lançar Diárias', grupo: 'p3', acesso: { perm: ['diaria'] }, gestor: 'diaria',
       desc: 'Lançamento das diárias pela escala do SEI (PDF ou HTML), com edição e histórico.' },
+    { id: 'escala', href: 'escala.html', ic: '📅', nome: 'P3 · Escalas', grupo: 'p3', acesso: { perm: ['escala', 'escalaver', 'diaria'] }, gestor: ['escala', 'diaria'], ver: 'escalaver',
+      desc: 'Escalas de permanência e de operação do BPFRON, texto pronto para o SEI e a folga de cada policial.' },
     { id: 'rvn', href: 'rvn.html', ic: '✍️', nome: 'RVN · Assinatura Digital', grupo: 'p3', acesso: { perm: ['rvn'] }, gestor: 'rvn',
       desc: 'Assinatura digital dos RVNs e controle dos pendentes e assinados.' },
     { id: 'drone', href: 'drone.html', ic: '🚁', nome: 'Curso de Drone', grupo: 'p3', acesso: 'pub', gestor: 'aro',
