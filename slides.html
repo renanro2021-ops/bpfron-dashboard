@@ -1,191 +1,188 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
 <title>Banco de Slides · BPFRON/RO</title>
 <script src="conta.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:       #060912;
-  --bg2:      #0b0f1a;
-  --yellow:   #F5C518;
-  --text:     #dde3f0;
-  --muted:    #94a3b8;
-  --border:   rgba(245,197,24,0.10);
-  --card:     rgba(12,17,30,0.85);
-  --red:      #ef4444;
-  --redsoft:  rgba(239,68,68,.12);
-  --green:    #34d399;
-}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
-  font-size:15.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
-  background-attachment:fixed;
-}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg2)}
-::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+/* Só o que é desta página. O visual comum vem do bp-ui.css. */
+/* O menu ☰ fechado fica logo à esquerda da tela e a sombra dele vazava para dentro,
+   escurecendo a borda dos slides claros. */
+#bpc-gaveta:not(.on){box-shadow:none!important}
+.sl-wrap{max-width:1160px}
+.sl-msg{margin-top:12px}
+#login-box{max-width:460px;margin:26px auto 0}
+.sl-login{display:flex;flex-direction:column;gap:14px}
+.sl-login p{margin:0;color:var(--muted);font-size:14.5px;line-height:1.6}
+.sl-login p b{color:var(--t1)}
+.bp-in textarea{flex:1;min-width:0;min-height:76px;border:0;background:none;outline:none;padding:13px 0;font:inherit;font-size:15px;color:var(--t1);resize:vertical}
+.sl-g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sl-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.sl-esp{margin-top:14px}
+.sl-bts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+@media(max-width:760px){.sl-g2,.sl-g3{grid-template-columns:1fr}}
 
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
-.hdr-inner{max-width:1180px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
-.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
-.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
-.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
-.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
-.hdr-back:hover{color:var(--yellow)}
-.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
-.hdr-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif}
-.hdr-link:hover{color:var(--yellow)}
-
-.wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,4vw,24px) 70px}
-
-.tabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
-.tab{flex:1;min-width:150px;background:rgba(148,163,184,.07);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--muted);font-family:'Inter',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;transition:.13s}
-.tab:hover{background:rgba(148,163,184,.13);color:#cbd5e1}
-.tab.on{background:rgba(245,197,24,.14);border-color:rgba(245,197,24,.45);color:var(--yellow)}
+/* abas */
+.tabs{display:flex;gap:8px;margin:18px 0 22px;flex-wrap:wrap}
+.tab{flex:1;min-width:150px;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:11px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-size:14.5px;font-weight:800;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.tab:hover{border-color:var(--line2);color:var(--t1)}
+.tab.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.tab:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .pane{display:none}
 .pane.on{display:block}
 
-.sec{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin:30px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sec:first-child{margin-top:0}
-.sec small{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+/* catálogo */
+.filtros{margin-bottom:14px}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.pills:empty{display:none}
+.pill-f{padding:7px 15px;border-radius:999px;background:var(--surf2);border:1px solid var(--line2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.pill-f:hover{color:var(--t1);border-color:var(--acc-line)}
+.pill-f.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.deck{display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .25s,transform .25s var(--ease),box-shadow .25s}
+.deck:hover{border-color:var(--acc-line);transform:translateY(-2px);box-shadow:var(--sh2)}
+.deck-capa{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--surf2);border-bottom:1px solid var(--line)}
+.deck-capa-vazia{display:grid;place-items:center;width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,var(--surf2),var(--surf));color:var(--dim);border-bottom:1px solid var(--line)}
+.deck-capa-vazia .bp-i{width:40px;height:40px}
+.deck-body{display:flex;flex-direction:column;gap:8px;flex:1;padding:14px 16px 16px}
+.deck-tit{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--t1);line-height:1.2}
+.deck-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.deck-res{flex:1;font-size:13.5px;color:var(--t3);line-height:1.55}
+.deck-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.deck-acoes [data-apresentar]{flex:1 0 100%}
+.deck-acoes [data-abrir],.deck-acoes [data-slides]{flex:1 1 0}
 
-.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px)}
-.hint{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6}
-.aviso{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 18px;font-size:14.5px;color:#fcd34d;line-height:1.6;margin-bottom:18px}
-.aviso b{color:#fde68a}
-
-.fg{display:flex;flex-direction:column;gap:5px}
-.fg label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-.fg input,.fg textarea,.fg select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15.5px;outline:none;min-height:46px;width:100%}
-.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:rgba(245,197,24,.6)}
-.fg textarea{min-height:70px;resize:vertical}
-.fg small{font-size:12px;color:var(--muted)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
-
-.btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow);border-radius:10px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;min-height:46px;transition:.12s}
-.btn:hover{background:rgba(245,197,24,.22)}
-.btn.ghost{background:rgba(148,163,184,.1);border-color:var(--border);color:#cbd5e1}
-.btn.ghost:hover{background:rgba(148,163,184,.18)}
-.btn.danger{background:var(--redsoft);border-color:rgba(239,68,68,.4);color:#fca5a5}
-.btn.danger:hover{background:rgba(239,68,68,.2)}
-.btn.small{padding:8px 14px;font-size:13px;min-height:36px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-.msg{font-size:14px;min-height:19px;margin-top:12px;line-height:1.6}
-.msg.err{color:#fca5a5}
-.msg.ok{color:#6ee7b7}
-
-/* ---------------- catálogo ---------------- */
-.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
-.filtros input{flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:15px;outline:none;min-height:46px}
-.filtros input:focus{border-color:rgba(245,197,24,.6)}
-.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
-.pill-f{background:rgba(148,163,184,.08);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.12s}
-.pill-f:hover{background:rgba(148,163,184,.16);color:#cbd5e1}
-.pill-f.on{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.45);color:var(--yellow)}
-
-.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
-.deck{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:.14s}
-.deck:hover{border-color:rgba(245,197,24,.38);transform:translateY(-2px)}
-.deck-capa{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0a1220,#111a2b);object-fit:cover;display:block;border-bottom:1px solid var(--border)}
-.deck-capa-vazia{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#072a1a,#0a3b25);display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid var(--border)}
-.deck-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
-.deck-tit{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.25}
-.deck-meta{font-size:12.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.deck-cat{display:inline-block;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);color:var(--yellow);border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700}
-.deck-res{font-size:13.5px;color:#a9b4c6;line-height:1.55;flex:1}
-.deck-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.deck-acoes a,.deck-acoes button{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
-
-/* ---------------- envio ---------------- */
-.drop{border:2px dashed rgba(245,197,24,.3);border-radius:16px;padding:30px 20px;text-align:center;cursor:pointer;transition:.14s;background:rgba(245,197,24,.02)}
-.drop:hover,.drop.over{border-color:rgba(245,197,24,.7);background:rgba(245,197,24,.07)}
-.drop .ic{font-size:38px;display:block;margin-bottom:10px}
-.drop b{color:#e2e8f0;font-size:16px}
-.drop p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.6}
-.prog{height:8px;background:rgba(148,163,184,.12);border-radius:999px;overflow:hidden;margin-top:14px;display:none}
-.prog.on{display:block}
-.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a030,var(--yellow));transition:width .2s}
-.relatorio{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:14px;font-size:13.5px;line-height:1.7;display:none}
+/* envio */
+.prog-sl{display:none;margin-top:14px}
+.prog-sl.on{display:block}
+.relatorio{display:none;margin-top:14px;padding:13px 15px;border-radius:15px;background:var(--surf2);border:1px solid var(--line2);font-size:13.5px;line-height:1.7;color:var(--t3)}
 .relatorio.on{display:block}
-.relatorio b{color:var(--yellow)}
-.relatorio .ruim{color:#fca5a5}
-
-.linha-deck{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(148,163,184,.1);flex-wrap:wrap}
+.relatorio b{color:var(--acc)}
+.relatorio .ruim{color:var(--crit)}
+.sl-oculto{display:none}
+.linha-deck{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
 .linha-deck:last-child{border-bottom:none}
-.linha-deck img{width:74px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#0b0f1a;flex-shrink:0}
-.linha-deck .ld-txt{flex:1;min-width:180px}
-.linha-deck .ld-tit{font-weight:700;color:#e2e8f0;font-size:14.5px}
-.linha-deck .ld-sub{font-size:12.5px;color:var(--muted)}
+.linha-deck img,.linha-deck .sem-capa{width:82px;aspect-ratio:16/9;object-fit:cover;border-radius:9px;background:var(--surf2);flex:none;display:grid;place-items:center;color:var(--dim)}
+.ld-txt{flex:1;min-width:190px}
+.ld-tit{font-weight:700;color:var(--t1);font-size:14.5px}
+.ld-sub{font-size:12.5px;color:var(--muted)}
+.ld-bts{display:flex;gap:8px;flex-wrap:wrap}
 
-.vazio{text-align:center;color:var(--muted);padding:40px 12px;font-size:14.5px;line-height:1.7}
+/* janela maior que a padrão, para o formulário de dados */
+#modal .bp-modal-cx{width:min(640px,100%)}
+#md-corpo{display:flex;flex-direction:column;gap:12px}
+#md-corpo p{margin:0;color:var(--t3);font-size:14.5px;line-height:1.6}
+#md-corpo p b{color:var(--t1)}
 
 /* ---------------- visualizador ---------------- */
-.visor{position:fixed;inset:0;background:#000;z-index:300;display:none;flex-direction:column}
+.visor{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;background:#000}
 .visor.on{display:flex}
-.visor-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#070b14;border-bottom:1px solid var(--border);flex-shrink:0}
-.visor-bar .vt{flex:1;min-width:0;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.visor-frame{flex:1;width:100%;border:0;background:#000}
+.visor-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;padding:8px 14px;background:var(--surf);border-bottom:1px solid var(--line2)}
+.vt{flex:1;min-width:120px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.visor-frame{flex:1;width:100%;border:0;background:#000;min-height:0}
+.visor-carga{position:absolute;left:50%;top:50%;z-index:1;width:min(340px,80vw);transform:translate(-50%,-50%);text-align:center;color:#cbd5e1;font-size:14px;display:none}
+.visor-carga.on{display:block}
+.visor-carga .bp-prog{margin-top:10px}
+.visor-zona{display:none}
 /* Em tela cheia a barra flutua por cima e some sozinha; volta ao mexer o mouse. */
-.visor:fullscreen .visor-bar{position:fixed;top:0;left:0;right:0;z-index:2;background:rgba(7,11,20,.92);border-bottom:none;transition:opacity .25s;backdrop-filter:blur(6px)}
-.visor:fullscreen.quieto .visor-bar{opacity:0;pointer-events:none}
-.visor:-webkit-full-screen .visor-bar{position:fixed;top:0;left:0;right:0;z-index:2;background:rgba(7,11,20,.92)}
+.visor.cheia .visor-bar{position:fixed;top:0;left:0;right:0;z-index:2;border-bottom:none;transition:opacity .25s}
+.visor.cheia.quieto .visor-bar{opacity:0;pointer-events:none}
+.visor.cheia .visor-zona{display:block;position:fixed;top:0;left:0;right:0;height:14px;z-index:1}
 
-.modal{position:fixed;inset:0;background:rgba(3,6,12,.82);backdrop-filter:blur(3px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto}
-.modal.on{display:flex}
-.modal-box{background:#0b111e;border:1px solid rgba(245,197,24,.28);border-radius:16px;padding:22px;max-width:640px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7)}
-.modal-tit{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:#fff;margin-bottom:16px}
+/* ---------------- editor ---------------- */
+.ed{position:fixed;inset:0;z-index:400;display:none;flex-direction:column;background:var(--bg);color:var(--t2)}
+.ed.on{display:flex}
+.ed-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;background:var(--surf);border-bottom:1px solid var(--line2)}
+.ed-nome{flex:1;min-width:150px}
+.ed-nome b{display:block;font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--t1);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-nome small{display:block;font-size:12px;color:var(--muted)}
+.ed-nome small.sujo{color:var(--warn);font-weight:700}
+.ed-dir{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ed-ferr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 14px;background:var(--surf2);border-bottom:1px solid var(--line)}
+.ed-gr{display:flex;align-items:center;gap:4px;padding-right:8px;margin-right:2px;border-right:1px solid var(--line2)}
+.ed-gr:last-child{border-right:0}
+.ed-bt{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 9px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ed-bt:hover:not(:disabled){background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.ed-bt:disabled{opacity:.38;cursor:not-allowed}
+.ed-bt:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.ed-bt.perigo:hover:not(:disabled){background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}
+.ed-bt .bp-i{width:17px;height:17px}
+.ed-tam-v{min-width:32px;text-align:center;font-size:12.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.ed-cor{position:relative;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 7px;border-radius:9px;font-size:12px;font-weight:700;color:var(--t2);cursor:pointer}
+.ed-cor:hover{background:var(--acc-soft)}
+.ed-cor input{width:24px;height:24px;padding:0;border:1px solid var(--line2);border-radius:6px;background:none;cursor:pointer}
+.ed-cor.des{opacity:.38;pointer-events:none}
+.ed-corpo{flex:1;min-height:0;display:flex}
+.ed-lista{width:216px;flex:none;border-right:1px solid var(--line);background:var(--bg2)}
+.ed-lista iframe{display:block;width:100%;height:100%;border:0;background:transparent}
+.ed-palco{position:relative;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg2)}
+.ed-tela{position:relative;flex:none;box-shadow:var(--sh);background:#000}
+.ed-tela iframe{display:block;border:0;background:#fff;transform-origin:0 0;position:absolute;left:0;top:0}
+.ed-carga{position:absolute;left:50%;top:50%;z-index:6;width:min(340px,80%);transform:translate(-50%,-50%);text-align:center;font-size:14px;color:var(--t3);display:none}
+.ed-carga.on{display:block}
+.ed-carga .bp-prog{margin-top:10px}
+.ed-sel{position:absolute;display:none;z-index:5;pointer-events:none;outline:2px solid var(--acc);outline-offset:1px}
+.ed-sel.on{display:block}
+.ed-sel.escrevendo{outline-style:dashed}
+.ed-puxa{position:absolute;pointer-events:auto;display:grid;place-items:center;border-radius:50%;background:var(--acc);color:var(--acc-ink);box-shadow:0 2px 8px rgba(0,0,0,.5);touch-action:none;user-select:none}
+.ed-mover{left:-15px;top:-15px;width:28px;height:28px;cursor:move}
+.ed-mover .bp-i{width:17px;height:17px}
+.ed-redim{right:-8px;bottom:-8px;width:16px;height:16px;cursor:nwse-resize;border:2px solid #fff}
+.ed-pe{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 14px;background:var(--surf);border-top:1px solid var(--line2)}
+.ed-cont{min-width:62px;text-align:center;font-size:13px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums}
+.ed-dica{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.ed.livre .ed-lista,.ed.livre .ed-pe{display:none}
+.ed.livre .ed-tela iframe{position:static}
+@media(max-width:900px){.ed-lista{display:none}.ed-dica{display:none}.ed-gr{border-right:0;padding-right:2px}}
+@media(max-width:760px){.ed-rot{display:none}}
 </style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-05", "titulo": "Tela cheia que já funciona", "quem": "todos", "itens": [
+    "Botão Apresentar: um clique e o slide abre em tela cheia.",
+    "As setas, o espaço e o passador funcionam na hora, sem precisar clicar no slide.",
+    "Em tela cheia, clicar no slide também avança, e a barra de cima some sozinha.",
+    "A página ganhou o visual novo do site."
+  ] },
+  { "data": "2026-11-05", "titulo": "Editar o slide aqui mesmo", "quem": "gestor", "itens": [
+    "Botão Editar: clique no texto e escreva, troque imagens, mova e redimensione blocos.",
+    "Dá para criar, duplicar, reordenar e excluir slides, com Desfazer.",
+    "Testar mostra como vai ficar antes de salvar. Salvar substitui a apresentação no banco."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-      <div class="hdr-brand-text">
-        <div class="hdr-title">Banco de <em>Slides</em></div>
-        <div class="hdr-sub">Apresentações institucionais · BPFRON/RO</div>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <a class="hdr-back" href="sistemas.html">⬅ Sistemas</a>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="sistemas.html" title="Voltar aos sistemas">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>P5 · Comunicação Social</small><b>Banco de Slides</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
       <span id="userchip"></span>
-      <button class="hdr-link" id="btn-sair" style="display:none">Sair</button>
+      <button type="button" class="bp-btn ic sec" id="btn-sair" style="display:none" title="Sair" aria-label="Sair"><i data-ic="sair"></i></button>
     </div>
   </div>
-</div>
+</header>
 
-<div class="wrap">
+<main class="bp-wrap sl-wrap">
 
   <!-- ============================== LOGIN ============================== -->
-  <div id="login-box" style="max-width:460px;margin:30px auto 0">
-    <div class="sec" style="justify-content:center">🔐 Entrar</div>
-    <div class="box">
-      <p style="color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:16px">
-        Mesmo <b style="color:#cbd5e1">usuário e senha</b> do dashboard, mas o acesso é <b style="color:#cbd5e1">liberado login por login</b>:
-        para assistir é preciso a permissão <b style="color:#cbd5e1">“Banco de Slides (ver)”</b> e, para enviar,
-        <b style="color:#cbd5e1">“Banco de Slides (gestor)”</b>.
-      </p>
-      <div class="fg"><label>Usuário</label><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
-      <div class="fg" style="margin-top:12px"><label>Senha</label><input id="f-pass" type="password" autocomplete="current-password"></div>
-      <button class="btn" id="btn-entrar" style="width:100%;margin-top:16px">Entrar</button>
-      <div class="msg" id="msg-login"></div>
+  <div id="login-box">
+    <div class="bp-card topo-acc sl-login">
+      <div class="bp-sec" style="margin:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>Entrar</h2><small>Mesmo usuário e senha do dashboard</small></div></div>
+      <p>O acesso é <b>liberado login por login</b>: para assistir é preciso a permissão <b>Banco de Slides (ver)</b> e, para enviar ou editar, <b>Banco de Slides (gestor)</b>.</p>
+      <div class="bp-campo"><label for="f-user">Usuário</label><div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" autocapitalize="none" spellcheck="false"></div></div>
+      <div class="bp-campo"><label for="f-pass">Senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password"></div></div>
+      <button type="button" class="bp-btn w" id="btn-entrar">Entrar</button>
+      <div class="bp-msg" id="msg-login"></div>
     </div>
   </div>
 
@@ -193,138 +190,212 @@ body{
   <div id="app" style="display:none">
 
     <div class="tabs">
-      <button class="tab on" id="tt-cat">🎞️ Apresentações</button>
-      <button class="tab" id="tt-ges" style="display:none">⚙️ Gestão do banco</button>
+      <button type="button" class="tab on" id="tt-cat"><i data-ic="grade"></i>Apresentações</button>
+      <button type="button" class="tab" id="tt-ges" style="display:none"><i data-ic="enviar"></i>Gestão do banco</button>
     </div>
 
     <!-- ---------------- catálogo ---------------- -->
     <div class="pane on" id="pane-cat">
-      <div class="filtros">
-        <input id="f-busca" placeholder="Buscar por título, resumo, seção ou palavra-chave…">
-      </div>
+      <div class="filtros bp-in"><i data-ic="buscar"></i><input id="f-busca" placeholder="Buscar por título, resumo, seção ou palavra-chave…"></div>
       <div class="pills" id="pills-cat"></div>
       <div class="grade" id="grade"></div>
-      <div class="vazio" id="vazio-cat" style="display:none"></div>
+      <div class="bp-vazio" id="vazio-cat" style="display:none"></div>
     </div>
 
     <!-- ---------------- gestão ---------------- -->
     <div class="pane" id="pane-ges">
 
-      <div class="sec">① Arquivo da apresentação <small>o .html e, se tiver, a pasta de imagens</small></div>
-      <div class="box">
-        <div class="aviso">
-          A apresentação precisa virar <b>um arquivo .html só</b>. Solte aqui o <b>.html</b> junto com a
-          <b>pasta de imagens</b> (assets) que esta página embute as fotos no arquivo, já reduzidas, antes de enviar.
-          Se o seu .html já tem tudo embutido, é só soltar ele sozinho.
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="arquivo"></i></span><div><h2>Arquivo da apresentação</h2><small>O .html e, se tiver, a pasta de imagens</small></div></div>
+      <div class="bp-card">
+        <div class="bp-aviso" style="margin-bottom:14px"><i data-ic="info"></i><div>A apresentação precisa virar <b>um arquivo .html só</b>. Solte aqui o <b>.html</b> junto com a <b>pasta de imagens</b> (assets) e a página embute as fotos no arquivo, já reduzidas, antes de enviar. Se o seu .html já tem tudo embutido, é só soltar ele sozinho.</div></div>
+
+        <div class="bp-arquivo grande" id="drop" role="button" tabindex="0">
+          <span class="bp-tile"><i data-ic="enviar"></i></span>
+          <span class="tx"><b>Arraste aqui a pasta da apresentação</b><small>ou clique para escolher os arquivos · aceita a pasta inteira (.html + assets)</small></span>
+        </div>
+        <input type="file" id="f-arquivos" class="sl-oculto" multiple accept=".html,.htm,image/*,.svg">
+        <input type="file" id="f-pasta" class="sl-oculto" webkitdirectory directory multiple>
+        <div class="sl-bts">
+          <button type="button" class="bp-btn sm sec" id="btn-esc-arq"><i data-ic="arquivo"></i>Escolher arquivos</button>
+          <button type="button" class="bp-btn sm sec" id="btn-esc-pasta"><i data-ic="pasta"></i>Escolher pasta</button>
+          <button type="button" class="bp-btn sm sec" id="btn-baixar-pac" style="display:none"><i data-ic="baixar"></i>Baixar o arquivo empacotado</button>
         </div>
 
-        <div class="drop" id="drop">
-          <span class="ic">🎞️</span>
-          <b>Arraste aqui a pasta da apresentação</b>
-          <p>ou clique para escolher os arquivos · aceita a pasta inteira (.html + assets)</p>
-          <input type="file" id="f-arquivos" multiple accept=".html,.htm,image/*,.svg" style="display:none">
-          <input type="file" id="f-pasta" webkitdirectory directory multiple style="display:none">
-        </div>
-        <div class="btnrow">
-          <button class="btn ghost small" id="btn-esc-arq">📄 Escolher arquivos</button>
-          <button class="btn ghost small" id="btn-esc-pasta">📁 Escolher pasta</button>
-          <button class="btn ghost small" id="btn-baixar-pac" style="display:none">⬇️ Baixar o arquivo empacotado</button>
-        </div>
-
-        <div class="grid3" style="margin-top:16px">
-          <div class="fg"><label>Largura máxima das fotos</label>
-            <select id="cfg-larg">
+        <div class="sl-g3 sl-esp">
+          <div class="bp-campo"><label for="cfg-larg">Largura máxima das fotos</label>
+            <div class="bp-in"><select id="cfg-larg">
               <option value="1920">1920 px — projetor/TV</option>
               <option value="1600" selected>1600 px — recomendado</option>
               <option value="1280">1280 px — arquivo leve</option>
               <option value="0">Não mexer nas fotos</option>
-            </select>
+            </select></div>
           </div>
-          <div class="fg"><label>Qualidade</label>
-            <select id="cfg-qual">
+          <div class="bp-campo"><label for="cfg-qual">Qualidade</label>
+            <div class="bp-in"><select id="cfg-qual">
               <option value="0.9">Alta (90%)</option>
               <option value="0.82" selected>Boa (82%) — recomendado</option>
               <option value="0.7">Leve (70%)</option>
-            </select>
+            </select></div>
           </div>
-          <div class="fg"><label>Capa do cartão</label>
-            <input type="file" id="f-capa" accept="image/png,image/jpeg,image/webp">
-            <small>Opcional — sem capa, uso a 1ª imagem da apresentação.</small>
+          <div class="bp-campo"><span class="bp-rot">Capa do cartão</span>
+            <label class="bp-arquivo"><span class="tx"><b data-vazio="Escolher capa">Escolher capa</b><small data-vazio="Opcional: sem capa, uso a maior imagem.">Opcional: sem capa, uso a maior imagem.</small></span><span class="bp-trocar"></span><input type="file" id="f-capa" accept="image/png,image/jpeg,image/webp"></label>
           </div>
         </div>
 
-        <div class="prog" id="prog"><i id="prog-i"></i></div>
+        <div class="bp-prog prog-sl" id="prog"><i id="prog-i"></i></div>
         <div class="relatorio" id="relatorio"></div>
       </div>
 
-      <div class="sec">② Como ela aparece no banco</div>
-      <div class="box">
-        <div class="grid2">
-          <div class="fg"><label>Título</label><input id="f-titulo" placeholder="Apresentação Institucional 2026"></div>
-          <div class="fg"><label>Categoria</label>
-            <input id="f-categoria" list="lista-cat" placeholder="Institucional, Operações, Instrução…">
-            <datalist id="lista-cat"></datalist>
-          </div>
+      <div class="bp-sec"><span class="bp-tile info"><i data-ic="etiqueta"></i></span><div><h2>Como ela aparece no banco</h2><small>Título, categoria e resumo do cartão</small></div></div>
+      <div class="bp-card">
+        <div class="sl-g2">
+          <div class="bp-campo"><label for="f-titulo">Título</label><div class="bp-in"><input id="f-titulo" placeholder="Apresentação Institucional 2026"></div></div>
+          <div class="bp-campo"><label for="f-categoria">Categoria</label><div class="bp-in"><input id="f-categoria" list="lista-cat" placeholder="Institucional, Operações, Instrução…"></div><datalist id="lista-cat"></datalist></div>
         </div>
-        <div class="fg" style="margin-top:14px"><label>Resumo</label><textarea id="f-resumo" placeholder="Do que trata a apresentação, para quem foi feita, onde foi usada."></textarea></div>
-        <div class="grid3" style="margin-top:14px">
-          <div class="fg"><label>Seção / autor</label><input id="f-secao" placeholder="P3, P2, Comando…"></div>
-          <div class="fg"><label>Data</label><input id="f-data" type="date"></div>
-          <div class="fg"><label>Ordem na lista</label><input id="f-ordem" type="number" min="1" placeholder="automático"></div>
+        <div class="bp-campo sl-esp"><label for="f-resumo">Resumo</label><div class="bp-in"><textarea id="f-resumo" placeholder="Do que trata a apresentação, para quem foi feita, onde foi usada."></textarea></div></div>
+        <div class="sl-g3 sl-esp">
+          <div class="bp-campo"><label for="f-secao">Seção / autor</label><div class="bp-in"><input id="f-secao" placeholder="P3, P2, Comando…"></div></div>
+          <div class="bp-campo"><label for="f-data">Data</label><div class="bp-in"><input id="f-data" type="date"></div></div>
+          <div class="bp-campo"><label for="f-ordem">Ordem na lista</label><div class="bp-in"><input id="f-ordem" type="number" min="1" placeholder="automático"></div></div>
         </div>
-        <div class="fg" style="margin-top:14px"><label>Palavras-chave</label><input id="f-tags" placeholder="fronteira, reunião de frações, 2026"></div>
+        <div class="bp-campo sl-esp"><label for="f-tags">Palavras-chave</label><div class="bp-in"><input id="f-tags" placeholder="fronteira, reunião de frações, 2026"></div></div>
       </div>
 
-      <div class="sec">③ Anexos <small>opcionais — para baixar e levar</small></div>
-      <div class="box">
-        <div class="grid3">
-          <div class="fg"><label>PDF para impressão</label><input type="file" id="f-pdf" accept="application/pdf"></div>
-          <div class="fg"><label>Arquivo original (.pptx)</label><input type="file" id="f-fonte" accept=".ppt,.pptx,.odp,.key,.zip"></div>
-          <div class="fg"><label>Link do arquivo original</label><input id="f-link" placeholder="https://drive.google.com/…">
-            <small>Use quando o .pptx passar de 30 MB.</small>
-          </div>
+      <div class="bp-sec"><span class="bp-tile ok"><i data-ic="zip"></i></span><div><h2>Anexos</h2><small>Opcionais: para baixar e levar</small></div></div>
+      <div class="bp-card">
+        <div class="sl-g3">
+          <div class="bp-campo"><span class="bp-rot">PDF para impressão</span>
+            <label class="bp-arquivo"><span class="tx"><b data-vazio="Escolher PDF">Escolher PDF</b><small data-vazio="Até 30 MB">Até 30 MB</small></span><span class="bp-trocar"></span><input type="file" id="f-pdf" accept="application/pdf"></label></div>
+          <div class="bp-campo"><span class="bp-rot">Arquivo original (.pptx)</span>
+            <label class="bp-arquivo"><span class="tx"><b data-vazio="Escolher arquivo">Escolher arquivo</b><small data-vazio="Até 30 MB">Até 30 MB</small></span><span class="bp-trocar"></span><input type="file" id="f-fonte" accept=".ppt,.pptx,.odp,.key,.zip"></label></div>
+          <div class="bp-campo"><label for="f-link">Link do arquivo original</label><div class="bp-in"><input id="f-link" placeholder="https://drive.google.com/…"></div><small style="color:var(--muted);font-size:12px">Use quando o .pptx passar de 30 MB.</small></div>
         </div>
-        <div class="btnrow">
-          <button class="btn" id="btn-enviar">⬆️ Enviar para o banco</button>
-          <button class="btn ghost" id="btn-limpar">Limpar</button>
+        <div class="sl-bts">
+          <button type="button" class="bp-btn" id="btn-enviar"><i data-ic="enviar"></i>Enviar para o banco</button>
+          <button type="button" class="bp-btn ghost" id="btn-limpar">Limpar</button>
         </div>
-        <div class="msg" id="msg-envio"></div>
+        <div class="bp-msg sl-msg" id="msg-envio"></div>
       </div>
 
-      <div class="sec">④ O que já está no banco <small id="ges-cont"></small></div>
-      <div class="box" id="lista-ges"></div>
+      <div class="bp-sec"><span class="bp-tile"><i data-ic="pasta"></i></span><div><h2>O que já está no banco</h2><small id="ges-cont"></small></div></div>
+      <div class="bp-card" id="lista-ges"></div>
     </div>
 
   </div>
-</div>
+</main>
 
 <!-- ============================== visualizador ============================== -->
 <div class="visor" id="visor">
-  <div class="visor-bar">
+  <div class="visor-zona" id="visor-zona"></div>
+  <div class="visor-bar" id="visor-bar">
     <span class="vt" id="visor-tit"></span>
-    <button class="btn small" id="btn-full">⛶ Tela cheia</button>
-    <a class="btn ghost small" id="visor-aba" target="_blank" rel="noopener">↗ Nova aba</a>
-    <button class="btn ghost small" id="visor-fechar">✕ Fechar</button>
+    <button type="button" class="bp-btn ic sm sec" id="visor-ant" title="Slide anterior (←)" aria-label="Slide anterior"><i data-icl="ant"></i></button>
+    <button type="button" class="bp-btn ic sm sec" id="visor-prox" title="Próximo slide (→)" aria-label="Próximo slide"><i data-icl="prox"></i></button>
+    <button type="button" class="bp-btn sm" id="btn-full"></button>
+    <button type="button" class="bp-btn sm sec" id="visor-editar" style="display:none"><i data-ic="editar"></i>Editar</button>
+    <a class="bp-btn sm ghost" id="visor-aba" target="_blank" rel="noopener"><i data-icl="novaaba"></i>Nova aba</a>
+    <button type="button" class="bp-btn sm ghost" id="visor-fechar"><i data-ic="x"></i>Fechar</button>
   </div>
-  <iframe class="visor-frame" id="visor-frame" title="Apresentação" allow="fullscreen"></iframe>
+  <div class="visor-carga" id="visor-carga"><span id="visor-carga-tx">Carregando a apresentação…</span><div class="bp-prog"><i id="visor-carga-i"></i></div></div>
+  <!-- Sem allow-same-origin: o script da apresentação roda, mas não alcança o login desta página. -->
+  <iframe class="visor-frame" id="visor-frame" title="Apresentação" allow="fullscreen" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>
 </div>
 
-<!-- ============================== modal de edição ============================== -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <div class="modal-tit" id="md-tit">Editar apresentação</div>
-    <div id="md-corpo"></div>
-    <div class="btnrow">
-      <button class="btn" id="md-ok">Salvar</button>
-      <button class="btn ghost" id="md-cancelar">Cancelar</button>
+<!-- ============================== editor de slides ============================== -->
+<div class="ed" id="ed" aria-hidden="true">
+  <div class="ed-topo">
+    <button type="button" class="bp-btn sm ghost" id="ed-fechar"><i data-ic="voltar"></i>Voltar</button>
+    <div class="ed-nome"><b id="ed-tit"></b><small id="ed-estado"></small></div>
+    <div class="ed-dir">
+      <button type="button" class="ed-bt" id="ed-desf" title="Desfazer (Ctrl+Z)" aria-label="Desfazer"><i data-icl="desf"></i></button>
+      <button type="button" class="ed-bt" id="ed-ref" title="Refazer (Ctrl+Y)" aria-label="Refazer"><i data-icl="refaz"></i></button>
+      <button type="button" class="bp-btn sm sec" id="ed-testar" title="Ver como vai ficar, sem salvar"><i data-icl="play"></i>Testar</button>
+      <button type="button" class="bp-btn sm sec" id="ed-baixar" title="Baixar o arquivo como está agora"><i data-ic="baixar"></i><span class="ed-rot">Baixar cópia</span></button>
+      <button type="button" class="bp-btn sm" id="ed-salvar" title="Salvar no banco (Ctrl+S)"><i data-ic="check"></i>Salvar</button>
     </div>
-    <div class="msg" id="md-msg"></div>
+  </div>
+  <div class="ed-ferr" id="ed-ferr">
+    <div class="ed-gr">
+      <button type="button" class="ed-bt" id="ed-neg" data-sel title="Negrito" aria-label="Negrito"><b>N</b></button>
+      <button type="button" class="ed-bt" id="ed-ita" data-sel title="Itálico" aria-label="Itálico"><i style="font-style:italic;font-family:serif">I</i></button>
+      <button type="button" class="ed-bt" id="ed-sub" data-sel title="Sublinhado" aria-label="Sublinhado"><u>S</u></button>
+    </div>
+    <div class="ed-gr">
+      <button type="button" class="ed-bt" id="ed-menos" data-sel title="Diminuir a letra" aria-label="Diminuir a letra">A−</button>
+      <span class="ed-tam-v" id="ed-tam-v" title="Tamanho da letra">–</span>
+      <button type="button" class="ed-bt" id="ed-mais" data-sel title="Aumentar a letra" aria-label="Aumentar a letra">A+</button>
+    </div>
+    <div class="ed-gr">
+      <label class="ed-cor" id="ed-cor-tx" title="Cor do texto">Texto<input type="color" id="ed-cor" value="#ffffff"></label>
+      <label class="ed-cor" id="ed-cor-fd" title="Cor de fundo do bloco">Fundo<input type="color" id="ed-fundo" value="#ffffff"></label>
+    </div>
+    <div class="ed-gr">
+      <button type="button" class="ed-bt" id="ed-al-e" data-sel title="Alinhar à esquerda" aria-label="Alinhar à esquerda"><i data-icl="alesq"></i></button>
+      <button type="button" class="ed-bt" id="ed-al-c" data-sel title="Centralizar" aria-label="Centralizar"><i data-icl="alcen"></i></button>
+      <button type="button" class="ed-bt" id="ed-al-d" data-sel title="Alinhar à direita" aria-label="Alinhar à direita"><i data-icl="aldir"></i></button>
+    </div>
+    <div class="ed-gr">
+      <button type="button" class="ed-bt" id="ed-trocar" title="Trocar a imagem selecionada" style="display:none"><i data-icl="imagem"></i>Trocar imagem</button>
+      <button type="button" class="ed-bt" id="ed-pai" data-sel title="Selecionar o bloco em volta deste" aria-label="Selecionar o bloco em volta"><i data-icl="bloco"></i><span class="ed-rot">Bloco maior</span></button>
+      <button type="button" class="ed-bt" id="ed-dup-b" data-sel title="Duplicar o bloco" aria-label="Duplicar o bloco"><i data-icl="copia"></i></button>
+      <button type="button" class="ed-bt perigo" id="ed-exc-b" data-sel title="Excluir o bloco (Delete)" aria-label="Excluir o bloco"><i data-ic="lixeira"></i></button>
+    </div>
+    <div class="ed-gr">
+      <button type="button" class="ed-bt" id="ed-novo-tx" title="Colocar um texto novo no slide"><i data-icl="texto"></i><span class="ed-rot">Novo texto</span></button>
+      <button type="button" class="ed-bt" id="ed-nova-img" title="Colocar uma imagem nova no slide"><i data-icl="imagem"></i><span class="ed-rot">Nova imagem</span></button>
+    </div>
+  </div>
+  <div class="ed-corpo">
+    <div class="ed-lista"><iframe id="ed-minis" sandbox="allow-same-origin" title="Lista de slides"></iframe></div>
+    <div class="ed-palco" id="ed-palco">
+      <div class="ed-carga" id="ed-carga"><span id="ed-carga-tx"></span><div class="bp-prog"><i id="ed-carga-i"></i></div></div>
+      <div class="ed-tela" id="ed-tela">
+        <!-- Sem allow-scripts: o script da apresentação NÃO roda aqui. Assim esta página
+             edita o HTML como ele é, e o que salva não leva nada do modo de apresentação. -->
+        <iframe id="ed-frame" sandbox="allow-same-origin" title="Slide em edição"></iframe>
+        <div class="ed-sel" id="ed-sel">
+          <span class="ed-puxa ed-mover" id="ed-mover" title="Arraste para mover"><i data-icl="mover"></i></span>
+          <span class="ed-puxa ed-redim" id="ed-redim" title="Arraste para mudar o tamanho"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ed-pe">
+    <button type="button" class="ed-bt" id="ed-ant" title="Slide anterior" aria-label="Slide anterior"><i data-icl="ant"></i></button>
+    <span class="ed-cont" id="ed-cont"></span>
+    <button type="button" class="ed-bt" id="ed-prox" title="Próximo slide" aria-label="Próximo slide"><i data-icl="prox"></i></button>
+    <span style="width:10px"></span>
+    <button type="button" class="ed-bt" id="ed-sl-novo" title="Criar um slide em branco depois deste"><i data-ic="mais"></i><span class="ed-rot">Novo slide</span></button>
+    <button type="button" class="ed-bt" id="ed-sl-dup" title="Duplicar este slide"><i data-icl="copia"></i><span class="ed-rot">Duplicar</span></button>
+    <button type="button" class="ed-bt" id="ed-sl-cima" title="Mover este slide para antes" aria-label="Mover para antes"><i data-icl="cima"></i></button>
+    <button type="button" class="ed-bt" id="ed-sl-baixo" title="Mover este slide para depois" aria-label="Mover para depois"><i data-icl="baixo"></i></button>
+    <button type="button" class="ed-bt perigo" id="ed-sl-exc" title="Excluir este slide"><i data-ic="lixeira"></i><span class="ed-rot">Excluir slide</span></button>
+    <span class="ed-dica">Clique no texto para escrever. Clique na imagem para selecionar. Puxe a bolinha para mover.</span>
+  </div>
+  <input type="file" id="ed-img" class="sl-oculto" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+</div>
+
+<!-- ============================== janela ============================== -->
+<div class="bp-modal" id="modal">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="md-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile" id="md-ic"><i data-ic="editar"></i></span>
+      <div><h3 id="md-tit">Editar apresentação</h3></div>
+      <button type="button" class="bp-btn ic sm ghost" id="md-x" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div id="md-corpo"></div>
+    <div class="bp-msg sl-msg" id="md-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" id="md-cancelar">Cancelar</button>
+      <button type="button" class="bp-btn" id="md-ok">Salvar</button>
+    </div>
   </div>
 </div>
 
 <script>
 /* =====================================================================
-   Banco de Slides — slides.html  (27/09/2026)
+   Banco de Slides — slides.html  (27/09/2026; tema novo, tela cheia e
+   editor em 05/11/2026)
 
    Sistema próprio: planilha própria (SHEET_ID_SLIDES), pasta própria no
    Drive (DRIVE_FOLDER_SLIDES) e permissão própria ("slides"). Esta página
@@ -367,6 +438,37 @@ function fData(s){
   const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
 }
+function msg(id, tipo, txt){ const m = $(id); m.className = 'bp-msg' + (id === 'msg-login' ? '' : ' sl-msg') + (tipo ? ' ' + tipo : ''); m.textContent = txt || ''; }
+function toast(t, tipo){ if (window.BPCasca && BPCasca.toast) BPCasca.toast(t, tipo); }
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+
+/* Ícones que só esta página usa (o resto vem do bp-casca.js). */
+const ICL = {
+  tela: '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  saitela: '<path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  ant: '<polyline points="15 18 9 12 15 6"/>',
+  prox: '<polyline points="9 18 15 12 9 6"/>',
+  cima: '<polyline points="18 15 12 9 6 15"/>',
+  baixo: '<polyline points="6 9 12 15 18 9"/>',
+  desf: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>',
+  refaz: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/>',
+  copia: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  imagem: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  texto: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+  novaaba: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+  alesq: '<line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>',
+  alcen: '<line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/>',
+  aldir: '<line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/>',
+  bloco: '<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><rect x="9" y="9" width="6" height="6"/>',
+  mover: '<polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>',
+};
+function icl(n){ return `<svg class="bp-i" viewBox="0 0 24 24" aria-hidden="true">${ICL[n] || ''}</svg>`; }
+function pintarIcones(el){
+  (el || document).querySelectorAll('i[data-icl]').forEach(i => { i.outerHTML = icl(i.dataset.icl); });
+  if (window.BPCasca && BPCasca.icones) BPCasca.icones(el || document);
+}
+pintarIcones();
 
 function cab(extra){
   const h = Object.assign({}, extra || {});
@@ -394,10 +496,10 @@ async function apiPostForm(path, form){
 
 /* ============================== login ============================== */
 async function entrar(){
-  const btn = $('btn-entrar'), m = $('msg-login');
+  const btn = $('btn-entrar');
   const user = $('f-user').value.trim(), pass = $('f-pass').value;
-  if (!user || !pass){ m.className='msg err'; m.textContent='Informe usuário e senha.'; return; }
-  btn.disabled = true; btn.textContent = 'Entrando…'; m.className='msg'; m.textContent='';
+  if (!user || !pass){ msg('msg-login', 'err', 'Informe usuário e senha.'); return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; msg('msg-login', '', '');
   try {
     const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ user, pass }) });
@@ -405,18 +507,22 @@ async function entrar(){
     if (!r.ok || !d.token) throw new Error(d.error === 'invalid_credentials' ? 'Usuário ou senha inválidos.' : 'Falha no login.');
     AUTH.token = d.token; AUTH.user = d.user; salvarPerms(d); $('f-pass').value = '';
     boot();
-  } catch(e){ m.className='msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  } catch(e){ msg('msg-login', 'err', e.message || 'Não foi possível conectar ao servidor.'); }
   finally { btn.disabled = false; btn.textContent = 'Entrar'; }
 }
-function sair(){ AUTH.token=''; AUTH.user=''; D=null; boot(); }
+function sair(){ AUTH.token=''; AUTH.user=''; D=null; limparGestao(); trocar('cat'); boot(); }
+/* Quem entrar depois no mesmo navegador não herda a tela de gestão do anterior. */
+function limparGestao(){ $('lista-ges').innerHTML = ''; $('ges-cont').textContent = ''; }
 $('btn-entrar').addEventListener('click', entrar);
 $('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
 $('f-user').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-pass').focus(); });
 $('btn-sair').addEventListener('click', sair);
 
+function iniciais(n){ const p = String(n||'').trim().split(/\s+/); return ((p[0]||'')[0]||'' ) .toUpperCase() + ((p.length > 1 ? p[p.length-1][0] : '') || '').toUpperCase(); }
 function renderUserChip(){
   const ps = permsSessao();
-  $('userchip').textContent = AUTH.logged ? ('👤 ' + ((ps && ps.nome) || AUTH.user)) : '';
+  const nome = (ps && ps.nome) || AUTH.user;
+  $('userchip').innerHTML = AUTH.logged ? `<span class="bp-eu" title="${esc(AUTH.user)}"><b>${esc(iniciais(nome))}</b><span>${esc(nome)}</span></span>` : '';
   $('btn-sair').style.display = AUTH.logged ? '' : 'none';
 }
 
@@ -438,6 +544,20 @@ function trocar(qual){
 $('tt-cat').addEventListener('click', () => trocar('cat'));
 $('tt-ges').addEventListener('click', () => trocar('ges'));
 
+/* Seletor de arquivo do bp-ui.css: mostra o nome escolhido e fica verde. */
+function pintarArquivo(input){
+  const box = input.closest('.bp-arquivo'); if (!box) return;
+  const f = input.files && input.files[0];
+  box.classList.toggle('tem', !!f);
+  const b = box.querySelector('.tx b'), s = box.querySelector('.tx small'), t = box.querySelector('.bp-trocar');
+  if (b) b.textContent = f ? f.name : (b.dataset.vazio || '');
+  if (s) s.textContent = f ? fTam(f.size) : (s.dataset.vazio || '');
+  if (t) t.textContent = f ? 'Trocar' : '';
+}
+document.addEventListener('change', e => {
+  if (e.target.matches && e.target.matches('.bp-arquivo input[type=file]')) pintarArquivo(e.target);
+});
+
 /* ============================== dados ============================== */
 let D = null;       // resposta do /api/slides
 let CAT = '';       // categoria filtrada
@@ -453,23 +573,26 @@ async function carregar(){
       // Banco fechado: a permissão é dada login por login no admin.html.
       $('tt-ges').style.display = 'none';
       $('grade').innerHTML = '';
-      $('vazio-cat').innerHTML = '🔒 <b>Acesso restrito</b><br>' + esc(e.message) +
+      $('vazio-cat').innerHTML = '<b>Acesso restrito</b><br>' + esc(e.message) +
         '<br><br>O Banco de Slides não é aberto a todo o efetivo: cada login é liberado individualmente.';
       return;
     }
-    $('vazio-cat').textContent = '⚠️ ' + e.message;
+    $('vazio-cat').textContent = e.message;
     return;
   }
   $('tt-ges').style.display = D.gestor ? '' : 'none';
+  if (!D.gestor){ limparGestao(); trocar('cat'); }
   renderCatalogo();
   if (D.gestor) renderGestao();
 }
 
+const CAPA_VAZIA = () => `<div class="deck-capa-vazia">${IC('arquivo')}</div>`;
+
 function renderCatalogo(){
   const termo = $('f-busca').value.trim().toLowerCase();
   const cats = D.categorias || [];
-  $('pills-cat').innerHTML = [`<button class="pill-f ${CAT ? '' : 'on'}" data-c="">Todas</button>`]
-    .concat(cats.map(c => `<button class="pill-f ${CAT === c ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`)).join('');
+  $('pills-cat').innerHTML = cats.length ? [`<button type="button" class="pill-f ${CAT ? '' : 'on'}" data-c="">Todas</button>`]
+    .concat(cats.map(c => `<button type="button" class="pill-f ${CAT === c ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`)).join('') : '';
   $('pills-cat').querySelectorAll('.pill-f').forEach(b => b.addEventListener('click', () => {
     CAT = b.dataset.c; renderCatalogo();
   }));
@@ -491,31 +614,41 @@ function renderCatalogo(){
   $('vazio-cat').style.display = 'none';
   $('grade').innerHTML = lista.map(s => {
     const capa = s.capa
-      ? `<img class="deck-capa" loading="lazy" src="${API_BASE}${s.capa}" alt="" onerror="this.outerHTML='<div class=&quot;deck-capa-vazia&quot;>🎞️</div>'">`
-      : `<div class="deck-capa-vazia">🎞️</div>`;
+      ? `<img class="deck-capa" loading="lazy" src="${API_BASE}${s.capa}" alt="" data-sem-capa>`
+      : CAPA_VAZIA();
     const meta = [s.secao, fData(s.data), fTam(s.tamanho)].filter(Boolean).map(esc).join(' · ');
     const extras = [];
-    if (s.pdf) extras.push(`<a class="btn ghost small" href="${API_BASE}${s.pdf}">📄 PDF</a>`);
-    if (s.fonte) extras.push(`<a class="btn ghost small" href="${API_BASE}${s.fonte}">📎 Original</a>`);
-    if (s.link) extras.push(`<a class="btn ghost small" href="${esc(s.link)}" target="_blank" rel="noopener">🔗 Arquivo</a>`);
+    if (s.pdf) extras.push(`<a class="bp-btn sm ghost" href="${API_BASE}${s.pdf}">${IC('arquivo')}PDF</a>`);
+    if (s.fonte) extras.push(`<a class="bp-btn sm ghost" href="${API_BASE}${s.fonte}">${IC('baixar')}Original</a>`);
+    if (s.link) extras.push(`<a class="bp-btn sm ghost" href="${esc(s.link)}" target="_blank" rel="noopener">${icl('novaaba')}Arquivo</a>`);
     return `
       <div class="deck">
         ${capa}
         <div class="deck-body">
           <div class="deck-tit">${esc(s.titulo)}</div>
-          <div class="deck-meta">${s.categoria ? `<span class="deck-cat">${esc(s.categoria)}</span>` : ''}<span>${meta}</span></div>
-          ${s.resumo ? `<div class="deck-res">${esc(s.resumo)}</div>` : '<div class="deck-res"></div>'}
+          <div class="deck-meta">${s.categoria ? `<span class="bp-sl info">${esc(s.categoria)}</span>` : ''}<span>${meta}</span></div>
+          <div class="deck-res">${esc(s.resumo)}</div>
           <div class="deck-acoes">
-            <button class="btn small" data-abrir="${esc(s.id)}">▶️ Abrir</button>
-            <a class="btn ghost small" href="${API_BASE}${s.url}" target="_blank" rel="noopener">↗ Nova aba</a>
+            <button type="button" class="bp-btn sm" data-apresentar="${esc(s.id)}" title="Abre direto em tela cheia">${icl('play')}Apresentar</button>
+            <button type="button" class="bp-btn sm sec" data-abrir="${esc(s.id)}" title="Abre em janela, sem tela cheia">${IC('olho')}Abrir</button>
+            ${D.gestor ? `<button type="button" class="bp-btn sm sec" data-slides="${esc(s.id)}" title="Editar o conteúdo dos slides">${IC('editar')}Editar</button>` : ''}
+            <a class="bp-btn sm ic ghost" href="${API_BASE}${s.url}" target="_blank" rel="noopener" title="Abrir em nova aba" aria-label="Abrir em nova aba">${icl('novaaba')}</a>
             ${extras.join('')}
           </div>
         </div>
       </div>`;
   }).join('');
-  $('grade').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.abrir)));
+  $('grade').querySelectorAll('img[data-sem-capa]').forEach(i => i.addEventListener('error', () => { i.outerHTML = CAPA_VAZIA(); }));
+  ligarAcoes($('grade'));
 }
 $('f-busca').addEventListener('input', () => { if (D) renderCatalogo(); });
+
+/* Os botões do catálogo e da lista de gestão fazem a mesma coisa. */
+function ligarAcoes(raiz){
+  raiz.querySelectorAll('[data-apresentar]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.apresentar, true)));
+  raiz.querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.abrir, false)));
+  raiz.querySelectorAll('[data-slides]').forEach(b => b.addEventListener('click', () => abrirEditor(b.dataset.slides, 0)));
+}
 
 /* ============================== empacotador ==============================
    Recebe os arquivos que o gestor soltou, acha o .html, troca cada
@@ -680,6 +813,7 @@ async function empacotar(arquivos, cfg, onProg){
   };
 }
 
+
 /* ---------------- entrada de arquivos (clique, drop de pasta) ---------------- */
 async function lerEntry(entry, prefixo, saida){
   if (entry.isFile){
@@ -698,34 +832,33 @@ async function lerEntry(entry, prefixo, saida){
 }
 
 async function receber(arquivos){
-  const m = $('msg-envio');
   if (!arquivos.length) return;
-  m.className = 'msg'; m.textContent = '';
+  msg('msg-envio', '', '');
   $('prog').classList.add('on');
   $('relatorio').classList.remove('on');
   $('btn-baixar-pac').style.display = 'none';
   const cfg = { maxLarg: Number($('cfg-larg').value), qual: Number($('cfg-qual').value) };
   try {
     PACOTE = await empacotar(arquivos, cfg, (p, txt) => {
-      $('prog-i').style.width = Math.round(p * 100) + '%';
-      m.className = 'msg'; m.textContent = txt || '';
+      $('prog-i').style.setProperty('--p', Math.round(p * 100) + '%');
+      msg('msg-envio', '', txt || '');
     });
   } catch(e){
     $('prog').classList.remove('on');
-    m.className = 'msg err'; m.textContent = '⚠️ ' + e.message;
+    msg('msg-envio', 'err', e.message);
     return;
   }
-  $('prog-i').style.width = '100%';
-  setTimeout(() => { $('prog').classList.remove('on'); $('prog-i').style.width = '0'; }, 400);
-  m.textContent = '';
+  $('prog-i').style.setProperty('--p', '100%');
+  setTimeout(() => { $('prog').classList.remove('on'); $('prog-i').style.setProperty('--p', '0%'); }, 400);
+  msg('msg-envio', '', '');
 
   const s = PACOTE.stats;
   const linhas = [
     `<b>${esc(PACOTE.nome)}</b> — pronto para enviar.`,
     `Arquivo final: <b>${fTam(s.total)}</b>${s.imagens ? ` (${s.imagens} imagens embutidas, ${fTam(s.somaAntes)} → ${fTam(s.somaDepois)})` : ' (sem imagens para embutir)'}.`,
   ];
-  if (s.faltando.length) linhas.push(`<span class="ruim">⚠️ ${s.faltando.length} imagem(ns) não vieram junto e vão aparecer quebradas: ${esc(s.faltando.slice(0,6).join(', '))}${s.faltando.length>6?'…':''}. Solte a pasta inteira.</span>`);
-  if (s.total > 25*1024*1024) linhas.push(`<span class="ruim">⚠️ Passou do limite de 25 MB. Escolha uma largura menor e solte os arquivos de novo.</span>`);
+  if (s.faltando.length) linhas.push(`<span class="ruim">${s.faltando.length} imagem(ns) não vieram junto e vão aparecer quebradas: ${esc(s.faltando.slice(0,6).join(', '))}${s.faltando.length>6?'…':''}. Solte a pasta inteira.</span>`);
+  if (s.total > 25*1024*1024) linhas.push(`<span class="ruim">Passou do limite de 25 MB. Escolha uma largura menor e solte os arquivos de novo.</span>`);
   else if (s.total > 8*1024*1024) linhas.push(`Fica pesado para abrir no 4G. Se quiser mais leve, escolha <b>1280 px</b> e solte os arquivos de novo.`);
   $('relatorio').innerHTML = linhas.join('<br>');
   $('relatorio').classList.add('on');
@@ -738,6 +871,7 @@ async function receber(arquivos){
 
 const drop = $('drop');
 drop.addEventListener('click', () => $('f-arquivos').click());
+drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('f-arquivos').click(); } });
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', async e => {
@@ -756,30 +890,30 @@ $('btn-esc-arq').addEventListener('click', () => $('f-arquivos').click());
 $('btn-esc-pasta').addEventListener('click', () => $('f-pasta').click());
 $('f-arquivos').addEventListener('change', e => receber([...e.target.files]));
 $('f-pasta').addEventListener('change', e => receber([...e.target.files]));
-$('btn-baixar-pac').addEventListener('click', () => {
-  if (!PACOTE) return;
+function baixarBlob(blob, nome){
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(PACOTE.blob);
-  a.download = PACOTE.nome;
+  a.href = URL.createObjectURL(blob);
+  a.download = nome;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-});
+}
+$('btn-baixar-pac').addEventListener('click', () => { if (PACOTE) baixarBlob(PACOTE.blob, PACOTE.nome); });
 
 /* ============================== enviar ============================== */
 function limparForm(){
   PACOTE = null;
   ['f-titulo','f-resumo','f-categoria','f-secao','f-data','f-ordem','f-tags','f-link'].forEach(id => $(id).value = '');
-  ['f-capa','f-pdf','f-fonte','f-arquivos','f-pasta'].forEach(id => $(id).value = '');
+  ['f-capa','f-pdf','f-fonte','f-arquivos','f-pasta'].forEach(id => { $(id).value = ''; pintarArquivo($(id)); });
   $('relatorio').classList.remove('on');
   $('btn-baixar-pac').style.display = 'none';
-  $('msg-envio').textContent = '';
+  msg('msg-envio', '', '');
 }
 $('btn-limpar').addEventListener('click', limparForm);
 
 $('btn-enviar').addEventListener('click', async () => {
-  const m = $('msg-envio'), btn = $('btn-enviar');
-  if (!PACOTE){ m.className='msg err'; m.textContent='Solte primeiro o arquivo da apresentação.'; return; }
-  if (!$('f-titulo').value.trim()){ m.className='msg err'; m.textContent='Dê um título para a apresentação.'; return; }
+  const btn = $('btn-enviar');
+  if (!PACOTE){ msg('msg-envio', 'err', 'Solte primeiro o arquivo da apresentação.'); return; }
+  if (!$('f-titulo').value.trim()){ msg('msg-envio', 'err', 'Dê um título para a apresentação.'); return; }
 
   const form = new FormData();
   form.append('arquivo', new File([PACOTE.blob], PACOTE.nome, { type:'text/html' }));
@@ -798,181 +932,1237 @@ $('btn-enviar').addEventListener('click', async () => {
   if ($('f-pdf').files[0]) form.append('pdf', $('f-pdf').files[0]);
   if ($('f-fonte').files[0]) form.append('fonte', $('f-fonte').files[0]);
 
-  btn.disabled = true; btn.textContent = 'Enviando…';
-  m.className='msg'; m.textContent = 'Enviando ' + fTam(PACOTE.blob.size) + '… não feche a página.';
+  const antes = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Enviando…';
+  msg('msg-envio', '', 'Enviando ' + fTam(PACOTE.blob.size) + '… não feche a página.');
   try {
     await apiPostForm('/api/slides/enviar', form);
     limparForm();                       // limparForm zera a mensagem — o aviso vem depois dele
     await carregar();
-    m.className='msg ok'; m.textContent = '✅ Apresentação publicada no banco.';
+    msg('msg-envio', 'ok', 'Apresentação publicada no banco.');
+    toast('Apresentação publicada no banco.');
   } catch(e){
-    m.className='msg err'; m.textContent = '⚠️ ' + e.message;
-  } finally { btn.disabled = false; btn.textContent = '⬆️ Enviar para o banco'; }
+    msg('msg-envio', 'err', e.message);
+  } finally { btn.disabled = false; btn.innerHTML = antes; }
 });
 
 /* ============================== visualizador ==============================
-   A apresentação é arquivo do gestor e roda isolada (CSP sandbox), então não
-   dá para pôr botão dentro dela. O botão de tela cheia fica aqui, na moldura:
-   quem chama o fullscreen é ESTA página, no elemento #visor, e o iframe vai
-   junto. Serve no celular e no tablet, onde não existe a tecla F. */
-function abrirVisor(id){
-  const s = (D.slides || []).find(x => x.id === id);
-  if (!s) return;
-  $('visor-tit').textContent = s.titulo;
-  $('visor-aba').href = API_BASE + s.url;
-  $('visor-frame').src = API_BASE + s.url;
+   A apresentação roda isolada: o iframe tem sandbox SEM allow-same-origin, então
+   o script dela não alcança o login desta página. Isso tem um preço: a página não
+   consegue mexer dentro dela. O que resolve é uma "ponte" pequena que entra no fim
+   do HTML, só aqui no visor (o arquivo guardado no Drive não muda):
+     • a página manda tecla para o slide, mesmo quando o foco está no botão;
+     • o slide avisa a página de mouse mexendo, F, Esc e em que slide está;
+     • em tela cheia, clicar no slide avança.
+   Sem a ponte (fetch falhou) ainda abre: o iframe carrega direto do Worker. */
+function ponteDentroDoSlide(){
+  var P = window.parent, cheia = false, tm = null, ult = 0;
+  if (P === window) return;
+  function av(o){ o.bpSlide = 1; try { P.postMessage(o, '*'); } catch(e){} }
+  function atual(){
+    var l = document.querySelectorAll('.slide'), i;
+    for (i = 0; i < l.length; i++) if (l[i].classList.contains('active')) return i;
+    return 0;
+  }
+  function relata(){ setTimeout(function(){ av({ slide: atual() }); }, 80); }
+  function tecla(k){
+    (document.body || document).dispatchEvent(new KeyboardEvent('keydown', { key: k, code: k, bubbles: true, cancelable: true }));
+    relata();
+  }
+  /* Quem edita agora é a plataforma: o modo de edição antigo do arquivo não salva
+     nada aqui dentro (localStorage é bloqueado), então fica escondido. */
+  var temEd = !!document.getElementById('editToggle');
+  var css = document.createElement('style');
+  css.textContent = '.edit-hotzone,.edit-toggle,.edit-bar,#hint{display:none!important}' +
+    'html.bp-sem-cursor,html.bp-sem-cursor *{cursor:none!important}';
+  (document.head || document.documentElement).appendChild(css);
+  function mexeu(){
+    document.documentElement.classList.remove('bp-sem-cursor');
+    clearTimeout(tm);
+    if (cheia) tm = setTimeout(function(){ document.documentElement.classList.add('bp-sem-cursor'); }, 2500);
+    var ag = Date.now();
+    if (ag - ult > 300){ ult = ag; av({ mexeu: 1 }); }
+  }
+  addEventListener('message', function(e){
+    if (e.source !== P || !e.data) return;
+    if (e.data.bpTecla) tecla(e.data.bpTecla);
+    if ('bpCheia' in e.data){ cheia = !!e.data.bpCheia; mexeu(); }
+    if (e.data.bpIrPara >= 0){
+      tecla('Home');
+      for (var i = 0; i < e.data.bpIrPara; i++) tecla('ArrowRight');
+    }
+  });
+  addEventListener('keydown', function(e){
+    var k = e.key;
+    if (k === 'f' || k === 'F' || k === 'Escape'){
+      e.preventDefault(); e.stopImmediatePropagation();
+      av({ tecla: k.toLowerCase() });
+      return;
+    }
+    if (temEd && (k === 'e' || k === 'E' || ((k === 'r' || k === 'R') && e.shiftKey) || ((k === 's' || k === 'S') && (e.ctrlKey || e.metaKey)))){
+      e.preventDefault(); e.stopImmediatePropagation();
+      return;
+    }
+    relata();
+  }, true);
+  addEventListener('mousemove', mexeu, { passive: true });
+  addEventListener('wheel', relata, { passive: true });
+  addEventListener('touchend', relata, { passive: true });
+  addEventListener('click', function(e){
+    if (!cheia || e.button !== 0) return;
+    if (e.target.closest && e.target.closest('a,button,input,select,textarea,label,video,audio,summary,[onclick],[contenteditable]')) return;
+    tecla('ArrowRight');
+  });
+  av({ pronto: 1 });
+}
+const PONTE_VISOR = '<scr' + 'ipt>(' + ponteDentroDoSlide.toString() + ')()</scr' + 'ipt>';
+
+const VISOR = { id: null, gen: 0, blobUrl: null, slide: 0, irPara: 0, mudouEm: 0 };
+const TECLAS_NAV = ['ArrowRight','ArrowLeft','ArrowUp','ArrowDown',' ','PageUp','PageDown','Home','End'];
+
+function emTelaCheia(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function visorAberto(){ return $('visor').classList.contains('on'); }
+
+/* O foco é o ponto central: depois de clicar num botão ele fica no botão, FORA do
+   iframe, e a seta não chega na apresentação. Era por isso que só andava depois de
+   clicar no slide. Toda ação do visor devolve o foco para o quadro. */
+function focarVisor(){
+  const f = $('visor-frame');
+  try { f.focus(); if (f.contentWindow) f.contentWindow.focus(); } catch(e){}
+}
+function falarComSlide(o){
+  const w = $('visor-frame').contentWindow;
+  if (w) { try { w.postMessage(o, '*'); } catch(e){} }
+}
+
+/* Baixa em pedaços para mostrar o andamento: a apresentação tem ~9 MB e no 4G demora. */
+async function baixarPartes(url, opcoes, tam, onP){
+  const r = await fetch(url, opcoes);
+  if (!r.ok) throw new Error('Não foi possível baixar a apresentação (erro ' + r.status + ').');
+  if (!r.body || !r.body.getReader) return [await r.blob()];
+  const leitor = r.body.getReader(), partes = [];
+  let lido = 0;
+  for (;;){
+    const { done, value } = await leitor.read();
+    if (done) break;
+    partes.push(value); lido += value.length;
+    if (onP) onP(tam ? Math.min(1, lido / tam) : 0, lido);
+  }
+  return partes;
+}
+
+function limparBlobVisor(){ if (VISOR.blobUrl){ URL.revokeObjectURL(VISOR.blobUrl); VISOR.blobUrl = null; } }
+function cargaVisor(on, p){
+  $('visor-carga').classList.toggle('on', !!on);
+  if (p != null) $('visor-carga-i').style.setProperty('--p', Math.round(p * 100) + '%');
+}
+function colocarNoVisor(partes){
+  limparBlobVisor();
+  VISOR.blobUrl = URL.createObjectURL(new Blob(partes.concat([PONTE_VISOR]), { type: 'text/html;charset=utf-8' }));
+  $('visor-frame').src = VISOR.blobUrl;
+}
+async function carregarNoVisor(s){
+  const gen = ++VISOR.gen, url = API_BASE + s.url;
+  cargaVisor(true, 0);
+  try {
+    const partes = await baixarPartes(url, {}, s.tamanho, p => { if (gen === VISOR.gen) cargaVisor(true, p); });
+    if (gen !== VISOR.gen) return;
+    colocarNoVisor(partes);
+  } catch(e){
+    if (gen !== VISOR.gen) return;
+    $('visor-frame').src = url;   // sem a ponte, mas abre
+  }
+}
+
+function abrirMolduraVisor(titulo){
+  $('visor-tit').textContent = titulo;
   $('visor').classList.add('on');
   document.body.style.overflow = 'hidden';
-  setTimeout(() => { try { $('visor-frame').focus(); } catch(e){} }, 300);
+  pintarBotaoFull();
+}
+function abrirVisor(id, cheia){
+  const s = (D.slides || []).find(x => x.id === id);
+  if (!s) return;
+  VISOR.id = id; VISOR.slide = 0; VISOR.irPara = 0;
+  abrirMolduraVisor(s.titulo);
+  $('visor-aba').style.display = '';
+  $('visor-aba').href = API_BASE + s.url;
+  $('visor-editar').style.display = D.gestor ? '' : 'none';
+  // Tem que ser AQUI, no clique: o navegador só aceita tela cheia em gesto do usuário.
+  if (cheia) entrarTelaCheia();
+  carregarNoVisor(s);
+}
+/* "Testar" do editor: mostra o que ainda não foi salvo. */
+function abrirTesteNoVisor(titulo, blob, irPara){
+  VISOR.id = null; VISOR.gen++; VISOR.slide = 0; VISOR.irPara = irPara || 0;
+  abrirMolduraVisor(titulo + ' (teste, ainda não salvo)');
+  $('visor-aba').style.display = 'none';
+  $('visor-editar').style.display = 'none';
+  cargaVisor(false);
+  colocarNoVisor([blob]);
 }
 function fecharVisor(){
-  if (document.fullscreenElement) sairTelaCheia();
-  $('visor').classList.remove('on');
+  if (emTelaCheia()) sairTelaCheia();
+  VISOR.gen++;
+  cargaVisor(false);
+  $('visor').classList.remove('on', 'quieto');
   $('visor-frame').src = 'about:blank';
-  document.body.style.overflow = '';
+  limparBlobVisor();
+  document.body.style.overflow = ED ? 'hidden' : '';
 }
-function emTelaCheia(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
 function sairTelaCheia(){
   const f = document.exitFullscreen || document.webkitExitFullscreen;
-  if (f) { try { f.call(document); } catch(e){} }
+  if (f) { try { const p = f.call(document); if (p && p.catch) p.catch(() => {}); } catch(e){} }
 }
-function alternarTelaCheia(){
+function entrarTelaCheia(){
   const el = $('visor');
-  if (emTelaCheia()){ sairTelaCheia(); return; }
   const f = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (!f){ $('btn-full').textContent = '⛶ Tela cheia não disponível'; return; }
+  if (!f){ toast('Este aparelho não tem tela cheia. A apresentação segue na janela.', 'err'); return; }
   try { const p = f.call(el); if (p && p.catch) p.catch(() => {}); } catch(e){}
 }
+function alternarTelaCheia(){ if (emTelaCheia()) sairTelaCheia(); else entrarTelaCheia(); }
 function pintarBotaoFull(){
   const cheio = emTelaCheia();
-  $('btn-full').textContent = cheio ? '⤢ Sair da tela cheia' : '⛶ Tela cheia';
-  $('btn-full').classList.toggle('ghost', cheio);
-  if (!cheio) $('visor').classList.remove('quieto');
+  $('btn-full').innerHTML = cheio ? icl('saitela') + 'Sair da tela cheia' : icl('tela') + 'Tela cheia';
+  $('btn-full').classList.toggle('sec', cheio);
+  $('visor').classList.toggle('cheia', cheio);
 }
-$('btn-full').addEventListener('click', alternarTelaCheia);
-$('visor-fechar').addEventListener('click', fecharVisor);
-['fullscreenchange','webkitfullscreenchange'].forEach(e => document.addEventListener(e, pintarBotaoFull));
-document.addEventListener('keydown', e => {
-  if (!$('visor').classList.contains('on')) return;
-  // Esc fora da tela cheia fecha o visor (dentro dela, o próprio navegador sai)
-  if (e.key === 'Escape' && !emTelaCheia()) fecharVisor();
-  if (e.key === 'f' || e.key === 'F') alternarTelaCheia();
-});
-// some com a barra depois de 3s parado em tela cheia; volta ao mexer o mouse
-let tQuieto = null;
-$('visor').addEventListener('mousemove', () => {
+function acordarBarra(){
   $('visor').classList.remove('quieto');
-  clearTimeout(tQuieto);
-  if (emTelaCheia()) tQuieto = setTimeout(() => $('visor').classList.add('quieto'), 3000);
+  clearTimeout(acordarBarra.t);
+  if (emTelaCheia()) acordarBarra.t = setTimeout(() => {
+    if (!$('visor-bar').matches(':hover')) $('visor').classList.add('quieto');
+  }, 2500);
+}
+function aoMudarTelaCheia(){
+  VISOR.mudouEm = Date.now();
+  pintarBotaoFull();
+  acordarBarra();
+  falarComSlide({ bpCheia: emTelaCheia() });
+  focarVisor();
+}
+['fullscreenchange','webkitfullscreenchange'].forEach(e => document.addEventListener(e, aoMudarTelaCheia));
+
+$('visor-frame').addEventListener('load', () => {
+  if (!visorAberto()) return;
+  cargaVisor(false);
+  focarVisor();
 });
+$('btn-full').addEventListener('click', () => { alternarTelaCheia(); focarVisor(); });
+$('visor-fechar').addEventListener('click', fecharVisor);
+$('visor-ant').addEventListener('click', () => { falarComSlide({ bpTecla: 'ArrowLeft' }); focarVisor(); });
+$('visor-prox').addEventListener('click', () => { falarComSlide({ bpTecla: 'ArrowRight' }); focarVisor(); });
+$('visor-editar').addEventListener('click', () => { const id = VISOR.id, sl = VISOR.slide; fecharVisor(); if (id) abrirEditor(id, sl); });
+$('visor-aba').addEventListener('click', () => setTimeout(focarVisor, 50));
+$('visor-zona').addEventListener('mouseenter', acordarBarra);
+$('visor-bar').addEventListener('mouseleave', acordarBarra);
+$('visor').addEventListener('mousemove', acordarBarra);
+
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || !d.bpSlide || e.source !== $('visor-frame').contentWindow) return;
+  if (d.pronto){
+    falarComSlide({ bpCheia: emTelaCheia() });
+    if (VISOR.irPara > 0){ falarComSlide({ bpIrPara: VISOR.irPara }); VISOR.irPara = 0; }
+    focarVisor();
+  }
+  if (d.mexeu) acordarBarra();
+  if (typeof d.slide === 'number') VISOR.slide = d.slide;
+  if (d.tecla === 'f') alternarTelaCheia();
+  if (d.tecla === 'escape' && !emTelaCheia() && Date.now() - VISOR.mudouEm > 500) fecharVisor();
+});
+
+/* Foco na página (botão, barra): a tecla ainda chega no slide. */
+document.addEventListener('keydown', e => {
+  if (!visorAberto()) return;
+  if (e.key === 'Escape'){ if (!emTelaCheia() && Date.now() - VISOR.mudouEm > 500) fecharVisor(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'f' || e.key === 'F'){ alternarTelaCheia(); return; }
+  if (TECLAS_NAV.includes(e.key)){
+    e.preventDefault();
+    falarComSlide({ bpTecla: e.key });
+    focarVisor();
+  }
+});
+pintarBotaoFull();
 
 /* ============================== gestão: lista ============================== */
 function renderGestao(){
   const lista = D.slides || [];
   $('ges-cont').textContent = lista.length ? `${lista.length} apresentaç${lista.length===1?'ão':'ões'}` : '';
   $('lista-cat').innerHTML = (D.categorias || []).map(c => `<option value="${esc(c)}">`).join('');
-  if (!lista.length){ $('lista-ges').innerHTML = '<div class="vazio">Nada enviado ainda.</div>'; return; }
+  if (!lista.length){ $('lista-ges').innerHTML = '<div class="bp-vazio">Nada enviado ainda.</div>'; return; }
   $('lista-ges').innerHTML = lista.map(s => `
     <div class="linha-deck">
-      ${s.capa ? `<img src="${API_BASE}${s.capa}" alt="" loading="lazy">` : '<div style="width:74px;aspect-ratio:16/9;border-radius:8px;background:#0b0f1a;display:flex;align-items:center;justify-content:center">🎞️</div>'}
+      ${s.capa ? `<img src="${API_BASE}${s.capa}" alt="" loading="lazy">` : `<div class="sem-capa">${IC('arquivo')}</div>`}
       <div class="ld-txt">
         <div class="ld-tit">${esc(s.titulo)}</div>
         <div class="ld-sub">${[s.categoria, s.secao, fData(s.data), fTam(s.tamanho)].filter(Boolean).map(esc).join(' · ')}</div>
         <div class="ld-sub">Enviada por ${esc(s.enviado_por||'—')}${s.atualizado_em ? ` · alterada por ${esc(s.atualizado_por)} em ${fData(s.atualizado_em)}` : ''}</div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost small" data-abrir="${esc(s.id)}">▶️ Ver</button>
-        <button class="btn ghost small" data-ed="${esc(s.id)}">✏️ Editar</button>
-        <button class="btn danger small" data-ex="${esc(s.id)}">🗑️</button>
+      <div class="ld-bts">
+        <button type="button" class="bp-btn sm sec" data-abrir="${esc(s.id)}">${IC('olho')}Ver</button>
+        <button type="button" class="bp-btn sm" data-slides="${esc(s.id)}" title="Editar o conteúdo dos slides">${IC('editar')}Editar slides</button>
+        <button type="button" class="bp-btn sm sec" data-ed="${esc(s.id)}" title="Título, categoria, capa e anexos">${IC('etiqueta')}Dados</button>
+        <button type="button" class="bp-btn sm ic perigo-l" data-ex="${esc(s.id)}" title="Excluir apresentação" aria-label="Excluir apresentação">${IC('lixeira')}</button>
       </div>
     </div>`).join('');
-  $('lista-ges').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirVisor(b.dataset.abrir)));
+  ligarAcoes($('lista-ges'));
   $('lista-ges').querySelectorAll('[data-ed]').forEach(b => b.addEventListener('click', () => abrirEdicao(b.dataset.ed)));
   $('lista-ges').querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => abrirExclusao(b.dataset.ex)));
 }
 
-/* ============================== modal ============================== */
+/* ============================== janela ============================== */
 let MD_OK = null;
-function fecharModal(){ $('modal').classList.remove('on'); MD_OK = null; $('md-msg').textContent=''; }
+function abrirModal(o){
+  $('md-tit').textContent = o.tit;
+  $('md-corpo').innerHTML = o.corpo;
+  $('md-ok').innerHTML = o.ok || 'Salvar';
+  $('md-ok').className = 'bp-btn' + (o.perigo ? ' perigo' : '');
+  $('md-ic').className = 'bp-tile' + (o.perigo ? ' crit' : '');
+  $('md-ic').innerHTML = IC(o.ic || 'editar');
+  msg('md-msg', '', '');
+  MD_OK = o.acao;
+  $('modal').classList.add('on');
+}
+function fecharModal(){ $('modal').classList.remove('on'); MD_OK = null; msg('md-msg', '', ''); }
 $('md-cancelar').addEventListener('click', fecharModal);
+$('md-x').addEventListener('click', fecharModal);
 $('modal').addEventListener('click', e => { if (e.target === $('modal')) fecharModal(); });
 $('md-ok').addEventListener('click', () => { if (MD_OK) MD_OK(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('modal').classList.contains('on')) fecharModal(); });
+
+const CAMPO = (rot, html) => `<div class="bp-campo"><label>${rot}</label><div class="bp-in">${html}</div></div>`;
+const ARQ = (id, rot, acc) => `<div class="bp-campo"><span class="bp-rot">${rot}</span><label class="bp-arquivo"><span class="tx"><b data-vazio="Escolher arquivo">Escolher arquivo</b><small data-vazio="Deixe vazio para manter o atual">Deixe vazio para manter o atual</small></span><span class="bp-trocar"></span><input type="file" id="${id}" accept="${acc}"></label></div>`;
 
 function abrirEdicao(id){
   const s = (D.slides || []).find(x => x.id === id);
   if (!s) return;
-  $('md-tit').textContent = 'Editar apresentação';
-  $('md-corpo').innerHTML = `
-    <div class="grid2">
-      <div class="fg"><label>Título</label><input id="e-titulo" value="${esc(s.titulo)}"></div>
-      <div class="fg"><label>Categoria</label><input id="e-categoria" value="${esc(s.categoria)}"></div>
+  abrirModal({
+    tit: 'Dados da apresentação', ic: 'etiqueta',
+    corpo: `
+    <div class="sl-g2">
+      ${CAMPO('Título', `<input id="e-titulo" value="${esc(s.titulo)}">`)}
+      ${CAMPO('Categoria', `<input id="e-categoria" value="${esc(s.categoria)}">`)}
     </div>
-    <div class="fg" style="margin-top:12px"><label>Resumo</label><textarea id="e-resumo">${esc(s.resumo)}</textarea></div>
-    <div class="grid3" style="margin-top:12px">
-      <div class="fg"><label>Seção / autor</label><input id="e-secao" value="${esc(s.secao)}"></div>
-      <div class="fg"><label>Data</label><input id="e-data" type="date" value="${esc((s.data||'').slice(0,10))}"></div>
-      <div class="fg"><label>Ordem</label><input id="e-ordem" type="number" min="1" value="${esc(s.ordem)}"></div>
+    ${CAMPO('Resumo', `<textarea id="e-resumo">${esc(s.resumo)}</textarea>`)}
+    <div class="sl-g3">
+      ${CAMPO('Seção / autor', `<input id="e-secao" value="${esc(s.secao)}">`)}
+      ${CAMPO('Data', `<input id="e-data" type="date" value="${esc((s.data||'').slice(0,10))}">`)}
+      ${CAMPO('Ordem', `<input id="e-ordem" type="number" min="1" value="${esc(s.ordem)}">`)}
     </div>
-    <div class="fg" style="margin-top:12px"><label>Palavras-chave</label><input id="e-tags" value="${esc(s.tags)}"></div>
-    <div class="fg" style="margin-top:12px"><label>Link do arquivo original</label><input id="e-link" value="${esc(s.link)}"></div>
-    <div class="grid3" style="margin-top:12px">
-      <div class="fg"><label>Trocar a capa</label><input type="file" id="e-capa" accept="image/png,image/jpeg,image/webp"></div>
-      <div class="fg"><label>Trocar o PDF</label><input type="file" id="e-pdf" accept="application/pdf"></div>
-      <div class="fg"><label>Trocar o original</label><input type="file" id="e-fonte" accept=".ppt,.pptx,.odp,.key,.zip"></div>
+    ${CAMPO('Palavras-chave', `<input id="e-tags" value="${esc(s.tags)}">`)}
+    ${CAMPO('Link do arquivo original', `<input id="e-link" value="${esc(s.link)}">`)}
+    <div class="sl-g3">
+      ${ARQ('e-capa', 'Trocar a capa', 'image/png,image/jpeg,image/webp')}
+      ${ARQ('e-pdf', 'Trocar o PDF', 'application/pdf')}
+      ${ARQ('e-fonte', 'Trocar o original', '.ppt,.pptx,.odp,.key,.zip')}
     </div>
-    <p class="hint">Para trocar a <b>apresentação inteira</b>, empacote o arquivo novo lá em cima (①) e marque abaixo.</p>
-    <label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:8px">
-      <input type="checkbox" id="e-trocar-html" ${PACOTE ? '' : 'disabled'}>
-      <span>Substituir o arquivo desta apresentação pelo que está empacotado agora${PACOTE ? ` (${esc(PACOTE.nome)}, ${fTam(PACOTE.blob.size)})` : ' — nenhum empacotado'}</span>
-    </label>`;
-  $('md-msg').textContent = '';
-  $('modal').classList.add('on');
-  MD_OK = async () => {
-    const form = new FormData();
-    form.append('id', id);
-    ['titulo','resumo','categoria','secao','data','tags','link','ordem'].forEach(c => form.append(c, $('e-'+c).value.trim()));
-    if ($('e-capa').files[0]) form.append('capa', $('e-capa').files[0]);
-    if ($('e-pdf').files[0]) form.append('pdf', $('e-pdf').files[0]);
-    if ($('e-fonte').files[0]) form.append('fonte', $('e-fonte').files[0]);
-    if ($('e-trocar-html').checked && PACOTE) form.append('arquivo', new File([PACOTE.blob], PACOTE.nome, { type:'text/html' }));
-    $('md-ok').disabled = true; $('md-msg').className='msg'; $('md-msg').textContent = 'Salvando…';
-    try {
-      await apiPostForm('/api/slides/editar', form);
-      fecharModal();
-      await carregar();
-    } catch(e){ $('md-msg').className='msg err'; $('md-msg').textContent = '⚠️ ' + e.message; }
-    finally { $('md-ok').disabled = false; }
-  };
+    <p>Para mudar o conteúdo dos slides, use <b>Editar slides</b>. Para trocar a <b>apresentação inteira</b>, empacote o arquivo novo na Gestão e marque abaixo.</p>
+    <label class="bp-check"><input type="checkbox" id="e-trocar-html" ${PACOTE ? '' : 'disabled'}>
+      <span>Substituir pelo arquivo empacotado${PACOTE ? ` (${esc(PACOTE.nome)}, ${fTam(PACOTE.blob.size)})` : ' (nenhum empacotado agora)'}</span>
+    </label>`,
+    acao: async () => {
+      const form = new FormData();
+      form.append('id', id);
+      ['titulo','resumo','categoria','secao','data','tags','link','ordem'].forEach(c => form.append(c, $('e-'+c).value.trim()));
+      if ($('e-capa').files[0]) form.append('capa', $('e-capa').files[0]);
+      if ($('e-pdf').files[0]) form.append('pdf', $('e-pdf').files[0]);
+      if ($('e-fonte').files[0]) form.append('fonte', $('e-fonte').files[0]);
+      if ($('e-trocar-html').checked && PACOTE) form.append('arquivo', new File([PACOTE.blob], PACOTE.nome, { type:'text/html' }));
+      $('md-ok').disabled = true; msg('md-msg', '', 'Salvando…');
+      try {
+        await apiPostForm('/api/slides/editar', form);
+        fecharModal();
+        await carregar();
+        toast('Dados salvos.');
+      } catch(e){ msg('md-msg', 'err', e.message); }
+      finally { $('md-ok').disabled = false; }
+    },
+  });
 }
 
 /* Exclusão com senha — mesma regra do resto do site. */
 function abrirExclusao(id){
   const s = (D.slides || []).find(x => x.id === id);
   if (!s) return;
-  $('md-tit').textContent = 'Excluir apresentação';
-  $('md-corpo').innerHTML = `
-    <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px">
-      Vai sair do banco: <b style="color:#fff">${esc(s.titulo)}</b>.<br>
+  abrirModal({
+    tit: 'Excluir apresentação', ic: 'lixeira', perigo: true, ok: 'Excluir',
+    corpo: `
+    <p>Vai sair do banco: <b>${esc(s.titulo)}</b>.<br>
       A linha da planilha não é apagada (fica marcada como excluída) e os arquivos vão para a lixeira do Drive,
-      onde dá para restaurar por 30 dias.
-    </p>
-    <div class="fg"><label>Sua senha</label><input type="password" id="x-senha" autocomplete="current-password"></div>
-    <div class="fg" style="margin-top:12px"><label>Motivo (opcional)</label><input id="x-motivo" placeholder="Versão substituída, apresentação antiga…"></div>`;
-  $('md-msg').textContent = '';
-  $('modal').classList.add('on');
+      onde dá para restaurar por 30 dias.</p>
+    ${CAMPO('Sua senha', '<input type="password" id="x-senha" autocomplete="current-password">')}
+    ${CAMPO('Motivo (opcional)', '<input id="x-motivo" placeholder="Versão substituída, apresentação antiga…">')}`,
+    acao: async () => {
+      const senha = $('x-senha').value;
+      if (!senha){ msg('md-msg', 'err', 'Digite a sua senha.'); return; }
+      $('md-ok').disabled = true; msg('md-msg', '', 'Excluindo…');
+      try {
+        await apiPost('/api/slides/excluir', { id, senha, motivo: $('x-motivo').value.trim() });
+        fecharModal();
+        await carregar();
+        toast('Apresentação excluída.');
+      } catch(e){ msg('md-msg', 'err', e.message); }
+      finally { $('md-ok').disabled = false; }
+    },
+  });
   setTimeout(() => $('x-senha').focus(), 60);
-  MD_OK = async () => {
-    const senha = $('x-senha').value;
-    if (!senha){ $('md-msg').className='msg err'; $('md-msg').textContent='Digite a sua senha.'; return; }
-    $('md-ok').disabled = true; $('md-msg').className='msg'; $('md-msg').textContent = 'Excluindo…';
-    try {
-      await apiPost('/api/slides/excluir', { id, senha, motivo: $('x-motivo').value.trim() });
-      fecharModal();
-      await carregar();
-    } catch(e){ $('md-msg').className='msg err'; $('md-msg').textContent = '⚠️ ' + e.message; }
-    finally { $('md-ok').disabled = false; }
+}
+
+/* ============================== editor de slides ==============================
+   O arquivo abre num iframe com sandbox="allow-same-origin" e SEM allow-scripts:
+     • o script da apresentação não roda, então não há como ele ler o login desta
+       página mesmo estando na mesma origem;
+     • o DOM fica exatamente como está no arquivo, sem o que o script faria ao
+       abrir (escala, classes, contador). O que salva é o arquivo com as edições,
+       sem resto do modo de apresentação.
+   O iframe tem o tamanho real do slide (1920×1080) e quem encolhe é o próprio
+   iframe, por transform. Por isso não importa como a apresentação foi feita:
+   basta ter .slide. Sem .slide, abre como documento corrido, sem lista.
+
+   O que esta página põe dentro do documento e tira ao salvar (ver serializar):
+   a <style data-bp-ed>, o contenteditable e as classes active/visible. */
+let ED = null;
+
+const ED_MAX_HTML = 25 * 1024 * 1024;   // mesmo limite do Worker (SL_MAX_HTML)
+const ED_MAX_PILHA = 60;
+const ED_CSS = `
+*,*::before,*::after{transition:none!important;animation:none!important}
+#counter,#hint,#progress,.edit-hotzone,.edit-toggle,.edit-bar{display:none!important}
+[contenteditable]{outline:none;cursor:text}
+img,svg{cursor:pointer}
+a{cursor:default}`;
+
+function estadoEditor(s){
+  return {
+    s, id: s.id, nome: s.arquivo || 'apresentacao.html', versao: s.versao || '',
+    doc: null, win: null, slides: [], pai: null, atual: 0, livre: false,
+    W: 1920, H: 1080, f: 1, sel: null, editando: null, fotoEdicao: null, antesEdicao: '', range: null,
+    undo: [], redo: [], sujo: false, salvando: false, blobUrl: null,
+    primeiro: { active: false, visible: false },
+    minis: new Map(), mdoc: null, tMini: new Map(), corFoto: false,
   };
 }
+
+async function abrirEditor(id, ini){
+  const s = (D.slides || []).find(x => x.id === id);
+  if (!s) return;
+  if (ED) return;
+  ED = estadoEditor(s);
+  $('ed').classList.add('on');
+  $('ed').classList.remove('livre');
+  $('ed').setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  $('ed-tit').textContent = s.titulo;
+  $('ed-tela').style.visibility = 'hidden';
+  cargaEditor(true, 'Baixando a apresentação…', 0);
+  pintarEstado(); pintarFerramentas(); pintarPe();
+  if (innerWidth < 900) toast('Editar é mais confortável no computador.');
+  const meu = ED;
+  try {
+    // cache:'reload' = sempre o arquivo mais novo; editar cópia velha perderia trabalho.
+    const partes = await baixarPartes(API_BASE + s.url, { cache: 'reload' }, s.tamanho, p => { if (ED === meu) cargaEditor(true, 'Baixando a apresentação…', p); });
+    if (ED !== meu) return;
+    cargaEditor(true, 'Preparando os slides…', 1);
+    ED.blobUrl = URL.createObjectURL(new Blob(partes, { type: 'text/html;charset=utf-8' }));
+    const f = $('ed-frame');
+    f.onload = () => { f.onload = null; if (ED === meu) montarEditor(ini || 0); };
+    f.src = ED.blobUrl;
+  } catch(e){
+    if (ED !== meu) return;
+    fecharEditor(true);
+    toast(e.message || 'Não foi possível abrir a apresentação.', 'err');
+  }
+}
+
+function cargaEditor(on, tx, p){
+  $('ed-carga').classList.toggle('on', !!on);
+  if (tx != null) $('ed-carga-tx').textContent = tx;
+  if (p != null) $('ed-carga-i').style.setProperty('--p', Math.round(p * 100) + '%');
+}
+
+function montarEditor(ini){
+  const f = $('ed-frame'), doc = f.contentDocument;
+  if (!doc || !doc.documentElement){ fecharEditor(true); toast('O navegador não abriu o arquivo para edição.', 'err'); return; }
+  ED.doc = doc; ED.win = f.contentWindow;
+
+  const estilo = doc.createElement('style');
+  estilo.setAttribute('data-bp-ed', '1');
+  estilo.textContent = ED_CSS;
+  (doc.head || doc.documentElement).appendChild(estilo);
+
+  ED.slides = [...doc.querySelectorAll('.slide')];
+  if (ED.slides.length){
+    ED.pai = ED.slides[0].parentNode;
+    ED.primeiro = { active: ED.slides[0].classList.contains('active'), visible: ED.slides[0].classList.contains('visible') };
+    ED.slides.forEach(s => s.classList.remove('active', 'visible'));
+    f.style.width = ED.W + 'px'; f.style.height = ED.H + 'px';
+    ED.slides[0].classList.add('active', 'visible');
+    const r = ED.slides[0].getBoundingClientRect();
+    if (r.width > 200 && r.height > 200){ ED.W = Math.round(r.width); ED.H = Math.round(r.height); }
+    f.style.width = ED.W + 'px'; f.style.height = ED.H + 'px';
+    ED.slides[0].classList.remove('active', 'visible');
+  } else {
+    // Sem .slide: documento corrido. Se o corpo está vazio, a apresentação é montada
+    // por script e não há o que editar aqui (o script não roda neste quadro).
+    const corpo = doc.body ? doc.body.cloneNode(true) : null;
+    if (corpo) corpo.querySelectorAll('script,style,noscript,template').forEach(n => n.remove());
+    if (!corpo || (!corpo.textContent.trim() && !corpo.querySelector('img,svg,video,canvas'))){
+      fecharEditor(true);
+      toast('Este arquivo monta os slides por script e não pode ser editado aqui. Baixe, edite e envie de novo.', 'err');
+      return;
+    }
+    ED.livre = true;
+    $('ed').classList.add('livre');
+    ED.slides = [doc.body];
+    ED.pai = doc.documentElement;
+    doc.addEventListener('scroll', desenharSel, true);
+  }
+
+  doc.addEventListener('click', cliqueNoSlide, true);
+  doc.addEventListener('keydown', teclaEditor, true);
+  doc.addEventListener('input', aoDigitar);
+  doc.addEventListener('paste', colarSoTexto);
+  doc.addEventListener('dragstart', e => e.preventDefault());
+  doc.addEventListener('selectionchange', aoMudarSelecaoTexto);
+  doc.addEventListener('submit', e => e.preventDefault(), true);
+
+  ajustarTela();
+  if (!ED.obs){ ED.obs = new ResizeObserver(ajustarTela); ED.obs.observe($('ed-palco')); }
+  $('ed-tela').style.visibility = '';
+  cargaEditor(false);
+  irPara(Math.min(ini || 0, ED.slides.length - 1), true);
+  if (!ED.livre) montarMinis();
+}
+
+/* Cabe na área livre mantendo a proporção. */
+function ajustarTela(){
+  if (!ED || !ED.doc) return;
+  const p = $('ed-palco').getBoundingClientRect(), f = $('ed-frame'), t = $('ed-tela');
+  if (ED.livre){
+    ED.f = 1; ED.W = Math.max(320, p.width - 24); ED.H = Math.max(200, p.height - 24);
+    f.style.transform = ''; f.style.width = ED.W + 'px'; f.style.height = ED.H + 'px';
+    t.style.width = ED.W + 'px'; t.style.height = ED.H + 'px';
+  } else {
+    ED.f = Math.max(.05, Math.min((p.width - 44) / ED.W, (p.height - 44) / ED.H));
+    f.style.transform = `scale(${ED.f})`;
+    t.style.width = Math.round(ED.W * ED.f) + 'px';
+    t.style.height = Math.round(ED.H * ED.f) + 'px';
+  }
+  desenharSel();
+}
+
+function slideAtual(){ return ED.slides[ED.atual]; }
+
+function irPara(i, inicial){
+  if (!ED || !ED.slides.length) return;
+  terminarEdicao();
+  selecionar(null);
+  i = Math.max(0, Math.min(i, ED.slides.length - 1));
+  if (!ED.livre){
+    ED.slides.forEach(s => s.classList.remove('active', 'visible'));
+    ED.slides[i].classList.add('active', 'visible');
+  }
+  ED.atual = i;
+  pintarPe();
+  pintarMiniAtiva(!inicial);
+}
+
+/* ---------- estado na tela ---------- */
+function marcarSujo(){ ED.sujo = true; pintarEstado(); }
+function pintarEstado(){
+  const e = $('ed-estado');
+  e.textContent = ED.salvando ? 'Salvando…' : ED.sujo ? 'Alterações não salvas' : 'Tudo salvo';
+  e.classList.toggle('sujo', ED.sujo);
+  $('ed-desf').disabled = !ED.undo.length && !ED.editando;
+  $('ed-ref').disabled = !ED.redo.length;
+  $('ed-salvar').disabled = !ED.sujo || ED.salvando;
+}
+function pintarPe(){
+  const n = ED.slides.length;
+  $('ed-cont').textContent = n ? `${ED.atual + 1} / ${n}` : '';
+  $('ed-ant').disabled = ED.atual <= 0;
+  $('ed-prox').disabled = ED.atual >= n - 1;
+  $('ed-sl-cima').disabled = ED.atual <= 0;
+  $('ed-sl-baixo').disabled = ED.atual >= n - 1;
+  $('ed-sl-exc').disabled = n <= 1;
+}
+function ehImagem(el){
+  if (!el || !ED.win) return false;
+  if (/^(img|svg)$/i.test(el.tagName)) return true;
+  return /url\(/.test(ED.win.getComputedStyle(el).backgroundImage || '');
+}
+function corHex(c){
+  const m = String(c).match(/\d+(\.\d+)?/g);
+  if (!m || m.length < 3) return '#ffffff';
+  return '#' + m.slice(0, 3).map(v => Math.round(Number(v)).toString(16).padStart(2, '0')).join('');
+}
+function pintarFerramentas(){
+  const el = ED && ED.sel;
+  document.querySelectorAll('#ed-ferr [data-sel]').forEach(b => { b.disabled = !el; });
+  $('ed-cor-tx').classList.toggle('des', !el);
+  $('ed-cor-fd').classList.toggle('des', !el);
+  $('ed-trocar').style.display = el && ehImagem(el) ? '' : 'none';
+  if (el && ED.win){
+    const cs = ED.win.getComputedStyle(el);
+    $('ed-tam-v').textContent = Math.round(parseFloat(cs.fontSize) || 0) || '–';
+    $('ed-cor').value = corHex(cs.color);
+    if (!/rgba\(.*,\s*0\)|transparent/.test(cs.backgroundColor)) $('ed-fundo').value = corHex(cs.backgroundColor);
+    $('ed-pai').disabled = el.parentElement === slideAtual().parentElement || el === slideAtual();
+  } else {
+    $('ed-tam-v').textContent = '–';
+  }
+}
+
+/* ---------- selecionar e escrever ---------- */
+function selecionar(el){
+  ED.sel = el || null;
+  desenharSel();
+  pintarFerramentas();
+}
+function desenharSel(){
+  if (!ED) return;
+  const q = $('ed-sel'), el = ED.sel;
+  if (!el || !el.isConnected){ q.classList.remove('on'); return; }
+  const r = el.getBoundingClientRect(), f = ED.f;
+  q.style.left = (r.left * f) + 'px';
+  q.style.top = (r.top * f) + 'px';
+  q.style.width = (r.width * f) + 'px';
+  q.style.height = (r.height * f) + 'px';
+  q.classList.add('on');
+  q.classList.toggle('escrevendo', !!ED.editando);
+}
+function temTextoProprio(el){
+  return [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) ||
+    [...el.children].some(c => ED.win.getComputedStyle(c).display === 'inline' && c.textContent.trim());
+}
+/* Sobe do que foi clicado até o bloco que contém a frase inteira: clicar no
+   <b> de um parágrafo edita o parágrafo, não só a palavra em negrito. */
+function blocoDeTexto(t){
+  const lim = slideAtual();
+  let e = t;
+  while (e && e !== lim && ED.win.getComputedStyle(e).display === 'inline' && e.parentElement) e = e.parentElement;
+  if (!e || e === lim) e = t;
+  return e && e !== lim && temTextoProprio(e) ? e : null;
+}
+function cliqueNoSlide(e){
+  if (!ED) return;
+  const t = e.target;
+  if (ED.editando && ED.editando.contains(t)) return;   // clicou dentro do que já escreve: é o cursor
+  e.preventDefault();
+  terminarEdicao();
+  const sl = slideAtual();
+  if (!t || !t.closest || !sl.contains(t) || t === sl){ selecionar(null); return; }
+  const img = t.closest('img,svg,video,canvas');
+  if (img && sl.contains(img)){ selecionar(img); return; }
+  const tx = blocoDeTexto(t);
+  if (tx){ selecionar(tx); comecarEdicao(tx, e); return; }
+  selecionar(t);
+}
+function fotoSlide(sl){ return { tipo: 'c', slide: sl, html: sl.innerHTML, cls: sl.className, st: sl.getAttribute('style') }; }
+function fotoOrdem(){ return { tipo: 'o', lista: [...ED.slides], atual: ED.atual }; }
+function empilhar(p){
+  ED.undo.push(p);
+  if (ED.undo.length > ED_MAX_PILHA) ED.undo.shift();
+  ED.redo = [];
+  marcarSujo();
+}
+function comecarEdicao(el, ev){
+  ED.fotoEdicao = fotoSlide(slideAtual());
+  ED.antesEdicao = el.outerHTML;
+  el.setAttribute('contenteditable', 'true');
+  el.focus();
+  ED.editando = el;
+  ED.range = null;
+  if (ev && ED.doc.caretRangeFromPoint){
+    const r = ED.doc.caretRangeFromPoint(ev.clientX, ev.clientY);
+    if (r && el.contains(r.startContainer)){ const s = ED.win.getSelection(); s.removeAllRanges(); s.addRange(r); }
+  }
+  desenharSel(); pintarEstado();
+}
+function terminarEdicao(){
+  if (!ED || !ED.editando) return;
+  const el = ED.editando;
+  el.removeAttribute('contenteditable');
+  ED.editando = null;
+  ED.range = null;
+  try { ED.win.getSelection().removeAllRanges(); } catch(e){}
+  if (el.outerHTML !== ED.antesEdicao){
+    empilhar(ED.fotoEdicao);
+    agendarMini(slideAtual());
+  }
+  ED.fotoEdicao = null;
+  desenharSel(); pintarEstado();
+}
+function aoDigitar(){ if (ED){ marcarSujo(); desenharSel(); } }
+function aoMudarSelecaoTexto(){
+  if (!ED || !ED.editando) return;
+  const s = ED.win.getSelection();
+  if (s.rangeCount && ED.editando.contains(s.anchorNode)) ED.range = s.getRangeAt(0).cloneRange();
+}
+/* Colar de Word/site traria a formatação de lá para dentro do slide. */
+function colarSoTexto(e){
+  if (!ED || !ED.editando) return;
+  e.preventDefault();
+  const t = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+  ED.doc.execCommand('insertText', false, t);
+}
+
+/* ---------- ferramentas ---------- */
+/* Fora da escrita cada mudança vira um passo de Desfazer; dentro dela, a foto de
+   quando a escrita começou já cobre tudo. */
+function mudar(fn){
+  if (!ED || !ED.sel) return;
+  if (!ED.editando) empilhar(fotoSlide(slideAtual()));
+  fn(ED.sel);
+  marcarSujo();
+  desenharSel(); pintarFerramentas(); pintarEstado();
+  if (!ED.editando) agendarMini(slideAtual());
+}
+function temTrecho(){ return !!(ED.editando && ED.range && !ED.range.collapsed); }
+function comando(nome, val){
+  const el = ED.editando;
+  el.focus();
+  const s = ED.win.getSelection();
+  s.removeAllRanges(); s.addRange(ED.range);
+  ED.doc.execCommand('styleWithCSS', false, true);
+  ED.doc.execCommand(nome, false, val);
+  aoMudarSelecaoTexto();
+  marcarSujo(); desenharSel();
+}
+function alternar(nome, prop, ligado, desligado, estaLigado){
+  if (temTrecho()){ comando(nome); return; }
+  mudar(el => { el.style[prop] = estaLigado(ED.win.getComputedStyle(el)) ? desligado : ligado; });
+}
+function comTexto(el){ return [el, ...el.querySelectorAll('*')].filter(n => [...n.childNodes].some(c => c.nodeType === 3 && c.textContent.trim())); }
+function mudarLetra(delta){
+  mudar(el => {
+    const cs = ED.win.getComputedStyle(el);
+    const base = parseFloat(cs.fontSize) || 16;
+    const novo = Math.max(8, base + delta);
+    const razao = novo / base;
+    const alvo = comTexto(el);
+    (alvo.length ? alvo : [el]).forEach(n => {
+      n.style.fontSize = Math.round((parseFloat(ED.win.getComputedStyle(n).fontSize) || base) * razao) + 'px';
+    });
+  });
+}
+function aplicarCor(cor){
+  if (temTrecho()){ comando('foreColor', cor); return; }
+  if (!ED.sel) return;
+  if (!ED.editando && !ED.corFoto){ empilhar(fotoSlide(slideAtual())); ED.corFoto = true; }
+  const alvo = comTexto(ED.sel);
+  (alvo.length ? alvo : [ED.sel]).forEach(n => { n.style.color = cor; });
+  marcarSujo();
+  if (!ED.editando) agendarMini(slideAtual());
+}
+function aplicarFundo(cor){
+  if (!ED.sel) return;
+  if (!ED.editando && !ED.corFoto){ empilhar(fotoSlide(slideAtual())); ED.corFoto = true; }
+  ED.sel.style.background = cor;
+  marcarSujo();
+  if (!ED.editando) agendarMini(slideAtual());
+}
+function excluirBloco(){
+  if (!ED || !ED.sel) return;
+  terminarEdicao();
+  empilhar(fotoSlide(slideAtual()));
+  ED.sel.remove();
+  selecionar(null);
+  agendarMini(slideAtual());
+}
+function duplicarBloco(){
+  if (!ED || !ED.sel) return;
+  terminarEdicao();
+  empilhar(fotoSlide(slideAtual()));
+  const c = ED.sel.cloneNode(true);
+  c.removeAttribute('id');
+  ED.sel.after(c);
+  selecionar(c);
+  agendarMini(slideAtual());
+}
+function blocoMaior(){
+  if (!ED || !ED.sel) return;
+  terminarEdicao();
+  const p = ED.sel.parentElement;
+  if (p && p !== slideAtual().parentElement) selecionar(p === slideAtual() ? null : p);
+}
+/* Cor e fonte do texto novo: as do título do slide. Slide novo nasce vazio e
+   usa o título do slide de onde saiu (ref). Sem título nenhum, garante leitura. */
+function rgbDe(cor){
+  const m = String(cor || '').match(/rgba?\(([^)]+)\)/);
+  if (!m) return null;
+  const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+  return p.length >= 3 && (p.length < 4 || p[3] > 0) ? p.slice(0, 3) : null;
+}
+function brilho(rgb){ return (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000; }
+function fundoDe(no){
+  for (let n = no; n && n.nodeType === 1; n = n.parentElement){
+    const cs = ED.win.getComputedStyle(n);
+    const rgb = rgbDe(cs.backgroundColor) || rgbDe(cs.backgroundImage);
+    if (rgb) return rgb;
+  }
+  return [255, 255, 255];
+}
+function estiloDoTexto(sl, ref){
+  const SEL = 'h1,h2,h3,.h-title';
+  const h = sl.querySelector(SEL) || (ref && ref.nodeType === 1 && ref.querySelector(SEL));
+  if (h){
+    const cs = ED.win.getComputedStyle(h);
+    return { cor: cs.color, fonte: cs.fontFamily };
+  }
+  const cs = ED.win.getComputedStyle(sl);
+  const c = rgbDe(cs.color);
+  const legivel = !c || Math.abs(brilho(c) - brilho(fundoDe(sl))) >= 90;
+  return { cor: legivel ? cs.color : (brilho(fundoDe(sl)) < 128 ? '#ffffff' : '#111111'), fonte: cs.fontFamily };
+}
+function garantirPosicionado(sl){
+  if (ED.win.getComputedStyle(sl).position === 'static') sl.style.position = 'relative';
+}
+function novoTexto(ref){
+  if (!ED || !ED.doc) return;
+  terminarEdicao();
+  const sl = slideAtual();
+  empilhar(fotoSlide(sl));
+  garantirPosicionado(sl);
+  const d = ED.doc.createElement('div');
+  d.textContent = 'Digite aqui';
+  const l = Math.round(ED.W * .25), a = Math.round(ED.H * .42);
+  const est = estiloDoTexto(sl, ref);
+  d.style.cssText = `position:absolute;left:${l}px;top:${a}px;width:${Math.round(ED.W * .5)}px;font-size:${Math.round(ED.H * .05)}px;font-weight:700;line-height:1.2;z-index:50;color:${est.cor}`;
+  d.style.fontFamily = est.fonte;
+  sl.appendChild(d);
+  selecionar(d);
+  comecarEdicao(d);
+  const s = ED.win.getSelection(), r = ED.doc.createRange();
+  r.selectNodeContents(d); s.removeAllRanges(); s.addRange(r);
+  ED.range = r.cloneRange();
+  agendarMini(sl);
+}
+
+/* ---------- imagens ---------- */
+let ED_IMG_MODO = 'nova';
+function escolherImagem(modo){
+  ED_IMG_MODO = modo;
+  $('ed-img').value = '';
+  $('ed-img').click();
+}
+async function imagemEscolhida(file){
+  if (!ED || !file) return;
+  if (!/^image\//.test(file.type)){ toast('Escolha um arquivo de imagem.', 'err'); return; }
+  terminarEdicao();
+  let blob = file;
+  try { blob = await encolher(file, 1600, 0.82); } catch(e){ blob = file; }
+  const uri = await paraDataURI(blob);
+  if (!ED) return;
+  const sl = slideAtual();
+  empilhar(fotoSlide(sl));
+  if (ED_IMG_MODO === 'trocar' && ED.sel && ehImagem(ED.sel)){
+    const el = ED.sel;
+    if (/^img$/i.test(el.tagName)){
+      el.src = uri; el.removeAttribute('srcset');
+    } else if (/^svg$/i.test(el.tagName)){
+      const r = el.getBoundingClientRect(), n = ED.doc.createElement('img');
+      n.src = uri;
+      if (el.getAttribute('class')) n.setAttribute('class', el.getAttribute('class'));
+      n.style.cssText = (el.getAttribute('style') || '') + `;width:${Math.round(r.width)}px;height:${Math.round(r.height)}px;object-fit:contain`;
+      el.replaceWith(n);
+      selecionar(n);
+    } else {
+      el.style.backgroundImage = `url("${uri}")`;
+    }
+  } else {
+    garantirPosicionado(sl);
+    const n = ED.doc.createElement('img');
+    n.src = uri; n.alt = '';
+    const l = Math.round(ED.W * .3), a = Math.round(ED.H * .2);
+    n.style.cssText = `position:absolute;left:${l}px;top:${a}px;width:${Math.round(ED.W * .4)}px;height:auto;z-index:50`;
+    sl.appendChild(n);
+    selecionar(n);
+  }
+  // A imagem ainda vai decodificar: o quadro de seleção redesenha quando ela chegar.
+  if (ED.sel && ED.sel.tagName === 'IMG' && !ED.sel.complete) ED.sel.addEventListener('load', desenharSel, { once: true });
+  desenharSel();
+  agendarMini(sl);
+}
+
+/* ---------- arrastar: mover e mudar o tamanho ----------
+   A captura do ponteiro faz o arraste continuar mesmo com o mouse por cima do
+   iframe, que senão engoliria o movimento. */
+function arrastar(pega, aoComecar){
+  pega.addEventListener('pointerdown', e => {
+    if (!ED || !ED.sel || e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    terminarEdicao();
+    pega.setPointerCapture(e.pointerId);
+    const foto = fotoSlide(slideAtual());
+    const x0 = e.clientX, y0 = e.clientY, f = ED.f;
+    const mexe = aoComecar(ED.sel);
+    let mudou = false;
+    const mv = (ev) => {
+      const dx = (ev.clientX - x0) / f, dy = (ev.clientY - y0) / f;
+      if (!mudou && Math.abs(dx) + Math.abs(dy) < 2) return;
+      if (!mudou){ mudou = true; empilhar(foto); }
+      mexe(dx, dy);
+      desenharSel();
+    };
+    const fim = () => {
+      pega.removeEventListener('pointermove', mv);
+      pega.removeEventListener('pointerup', fim);
+      pega.removeEventListener('pointercancel', fim);
+      if (mudou && ED) agendarMini(slideAtual());
+    };
+    pega.addEventListener('pointermove', mv);
+    pega.addEventListener('pointerup', fim);
+    pega.addEventListener('pointercancel', fim);
+  });
+}
+function prepararMover(el){
+  const cs = ED.win.getComputedStyle(el);
+  if (cs.position === 'static') el.style.position = 'relative';
+  const base = ED.win.getComputedStyle(el);
+  const l0 = parseFloat(base.left) || 0, t0 = parseFloat(base.top) || 0;
+  return { l0, t0, abs: base.position !== 'relative' };
+}
+arrastar($('ed-mover'), (el) => {
+  const b = prepararMover(el);
+  return (dx, dy) => {
+    if (b.abs){ el.style.right = 'auto'; el.style.bottom = 'auto'; }
+    el.style.left = (b.l0 + dx) + 'px';
+    el.style.top = (b.t0 + dy) + 'px';
+  };
+});
+arrastar($('ed-redim'), (el) => {
+  const r = el.getBoundingClientRect(), w0 = r.width, h0 = r.height;
+  const ehImg = /^(img|svg)$/i.test(el.tagName), comAltura = !ehImg && ehImagem(el);
+  return (dx, dy) => {
+    const w = Math.max(20, w0 + dx);
+    el.style.width = w + 'px'; el.style.maxWidth = 'none'; el.style.flex = 'none';
+    if (ehImg){ el.style.height = (h0 * w / w0) + 'px'; el.style.maxHeight = 'none'; }
+    if (comAltura) el.style.height = Math.max(20, h0 + dy) + 'px';
+  };
+});
+function empurrar(dx, dy){
+  const el = ED.sel, b = prepararMover(el);
+  empilhar(fotoSlide(slideAtual()));
+  if (b.abs){ el.style.right = 'auto'; el.style.bottom = 'auto'; }
+  el.style.left = (b.l0 + dx) + 'px';
+  el.style.top = (b.t0 + dy) + 'px';
+  desenharSel();
+  agendarMini(slideAtual());
+}
+
+/* ---------- slides: criar, duplicar, ordenar, excluir ---------- */
+function aplicarOrdem(lista, atual){
+  ED.slides.forEach(s => s.remove());
+  lista.forEach(s => ED.pai.appendChild(s));
+  ED.slides = [...lista];
+  refazerListaMinis();
+  irPara(atual);
+}
+function mudarOrdem(lista, atual){
+  terminarEdicao();
+  empilhar(fotoOrdem());
+  aplicarOrdem(lista, atual);
+}
+function novoSlide(){
+  terminarEdicao();
+  const sl = slideAtual(), c = sl.cloneNode(false);
+  c.removeAttribute('id'); c.classList.remove('active', 'visible');
+  c.setAttribute('data-t', 'Novo slide');
+  const l = [...ED.slides]; l.splice(ED.atual + 1, 0, c);
+  mudarOrdem(l, ED.atual + 1);
+  novoTexto(sl);
+}
+function duplicarSlide(){
+  terminarEdicao();
+  const c = slideAtual().cloneNode(true);
+  c.removeAttribute('id'); c.classList.remove('active', 'visible');
+  const l = [...ED.slides]; l.splice(ED.atual + 1, 0, c);
+  mudarOrdem(l, ED.atual + 1);
+}
+function moverSlide(d){
+  const i = ED.atual, j = i + d;
+  if (j < 0 || j >= ED.slides.length) return;
+  const l = [...ED.slides]; l.splice(j, 0, l.splice(i, 1)[0]);
+  mudarOrdem(l, j);
+}
+function excluirSlide(){
+  if (ED.slides.length <= 1) return;
+  const l = [...ED.slides]; l.splice(ED.atual, 1);
+  mudarOrdem(l, Math.min(ED.atual, l.length - 1));
+  toast('Slide excluído. Desfazer traz de volta.');
+}
+
+/* ---------- desfazer ---------- */
+function aplicarFoto(p){
+  if (p.tipo === 'o'){ aplicarOrdem(p.lista, p.atual); return; }
+  p.slide.innerHTML = p.html;
+  p.slide.className = p.cls;
+  if (p.st == null) p.slide.removeAttribute('style'); else p.slide.setAttribute('style', p.st);
+  const i = ED.slides.indexOf(p.slide);
+  if (i >= 0) irPara(i);
+  agendarMini(p.slide);
+}
+function inverso(p){ return p.tipo === 'o' ? fotoOrdem() : fotoSlide(p.slide); }
+function desfazer(){
+  if (!ED) return;
+  terminarEdicao();
+  const p = ED.undo.pop();
+  if (!p) { pintarEstado(); return; }
+  ED.redo.push(inverso(p));
+  aplicarFoto(p);
+  marcarSujo();
+}
+function refazer(){
+  if (!ED) return;
+  terminarEdicao();
+  const p = ED.redo.pop();
+  if (!p) return;
+  ED.undo.push(inverso(p));
+  aplicarFoto(p);
+  marcarSujo();
+}
+
+/* ---------- miniaturas ----------
+   Um iframe só, sem script, com os estilos da apresentação e uma cópia de cada
+   slide encolhida. content-visibility evita desenhar as que estão fora da tela. */
+function montarMinis(){
+  const f = $('ed-minis'), meu = ED;
+  f.onload = () => {
+    f.onload = null;
+    if (ED !== meu) return;
+    const m = f.contentDocument;
+    ED.mdoc = m;
+    [...ED.doc.head.children].forEach(n => {
+      if (/^(script|title|meta|base)$/i.test(n.tagName) || n.hasAttribute('data-bp-ed')) return;
+      m.head.appendChild(m.importNode(n, true));
+    });
+    const larg = 168, cs = getComputedStyle(document.documentElement);
+    const st = m.createElement('style');
+    st.textContent = `
+      html,body{width:auto!important;height:auto!important;overflow:visible!important;margin:0!important;background:${cs.getPropertyValue('--bg2')}!important}
+      html{overflow-y:auto!important;scrollbar-width:thin}
+      body{padding:10px 8px 10px 4px!important}
+      .bpli{display:flex;align-items:flex-start;gap:5px;margin-bottom:10px;cursor:pointer}
+      .bpn{width:22px;flex:none;text-align:right;font:700 11px/1.3 Inter,system-ui,sans-serif;color:${cs.getPropertyValue('--muted')}}
+      .bpth{position:relative;width:${larg}px;height:${Math.round(larg * ED.H / ED.W)}px;overflow:hidden;border-radius:6px;outline:2px solid ${cs.getPropertyValue('--line2')};content-visibility:auto;contain-intrinsic-size:${larg}px ${Math.round(larg * ED.H / ED.W)}px;background:#222}
+      .bpli:hover .bpth{outline-color:${cs.getPropertyValue('--acc-line')}}
+      .bpli.on .bpth{outline:3px solid ${cs.getPropertyValue('--acc')}}
+      .bpli.on .bpn{color:${cs.getPropertyValue('--acc')}}
+      .bpth>.slide{position:absolute!important;inset:auto!important;left:0!important;top:0!important;transform:scale(${larg / ED.W})!important;transform-origin:0 0!important;visibility:visible!important;opacity:1!important;pointer-events:none!important}
+      .bpth *{transition:none!important;animation:none!important;pointer-events:none!important}`;
+    m.head.appendChild(st);
+    m.addEventListener('keydown', teclaEditor, true);
+    refazerListaMinis();
+    pintarMiniAtiva(false);
+  };
+  f.srcdoc = '<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>';
+}
+function copiaMini(sl){
+  const c = ED.mdoc.importNode(sl, true);
+  c.removeAttribute('id');
+  c.classList.add('active', 'visible');
+  c.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
+  return c;
+}
+function miniDe(sl){
+  let li = ED.minis.get(sl);
+  if (li) return li;
+  const m = ED.mdoc;
+  li = m.createElement('div'); li.className = 'bpli';
+  const n = m.createElement('span'); n.className = 'bpn';
+  const th = m.createElement('div'); th.className = 'bpth';
+  th.appendChild(copiaMini(sl));
+  li.append(n, th);
+  li.addEventListener('click', () => irPara(ED.slides.indexOf(sl)));
+  ED.minis.set(sl, li);
+  return li;
+}
+function refazerListaMinis(){
+  if (!ED.mdoc) return;
+  const b = ED.mdoc.body;
+  b.textContent = '';
+  ED.slides.forEach((sl, i) => {
+    const li = miniDe(sl);
+    li.firstChild.textContent = i + 1;
+    li.title = sl.getAttribute('data-t') || '';
+    b.appendChild(li);
+  });
+  pintarMiniAtiva(false);
+}
+function pintarMiniAtiva(rolar){
+  if (!ED.mdoc) return;
+  ED.slides.forEach((sl, i) => {
+    const li = ED.minis.get(sl);
+    if (li) li.classList.toggle('on', i === ED.atual);
+  });
+  const li = ED.minis.get(slideAtual());
+  if (li && rolar !== false) li.scrollIntoView({ block: 'nearest' });
+}
+function agendarMini(sl){
+  if (!ED || !ED.mdoc) return;
+  clearTimeout(ED.tMini.get(sl));
+  ED.tMini.set(sl, setTimeout(() => {
+    const li = ED && ED.minis.get(sl);
+    if (!li) return;
+    const th = li.querySelector('.bpth');
+    th.textContent = '';
+    th.appendChild(copiaMini(sl));
+  }, 350));
+}
+
+/* ---------- teclado ---------- */
+function teclaEditor(e){
+  if (!ED || !ED.doc) return;
+  if (visorAberto() || $('modal').classList.contains('on')) return;
+  const k = e.key, ctrl = e.ctrlKey || e.metaKey, t = e.target;
+  if (ctrl && (k === 's' || k === 'S')){ e.preventDefault(); salvarEditor(); return; }
+  if (t && t.ownerDocument === document && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+  if (ED.editando){
+    if (k === 'Escape'){ e.preventDefault(); terminarEdicao(); }
+    return;   // dentro do texto as outras teclas são do texto, inclusive o Ctrl+Z do navegador
+  }
+  if (ctrl && (k === 'z' || k === 'Z')){ e.preventDefault(); if (e.shiftKey) refazer(); else desfazer(); return; }
+  if (ctrl && (k === 'y' || k === 'Y')){ e.preventDefault(); refazer(); return; }
+  if (ctrl || e.altKey) return;
+  if (k === 'Escape'){ selecionar(null); return; }
+  if ((k === 'Delete' || k === 'Backspace') && ED.sel){ e.preventDefault(); excluirBloco(); return; }
+  const passo = e.shiftKey ? 20 : 4;
+  const seta = { ArrowLeft: [-passo, 0], ArrowRight: [passo, 0], ArrowUp: [0, -passo], ArrowDown: [0, passo] }[k];
+  if (seta && ED.sel){ e.preventDefault(); empurrar(seta[0], seta[1]); return; }
+  if (ED.livre) return;
+  if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown'){ e.preventDefault(); irPara(ED.atual + 1); return; }
+  if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp'){ e.preventDefault(); irPara(ED.atual - 1); }
+}
+document.addEventListener('keydown', teclaEditor);
+
+/* ---------- gerar o arquivo ----------
+   Parte de uma cópia: o que está na tela (slide aberto, foco) não muda. As
+   classes active/visible voltam a ser as do arquivo original, porque quem as
+   controla na apresentação é o script dela ao abrir. */
+function serializar(){
+  terminarEdicao();
+  const raiz = ED.doc.documentElement.cloneNode(true);
+  raiz.querySelectorAll('[data-bp-ed]').forEach(n => n.remove());
+  raiz.querySelectorAll('[contenteditable]').forEach(n => n.removeAttribute('contenteditable'));
+  if (!ED.livre){
+    const l = raiz.querySelectorAll('.slide');
+    l.forEach(s => s.classList.remove('active', 'visible'));
+    if (l[0]){
+      if (ED.primeiro.active) l[0].classList.add('active');
+      if (ED.primeiro.visible) l[0].classList.add('visible');
+    }
+  }
+  const dt = ED.doc.doctype;
+  return (dt ? `<!DOCTYPE ${dt.name}>\n` : '') + raiz.outerHTML + '\n';
+}
+function blobDoEditor(){ return new Blob([serializar()], { type: 'text/html;charset=utf-8' }); }
+
+async function salvarEditor(){
+  if (!ED || !ED.doc || ED.salvando) return;
+  terminarEdicao();
+  if (!ED.sujo) return;
+  const blob = blobDoEditor();
+  if (blob.size > ED_MAX_HTML){
+    toast(`O arquivo ficou com ${fTam(blob.size)} e o limite é ${fTam(ED_MAX_HTML)}. Use imagens menores.`, 'err');
+    return;
+  }
+  const form = new FormData();
+  form.append('id', ED.id);
+  if (ED.versao) form.append('base', ED.versao);
+  form.append('arquivo', new File([blob], ED.nome, { type: 'text/html' }));
+  const meu = ED, btn = $('ed-salvar'), antes = btn.innerHTML;
+  ED.salvando = true; pintarEstado();
+  btn.innerHTML = '<span class="bp-gira"></span>Salvando…';
+  try {
+    const r = await apiPostForm('/api/slides/editar', form);
+    meu.versao = (r.slide && r.slide.versao) || meu.versao;
+    meu.sujo = false;
+    toast('Salvo. Quem abrir agora já vê esta versão.');
+    carregar();
+    return true;
+  } catch(e){
+    toast(e.message || 'Não foi possível salvar. Tente de novo ou baixe uma cópia.', 'err');
+    return false;
+  } finally {
+    meu.salvando = false;
+    btn.innerHTML = antes;
+    if (ED === meu) pintarEstado();
+  }
+}
+
+function pedirSaida(){
+  if (!ED) return;
+  terminarEdicao();
+  if (!ED.sujo){ fecharEditor(true); return; }
+  abrirModal({
+    tit: 'Sair sem salvar?', ic: 'alerta', ok: 'Salvar e sair',
+    corpo: `<p>Você tem alterações que ainda não foram salvas no banco.</p>
+      <div><button type="button" class="bp-btn perigo-l" id="md-descartar">${IC('lixeira')}Sair sem salvar</button></div>`,
+    acao: async () => {
+      $('md-ok').disabled = true;
+      const ok = await salvarEditor();
+      $('md-ok').disabled = false;
+      if (ok){ fecharModal(); fecharEditor(true); }
+    },
+  });
+  $('md-descartar').addEventListener('click', () => { fecharModal(); fecharEditor(true); });
+}
+function fecharEditor(){
+  if (!ED) return;
+  if (ED.obs) ED.obs.disconnect();
+  ED.tMini.forEach(t => clearTimeout(t));
+  if (ED.blobUrl) URL.revokeObjectURL(ED.blobUrl);
+  const f = $('ed-frame'), m = $('ed-minis');
+  f.onload = null; m.onload = null;
+  f.src = 'about:blank'; f.removeAttribute('style');
+  m.removeAttribute('srcdoc'); m.src = 'about:blank';
+  $('ed-tela').removeAttribute('style');
+  $('ed-sel').classList.remove('on');
+  ED = null;
+  cargaEditor(false);
+  $('ed').classList.remove('on', 'livre');
+  $('ed').setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+window.addEventListener('beforeunload', e => { if (ED && ED.sujo){ e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- ligar os botões ----------
+   mousedown com preventDefault: clicar na barra não pode tirar o foco do texto,
+   senão o trecho marcado some antes do comando chegar nele. */
+$('ed-ferr').addEventListener('mousedown', e => {
+  if (!e.target.closest('input,label')) e.preventDefault();
+});
+const ED_BT = {
+  'ed-fechar': pedirSaida,
+  'ed-desf': desfazer, 'ed-ref': refazer,
+  'ed-salvar': salvarEditor,
+  'ed-baixar': () => { if (ED && ED.doc) baixarBlob(blobDoEditor(), ED.nome); },
+  'ed-testar': () => { if (ED && ED.doc) abrirTesteNoVisor(ED.s.titulo, blobDoEditor(), ED.atual); },
+  'ed-neg': () => alternar('bold', 'fontWeight', '700', '400', cs => parseInt(cs.fontWeight, 10) >= 600),
+  'ed-ita': () => alternar('italic', 'fontStyle', 'italic', 'normal', cs => cs.fontStyle === 'italic'),
+  'ed-sub': () => alternar('underline', 'textDecoration', 'underline', 'none', cs => /underline/.test(cs.textDecorationLine)),
+  'ed-menos': () => mudarLetra(-4), 'ed-mais': () => mudarLetra(4),
+  'ed-al-e': () => mudar(el => { el.style.textAlign = 'left'; }),
+  'ed-al-c': () => mudar(el => { el.style.textAlign = 'center'; }),
+  'ed-al-d': () => mudar(el => { el.style.textAlign = 'right'; }),
+  'ed-trocar': () => escolherImagem('trocar'),
+  'ed-pai': blocoMaior, 'ed-dup-b': duplicarBloco, 'ed-exc-b': excluirBloco,
+  'ed-novo-tx': novoTexto, 'ed-nova-img': () => escolherImagem('nova'),
+  'ed-ant': () => irPara(ED.atual - 1), 'ed-prox': () => irPara(ED.atual + 1),
+  'ed-sl-novo': novoSlide, 'ed-sl-dup': duplicarSlide,
+  'ed-sl-cima': () => moverSlide(-1), 'ed-sl-baixo': () => moverSlide(1), 'ed-sl-exc': excluirSlide,
+};
+Object.keys(ED_BT).forEach(id => $(id).addEventListener('click', () => { if (ED && (ED.doc || id === 'ed-fechar')) ED_BT[id](); }));
+$('ed-cor').addEventListener('input', e => { if (ED) aplicarCor(e.target.value); });
+$('ed-fundo').addEventListener('input', e => { if (ED) aplicarFundo(e.target.value); });
+['ed-cor','ed-fundo'].forEach(id => $(id).addEventListener('change', () => { if (ED) ED.corFoto = false; }));
+$('ed-img').addEventListener('change', e => { imagemEscolhida(e.target.files[0]); });
+$('ed-palco').addEventListener('click', e => {
+  if (ED && (e.target === $('ed-palco'))){ terminarEdicao(); selecionar(null); }
+});
 
 /* ============================== início ============================== */
 boot();

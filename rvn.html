@@ -53,6 +53,9 @@
 .rvn-pc-prog span{font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
 .rvn-pc-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .rvn-pc-acoes .bp-btn[disabled]{cursor:help}
+.rvn-bloq-aviso{margin-top:14px}
+.rvn-bloq .rvn-faltam{display:inline-block;margin-top:4px}
+.rvn-pc-libera{margin-top:10px;font-size:13px}
 .rvn-pc-dica{font-size:12.5px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
 .rvn-edit-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;margin-top:14px;padding:14px;border:1px dashed var(--acc-line);border-radius:16px;background:var(--acc-soft)}
 .rvn-edit-box .rvn-ed-bts{display:flex;gap:8px}
@@ -146,6 +149,12 @@
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-03", "titulo": "RVN de período futuro", "quem": "todos", "itens": [
+    "Dá para cadastrar o período e lançar o RVN antes de a missão acabar.",
+    "O policial já vê o RVN na busca, mas o Baixar e o Enviar ficam travados até o dia seguinte ao término da missão, com a contagem de quantos dias faltam.",
+    "A assinatura passa a valer só a partir do dia seguinte ao término (assinada no próprio dia é recusada).",
+    "No painel da gestão, o período futuro mostra o dia em que a assinatura libera."
+  ] },
   { "data": "2026-10-29", "titulo": "Quem falta e atividade ao vivo", "quem": "gestor", "itens": [
     "Toque no cartão Pendentes para ver quem ainda falta assinar, separado por período (dá para filtrar e copiar a lista para o WhatsApp). Assinados faz o mesmo com quem já assinou.",
     "Quadro Atividade ao vivo: aparece na hora quem baixou o RVN (está assinando), quem mandou assinado e envio recusado, com o motivo.",
@@ -555,6 +564,24 @@ function renderResultado(data){
   }
   let n = 0;
   data.pendentes.forEach((p, i) => {
+    const lib = rvnLib(p);
+    if (!lib.liberado){
+      // Período ainda não terminou: o RVN já aparece, mas só libera no dia seguinte ao término.
+      html += `
+    <div class="bp-card rvn-res rvn-bloq" id="rvn-pend-${i}" style="--i:${n++}">
+      <div class="rvn-res-top">
+        <span class="bp-tile info">${IC('relogio')}</span>
+        <div class="rvn-res-tx"><b>${esc(p.periodo)}</b><small>${IC('calendario')}${esc(p.dataInicio || '—')} a ${esc(p.dataFim || '—')}</small></div>
+        <span class="bp-sl info">${IC('cadeado')}Libera em ${esc(lib.liberaEm.slice(0, 5))}</span>
+      </div>
+      <div class="bp-aviso pend rvn-bloq-aviso">${IC('info')}<div>Seu RVN <b>já está disponível</b>, mas só pode ser baixado e assinado a partir de <b>${esc(lib.liberaEm)}</b> (dia seguinte ao término da missão).<br><b class="rvn-faltam">${rvnFaltamTxt(lib.faltamDias)}</b></div></div>
+      <div class="rvn-res-acoes">
+        <button type="button" class="bp-btn" disabled title="Libera em ${esc(lib.liberaEm)}">${IC('cadeado')}Baixar RVN</button>
+        <button type="button" class="bp-btn sec" disabled title="Libera em ${esc(lib.liberaEm)}">${IC('cadeado')}Enviar assinado</button>
+      </div>
+    </div>`;
+      return;
+    }
     html += `
     <div class="bp-card pend rvn-res" id="rvn-pend-${i}" style="--i:${n++}">
       <div class="rvn-res-top">
@@ -593,6 +620,21 @@ function renderResultado(data){
   });
   wrap.innerHTML = html;
 }
+
+// Assinatura só a partir do DIA SEGUINTE ao término da missão. A busca já traz
+// liberado/liberaEm/faltamDias do Worker (que também barra baixar e enviar);
+// sem esses campos (Worker antigo) calcula aqui pela data de fim.
+function rvnLib(p){
+  if (p && typeof p.liberado === 'boolean') return { liberado: p.liberado, liberaEm: p.liberaEm || '', faltamDias: +p.faltamDias || 0 };
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String((p && p.dataFim) || '').trim());
+  if (!m) return { liberado: true, liberaEm: '', faltamDias: 0 };
+  const libera = new Date(+m[3], +m[2] - 1, +m[1] + 1);
+  const h = new Date(); const hoje = new Date(h.getFullYear(), h.getMonth(), h.getDate());
+  const faltamDias = Math.max(0, Math.round((libera - hoje) / 86400000));
+  const liberaEm = String(libera.getDate()).padStart(2, '0') + '/' + String(libera.getMonth() + 1).padStart(2, '0') + '/' + libera.getFullYear();
+  return { liberado: faltamDias === 0, liberaEm, faltamDias };
+}
+function rvnFaltamTxt(n){ return n === 1 ? 'Falta 1 dia (libera amanhã).' : `Faltam ${n} dias.`; }
 
 function rvnBaixar(fileId){
   window.open(API_BASE + '/api/rvn/download?fileId=' + encodeURIComponent(fileId), '_blank');
@@ -950,6 +992,7 @@ function renderPainel(periodos){
         ${pronto ? `<span class="bp-sl ok">${IC('check')}${tot ? 'Todos assinaram' : 'Vazio'}</span>` : `<span class="bp-sl pend">${IC('relogio')}Falta${np > 1 ? 'm' : ''} ${np}</span>`}
       </div>
       <div class="rvn-pc-prog"><div class="bp-prog${pronto ? ' ok' : ''}"><i style="--p:${pct}%"></i></div><span>${na} de ${tot} · ${pct}%</span></div>
+      ${(() => { const lib = rvnLib({ dataFim: p.dataFim }); return lib.liberado ? '' : `<div class="bp-aviso pend rvn-pc-libera">${IC('cadeado')}<div><b>Assinatura libera em ${esc(lib.liberaEm)}</b> · ${esc(rvnFaltamTxt(lib.faltamDias))} Os policiais já veem o RVN, mas só baixam e enviam a partir desse dia (dia seguinte ao término).</div></div>`; })()}
       <div class="rvn-pc-acoes">
         <button type="button" class="bp-btn sm ghost rvn-edit-btn" onclick="rvnEditarDatas(${i})">${IC('editar')}Editar datas</button>
         <button type="button" class="bp-btn sm perigo-l rvn-arq-btn" id="rvn-arq-btn-${i}" onclick="rvnArquivarAbrir(${i})" ${pronto ? '' : `disabled title="Só dá para arquivar quando todos assinarem (falta${np > 1 ? 'm' : ''} ${np})."`}>${IC('arquivar')}Arquivar período</button>
@@ -1315,7 +1358,10 @@ async function gestCriarPeriodo(ev){
       dataInicio: document.getElementById('rvn-p-inicio').value,
       dataFim: document.getElementById('rvn-p-fim').value,
     });
-    msg.className = 'bp-msg ok'; msg.textContent = '✅ Período criado.';
+    const libNovo = rvnLib({ dataFim: document.getElementById('rvn-p-fim').value });
+    msg.className = 'bp-msg ok';
+    msg.textContent = libNovo.liberado ? '✅ Período criado.'
+      : `✅ Período criado. Os policiais já vão ver o RVN, mas só baixam e enviam a partir de ${libNovo.liberaEm} (dia seguinte ao término).`;
     document.getElementById('rvn-p-nome').value = '';
     document.getElementById('rvn-p-inicio').value = '';
     document.getElementById('rvn-p-fim').value = '';
