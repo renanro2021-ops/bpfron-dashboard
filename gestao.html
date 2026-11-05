@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Gestão PM">
 <title>Portal da Gestão · BPFRON/RO</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="bp-casca.js"></script>
+<script src="bp-casca.js?v=20261105"></script>
 <script src="conta.js"></script>
 <style>
 /* =====================================================================
@@ -22,6 +22,8 @@
    SÓ os sistemas que aquele login tem liberados (lista e regras no
    bp-casca.js, a mesma do menu ☰ e do sistemas.html). Aqui também se
    escolhe o tema do site, que vale em todas as páginas e acompanha o login.
+   05/11/2026: uma tela só, na ordem do que a pessoa precisa: Meu trabalho,
+   Para consultar e Para todo o efetivo (recolhido). BPCasca.categoria decide.
    ===================================================================== */
 :root{
   --bg:#060912; --bg2:#0a0f1c; --surf:#0d1324; --surf2:#121a30;
@@ -218,14 +220,18 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
 @keyframes anel{from{transform:scale(.55);opacity:.9}to{transform:scale(1.15);opacity:0}}
 @keyframes flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
-.numeros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
-.num{position:relative;overflow:hidden;padding:16px 18px;border-radius:18px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:sobe .6s var(--ease) both}
-.num:nth-child(2){animation-delay:.06s}.num:nth-child(3){animation-delay:.12s}.num:nth-child(4){animation-delay:.18s}
-.num .r{font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.num .v{font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;color:var(--t1);line-height:1.1;margin-top:4px}
-.num .v.tx{font-size:22px;padding-top:8px}
-.num .ic{position:absolute;right:14px;top:14px;font-size:22px;opacity:.85}
-.num::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;background:linear-gradient(90deg,var(--c,var(--acc)),transparent)}
+/* bloco recolhido: Para todo o efetivo */
+.dobra{margin-top:30px}
+.dobra>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:15px 18px;border-radius:16px;background:var(--card);border:1px solid var(--line);transition:border-color .2s,background .2s}
+.dobra>summary::-webkit-details-marker{display:none}
+.dobra>summary:hover{border-color:var(--line2);background:var(--card-h)}
+.dobra>summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.dobra>summary b{font-family:'Rajdhani',sans-serif;font-size:20px;color:var(--t1);display:flex;align-items:center;gap:10px}
+.dobra>summary .ct{font-family:'Inter',sans-serif;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);color:var(--muted)}
+.dobra>summary small{color:var(--muted);font-size:13px}
+.dobra>summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:16px;transition:transform .25s var(--ease)}
+.dobra[open]>summary::after{transform:rotate(180deg)}
+.dobra[open]>summary{margin-bottom:14px}
 
 .secao{margin-top:30px}
 .secao .cab{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -352,9 +358,7 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
   main{padding:18px 16px calc(96px + env(safe-area-inset-bottom))}
   .heroi{grid-template-columns:1fr;border-radius:22px}
   .heroi .selo{display:none}
-  .numeros{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .num{padding:14px}
-  .num .v{font-size:28px}
+  .dobra>summary small{display:none}
   .grade{grid-template-columns:1fr}
   .secao .cab{flex-wrap:wrap;align-items:center;gap:4px 12px}
   .secao .cab small{width:100%}
@@ -376,6 +380,14 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
 .menu-conta button:hover,.menu-conta a:hover{background:var(--surf2)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-05", "titulo": "Portal mais simples: só o que é seu", "quem": "todos", "itens": [
+    "Agora é uma tela só. Seu trabalho vem primeiro, em \"Meu trabalho\".",
+    "O que você só pode ver fica em \"Para consultar\".",
+    "Os serviços abertos a qualquer policial ficam recolhidos em \"Para todo o efetivo\". É só tocar para abrir.",
+    "O menu ☰ de todas as páginas segue a mesma ordem."
+  ] }
+]</script>
 </head>
 <body>
 <div class="fundo" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -414,7 +426,6 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
     <nav id="nav">
       <span class="marcador" id="marcador"></span>
       <button class="ni" data-vai="inicio"><span class="ic">🏠</span><span class="tx">Início</span></button>
-      <button class="ni" data-vai="adm"><span class="ic">🛡️</span><span class="tx">ADM · Meus sistemas</span><span class="qt" id="qt-adm">0</span></button>
       <button class="ni" data-vai="tema"><span class="ic">🎨</span><span class="tx">Tema do site</span></button>
       <div class="rot">Atalhos</div>
       <a class="ni" id="ln-painel" href="index.html"><span class="ic">📊</span><span class="tx">Painel Analítico</span></a>
@@ -444,42 +455,32 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
           <div class="sauda" id="h-sauda">Olá</div>
           <h1 id="h-nome">—</h1>
           <p id="h-texto"></p>
-          <div class="bts">
-            <button class="btn" type="button" data-vai="adm">🛡️ Abrir meus sistemas</button>
-            <button class="btn sec" type="button" id="h-buscar">🔎 Buscar sistema</button>
-          </div>
+          <div class="bts hide" id="h-bts"><a class="btn" id="h-abrir" href="#"></a></div>
         </div>
         <div class="selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
       </div>
-      <div class="numeros">
-        <div class="num" style="--c:#3b82f6"><span class="ic">🧭</span><div class="r">Sistemas liberados</div><div class="v" id="n-total" data-n="0">0</div></div>
-        <div class="num" style="--c:#22c55e"><span class="ic">🛡️</span><div class="r">De gestão (ADM)</div><div class="v" id="n-adm" data-n="0">0</div></div>
-        <div class="num" style="--c:#f59e0b"><span class="ic">⭐</span><div class="r">Favoritos</div><div class="v" id="n-fav" data-n="0">0</div></div>
-        <div class="num" style="--c:#a855f7"><span class="ic">👤</span><div class="r">Perfil</div><div class="v tx" id="n-perfil">—</div></div>
-      </div>
-      <div class="secao">
-        <div class="cab"><h2>⭐ Favoritos</h2><small>Toque na ☆ de um sistema para fixar aqui</small></div>
+      <div class="secao hide" id="s-fav">
+        <div class="cab"><h2>⭐ Favoritos</h2></div>
         <div id="l-fav"></div>
       </div>
-      <div class="secao">
+      <div class="secao hide" id="s-rec">
         <div class="cab"><h2>🕘 Usados recentemente</h2></div>
         <div id="l-rec"></div>
       </div>
-      <div class="secao">
-        <div class="cab"><h2>🛡️ Para todo o efetivo <span class="ct" id="c-pub">0</span></h2><small>Abertos a qualquer policial</small></div>
+      <div class="secao hide" id="s-trab">
+        <div class="cab"><h2>💼 Meu trabalho <span class="ct" id="c-trab">0</span></h2><small id="t-sub"></small></div>
+        <div class="barra hide" id="t-barra"><label class="filtro"><span>🔎</span><input id="t-filtro" type="search" placeholder="Filtrar por nome ou assunto…" autocomplete="off"></label></div>
+        <div class="chips hide" id="t-chips"></div>
+        <div id="l-trab"></div>
+      </div>
+      <div class="secao hide" id="s-cons">
+        <div class="cab"><h2>👁️ Para consultar <span class="ct" id="c-cons">0</span></h2><small>Você abre e vê, sem alterar nada</small></div>
+        <div id="l-cons"></div>
+      </div>
+      <details class="dobra hide" id="s-pub">
+        <summary><b>🛡️ Para todo o efetivo <span class="ct" id="c-pub">0</span></b><small>Serviços abertos a qualquer policial</small></summary>
         <div id="l-pub"></div>
-      </div>
-    </section>
-
-    <!-- ADM -->
-    <section class="vista hide" id="v-adm" data-tit="ADM · Meus sistemas">
-      <div class="secao" style="margin-top:0">
-        <div class="cab"><h2>🛡️ Meus sistemas de gestão <span class="ct" id="c-adm">0</span></h2></div>
-        <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-top:-6px" id="a-sub"></p>
-      </div>
-      <div class="barra"><label class="filtro"><span>🔎</span><input id="a-filtro" type="search" placeholder="Filtrar por nome ou assunto…" autocomplete="off"></label></div>
-      <div class="chips" id="a-chips"></div>
-      <div id="a-lista"></div>
+      </details>
     </section>
 
     <!-- TEMA -->
@@ -495,7 +496,6 @@ main{margin-left:var(--sidew);padding:28px clamp(16px,3vw,32px) 60px;transition:
 
   <nav class="abas" aria-label="Seções">
     <button data-vai="inicio" class="on"><span>🏠</span>Início</button>
-    <button data-vai="adm"><span>🛡️</span>Sistemas</button>
     <button id="ab-buscar" type="button"><span>🔎</span>Buscar</button>
     <button data-vai="tema"><span>🎨</span>Tema</button>
   </nav>
@@ -522,18 +522,14 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const semAc = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} return null; };
 const GR = Object.fromEntries(C.GRUPOS.map((g) => [g.id, g]));
+const TRAB_MUITOS = 6; // acima disso, "Meu trabalho" ganha filtro e divisão por seção
 let P = null, vista = 'inicio', grupoSel = 'todos';
 
 /* ---------------- utilidades ---------------- */
 function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 2600); }
 function favs(){ try { return JSON.parse(ls('bp_fav:' + (P && P.user)) || '[]'); } catch (e) { return []; } }
 function setFavs(a){ ls('bp_fav:' + P.user, JSON.stringify(a)); }
-function contar(el, alvo){
-  const ini = Number(el.dataset.n || 0), t0 = performance.now(), dur = 700;
-  el.dataset.n = alvo;
-  const passo = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(ini + (alvo - ini) * e); if (k < 1) requestAnimationFrame(passo); };
-  requestAnimationFrame(passo);
-}
+const doTipo = (c) => C.CATALOGO.filter((i) => C.categoria(i, P) === c && i.id !== 'sistemas');
 function saudacao(){ const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
 function relogio(){
   const d = new Date();
@@ -545,7 +541,7 @@ function relogio(){
 function cartao(i, n, mini){
   const g = GR[i.grupo] || {}, pa = C.papel(i, P), fav = favs().includes(i.id);
   const dash = /^index\.html\?pg=/.test(i.href);
-  const selo = pa === 'gestor' ? '<span class="sl">GESTOR</span>' : pa === 'ver' ? '<span class="sl ver">SÓ VER</span>' : dash ? '<span class="sl dash">NO DASHBOARD</span>' : '';
+  const selo = pa === 'ver' ? '<span class="sl ver">SÓ VER</span>' : dash ? '<span class="sl dash">NO DASHBOARD</span>' : '';
   return `<a class="sc" href="${esc(C.hrefCom(i.href))}" data-id="${i.id}" style="--c:${g.cor || 'var(--acc)'};--i:${n}">
     ${mini ? '' : `<button class="estrela${fav ? ' on' : ''}" type="button" data-fav="${i.id}" aria-label="${fav ? 'Tirar dos favoritos' : 'Fixar nos favoritos'}" title="${fav ? 'Tirar dos favoritos' : 'Fixar nos favoritos'}">${fav ? '★' : '☆'}</button>`}
     <div class="lin"><div class="tile">${i.ic}</div><div class="nm"><b>${esc(i.nome)}</b><small>${esc(g.nome || '')}</small></div></div>
@@ -557,32 +553,49 @@ function grade(itens, mini){ return `<div class="grade${mini ? ' mini' : ''}">${
 
 /* ---------------- Início ---------------- */
 function pintarInicio(){
-  const vis = C.visiveis(P), adm = vis.filter((i) => C.deGestao(i, P));
-  const fv = favs().map((id) => vis.find((i) => i.id === id)).filter(Boolean);
-  const rec = C.recentes().filter((i) => C.pode(i, P)).slice(0, 8);
-  const pub = vis.filter((i) => !C.deGestao(i, P) && i.id !== 'sistemas');
+  const trab = doTipo('trabalho'), cons = doTipo('consulta'), pub = doTipo('efetivo');
   $('h-sauda').textContent = saudacao() + ',';
   $('h-nome').textContent = P.nome;
-  $('h-texto').textContent = adm.length
-    ? `Você tem ${adm.length} ${adm.length === 1 ? 'sistema de gestão liberado' : 'sistemas de gestão liberados'} neste login${P.admin ? ', além do Painel de Controle de administrador' : ''}. Abra pela aba ADM, pelos favoritos ou buscando com Ctrl K.`
-    : 'Este login ainda não tem sistemas de gestão liberados. Os sistemas abertos ao efetivo estão logo abaixo; para liberar outros, fale com o administrador do Painel de Controle.';
-  contar($('n-total'), vis.length); contar($('n-adm'), adm.length); contar($('n-fav'), fv.length);
-  $('n-perfil').textContent = P.admin ? 'Administrador' : adm.length ? 'Gestor' : 'Usuário';
-  $('l-fav').innerHTML = fv.length ? grade(fv) : '<div class="vazio">Nenhum favorito ainda. Na aba <b>ADM</b>, toque na <b>☆</b> dos sistemas que você mais usa: eles aparecem aqui, logo na entrada.</div>';
-  $('l-rec').innerHTML = rec.length ? grade(rec, true) : '<div class="vazio">Os sistemas que você abrir aparecem aqui.</div>';
-  $('l-pub').innerHTML = grade(pub, true);
+  $('h-texto').textContent = trab.length === 1 ? 'Neste login, seu sistema de trabalho é este:'
+    : trab.length ? `Você tem ${trab.length} sistemas de trabalho liberados neste login.`
+    : 'Este login não tem sistema de trabalho liberado. Para liberar, fale com o administrador do Painel de Controle.';
+  $('h-bts').classList.toggle('hide', trab.length !== 1);
+  if (trab.length === 1) { $('h-abrir').textContent = 'Abrir ' + trab[0].nome; $('h-abrir').href = C.hrefCom(trab[0].href); }
+  pintarTrabalho();
+  $('s-cons').classList.toggle('hide', !cons.length);
+  $('c-cons').textContent = cons.length;
+  $('l-cons').innerHTML = grade(cons, true);
+  $('s-pub').classList.toggle('hide', !pub.length);
   $('c-pub').textContent = pub.length;
+  $('l-pub').innerHTML = grade(pub, true);
+  if (!trab.length && !cons.length) $('s-pub').open = true;
+  pintarAtalhos();
 }
-
-/* ---------------- ADM ---------------- */
-function pintarAdm(){
-  const adm = C.CATALOGO.filter((i) => C.deGestao(i, P));
-  const q = semAc($('a-filtro').value).trim();
-  $('c-adm').textContent = adm.length; $('qt-adm').textContent = adm.length;
-  $('a-sub').innerHTML = `Os sistemas que o login <b style="color:var(--t1)">${esc(P.user)}</b> tem liberados no Painel de Controle. O selo <span class="sl">GESTOR</span> indica onde você também cadastra, edita ou confere; <span class="sl ver">SÓ VER</span>, onde só consulta.`;
-  const porGrupo = C.GRUPOS.map((g) => ({ g, itens: adm.filter((i) => i.grupo === g.id) })).filter((x) => x.itens.length);
+// Favoritos e recentes: o recente que já está à vista não se repete.
+function pintarAtalhos(){
+  const trab = doTipo('trabalho'), cons = doTipo('consulta'), muitos = trab.length > TRAB_MUITOS;
+  const fv = favs().map((id) => C.CATALOGO.find((i) => i.id === id)).filter((i) => i && C.categoria(i, P));
+  const avista = new Set(fv.concat(muitos ? [] : trab.concat(cons)).map((i) => i.id));
+  const rec = C.recentes().filter((i) => C.categoria(i, P) && i.id !== 'sistemas' && !avista.has(i.id)).slice(0, 4);
+  $('s-fav').classList.toggle('hide', !fv.length);
+  $('l-fav').innerHTML = fv.length ? grade(fv) : '';
+  $('s-rec').classList.toggle('hide', !rec.length);
+  $('l-rec').innerHTML = rec.length ? grade(rec, true) : '';
+  // Quem tem muitos sistemas vê os recentes no alto; quem tem poucos vê o trabalho primeiro.
+  if (muitos) $('s-trab').before($('s-rec')); else $('s-cons').after($('s-rec'));
+}
+function pintarTrabalho(){
+  const trab = doTipo('trabalho'), muitos = trab.length > TRAB_MUITOS;
+  $('s-trab').classList.toggle('hide', !trab.length);
+  $('c-trab').textContent = trab.length;
+  $('t-sub').textContent = muitos ? 'Toque na ☆ para fixar no alto' : '';
+  $('t-barra').classList.toggle('hide', !muitos);
+  $('t-chips').classList.toggle('hide', !muitos);
+  if (!muitos) { $('l-trab').innerHTML = grade(trab); return; }
+  const q = semAc($('t-filtro').value).trim();
+  const porGrupo = C.GRUPOS.map((g) => ({ g, itens: trab.filter((i) => i.grupo === g.id) })).filter((x) => x.itens.length);
   if (grupoSel !== 'todos' && !porGrupo.some((x) => x.g.id === grupoSel)) grupoSel = 'todos';
-  $('a-chips').innerHTML = `<button class="chip${grupoSel === 'todos' ? ' on' : ''}" data-g="todos">Todos <em>${adm.length}</em></button>` +
+  $('t-chips').innerHTML = `<button class="chip${grupoSel === 'todos' ? ' on' : ''}" data-g="todos">Todos <em>${trab.length}</em></button>` +
     porGrupo.map((x) => `<button class="chip${grupoSel === x.g.id ? ' on' : ''}" data-g="${x.g.id}"><i style="background:${x.g.cor}"></i>${esc(x.g.nome)} <em>${x.itens.length}</em></button>`).join('');
   let n = 0, html = '';
   porGrupo.forEach((x) => {
@@ -591,9 +604,7 @@ function pintarAdm(){
     if (!itens.length) return;
     html += `<div class="grupo"><h3><i style="background:${x.g.cor}"></i>${x.g.ic} ${esc(x.g.nome)}</h3><div class="grade">${itens.map((i) => cartao(i, n++)).join('')}</div></div>`;
   });
-  $('a-lista').innerHTML = html || (adm.length
-    ? `<div class="vazio" style="margin-top:20px">Nenhum sistema com “<b>${esc($('a-filtro').value)}</b>”.</div>`
-    : '<div class="vazio" style="margin-top:20px">Este login ainda não tem nenhum sistema de gestão liberado.<br>Quem libera é o administrador, no <b>Painel de Controle</b>.</div>');
+  $('l-trab').innerHTML = html || `<div class="vazio" style="margin-top:20px">Nenhum sistema com “<b>${esc($('t-filtro').value)}</b>”.</div>`;
 }
 
 /* ---------------- Tema ---------------- */
@@ -617,7 +628,7 @@ function pintarTemas(){
 
 /* ---------------- navegação entre abas ---------------- */
 function irPara(v, semAnim){
-  if (!['inicio', 'adm', 'tema'].includes(v)) v = 'inicio';
+  if (!['inicio', 'tema'].includes(v)) v = 'inicio'; // #adm antigo cai no Início
   const velha = $('v-' + vista), nova = $('v-' + v);
   const trocar = () => {
     qsa('.vista').forEach((s) => s.classList.add('hide'));
@@ -630,7 +641,6 @@ function irPara(v, semAnim){
   document.title = nova.dataset.tit + ' · Portal da Gestão · BPFRON/RO';
   moverMarcador();
   if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
-  if (v === 'adm') pintarAdm();
   if (v === 'tema') pintarTemas();
   if (v === 'inicio') pintarInicio();
   window.scrollTo({ top: 0, behavior: semAnim ? 'auto' : 'smooth' });
@@ -651,11 +661,11 @@ function abrirPaleta(){
 function fecharPaleta(){ const p = $('paleta'); p.classList.remove('on'); p.setAttribute('aria-hidden', 'true'); }
 function pintarPaleta(){
   const q = semAc($('p-in').value).trim();
-  const vis = C.visiveis(P);
+  const vis = C.CATALOGO.filter((i) => C.categoria(i, P));
   pItens = vis.map((i) => {
     const g = GR[i.grupo] || {}, alvo = semAc(i.nome), resto = semAc(i.desc + ' ' + g.nome);
     let s = 0;
-    if (!q) s = 1 + (favs().includes(i.id) ? 2 : 0) + (C.deGestao(i, P) ? 1 : 0);
+    if (!q) s = 1 + (favs().includes(i.id) ? 2 : 0) + (C.categoria(i, P) === 'trabalho' ? 1 : 0);
     else if (alvo.startsWith(q)) s = 10; else if (alvo.includes(q)) s = 7;
     else if (q.split(/\s+/).every((w) => (alvo + ' ' + resto).includes(w))) s = 3;
     return { i, g, s };
@@ -694,13 +704,13 @@ function pintarConta(){
   $('s-av').textContent = ini; $('m-av').textContent = ini;
   $('s-nome').textContent = P.nome; $('s-user').textContent = P.user + (P.admin ? ' · Admin' : '');
   $('ln-admin').classList.toggle('hide', !P.admin);
+  $('ln-sistemas').classList.toggle('hide', !P.admin);
   ['ln-painel', 'ln-sistemas', 'ln-admin'].forEach((id) => { const a = $(id); a.href = C.hrefCom(a.getAttribute('href').split('?')[0]); });
   $('e-portal').href = C.hrefCom('policial.html');
 }
 function mostrarApp(){
   $('entrar').classList.add('hide'); $('app').classList.remove('hide');
   pintarConta();
-  $('qt-adm').textContent = C.CATALOGO.filter((i) => C.deGestao(i, P)).length;
   irPara((location.hash || '#inicio').slice(1), true);
   requestAnimationFrame(moverMarcador);
 }
@@ -747,11 +757,10 @@ document.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation();
     const id = fav.dataset.fav, a = favs(), on = a.includes(id);
     setFavs(on ? a.filter((x) => x !== id) : [...a, id]);
-    fav.classList.toggle('on', !on); fav.textContent = on ? '☆' : '★';
+    qsa('[data-fav="' + id + '"]').forEach((b) => { b.classList.toggle('on', !on); b.textContent = on ? '☆' : '★'; });
     fav.classList.remove('pop'); void fav.offsetWidth; fav.classList.add('pop');
     toast(on ? 'Tirado dos favoritos.' : '⭐ Fixado nos favoritos do Início.');
-    contar($('n-fav'), favs().length);
-    if (vista === 'inicio') setTimeout(pintarInicio, 250);
+    setTimeout(pintarAtalhos, 250);
     return;
   }
   const vai = e.target.closest('[data-vai]');
@@ -759,7 +768,7 @@ document.addEventListener('click', (e) => {
   const tm = e.target.closest('.tm[data-tema]');
   if (tm) { C.setTema(tm.dataset.tema, e); setTimeout(pintarTemas, 20); toast('Tema ' + (C.TEMAS.find((t) => t.id === tm.dataset.tema) || {}).nome + ' aplicado em todo o site.'); return; }
   const ch = e.target.closest('.chip[data-g]');
-  if (ch) { grupoSel = ch.dataset.g; pintarAdm(); return; }
+  if (ch) { grupoSel = ch.dataset.g; pintarTrabalho(); return; }
   const ac = e.target.closest('#menu-conta [data-a]');
   if (ac) {
     $('menu-conta').classList.remove('on');
@@ -779,9 +788,8 @@ document.addEventListener('pointermove', (e) => {
 }, { passive: true });
 $('f-entrar').addEventListener('submit', entrar);
 $('e-olho').addEventListener('click', () => { const i = $('e-pass'); i.type = i.type === 'password' ? 'text' : 'password'; $('e-olho').textContent = i.type === 'password' ? '👁️' : '🙈'; });
-$('a-filtro').addEventListener('input', pintarAdm);
+$('t-filtro').addEventListener('input', pintarTrabalho);
 $('bt-buscar').addEventListener('click', abrirPaleta);
-$('h-buscar').addEventListener('click', abrirPaleta);
 $('ab-buscar').addEventListener('click', abrirPaleta);
 $('paleta').addEventListener('click', (e) => { if (e.target.id === 'paleta') fecharPaleta(); });
 $('p-in').addEventListener('input', pintarPaleta);

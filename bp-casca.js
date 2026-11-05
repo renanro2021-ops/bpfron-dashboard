@@ -79,6 +79,9 @@
              {perm:[…]} precisa de UMA das permissões do painel
              {pagina:x} página do dashboard — todo login, menos quem tem x bloqueada
      gestor/ver: permissão que mostra o selo "Gestor" / "Só ver".
+     consulta:true  aberto a todos, mas é painel de ver: vai em "Para consultar".
+     soAdmin:true   existe para todos (pode), mas só o administrador vê na lista
+                    do Portal e do ☰ (regra em categoria()).
      ================================================================ */
   /* Seções do batalhão (29/10/2026, pedido do usuário): mesmos nomes, cores e
      ícones das seções da Central de Tarefas (TAR_SECOES_PADRAO do worker.js).
@@ -123,7 +126,7 @@
       desc: 'Pesquisa livre no texto de todas as ocorrências, com relatório.' },
 
     // ---- P3 · Operações
-    { id: 'painel', href: 'index.html', ic: '📊', nome: 'Painel Analítico', grupo: 'p3', acesso: 'pub',
+    { id: 'painel', href: 'index.html', ic: '📊', nome: 'Painel Analítico', grupo: 'p3', acesso: 'pub', consulta: true,
       desc: 'Dashboard de operações: indicadores, mapa, gráficos e comparativos.' },
     { id: 'dcampo', href: 'index.html?pg=policiais-campo', ic: '👮', nome: 'Policiais em Campo', grupo: 'p3', acesso: { pagina: 'policiais-campo' },
       desc: 'Onde cada policial está, pela escala, no mapa.' },
@@ -181,7 +184,7 @@
       desc: 'Uma resposta do batalhão preenchida por vários setores, ao vivo.' },
 
     // ---- P6 · Procedimentos (ficam dentro da Central de Tarefas)
-    { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub',
+    { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub', soAdmin: true,
       desc: 'IPM, sindicância e perícias ficam na Central de Tarefas, só para a P6 e o Comando.' },
 
     // ---- Para todo o efetivo
@@ -195,7 +198,7 @@
       desc: 'Ferramentas de IA gratuitas em português.' },
 
     // ---- Administração do site
-    { id: 'sistemas', href: 'sistemas.html', ic: '🧭', nome: 'Todos os Sistemas', grupo: 'admin', acesso: 'pub',
+    { id: 'sistemas', href: 'sistemas.html', ic: '🧭', nome: 'Todos os Sistemas', grupo: 'admin', acesso: 'pub', soAdmin: true,
       desc: 'Lista completa dos sistemas do site, por seção.' },
     { id: 'admin', href: 'admin.html', ic: '🛡️', nome: 'Painel de Controle', grupo: 'admin', acesso: 'admin',
       desc: 'Usuários, senhas e níveis de acesso de cada login.' }
@@ -435,14 +438,25 @@
     if (item.ver && tem(P, item.ver)) return 'ver';
     return '';
   }
-  // Sistemas de gestão do login (o que vai na aba ADM): os restritos que ele
-  // abre + os abertos em que ele é gestor.
-  function deGestao(item, P) {
+  /* Em que bloco o sistema aparece para o login (Portal da Gestão e ☰):
+     'trabalho' = a pessoa opera: é gestor, ou recebeu a permissão daquele sistema.
+     'consulta' = só vê: permissão "(ver)" ou painel do dashboard sem função nele.
+     'efetivo'  = serviço aberto a qualquer policial.
+     null       = não aparece (sem acesso, ou item só do administrador). */
+  function categoria(item, P) {
     P = P || PERFIL || perfilVazio();
-    if (!P.logado || !pode(item, P)) return false;
-    if (item.acesso === 'pub' || item.acesso === 'login') return papel(item, P) === 'gestor';
-    return true;
+    if (!pode(item, P)) return null;
+    if (!P.logado) return 'efetivo';
+    if (item.soAdmin && !P.admin) return null;
+    var pa = papel(item, P), a = item.acesso;
+    if (pa === 'gestor') return 'trabalho';
+    if (pa === 'ver') return 'consulta';
+    if (a && a.perm) return 'trabalho';
+    if ((a && a.pagina) || item.consulta) return 'consulta';
+    return 'efetivo';
   }
+  // Mantido para a versão anterior do gestao.html, que pode vir do cache logo após publicar.
+  function deGestao(item, P) { return categoria(item, P) === 'trabalho'; }
   function visiveis(P) { return CATALOGO.filter(function (i) { return pode(i, P); }); }
 
   /* ---------- página atual + recentes ---------- */
@@ -612,6 +626,15 @@
     '#bpc-gaveta .bpc-portal .bpc-ic{background:rgba(245,197,24,.18)}' +
     '#bpc-gaveta .bpc-gr{font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted,#94a3b8);margin:14px 10px 4px;display:flex;align-items:center;gap:6px}' +
     '#bpc-gaveta .bpc-gr i{width:6px;height:6px;border-radius:50%;flex:none}' +
+    '#bpc-gaveta .bpc-sec{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--t1,#fff);margin:16px 10px 4px}' +
+    '#bpc-gaveta .bpc-dobra{margin-top:12px;border-top:1px solid var(--line,rgba(148,163,184,.12))}' +
+    '#bpc-gaveta .bpc-dobra>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 10px 8px;font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted,#94a3b8);border-radius:10px}' +
+    '#bpc-gaveta .bpc-dobra>summary::-webkit-details-marker{display:none}' +
+    '#bpc-gaveta .bpc-dobra>summary:hover{color:var(--t1,#fff)}' +
+    '#bpc-gaveta .bpc-dobra>summary:focus-visible{outline:2px solid var(--yellow,#F5C518);outline-offset:-2px}' +
+    '#bpc-gaveta .bpc-dobra>summary em{font-style:normal;font-size:11px;opacity:.8}' +
+    '#bpc-gaveta .bpc-dobra>summary::after{content:"▾";margin-left:auto;transition:transform .2s}' +
+    '#bpc-gaveta .bpc-dobra[open]>summary::after{transform:rotate(180deg)}' +
     '#bpc-gaveta .bpc-it{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:11px;text-decoration:none;color:var(--t2,var(--text,#e2e8f0));transition:background .15s,transform .15s;' +
       'opacity:0;transform:translateX(-8px)}' +
     '#bpc-gaveta.on .bpc-it,#bpc-gaveta.on .bpc-portal{animation:bpc-entra .38s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i,0) * 18ms + 60ms)}' +
@@ -779,18 +802,34 @@
       html += '<a class="bpc-portal" style="--i:0" href="' + esc(hrefCom(PORTAL.href)) + '"><span class="bpc-ic">' + PORTAL.ic + '</span><span><b>' + PORTAL.nome + '</b><small>' +
         (P.logado ? 'Seus sistemas num lugar só' : 'Entre com o login do dashboard') + '</small></span></a>';
     }
-    GRUPOS.forEach(function (g) {
-      var itens = CATALOGO.filter(function (i) { return i.grupo === g.id && pode(i, P) && bate(i); });
-      if (!itens.length) return;
-      html += '<div class="bpc-gr"><i style="background:' + g.cor + '"></i>' + esc(g.nome) + '</div>';
-      itens.forEach(function (i) {
-        n++;
-        var pa = papel(i, P);
-        html += '<a class="bpc-it' + (atual && atual.id === i.id ? ' atual' : '') + '" style="--i:' + n + '" href="' + esc(hrefCom(i.href)) + '" title="' + esc(i.desc) + '">' +
-          '<span class="bpc-ic">' + i.ic + '</span><span class="t">' + esc(i.nome) + '</span>' +
-          (pa === 'gestor' && !(atual && atual.id === i.id) ? '<span class="bpc-sl">GESTOR</span>' : pa === 'ver' && !(atual && atual.id === i.id) ? '<span class="bpc-sl ver">VER</span>' : '') + '</a>';
-      });
-    });
+    var linha = function (i) {
+      n++;
+      var aqui = atual && atual.id === i.id, pa = papel(i, P);
+      return '<a class="bpc-it' + (aqui ? ' atual' : '') + '" style="--i:' + n + '" href="' + esc(hrefCom(i.href)) + '" title="' + esc(i.desc) + '">' +
+        '<span class="bpc-ic">' + i.ic + '</span><span class="t">' + esc(i.nome) + '</span>' +
+        (pa === 'ver' && !aqui ? '<span class="bpc-sl ver">VER</span>' : '') + '</a>';
+    };
+    var porSecao = function (lista) {
+      return GRUPOS.map(function (g) {
+        var itens = lista.filter(function (i) { return i.grupo === g.id; });
+        if (!itens.length) return '';
+        return '<div class="bpc-gr"><i style="background:' + g.cor + '"></i>' + esc(g.nome) + '</div>' + itens.map(linha).join('');
+      }).join('');
+    };
+    if (P.logado && !q) {
+      // Com login: primeiro o trabalho da pessoa; o que é de todos fica recolhido.
+      var doTipo = function (c) { return CATALOGO.filter(function (i) { return categoria(i, P) === c; }); };
+      var trab = doTipo('trabalho'), cons = doTipo('consulta'), efet = doTipo('efetivo');
+      if (trab.length) html += '<div class="bpc-sec">💼 Meu trabalho</div>' + (trab.length > 8 ? porSecao(trab) : trab.map(linha).join(''));
+      if (cons.length) html += '<div class="bpc-sec">👁️ Para consultar</div>' + cons.map(linha).join('');
+      if (efet.length) {
+        var abre = (!trab.length && !cons.length) || (atual && categoria(atual, P) === 'efetivo');
+        n = 0;
+        html += '<details class="bpc-dobra"' + (abre ? ' open' : '') + '><summary>🛡️ Para todo o efetivo <em>' + efet.length + '</em></summary>' + efet.map(linha).join('') + '</details>';
+      }
+    } else {
+      html += porSecao(CATALOGO.filter(function (i) { return (P.logado ? categoria(i, P) : pode(i, P)) && bate(i); }));
+    }
     if (!n && q) html += '<div class="bpc-nada">Nenhum sistema com “' + esc(filtro) + '”.</div>';
     if (!P.logado && !q) html += '<div class="bpc-nada">Entre com o login do dashboard para ver também os sistemas de gestão liberados para você.</div>';
     gaveta.querySelector('.bpc-lista').innerHTML = html;
@@ -1019,7 +1058,7 @@
     atualizarPerfil: atualizarPerfil,
     aoMudarPerfil: function (cb) { ouvintes.push(cb); },
     guardarDoWorker: guardarDoWorker,
-    pode: pode, papel: papel, deGestao: deGestao, visiveis: visiveis,
+    pode: pode, papel: papel, categoria: categoria, deGestao: deGestao, visiveis: visiveis,
     recentes: recentes, hrefCom: hrefCom, sair: sair, iniciais: iniciais,
     abrirMenu: abrirMenu, fecharMenu: fecharMenu,
     ic: ic, icones: icones, ICONES: ICONES, toast: toast, novidades: novidades,

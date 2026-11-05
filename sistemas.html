@@ -63,6 +63,9 @@
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-05", "titulo": "Só os seus sistemas, já na entrada", "quem": "todos", "itens": [
+    "Quem entra com login já vê só o que o login abre. Para ver a lista inteira, desmarque \"Só os liberados para mim\"."
+  ] },
   { "data": "2026-10-29", "titulo": "Sistemas separados por seção", "quem": "todos", "itens": [
     "Os sistemas agora ficam agrupados por seção: Comando, P1, P2, P3, P4, P5 e P6, além do bloco para todo o efetivo.",
     "Os atalhos no topo levam direto para a seção; a busca procura em todas.",
@@ -122,7 +125,8 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt
 function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
 
 let SEL = '';   // seção escolhida nos atalhos ('' = todas)
-try { $('sis-so').checked = localStorage.getItem('bp_sis_so') === '1'; } catch (e) {}
+// Com login, já abre só com os liberados; desmarcar fica guardado no aparelho.
+try { $('sis-so').checked = localStorage.getItem('bp_sis_so') !== '0'; } catch (e) {}
 
 function chip(s, P){
   const pode = C.pode(s, P), pa = C.papel(s, P);
