@@ -89,6 +89,11 @@ textarea.es-obs{width:100%;min-height:150px;background:var(--bg2);border:1px sol
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-06", "titulo": "Permanência igual à escala do SEI", "quem": "gestor", "itens": [
+    "“Copiar para o SEI” da permanência agora sai igual à seção 4 da Escala do SEI: título na barra cinza, Horário, Armamento, Uniforme e Efetivo, e a tabela TURNO | FUNÇÃO | PPMM ESCALADOS em Times New Roman.",
+    "Abaixo do turno do dia entram sozinhas as equipes de folga (24, 48 e 72 horas), lidas das permanências já salvas.",
+    "Na permanência o mais antigo fica na PERMANÊNCIA e o seguinte de ARMEIRO; o novo campo “Horário (apresentação)” vai para o texto."
+  ] },
   { "data": "2026-11-02", "titulo": "Escalas da P3 no ar", "quem": "todos", "itens": [
     "Escalas de permanência e de operação do BPFRON num lugar só.",
     "Folga do efetivo: há quantos dias cada policial terminou o último serviço, com os dias de operação e de permanência no período.",
@@ -245,6 +250,8 @@ textarea.es-obs{width:100%;min-height:150px;background:var(--bg2);border:1px sol
         <div class="bp-in"><i data-ic="usuario"></i><input id="ed-uniforme" maxlength="300" autocomplete="off" oninput="ED.cab.uniforme=this.value"></div></div>
       <div class="bp-campo d2"><label for="ed-armamento">Armamento</label>
         <div class="bp-in"><i data-ic="escudo"></i><input id="ed-armamento" maxlength="300" autocomplete="off" oninput="ED.cab.armamento=this.value"></div></div>
+      <div class="bp-campo d2 so-pe"><label for="ed-horario">Horário (apresentação)</label>
+        <div class="bp-in"><i data-ic="relogio"></i><input id="ed-horario" maxlength="200" autocomplete="off" placeholder="07h30min prontos em Nova Mutum." oninput="ED.cab.horario=this.value"></div></div>
       <div class="bp-campo d2"><label for="ed-local" id="ed-local-rot">Local do patrulhamento</label>
         <div class="bp-in"><i data-ic="local"></i><input id="ed-local" maxlength="200" autocomplete="off" oninput="ED.cab.local=this.value"></div></div>
       <div class="bp-campo"><label for="ed-processo">Processo SEI</label>
@@ -426,7 +433,7 @@ textarea.es-obs{width:100%;min-height:150px;background:var(--bg2);border:1px sol
 </div>
 
 <datalist id="dl-ops"></datalist><datalist id="dl-org"></datalist>
-<datalist id="dl-func"><option value="CMT"><option value="MOT"><option value="AUX"><option value="PERMANÊNCIA"><option value="OF DIA"><option value="SGT DIA"><option value="CMT GUARDA"><option value="SENTINELA"><option value="RÁDIO OPERADOR"></datalist>
+<datalist id="dl-func"><option value="CMT"><option value="MOT"><option value="AUX"><option value="PERMANÊNCIA"><option value="ARMEIRO"><option value="OF DIA"><option value="SGT DIA"><option value="CMT GUARDA"><option value="SENTINELA"><option value="RÁDIO OPERADOR"></datalist>
 
 <script>
 'use strict';
@@ -674,19 +681,23 @@ const OBS_PE = [
   'A troca de serviço somente poderá ocorrer com autorização da Divisão Operacional - P3.',
   'As alterações ocorridas durante o serviço deverão ser registradas e comunicadas ao Oficial de Dia.',
 ];
+/* Permanência: textos do modelo do SEI (Escala 09.11.2026, SEI 78456411, seção 4). */
 const PADRAO = {
-  OPERACAO: { evento: '', local: 'FRONTEIRA E DIVISAS', area: 'FRONTEIRA/NOVA MUTUM - BPFRON', viatura: 'A CARGO DA DIVISÃO DE TRANSPORTES', localidade: 'NOVA MUTUM', obs: OBS_OP },
-  PERMANENCIA: { evento: 'ESCALA DE PERMANÊNCIA', local: 'SEDE DO BPFRON - DISTRITO DE NOVA MUTUM PARANÁ', area: 'PERMANÊNCIA - SEDE DO BPFRON', viatura: '', localidade: 'NOVA MUTUM', obs: OBS_PE },
+  OPERACAO: { evento: '', local: 'FRONTEIRA E DIVISAS', area: 'FRONTEIRA/NOVA MUTUM - BPFRON', viatura: 'A CARGO DA DIVISÃO DE TRANSPORTES', localidade: 'NOVA MUTUM', obs: OBS_OP,
+    uniforme: 'UNIFORME "A" C/ CHAPÉU E SHEMAGH (BPFRON).', armamento: 'O DE DOTAÇÃO DA PMRO e EPC (conforme equipamento especializado).', horario: '', hora: '08:00' },
+  PERMANENCIA: { evento: 'ESCALA PERMANÊNCIA/ARMEIRO BPFRON SEDE - NOVA MUTUM PARANÁ', local: 'SEDE DO BPFRON - DISTRITO DE NOVA MUTUM PARANÁ', area: 'PERMANÊNCIA - SEDE DO BPFRON', viatura: '', localidade: 'NOVA MUTUM', obs: OBS_PE,
+    uniforme: '12"A" BPFron com gorro', armamento: 'Cinto de GU e o de dotação da PMRO e EPI e EPC (conforme equipamento especializado).', horario: '07h30min prontos em Nova Mutum.', hora: '06:00' },
 };
-const CAB_FIXO = { uniforme: 'UNIFORME "A" C/ CHAPÉU E SHEMAGH (BPFRON).', armamento: 'O DE DOTAÇÃO DA PMRO e EPC (conforme equipamento especializado).',
+const CAB_FIXO = {
   fecho: 'Quartel no Distrito de Nova Mutum Paraná - Porto Velho/RO, na data da assinatura eletrônica.',
   assinante: 'FELIPE SANTOS DAS CHAGAS - MAJ QOPM', assinante_cargo: 'Comandante do Batalhão de Polícia de Fronteira e Divisas - BPFron' };
 
 function novaEscala(tipo) {
   const h = D.hoje;
   ED = { id: '', versao: '', tipo, sujo: false,
-    cab: { evento: PADRAO[tipo].evento, operacao: '', etapa: '', orgao: '', local: PADRAO[tipo].local, processo: '', sei_doc: '', obs: PADRAO[tipo].obs.join('\n'), ...CAB_FIXO },
-    pad: { ini: h, fim: somaD(h, 7), hora: '08:00', horas: 24 }, equipes: [] };
+    cab: { evento: PADRAO[tipo].evento, operacao: '', etapa: '', orgao: '', local: PADRAO[tipo].local, processo: '', sei_doc: '', obs: PADRAO[tipo].obs.join('\n'),
+      uniforme: PADRAO[tipo].uniforme, armamento: PADRAO[tipo].armamento, horario: PADRAO[tipo].horario, ...CAB_FIXO },
+    pad: { ini: h, fim: somaD(h, 7), hora: PADRAO[tipo].hora, horas: 24 }, equipes: [] };
   ED.equipes.push(equipeVazia('comum'));
   abrirEditor();
 }
@@ -701,7 +712,7 @@ function editarEscala(id) {
   if (!e || !e.dados) return toast('Não consegui abrir essa escala.', 'erro');
   const d = e.dados;
   ED = { id: e.id, versao: e.atualizado_em, tipo: d.tipo, sujo: false,
-    cab: { evento: d.evento, operacao: d.operacao, etapa: d.etapa, orgao: d.orgao, uniforme: d.uniforme, armamento: d.armamento, local: d.local,
+    cab: { evento: d.evento, operacao: d.operacao, etapa: d.etapa, orgao: d.orgao, uniforme: d.uniforme, armamento: d.armamento, horario: d.horario || PADRAO[d.tipo].horario, local: d.local,
       processo: d.processo, sei_doc: d.sei_doc, obs: (d.obs || []).join('\n'), fecho: d.fecho, assinante: d.assinante, assinante_cargo: d.assinante_cargo },
     pad: { ini: (d.equipes[0] || {}).ini || D.hoje, fim: (d.equipes[0] || {}).fim || D.hoje, hora: (d.equipes[0] || {}).hora || '08:00', horas: (d.equipes[0] || {}).horas || 24 },
     equipes: d.equipes.map((q) => ({ kind: /\bNI\b/.test(q.nome) ? 'ni' : /CANIL/.test(q.nome) ? 'canil' : 'comum', area: q.area, viatura: q.viatura, localidade: q.localidade,
@@ -713,7 +724,7 @@ function abrirEditor() {
   $('m-ed-tit').textContent = ED.id ? 'Editar escala' : 'Nova escala';
   $('m-ed-sub').textContent = ED.id ? ED.id : 'Só efetivo do BPFRON';
   const c = ED.cab;
-  [['ed-evento', 'evento'], ['ed-operacao', 'operacao'], ['ed-etapa', 'etapa'], ['ed-orgao', 'orgao'], ['ed-uniforme', 'uniforme'], ['ed-armamento', 'armamento'],
+  [['ed-evento', 'evento'], ['ed-operacao', 'operacao'], ['ed-etapa', 'etapa'], ['ed-orgao', 'orgao'], ['ed-uniforme', 'uniforme'], ['ed-armamento', 'armamento'], ['ed-horario', 'horario'],
     ['ed-local', 'local'], ['ed-processo', 'processo'], ['ed-sei', 'sei_doc'], ['ed-obs', 'obs'], ['ed-fecho', 'fecho'], ['ed-ass', 'assinante'], ['ed-cargo', 'assinante_cargo']]
     .forEach(([id, k]) => { $(id).value = c[k] || ''; });
   $('pd-ini').value = ED.pad.ini; $('pd-fim').value = ED.pad.fim; $('pd-hora').value = ED.pad.hora; $('pd-horas').value = String(ED.pad.horas);
@@ -742,12 +753,17 @@ $('ed-tipo').addEventListener('click', (e) => {
   if (!ED.cab.evento || ED.cab.evento === PADRAO[de].evento) ED.cab.evento = PADRAO[para].evento;
   if (!ED.cab.local || ED.cab.local === PADRAO[de].local) ED.cab.local = PADRAO[para].local;
   if (!ED.cab.obs || ED.cab.obs === PADRAO[de].obs.join('\n')) ED.cab.obs = PADRAO[para].obs.join('\n');
+  ['uniforme', 'armamento', 'horario'].forEach((k) => { if (!ED.cab[k] || ED.cab[k] === PADRAO[de][k]) ED.cab[k] = PADRAO[para][k]; });
+  if (ED.pad.hora === PADRAO[de].hora) ED.pad.hora = PADRAO[para].hora;
   ED.equipes.forEach((q) => {
+    if (q.hora === PADRAO[de].hora) q.hora = PADRAO[para].hora;
+    if (!q.manual) autoFuncoes(q);
     if (q.kind === 'comum' && q.area === PADRAO[de].area) q.area = PADRAO[para].area;
     if (q.viatura === PADRAO[de].viatura) q.viatura = PADRAO[para].viatura;
     if (para === 'OPERACAO' && !q.fim) q.fim = ED.pad.fim || q.ini;
   });
   $('ed-evento').value = ED.cab.evento; $('ed-local').value = ED.cab.local; $('ed-obs').value = ED.cab.obs;
+  $('ed-uniforme').value = ED.cab.uniforme; $('ed-armamento').value = ED.cab.armamento; $('ed-horario').value = ED.cab.horario; $('pd-hora').value = ED.pad.hora;
   pintarTipo();
 });
 function aplicarPadrao() {
@@ -769,10 +785,12 @@ const RANK = [[/^CEL/, 1], [/^(TC|TEN\.?\s*CEL)/, 2], [/^MAJ/, 3], [/^CAP/, 4], 
   [/^1\S*\s*SGT/, 9], [/^2\S*\s*SGT/, 10], [/^3\S*\s*SGT/, 11], [/^CB/, 12], [/^SD/, 13]];
 const rank = (p) => { const s = sem(p.posto).trim(); for (const [r, n] of RANK) if (r.test(s)) return n; return 20; };
 const antig = (a, b) => rank(a) - rank(b) || (+re5(a.re) || 0) - (+re5(b.re) || 0);
-const FPRI = { CMT: 1, MOT: 2, AUX: 3 };
+const FPRI = { CMT: 1, MOT: 2, AUX: 3, 'PERMANÊNCIA': 1, ARMEIRO: 2 };
 function autoFuncoes(q) {
   if (q.manual) return;
   q.pols.sort(antig);
+  // permanência: o mais antigo fica na PERMANÊNCIA e o seguinte de ARMEIRO (modelo do SEI)
+  if (ED && ED.tipo === 'PERMANENCIA') { q.pols.forEach((p, i) => { p.funcao = i === 0 ? 'PERMANÊNCIA' : i === 1 ? 'ARMEIRO' : 'AUX'; }); return; }
   q.pols.forEach((p, i) => { p.funcao = i === 0 ? 'CMT' : (i === 1 && q.kind !== 'ni') ? 'MOT' : 'AUX'; });
 }
 /* equipes na ordem do SEI: comuns, depois CANIL, depois NI — com o nome de cada uma */
@@ -846,7 +864,7 @@ function pintarEquipes() {
       ${q.pols.length ? `<table class="es-pols"><thead><tr><th>Posto</th><th>RE</th><th>Nome</th><th>Função</th><th class="c-cont">Contato</th><th></th></tr></thead><tbody>${linhas}</tbody></table>` : ''}
       <div class="es-add">
         <div class="bp-in"><i data-ic="buscar"></i><input id="busca-${qi}" placeholder="Adicionar policial: nome, nome de guerra ou RE (vazio = mais descansados)" autocomplete="off" value="${esc(q.q)}" oninput="ED.equipes[${qi}].q=this.value;buscar(${qi})" onfocus="buscar(${qi})"></div>
-        <button type="button" class="bp-btn sm sec" onclick="sugerir(${qi})" title="Põe na equipe os 4 que estão há mais tempo de folga e livres no período"><i data-ic="estrela"></i>4 mais descansados</button>
+        <button type="button" class="bp-btn sm sec" onclick="sugerir(${qi})" title="Põe na equipe os ${op ? 4 : 2} que estão há mais tempo de folga e livres no período"><i data-ic="estrela"></i>${op ? 4 : 2} mais descansados</button>
         <button type="button" class="bp-btn sm ghost" onclick="abrirManual(${qi})"><i data-ic="mais"></i>Fora do cadastro</button>
       </div>
       <div class="es-res" id="res-${qi}"></div>
@@ -880,7 +898,7 @@ function addPol(qi, re) {
 }
 function sugerir(qi) {
   const q = ED.equipes[qi];
-  const livres = candidatos(qi).filter((x) => !x.c && !x.st.atual).slice(0, 4);
+  const livres = candidatos(qi).filter((x) => !x.c && !x.st.atual).slice(0, ED.tipo === 'OPERACAO' ? 4 : 2);
   if (!livres.length) return toast('Ninguém livre nesse período.', 'erro');
   livres.forEach((x) => q.pols.push({ re: x.p.re, posto: x.p.posto, nome: x.p.nome, guerra: x.p.guerra, opm: 'BPFRON', contato: x.p.contato, funcao: 'AUX' }));
   q.manual = false; autoFuncoes(q); ED.sujo = true; pintarEquipes();
@@ -911,7 +929,8 @@ function confirmarSimples(m) { const ok = _conf.m === m && Date.now() - _conf.t 
 /* escala no formato que vai para o Worker (e para o SEI) */
 function montarEscala() {
   const c = ED.cab;
-  return { id: ED.id, tipo: ED.tipo, evento: c.evento, operacao: c.operacao, etapa: c.etapa, orgao: c.orgao, uniforme: c.uniforme, armamento: c.armamento, local: c.local,
+  return { id: ED.id, tipo: ED.tipo, evento: c.evento, operacao: c.operacao, etapa: c.etapa, orgao: c.orgao, uniforme: c.uniforme, armamento: c.armamento,
+    horario: ED.tipo === 'PERMANENCIA' ? c.horario : '', local: c.local,
     processo: c.processo, sei_doc: c.sei_doc, obs: String(c.obs || '').split(/\n+/).map((x) => x.trim()).filter(Boolean),
     fecho: c.fecho, assinante: c.assinante, assinante_cargo: c.assinante_cargo,
     equipes: equipesOrdenadas(ED.equipes).map(({ q, nome }) => {
@@ -950,7 +969,84 @@ function dataEquipe(tipo, q) {
   if (q.ini.slice(0, 7) === q.fim.slice(0, 7)) return `${q.ini.slice(8, 10)} A ${ddmm(q.fim)}`;
   return `${ddmm(q.ini)} A ${ddmm(q.fim)}`;
 }
+/* ---------- Permanência: cópia da seção 4 da Escala do SEI (SEI 78456411, 09.11.2026) ----------
+   Medido no PDF do SEI (06/11/2026): Times New Roman; título 12pt negrito numa barra cinza #e6e6e6
+   (largura do texto); HORÁRIO/ARMAMENTO/UNIFORME/EFETIVO 12pt, justificados, recuo de 25 mm só na
+   1ª linha; tabela TURNO | FUNÇÃO | PPMM ESCALADOS em 11pt, borda padrão do SEI (border=1 +
+   espaçamento 1 = linha dupla), ~701 px no PDF com colunas de 195/122/367 px; turno mesclado nas
+   2 linhas (PERMANÊNCIA e ARMEIRO). Abaixo do turno do dia vêm as equipes de folga: quem tirou o
+   serviço 24, 48 e 72 h antes (procuradas nesta escala e nas outras permanências salvas); a linha
+   de 96 h fica em branco, como no modelo. Mesmo jeito de largura/centralizar da Ficha de Conceito
+   (align="center", width 666 + min-width e nowrap nas colunas). */
+const PE_FONTE = "font-family:'Times New Roman',Times,serif;";
+const PE_COLS = [195, 122, 367];
+const DIA_SEM = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+const hMin = (hhmm) => { const [h, m] = String(hhmm || '00:00').split(':').map(Number); return String(h || 0).padStart(2, '0') + 'h' + String(m || 0).padStart(2, '0') + 'min'; };
+function equipeDoDia(e, data) {
+  const q = e.equipes.find((x) => x.ini === data);
+  if (q) return q;
+  for (const x of D.escalas || []) {
+    if (x.id === e.id || !x.dados || x.dados.tipo !== 'PERMANENCIA') continue;
+    const o = (x.dados.equipes || []).find((y) => y.ini === data);
+    if (o) return o;
+  }
+  return null;
+}
+function funcaoPe(p, i) {
+  const f = String(p.funcao || '').toUpperCase();
+  if (f === 'CMT' || (!f && i === 0)) return 'PERMANÊNCIA';
+  if (f === 'MOT' || (!f && i === 1)) return 'ARMEIRO';
+  return f;
+}
+function htmlPermanenciaSEI(e) {
+  const H = (s) => esc(String(s || '').toUpperCase());
+  const P = (t, est) => `<p style="${PE_FONTE}font-size:12pt;margin:6pt 0;${est || ''}">${t}</p>`;
+  // texto da célula num parágrafo com 2pt em cima e embaixo: dá a altura de linha do modelo (~20pt)
+  const cp = (txt) => `<p style="${PE_FONTE}font-size:11pt;text-align:center;margin:2pt 0;">${txt || '&nbsp;'}</p>`;
+  const td = (txt, i, extra) => `<td width="${PE_COLS[i]}" nowrap="nowrap" style="width:${PE_COLS[i]}px;min-width:${PE_COLS[i]}px;${PE_FONTE}font-size:11pt;text-align:center;vertical-align:middle;"${extra || ''}>${cp(txt)}</td>`;
+  const tdS = (txt, extra) => `<td style="${PE_FONTE}font-size:11pt;text-align:center;vertical-align:middle;"${extra || ''}>${cp(txt)}</td>`;
+  const recuo = 'text-align:justify;text-indent:25mm;';
+  const ppmm = (p) => p ? `<b>${H(p.posto)}</b> RE ${esc(p.re)} <b>${H(p.guerra || p.nome)}</b>` : '';
+  /* bloco de linhas de um turno: o turno mesclado e uma linha por função */
+  const turno = (rot, q) => {
+    const pols = q ? q.pols.map((p, i) => ({ p, f: funcaoPe(p, i) })).sort((a, b) => (FPRI[a.f] || 9) - (FPRI[b.f] || 9)) : [];
+    const n = Math.max(2, pols.length);
+    let t = '';
+    for (let i = 0; i < n; i++) {
+      const x = pols[i];
+      const f = x ? x.f : (i === 0 ? 'PERMANÊNCIA' : i === 1 ? 'ARMEIRO' : '');
+      t += `<tr>${i === 0 ? tdS(rot, ` rowspan="${n}"`) : ''}${tdS(esc(f))}${tdS(ppmm(x && x.p))}</tr>`;
+    }
+    return t;
+  };
+  let h = '';
+  e.equipes.forEach((q, qi) => {
+    const horas = +q.horas || 24, passo = Math.max(1, Math.round(horas / 24));
+    const [hh, mm] = String(q.hora || '06:00').split(':').map(Number);
+    const fimMin = ((hh || 0) * 60 + (mm || 0) + horas * 60) % 1440;
+    const fimH = String(Math.floor(fimMin / 60)).padStart(2, '0') + ':' + String(fimMin % 60).padStart(2, '0');
+    const dia = DIA_SEM[new Date(q.ini + 'T12:00:00').getDay()];
+    const ev = String(e.evento || PADRAO.PERMANENCIA.evento).trim();
+    const tit = `4. ${H(ev)}${/\(\s*\d+\s*X\s*\d+\s*\)/i.test(ev) ? '' : ` (${horas}X${horas * 3})`} DATA: ${br(q.ini)} (${dia})`;
+    if (qi) h += P('<br>');
+    h += P(`<b>${tit}</b>`, 'font-weight:bold;background-color:#e6e6e6;text-align:justify;');
+    if (e.horario) h += P(`<b>HORÁRIO:</b> ${esc(e.horario)}`, recuo);
+    if (e.armamento) h += P(`<b>ARMAMENTO:</b> ${esc(e.armamento)}`, recuo);
+    if (e.uniforme) h += P(`<b>UNIFORME:</b> ${esc(e.uniforme)}`, recuo);
+    const n = q.pols.length;
+    h += P(`<b>EFETIVO ESCALADO:</b> ${String(n).padStart(2, '0')} ${n === 1 ? 'POLICIAL MILITAR' : 'POLICIAIS MILITARES'} DO BPFRON`, recuo);
+    let t = `<table align="center" border="1" cellpadding="1" cellspacing="1" width="666" style="width:666px;${PE_FONTE}font-size:11pt;"><tbody>`;
+    t += `<tr>${td('<b>TURNO</b>', 0)}${td('<b>FUNÇÃO</b>', 1)}${td('<b>PPMM ESCALADOS</b>', 2)}</tr>`;
+    t += turno(`(${hMin(q.hora || '06:00')} às ${hMin(fimH)})`, q);
+    for (let k = 1; k <= 3; k++) t += turno(`${k * horas} Horas (folga)`, equipeDoDia(e, somaD(q.ini, -k * passo)));
+    t += turno(`${4 * horas} Horas`, null);
+    t += '</tbody></table>';
+    h += t;
+  });
+  return h;
+}
 function htmlSEI(e) {
+  if (e.tipo === 'PERMANENCIA') return htmlPermanenciaSEI(e);
   const H = (s) => esc(String(s || '').toUpperCase());
   const op = e.tipo === 'OPERACAO';
   const qtd = new Set(e.equipes.flatMap((q) => q.pols.map((p) => re5(p.re)))).size;
@@ -992,7 +1088,7 @@ function abrirSEI(e, doEditor) {
   if (doEditor && ED && ED.sujo) avisos.push('Você ainda não salvou as últimas mudanças — a prévia já mostra como está agora.');
   if (e.equipes.some((q) => !q.pols.length)) avisos.push('Tem equipe sem policial.');
   if (e.tipo === 'OPERACAO' && !e.processo) avisos.push('Falta o nº do processo SEI (aparece na OBS do RVN como “____________”).');
-  const semCont = e.equipes.flatMap((q) => q.pols).filter((p) => !p.contato).length;
+  const semCont = e.tipo === 'OPERACAO' ? e.equipes.flatMap((q) => q.pols).filter((p) => !p.contato).length : 0;
   if (semCont) avisos.push(`${semCont} policial(is) sem telefone no cadastro.`);
   $('sei-aviso').innerHTML = avisos.length ? `<div class="bp-aviso pend" style="margin-bottom:12px"><i data-ic="alerta"></i><div>${avisos.map(esc).join('<br>')}</div></div>` : '';
   SEI_HTML = htmlSEI(e);
