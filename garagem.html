@@ -211,6 +211,9 @@ html.portal #quem-ok a{display:none}
 .ab-comb .opt{padding:11px 6px;font-size:13.5px}
 .btn.ab{width:100%;margin:0 0 12px;border-color:var(--warn-line);color:var(--warn);background:var(--warn-soft)}
 .btn.ab:hover{color:var(--warn);filter:brightness(1.08)}
+.ab-aviso{margin:0 0 12px}
+.ab-av-it{margin-top:8px;padding-top:8px;border-top:1px dashed var(--warn-line);font-size:13px}
+.ab-av-it .chip{margin-left:2px}
 .abm{border:1px solid var(--line2);border-radius:15px;padding:12px 13px;margin-bottom:8px;background:var(--surf2)}
 .abm .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .abm .t b{font-size:14.5px;color:var(--t1)}
@@ -229,6 +232,10 @@ html.portal #quem-ok a{display:none}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-08", "titulo": "Aviso de abastecimento pendente na viatura", "quem": "todos", "itens": [
+    "Ao escolher uma viatura que ainda tem pendência de abastecimento em aberto (lançada por qualquer motorista), aparece um aviso amarelo: o cartão dela pode dar o mesmo erro no posto.",
+    "Na lista de viaturas, ela ganha a etiqueta “Abastecimento pendente”. O aviso some quando a DAAL resolver."
+  ] },
   { "data": "2026-11-08", "titulo": "Pendência de abastecimento", "quem": "todos", "itens": [
     "Deu erro no cartão na hora de abastecer (média de consumo fora dos intervalos, preço fora da tabela…)? Com a viatura no seu nome, toque em “Lançar pendência de abastecimento”.",
     "RE, nome, unidade, viatura, data e hora vão sozinhos. Você informa o erro, o posto, o km, os litros, o valor e o combustível.",
@@ -408,6 +415,7 @@ html.portal #quem-ok a{display:none}
         <button class="opt" id="m-fim" onclick="setMomento('Término de uso')"><i data-ic="bandeira"></i>Término de uso<small>estou devolvendo</small></button>
       </div>
       <div id="momento-info" class="aviso blue hidden"></div>
+      <div id="ab-vtr-aviso" class="aviso yel hidden"></div>
       <div class="info2" id="vtr-info"></div>
 
       <label class="lb" for="km">Hodômetro (km) <span class="req">*</span></label>
@@ -697,6 +705,7 @@ function renderMinha(){
     <div class="mv"><div><div class="pf">${esc(v.prefixo)}</div>
       <div class="d">${esc(v.modelo)} · ${esc(v.placa)}<br>Saiu em ${esc(fData(v.ultimo.data))} (há ${esc(tempoDesde(v.ultimo.data))})${v.ultimo.km ? ' com <b>' + fN(v.ultimo.km) + ' km</b>' : ''}</div></div></div>
     <button class="btn-main" style="margin:0 0 10px" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')"><i data-ic="bandeira"></i>Registrar término de uso · ${esc(v.prefixo)}</button>
+    ${abAvisoHtml(abAbertas(v.prefixo, true))}
     <button class="btn ab" onclick="abrirAbast('${esc(v.prefixo).replace(/'/g,"\\'")}')"><i data-ic="bomba"></i>Lançar pendência de abastecimento</button>`).join('')
     + '<div class="hint" style="margin-top:0"><i data-ic="cadeado"></i>Para pegar outra viatura, registre antes o <b>término</b> desta. Não está mais com ela? Procure o gestor da garagem.</div>' : '';
 }
@@ -750,7 +759,31 @@ async function carregarAb(forcar){
     const d = await api('/api/garagem/abastecimento/minhas', { re });
     if (!EU || EU.re !== re) return;
     AB = d; AB_RE = re; renderAbMin();
+    // os avisos de pendência aberta por viatura chegam junto: redesenha onde aparecem
+    if (APP) renderViaturas();
+    renderMinha();
+    if (SEL && !$('s-form').classList.contains('hidden')) renderAbVtr();
   }catch(e){ /* sem a lista o checklist segue normal */ }
+}
+// Pendências de abastecimento AINDA ABERTAS da viatura, de qualquer motorista (08/11/2026).
+// soOutros = só as lançadas por outro RE (as do próprio motorista já aparecem na lista dele).
+function abAbertas(prefixo, soOutros){
+  const m = AB && AB_RE === (EU && EU.re) && AB.abertas_vtr || {};
+  return (m[String(prefixo || '').toUpperCase()] || []).filter(p => !soOutros || !p.minha);
+}
+function abAvisoHtml(L){
+  return L.length ? `<div class="aviso yel ab-aviso">${abAvisoCorpo(L)}</div>` : '';
+}
+function abAvisoCorpo(L){
+  return `<i data-ic="bomba"></i><b>Esta viatura tem ${L.length > 1 ? L.length + ' pendências' : 'pendência'} de abastecimento em aberto.</b>
+    O cartão pode dar o mesmo erro no posto. A DAAL já recebeu e está resolvendo.
+    ${L.map(p => `<div class="ab-av-it"><b>${esc(p.erro)}</b><br>${esc(fData(p.data))}${p.posto_combustivel ? ' · ' + esc(p.posto_combustivel) : ''} · ${p.minha ? 'lançada por você' : 'lançada por ' + esc(p.lancada_por || 'outro motorista')} · <span class="chip ab-${esc(p.situacao)}">${esc(AB_SIT[p.situacao] || p.situacao)}</span></div>`).join('')}
+    <div style="font-size:12.5px;margin-top:6px">Se der erro de novo, lance outra pendência pelo app depois de sair com a viatura.</div>`;
+}
+function renderAbVtr(){
+  const L = SEL ? abAbertas(SEL.prefixo) : [];
+  show('ab-vtr-aviso', L.length > 0);
+  $('ab-vtr-aviso').innerHTML = L.length ? abAvisoCorpo(L) : '';
 }
 function renderAbMin(){
   const L = (AB && EU && AB_RE === EU.re && VISTA !== 'frota' && !ABV && $('s-ok').classList.contains('hidden')) ? AB.minhas : [];
@@ -902,6 +935,7 @@ function renderViaturas(){
     chips.push(v.em_uso ? '<span class="chip uso">Em uso</span>' : '<span class="chip livre">Disponível</span>');
     if (v.critico) chips.push('<span class="chip crit"><i data-ic="alerta"></i>Motor/Transmissão</span>');
     else if (v.pendencias.length) chips.push(`<span class="chip pend"><i data-ic="chave"></i>${v.itens_bloqueados.length || v.pendencias.length} alteração(ões)</span>`);
+    if (abAbertas(v.prefixo).length) chips.push('<span class="chip pend ab-chip"><i data-ic="bomba"></i>Abastecimento pendente</span>');
     if (v.km_para_troca !== null && v.km_para_troca <= 1000) chips.push(`<span class="chip oleo"><i data-ic="gota"></i>${v.km_para_troca <= 0 ? 'Óleo vencido' : 'Óleo em breve'}</span>`);
     const quem = v.em_uso && v.ultimo ? `<div class="quem">${EU && v.ultimo.motorista_re === EU.re ? '<i data-ic="estrela"></i>com VOCÊ' : 'com ' + esc(v.ultimo.motorista)} desde ${esc(fData(v.ultimo.data))}</div>` : '';
     const kms = `<div class="km"><i data-ic="painel"></i>${v.km_atual ? fN(v.km_atual) + ' km' : 'sem km'}${v.km_proxima_troca ? ' · <i data-ic="gota"></i>óleo aos ' + fN(v.km_proxima_troca) : ''}</div>`;
@@ -943,6 +977,7 @@ function abrirForm(rolar){
       + (u.motorista_re && EU && u.motorista_re !== EU.re ? '<br><span style="font-size:12.5px">Se foi outro policial que saiu com ela, tudo bem — o término fica no seu nome. Se a viatura já tinha sido devolvida e ninguém deu baixa, avise o gestor.</span>' : '')
     : `Viatura <b>disponível</b>${u ? ` — último término em ${esc(fData(u.data))}` : ''}. Registre o <b>Início</b>.`;
   show('momento-info', true);
+  renderAbVtr();
   $('km-hint').textContent = SEL.km_atual ? `Maior km já registrado nesta viatura: ${fN(SEL.km_atual)} km` : 'Primeiro registro desta viatura.';
   if (u && u.local && !$('local').value) $('local').value = emUso ? u.local : '';
   if (emUso && u && u.comandante && !$('cmt').value) $('cmt').value = u.comandante;
