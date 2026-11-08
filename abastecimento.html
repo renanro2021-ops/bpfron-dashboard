@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- =====================================================================
+     abastecimento.html — DAAL · Pendências de abastecimento (08/11/2026)
+     O motorista com viatura em uso lança no checklist (garagem.html) o erro
+     do cartão no posto (eLiq/Uzzipay). A DAAL recebe aqui e sana.
+     Worker: /api/garagem/abastecimento/gestao (GET lista, POST situação).
+     Permissão "abastecimento" muda a situação; quem é gestor da Garagem só vê.
+     ===================================================================== -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>Pendências de Abastecimento · DAAL · BPFRON</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.ab-barra{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.ab-filtros{display:flex;gap:6px;flex-wrap:wrap}
+.ab-filtros button{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:8px 14px;color:var(--t2);font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.ab-filtros button b{font-weight:800;color:var(--t1)}
+.ab-filtros button.on{border-color:var(--acc-line);color:var(--acc);background:var(--acc-soft)}
+.ab-filtros button.on b{color:var(--acc)}
+.ab-busca{flex:1;min-width:220px}
+.ab-lista{display:flex;flex-direction:column;gap:12px}
+.ab-p{display:flex;flex-direction:column;gap:12px}
+.ab-p .cab{display:flex;gap:12px;align-items:flex-start}
+.ab-p .cab .tx{flex:1;min-width:0}
+.ab-p .cab h3{margin:0;font:700 20px 'Rajdhani',sans-serif;color:var(--t1);line-height:1.2}
+.ab-p .cab .er{font-size:15px;font-weight:700;color:var(--t1);margin-top:2px}
+.ab-p .cab small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+.ab-p .msg{font-size:13.5px;color:var(--t2);background:var(--surf2);border:1px dashed var(--line2);border-radius:12px;padding:9px 12px;white-space:pre-line}
+.ab-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.ab-grade .bx{background:var(--surf2);border:1px solid var(--line);border-radius:12px;padding:8px 11px;min-width:0}
+.ab-grade .l{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.ab-grade .v{font-size:14px;font-weight:700;color:var(--t1);line-height:1.4;overflow-wrap:anywhere}
+.ab-grade .v small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.ab-grade .v a{color:var(--acc)}
+.ab-grade .bx.larga{grid-column:span 2}
+.ab-acoes{display:flex;gap:8px;flex-wrap:wrap}
+.ab-resp{font-size:13.5px;color:var(--t2);border-left:3px solid var(--good);padding:4px 0 4px 10px}
+.ab-resp.crit{border-left-color:var(--muted)}
+.ab-resp.info{border-left-color:var(--info)}
+.ab-hist{font-size:12.5px;color:var(--muted)}
+.ab-hist summary{cursor:pointer;font-weight:700}
+.ab-hist ol{margin:6px 0 0;padding-left:18px;line-height:1.7}
+.ab-p.novo{box-shadow:0 0 0 2px var(--warn-line),var(--sh)}
+.ab-hora{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+@media (max-width:620px){ .ab-grade .bx.larga{grid-column:auto} .ab-busca{min-width:100%} }
+@media print{ .bp-topo,.ab-barra,.ab-acoes,.bp-heroi,.bp-nums,.bp-fundo{display:none!important} }
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-08", "titulo": "Página nova", "quem": "todos", "itens": [
+    "As pendências de abastecimento que o motorista lança no checklist (erro do cartão no posto) chegam aqui na hora.",
+    "Toque em “Estou vendo” para o colega saber que você pegou; depois “Sanar” com o que foi feito. O motorista vê a resposta no app dele.",
+    "Com a página aberta, ela se atualiza sozinha a cada minuto e pode avisar com som quando chegar pendência nova."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="abastecimento.html" title="Pendências de abastecimento">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · DAAL</small><b>Pendências de abastecimento</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="ab-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="ab-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="ab-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>Pendências de abastecimento</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="ab-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>Só a DAAL e a gestão da Garagem</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="ab-negado-tx">Seu login não tem acesso às pendências de abastecimento.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“Garagem · Pendências de abastecimento (DAAL)”</b> no Painel de Controle.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="ab-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="ab-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>DAAL · Abastecimento</span>
+        <h1>Pendências de <em>abastecimento</em></h1>
+        <p>Erros do cartão no posto (eLiq / Uzzipay) lançados pelo motorista no checklist da viatura. Resolva por aqui, sem ligação de madrugada.</p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn" onclick="carregar(true)"><i data-ic="atualizar"></i>Atualizar</button>
+          <button type="button" class="bp-btn sec" id="bt-som" onclick="ligarAviso()"><i data-ic="novidade"></i>Avisar com som</button>
+          <button type="button" class="bp-btn sec" onclick="exportarCSV()"><i data-ic="baixar"></i>Planilha (CSV)</button>
+        </div>
+        <div class="ab-hora" style="margin-top:10px"><span class="bp-vivo on" id="ab-vivo"></span><span id="ab-hora">—</span></div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="bp-aviso pend" id="ab-soconsulta" style="display:none;margin-top:14px"><i data-ic="olho"></i><div>Você está <b>só consultando</b> (gestão da Garagem). Quem muda a situação é a DAAL.</div></div>
+
+    <div class="bp-nums" style="margin-top:14px">
+      <button type="button" class="bp-num clica" style="--i:0;--c:var(--warn)" onclick="setFiltro('resolver')"><i data-ic="relogio"></i><div class="r">A resolver</div><div class="v" id="n-resolver">0</div><small class="bp-ver">ver<i data-ic="seta"></i></small></button>
+      <button type="button" class="bp-num clica" style="--i:1;--c:var(--crit)" onclick="setFiltro('resolver')"><i data-ic="alerta"></i><div class="r">Ninguém pegou</div><div class="v" id="n-aberta">0</div><small class="bp-ver">abertas<i data-ic="seta"></i></small></button>
+      <button type="button" class="bp-num clica" style="--i:2;--c:var(--info)" onclick="setFiltro('resolver')"><i data-ic="olho"></i><div class="r">Em análise</div><div class="v" id="n-analise">0</div><small class="bp-ver">alguém está vendo<i data-ic="seta"></i></small></button>
+      <button type="button" class="bp-num clica" style="--i:3;--c:var(--good)" onclick="setFiltro('SANADA')"><i data-ic="ok"></i><div class="r">Sanadas em 30 dias</div><div class="v" id="n-sanada">0</div><small class="bp-ver">ver<i data-ic="seta"></i></small></button>
+    </div>
+
+    <div class="ab-barra" style="margin-top:16px">
+      <div class="ab-filtros" id="ab-filtros">
+        <button type="button" data-f="resolver" class="on" onclick="setFiltro('resolver')">A resolver <b id="f-resolver"></b></button>
+        <button type="button" data-f="SANADA" onclick="setFiltro('SANADA')">Sanadas <b id="f-sanada"></b></button>
+        <button type="button" data-f="CANCELADA" onclick="setFiltro('CANCELADA')">Canceladas <b id="f-cancelada"></b></button>
+        <button type="button" data-f="todas" onclick="setFiltro('todas')">Todas <b id="f-todas"></b></button>
+      </div>
+      <div class="bp-in ab-busca"><i data-ic="buscar"></i><input id="ab-q" placeholder="Buscar viatura, policial, RE, posto, erro…" oninput="pintar()"></div>
+    </div>
+
+    <div class="ab-lista" id="ab-lista"></div>
+  </div>
+</main>
+
+<!-- JANELA: mudar a situação -->
+<div class="bp-modal" id="m-sit" onclick="if(event.target===this)fecharSit()">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-sit-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile" id="m-sit-ic"><i data-ic="ok"></i></span>
+      <div><h3 id="m-sit-tit">Sanar pendência</h3><small id="m-sit-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fecharSit()" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="bp-campo"><label for="m-sit-obs" id="m-sit-rot">O que foi feito (o motorista vê)</label>
+      <div class="bp-in"><textarea id="m-sit-obs" rows="3" maxlength="1000" style="width:100%;min-height:80px;background:transparent;border:0;color:var(--t1);font:inherit;outline:none;resize:vertical"></textarea></div></div>
+    <div class="bp-msg err" id="m-sit-erro"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fecharSit()">Cancelar</button>
+      <button type="button" class="bp-btn" id="m-sit-ok" onclick="confirmarSit()"><i data-ic="check"></i>Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const fN = (n) => Number(n || 0).toLocaleString('pt-BR');
+const fR$ = (n) => 'R$ ' + Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fLt = (n) => Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' L';
+// ISO "aaaa-mm-ddTHH:MM:SS" na hora de Porto Velho -> "dd/mm HH:MM"
+const fData = (iso) => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]} ${m[4]}:${m[5]}` : ''; };
+const fDataAno = (iso) => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : ''; };
+const instante = (iso) => iso ? Date.parse(iso + 'Z') + 4 * 3600e3 : 0;   // Porto Velho = UTC-4
+function ha(iso) {
+  const min = Math.max(0, Math.round((Date.now() - instante(iso)) / 60000));
+  if (min < 1) return 'agora';
+  if (min < 60) return 'há ' + min + ' min';
+  const h = Math.floor(min / 60); if (h < 48) return 'há ' + h + ' h' + (min % 60 && h < 6 ? ' ' + (min % 60) + ' min' : '');
+  return 'há ' + Math.floor(h / 24) + ' dias';
+}
+const SIT = {
+  ABERTA:     { nome: 'Aberta',      cl: 'crit', ic: 'alerta' },
+  EM_ANALISE: { nome: 'Em análise',  cl: 'info', ic: 'olho' },
+  SANADA:     { nome: 'Sanada',      cl: 'ok',   ic: 'ok' },
+  CANCELADA:  { nome: 'Cancelada',   cl: '',     ic: 'x' },
+};
+
+/* ============================== API / login ============================== */
+async function api(path, opt) {
+  const h = Object.assign({}, (opt && opt.headers) || {});
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, Object.assign({}, opt || {}, { headers: h }));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  return r;
+}
+async function apiJson(path, body) {
+  const r = await api(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { clearInterval(TIMER); ls('bp_token', ''); ls('bp_user', ''); D = null; VISTOS = null; boot(); }
+function nomeLogado() {
+  try { const p = JSON.parse(ls('bp_perms') || 'null'); if (p && p.nome) return p.nome; } catch (e) {}
+  return ls('bp_user');
+}
+function mostrar(qual) { ['ab-login', 'ab-negado', 'ab-estado', 'ab-app'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; }); }
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'ab-login');
+  $('ab-sair').style.display = logado ? '' : 'none';
+  $('ab-eu').style.display = logado ? '' : 'none';
+  if (logado) {
+    const n = nomeLogado();
+    $('ab-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'DA';
+    $('ab-eu').querySelector('span').textContent = n;
+    carregar();
+  }
+}
+
+/* ============================== dados ============================== */
+let D = null;            // { pode, usuario, pendencias:[…] }
+let FILTRO = 'resolver';
+let VISTOS = null;       // ids já vistos (para avisar só das novas)
+let NOVOS = new Set();
+let TIMER = null;
+
+async function carregar(manual) {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo as pendências') : null;
+  try {
+    const d = await apiJson('/api/garagem/abastecimento/gestao');
+    avisarNovas(d);
+    D = d;
+  } catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { $('ab-negado-tx').textContent = e.message; mostrar('ab-negado'); return; }
+    if (D) { $('ab-hora').textContent = 'Sem conexão agora — tentando de novo em 1 minuto.'; $('ab-vivo').classList.remove('on'); return; }
+    mostrar('ab-estado');
+    $('ab-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  mostrar('ab-app');
+  $('ab-soconsulta').style.display = D.pode ? 'none' : '';
+  $('ab-vivo').classList.add('on');
+  $('ab-hora').textContent = 'Atualizado às ' + String(D.agora || '').slice(11, 16) + ' · atualiza sozinho a cada minuto';
+  if (manual) toast('Lista atualizada.');
+  pintar();
+  clearInterval(TIMER);
+  TIMER = setInterval(() => { if (document.visibilityState === 'visible' && !$('m-sit').classList.contains('on')) carregar(); }, 60000);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && ls('bp_token')) carregar(); });
+
+/* aviso de pendência nova: som + notificação do navegador (com a página aberta) */
+function avisarNovas(d) {
+  const abertas = d.pendencias.filter((p) => p.situacao === 'ABERTA').map((p) => p.id);
+  if (VISTOS) {
+    const novas = abertas.filter((id) => !VISTOS.has(id));
+    novas.forEach((id) => NOVOS.add(id));
+    if (novas.length) {
+      const p = d.pendencias.find((x) => x.id === novas[0]);
+      const txt = novas.length > 1 ? novas.length + ' pendências novas de abastecimento' : `${p.prefixo}: ${p.erro}`;
+      toast(txt, 'err', 8000);
+      if (ls('bp_ab_som') === '1') bip();
+      try { if (ls('bp_ab_som') === '1' && 'Notification' in window && Notification.permission === 'granted') new Notification('Pendência de abastecimento', { body: txt, icon: 'garagem-gestao-icon-192.png', tag: 'bp-abast' }); } catch (e) {}
+    }
+  }
+  VISTOS = new Set([...(VISTOS || []), ...d.pendencias.map((p) => p.id)]);
+}
+function bip() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.22].forEach((t) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.18);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.2);
+    });
+  } catch (e) {}
+}
+async function ligarAviso() {
+  const ligado = ls('bp_ab_som') === '1';
+  if (ligado) { ls('bp_ab_som', ''); pintarSom(); toast('Aviso com som desligado.'); return; }
+  ls('bp_ab_som', '1'); bip();
+  try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch (e) {}
+  pintarSom(); toast('Pronto: com a página aberta, chega som e aviso quando entrar pendência nova.');
+}
+function pintarSom() {
+  const on = ls('bp_ab_som') === '1';
+  $('bt-som').innerHTML = IC('novidade') + (on ? 'Som ligado' : 'Avisar com som');
+  $('bt-som').classList.toggle('sec', !on);
+}
+
+/* ============================== tela ============================== */
+function setFiltro(f) {
+  FILTRO = f;
+  document.querySelectorAll('#ab-filtros button').forEach((b) => b.classList.toggle('on', b.dataset.f === f));
+  pintar();
+}
+function passa(p) {
+  if (FILTRO === 'resolver') return p.situacao === 'ABERTA' || p.situacao === 'EM_ANALISE';
+  if (FILTRO === 'todas') return true;
+  return p.situacao === FILTRO;
+}
+function pintar() {
+  if (!D) return;
+  const P = D.pendencias;
+  const conta = (f) => P.filter((p) => f(p)).length;
+  const resolver = conta((p) => p.situacao === 'ABERTA' || p.situacao === 'EM_ANALISE');
+  const lim = Date.now() - 30 * 86400e3;
+  $('n-resolver').textContent = resolver;
+  $('n-aberta').textContent = conta((p) => p.situacao === 'ABERTA');
+  $('n-analise').textContent = conta((p) => p.situacao === 'EM_ANALISE');
+  $('n-sanada').textContent = conta((p) => p.situacao === 'SANADA' && instante(p.atualizado) >= lim);
+  $('f-resolver').textContent = resolver; $('f-sanada').textContent = conta((p) => p.situacao === 'SANADA');
+  $('f-cancelada').textContent = conta((p) => p.situacao === 'CANCELADA'); $('f-todas').textContent = P.length;
+  document.title = (resolver ? '(' + resolver + ') ' : '') + 'Pendências de Abastecimento · DAAL · BPFRON';
+  pintarSom();
+
+  const q = sem($('ab-q').value).trim();
+  let L = P.filter(passa).filter((p) => !q || sem([p.prefixo, p.placa, p.modelo, p.nome, p.posto_grad, p.re, p.unidade, p.posto_combustivel, p.endereco, p.erro, p.mensagem, p.combustivel, p.transacao].join(' ')).includes(q));
+  // a resolver: a mais antiga primeiro (fila); as demais: a mais recente primeiro
+  if (FILTRO === 'resolver') L = L.slice().sort((a, b) => (a.data < b.data ? -1 : 1));
+  $('ab-lista').innerHTML = L.map(cartao).join('') || `<div class="bp-vazio">${FILTRO === 'resolver' ? 'Nenhuma pendência para resolver agora.' : 'Nada por aqui.'}</div>`;
+}
+function linkMapa(p) {
+  const q = p.lat_lon || [p.posto_combustivel, p.endereco].filter(Boolean).join(', ');
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+function cartao(p) {
+  const s = SIT[p.situacao] || SIT.ABERTA;
+  const tel = String(p.telefone || '').replace(/\D/g, '');
+  const telBR = tel.length >= 10 && tel.length <= 11 ? '55' + tel : tel;
+  const ac = [];
+  if (D.pode) {
+    if (p.situacao === 'ABERTA') ac.push(`<button class="bp-btn sm sec" onclick="mudar('${p.id}','EM_ANALISE')"><i data-ic="olho"></i>Estou vendo</button>`);
+    if (p.situacao === 'ABERTA' || p.situacao === 'EM_ANALISE') {
+      ac.push(`<button class="bp-btn sm" onclick="abrirSit('${p.id}','SANADA')"><i data-ic="ok"></i>Sanar</button>`);
+      if (p.situacao === 'EM_ANALISE') ac.push(`<button class="bp-btn sm ghost" onclick="mudar('${p.id}','ABERTA')"><i data-ic="voltar"></i>Devolver para abertas</button>`);
+      ac.push(`<button class="bp-btn sm perigo-l" onclick="abrirSit('${p.id}','CANCELADA')"><i data-ic="x"></i>Cancelar</button>`);
+    } else ac.push(`<button class="bp-btn sm ghost" onclick="abrirSit('${p.id}','ABERTA')"><i data-ic="atualizar"></i>Reabrir</button>`);
+  }
+  ac.push(`<button class="bp-btn sm ghost" onclick="copiar('${p.id}')"><i data-ic="arquivo"></i>Copiar dados</button>`);
+  const resp = p.situacao !== 'ABERTA' && p.atualizado
+    ? `<div class="ab-resp ${p.situacao === 'CANCELADA' ? 'crit' : p.situacao === 'EM_ANALISE' ? 'info' : ''}"><b>${esc(s.nome)}</b> por ${esc(p.atualizado_por)} em ${esc(fData(p.atualizado))}${p.resposta ? ': ' + esc(p.resposta) : ''}</div>` : '';
+  const hist = (p.historico || []).length
+    ? `<details class="ab-hist"><summary>Histórico (${p.historico.length + 1})</summary><ol><li>${esc(fDataAno(p.data))} — lançada pelo motorista</li>${p.historico.map((h) => `<li>${esc(fDataAno(h.quando))} — ${esc((SIT[h.situacao] || {}).nome || h.situacao)} · ${esc(h.quem)}${h.obs ? ': ' + esc(h.obs) : ''}</li>`).join('')}</ol></details>` : '';
+  return `<div class="bp-card ab-p ${NOVOS.has(p.id) && p.situacao === 'ABERTA' ? 'novo' : ''}" id="p-${p.id}">
+    <div class="cab">
+      <span class="bp-tile ${s.cl}"><i data-ic="${s.ic}"></i></span>
+      <div class="tx"><h3>${esc(p.prefixo)} <span style="font:600 13px Inter,sans-serif;color:var(--muted)">${esc(p.modelo)} · ${esc(p.placa)}</span></h3>
+        <div class="er">${esc(p.erro)}</div>
+        <small>${esc(fDataAno(p.data))} · ${ha(p.data)}</small></div>
+      <span class="bp-sl ${s.cl}">${esc(s.nome)}</span>
+    </div>
+    ${p.mensagem ? `<div class="msg">“${esc(p.mensagem)}”</div>` : ''}
+    <div class="ab-grade">
+      <div class="bx larga"><div class="l">Motorista</div><div class="v">${esc([p.posto_grad, p.nome].filter(Boolean).join(' '))} · RE ${esc(p.re)}<small>${esc(p.unidade)}${tel ? ` · <a href="tel:${esc(tel)}">${esc(p.telefone)}</a> · <a href="https://wa.me/${esc(telBR)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</small></div></div>
+      <div class="bx larga"><div class="l">Posto</div><div class="v">${esc(p.posto_combustivel)}<small>${esc(p.endereco)} · <a href="${esc(linkMapa(p))}" target="_blank" rel="noopener">ver no mapa</a></small></div></div>
+      <div class="bx"><div class="l">Combustível</div><div class="v">${esc(p.combustivel)}</div></div>
+      <div class="bx"><div class="l">Litros</div><div class="v">${fLt(p.litros)}</div></div>
+      <div class="bx"><div class="l">Valor</div><div class="v">${fR$(p.valor)}<small>${p.preco_litro ? 'R$ ' + Number(p.preco_litro).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + ' por litro' : ''}</small></div></div>
+      <div class="bx"><div class="l">Km informado</div><div class="v">${p.km ? fN(p.km) + ' km' : '—'}</div></div>
+      ${p.transacao ? `<div class="bx"><div class="l">Transação</div><div class="v">${esc(p.transacao)}</div></div>` : ''}
+    </div>
+    ${p.obs ? `<div class="msg" style="border-style:solid">${IC('info')} ${esc(p.obs)}</div>` : ''}
+    ${resp}
+    <div class="ab-acoes">${ac.join('')}</div>
+    ${hist}
+  </div>`;
+}
+function copiar(id) {
+  const p = D.pendencias.find((x) => x.id === id); if (!p) return;
+  const t = [
+    `PENDÊNCIA DE ABASTECIMENTO — ${p.prefixo} (${p.placa} · ${p.modelo})`,
+    `Data/hora: ${fDataAno(p.data)}`,
+    `Erro: ${p.erro}${p.mensagem ? ' — "' + p.mensagem + '"' : ''}`,
+    `Motorista: ${[p.posto_grad, p.nome].filter(Boolean).join(' ')} · RE ${p.re} · ${p.unidade}`,
+    `Posto: ${p.posto_combustivel} — ${p.endereco}`,
+    `Combustível: ${p.combustivel} · ${fLt(p.litros)} · ${fR$(p.valor)} · Km ${p.km ? fN(p.km) : '—'}`,
+    p.transacao ? `Transação: ${p.transacao}` : '', p.obs ? `Obs.: ${p.obs}` : '',
+  ].filter(Boolean).join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Dados copiados.'), () => { window.prompt('Copie os dados:', t); });
+}
+
+/* ============================== situação ============================== */
+let SIT_ALVO = null;
+function abrirSit(id, situacao) {
+  const p = D.pendencias.find((x) => x.id === id); if (!p) return;
+  SIT_ALVO = { id, situacao, de: p.situacao };
+  const cfg = {
+    SANADA: ['Sanar pendência', 'O que foi feito (o motorista vê)', 'ok', 'Ex.: liberado no eLiq / média ajustada / preço autorizado.'],
+    CANCELADA: ['Cancelar pendência', 'Motivo do cancelamento (obrigatório)', 'crit', 'Ex.: lançada por engano / o abastecimento passou depois.'],
+    ABERTA: ['Reabrir pendência', 'Por que está reabrindo', 'pend', ''],
+  }[situacao];
+  $('m-sit-tit').textContent = cfg[0];
+  $('m-sit-rot').textContent = cfg[1];
+  $('m-sit-ic').className = 'bp-tile ' + cfg[2];
+  $('m-sit-sub').textContent = `${p.prefixo} · ${p.erro}`;
+  $('m-sit-obs').value = ''; $('m-sit-obs').placeholder = cfg[3];
+  $('m-sit-erro').textContent = '';
+  $('m-sit').classList.add('on'); setTimeout(() => $('m-sit-obs').focus(), 80);
+}
+function fecharSit() { $('m-sit').classList.remove('on'); SIT_ALVO = null; }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharSit(); });
+async function confirmarSit() {
+  if (!SIT_ALVO) return;
+  const obs = $('m-sit-obs').value.trim();
+  if (SIT_ALVO.situacao === 'CANCELADA' && obs.length < 3) { $('m-sit-erro').textContent = 'Diga o motivo do cancelamento.'; return; }
+  const bt = $('m-sit-ok'), antes = bt.innerHTML;
+  bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Salvando…';
+  try { await gravar(SIT_ALVO.id, SIT_ALVO.situacao, obs, SIT_ALVO.de); fecharSit(); }
+  catch (e) { $('m-sit-erro').textContent = e.message; }
+  finally { bt.disabled = false; bt.innerHTML = antes; }
+}
+async function mudar(id, situacao) {
+  const p = D.pendencias.find((x) => x.id === id); if (!p) return;
+  try { await gravar(id, situacao, '', p.situacao); } catch (e) { toast(e.message, 'err'); }
+}
+async function gravar(id, situacao, obs, de) {
+  try {
+    await apiJson('/api/garagem/abastecimento/gestao', { op: 'situacao', id, situacao, obs, de });
+    NOVOS.delete(id);
+    toast({ SANADA: 'Pendência sanada. O motorista já vê no app.', EM_ANALISE: 'Marcada como “em análise” — o colega sabe que você pegou.', CANCELADA: 'Pendência cancelada.', ABERTA: 'Pendência aberta de novo.' }[situacao]);
+    await carregar();
+  } catch (e) {
+    if (e.status === 409) { await carregar(); toast(e.message, 'err', 6000); fecharSit(); return; }
+    throw e;
+  }
+}
+
+/* ============================== CSV ============================== */
+function exportarCSV() {
+  if (!D) return;
+  const col = [['data', 'Data/hora'], ['prefixo', 'Viatura'], ['placa', 'Placa'], ['re', 'RE'], ['posto_grad', 'Posto/grad'], ['nome', 'Nome'], ['unidade', 'Unidade'],
+    ['erro', 'Erro'], ['mensagem', 'Mensagem'], ['posto_combustivel', 'Posto'], ['endereco', 'Endereço'], ['km', 'Km'], ['litros', 'Litros'], ['valor', 'Valor (R$)'],
+    ['preco_litro', 'R$/litro'], ['combustivel', 'Combustível'], ['transacao', 'Transação'], ['obs', 'Observação'], ['situacao', 'Situação'],
+    ['atualizado_por', 'Por'], ['atualizado', 'Quando'], ['resposta', 'Resposta da DAAL']];
+  const cel = (v, k) => {
+    if (k === 'data' || k === 'atualizado') v = fDataAno(v);
+    if (typeof v === 'number') v = String(v).replace('.', ',');
+    if (k === 'situacao') v = (SIT[v] || {}).nome || v;
+    return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  };
+  const L = D.pendencias.filter(passa);
+  const csv = '﻿' + [col.map((c) => '"' + c[1] + '"').join(';'), ...L.map((p) => col.map(([k]) => cel(p[k], k)).join(';'))].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'pendencias-abastecimento.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+// ícones <i data-ic> que o JS escreve depois do carregamento
+if (window.BPCasca && BPCasca.icones) {
+  new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); })
+    .observe(document.body, { childList: true, subtree: true });
+}
+boot();
+</script>
+</body>
+</html>

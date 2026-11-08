@@ -156,6 +156,8 @@
       desc: 'Situação das viaturas e o último checklist de cada uma.' },
     { id: 'garagem', href: 'garagem.html', ic: '🚓', nome: 'Checklist da Viatura', grupo: 'p4', acesso: 'pub',
       desc: 'Início e término de uso da viatura, direto do celular.' },
+    { id: 'abastecimento', href: 'abastecimento.html', ic: '⛽', nome: 'Garagem · Pendências de Abastecimento', grupo: 'p4', acesso: { perm: ['abastecimento', 'garagem'] }, gestor: 'abastecimento', ver: 'garagem',
+      desc: 'DAAL: erros de abastecimento do cartão (eLiq) lançados pelo motorista no checklist, para sanar sem ligação de madrugada.' },
     { id: 'reserva', href: 'cautela-reserva.html', ic: IC_PISTOLA, nome: 'Reserva de Armamento', grupo: 'p4', acesso: { perm: ['cautela', 'material'] }, gestor: 'cautela',
       desc: 'Estoque, cautela, passagem de serviço e a Parte Diária para o SEI.' },
     { id: 'dmaterial', href: 'index.html?pg=material', ic: IC_PISTOLA, nome: 'Material Bélico', grupo: 'p4', acesso: { pagina: 'material' }, gestor: 'material',
@@ -884,7 +886,8 @@
     celular: '<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
     etiqueta: '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
     proibido: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
-    iniciar: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>'
+    iniciar: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+    bomba: '<path d="M3 22V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/><line x1="2" y1="22" x2="15" y2="22"/><line x1="6" y1="9" x2="11" y2="9"/><path d="M14 13h2a2 2 0 0 1 2 2v3a2 2 0 0 0 4 0V9l-4-4"/>'
   };
   function ic(nome, cls) {
     var d = ICONES[nome];

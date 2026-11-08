@@ -454,6 +454,8 @@ function quadro(aba){
   if (!f){
     f = document.createElement('iframe');
     f.title = { tarefas:'Central de Tarefas', viatura:'Checklist da viatura', cautela:'Cautela de armamento', ficha:'Minha ficha (P1)', p1:'P1 · afastamentos e documentos' }[aba];
+    // checklist: "Usar minha localização" da pendência de abastecimento (08/11/2026)
+    if (aba === 'viatura') f.allow = 'geolocation';
     f.src = srcDe(aba);
     f.addEventListener('load', () => { const c = box.querySelector('.carr'); if (c) c.remove(); });
     box.appendChild(f);

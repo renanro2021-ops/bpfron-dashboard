@@ -198,6 +198,29 @@ textarea{min-height:92px;resize:vertical}
 html.portal .bp-topo,html.portal .bp-fundo{display:none}
 html.portal .bp-wrap{padding-top:14px}
 html.portal #quem-ok a{display:none}
+/* pendência de abastecimento (08/11/2026) */
+.ab-card{border-color:var(--warn-line)}
+.ab-card .step>.bp-i{background:var(--warn-soft);color:var(--warn)}
+.ab-id{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ab-id .bx{background:var(--surf2);border:1px solid var(--line2);border-radius:13px;padding:9px 12px;min-width:0}
+.ab-id .l{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.ab-id .v{font-size:14.5px;font-weight:700;color:var(--t1);line-height:1.35;overflow-wrap:anywhere}
+.ab-id .bx.auto .l::after{content:" · automático";text-transform:none;letter-spacing:0;font-weight:600;color:var(--dim)}
+.ab-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ab-comb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ab-comb .opt{padding:11px 6px;font-size:13.5px}
+.btn.ab{width:100%;margin:0 0 12px;border-color:var(--warn-line);color:var(--warn);background:var(--warn-soft)}
+.btn.ab:hover{color:var(--warn);filter:brightness(1.08)}
+.abm{border:1px solid var(--line2);border-radius:15px;padding:12px 13px;margin-bottom:8px;background:var(--surf2)}
+.abm .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.abm .t b{font-size:14.5px;color:var(--t1)}
+.abm .d{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.abm .r{font-size:13px;color:var(--t2);margin-top:7px;padding:8px 10px;border-radius:11px;background:var(--surf);border:1px solid var(--line)}
+.chip.ab-ABERTA{color:var(--warn);border-color:var(--warn-line);background:var(--warn-soft)}
+.chip.ab-EM_ANALISE{color:var(--info);border-color:var(--info-line);background:var(--info-soft)}
+.chip.ab-SANADA{color:var(--good);border-color:var(--good-line);background:var(--good-soft)}
+.chip.ab-CANCELADA{color:var(--muted);border-color:var(--line2);background:var(--surf)}
+@media(max-width:520px){ .ab-comb{grid-template-columns:1fr 1fr} }
 @media(max-width:520px){
   #btn-instalar .tx{display:none}
   .info2{grid-template-columns:1fr}
@@ -206,6 +229,11 @@ html.portal #quem-ok a{display:none}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-08", "titulo": "Pendência de abastecimento", "quem": "todos", "itens": [
+    "Deu erro no cartão na hora de abastecer (média de consumo fora dos intervalos, preço fora da tabela…)? Com a viatura no seu nome, toque em “Lançar pendência de abastecimento”.",
+    "RE, nome, unidade, viatura, data e hora vão sozinhos. Você informa o erro, o posto, o km, os litros, o valor e o combustível.",
+    "A DAAL recebe na hora e resolve, sem precisar ligar. A situação (aguardando, a DAAL está vendo, sanada) aparece aqui no app."
+  ] },
   { "data": "2026-10-30", "titulo": "App de cara nova", "quem": "todos", "itens": [
     "Visual do Portal da Gestão, com os temas do site (menu ☰ → Tema).",
     "Botões, cartões das viaturas e avisos redesenhados, com ícones novos.",
@@ -293,6 +321,63 @@ html.portal #quem-ok a{display:none}
 
   <!-- viatura que este policial está usando agora (atalho pro Término) -->
   <div id="s-minha" class="card minha hidden"></div>
+
+  <!-- pendência de abastecimento (08/11/2026): erro do cartão no posto → DAAL -->
+  <div id="s-abast" class="hidden">
+    <div class="card ab-card">
+      <div class="step"><i data-ic="bomba"></i>Pendência de abastecimento <span id="ab-vtr" style="color:var(--acc);letter-spacing:.5px"></span></div>
+      <div class="hint" style="margin:-4px 0 12px">Deu erro no cartão (eLiq) na hora de abastecer? Lance aqui: a <b>DAAL</b> recebe e resolve, sem precisar ligar.</div>
+      <div class="ab-id" id="ab-id"></div>
+
+      <label class="lb" for="ab-erro">Erro que apareceu <span class="req">*</span></label>
+      <select id="ab-erro" onchange="abErroMudou()"></select>
+      <label class="lb" for="ab-msg">Mensagem que apareceu na tela <span class="req hidden" id="ab-msg-req">*</span></label>
+      <textarea id="ab-msg" maxlength="1000" style="min-height:64px" placeholder="Copie a mensagem como apareceu. Ex.: A MÉDIA DE CONSUMO DA TRANSAÇÃO ESTÁ FORA DOS INTERVALOS"></textarea>
+
+      <label class="lb" for="ab-posto">Nome do posto <span class="req">*</span></label>
+      <input id="ab-posto" list="dl-postos" autocomplete="off" maxlength="120" placeholder="Ex.: Posto Trevo" oninput="abPostoMudou()">
+      <datalist id="dl-postos"></datalist>
+      <label class="lb" for="ab-end">Endereço do posto <span class="req">*</span></label>
+      <input id="ab-end" autocomplete="off" maxlength="300" placeholder="Rua / rodovia, número ou km, cidade">
+      <button class="btn gray" type="button" style="width:100%;margin-top:8px" id="ab-gps" onclick="abLocalizacao()"><i data-ic="local"></i>Usar minha localização</button>
+      <div class="hint" id="ab-gps-hint"></div>
+
+      <label class="lb" for="ab-km">Km informado no abastecimento <span class="req">*</span></label>
+      <input id="ab-km" inputmode="numeric" autocomplete="off" placeholder="Km do painel" oninput="abCalc()">
+      <div class="hint" id="ab-km-hint"></div>
+      <div class="ab-2">
+        <div><label class="lb" for="ab-lt">Litros <span class="req">*</span></label>
+          <input id="ab-lt" inputmode="decimal" autocomplete="off" placeholder="Ex.: 45,32" oninput="abCalc()"></div>
+        <div><label class="lb" for="ab-vl">Valor total (R$) <span class="req">*</span></label>
+          <input id="ab-vl" inputmode="decimal" autocomplete="off" placeholder="Ex.: 289,90" oninput="abCalc()"></div>
+      </div>
+      <div class="hint" id="ab-preco"></div>
+      <label class="lb">Combustível <span class="req">*</span></label>
+      <div class="ab-comb" id="ab-comb"></div>
+
+      <label class="lb" for="ab-tx">Nº da transação / autorização <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:600">(se apareceu)</span></label>
+      <input id="ab-tx" autocomplete="off" maxlength="60">
+      <label class="lb" for="ab-obs">Observação</label>
+      <textarea id="ab-obs" maxlength="1000" style="min-height:64px" placeholder="Algo que ajude a DAAL (o que o frentista disse, se o abastecimento foi feito ou não…)"></textarea>
+
+      <div id="ab-erro-envio" class="aviso red hidden"></div>
+      <div class="sticky-send"><button class="btn-main" id="ab-enviar" onclick="enviarAbast()"><i data-ic="enviar"></i>Enviar para a DAAL</button></div>
+      <button class="btn gray" style="width:100%;margin-top:8px" onclick="fecharAbast()"><i data-ic="voltar"></i>Voltar</button>
+    </div>
+  </div>
+  <div id="s-abast-ok" class="card sucesso hidden">
+    <div class="ic"><i data-ic="ok"></i></div>
+    <h2>Pendência enviada!</h2>
+    <div class="muted" id="ab-ok-sub"></div>
+    <div class="resumo" id="ab-ok-resumo"></div>
+    <button class="btn-main" onclick="fecharAbast()">Voltar</button>
+  </div>
+
+  <!-- pendências de abastecimento deste policial (situação dada pela DAAL) -->
+  <div id="s-abmin" class="card hidden">
+    <div class="step"><i data-ic="bomba"></i>Suas pendências de abastecimento</div>
+    <div id="abmin-lista"></div>
+  </div>
 
   <!-- 2. viatura -->
   <div id="s-vtr" class="card hidden">
@@ -483,7 +568,7 @@ function irVista(v){
   VISTA = v;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   show('s-frota', v === 'frota');
-  if (v === 'frota'){ ['s-quem','s-minha','s-vtr','s-form','s-ok'].forEach(id => $(id).classList.add('hidden')); renderFrotaSit(); }
+  if (v === 'frota'){ ['s-quem','s-minha','s-vtr','s-form','s-ok','s-abast','s-abast-ok','s-abmin'].forEach(id => $(id).classList.add('hidden')); ABV = null; renderFrotaSit(); }
   else { mostrarQuem(); if (SEL) abrirForm(false); }
   window.scrollTo({ top:0 });
 }
@@ -525,8 +610,9 @@ function mostrarQuem(){
     $('eu-uni').innerHTML = IC('etiqueta') + 'Outra unidade' + (EU.unidade ? ' · ' + esc(EU.unidade) : ''); show('eu-uni', !!EU.externo);
   }
   // quem está com viatura em uso só vê a dela: a lista some até ele dar o Término
-  show('s-vtr', !!EU && !travarNaMinha());
+  show('s-vtr', !!EU && !travarNaMinha() && !ABV);
   renderMinha();
+  carregarAb();
   if (!EU) setTimeout(() => $('re').focus(), 50);
 }
 async function identificar(){
@@ -584,6 +670,7 @@ async function reconferirEU(){
 }
 function trocarPolicial(){
   EU = null; try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  AB = null; AB_RE = ''; ABV = null; show('s-abast', false); show('s-abast-ok', false);
   SEL = null; show('s-form', false); $('re').value = ''; EXT_PEND = null; show('quem-ext', false);
   mostrarQuem(); renderViaturas();
 }
@@ -604,12 +691,13 @@ function travarNaMinha(){
   return true;
 }
 function renderMinha(){
-  const L = (VISTA === 'frota' || !$('s-ok').classList.contains('hidden')) ? [] : minhasViaturas();
+  const L = (VISTA === 'frota' || ABV || !$('s-ok').classList.contains('hidden') || !$('s-abast-ok').classList.contains('hidden')) ? [] : minhasViaturas();
   show('s-minha', L.length > 0);
   $('s-minha').innerHTML = L.length ? `<div class="step"><i data-ic="carro"></i>Você está com ${L.length > 1 ? 'estas viaturas' : 'esta viatura'}</div>` + L.map(v => `
     <div class="mv"><div><div class="pf">${esc(v.prefixo)}</div>
       <div class="d">${esc(v.modelo)} · ${esc(v.placa)}<br>Saiu em ${esc(fData(v.ultimo.data))} (há ${esc(tempoDesde(v.ultimo.data))})${v.ultimo.km ? ' com <b>' + fN(v.ultimo.km) + ' km</b>' : ''}</div></div></div>
-    <button class="btn-main" style="margin:0 0 12px" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')"><i data-ic="bandeira"></i>Registrar término de uso · ${esc(v.prefixo)}</button>`).join('')
+    <button class="btn-main" style="margin:0 0 10px" onclick="escolher('${esc(v.prefixo).replace(/'/g,"\\'")}')"><i data-ic="bandeira"></i>Registrar término de uso · ${esc(v.prefixo)}</button>
+    <button class="btn ab" onclick="abrirAbast('${esc(v.prefixo).replace(/'/g,"\\'")}')"><i data-ic="bomba"></i>Lançar pendência de abastecimento</button>`).join('')
     + '<div class="hint" style="margin-top:0"><i data-ic="cadeado"></i>Para pegar outra viatura, registre antes o <b>término</b> desta. Não está mais com ela? Procure o gestor da garagem.</div>' : '';
 }
 // Próxima troca de óleo: km (se informado, usa o do painel; senão o último registrado).
@@ -630,6 +718,174 @@ function renderVtrInfo(){
     <div class="bx"><div class="l"><i data-ic="painel"></i>Último km da viatura</div><div class="v">${SEL.km_atual ? fN(SEL.km_atual) + ' km' : '—'}</div>
       <div class="s">${u ? (u.momento === 'Término de uso' ? 'término' : 'início') + ' em ' + esc(fData(u.data)) : 'primeiro registro desta viatura'}</div></div>
     <div class="bx ${o.cls}"><div class="l"><i data-ic="gota"></i>Próxima troca de óleo</div><div class="v">${o.txt}</div><div class="s">${o.sub}</div></div>`;
+}
+
+/* ─── pendência de abastecimento (08/11/2026) ───
+   Erro do cartão no posto (eLiq/Uzzipay: média de consumo, preço fora da tabela…).
+   Só aparece para quem está com a viatura em uso; o Worker confere de novo.
+   RE, nome, unidade, viatura e data/hora vão sozinhos (data/hora é a do servidor). */
+let AB = null;          // resposta de /api/garagem/abastecimento/minhas
+let AB_RE = '';         // de quem é o AB carregado
+let ABV = null;         // viatura do formulário aberto
+let AB_COMB = '';
+let AB_LATLON = '';
+let AB_RELOGIO = null;
+const AB_SIT = { ABERTA:'Aguardando a DAAL', EM_ANALISE:'DAAL está vendo', SANADA:'Sanada', CANCELADA:'Cancelada' };
+function numBR(v){
+  let s = String(v == null ? '' : v).replace(/[^\d,.]/g, '');
+  if (!s) return NaN;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if ((s.match(/\./g) || []).length > 1) s = s.replace(/\.(?=.*\.)/g, '');
+  return Number(s);
+}
+const fR$ = (n) => 'R$ ' + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const fLt = (n) => (Number(n) || 0).toLocaleString('pt-BR', { maximumFractionDigits:3 }) + ' L';
+function horaPV(){ const d = new Date(Date.now() - 4*3600e3), p = (n) => String(n).padStart(2,'0'); return `${p(d.getUTCDate())}/${p(d.getUTCMonth()+1)}/${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`; }
+
+async function carregarAb(forcar){
+  if (!EU || VISTA === 'frota'){ show('s-abmin', false); return; }
+  if (AB && AB_RE === EU.re && !forcar){ renderAbMin(); return; }
+  const re = EU.re;
+  try{
+    const d = await api('/api/garagem/abastecimento/minhas', { re });
+    if (!EU || EU.re !== re) return;
+    AB = d; AB_RE = re; renderAbMin();
+  }catch(e){ /* sem a lista o checklist segue normal */ }
+}
+function renderAbMin(){
+  const L = (AB && EU && AB_RE === EU.re && VISTA !== 'frota' && !ABV && $('s-ok').classList.contains('hidden')) ? AB.minhas : [];
+  show('s-abmin', L.length > 0);
+  $('abmin-lista').innerHTML = L.map(p => `<div class="abm">
+      <div class="t"><span class="chip ab-${esc(p.situacao)}">${esc(AB_SIT[p.situacao] || p.situacao)}</span><b>${esc(p.prefixo)}</b><span class="muted" style="font-size:12.5px">${esc(fData(p.data))}</span></div>
+      <div class="d"><b style="color:var(--t2)">${esc(p.erro)}</b><br>${esc(p.posto_combustivel)} · ${fLt(p.litros)} · ${fR$(p.valor)} · ${esc(p.combustivel)}</div>
+      ${p.situacao !== 'ABERTA' && (p.resposta || p.atualizado) ? `<div class="r">${p.situacao === 'EM_ANALISE' ? '<i data-ic="relogio"></i> A DAAL pegou a sua pendência' : p.situacao === 'SANADA' ? '<i data-ic="ok"></i> Resolvido pela DAAL' : '<i data-ic="x"></i> Cancelada pela DAAL'}${p.atualizado ? ' em ' + esc(fData(p.atualizado)) : ''}${p.resposta ? ':<br>' + esc(p.resposta) : '.'}</div>` : ''}
+    </div>`).join('');
+}
+
+function abrirAbast(prefixo){
+  const v = minhasViaturas().find(x => x.prefixo === prefixo);
+  if (!v) return;
+  ABV = v; AB_COMB = ''; AB_LATLON = '';
+  ['ab-msg','ab-posto','ab-end','ab-km','ab-lt','ab-vl','ab-tx','ab-obs'].forEach(id => $(id).value = '');
+  $('ab-gps-hint').textContent = ''; abErroEnvio('');
+  $('ab-erro').value = '';
+  abListas();
+  $('ab-vtr').textContent = '· ' + v.prefixo;
+  abId(); clearInterval(AB_RELOGIO); AB_RELOGIO = setInterval(abId, 20000);
+  $('ab-km-hint').textContent = v.ultimo && v.ultimo.km ? `Você saiu com ${fN(v.ultimo.km)} km.` : '';
+  abErroMudou(); abCalc();
+  ['s-vtr','s-form','s-minha','s-ok','s-abast-ok','s-abmin'].forEach(id => show(id, false));
+  show('s-abast', true);
+  if (!AB) carregarAb(true).then(() => { if (ABV === v) abListas(); });
+  setTimeout(() => $('s-abast').scrollIntoView({ behavior:'smooth', block:'start' }), 60);
+}
+// listas do formulário (erros, postos já usados, combustíveis) — mantém o que já foi escolhido
+function abListas(){
+  const erroAntes = $('ab-erro').value;
+  const lista = (AB && AB.erros) || [];
+  $('ab-erro').innerHTML = '<option value="">' + (lista.length ? 'Escolha o erro…' : 'Carregando a lista…') + '</option>' + lista.map(e => `<option>${esc(e)}</option>`).join('');
+  if (lista.includes(erroAntes)) $('ab-erro').value = erroAntes;
+  $('dl-postos').innerHTML = ((AB && AB.postos) || []).map(p => `<option value="${esc(p.nome)}">${esc(p.endereco)}</option>`).join('');
+  $('ab-comb').innerHTML = ((AB && AB.combustiveis) || []).map(c => `<button type="button" class="opt${c === AB_COMB ? ' on' : ''}" data-c="${esc(c)}" onclick="abComb(this.dataset.c)">${esc(c)}</button>`).join('');
+  abErroMudou();
+}
+function abId(){
+  if (!ABV || !EU) return;
+  $('ab-id').innerHTML = `
+    <div class="bx auto"><div class="l">Policial</div><div class="v">${esc(EU.nome)}<br><span class="muted" style="font-size:12.5px;font-weight:600">RE ${esc(EU.re)}</span></div></div>
+    <div class="bx auto"><div class="l">Unidade</div><div class="v">${esc(EU.externo ? (EU.unidade || 'Outra unidade') : 'BPFRON')}</div></div>
+    <div class="bx auto"><div class="l">Viatura</div><div class="v">${esc(ABV.prefixo)}<br><span class="muted" style="font-size:12.5px;font-weight:600">${esc(ABV.modelo)} · ${esc(ABV.placa)}</span></div></div>
+    <div class="bx auto"><div class="l">Data e hora</div><div class="v">${horaPV()}<br><span class="muted" style="font-size:12px;font-weight:600">registrada no envio</span></div></div>`;
+}
+function fecharAbast(){
+  ABV = null; clearInterval(AB_RELOGIO);
+  show('s-abast', false); show('s-abast-ok', false);
+  mostrarQuem(); renderViaturas();
+  if (SEL) abrirForm(false);
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+function abErroMudou(){
+  const outro = AB && $('ab-erro').value === AB.outro;
+  show('ab-msg-req', !!outro);
+}
+function abComb(c){ AB_COMB = c; document.querySelectorAll('#ab-comb .opt').forEach(b => b.classList.toggle('on', b.dataset.c === c)); }
+function abPostoMudou(){
+  const p = ((AB && AB.postos) || []).find(x => x.nome.toUpperCase() === $('ab-posto').value.trim().toUpperCase());
+  if (p && p.endereco && !$('ab-end').value.trim()) $('ab-end').value = p.endereco;
+}
+function abCalc(){
+  const lt = numBR($('ab-lt').value), vl = numBR($('ab-vl').value);
+  $('ab-preco').innerHTML = lt > 0 && vl > 0 ? `Preço por litro: <b style="color:var(--t1)">R$ ${(vl / lt).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:3 })}</b>` : '';
+  const km = Number($('ab-km').value.replace(/\D/g,'')) || 0, saiu = ABV && ABV.ultimo && ABV.ultimo.km;
+  $('ab-km-hint').innerHTML = saiu ? (km && km < saiu
+    ? `<span class="err">Atenção: menor que o km com que você saiu (${fN(saiu)} km). Confira o painel.</span>`
+    : `Você saiu com ${fN(saiu)} km${km > saiu ? ` · rodou ${fN(km - saiu)} km até aqui` : ''}.`) : '';
+}
+// Localização do celular -> endereço (OpenStreetMap). Se não der, só as coordenadas.
+function abLocalizacao(){
+  const h = $('ab-gps-hint');
+  if (!navigator.geolocation){ h.textContent = 'Este celular não informa a localização. Digite o endereço.'; return; }
+  $('ab-gps').disabled = true; h.textContent = 'Buscando a sua localização…';
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude.toFixed(6), lon = pos.coords.longitude.toFixed(6);
+    AB_LATLON = lat + ',' + lon;
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&accept-language=pt-BR&lat=${lat}&lon=${lon}`);
+      const d = await r.json(), a = d.address || {};
+      const rua = [a.road, a.house_number].filter(Boolean).join(', ');
+      const txt = [rua, a.suburb || a.neighbourhood, a.city || a.town || a.village || a.municipality, a.state_code || a.state].filter(Boolean).join(' - ');
+      if (txt) $('ab-end').value = txt;
+      h.textContent = txt ? 'Endereço preenchido pela localização — confira e corrija se precisar.' : 'Localização registrada. Digite o endereço.';
+    }catch(e){
+      if (!$('ab-end').value.trim()) $('ab-end').value = 'Coordenadas ' + lat + ', ' + lon;
+      h.textContent = 'Localização registrada (sem internet para achar o endereço). Se puder, escreva o endereço.';
+    }finally{ $('ab-gps').disabled = false; }
+  }, () => { $('ab-gps').disabled = false; h.textContent = 'Não foi possível pegar a localização (permissão negada ou sem GPS). Digite o endereço.'; },
+  { enableHighAccuracy:true, timeout:15000, maximumAge:60000 });
+}
+function abErroEnvio(msg){ $('ab-erro-envio').innerHTML = msg; show('ab-erro-envio', !!msg); if (msg) $('ab-erro-envio').scrollIntoView({ behavior:'smooth', block:'center' }); }
+async function enviarAbast(confirmar){
+  abErroEnvio('');
+  if (!EU || !ABV) return;
+  const erro = $('ab-erro').value, msg = $('ab-msg').value.trim();
+  const km = Number($('ab-km').value.replace(/\D/g,'')) || 0, lt = numBR($('ab-lt').value), vl = numBR($('ab-vl').value);
+  const faltas = [];
+  if (!erro) faltas.push('o erro que apareceu');
+  if (AB && erro === AB.outro && msg.length < 3) faltas.push('a mensagem de erro');
+  if ($('ab-posto').value.trim().length < 2) faltas.push('o nome do posto');
+  if ($('ab-end').value.trim().length < 3) faltas.push('o endereço do posto');
+  if (!km) faltas.push('o km');
+  if (!(lt >= 0.5)) faltas.push('os litros');
+  if (!(vl >= 1)) faltas.push('o valor');
+  if (!AB_COMB) faltas.push('o combustível');
+  if (faltas.length) return abErroEnvio('Falta preencher: <b>' + faltas.join(', ') + '</b>.');
+  const body = {
+    re: EU.re, prefixo: ABV.prefixo, erro, mensagem: msg,
+    posto_combustivel: $('ab-posto').value.trim(), endereco: $('ab-end').value.trim(), lat_lon: AB_LATLON,
+    km, litros: lt, valor: vl, combustivel: AB_COMB, transacao: $('ab-tx').value.trim(), obs: $('ab-obs').value.trim(),
+    ...(EU.desconhecido ? { nome_externo: EU.nome, unidade: EU.unidade } : {}),
+    ...(confirmar ? { confirmar_repetida: true } : {}),
+  };
+  $('ab-enviar').disabled = true; carregandoOvl('Enviando para a DAAL…');
+  try{
+    const d = await api('/api/garagem/abastecimento', body);
+    clearInterval(AB_RELOGIO);
+    show('s-abast', false); show('s-abast-ok', true);
+    $('ab-ok-sub').textContent = d.quando + ' — a DAAL recebeu e vai resolver. Acompanhe a situação aqui no app.';
+    $('ab-ok-resumo').innerHTML = `
+      <div><i data-ic="carro"></i><b>${esc(body.prefixo)}</b> · ${esc(d.motorista)} (${esc(d.unidade)})</div>
+      <div><i data-ic="alerta"></i>${esc(body.erro)}</div>
+      <div><i data-ic="local"></i>${esc(body.posto_combustivel)} — ${esc(body.endereco)}</div>
+      <div><i data-ic="bomba"></i>${fLt(lt)} · ${fR$(vl)} · ${esc(AB_COMB)}</div>
+      <div><i data-ic="painel"></i>${fN(km)} km</div>`;
+    ABV = null; AB = null;
+    window.scrollTo({ top:0, behavior:'smooth' });
+    carregarAb(true);
+  }catch(e){
+    if (e.code === 'repetida') abErroEnvio('<i data-ic="info"></i>' + esc(e.message) + `<br><button class="btn gray" style="margin-top:8px" onclick="enviarAbast(true)">É outro abastecimento — enviar mesmo assim</button>`);
+    else if (e.code === 'sem_viatura'){ abErroEnvio('<i data-ic="cadeado"></i>' + esc(e.message)); recarregarSilencioso(); }
+    else abErroEnvio('<i data-ic="alerta"></i>Não foi enviado: ' + esc(e.message) + '<br><span style="font-size:12.5px">Seus dados continuam na tela — tente de novo.</span>');
+  }finally{ $('ab-enviar').disabled = false; carregandoOvl(''); }
 }
 
 /* ─── 2. viaturas ─── */
@@ -665,7 +921,7 @@ function escolher(prefixo){
 
 /* ─── 3. formulário ─── */
 function abrirForm(rolar){
-  if (!SEL || VISTA === 'frota') return;
+  if (!SEL || VISTA === 'frota' || ABV) return;
   show('s-form', true); show('s-ok', false);
   $('f-vtr').textContent = '· ' + SEL.prefixo;
   // momento: a sequência decide (igual à trava do AppSheet)
@@ -830,7 +1086,7 @@ async function recarregarSilencioso(){
 function mostrarSucesso(b, d){
   const v = APP.viaturas.find(x => x.prefixo === b.prefixo);   // "Situação da frota" já reflete o envio
   if (v){ v.em_uso = b.momento === 'Início de uso'; v.ultimo = { ...(v.ultimo || {}), momento:b.momento, data:new Date(Date.now() - 4*3600e3).toISOString().slice(0,19), km:b.km, motorista:d.motorista, motorista_re:EU.re }; }
-  show('s-form', false); show('s-vtr', false); show('s-quem', false); show('s-minha', false); show('s-ok', true);
+  show('s-form', false); show('s-vtr', false); show('s-quem', false); show('s-minha', false); show('s-abmin', false); show('s-ok', true);
   $('ok-sub').textContent = d.quando + ' — registrado na planilha da Garagem.';
   $('ok-resumo').innerHTML = `
     <div><i data-ic="carro"></i><b>${esc(b.prefixo)}</b> — ${esc(b.momento)}</div>
