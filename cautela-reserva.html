@@ -178,6 +178,12 @@ details summary{color:var(--muted)}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-08", "titulo": "Editar a cautela antes da assinatura", "quem": "todos", "itens": [
+    "Em “Receber de volta”, a cautela que ainda espera a assinatura do policial ganhou o botão ✏️ Editar.",
+    "Dá para trocar o material, as quantidades, a missão, as datas, a observação e até o policial que vai receber.",
+    "Assim que o policial assina o recebimento, a edição trava. Daí em diante, o que estiver errado se resolve na devolução.",
+    "Se o policial estava com a tela de assinar aberta, ele é avisado de que a cautela mudou e confere de novo antes de assinar."
+  ] },
   { "data": "2026-11-01", "titulo": "Assinaturas ao vivo", "quem": "todos", "itens": [
     "Quadro “Ao vivo” no topo: mostra na hora quem está com a janela de assinar aberta no celular e quem já assinou — sem precisar atualizar a página.",
     "Também lista quem ainda falta assinar (recebimento ou devolução) e as últimas ações da reserva: entregas, recebimentos, cancelamentos, conferências e passagens.",
@@ -263,6 +269,7 @@ details summary{color:var(--muted)}
 
     <!-- ===== ENTREGAR ===== -->
     <section class="pane" id="p-entregar">
+      <div class="card hidden" id="c-edit" style="border-color:var(--warn)"></div>
       <div class="card">
         <h2><span class="passo">1</span>Quem vai receber?</h2>
         <div class="res-busca"><i data-ic="buscar"></i><input id="c-q" placeholder="Digite o RE ou o nome do policial" autocomplete="off"></div>
@@ -513,6 +520,7 @@ async function carregar(quieto){
   }
   R = novo;
   show('app', true);
+  conferirEdicao();
   { const nome = R.eu.guerra ? `${R.eu.posto} ${R.eu.guerra}` : R.eu.nome;
     $('userchip').innerHTML = `<span class="bp-eu" title="${esc(nome)}"><b>${esc(String(R.eu.guerra || R.eu.nome || '?').trim().split(/s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase())}</b><span>${esc(nome)}</span></span>`; }
   const digitado = quieto ? CONTAGEM : null;   // atualização automática não apaga a conferência em andamento
@@ -594,6 +602,11 @@ $('q-res').oninput = renderReserva;
 
 /* ===== entregar ===== */
 let POL = null, CARRO = [], TIPO = 'missao';
+/* Edição antes da assinatura (08/11/2026): EDIT = a cautela aberta no formulário do Entregar.
+   O que ela segura conta como "livre" para ela mesma (peças e saldo). */
+let EDIT = null;
+const livre = (p) => p.disponivel || !!(EDIT && p.em_cautela === EDIT.cautela_id);
+const naReserva = (l) => l.reserva + (EDIT ? EDIT.itens.filter(i => i.item_id === l.id).reduce((n, i) => n + i.qtd, 0) : 0);
 function picker({ campo, res, onPick, todos }){
   let t;
   $(campo).oninput = () => { clearTimeout(t); t = setTimeout(async () => {
@@ -608,7 +621,7 @@ function picker({ campo, res, onPick, todos }){
 }
 picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); $('c-missao').focus(); }, todos: true });
 function renderPol(){
-  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta ? '<i data-ic="ok"></i>Assina o recebimento pelo celular, com a senha do Portal.' : '<i data-ic="alerta"></i>Ainda não criou a senha do Portal: peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF).'}</span></div><button class="btn sm sec" id="c-troca" type="button">trocar</button></div>` : '';
+  $('c-pol').innerHTML = POL ? `<div class="sel-box"><div><b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b> · RE ${esc(POL.re)} · ${esc(POL.opm)}<br><span class="muted">${POL.tem_conta === undefined ? '' : POL.tem_conta ? '<i data-ic="ok"></i>Assina o recebimento pelo celular, com a senha do Portal.' : '<i data-ic="alerta"></i>Ainda não criou a senha do Portal: peça para fazer o <b>Primeiro acesso</b> (Portal do Policial → Cautela, com o RE e o CPF).'}</span></div><button class="btn sm sec" id="c-troca" type="button">trocar</button></div>` : '';
   if (POL) $('c-troca').onclick = () => { POL = null; renderPol(); };
 }
 function dtLocal(ms){ const d = new Date(ms - 4 * 3600e3); return d.toISOString().slice(0, 16); }
@@ -634,20 +647,20 @@ $('c-qi').oninput = () => {
   const pecas = [];
   if (qc.length >= 3) for (const l of R.linhas) for (const p of l.pecas) if (compacto(p.codigo).includes(qc) || compacto(p.serie).includes(qc) || compacto(p.patrimonio).includes(qc)) pecas.push({ l, p });
   const porNome = R.linhas.filter(l => norm(l.descricao).includes(q)).slice(0, 14);
-  const chip = (p) => p.disponivel ? '<span class="chip ok">na reserva</span>' : p.em_cautela ? `<span class="chip bad">com ${esc(p.com)}</span>` : `<span class="chip wait">${esc(p.situacao)}</span>`;
+  const chip = (p) => livre(p) ? '<span class="chip ok">na reserva</span>' : p.em_cautela ? `<span class="chip bad">com ${esc(p.com)}</span>` : `<span class="chip wait">${esc(p.situacao)}</span>`;
   const html = pecas.slice(0, 14).map((x, i) => `<button data-p="${i}" type="button"><span><span class="cod">${esc(x.p.codigo)}</span> · ${esc(x.l.descricao)}${x.p.serie ? ' · Nº <b>' + esc(x.p.serie) + '</b>' : ''}</span>${chip(x.p)}</button>`).join('')
-    + porNome.map(l => `<button data-id="${esc(l.id)}" type="button"><span>${esc(l.descricao)}${l.disponiveis ? ` <span class="muted">· ${l.disponiveis} com código disponíveis</span>` : ''}</span><span class="chip ${l.reserva > 0 ? 'ok' : 'bad'}">${l.reserva} na reserva</span></button>`).join('');
+    + porNome.map(l => `<button data-id="${esc(l.id)}" type="button"><span>${esc(l.descricao)}${l.disponiveis ? ` <span class="muted">· ${l.disponiveis} com código disponíveis</span>` : ''}</span><span class="chip ${naReserva(l) > 0 ? 'ok' : 'bad'}">${naReserva(l)} na reserva</span></button>`).join('');
   $('c-resi').innerHTML = html || `<div class="muted" style="padding:10px">Nada com "${esc(bruto)}". Confira o número ou procure pelo nome (ex.: PT 100).</div>`;
   show('c-resi', true);
   const fechar = () => { show('c-resi', false); $('c-qi').value = ''; renderCarrinho(); $('c-qi').focus(); };
   $('c-resi').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
     const l = linha(b.dataset.id);
-    const livre = l.pecas.find(p => p.disponivel && !CARRO.some(x => x.codigo === p.codigo));
-    CARRO.push({ item_id: l.id, qtd: 1, codigo: livre ? livre.codigo : '' }); fechar();
+    const solta = l.pecas.find(p => livre(p) && !CARRO.some(x => x.codigo === p.codigo));
+    CARRO.push({ item_id: l.id, qtd: 1, codigo: solta ? solta.codigo : '' }); fechar();
   });
   $('c-resi').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
     const { l, p } = pecas[b.dataset.p];
-    if (!p.disponivel){ toast(p.em_cautela ? `${p.codigo} está com ${p.com}.` : `${p.codigo} não está na reserva (${p.situacao}).`); return; }
+    if (!livre(p)){ toast(p.em_cautela ? `${p.codigo} está com ${p.com}.` : `${p.codigo} não está na reserva (${p.situacao}).`); return; }
     if (CARRO.some(x => x.codigo === p.codigo)){ toast(`${p.codigo} já está na lista.`); return; }
     CARRO.push({ item_id: l.id, qtd: 1, codigo: p.codigo }); fechar();
   });
@@ -657,10 +670,10 @@ function renderCarrinho(){
   show('c-vazio', !CARRO.length);
   $('c-carrinho').innerHTML = CARRO.map((x, i) => {
     const l = linha(x.item_id);
-    const livres = l.pecas.filter(p => p.disponivel && !CARRO.some((y, j) => j !== i && y.codigo === p.codigo));
+    const livres = l.pecas.filter(p => livre(p) && !CARRO.some((y, j) => j !== i && y.codigo === p.codigo));
     const campo = livres.length || x.codigo ? `<select data-i="${i}" data-k="codigo">${l.pecas.length > 0 ? '' : ''}<option value="">sem código (só a quantidade)</option>${livres.map(p => `<option value="${esc(p.codigo)}" ${x.codigo === p.codigo ? 'selected' : ''}>${esc(p.codigo)}${p.serie ? ' · Nº ' + esc(p.serie) : ''}</option>`).join('')}</select>` : '';
     const qtd = x.codigo ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:120px;margin-top:${campo ? 6 : 0}px"> <span class="muted">unidade(s)</span>`;
-    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${qtd}</td><td class="n ${l.reserva < 0 ? 'neg' : ''}">${l.reserva}</td><td><button class="btn sm red" data-rm="${i}" type="button"><i data-ic="x"></i></button></td></tr>`;
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${qtd}</td><td class="n ${naReserva(l) < 0 ? 'neg' : ''}">${naReserva(l)}</td><td><button class="btn sm red" data-rm="${i}" type="button"><i data-ic="x"></i></button></td></tr>`;
   }).join('');
   $('c-carrinho').querySelectorAll('[data-k]').forEach(el => el.onchange = el.oninput = () => {
     const x = CARRO[el.dataset.i], k = el.dataset.k;
@@ -671,6 +684,7 @@ function renderCarrinho(){
 }
 $('btn-cautelar').onclick = async () => {
   const m = $('c-msg'); m.className = 'msg err'; m.textContent = '';
+  if (EDIT) return salvarEdicao(m);
   if (!POL){ m.textContent = 'Passo 1: escolha quem vai receber.'; return; }
   if (TIPO === 'missao' && $('c-missao').value.trim().length < 3){ m.textContent = 'Passo 2: escreva o nome da missão.'; return; }
   if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Passo 2: informe a saída e a volta prevista.'; return; }
@@ -695,6 +709,92 @@ $('btn-cautelar').onclick = async () => {
   } catch(e){ falha(e); }
 };
 
+/* ===== editar a cautela antes da assinatura (08/11/2026) =====
+   Pedido do usuário: poder corrigir a cautela antes de o policial que vai receber assinar;
+   a edição trava quando ele assina. O Worker confere de novo (409 nao_editavel). */
+function renderEdit(){
+  const box = $('c-edit');
+  show('c-edit', !!EDIT);
+  $('btn-cautelar').innerHTML = EDIT ? '<i data-ic="assinar"></i>Salvar a alteração' : '<i data-ic="assinar"></i>Entregar e gerar a cautela';
+  $('btn-cautelar').disabled = !!(EDIT && EDIT.travada);
+  if (!EDIT){ box.innerHTML = ''; return; }
+  box.innerHTML = EDIT.travada
+    ? `<h2><i data-ic="alerta"></i>Cautela ${esc(EDIT.cautela_id)} travada</h2><p class="muted">${esc(EDIT.travada)}</p><button class="btn sec" id="c-edit-sair" type="button">Fechar</button>`
+    : `<h2><i data-ic="editar"></i>Editando a cautela ${esc(EDIT.cautela_id)}</h2>
+      <p class="muted">O policial ainda <b>não assinou</b>. Mude o que precisar abaixo e clique em <b>Salvar a alteração</b>. Depois que ele assinar, não dá mais para alterar.</p>
+      <button class="btn sec" id="c-edit-sair" type="button"><i data-ic="x"></i>Desistir da alteração</button>`;
+  $('c-edit-sair').onclick = sairEdicao;
+}
+function sairEdicao(){ EDIT = null; $('c-msg').textContent = ''; resetEntregar(); renderEdit(); }
+async function editarCautela(id){
+  const c = R.cautelas_abertas.find(x => x.cautela_id === id);
+  if (!c || c.status !== 'aguardando'){ toast('O policial já assinou: essa cautela não pode mais ser alterada.'); return; }
+  EDIT = JSON.parse(JSON.stringify(c));
+  abrirPane('entregar');
+  $('c-ok').innerHTML = ''; $('c-msg').textContent = '';
+  POL = { re: c.policial.re, nome: c.policial.nome, guerra: c.policial.guerra, posto: c.policial.posto, opm: c.policial.opm };
+  TIPO = c.tipo === 'servico' ? 'servico' : 'missao';
+  document.querySelectorAll('[data-tipo]').forEach(x => x.classList.toggle('on', x.dataset.tipo === TIPO));
+  show('c-missao-box', TIPO === 'missao');
+  $('c-missao').value = TIPO === 'missao' ? c.missao : '';
+  $('c-ini').value = dtLocal(Date.parse(c.inicio)); $('c-fim').value = dtLocal(Date.parse(c.fim_previsto));
+  document.querySelectorAll('#c-prazos .pill').forEach(b => b.classList.remove('on'));
+  $('c-obs').value = c.obs || '';
+  CARRO = c.itens.map(i => i.codigo ? { item_id: i.item_id, qtd: 1, codigo: i.codigo } : { item_id: i.item_id, qtd: i.qtd, codigo: '' });
+  renderPol(); renderCarrinho(); renderEdit();
+  $('c-edit').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  // descobre se o policial já tem a senha do Portal (só para o aviso do passo 1)
+  try {
+    const d = await api('/api/cautela/policiais?todos=1&q=' + encodeURIComponent(c.policial.re));
+    const p = d.policiais.find(x => x.re === c.policial.re);
+    if (p && POL && POL.re === p.re){ POL.tem_conta = p.tem_conta; renderPol(); }
+  } catch { /* só o aviso */ }
+}
+async function salvarEdicao(m){
+  if (EDIT.travada) return;
+  if (!POL){ m.textContent = 'Passo 1: escolha quem vai receber.'; return; }
+  if (TIPO === 'missao' && $('c-missao').value.trim().length < 3){ m.textContent = 'Passo 2: escreva o nome da missão.'; return; }
+  if (!$('c-ini').value || !$('c-fim').value){ m.textContent = 'Passo 2: informe a saída e a volta prevista.'; return; }
+  if (!CARRO.length){ m.textContent = 'Passo 3: inclua pelo menos um material. (Para desfazer a entrega toda, use Cancelar em “Receber de volta”.)'; return; }
+  const trocou = POL.re !== EDIT.policial.re;
+  const resumo = `<div class="muted">${trocou ? `Quem recebe passa de <b>${esc(EDIT.policial.posto)} ${esc(EDIT.policial.guerra || EDIT.policial.nome)}</b> para ` : ''}<b>${esc(POL.posto)} ${esc(POL.guerra || POL.nome)}</b>${trocou ? '' : ' vai levar'}:</div><div style="margin-top:6px;line-height:1.7">`
+    + CARRO.map(x => `• ${x.qtd}× ${esc(linha(x.item_id).descricao)}${x.codigo ? ` <span class="cod">${esc(x.codigo)}</span>` : ''}`).join('<br>') + '</div>'
+    + '<label>O que foi corrigido? (opcional)</label><input id="e-mot" maxlength="200" placeholder="ex.: troquei a pistola, faltou um carregador">';
+  const mm = await modal({ titulo: 'Salvar a alteração · ' + EDIT.cautela_id, corpo: resumo, ok: '<i data-ic="assinar"></i>Assinar e salvar' });
+  if (!mm) return;
+  const corpo = { cautela_id: EDIT.cautela_id, versao: EDIT.versao, re: POL.re, tipo: TIPO, missao: TIPO === 'missao' ? $('c-missao').value : '', inicio: doLocal($('c-ini').value), fim_previsto: doLocal($('c-fim').value), obs: $('c-obs').value,
+    itens: CARRO.map(x => x.codigo ? { item_id: x.item_id, codigo: x.codigo } : { item_id: x.item_id, qtd: x.qtd }), motivo: val(mm, 'e-mot'), senha: mm.senha };
+  try {
+    let d;
+    try { d = await apiPost('/api/cautela/editar', corpo); }
+    catch(e){
+      if (e.code === 'sem_saldo' && confirm(e.message + '\n\nO sistema diz que não tem tudo isso na reserva. Salvar assim mesmo?')) d = await apiPost('/api/cautela/editar', Object.assign(corpo, { confirmar_sem_saldo: true }));
+      else throw e;
+    }
+    const id = EDIT.cautela_id;
+    EDIT = null; resetEntregar(); renderEdit();
+    $('c-ok').innerHTML = `<div class="card" style="border-color:var(--good)"><h2><i data-ic="ok"></i>Alteração salva · cautela ${esc(id)}</h2>
+      <p class="muted">${d.trocou_policial ? 'A cautela passou para o outro policial: agora é <b>ele</b> quem confere e assina no Portal do Policial.' : 'O policial confere a cautela <b>já corrigida</b> no Portal do Policial e assina com a senha dele.'}${d.policial_tem_conta ? '' : '<br><i data-ic="alerta"></i>Esse policial ainda não tem a senha do Portal: ele faz o Primeiro acesso (RE + CPF) antes de assinar.'}${d.sem_saldo ? '<br><i data-ic="alerta"></i>Saiu mais do que o sistema tinha na reserva — confira na <i data-ic="check"></i>Conferir.' : ''}</p></div>`;
+    toast('Alteração salva.'); await carregar();
+  } catch(e){
+    if (e.code === 'nao_editavel' || e.code === 'cautela_mudou'){ EDIT.travada = e.message; renderEdit(); }
+    falha(e);
+  }
+}
+// releitura (ao vivo): se o policial assinou enquanto o armeiro editava, a edição trava na hora
+function conferirEdicao(){
+  if (!EDIT || EDIT.travada) return;
+  const atual = R.cautelas_abertas.find(x => x.cautela_id === EDIT.cautela_id);
+  if (!atual || atual.status !== 'aguardando'){
+    EDIT.travada = atual && atual.recebimento ? 'O policial acabou de assinar o recebimento: a cautela não pode mais ser alterada. Se algo veio errado, registre a devolução e faça uma cautela nova.'
+      : 'Essa cautela foi cancelada ou não está mais aguardando a assinatura.';
+    renderEdit(); toast('A cautela ' + EDIT.cautela_id + ' foi travada.');
+  } else if ((atual.versao || 1) !== (EDIT.versao || 1)){
+    EDIT.travada = 'Outra pessoa alterou essa cautela enquanto você editava. Feche e abra de novo para ver como ficou.';
+    renderEdit();
+  }
+}
+
 /* ===== receber de volta ===== */
 const AL = { aguardando_assinatura: ['wait', 'Falta o policial assinar'], vencida: ['bad', 'Passou do prazo'], vence_em_24h: ['wait', 'Vence em 24 h'], devolucao_parcial: ['wait', 'Voltou só uma parte'], devolucao_sem_assinatura: ['wait', 'Falta assinar a devolução'] };
 // busca do "Receber de volta": nome, RE, missão, material, código ou nº de série (sem ligar para espaço/traço)
@@ -713,8 +813,8 @@ function renderReceber(){
   $('lista-cautelas').innerHTML = lista.map(c => `<div class="lista-item"><div class="txt">
       <b>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}</b> <span class="muted">· ${esc(c.missao)} · volta até ${fQ(c.fim_previsto)}</span><br>
       <pre>${c.itens.map(i => `${i.qtd - i.devolvido > 0 ? '' : '<i data-ic="check"></i>'}${i.qtd}× ${i.descricao}${i.codigo ? ' [' + i.codigo + ']' : ''}${i.serie ? ' Nº ' + i.serie : ''}`).join('\n')}</pre>
-      <div style="margin-top:4px">${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'} <span class="muted">${esc(c.cautela_id)}</span></div></div>
-    ${PODE ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button"><i data-ic="baixar"></i>Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div>` : ''}</div>`).join('')
+      <div style="margin-top:4px">${c.alertas.map(a => `<span class="chip ${AL[a][0]}">${AL[a][1]}</span>`).join(' ') || '<span class="chip ok">em dia</span>'}${(c.edicoes || []).length ? ' <span class="chip neu">alterada antes da assinatura</span>' : ''} <span class="muted">${esc(c.cautela_id)}</span></div></div>
+    ${PODE ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${c.status === 'aguardando' ? `<button class="btn sm" data-a="editar" data-id="${esc(c.cautela_id)}" type="button"><i data-ic="editar"></i>Editar</button> <button class="btn sm red" data-a="cancelar" data-id="${esc(c.cautela_id)}" type="button">Cancelar</button>` : `<button class="btn" data-a="devolver" data-id="${esc(c.cautela_id)}" type="button"><i data-ic="baixar"></i>Receber</button>`} <button class="btn sm sec" data-a="prorrogar" data-id="${esc(c.cautela_id)}" type="button">⏱️ Mais prazo</button></div>` : ''}</div>`).join('')
     || vazio('Nenhuma cautela aberta.');
   $('lista-cautelas').querySelectorAll('[data-a]').forEach(b => b.onclick = () => acaoCautela(b.dataset.a, b.dataset.id));
   $('lista-anteriores').innerHTML = ant.map(m => `<div class="lista-item"><div class="txt">
@@ -725,6 +825,7 @@ function renderReceber(){
 }
 $('q-rec').oninput = renderReceber;
 async function acaoCautela(a, id){
+  if (a === 'editar') return editarCautela(id);
   const c = R.cautelas_abertas.find(x => x.cautela_id === id);
   if (a === 'devolver'){
     const corpo = '<div class="muted">Está tudo voltando? Se sim, só assine. Se faltou algo, diminua a quantidade; se veio estragado ou se perdeu, escolha ao lado e escreva o que houve.</div><table class="t1" style="margin-top:8px"><tr><th>Material</th><th>Voltou</th><th>Como</th><th>O que houve</th></tr>' + c.itens.map((i, k) => {
@@ -899,7 +1000,7 @@ async function buscarHistorico(){
     $('h-escopo').textContent = d.escopo === 'todas' ? 'Administrador: todas as cautelas.' : 'Mostrando as cautelas que você entregou.';
     const ST = { aguardando: ['wait', 'falta assinar'], ativa: ['ok', 'com o policial'], parcial: ['wait', 'voltou em parte'], devolvida: ['neu', 'devolvida'], cancelada: ['neu', 'cancelada'] };
     $('tb-hist').innerHTML = HIST.map(c => `<tr><td><b>${esc(c.cautela_id)}</b><br><span class="muted">${fQ(c.criada_em)}</span></td><td>${esc(c.policial.posto)} ${esc(c.policial.guerra || c.policial.nome)}<br><span class="muted">RE ${esc(c.policial.re)}</span></td><td>${esc(c.missao)}</td>
-      <td>${c.itens.map(i => `${i.qtd}× ${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? ' Nº ' + esc(i.serie) : ''}`).join('<br>')}</td><td>${fQ(c.inicio)}<br>→ ${fQ(c.fim_previsto)}</td><td><span class="chip ${ST[c.status][0]}">${ST[c.status][1]}</span>${c.devolvida_em ? `<br><span class="muted">${fQ(c.devolvida_em)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
+      <td>${c.itens.map(i => `${i.qtd}× ${esc(i.descricao)}${i.codigo ? ` <span class="cod">${esc(i.codigo)}</span>` : ''}${i.serie ? ' Nº ' + esc(i.serie) : ''}`).join('<br>')}</td><td>${fQ(c.inicio)}<br>→ ${fQ(c.fim_previsto)}</td><td><span class="chip ${ST[c.status][0]}">${ST[c.status][1]}</span>${(c.edicoes || []).length ? `<br><span class="muted">alterada ${c.edicoes.length}× antes da assinatura</span>` : ''}${c.devolvida_em ? `<br><span class="muted">${fQ(c.devolvida_em)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nada encontrado.</td></tr>';
   } catch(e){ falha(e); }
 }
 $('btn-hist').onclick = buscarHistorico;
@@ -1004,6 +1105,7 @@ let VIVO_EV = [], VIVO_ASS = [], VIVO_ON = [], VIVO_EU = '', VIVO_WS = null, VIV
 const quem = (t) => `<b>${esc(t || '?')}</b>`;
 const CV_TIPO = {
   entregou:     { ic: 'enviar',  c: 'var(--info)', tx: (e) => `${quem(e.por)} entregou material a ${quem(e.pol)}`, sub: (e) => [e.missao, e.resumo].filter(Boolean).join(' · ') },
+  editou:       { ic: 'editar',  c: 'var(--warn)', tx: (e) => `${quem(e.por)} alterou a cautela de ${quem(e.pol)} (antes da assinatura)`, sub: (e) => [e.nota, e.resumo, e.cautela].filter(Boolean).join(' · ') },
   assinou:      { ic: 'assinar', c: 'var(--good)', tx: (e) => `${quem(e.pol)} <span style="color:var(--good)">assinou o recebimento</span>`, sub: (e) => [e.missao, e.aparelho, e.cautela].filter(Boolean).join(' · ') },
   recebeu:      { ic: 'baixar',  c: 'var(--info)', tx: (e) => `${quem(e.por)} recebeu de volta de ${quem(e.pol)}`, sub: (e) => [e.resumo, e.nota].filter(Boolean).join(' · ') },
   assinou_dev:  { ic: 'assinar', c: 'var(--good)', tx: (e) => `${quem(e.pol)} <span style="color:var(--good)">assinou a devolução</span>`, sub: (e) => [e.missao, e.aparelho, e.cautela].filter(Boolean).join(' · ') },

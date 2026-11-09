@@ -96,6 +96,11 @@ html.portal .bp-wrap{padding-top:14px}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-08", "titulo": "Cautela corrigida antes de você assinar", "quem": "todos", "itens": [
+    "O armeiro pode corrigir a cautela (material, quantidade, missão, datas) enquanto você ainda não assinou o recebimento.",
+    "Se ele mudar algo com a sua tela aberta, o sistema avisa e mostra a cautela de novo para você conferir antes de assinar.",
+    "Depois que você assina, ninguém altera mais a cautela."
+  ] },
   { "data": "2026-10-31", "titulo": "Carga pessoal", "quem": "todos", "itens": [
     "Aba nova “Carga pessoal”: os bens que a P4 entregou para ficar com você (pistola, colete, celular, barraca, lanterna…).",
     "Quando a P4 entregar um bem, ele aparece em “Para assinar”: confira e aceite com a sua senha — ou diga o que está errado.",
@@ -290,6 +295,7 @@ function cartao(c, completo){
   c.devolucoes.filter(d => !d.assinada).forEach(d => botoes.push(`<button class="btn full" data-act="devolver" data-id="${esc(c.cautela_id)}" data-ref="${esc(d.evento)}">${IC('assinar')}Assinar a entrega (devolução) de ${d.itens.length} item(ns)</button>`));
   const tl = [];
   tl.push(`<div>${IC('arquivo')}<span>Cautela lançada em <b>${fQuando(c.criada_em)}</b> por ${esc((c.armeiro && (c.armeiro.guerra || c.armeiro.nome)) || c.criada_por)}</span></div>`);
+  (c.edicoes || []).forEach(e => tl.push(`<div>${IC('editar')}<span>Corrigida pelo armeiro em <b>${fQuando(e.em)}</b>, antes da assinatura${e.motivo ? ' — ' + esc(e.motivo) : ''}</span></div>`));
   if (c.recebimento) tl.push(`<div>${IC('check')}<span>Recebimento assinado em <b>${fQuando(c.recebimento.em)}</b></span></div>`);
   c.prorrogacoes.forEach(p => tl.push(`<div>${IC('relogio')}<span>Prorrogada para <b>${fQuando(p.para)}</b> — ${esc(p.motivo)}</span></div>`));
   c.devolucoes.forEach(d => tl.push(`<div>${IC('voltar')}<span>Devolução registrada em ${fQuando(d.em)}${d.itens.some(x => x.estado !== 'ok') ? ' (com ocorrência)' : ''} — ${d.assinada ? `assinada em <b>${fQuando(d.assinada.em)}</b>` : '<b>aguarda a sua assinatura</b>'}</span></div>`));
@@ -300,6 +306,7 @@ function cartao(c, completo){
       <div class="muted">${fQuando(c.inicio)} → ${fQuando(c.fim_previsto)}</div></div>
       <div style="text-align:right"><span class="chip ${cls}">${txt}</span><div style="margin-top:6px">${chips}</div></div></div>
     ${itensHtml(c)}
+    ${c.status === 'aguardando' && (c.edicoes || []).length ? `<div class="muted" style="margin:-2px 0 10px">${IC('editar')} O armeiro <b>corrigiu esta cautela</b> em ${fQuando(c.edicoes[c.edicoes.length - 1].em)}${c.edicoes[c.edicoes.length - 1].motivo ? ' — ' + esc(c.edicoes[c.edicoes.length - 1].motivo) : ''}. Confira os itens acima antes de assinar.</div>` : ''}
     ${botoes.join('<div style="height:8px"></div>')}
     ${completo ? `<div class="tl">${tl.join('')}</div>
       <div class="sel-qr"><button class="btn sm sec" data-act="auth" data-id="${esc(c.cautela_id)}">${IC('escudo')}Autenticação do documento</button><span class="muted">Assinatura ${esc(c.assinatura)}</span></div>
@@ -448,13 +455,15 @@ async function acao(b){
   if (!senha){ avisarAssinando(id, a, false); return; }
   b.disabled = true;
   try {
-    const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, senha });
+    const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, versao: receber ? (c.versao || 1) : undefined, senha });
     toast('Assinado — código ' + d.assinatura);
     await carregar();
   } catch(e){
     b.disabled = false;
     avisarAssinando(id, a, false);
     if (e.status === 401){ CA.esquecer(); D = null; boot(); return; }
+    // o armeiro corrigiu a cautela enquanto a tela estava aberta: mostra a versão nova (08/11/2026)
+    if (e.code === 'cautela_editada'){ toast('O armeiro corrigiu esta cautela. Confira os itens de novo e assine.'); await carregar(); return; }
     toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi assinado.' : e.message);
   }
 }
