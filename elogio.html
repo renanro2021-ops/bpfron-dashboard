@@ -100,6 +100,11 @@ textarea.el-area:focus{outline:none;border-color:var(--acc)}
 @media (max-width:560px){ .el-modelos{grid-template-columns:1fr} .el-pols .c-dest{display:none} }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-11", "titulo": "Policiais puxados da ocorrência", "quem": "todos", "itens": [
+    "Ao marcar a ocorrência no passo 2, a guarnição lançada nela entra sozinha na lista de policiais (passo 3), em ordem de antiguidade.",
+    "Quem está no cadastro do BPFRON entra com o nome completo e o posto de lá; quem não está aparece como “fora do cadastro”, com a unidade.",
+    "Desmarcou a ocorrência? Sai quem entrou só por ela. Quem você pôs à mão continua."
+  ] },
   { "data": "2026-11-11", "titulo": "Elogios da P6 no ar", "quem": "todos", "itens": [
     "Notas de elogio pelos modelos da P6: coletivo, individual, geral ao efetivo e simplificado.",
     "Escolha a ocorrência na base do sistema (ou importe o PDF), marque os policiais e a IA escreve o item 1 — Do ato meritório.",
@@ -555,9 +560,44 @@ function pintarOcorrencias() {
   contarFato();
 }
 function marcarOc(bo, on) {
+  const tinha = SEL.includes(bo);
   SEL = SEL.filter((x) => x !== bo);
-  if (on) { if (SEL.length >= 15) { toast('No máximo 15 ocorrências num elogio.', 'erro'); } else SEL.push(bo); }
+  if (on) { if (SEL.length >= 15) { toast('No máximo 15 ocorrências num elogio.', 'erro'); on = false; } else SEL.push(bo); }
   pintarOcorrencias();
+  if (on && !tinha) puxarEquipe(bo);
+  else if (!on && tinha) soltarEquipe(bo);
+}
+/* guarnição da ocorrência (aba POLICIAIS do banco) → lista de policiais do passo 3.
+   Casa pelo RE com o cadastro do BPFRON (nome completo e posto de lá); quem não casa entra como "fora do cadastro". */
+const normPosto = (p) => String(p || '').toUpperCase().replace(/\s+/g, ' ').trim().replace(/^(\d)\s*(?:º|°|ª|O|\.)?\s*/, '$1º ');
+function puxarEquipe(bo) {
+  const o = ((D && D.ocorrencias) || []).find((x) => x.bo === bo); if (!o) return;
+  const eq = (o.equipe || []).filter((p) => !/^AUSENTE/i.test(sem(p.funcao)));
+  if (!eq.length) {
+    toast((D && D.aviso_equipe) ? D.aviso_equipe : `O BO ${bo} não tem a guarnição lançada na base: adicione os policiais no passo 3.`, 'erro');
+    return;
+  }
+  let novos = 0;
+  eq.forEach((m) => {
+    const cad = ((D && D.efetivo) || []).find((x) => (m.re && re5(x.re) === re5(m.re)) || (!m.re && m.nome && sem(x.nome) === sem(m.nome)));
+    const nome = String((cad && cad.nome) || m.nome || m.guerra || '').toUpperCase();
+    if (!nome) return;
+    const re = (cad && cad.re) || m.re || '';
+    const ja = POLS.find((p) => (re && p.re && re5(p.re) === re5(re)) || (!re && sem(p.nome) === sem(nome)));
+    if (ja) { ja.de = [...new Set([...(ja.de || []), bo])]; if (!ja.funcao && m.funcao) ja.funcao = m.funcao; return; }
+    POLS.push({ re, posto: cad ? cad.posto : normPosto(m.posto), nome, guerra: (cad && cad.guerra) || m.guerra || '', fem: false, destaque: '',
+      fora: !cad, unidade: cad ? '' : m.unidade, funcao: m.funcao || '', de: [bo] });
+    novos++;
+  });
+  ordenarPols(); pintarPols();
+  const fora = eq.length - novos;
+  toast(novos ? `${novos} policia${novos > 1 ? 'is' : 'l'} da guarnição do BO ${bo} entr${novos > 1 ? 'aram' : 'ou'} na lista (passo 3). Confira.` : `A guarnição do BO ${bo} já estava na lista.`);
+}
+/* desmarcou a ocorrência: sai quem entrou só por ela (quem foi posto à mão fica) */
+function soltarEquipe(bo) {
+  const antes = POLS.length;
+  POLS = POLS.filter((p) => { if (!p.de || !p.de.includes(bo)) return true; p.de = p.de.filter((x) => x !== bo); return p.manual || p.de.length > 0; });
+  if (POLS.length !== antes) { pintarPols(); toast(`${antes - POLS.length} policia${antes - POLS.length > 1 ? 'is' : 'l'} da guarnição do BO ${bo} saí${antes - POLS.length > 1 ? 'ram' : 'u'} da lista.`); }
 }
 function contarFato() {
   if (MOD === 'm3') return;
@@ -621,14 +661,14 @@ function buscarPol() {
 }
 function addPol(re) {
   const p = ((D && D.efetivo) || []).find((x) => x.re === re); if (!p) return;
-  POLS.push({ re: p.re, posto: p.posto, nome: p.nome, guerra: p.guerra, fem: false, destaque: '' });
+  POLS.push({ re: p.re, posto: p.posto, nome: p.nome, guerra: p.guerra, fem: false, destaque: '', manual: true });
   ordenarPols(); $('pol-busca').value = ''; $('pol-res').innerHTML = ''; pintarPols(); $('pol-busca').focus();
 }
 function addManual() {
   const nome = $('man-nome').value.trim().toUpperCase(), posto = $('man-posto').value.trim().toUpperCase(), re = $('man-re').value.replace(/\D/g, '');
   if (!nome || !posto) { $('man-msg').textContent = 'Preencha o posto/graduação e o nome completo.'; return; }
   if (re && POLS.some((p) => re5(p.re) === re5(re))) { $('man-msg').textContent = 'Esse RE já está na lista.'; return; }
-  POLS.push({ re, posto, nome, guerra: '', fem: $('man-fem').checked, destaque: '', fora: true });
+  POLS.push({ re, posto, nome, guerra: '', fem: $('man-fem').checked, destaque: '', fora: true, manual: true });
   ordenarPols(); ['man-nome', 'man-posto', 'man-re'].forEach((id) => { $(id).value = ''; }); $('man-fem').checked = false; $('man-msg').textContent = '';
   fechar('m-man'); pintarPols();
 }
@@ -639,12 +679,18 @@ function polCampo(i, campo, el) {
   else if (campo === 'posto') { p.posto = el.value.toUpperCase(); }
   else p[campo] = el.value;
 }
+function polEtiqueta(p) {
+  const t = [];
+  if (p.de && p.de.length) t.push('guarnição do BO ' + p.de.join(', ') + (p.funcao ? ' · ' + p.funcao.toLowerCase() : ''));
+  if (p.fora) t.push(p.unidade && sem(p.unidade) !== 'bpfron' ? 'fora do cadastro do BPFRON · ' + p.unidade : 'fora do cadastro');
+  return t.length ? '<small>' + esc(t.join(' · ')) + '</small>' : '';
+}
 function pintarPols() {
   $('pols-conta').textContent = POLS.length ? POLS.length + (POLS.length > 1 ? ' policiais' : ' policial') : '';
   $('pols-box').innerHTML = POLS.length ? `<div style="overflow:auto"><table class="el-pols"><thead><tr><th>#</th><th>Posto/grad.</th><th>Nome completo</th><th class="c-re">Matrícula</th><th>Fem.</th><th class="c-dest">Destaque (opcional)</th><th></th></tr></thead><tbody>${
     POLS.map((p, i) => `<tr><td>${i + 1}</td>
       <td><input type="text" class="posto" value="${esc(p.posto)}" onchange="polCampo(${i},'posto',this);ordenarPols();pintarPols()" aria-label="Posto"></td>
-      <td><b>${esc(p.nome)}</b>${p.fora ? '<small>fora do cadastro</small>' : ''}</td>
+      <td><b>${esc(p.nome)}</b>${polEtiqueta(p)}</td>
       <td class="c-re">${esc(p.re || '—')}</td>
       <td><input type="checkbox" ${p.fem ? 'checked' : ''} onchange="polCampo(${i},'fem',this)" aria-label="Policial feminina"></td>
       <td class="c-dest"><input type="text" value="${esc(p.destaque)}" maxlength="300" placeholder="pela condução da viatura…" oninput="polCampo(${i},'destaque',this)" aria-label="Destaque"></td>
