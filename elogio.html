@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- P6 · Elogios (11/11/2026).
+     Monta as notas de elogio pelos modelos da P6 (coletivo, individual, geral ao
+     efetivo e simplificado): o gestor escolhe a ocorrência na base do sistema (ou
+     importa o PDF / cola o texto), marca os policiais e a IA (Workers AI, no
+     Worker) escreve só o item 1 "DO ATO MERITÓRIO". O resto é o texto fixo do
+     modelo, com singular/plural e masculino/feminino trocados aqui na página.
+     Uma ocorrência com 10 policiais sai em 11 documentos de uma vez (1 coletivo
+     + 10 individuais), cada um com "Copiar para o SEI".
+     Worker: backend/elogio.js (rotas /api/elogio*), permissão "elogio".
+     Histórico e configuração (comandante que assina) no KV do Worker. -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>P6 · Elogios · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<!-- pdf.js (UMD) — lê o texto do PDF da ocorrência no navegador -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+.bp-wrap{max-width:1180px}
+.bp-topo-in{max-width:1240px}
+.el-seg{display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--surf);border:1px solid var(--line);flex-wrap:wrap}
+.el-seg button{flex:1;min-width:120px;background:transparent;border:0;border-radius:11px;padding:10px;color:var(--muted);font:700 14px Inter,sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.el-seg button:hover{color:var(--t1);background:var(--surf2)}
+.el-seg button.on{background:var(--acc);color:var(--acc-ink)}
+.el-passo{display:flex;align-items:center;gap:10px;margin:0 0 12px;font:700 16px Rajdhani,Inter,sans-serif;letter-spacing:.4px;color:var(--t1);text-transform:uppercase}
+.el-passo .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acc);color:var(--acc-ink);font:800 13px Inter,sans-serif;flex:none}
+.el-passo small{font:500 13px Inter,sans-serif;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:auto}
+.el-bloco{margin-top:16px}
+.el-modelos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.el-mod{display:flex;flex-direction:column;gap:4px;text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line2);background:var(--bg2);color:var(--t2);font:inherit;cursor:pointer;transition:border-color .2s,background .2s}
+.el-mod b{color:var(--t1);font-size:15px}
+.el-mod small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.el-mod:hover{border-color:var(--acc-line)}
+.el-mod.on{border-color:var(--acc);background:var(--card-h);box-shadow:0 0 0 1px var(--acc) inset}
+.el-opc{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
+.el-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.el-grid .d2{grid-column:span 2}.el-grid .d3{grid-column:1/-1}
+.el-lista{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;margin-top:10px;padding-right:2px}
+.el-oc{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);cursor:pointer}
+.el-oc:hover{border-color:var(--acc-line)}
+.el-oc.on{border-color:var(--acc);background:var(--card-h)}
+.el-oc input{margin-top:3px;accent-color:var(--acc);width:17px;height:17px;flex:none}
+.el-oc .tx{flex:1;min-width:0}
+.el-oc .tx b{color:var(--t1);font-size:14.5px}
+.el-oc .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.el-oc .tx .res{color:var(--good)}
+.el-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+textarea.el-area{width:100%;min-height:130px;background:var(--bg2);border:1px solid var(--line2);border-radius:12px;color:var(--t1);padding:10px 12px;font:500 14px/1.5 Inter,sans-serif;resize:vertical}
+textarea.el-area:focus{outline:none;border-color:var(--acc)}
+.el-rot{display:block;font-size:12.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 6px}
+.el-pols{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:12px}
+.el-pols th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+.el-pols td{padding:6px 8px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:middle}
+.el-pols td b{color:var(--t1)}
+.el-pols td small{display:block;font-size:11.5px;color:var(--muted)}
+.el-pols input[type=text]{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;color:var(--t1);padding:6px 8px;font:500 13px Inter,sans-serif}
+.el-pols input.posto{width:128px;text-transform:uppercase;font-weight:600}
+.el-pols input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
+.el-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px;align-items:center}
+.el-res{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-top:8px}
+.el-res:empty{display:none}
+.el-res button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--t1);font:inherit;cursor:pointer}
+.el-res button:hover{border-color:var(--acc-line);background:var(--card-h)}
+.el-res button .tx{flex:1;min-width:0}
+.el-res button .tx small{display:block;color:var(--muted);font-size:12.5px}
+.el-docs{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.el-doc{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.el-doc .tx{flex:1;min-width:200px}
+.el-doc .tx b{display:block;color:var(--t1)}
+.el-doc .tx small{display:block;color:var(--muted);font-size:12.5px}
+.el-doc.copiado{border-color:var(--good)}
+.el-fatos{margin-top:10px;font-size:13px;color:var(--t3)}
+.el-fatos pre{white-space:pre-wrap;font:12.5px/1.45 ui-monospace,Consolas,monospace;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px;max-height:240px;overflow:auto;color:var(--t2)}
+.el-hist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.el-h{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.el-h .tx{flex:1;min-width:220px}
+.el-h .tx b{display:block;color:var(--t1);font-size:15px}
+.el-h .tx small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.el-h .acs{display:flex;gap:6px;flex-wrap:wrap}
+.bp-modal-cx.tela{width:min(1000px,96vw);max-height:94vh}
+/* prévia do SEI: papel branco, editável antes de copiar */
+.el-papel{background:#fff;color:#000;border-radius:10px;padding:26px 34px;max-height:62vh;overflow:auto;font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.45;outline:none}
+.el-papel:focus{box-shadow:0 0 0 2px var(--acc)}
+.el-papel p{margin:0 0 9px}
+.el-ass{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px dashed var(--line2);background:var(--bg2)}
+.el-ass .tx{flex:1;min-width:200px}
+.el-ass b{color:var(--t1)}
+.el-ass small{display:block;color:var(--muted);font-size:12.5px}
+@media (max-width:900px){
+  .el-modelos{grid-template-columns:1fr 1fr}
+  .el-grid{grid-template-columns:1fr}.el-grid .d2{grid-column:auto}
+  .el-pols .c-re{display:none}
+}
+@media (max-width:560px){ .el-modelos{grid-template-columns:1fr} .el-pols .c-dest{display:none} }
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-11", "titulo": "Elogios da P6 no ar", "quem": "todos", "itens": [
+    "Notas de elogio pelos modelos da P6: coletivo, individual, geral ao efetivo e simplificado.",
+    "Escolha a ocorrência na base do sistema (ou importe o PDF), marque os policiais e a IA escreve o item 1 — Do ato meritório.",
+    "Ocorrência com vários policiais: sai o coletivo e um individual para cada um de uma vez, cada documento com “Copiar para o SEI”.",
+    "Singular, plural e feminino são trocados sozinhos; dá para corrigir qualquer palavra na prévia antes de copiar."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>P6 · Elogios</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="el-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="el-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+
+  <!-- LOGIN -->
+  <div id="el-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>P6 · Elogios</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label>
+          <div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEM PERMISSÃO -->
+  <div id="el-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>Os Elogios da P6 são liberados login por login</small></div></div>
+      <div class="bp-aviso pend"><i data-ic="info"></i><div id="el-negado-tx">Seu login não tem acesso aos Elogios da P6.</div></div>
+      <p style="color:var(--t3);font-size:14px;margin:12px 0 0">Peça ao administrador para marcar <b>“P6 · Elogios”</b> no Painel de Controle.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="el-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="el-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P6 · Justiça e Disciplina</span>
+        <h1>Notas de <em>elogio</em></h1>
+        <p>Escolha a ocorrência e os policiais. A IA escreve o ato meritório e o resto sai igual ao modelo, pronto para colar no SEI — o coletivo e um individual para cada policial de uma vez.</p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn" onclick="vista('novo')"><i data-ic="mais"></i>Novo elogio</button>
+          <button type="button" class="bp-btn sec" onclick="vista('hist')"><i data-ic="arquivar"></i>Histórico</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="bp-passos" style="margin-top:14px">
+      <div class="bp-passo" style="--i:0"><span class="bp-tile sm"><i data-ic="buscar"></i></span><div><span class="n">PASSO 1</span><b>O fato</b><small>Ocorrência do sistema, PDF ou texto.</small></div></div>
+      <div class="bp-passo" style="--i:1"><span class="bp-tile sm info"><i data-ic="usuarios"></i></span><div><span class="n">PASSO 2</span><b>Os policiais</b><small>Quem vai ser elogiado.</small></div></div>
+      <div class="bp-passo" style="--i:2"><span class="bp-tile sm ok"><i data-ic="arquivo"></i></span><div><span class="n">PASSO 3</span><b>Para o SEI</b><small>Um botão de copiar por documento.</small></div></div>
+    </div>
+
+    <div class="el-seg" style="margin-top:18px">
+      <button type="button" id="seg-novo" class="on" onclick="vista('novo')">Novo elogio</button>
+      <button type="button" id="seg-hist" onclick="vista('hist')">Histórico <span id="hist-n"></span></button>
+    </div>
+
+    <!-- ============================ NOVO ============================ -->
+    <div id="v-novo">
+      <div id="el-aviso-base"></div>
+
+      <!-- 1. MODELO -->
+      <div class="bp-card topo-acc el-bloco">
+        <div class="el-passo"><span class="n">1</span>Modelo</div>
+        <div class="el-modelos" id="el-modelos">
+          <button type="button" class="el-mod on" data-m="m1" onclick="escolherModelo('m1')"><b>Coletivo</b><small>Ocorrência ou operação: elogio da guarnição + um individual para cada policial (modelos 1 e 2).</small></button>
+          <button type="button" class="el-mod" data-m="m2" onclick="escolherModelo('m2')"><b>Individual</b><small>Um documento para cada policial escolhido (modelo 2).</small></button>
+          <button type="button" class="el-mod" data-m="m3" onclick="escolherModelo('m3')"><b>Geral ao efetivo</b><small>Fim de ano, aniversário da unidade, fim de operação longa, metas (modelo 3).</small></button>
+          <button type="button" class="el-mod" data-m="m4" onclick="escolherModelo('m4')"><b>Simplificado</b><small>Curto, mas qualitativo (modelo 4).</small></button>
+        </div>
+        <div class="el-opc">
+          <label class="bp-check" id="op-indiv"><input type="checkbox" id="c-indiv" checked onchange="pintarItem1()"> Gerar também um individual para cada policial</label>
+          <label class="bp-check" id="op-m4" style="display:none"><input type="checkbox" id="c-m4ind" onchange="pintarItem1()"> Um documento para cada policial (em vez de um coletivo)</label>
+        </div>
+      </div>
+
+      <!-- 2. FATO -->
+      <div class="bp-card el-bloco">
+        <div class="el-passo"><span class="n">2</span>O fato<small id="fato-conta"></small></div>
+        <div id="fato-oc">
+          <div class="el-seg" style="margin-bottom:12px">
+            <button type="button" id="fo-sis" class="on" onclick="fonteFato('sis')">Ocorrências do sistema</button>
+            <button type="button" id="fo-pdf" onclick="fonteFato('pdf')">PDF ou texto da ocorrência</button>
+          </div>
+          <div id="fo-sis-box">
+            <div class="bp-campo"><label for="oc-busca">Procurar ocorrência</label>
+              <div class="bp-in"><i data-ic="buscar"></i><input id="oc-busca" placeholder="BO, data (12/10/2026), município, natureza, droga…" autocomplete="off" oninput="pintarOcorrencias()"></div></div>
+            <div class="el-chips" id="oc-chips"></div>
+            <div class="el-lista" id="oc-lista"></div>
+          </div>
+          <div id="fo-pdf-box" style="display:none">
+            <label class="bp-arquivo" id="pdf-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerPdf(event.dataTransfer.files)">
+              <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
+              <span class="tx"><b>Toque para escolher o PDF da ocorrência</b><small>ou arraste para cá — o texto é lido aqui no navegador</small></span>
+              <span class="bp-trocar"></span>
+              <input type="file" id="pdf-file" accept="application/pdf,.pdf" onchange="lerPdf(this.files)">
+            </label>
+            <span class="el-rot">Texto da ocorrência (pode colar ou corrigir)</span>
+            <textarea class="el-area" id="fato-texto" placeholder="Cole aqui o histórico da ocorrência, ou importe o PDF acima." oninput="contarFato()"></textarea>
+          </div>
+        </div>
+        <div id="fato-geral" style="display:none">
+          <div class="el-grid">
+            <div class="bp-campo"><label for="g-de">Início do período</label><div class="bp-in"><i data-ic="calendario"></i><input id="g-de" type="date" onchange="contarGeral()"></div></div>
+            <div class="bp-campo"><label for="g-ate">Fim do período</label><div class="bp-in"><i data-ic="calendario"></i><input id="g-ate" type="date" onchange="contarGeral()"></div></div>
+            <div class="bp-campo"><label for="g-rot">Como chamar o período</label><div class="bp-in"><i data-ic="etiqueta"></i><input id="g-rot" maxlength="120" placeholder="Ex.: o ano de 2026"></div></div>
+          </div>
+          <span class="el-rot">Algo a mais para a IA citar (opcional)</span>
+          <textarea class="el-area" id="g-texto" style="min-height:80px" placeholder="Ex.: participação nas Operações Protetor das Fronteiras e Protetor das Divisas, apoio à Polícia Federal e ao IBAMA…"></textarea>
+        </div>
+      </div>
+
+      <!-- 3. POLICIAIS -->
+      <div class="bp-card el-bloco" id="bloco-pols">
+        <div class="el-passo"><span class="n">3</span>Policiais<small id="pols-conta"></small></div>
+        <div class="el-add">
+          <div class="bp-campo"><label for="pol-busca">Adicionar policial do BPFRON</label>
+            <div class="bp-in"><i data-ic="buscar"></i><input id="pol-busca" placeholder="Nome, nome de guerra ou RE" autocomplete="off" oninput="buscarPol()" onkeydown="if(event.key==='Enter'){event.preventDefault();const b=document.querySelector('#pol-res button');if(b)b.click();}"></div></div>
+          <button type="button" class="bp-btn sec" style="align-self:end" onclick="abrir('m-man')"><i data-ic="usuario"></i>Fora do cadastro</button>
+        </div>
+        <div class="el-res" id="pol-res"></div>
+        <div id="pols-box"></div>
+        <p style="color:var(--muted);font-size:12.5px;margin:10px 0 0">A ordem é pela antiguidade (posto/graduação e depois o RE). “Destaque” só entra no individual daquele policial: escreva como continua a frase “Destacou-se, ainda, …”.</p>
+      </div>
+
+      <!-- 4. ATO MERITÓRIO -->
+      <div class="bp-card el-bloco">
+        <div class="el-passo"><span class="n">4</span>Do ato meritório<small>escrito pela IA, você revisa</small></div>
+        <div class="bp-bts" style="margin:0">
+          <button type="button" class="bp-btn" id="ia-btn" onclick="escreverIA()"><i data-ic="foguete"></i>Escrever com IA</button>
+          <span class="bp-msg" id="ia-msg" style="margin:0;align-self:center"></span>
+        </div>
+        <div id="ia-avisos"></div>
+        <div id="it-col"><span class="el-rot" id="it-col-rot">Item 1 — elogio coletivo</span>
+          <textarea class="el-area" id="t-col" placeholder="No dia dd/mm/aaaa, por volta das …, durante … na região de …, a guarnição acima nominada …"></textarea></div>
+        <div id="it-ind"><span class="el-rot">Item 1 — elogio individual (o mesmo para cada policial)</span>
+          <textarea class="el-area" id="t-ind" placeholder="O policial militar elogiado integrou a guarnição que, no dia …"></textarea></div>
+        <div id="it-m4" class="el-grid" style="margin-top:4px">
+          <div class="d3"><span class="el-rot">Elogiar … pela</span><textarea class="el-area" id="t-mot" style="min-height:60px" placeholder="atuação na ocorrência de 12/10/2026, em Guajará-Mirim/RO"></textarea></div>
+          <div class="d3"><span class="el-rot">… que resultou</span><textarea class="el-area" id="t-res" style="min-height:60px" placeholder="na prisão de 2 indivíduos e na apreensão de 30 kg de cocaína"></textarea></div>
+        </div>
+        <details class="el-fatos" id="ia-fatos" style="display:none"><summary>Ver os dados que a IA recebeu</summary><pre id="ia-fatos-tx"></pre></details>
+      </div>
+
+      <!-- 5. DOCUMENTO -->
+      <div class="bp-card el-bloco">
+        <div class="el-passo"><span class="n">5</span>Documento</div>
+        <div class="el-grid">
+          <div class="bp-campo"><label for="d-data">Data do documento</label><div class="bp-in"><i data-ic="calendario"></i><input id="d-data" type="date"></div></div>
+          <div class="bp-campo"><label for="d-nota">Nº da 1ª nota para BI (opcional)</label><div class="bp-in"><i data-ic="etiqueta"></i><input id="d-nota" inputmode="numeric" maxlength="8" placeholder="em branco = ____"></div></div>
+          <div class="bp-campo"><label>&nbsp;</label><small style="color:var(--muted);font-size:12.5px;line-height:1.35">Com número, cada documento seguinte ganha o próximo (coletivo primeiro, depois os individuais).</small></div>
+          <div class="d3 el-ass">
+            <span class="bp-tile sm"><i data-ic="assinar"></i></span>
+            <div class="tx"><b id="ass-nome"></b><small id="ass-cargo"></small></div>
+            <button type="button" class="bp-btn sm sec" onclick="abrirCfg()"><i data-ic="editar"></i>Assinatura e cabeçalho</button>
+          </div>
+        </div>
+        <div class="bp-bts" style="margin-top:16px">
+          <button type="button" class="bp-btn" onclick="gerar()"><i data-ic="check"></i>Gerar elogios</button>
+          <button type="button" class="bp-btn ghost" onclick="limpar()">Começar outro</button>
+        </div>
+        <div class="bp-msg err" id="ger-msg"></div>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="ger-box" style="display:none">
+        <div class="bp-sec"><span class="bp-tile ok"><i data-ic="arquivo"></i></span><div><h2>Documentos prontos</h2><small>Abra, confira (dá para corrigir na prévia) e copie para o SEI — um documento do SEI para cada</small></div><span class="bp-cont bp-sl" id="ger-n"></span></div>
+        <div class="el-docs" id="ger-docs"></div>
+        <div class="bp-bts" style="margin-top:12px">
+          <button type="button" class="bp-btn sec" id="sal-btn" onclick="salvarHist()"><i data-ic="arquivar"></i>Salvar no histórico</button>
+          <span class="bp-msg" id="sal-msg" style="margin:0;align-self:center"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================ HISTÓRICO ============================ -->
+    <div id="v-hist" style="display:none">
+      <div class="bp-campo" style="margin-top:16px"><label for="h-busca">Procurar</label>
+        <div class="bp-in"><i data-ic="buscar"></i><input id="h-busca" placeholder="Policial, BO, assunto…" autocomplete="off" oninput="pintarHist()"></div></div>
+      <div class="el-hist" id="h-lista"></div>
+    </div>
+  </div>
+</main>
+
+<!-- PRÉVIA / COPIAR -->
+<div class="bp-modal" id="m-doc" onclick="if(event.target===this)fechar('m-doc')">
+  <div class="bp-modal-cx tela" role="dialog" aria-modal="true" aria-labelledby="m-doc-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile info"><i data-ic="arquivo"></i></span>
+      <div><h3 id="m-doc-tit">Documento</h3><small>Clique no texto para corrigir qualquer palavra. No SEI: crie a Nota para BI, clique dentro do texto e aperte Ctrl+V.</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-doc')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="el-papel" id="doc-papel" contenteditable="true" spellcheck="true" oninput="docEditado()"></div>
+    <div class="bp-modal-pe">
+      <span class="bp-msg" id="doc-msg" style="flex:1;margin:0"></span>
+      <button type="button" class="bp-btn ghost" id="doc-ant" onclick="docVizinho(-1)"><i data-ic="voltar"></i>Anterior</button>
+      <button type="button" class="bp-btn ghost" id="doc-prox" onclick="docVizinho(1)">Próximo<i data-ic="seta"></i></button>
+      <button type="button" class="bp-btn" onclick="copiarDoc()"><i data-ic="arquivo"></i>Copiar para o SEI</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIGURAÇÃO (assinatura) -->
+<div class="bp-modal" id="m-cfg" onclick="if(event.target===this)fechar('m-cfg')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-cfg-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="assinar"></i></span>
+      <div><h3 id="m-cfg-tit">Assinatura e cabeçalho</h3><small>Vale para todos os elogios, até alguém trocar</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-cfg')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="el-grid" style="grid-template-columns:2fr 1fr">
+      <div class="bp-campo"><label for="cfg-nome">Nome de quem assina</label><div class="bp-in"><i data-ic="usuario"></i><input id="cfg-nome" maxlength="120" placeholder="Ex.: FELIPE SANTOS"></div></div>
+      <div class="bp-campo"><label for="cfg-posto">Posto</label><div class="bp-in"><i data-ic="estrela"></i><input id="cfg-posto" maxlength="40" placeholder="MAJ PM"></div></div>
+      <div class="bp-campo" style="grid-column:1/-1"><label for="cfg-cargo">Cargo</label><div class="bp-in"><i data-ic="escudo"></i><input id="cfg-cargo" maxlength="120" placeholder="Comandante do BPFRON"></div></div>
+      <div class="bp-campo"><label for="cfg-sufixo">Depois do nº da nota</label><div class="bp-in"><i data-ic="etiqueta"></i><input id="cfg-sufixo" maxlength="60" placeholder="DIV ADM/BPFRON"></div></div>
+      <div class="bp-campo"><label for="cfg-cidade">Cidade</label><div class="bp-in"><i data-ic="local"></i><input id="cfg-cidade" maxlength="80" placeholder="Porto Velho/RO"></div></div>
+    </div>
+    <div class="bp-msg err" id="cfg-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-cfg')">Cancelar</button>
+      <button type="button" class="bp-btn" id="cfg-btn" onclick="salvarCfg()"><i data-ic="check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- POLICIAL FORA DO CADASTRO -->
+<div class="bp-modal" id="m-man" onclick="if(event.target===this)fechar('m-man')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-man-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="usuario"></i></span>
+      <div><h3 id="m-man-tit">Policial fora do cadastro</h3><small>Apoio de outra unidade ou quem ainda não está no cadastro</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-man')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="el-grid" style="grid-template-columns:1fr 1fr">
+      <div class="bp-campo"><label for="man-posto">Posto/graduação</label><div class="bp-in"><i data-ic="estrela"></i><input id="man-posto" maxlength="40" placeholder="Ex.: CB PM"></div></div>
+      <div class="bp-campo"><label for="man-re">Matrícula (RE)</label><div class="bp-in"><i data-ic="etiqueta"></i><input id="man-re" inputmode="numeric" maxlength="12"></div></div>
+      <div class="bp-campo" style="grid-column:1/-1"><label for="man-nome">Nome completo</label><div class="bp-in"><i data-ic="usuario"></i><input id="man-nome" maxlength="120"></div></div>
+      <label class="bp-check" style="grid-column:1/-1"><input type="checkbox" id="man-fem"> Policial feminina</label>
+    </div>
+    <div class="bp-msg err" id="man-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-man')">Cancelar</button>
+      <button type="button" class="bp-btn" onclick="addManual()"><i data-ic="mais"></i>Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ELOGIO DO HISTÓRICO -->
+<div class="bp-modal" id="m-lote" onclick="if(event.target===this)fechar('m-lote')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="m-lote-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile"><i data-ic="arquivar"></i></span>
+      <div><h3 id="m-lote-tit">Elogio</h3><small id="m-lote-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-lote')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="el-docs" id="lote-docs" style="margin-top:0"></div>
+  </div>
+</div>
+
+<!-- EXCLUIR -->
+<div class="bp-modal" id="m-exc" onclick="if(event.target===this)fechar('m-exc')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="m-exc-tit">
+    <div class="bp-modal-cab">
+      <span class="bp-tile crit"><i data-ic="lixeira"></i></span>
+      <div><h3 id="m-exc-tit">Tirar do histórico</h3><small id="m-exc-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-exc')" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <p style="color:var(--t3);margin:0 0 12px;font-size:14px">Só some do histórico desta página. O que já foi publicado no SEI não muda.</p>
+    <div class="bp-campo"><label for="exc-senha">Sua senha</label>
+      <div class="bp-in"><i data-ic="cadeado"></i><input id="exc-senha" type="password" autocomplete="current-password"></div></div>
+    <div class="bp-msg err" id="exc-msg"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-exc')">Cancelar</button>
+      <button type="button" class="bp-btn perigo" id="exc-btn" onclick="excluir()"><i data-ic="lixeira"></i>Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+
+const $ = (id) => document.getElementById(id);
+const toast = (m, t) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t); };
+const icones = (el) => { if (window.BPCasca && BPCasca.icones) BPCasca.icones(el || document.body); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const re5 = (v) => { const d = String(v || '').replace(/\D/g, ''); return d.length > 5 ? d.slice(-5) : d; };
+const br = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const hojeISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const MODAIS = ['m-exc', 'm-man', 'm-cfg', 'm-doc', 'm-lote'];
+const NOME_MODELO = { m1: 'Coletivo', m2: 'Individual', m3: 'Geral ao efetivo', m4: 'Simplificado' };
+
+function abrir(id) { $(id).classList.add('on'); }
+function fechar(id) { $(id).classList.remove('on'); }
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  for (const id of MODAIS) if ($(id).classList.contains('on')) { fechar(id); break; }
+});
+
+/* ============================== API / login ============================== */
+async function api(path, body) {
+  const h = { 'Content-Type': 'application/json' };
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; boot(); }
+function mostrar(qual) { ['el-login', 'el-negado', 'el-estado', 'el-app'].forEach((id) => { $(id).style.display = id === qual ? '' : 'none'; }); }
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'el-login');
+  $('el-sair').style.display = logado ? '' : 'none';
+  $('el-eu').style.display = logado ? '' : 'none';
+  if (logado) carregar();
+}
+
+/* ============================== estado ============================== */
+let D = null;            // resposta do /api/elogio
+let MOD = 'm1';          // modelo escolhido
+let FONTE = 'sis';       // fato: ocorrências do sistema ou PDF/texto
+let SEL = [];            // BOs escolhidos
+let POLS = [];           // policiais escolhidos
+let GER = [];            // documentos gerados agora
+let GER_META = null;     // dados do que foi gerado (para o histórico)
+let DOCS_ABERTOS = null; // lista em que a prévia está navegando (GER ou do histórico)
+let DOC_I = -1;
+let EXC_ID = '';
+
+async function carregar() {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo os elogios') : null;
+  try { D = await api('/api/elogio'); }
+  catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { $('el-negado-tx').textContent = e.message; mostrar('el-negado'); return; }
+    mostrar('el-estado');
+    $('el-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>';
+    return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 250); }
+  mostrar('el-app');
+  const n = (D.eu && D.eu.nome) || ls('bp_user');
+  $('el-eu').querySelector('b').textContent = n.split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P6';
+  $('el-eu').querySelector('span').textContent = n;
+  (D.ocorrencias || []).forEach((o) => { o._n = sem([o.bo, br(o.data), o.municipio, o.natureza, o.tipo_bo, o.operacao, o.meio, o.ambiente, o.resumo, o.descricao].join(' ')); });
+  $('el-aviso-base').innerHTML = D.aviso_base ? `<div class="bp-aviso pend el-bloco"><i data-ic="alerta"></i><div>${esc(D.aviso_base)} Dá para seguir pelo PDF ou colando o texto.</div></div>` : '';
+  if (!D.ia) $('ia-msg').textContent = 'A IA não está ligada no servidor: escreva o item 1 à mão.';
+  if (!$('d-data').value) $('d-data').value = hojeISO();
+  if (!$('g-de').value) { const y = hojeISO().slice(0, 4); $('g-de').value = y + '-01-01'; $('g-ate').value = hojeISO(); $('g-rot').value = 'o ano de ' + y; }
+  pintarAss(); escolherModelo(MOD); pintarOcorrencias(); pintarPols(); pintarHist();
+  icones();
+}
+
+function vista(v) {
+  $('v-novo').style.display = v === 'novo' ? '' : 'none';
+  $('v-hist').style.display = v === 'hist' ? '' : 'none';
+  $('seg-novo').classList.toggle('on', v === 'novo');
+  $('seg-hist').classList.toggle('on', v === 'hist');
+}
+
+/* ============================== 1. modelo ============================== */
+function escolherModelo(m) {
+  MOD = m;
+  document.querySelectorAll('#el-modelos .el-mod').forEach((b) => b.classList.toggle('on', b.dataset.m === m));
+  $('op-indiv').style.display = m === 'm1' ? '' : 'none';
+  $('op-m4').style.display = m === 'm4' ? '' : 'none';
+  $('fato-oc').style.display = m === 'm3' ? 'none' : '';
+  $('fato-geral').style.display = m === 'm3' ? '' : 'none';
+  $('bloco-pols').style.display = m === 'm3' ? 'none' : '';
+  if (m === 'm3') contarGeral(); else contarFato();
+  pintarItem1();
+}
+/* quais textos do item 1 aparecem em cada modelo */
+function pintarItem1() {
+  $('it-col').style.display = (MOD === 'm1' || MOD === 'm3') ? '' : 'none';
+  $('it-col-rot').textContent = MOD === 'm3' ? 'Item 1 — elogio geral ao efetivo' : 'Item 1 — elogio coletivo';
+  $('it-ind').style.display = (MOD === 'm2' || (MOD === 'm1' && $('c-indiv').checked)) ? '' : 'none';
+  $('it-m4').style.display = MOD === 'm4' ? '' : 'none';
+}
+
+/* ============================== 2. fato ============================== */
+function fonteFato(f) {
+  FONTE = f;
+  $('fo-sis').classList.toggle('on', f === 'sis'); $('fo-pdf').classList.toggle('on', f === 'pdf');
+  $('fo-sis-box').style.display = f === 'sis' ? '' : 'none'; $('fo-pdf-box').style.display = f === 'pdf' ? '' : 'none';
+  contarFato();
+}
+function pintarOcorrencias() {
+  const lista = (D && D.ocorrencias) || [];
+  const termos = sem($('oc-busca').value).split(/\s+/).filter(Boolean);
+  const achou = lista.filter((o) => termos.every((t) => o._n.includes(t)));
+  const mostra = achou.slice(0, 60);
+  // as escolhidas aparecem sempre, mesmo fora da busca
+  SEL.forEach((bo) => { if (!mostra.some((o) => o.bo === bo)) { const o = lista.find((x) => x.bo === bo); if (o) mostra.unshift(o); } });
+  $('oc-lista').innerHTML = mostra.length ? mostra.map((o) => {
+    const on = SEL.includes(o.bo);
+    return `<label class="el-oc${on ? ' on' : ''}"><input type="checkbox" ${on ? 'checked' : ''} onchange="marcarOc(${esc(JSON.stringify(o.bo))}, this.checked)">
+      <span class="tx"><b>${esc(br(o.data) || 'sem data')}${o.hora ? ' · ' + esc(o.hora) : ''} · ${esc(o.municipio || 'município não informado')}</b>
+      <small>BO ${esc(o.bo)} · ${esc(o.natureza || o.tipo_bo || '')}${o.operacao ? ' · ' + esc(o.operacao) : ''}</small>
+      ${o.resumo ? `<small class="res">${esc(o.resumo)}</small>` : ''}</span></label>`;
+  }).join('') + (achou.length > 60 ? `<div class="bp-vazio" style="padding:10px">Mostrando 60 de ${achou.length}. Refine a busca.</div>` : '')
+    : `<div class="bp-vazio">${lista.length ? 'Nenhuma ocorrência com essa busca.' : 'A base de ocorrências não veio. Use o PDF ou cole o texto.'}</div>`;
+  $('oc-chips').innerHTML = SEL.map((bo) => `<span class="bp-sl info">BO ${esc(bo)} <button type="button" class="bp-btn ic sm ghost" style="width:22px;height:22px" aria-label="Tirar" onclick="marcarOc(${esc(JSON.stringify(bo))}, false)"><i data-ic="x"></i></button></span>`).join('');
+  icones($('oc-chips'));
+  contarFato();
+}
+function marcarOc(bo, on) {
+  SEL = SEL.filter((x) => x !== bo);
+  if (on) { if (SEL.length >= 15) { toast('No máximo 15 ocorrências num elogio.', 'erro'); } else SEL.push(bo); }
+  pintarOcorrencias();
+}
+function contarFato() {
+  if (MOD === 'm3') return;
+  const t = $('fato-texto').value.trim();
+  const p = [];
+  if (SEL.length) p.push(SEL.length + (SEL.length > 1 ? ' ocorrências escolhidas' : ' ocorrência escolhida'));
+  if (t) p.push('texto com ' + t.length + ' caracteres');
+  $('fato-conta').textContent = p.join(' + ');
+}
+function contarGeral() {
+  const de = $('g-de').value, ate = $('g-ate').value;
+  const n = ((D && D.ocorrencias) || []).filter((o) => o.data && o.data >= de && o.data <= ate).length;
+  $('fato-conta').textContent = de && ate ? `${n} ocorrência${n === 1 ? '' : 's'} no período` : '';
+}
+async function lerPdf(files) {
+  const f = files && files[0]; if (!f) return;
+  const box = $('pdf-arq');
+  box.classList.add('tem'); box.querySelector('.tx b').textContent = f.name; box.querySelector('.tx small').textContent = 'lendo…'; box.querySelector('.bp-trocar').textContent = 'Trocar';
+  try {
+    if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Confira a internet.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+    const partes = [];
+    for (let i = 1; i <= Math.min(doc.numPages, 30); i++) {
+      const pg = await doc.getPage(i); const tc = await pg.getTextContent();
+      let linha = '', y = null; const ls2 = [];
+      tc.items.forEach((it) => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 3) { ls2.push(linha.trim()); linha = ''; } y = yy; linha += it.str + (it.hasEOL ? '' : ' '); });
+      if (linha.trim()) ls2.push(linha.trim());
+      partes.push(ls2.join('\n'));
+    }
+    const texto = partes.join('\n\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    if (texto.length < 40) throw new Error('Esse PDF não tem texto (parece digitalizado). Cole o texto da ocorrência na caixa abaixo.');
+    $('fato-texto').value = texto.slice(0, 15000);
+    box.querySelector('.tx small').textContent = doc.numPages + ' página(s) lida(s)';
+    toast('Texto do PDF carregado. Confira e corte o que não for do fato.');
+  } catch (e) {
+    box.querySelector('.tx small').textContent = 'não deu para ler';
+    toast(e.message || 'Não consegui ler esse PDF.', 'erro');
+  }
+  contarFato();
+}
+
+/* ============================== 3. policiais ============================== */
+/* antiguidade: posto/graduação, depois o RE (menor = mais antigo) */
+function ordemPosto(p) {
+  const s = sem(p).replace(/[º°ª.]/g, '').replace(/\s+/g, ' ').trim();
+  const R = [[/^CEL/, 0], [/^(TC|TEN CEL)/, 1], [/^MAJ/, 2], [/^CAP/, 3], [/^1 ?TEN/, 4], [/^2 ?TEN/, 5], [/^ASP/, 6], [/^(ST|SUBTEN)/, 7],
+    [/^1 ?SGT/, 8], [/^2 ?SGT/, 9], [/^3 ?SGT/, 10], [/^CB/, 11], [/^SD/, 12]];
+  for (const [re, n] of R) if (re.test(s)) return n;
+  return 13;
+}
+function ordenarPols() { POLS.sort((a, b) => ordemPosto(a.posto) - ordemPosto(b.posto) || (+String(a.re).replace(/\D/g, '') || 9e12) - (+String(b.re).replace(/\D/g, '') || 9e12)); }
+function buscarPol() {
+  const t = sem($('pol-busca').value).trim();
+  if (t.length < 2) { $('pol-res').innerHTML = ''; return; }
+  const ja = new Set(POLS.map((p) => re5(p.re)));
+  const r = ((D && D.efetivo) || []).filter((p) => !ja.has(re5(p.re)) && (sem(p.nome + ' ' + p.guerra).includes(t) || String(p.re).includes(t.replace(/\D/g, '') || '§'))).slice(0, 8);
+  $('pol-res').innerHTML = r.length ? r.map((p) => `<button type="button" onclick="addPol('${esc(p.re)}')"><span class="bp-tile sm"><i data-ic="usuario"></i></span><span class="tx"><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b><small>${esc(p.nome)} · RE ${esc(p.re)}</small></span><i data-ic="mais"></i></button>`).join('')
+    : '<div class="bp-vazio" style="padding:10px">Ninguém do cadastro do BPFRON com esse nome. Use “Fora do cadastro”.</div>';
+  icones($('pol-res'));
+}
+function addPol(re) {
+  const p = ((D && D.efetivo) || []).find((x) => x.re === re); if (!p) return;
+  POLS.push({ re: p.re, posto: p.posto, nome: p.nome, guerra: p.guerra, fem: false, destaque: '' });
+  ordenarPols(); $('pol-busca').value = ''; $('pol-res').innerHTML = ''; pintarPols(); $('pol-busca').focus();
+}
+function addManual() {
+  const nome = $('man-nome').value.trim().toUpperCase(), posto = $('man-posto').value.trim().toUpperCase(), re = $('man-re').value.replace(/\D/g, '');
+  if (!nome || !posto) { $('man-msg').textContent = 'Preencha o posto/graduação e o nome completo.'; return; }
+  if (re && POLS.some((p) => re5(p.re) === re5(re))) { $('man-msg').textContent = 'Esse RE já está na lista.'; return; }
+  POLS.push({ re, posto, nome, guerra: '', fem: $('man-fem').checked, destaque: '', fora: true });
+  ordenarPols(); ['man-nome', 'man-posto', 'man-re'].forEach((id) => { $(id).value = ''; }); $('man-fem').checked = false; $('man-msg').textContent = '';
+  fechar('m-man'); pintarPols();
+}
+function tirarPol(i) { POLS.splice(i, 1); pintarPols(); }
+function polCampo(i, campo, el) {
+  const p = POLS[i]; if (!p) return;
+  if (campo === 'fem') p.fem = el.checked;
+  else if (campo === 'posto') { p.posto = el.value.toUpperCase(); }
+  else p[campo] = el.value;
+}
+function pintarPols() {
+  $('pols-conta').textContent = POLS.length ? POLS.length + (POLS.length > 1 ? ' policiais' : ' policial') : '';
+  $('pols-box').innerHTML = POLS.length ? `<div style="overflow:auto"><table class="el-pols"><thead><tr><th>#</th><th>Posto/grad.</th><th>Nome completo</th><th class="c-re">Matrícula</th><th>Fem.</th><th class="c-dest">Destaque (opcional)</th><th></th></tr></thead><tbody>${
+    POLS.map((p, i) => `<tr><td>${i + 1}</td>
+      <td><input type="text" class="posto" value="${esc(p.posto)}" onchange="polCampo(${i},'posto',this);ordenarPols();pintarPols()" aria-label="Posto"></td>
+      <td><b>${esc(p.nome)}</b>${p.fora ? '<small>fora do cadastro</small>' : ''}</td>
+      <td class="c-re">${esc(p.re || '—')}</td>
+      <td><input type="checkbox" ${p.fem ? 'checked' : ''} onchange="polCampo(${i},'fem',this)" aria-label="Policial feminina"></td>
+      <td class="c-dest"><input type="text" value="${esc(p.destaque)}" maxlength="300" placeholder="pela condução da viatura…" oninput="polCampo(${i},'destaque',this)" aria-label="Destaque"></td>
+      <td><button type="button" class="bp-btn ic sm ghost" title="Tirar" aria-label="Tirar" onclick="tirarPol(${i})"><i data-ic="x"></i></button></td></tr>`).join('')
+  }</tbody></table></div>` : '<div class="bp-vazio" style="margin-top:10px">Nenhum policial ainda.</div>';
+  icones($('pols-box'));
+}
+
+/* ============================== 4. IA ============================== */
+async function escreverIA() {
+  const bt = $('ia-btn'), msg = $('ia-msg');
+  const corpo = MOD === 'm3'
+    ? { modo: 'geral', de: $('g-de').value, ate: $('g-ate').value, rotulo: $('g-rot').value, texto: $('g-texto').value }
+    : { modo: 'ocorrencia', bos: SEL, texto: $('fato-texto').value };
+  if (MOD !== 'm3' && !SEL.length && $('fato-texto').value.trim().length < 40) { msg.className = 'bp-msg err'; msg.textContent = 'Escolha a ocorrência (passo 2) ou importe/cole o texto dela.'; return; }
+  const antes = bt.innerHTML; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>A IA está escrevendo…';
+  msg.className = 'bp-msg'; msg.textContent = 'Leva uns 10 segundos.'; $('ia-avisos').innerHTML = '';
+  try {
+    const r = await api('/api/elogio/ia', corpo);
+    if (MOD === 'm3') $('t-col').value = r.geral || '';
+    else { $('t-col').value = r.coletivo || ''; $('t-ind').value = r.individual || ''; }
+    $('t-mot').value = r.motivo || ''; $('t-res').value = r.resultado || '';
+    msg.className = 'bp-msg ok'; msg.textContent = 'Pronto. Leia e corrija o que precisar antes de gerar.';
+    $('ia-avisos').innerHTML = (r.avisos || []).map((a) => `<div class="bp-aviso pend" style="margin-top:10px"><i data-ic="alerta"></i><div>${esc(a)}</div></div>`).join('');
+    $('ia-fatos').style.display = r.fatos ? '' : 'none'; $('ia-fatos-tx').textContent = r.fatos || '';
+    icones($('ia-avisos'));
+  } catch (e) {
+    if (e.status === 401) return;
+    msg.className = 'bp-msg err'; msg.textContent = e.message;
+  } finally { bt.disabled = false; bt.innerHTML = antes; icones(bt); }
+}
+
+/* ============================== 5. documentos ============================== */
+function pintarAss() {
+  const c = (D && D.cfg) || {};
+  $('ass-nome').textContent = c.cmt_nome ? `${c.cmt_nome} – ${c.cmt_posto}` : 'Falta o nome de quem assina';
+  $('ass-cargo').textContent = c.cmt_nome ? `${c.cmt_cargo} · Nota para BI Nº ___/${c.sufixo_nota} · ${c.cidade}` : 'Clique em “Assinatura e cabeçalho” para salvar o comandante (fica salvo para os próximos).';
+}
+function abrirCfg() {
+  const c = (D && D.cfg) || {};
+  $('cfg-nome').value = c.cmt_nome || ''; $('cfg-posto').value = c.cmt_posto || ''; $('cfg-cargo').value = c.cmt_cargo || '';
+  $('cfg-sufixo').value = c.sufixo_nota || ''; $('cfg-cidade').value = c.cidade || ''; $('cfg-msg').textContent = '';
+  abrir('m-cfg'); $('cfg-nome').focus();
+}
+async function salvarCfg() {
+  const bt = $('cfg-btn'); bt.disabled = true;
+  try {
+    const r = await api('/api/elogio/salvar', { op: 'config', cfg: { cmt_nome: $('cfg-nome').value.toUpperCase(), cmt_posto: $('cfg-posto').value.toUpperCase(), cmt_cargo: $('cfg-cargo').value, sufixo_nota: $('cfg-sufixo').value.toUpperCase(), cidade: $('cfg-cidade').value } });
+    D.cfg = r.cfg; pintarAss(); fechar('m-cfg'); toast('Assinatura salva.');
+  } catch (e) { $('cfg-msg').textContent = e.message; }
+  finally { bt.disabled = false; }
+}
+
+/* ---- texto fixo dos modelos da P6 (o que o usuário mandou em 11/11/2026) ---- */
+const RDPM = 'no uso de suas atribuições legais, conforme prescreve o RDPM/RO em seu art. 50, §1º, inciso VII, em consonância com o art. 87, §4º, determina sua publicação nos seguintes termos:';
+const ABRE_M1 = 'O Comandante do Batalhão de Polícia de Fronteira e Divisas (BPFRON), ' + RDPM;
+const ABRE = 'O Comandante do BPFRON, ' + RDPM;
+const DEVER = 'É por dever de justiça, com grande honra, satisfação e reconhecimento, que me digno a agradecer e elogiar';
+const ITEM2_COL = 'A atuação dos policiais militares elogiados revelou elevada capacidade técnica, iniciativa, discernimento e espírito de corpo. A leitura precisa do cenário, a observância rigorosa dos protocolos operacionais e o uso proporcional e legal dos meios disponíveis foram determinantes para o êxito da ação, preservando a integridade física da equipe, de terceiros e dos próprios abordados. Trata-se de resultado que fortalece a imagem da Corporação e reafirma a credibilidade da Polícia Militar perante a sociedade rondoniense.';
+const ITEM2_IND = (f) => `No desempenho de suas atribuições, demonstrou zelo, iniciativa, lealdade, disciplina consciente e elevado senso de responsabilidade, conduzindo-se com discrição e eficiência mesmo diante de prazos exíguos e demandas simultâneas. Sua conduta revela profissional ${f ? 'preparada' : 'preparado'}, confiável e ${f ? 'comprometida' : 'comprometido'} com os valores institucionais, ${f ? 'merecedora' : 'merecedor'} da confiança de seus superiores e do respeito de seus pares e subordinados.`;
+const ITEM2_GERAL = 'Tais resultados somente foram possíveis graças ao esforço conjunto de cada integrante desta Unidade: daqueles que estiveram na linha de frente, em patrulhas terrestres, fluviais e aéreas, e daqueles que, nas atividades administrativas, logísticas e de planejamento, asseguraram que nenhuma guarnição deixasse de cumprir sua missão por falta de meios, escalas, documentação ou apoio. Cada função, por mais silenciosa que seja, foi peça indispensável para o êxito coletivo.';
+/* item 3 — g: { pl: plural, f: feminino } */
+function item3(g) {
+  const pl = g.pl, f = g.f;
+  const ad = (m, fe, mp, fp) => pl ? (f ? fp : mp) : (f ? fe : m);
+  return [
+    'Cumpre destacar que a atividade de Polícia de Fronteira impõe aos seus profissionais inúmeros sacrifícios, a exemplo da abdicação do convívio familiar durante missões e operações, dos constantes acionamentos e escalas extraordinárias, das demandas administrativas e logísticas acumuladas às funções operacionais e da participação desta Especializada em Operações Integradas, que exige postura exemplar e ilibada. Some-se a isso a frequente supressão do descanso regular em razão da necessidade do serviço e a exposição permanente à perda ou limitação de bens preciosos, como a vida, a saúde e a liberdade.',
+    `${ad('Este brioso policial', 'Esta briosa policial', 'Estes briosos policiais', 'Estas briosas policiais')}, diante de tantos riscos iminentes, uma vez que suas funções são desenvolvidas em grande parte de forma isolada, com meios limitados e em locais inóspitos, onde poucos têm a coragem e os conhecimentos necessários sequer para alcançar o objetivo pretendido, ${pl ? 'mostraram-se' : 'mostrou-se'} ${ad('dedicado', 'dedicada', 'dedicados', 'dedicadas')} a ponto de operar da forma que fosse possível: ${ad('motorizado, embarcado', 'motorizada, embarcada', 'motorizados, embarcados', 'motorizadas, embarcadas')}, com emprego de aeronaves ou por meio de patrulhas a pé, motorizadas ou fluviais, com total desprendimento de necessidades básicas, sempre com energia, empenho, sem murmúrios e, acima de tudo, com profissionalismo, tendo suas ações norteadas pelos preceitos da legalidade.`,
+    'Cabe ressaltar que o exemplo demonstrado reflete o alto grau de comprometimento com a atividade policial militar, com a excelência da presença policial e com a preservação da ordem pública na defesa das Fronteiras e Divisas do Estado e no combate aos ilícitos fronteiriços, constituindo estímulo para que policiais militares das diversas Organizações Policiais Militares da PMRO desejem servir nesta Especializada. Desta forma, esta tropa diferenciada mantém-se sempre nivelada pelo melhor recurso humano.',
+    `${ad('Concito-o a continuar', 'Concito-a a continuar', 'Concito-os a continuarem', 'Concito-as a continuarem')} mantendo o alto padrão, com o mesmo entusiasmo, durante toda a carreira policial militar, independentemente da localidade ou função designada, sempre ${ad('preocupado', 'preocupada', 'preocupados', 'preocupadas')} em bem servir à Corporação e à sociedade rondoniense na proteção das Fronteiras e Divisas.`,
+    `Diante do exposto, é digna esta menção elogiosa, que sirva de exemplo e orgulho aos superiores, pares e subordinados. Por fim, agradeço a dedicação, o comprometimento, o profissionalismo e a resiliência demonstrados, pois todas as missões foram prontamente cumpridas. ${pl ? 'Desejo-lhes sucesso em tudo o que fizerem, que continuem' : 'Desejo-lhe sucesso em tudo o que fizer, que continue'} trilhando o caminho da justiça, sendo referencial a ser seguido por todos. Que Deus abençoe, a cada dia, ${pl ? 'as vossas vidas' : 'a vossa vida'}.`,
+  ];
+}
+/* "CB QPPM" já tem PM; "CB" vira "CB PM" */
+const postoPM = (p) => { const s = String(p || '').trim().toUpperCase(); return /PM\b|QOPM|QPPM|QOA|QOE|QPE/.test(s) ? s : (s ? s + ' PM' : 'PM'); };
+const nomeLinha = (p) => `${postoPM(p.posto)} ${String(p.nome || '').toUpperCase()}${p.re ? ' – Mat. ' + p.re : ''}`;
+const juntarE = (a) => a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' e ' + a[a.length - 1];
+const paragrafos = (t) => String(t || '').split(/\n\s*\n/).map((x) => x.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+function dataExtenso(iso) { if (!iso) return '___ de ________ de ____'; return `${+iso.slice(8, 10)} de ${MESES[+iso.slice(5, 7) - 1]} de ${iso.slice(0, 4)}`; }
+
+/* monta um documento em HTML para o SEI */
+function htmlDoc(o) {
+  const c = (D && D.cfg) || {};
+  const J = 'text-align:justify;text-indent:1.5cm;', C = 'text-align:center;';
+  const P = (t, est) => `<p style="${est || ''}">${t}</p>`;
+  let h = P(`<b>NOTA PARA BI Nº ${esc(o.nota || '____')}/${esc(c.sufixo_nota || 'DIV ADM/BPFRON')}</b>`, C);
+  h += P(`${esc(c.cidade || 'Porto Velho/RO')}, ${dataExtenso($('d-data').value)}.`, 'text-align:right;');
+  h += P(`<b>ASSUNTO: ${esc(o.assunto)}</b>`);
+  h += P(esc(o.abertura), J);
+  h += P(o.dever, J);
+  (o.lista || []).forEach((l, i, a) => { h += P(esc(l) + (i === a.length - 1 ? '.' : ';'), 'text-align:left;margin-left:1.5cm;'); });
+  (o.itens || []).forEach((it) => {
+    if (it.titulo) h += P(`<b>${esc(it.titulo)}</b>`);
+    it.ps.forEach((t) => { h += P(esc(t), J); });
+  });
+  h += P(`(${esc(o.marca)})`, C);
+  h += P('<br>', C);
+  h += P(`<b>${esc(c.cmt_nome || '[NOME]')} – ${esc(c.cmt_posto || 'MAJ PM')}</b>`, C);
+  h += P(esc(c.cmt_cargo || 'Comandante do BPFRON'), C);
+  return h;
+}
+
+function gerar() {
+  const msg = $('ger-msg'); msg.textContent = '';
+  const tCol = $('t-col').value.trim(), tInd = $('t-ind').value.trim(), tMot = $('t-mot').value.trim(), tRes = $('t-res').value.trim();
+  const indiv = MOD === 'm2' || (MOD === 'm1' && $('c-indiv').checked);
+  const m4ind = $('c-m4ind').checked;
+  const erros = [];
+  if (MOD !== 'm3' && !POLS.length) erros.push('Escolha pelo menos um policial (passo 3).');
+  if (MOD === 'm1' && POLS.length === 1) erros.push('O coletivo precisa de 2 ou mais policiais — para um só use o modelo Individual.');
+  if ((MOD === 'm1' || MOD === 'm3') && !tCol) erros.push('Falta o item 1 ' + (MOD === 'm3' ? 'do elogio geral.' : 'do coletivo.'));
+  if (indiv && !tInd) erros.push('Falta o item 1 do individual.');
+  if (MOD === 'm4' && (!tMot || !tRes)) erros.push('No simplificado, preencha o “pela …” e o “que resultou …”.');
+  if (POLS.some((p) => !p.posto || !p.nome)) erros.push('Tem policial sem posto ou sem nome.');
+  if (erros.length) { msg.textContent = erros.join(' '); return; }
+  if (!(D.cfg && D.cfg.cmt_nome)) toast('Falta o nome de quem assina: o documento sai com [NOME].', 'erro');
+
+  const n0 = parseInt($('d-nota').value.replace(/\D/g, ''), 10);
+  let k = 0;
+  const nota = () => (Number.isFinite(n0) ? String(n0 + k++) : '____');
+  const docs = [];
+  const todosF = POLS.length > 0 && POLS.every((p) => p.fem);
+  const destaque = (p) => p.destaque && p.destaque.trim() ? ' Destacou-se, ainda, ' + p.destaque.trim().replace(/^destacou-se,?\s*(ainda,?)?\s*/i, '').replace(/\.*$/, '') + '.' : '';
+  const individual = (p) => {
+    const f = !!p.fem;
+    const corpo = paragrafos(tInd).map((t, i) => (i === 0 && f ? t.replace(/^O policial militar elogiado/, 'A policial militar elogiada') : t));
+    if (corpo.length) corpo[corpo.length - 1] += destaque(p);
+    return { tipo: 'individual', re: p.re, titulo: 'Individual — ' + postoPM(p.posto) + ' ' + p.nome, nota: nota(), assunto: 'ELOGIO INDIVIDUAL', abertura: ABRE,
+      dever: `${DEVER} ${f ? 'a' : 'o'} ${esc(nomeLinha(p))}.`, lista: [],
+      itens: [{ titulo: '1. DO ATO MERITÓRIO', ps: corpo }, { titulo: '2. DA QUALIFICAÇÃO DA CONDUTA', ps: [ITEM2_IND(f)] }, { titulo: '3. DA ATIVIDADE DE POLÍCIA DE FRONTEIRA', ps: item3({ pl: false, f }) }],
+      marca: 'INDIVIDUAL' };
+  };
+  if (MOD === 'm1') {
+    docs.push({ tipo: 'coletivo', titulo: 'Coletivo — ' + POLS.length + ' policiais', nota: nota(), assunto: 'ELOGIO COLETIVO', abertura: ABRE_M1,
+      dever: `${DEVER} ${todosF ? 'as seguintes policiais militares' : 'os seguintes policiais militares'}:`, lista: POLS.map(nomeLinha),
+      itens: [{ titulo: '1. DO ATO MERITÓRIO', ps: paragrafos(tCol) }, { titulo: '2. DA QUALIFICAÇÃO DA CONDUTA', ps: [ITEM2_COL] }, { titulo: '3. DA ATIVIDADE DE POLÍCIA DE FRONTEIRA', ps: item3({ pl: true, f: todosF }) }],
+      marca: 'INDIVIDUAL E COLETIVO' });
+    if (indiv) POLS.forEach((p) => docs.push(individual(p)));
+  } else if (MOD === 'm2') {
+    POLS.forEach((p) => docs.push(individual(p)));
+  } else if (MOD === 'm3') {
+    docs.push({ tipo: 'geral', titulo: 'Geral ao efetivo do BPFRON', nota: nota(), assunto: 'ELOGIO COLETIVO AO EFETIVO DO BPFRON', abertura: ABRE,
+      dever: `${DEVER} todos os policiais militares do Batalhão de Polícia de Fronteira e Divisas, oficiais e praças, lotados no Comando, na Seção Administrativa, na Seção Operacional, nas Companhias e Bases Operacionais desta Especializada.`, lista: [],
+      itens: [{ titulo: '1. DO ATO MERITÓRIO', ps: paragrafos(tCol) }, { titulo: '2. DA QUALIFICAÇÃO DA CONDUTA', ps: [ITEM2_GERAL] },
+        { titulo: '3. DA ATIVIDADE DE POLÍCIA DE FRONTEIRA', ps: [...item3({ pl: true, f: false }), 'Neste momento, estendo também meu reconhecimento às famílias de nossos policiais militares, que compartilham das ausências, das incertezas e dos sacrifícios impostos pela missão, sendo o alicerce que sustenta cada um destes profissionais.'] }],
+      marca: 'COLETIVO' });
+  } else {
+    const simples = (grupo) => {
+      const pl = grupo.length > 1, f = grupo.every((p) => p.fem);
+      const quem = pl ? `${f ? 'as' : 'os'} ${juntarE(grupo.map(nomeLinha))}` : `${f ? 'a' : 'o'} ${nomeLinha(grupo[0])}`;
+      const resultado = tRes.replace(/^que\s+resultou\s+/i, '').replace(/\.*$/, '');
+      const motivo = tMot.replace(/^pela\s+/i, '').replace(/[.,]*$/, '');
+      return { tipo: pl ? 'coletivo' : 'individual', re: pl ? '' : grupo[0].re, titulo: (pl ? 'Simplificado coletivo — ' + grupo.length + ' policiais' : 'Simplificado — ' + postoPM(grupo[0].posto) + ' ' + grupo[0].nome), nota: nota(),
+        assunto: pl ? 'ELOGIO COLETIVO' : 'ELOGIO INDIVIDUAL', abertura: ABRE,
+        dever: `${DEVER} ${esc(quem)}, pela ${esc(motivo)}, que resultou ${esc(resultado)}.`, lista: [],
+        itens: [{ titulo: '', ps: [
+          `${pl ? (f ? 'As militares demonstraram' : 'Os militares demonstraram') : (f ? 'A militar demonstrou' : 'O militar demonstrou')} comprometimento, iniciativa, técnica e equilíbrio emocional, características indispensáveis à atividade de Polícia de Fronteira, que exige de seus integrantes renúncias constantes, como o afastamento do convívio familiar, escalas extraordinárias, serviço em locais isolados e inóspitos, com meios limitados, e exposição permanente a riscos à vida, à saúde e à liberdade. Ainda assim, ${pl ? 'cumpriram' : 'cumpriu'} a missão com profissionalismo, sem murmúrios e sob os estritos preceitos da legalidade, elevando o nome desta Especializada e da Polícia Militar do Estado de Rondônia.`,
+          `Diante do exposto, é digna esta menção elogiosa, que sirva de exemplo aos superiores, pares e subordinados. Agradeço a dedicação e a resiliência demonstradas e ${pl ? 'desejo-lhes' : 'desejo-lhe'} sucesso, que ${pl ? 'continuem' : 'continue'} sendo referencial a ser seguido por todos. Que Deus abençoe ${pl ? 'as vossas vidas' : 'a vossa vida'}.`] }],
+        marca: pl ? 'COLETIVO' : 'INDIVIDUAL' };
+    };
+    if (m4ind || POLS.length === 1) POLS.forEach((p) => docs.push(simples([p]))); else docs.push(simples(POLS));
+  }
+  GER = docs.map((o) => ({ tipo: o.tipo, re: o.re || '', titulo: o.titulo, nota: o.nota, html: htmlDoc(o), copiado: false }));
+  GER_META = { modelo: NOME_MODELO[MOD], data_doc: $('d-data').value, assunto: docs[0].assunto, bos: MOD === 'm3' ? [] : SEL.slice(), policiais: POLS.map((p) => ({ re: p.re, posto: p.posto, nome: p.nome })) };
+  $('sal-msg').textContent = ''; $('sal-btn').disabled = false;
+  pintarGerados();
+  $('ger-box').style.display = '';
+  $('ger-box').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast(docs.length === 1 ? 'Documento pronto.' : docs.length + ' documentos prontos.');
+}
+function cartaoDoc(d, i, lista) {
+  return `<div class="bp-card el-doc${d.copiado ? ' copiado' : ''}"><span class="bp-tile sm ${d.tipo === 'individual' ? 'info' : 'ok'}"><i data-ic="${d.tipo === 'individual' ? 'usuario' : 'usuarios'}"></i></span>
+    <div class="tx"><b>${esc(d.titulo)}</b><small>Nota para BI Nº ${esc(d.nota || '____')}${d.copiado ? ' · copiado' : ''}</small></div>
+    <button type="button" class="bp-btn sm sec" onclick="abrirDoc('${lista}', ${i})"><i data-ic="olho"></i>Ver e copiar</button></div>`;
+}
+function pintarGerados() {
+  $('ger-n').textContent = GER.length;
+  $('ger-docs').innerHTML = GER.map((d, i) => cartaoDoc(d, i, 'ger')).join('');
+  icones($('ger-docs'));
+}
+let LOTE = null;
+function listaDocs(qual) { return qual === 'ger' ? GER : (LOTE ? LOTE.docs : []); }
+function abrirDoc(qual, i) {
+  DOCS_ABERTOS = qual; DOC_I = i;
+  const lista = listaDocs(qual), d = lista[i]; if (!d) return;
+  $('m-doc-tit').textContent = d.titulo + (lista.length > 1 ? ` (${i + 1} de ${lista.length})` : '');
+  $('doc-papel').innerHTML = d.html; $('doc-msg').textContent = '';
+  $('doc-ant').style.display = lista.length > 1 ? '' : 'none'; $('doc-prox').style.display = lista.length > 1 ? '' : 'none';
+  $('doc-ant').disabled = i === 0; $('doc-prox').disabled = i === lista.length - 1;
+  abrir('m-doc'); icones($('m-doc'));
+}
+function docVizinho(passo) { abrirDoc(DOCS_ABERTOS, DOC_I + passo); }
+function docEditado() { const d = listaDocs(DOCS_ABERTOS)[DOC_I]; if (d) d.html = $('doc-papel').innerHTML; }
+async function copiarDoc() {
+  const d = listaDocs(DOCS_ABERTOS)[DOC_I]; if (!d) return;
+  const html = $('doc-papel').innerHTML, txt = $('doc-papel').innerText;
+  try {
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([txt], { type: 'text/plain' }) })]);
+    } else throw new Error('sem ClipboardItem');
+  } catch (e) {
+    const sel = window.getSelection(), r = document.createRange();
+    r.selectNodeContents($('doc-papel')); sel.removeAllRanges(); sel.addRange(r);
+    try { document.execCommand('copy'); } catch (x) { /* nada */ }
+    sel.removeAllRanges();
+  }
+  d.copiado = true;
+  $('doc-msg').className = 'bp-msg ok'; $('doc-msg').textContent = 'Copiado. No SEI, clique dentro do texto da Nota e aperte Ctrl+V.';
+  if (DOCS_ABERTOS === 'ger') pintarGerados(); else pintarLote();
+  toast('Copiado para o SEI.');
+}
+async function salvarHist() {
+  if (!GER.length || !GER_META) return;
+  const bt = $('sal-btn'); bt.disabled = true; $('sal-msg').className = 'bp-msg'; $('sal-msg').textContent = 'Salvando…';
+  try {
+    const r = await api('/api/elogio/salvar', { op: 'registrar', ...GER_META, docs: GER.map((d) => ({ tipo: d.tipo, titulo: d.titulo, nota: d.nota, re: d.re, html: d.html })) });
+    D.historico = r.historico; pintarHist();
+    $('sal-msg').className = 'bp-msg ok'; $('sal-msg').textContent = 'Salvo no histórico.';
+    toast('Salvo no histórico.');
+  } catch (e) { bt.disabled = false; $('sal-msg').className = 'bp-msg err'; $('sal-msg').textContent = e.message; }
+}
+function limpar() {
+  SEL = []; POLS = []; GER = []; GER_META = null;
+  ['fato-texto', 't-col', 't-ind', 't-mot', 't-res', 'd-nota', 'oc-busca', 'g-texto'].forEach((id) => { $(id).value = ''; });
+  $('ia-avisos').innerHTML = ''; $('ia-msg').textContent = ''; $('ia-fatos').style.display = 'none'; $('ger-box').style.display = 'none'; $('ger-msg').textContent = '';
+  const box = $('pdf-arq'); box.classList.remove('tem'); box.querySelector('.tx b').textContent = 'Toque para escolher o PDF da ocorrência'; box.querySelector('.tx small').textContent = 'ou arraste para cá — o texto é lido aqui no navegador'; box.querySelector('.bp-trocar').textContent = ''; $('pdf-file').value = '';
+  pintarOcorrencias(); pintarPols();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================== histórico ============================== */
+function pintarHist() {
+  const h = (D && D.historico) || [];
+  $('hist-n').textContent = h.length ? '(' + h.length + ')' : '';
+  const t = sem($('h-busca').value).trim();
+  const lista = h.filter((x) => !t || sem([x.assunto, x.modelo, (x.bos || []).join(' '), (x.policiais || []).join(' '), x.criado_nome].join(' ')).includes(t));
+  $('h-lista').innerHTML = lista.length ? lista.map((x) => `<div class="bp-card el-h"><span class="bp-tile sm"><i data-ic="estrela"></i></span>
+    <div class="tx"><b>${esc(x.modelo || 'Elogio')} · ${esc(x.assunto || '')}</b>
+      <small>${esc(new Date(x.criado_em).toLocaleString('pt-BR'))} · ${esc(x.criado_nome || x.criado_por)} · ${x.qtd_docs} documento${x.qtd_docs === 1 ? '' : 's'}${(x.bos || []).length ? ' · BO ' + esc(x.bos.join(', ')) : ''}</small>
+      <small>${esc((x.policiais || []).slice(0, 12).join('; '))}${(x.policiais || []).length > 12 ? '…' : ''}</small></div>
+    <div class="acs"><button type="button" class="bp-btn sm sec" onclick="abrirLote('${esc(x.id)}')"><i data-ic="olho"></i>Abrir</button>
+      <button type="button" class="bp-btn sm perigo-l" onclick="pedirExcluir('${esc(x.id)}')"><i data-ic="lixeira"></i>Excluir</button></div></div>`).join('')
+    : `<div class="bp-vazio">${h.length ? 'Nada com essa busca.' : 'Nenhum elogio salvo ainda. Depois de gerar, clique em “Salvar no histórico”.'}</div>`;
+  icones($('h-lista'));
+}
+async function abrirLote(id) {
+  try {
+    const r = await api('/api/elogio/lote?id=' + encodeURIComponent(id));
+    LOTE = r.lote; LOTE.docs.forEach((d) => { d.copiado = false; });
+    $('m-lote-tit').textContent = (LOTE.modelo || 'Elogio') + ' · ' + (LOTE.assunto || '');
+    $('m-lote-sub').textContent = 'Gerado em ' + new Date(LOTE.criado_em).toLocaleString('pt-BR') + ' por ' + (LOTE.criado_nome || LOTE.criado_por);
+    pintarLote(); abrir('m-lote');
+  } catch (e) { if (e.status !== 401) toast(e.message, 'erro'); }
+}
+function pintarLote() { $('lote-docs').innerHTML = LOTE ? LOTE.docs.map((d, i) => cartaoDoc(d, i, 'lote')).join('') : ''; icones($('lote-docs')); }
+function pedirExcluir(id) {
+  const x = ((D && D.historico) || []).find((h) => h.id === id); if (!x) return;
+  EXC_ID = id; $('m-exc-sub').textContent = (x.modelo || '') + ' · ' + new Date(x.criado_em).toLocaleString('pt-BR');
+  $('exc-senha').value = ''; $('exc-msg').textContent = ''; abrir('m-exc'); $('exc-senha').focus();
+}
+async function excluir() {
+  const bt = $('exc-btn'); bt.disabled = true; $('exc-msg').textContent = '';
+  try {
+    const r = await api('/api/elogio/salvar', { op: 'excluir', id: EXC_ID, senha: $('exc-senha').value });
+    D.historico = r.historico; pintarHist(); fechar('m-exc'); toast('Tirado do histórico.');
+  } catch (e) { $('exc-msg').textContent = e.message; }
+  finally { bt.disabled = false; }
+}
+
+boot();
+</script>
+</body>
+</html>

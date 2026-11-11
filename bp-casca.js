@@ -93,7 +93,7 @@
     { id: 'p3',      sigla: 'P3',  nome: 'P3 · Operações',          ic: '🎯', cor: '#34d399', desc: 'Indicadores, policiais em campo, diárias, RVN e instrução.' },
     { id: 'p4',      sigla: 'P4',  nome: 'P4 · Logística',          ic: '📦', cor: '#fb923c', desc: 'Frota, armamento, cautela, patrimônio, leilão e pedidos.' },
     { id: 'p5',      sigla: 'P5',  nome: 'P5 · Comunicação Social', ic: '📣', cor: '#f472b6', desc: 'Agraciados, apresentações e pesquisas.' },
-    { id: 'p6',      sigla: 'P6',  nome: 'P6 · Procedimentos',      ic: '⚖️', cor: '#f87171', desc: 'IPM, sindicância e demais procedimentos.' },
+    { id: 'p6',      sigla: 'P6',  nome: 'P6 · Procedimentos',      ic: '⚖️', cor: '#f87171', desc: 'IPM, sindicância, elogios e demais procedimentos.' },
     { id: 'efetivo', sigla: '★',   nome: 'Para todo o efetivo',     ic: '🛡️', cor: '#eab308', desc: 'Portal do policial, aplicativos e apoio às ocorrências.' },
     { id: 'admin',   sigla: 'ADM', nome: 'Administração do site',   ic: '🔐', cor: '#ef4444', desc: 'Lista de sistemas e controle de logins.' }
   ];
@@ -188,6 +188,8 @@
     // ---- P6 · Procedimentos (ficam dentro da Central de Tarefas)
     { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub', soAdmin: true,
       desc: 'IPM, sindicância e perícias ficam na Central de Tarefas, só para a P6 e o Comando.' },
+    { id: 'elogio', href: 'elogio.html', ic: '🏅', nome: 'P6 · Elogios', grupo: 'p6', acesso: { perm: ['elogio'] }, gestor: 'elogio',
+      desc: 'Notas de elogio pelos modelos da P6: a IA escreve o ato meritório e sai o coletivo e o individual de cada policial para o SEI.' },
 
     // ---- Para todo o efetivo
     { id: 'policial', href: 'policial.html', ic: '🛡️', nome: 'Portal do Policial', grupo: 'efetivo', acesso: 'pub',
