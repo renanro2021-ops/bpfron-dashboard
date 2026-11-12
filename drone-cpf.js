@@ -31,6 +31,11 @@
   if (window.__droneCpf) return;
   window.__droneCpf = true;
 
+  // Pasta onde este arquivo está (a raiz do site), para achar o brasão de qualquer subpasta.
+  var BASE_SCRIPT = (function () {
+    try { var s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^\/]*$/, '') : ''; } catch (e) { return ''; }
+  })();
+
   var API_PADRAO = 'https://bpfron-api.bpfron.workers.dev';
   var apiBase = (function () {
     try { var q = new URLSearchParams(location.search).get('api'); if (q) return q.replace(/\/+$/, ''); } catch (e) {}
@@ -280,8 +285,9 @@
     if (!el('drc-bv-css')) { var st = document.createElement('style'); st.id = 'drc-bv-css'; st.textContent = CSS_BV; document.head.appendChild(st); }
     var h = new Date().getHours();
     var saudacao = h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
-    // As apostilas ficam em apostilas/, um nível abaixo — o brasão sobe um nível.
-    var base = /\/apostilas\//.test(location.pathname) ? '../' : '';
+    // O brasão fica na raiz do site, ao lado deste arquivo: vale para as páginas da raiz,
+    // para as apostilas (apostilas/) e para o simulador (simulador-dji/), um nível abaixo.
+    var base = BASE_SCRIPT || (/\/apostilas\//.test(location.pathname) ? '../' : '');
     var papel = souGestor
       ? 'Você entrou como <b>gestor do curso</b>. Dá pra cadastrar aluno, enviar apostila e ver o ranking da turma.'
       : 'Você entrou como <b>aluno do CPPSARP</b>. Bons estudos — o material e o simulado estão liberados.';

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador DJI</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+  "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+  "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+} }
+</script>
+<!-- Entrada do Curso de Drone: CPF do aluno ou login de gestor (mesmo gate das outras páginas do curso) -->
+<script src="../drone-cpf.js"></script>
+<style>
+#aviso-celular{position:fixed;inset:0;z-index:2147482000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(6,9,18,.96);color:#e2e8f0;font-family:'Open Sans',system-ui,sans-serif;text-align:center}
+#aviso-celular .cx{max-width:380px}
+#aviso-celular h2{margin:0 0 10px;font-size:20px;color:#fff}
+#aviso-celular p{margin:0 0 18px;font-size:14px;line-height:1.5;color:#94a3b8}
+#aviso-celular button,#aviso-celular a{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#fff;font:600 14px 'Open Sans',sans-serif;text-decoration:none;cursor:pointer}
+#aviso-celular a{background:#1d4ed8;border-color:#1d4ed8}
+</style>
+</head>
+<body>
+<!-- Celular/tablet só com toque: este simulador ainda não tem sticks na tela -->
+<div id="aviso-celular" role="dialog" aria-modal="true"><div class="cx">
+  <h2>🕹️ Simulador para computador</h2>
+  <p>Este simulador usa controle de videogame, rádio USB ou teclado. No celular ainda não dá para pilotar pela tela.</p>
+  <a href="../drone.html">⬅ Voltar ao Curso de Drone</a>
+  <button type="button" onclick="document.getElementById('aviso-celular').style.display='none'">Abrir mesmo assim</button>
+</div></div>
+<script>
+try { if (matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fine)').matches) document.getElementById('aviso-celular').style.display = 'flex'; } catch (e) {}
+</script>
+<canvas id="view"></canvas>
+<canvas id="osd"></canvas>
+<div id="indicator"><div class="arrow"></div><span></span></div>
+<div id="modehud" class="hidden"><div class="title"></div><div class="rows"></div><div class="progress"><div></div></div></div>
+<div id="center" class="hidden"></div>
+<div id="toast"></div>
+<div id="shutterFlash"></div>
+<div id="loading" class="hidden"><div class="spin"></div><span>Carregando mapa…</span></div>
+
+<!-- controles na tela do DJI Fly (drones de câmera) -->
+<div id="flyui" class="hidden">
+  <div class="fly-left">
+    <button class="round" id="btnTakeoff" title="Decolar / pousar (T)"><svg><use href="#i-takeoff"/></svg></button>
+    <button class="round" id="btnRth" title="Voltar para casa (H)"><svg><use href="#i-rth"/></svg></button>
+  </div>
+  <div class="fly-right">
+    <div class="zoom" id="zoomChips"></div>
+    <button class="pill-s" id="btnQs" title="QuickShots (K)">QuickShots</button>
+    <div class="capmode"><button id="capPhoto" class="on" title="Foto">FOTO</button><button id="capVideo" title="Vídeo">VÍDEO</button></div>
+    <button class="shutter" id="btnShutter" title="Foto (F) / Vídeo (V)"><i></i></button>
+    <button class="albumthumb" id="btnAlbum" title="Álbum"></button>
+  </div>
+  <div class="qsmenu hidden" id="qsMenu">
+    <button data-qs="dronie"><svg><use href="#q-dronie"/></svg>Dronie</button>
+    <button data-qs="rocket"><svg><use href="#q-rocket"/></svg>Foguete</button>
+    <button data-qs="circle"><svg><use href="#q-circle"/></svg>Círculo</button>
+    <button data-qs="helix"><svg><use href="#q-helix"/></svg>Hélice</button>
+  </div>
+  <div class="camparams" id="camParams"></div>
+</div>
+
+<!-- ícones -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 000-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 00-1.7-1L15 3h-4l-.4 2.6a7.4 7.4 0 00-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 000 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 001.7 1L11 21h4l.4-2.6a7.4 7.4 0 001.7-1l2.5 1 2-3.4zM13 15.5A3.5 3.5 0 1116.5 12 3.5 3.5 0 0113 15.5z"/></symbol>
+    <symbol id="i-cap" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3L1 9l11 6 9-4.9V17h2V9zM5 13.2V17c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.8z"/></symbol>
+    <symbol id="i-album" viewBox="0 0 24 24"><path fill="currentColor" d="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm1 2v8l4-4 3 3 3-3 4 4V7zm11 1.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 14.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zM12 6a3.6 3.6 0 00-3.6 3.6h2a1.6 1.6 0 113.2 0c0 1.6-2.6 1.5-2.6 4.4h2c0-2 2.6-2.3 2.6-4.4A3.6 3.6 0 0012 6z"/></symbol>
+    <symbol id="i-pad" viewBox="0 0 24 24"><path fill="currentColor" d="M7 7h10a5 5 0 015 5l-.6 4a3 3 0 01-5.2 1.4L14.5 16h-5l-1.7 1.4a3 3 0 01-5.2-1.4L2 12a5 5 0 015-5zm0 3v1.5H5.5v1.5H7v1.5h1.5V13H10v-1.5H8.5V10zm9 .5a1 1 0 100 2 1 1 0 000-2zm2 2a1 1 0 100 2 1 1 0 000-2z"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.3a8 8 0 1011.4 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-takeoff" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 20h16"/></g></symbol>
+    <symbol id="i-land" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M4 20h16"/></g></symbol>
+    <symbol id="i-rth" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 8v8M15 8v8M9 12h6"/></g></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="t-mode" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="24" r="16"/><path d="M24 24l8-8M24 12v3M36 24h-3M12 24h3"/></g></symbol>
+    <symbol id="t-fov" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="6" y="12" width="36" height="24" rx="3"/><path d="M10 31l9-9 7 7 4-4 8 6"/></g></symbol>
+    <symbol id="t-obs" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 30a20 20 0 0128 0M15 25a13 13 0 0118 0M20 20a6 6 0 018 0"/><rect x="18" y="32" width="12" height="8" rx="2"/></g></symbol>
+    <symbol id="t-gimbal" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M24 6v8M14 14h20v6M14 14v20h6"/><rect x="20" y="20" width="16" height="14" rx="3"/><circle cx="28" cy="27" r="3"/></g></symbol>
+    <symbol id="t-grid" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4"><rect x="8" y="10" width="32" height="28" rx="2"/><path d="M18.7 10v28M29.3 10v28M8 19.3h32M8 28.7h32"/></g></symbol>
+    <symbol id="t-bat" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="15" y="9" width="18" height="32" rx="2"/><path d="M20 5h8M26 16l-5 9h7l-5 9"/></g></symbol>
+    <symbol id="t-dmg" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40V10h14l-4 10 6 4-4 10M28 10h12v30H22"/></g></symbol>
+    <symbol id="t-wind" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 18h24a5 5 0 10-5-5M6 26h32a5 5 0 11-5 5M6 34h14"/></g></symbol>
+    <symbol id="q-dronie" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18L18 6M18 6h-5M18 6v5"/><circle cx="5" cy="18" r="2"/></g></symbol>
+    <symbol id="q-rocket" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 20V4M8 8l4-4 4 4"/><path d="M6 20h12"/></g></symbol>
+    <symbol id="q-circle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="13" rx="9" ry="5"/><circle cx="12" cy="13" r="1.6"/><path d="M19 9l2 1-1 2"/></g></symbol>
+    <symbol id="q-helix" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19c0-2 14-2 14-4S5 13 5 11s14-2 14-4S8 5 8 4"/></g></symbol>
+  </defs>
+</svg>
+
+<div id="ui">
+  <!-- ===== INÍCIO ===== -->
+  <section class="screen active home" data-screen="main">
+    <header class="topbar">
+      <div class="brand"><b>DJI</b><span>Simulador de Voo</span>
+        <button class="insignias" data-go="about" title="Sobre o simulador">
+          <img src="assets/brand/curso_ppsarp.png" alt="Curso PPSARP · Força Nacional · MJSP">
+          <img src="assets/brand/bpfron.png" alt="BPFRON">
+        </button>
+      </div>
+      <nav>
+        <button data-mode="school"><svg><use href="#i-cap"/></svg>Academia</button>
+        <button data-go="album"><svg><use href="#i-album"/></svg>Álbum</button>
+        <button data-settings="safety"><svg><use href="#i-gear"/></svg>Configurações</button>
+        <button data-go="help"><svg><use href="#i-help"/></svg>Ajuda</button>
+        <span class="device"><svg><use href="#i-pad"/></svg><span id="deviceName">Teclado</span></span>
+      </nav>
+    </header>
+    <div class="hero">
+      <div class="info">
+        <span class="chip" id="dKind">FPV</span>
+        <h1 id="dName">DJI Avata 2</h1>
+        <p id="dDesc"></p>
+        <div class="specs" id="dSpecs"></div>
+        <div class="actions">
+          <button class="go" data-go="fly">VOAR</button>
+          <button class="ghost-btn" data-go="hangar">Todos os drones</button>
+        </div>
+      </div>
+      <div class="stage">
+        <canvas id="showcase"></canvas>
+        <button class="arrow l" id="prevDrone"><svg><use href="#i-arrow"/></svg></button>
+        <button class="arrow r" id="nextDrone"><svg><use href="#i-arrow"/></svg></button>
+      </div>
+    </div>
+    <div class="dronebar" id="droneBar"></div>
+    <div class="version">Simulador não oficial · inspirado nos drones e apps da DJI</div>
+  </section>
+
+  <!-- ===== VOAR ===== -->
+  <section class="screen" data-screen="fly">
+    <header class="subbar"><button class="back" data-go="main"><svg><use href="#i-arrow"/></svg></button><h2>Escolha o tipo de voo</h2></header>
+    <div class="cards">
+      <button class="card" data-mode="freestyle"><div class="img" data-thumb="canyon"></div><div class="cap"><b>Voo livre</b><small>Explore o mapa, tire fotos e grave vídeos</small></div></button>
+      <button class="card" data-mode="race"><div class="img" data-thumb="stadium"></div><div class="cap"><b>Corrida</b><small>Passe pelos portões no menor tempo</small></div></button>
+      <button class="card" data-mode="challenge"><div class="img" data-thumb="factory"></div><div class="cap"><b>Missões</b><small>Colete pontos ou siga outro drone</small></div></button>
+      <button class="card" data-mode="school"><div class="img" data-thumb="promo"></div><div class="cap"><b>Academia de voo</b><small>Aprenda passo a passo, do zero ao modo M</small></div></button>
+      <button class="card" data-mode="builder"><div class="img" data-thumb="factory2"></div><div class="cap"><b>Criar pista</b><small>Monte e salve seus próprios percursos</small></div></button>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="map">
+    <header class="subbar"><button class="back" data-go="fly"><svg><use href="#i-arrow"/></svg></button><h2 id="mapTitle">Escolha o local</h2></header>
+    <div class="grid" id="mapList"></div>
+  </section>
+  <section class="screen" data-screen="track">
+    <header class="subbar"><button class="back" data-go="map"><svg><use href="#i-arrow"/></svg></button><h2>Escolha a pista</h2></header>
+    <div class="grid" id="trackList"></div>
+  </section>
+  <section class="screen" data-screen="challenge">
+    <header class="subbar"><button class="back" data-go="map"><svg><use href="#i-arrow"/></svg></button><h2>Missões</h2></header>
+    <div class="grid" id="challengeList"></div>
+  </section>
+  <section class="screen" data-screen="school">
+    <header class="subbar"><button class="back" data-go="main"><svg><use href="#i-arrow"/></svg></button><h2>Academia de voo</h2></header>
+    <div class="grid" id="lessonList"></div>
+  </section>
+  <section class="screen" data-screen="hangar">
+    <header class="subbar"><button class="back" data-go="main"><svg><use href="#i-arrow"/></svg></button><h2>Drones</h2></header>
+    <div class="grid" id="droneList"></div>
+  </section>
+
+  <section class="screen" data-screen="album">
+    <header class="subbar"><button class="back" data-back><svg><use href="#i-arrow"/></svg></button><h2>Álbum</h2><span class="count" id="albumCount"></span></header>
+    <div class="grid album" id="albumList"></div>
+    <div class="viewer hidden" id="viewer">
+      <div class="vbox"><div class="vmedia" id="vMedia"></div>
+        <div class="vbar"><span id="vInfo"></span><div><button class="pill" id="vDown">Baixar</button><button class="pill dangerish" id="vDel">Excluir</button><button class="pill" id="vClose">Fechar</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="help">
+    <header class="subbar"><button class="back" data-back><svg><use href="#i-arrow"/></svg></button><h2>Como pilotar</h2></header>
+    <div class="panel help">
+      <div class="cols">
+        <div>
+          <h3>Teclado</h3>
+          <table class="keys">
+            <tr><td>T</td><td>decolar / pousar automaticamente</td></tr>
+            <tr><td>W / S</td><td>subir / descer (soltando, mantém a altitude)</td></tr>
+            <tr><td>A / D</td><td>girar</td></tr>
+            <tr><td>↑ / ↓</td><td>frente / trás</td></tr>
+            <tr><td>← / →</td><td>para os lados</td></tr>
+            <tr><td>ESPAÇO</td><td>no chão: liga/desliga motores · no ar: freio</td></tr>
+            <tr><td>H</td><td>voltar para casa (RTH)</td></tr>
+            <tr><td>M</td><td>modo de voo (C / N / S ou N / S / M)</td></tr>
+            <tr><td>Q / E</td><td>gimbal para baixo / para cima (ou rodinha do mouse)</td></tr>
+            <tr><td>X</td><td>centralizar gimbal / olhar para baixo</td></tr>
+            <tr><td>F / V</td><td>foto / iniciar e parar vídeo</td></tr>
+            <tr><td>1 2 3</td><td>zoom (drones com tele)</td></tr>
+            <tr><td>K</td><td>QuickShots</td></tr>
+            <tr><td>C</td><td>câmera do drone / 3ª pessoa</td></tr>
+            <tr><td>R · ESC</td><td>reiniciar · pausa</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3>Controle (Mode 2)</h3>
+          <table class="keys">
+            <tr><td>Stick esquerdo ↕</td><td>subir / descer (no modo M: acelerador)</td></tr>
+            <tr><td>Stick esquerdo ↔</td><td>girar</td></tr>
+            <tr><td>Stick direito</td><td>frente, trás e lados</td></tr>
+            <tr><td>X</td><td>decolar / pousar</td></tr>
+            <tr><td>B</td><td>freio</td></tr>
+            <tr><td>Y</td><td>modo de voo</td></tr>
+            <tr><td>LT / RT</td><td>gimbal</td></tr>
+            <tr><td>RB · L3</td><td>foto · vídeo</td></tr>
+            <tr><td>LB</td><td>câmera / 3ª pessoa</td></tr>
+            <tr><td>SELECT · START</td><td>voltar para casa · pausa</td></tr>
+          </table>
+          <h3>Modos de voo</h3>
+          <p class="note"><b>C (Cine)</b>: lento e suave, para filmar. <b>N (Normal)</b>: GPS segura o drone parado quando você solta os sticks. <b>S (Esporte)</b>: bem mais rápido, sem desvio de obstáculos. <b>M (Manual)</b>: só nos drones FPV, sem nenhuma assistência, como um drone de corrida.</p>
+          <p class="note">Com o perfil <b>Movimento</b> (Configurações › Controle), o mouse faz o papel do Motion Controller: aponte para onde quer ir e segure o botão esquerdo para acelerar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONFIGURAÇÕES ===== -->
+  <section class="screen" data-screen="settings">
+    <header class="subbar"><button class="back" data-back><svg><use href="#i-arrow"/></svg></button><h2>Configurações</h2></header>
+    <div class="panel settings">
+      <nav class="tabs" id="tabs"></nav>
+      <div class="sbody">
+        <div class="rows" id="setRows"></div>
+        <aside class="helpbox"><h4 id="helpTitle"></h4><p id="helpText"></p><canvas id="rateGraph" width="560" height="320"></canvas><div id="rateNums"></div></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="about">
+    <header class="subbar"><button class="back" data-back><svg><use href="#i-arrow"/></svg></button><h2>Sobre</h2></header>
+    <div class="panel about">
+      <div class="about-text">
+        <span class="about-kicker">Desenvolvido por um aluno do curso</span>
+        <h3>CB QPPM De Sousa</h3>
+        <p class="about-unit">BPFRON · Rondônia</p>
+        <div class="about-sep"></div>
+        <p>Curso PPSARP · Força Nacional · MJSP<br><span>35ª edição</span></p>
+      </div>
+      <div class="about-logos">
+        <figure><img src="assets/brand/curso_ppsarp_g.png" alt="Brasão do curso PPSARP · Força Nacional · MJSP"><figcaption>Curso PPSARP</figcaption></figure>
+        <figure><img src="assets/brand/bpfron_g.png" alt="Brasão do BPFRON"><figcaption>BPFRON</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="calib">
+    <div class="panel narrow">
+      <h3>Calibração do controle</h3>
+      <p id="calibStep"></p>
+      <p id="calibStatus" class="status"></p>
+      <div id="axes"></div>
+      <div class="btnrow"><button class="pill primary" id="calibNext">Próximo</button><button class="pill" data-settings="control">Cancelar</button></div>
+    </div>
+  </section>
+
+  <!-- ===== PAUSA ===== -->
+  <section class="screen pause" data-screen="pause">
+    <div class="pausebox">
+      <div class="phead"><b id="pauseDroneName">DJI Avata 2</b><span id="pauseInfo"></span></div>
+      <div class="ptiles" id="pauseTiles"></div>
+      <div class="plist">
+        <button class="pill primary" id="resume">Continuar</button>
+        <button class="pill" id="restart">Reiniciar</button>
+        <button class="pill" data-settings="safety">Configurações</button>
+        <button class="pill" data-go="album">Álbum</button>
+        <label class="psel">Drone<select id="pauseDrone"></select></label>
+        <button class="pill" id="quit">Sair para o início</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="results">
+    <div class="panel narrow">
+      <h3 id="resTitle"></h3>
+      <table id="resLines"></table>
+      <div id="resBoard"></div>
+      <div class="btnrow"><button class="pill primary" id="again">Jogar de novo</button><button class="pill" id="resMenu">Início</button></div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="lesson">
+    <div class="panel narrow lesson">
+      <div class="step" id="lessonStep"></div>
+      <h3 id="lessonTitle"></h3>
+      <div id="lessonText"></div>
+      <div class="btnrow"><button class="pill primary" id="lessonGo">Praticar</button><button class="pill" id="lessonQuit">Sair</button></div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="name">
+    <div class="panel narrow">
+      <h3>Salvar pista</h3>
+      <input id="trackName" maxlength="30" placeholder="Nome da pista">
+      <div class="btnrow"><button class="pill primary" id="nameOk">Salvar</button><button class="pill" id="nameCancel">Cancelar</button></div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
