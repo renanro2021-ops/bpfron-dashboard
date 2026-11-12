@@ -97,9 +97,25 @@ textarea.el-area:focus{outline:none;border-color:var(--acc)}
   .el-grid{grid-template-columns:1fr}.el-grid .d2{grid-column:auto}
   .el-pols .c-re{display:none}
 }
-@media (max-width:560px){ .el-modelos{grid-template-columns:1fr} .el-pols .c-dest{display:none} }
+.el-pols tr.obs td{background:var(--bg2);padding:8px 10px 12px}
+.el-pols tr.obs textarea{width:100%;min-height:64px;resize:vertical;background:var(--card);border:1px solid var(--line2);border-radius:10px;color:var(--t1);padding:8px 10px;font:500 13.5px/1.45 Inter,sans-serif}
+.el-pols tr.obs small{margin-top:4px}
+.el-pols .bt-obs{white-space:nowrap}
+.el-pols .bt-obs.tem{border-color:var(--acc-line);color:var(--acc)}
+.el-pessoal{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.el-pessoal .cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.el-pessoal .cab b{color:var(--t1);flex:1;min-width:180px}
+.el-pessoal .cab small{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.el-pessoal textarea.el-area{min-height:90px;margin:0}
+@media (max-width:560px){ .el-modelos{grid-template-columns:1fr} .el-pols .bt-obs span{display:none} }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-11", "titulo": "Individual próprio para cada policial", "quem": "todos", "itens": [
+    "Cada policial do passo 3 tem o botão “Observação”: escreva o que ele fez de diferente (também no celular).",
+    "Ao clicar em “Escrever com IA”, quem tem observação, ou aparece no relato da ocorrência, ganha um individual próprio, escrito só para ele.",
+    "O individual próprio aparece no passo 4, embaixo do comum: dá para corrigir, ou clicar em “Usar o comum” para voltar ao texto de todos.",
+    "A coluna “Fem.” passou a se chamar “Feminina”: marque para a policial mulher, e o documento dela sai no feminino."
+  ] },
   { "data": "2026-11-11", "titulo": "Policiais puxados da ocorrência", "quem": "todos", "itens": [
     "Ao marcar a ocorrência no passo 2, a guarnição lançada nela entra sozinha na lista de policiais (passo 3), em ordem de antiguidade.",
     "Quem está no cadastro do BPFRON entra com o nome completo e o posto de lá; quem não está aparece como “fora do cadastro”, com a unidade.",
@@ -249,7 +265,7 @@ textarea.el-area:focus{outline:none;border-color:var(--acc)}
         </div>
         <div class="el-res" id="pol-res"></div>
         <div id="pols-box"></div>
-        <p style="color:var(--muted);font-size:12.5px;margin:10px 0 0">A ordem é pela antiguidade (posto/graduação e depois o RE). “Destaque” só entra no individual daquele policial: escreva como continua a frase “Destacou-se, ainda, …”.</p>
+        <p style="color:var(--muted);font-size:12.5px;margin:10px 0 0">A ordem é pela antiguidade (posto/graduação e depois o RE). Em “Observação” escreva o que aquele policial fez de diferente: com a IA ele ganha um individual próprio no passo 4.</p>
       </div>
 
       <!-- 4. ATO MERITÓRIO -->
@@ -262,8 +278,9 @@ textarea.el-area:focus{outline:none;border-color:var(--acc)}
         <div id="ia-avisos"></div>
         <div id="it-col"><span class="el-rot" id="it-col-rot">Item 1 — elogio coletivo</span>
           <textarea class="el-area" id="t-col" placeholder="No dia dd/mm/aaaa, por volta das …, durante … na região de …, a guarnição acima nominada …"></textarea></div>
-        <div id="it-ind"><span class="el-rot">Item 1 — elogio individual (o mesmo para cada policial)</span>
-          <textarea class="el-area" id="t-ind" placeholder="O policial militar elogiado integrou a guarnição que, no dia …"></textarea></div>
+        <div id="it-ind"><span class="el-rot">Item 1 — elogio individual comum (vale para quem não tem individual próprio)</span>
+          <textarea class="el-area" id="t-ind" placeholder="O policial militar elogiado integrou a guarnição que, no dia …"></textarea>
+          <div id="it-pessoais" style="display:none"></div></div>
         <div id="it-m4" class="el-grid" style="margin-top:4px">
           <div class="d3"><span class="el-rot">Elogiar … pela</span><textarea class="el-area" id="t-mot" style="min-height:60px" placeholder="atuação na ocorrência de 12/10/2026, em Guajará-Mirim/RO"></textarea></div>
           <div class="d3"><span class="el-rot">… que resultou</span><textarea class="el-area" id="t-res" style="min-height:60px" placeholder="na prisão de 2 indivíduos e na apreensão de 30 kg de cocaína"></textarea></div>
@@ -531,6 +548,7 @@ function pintarItem1() {
   $('it-col-rot').textContent = MOD === 'm3' ? 'Item 1 — elogio geral ao efetivo' : 'Item 1 — elogio coletivo';
   $('it-ind').style.display = (MOD === 'm2' || (MOD === 'm1' && $('c-indiv').checked)) ? '' : 'none';
   $('it-m4').style.display = MOD === 'm4' ? '' : 'none';
+  pintarPessoais();
 }
 
 /* ============================== 2. fato ============================== */
@@ -687,17 +705,44 @@ function polEtiqueta(p) {
 }
 function pintarPols() {
   $('pols-conta').textContent = POLS.length ? POLS.length + (POLS.length > 1 ? ' policiais' : ' policial') : '';
-  $('pols-box').innerHTML = POLS.length ? `<div style="overflow:auto"><table class="el-pols"><thead><tr><th>#</th><th>Posto/grad.</th><th>Nome completo</th><th class="c-re">Matrícula</th><th>Fem.</th><th class="c-dest">Destaque (opcional)</th><th></th></tr></thead><tbody>${
+  $('pols-box').innerHTML = POLS.length ? `<div style="overflow:auto"><table class="el-pols"><thead><tr><th>#</th><th>Posto/grad.</th><th>Nome completo</th><th class="c-re">Matrícula</th><th title="Marque quando for policial feminina: o documento dela sai no feminino (a policial militar elogiada, briosa, dedicada…)">Feminina</th><th>Observação</th><th></th></tr></thead><tbody>${
     POLS.map((p, i) => `<tr><td>${i + 1}</td>
       <td><input type="text" class="posto" value="${esc(p.posto)}" onchange="polCampo(${i},'posto',this);ordenarPols();pintarPols()" aria-label="Posto"></td>
       <td><b>${esc(p.nome)}</b>${polEtiqueta(p)}</td>
       <td class="c-re">${esc(p.re || '—')}</td>
-      <td><input type="checkbox" ${p.fem ? 'checked' : ''} onchange="polCampo(${i},'fem',this)" aria-label="Policial feminina"></td>
-      <td class="c-dest"><input type="text" value="${esc(p.destaque)}" maxlength="300" placeholder="pela condução da viatura…" oninput="polCampo(${i},'destaque',this)" aria-label="Destaque"></td>
-      <td><button type="button" class="bp-btn ic sm ghost" title="Tirar" aria-label="Tirar" onclick="tirarPol(${i})"><i data-ic="x"></i></button></td></tr>`).join('')
+      <td><input type="checkbox" ${p.fem ? 'checked' : ''} onchange="polCampo(${i},'fem',this)" aria-label="Policial feminina" title="Policial feminina: o documento sai no feminino"></td>
+      <td><button type="button" class="bp-btn sm sec bt-obs${obsTem(p) ? ' tem' : ''}" id="bt-obs-${i}" onclick="abrirObs(${i})" aria-expanded="${p._obs ? 'true' : 'false'}" title="Observação individual deste policial"><i data-ic="editar"></i><span>${obsTem(p) ? 'Com observação' : 'Observação'}</span></button></td>
+      <td><button type="button" class="bp-btn ic sm ghost" title="Tirar" aria-label="Tirar" onclick="tirarPol(${i})"><i data-ic="x"></i></button></td></tr>${p._obs ? `
+      <tr class="obs"><td></td><td colspan="6"><textarea id="obs-${i}" maxlength="400" placeholder="O que este policial fez de diferente. Ex.: foi quem avistou o veículo e deu voz de abordagem; fez a busca e achou o fundo falso." oninput="polObs(${i},this)" aria-label="Observação individual de ${esc(p.nome)}">${esc(p.destaque)}</textarea>
+        <small>Só entra no individual deste policial. Com a IA (passo 4), ela escreve o individual dele já contando isso; sem a IA, entra no fim como “Destacou-se, ainda, …”.</small></td></tr>` : ''}`).join('')
   }</tbody></table></div>` : '<div class="bp-vazio" style="margin-top:10px">Nenhum policial ainda.</div>';
   icones($('pols-box'));
+  pintarPessoais();
 }
+/* observação individual: abre/fecha a linha embaixo do policial */
+const obsTem = (p) => !!(p.destaque && p.destaque.trim());
+function abrirObs(i) {
+  const p = POLS[i]; if (!p) return;
+  p._obs = !p._obs; pintarPols();
+  if (p._obs) { const t = $('obs-' + i); if (t) t.focus(); }
+}
+function polObs(i, el) {
+  const p = POLS[i]; if (!p) return;
+  p.destaque = el.value;
+  const b = $('bt-obs-' + i); if (b) { b.classList.toggle('tem', obsTem(p)); b.querySelector('span').textContent = obsTem(p) ? 'Com observação' : 'Observação'; }
+}
+/* passo 4: o individual próprio de cada policial (escrito pela IA; dá para corrigir ou voltar ao comum) */
+function pintarPessoais() {
+  const box = $('it-pessoais'); if (!box) return;
+  const indiv = MOD === 'm2' || (MOD === 'm1' && $('c-indiv').checked);
+  const com = POLS.map((p, i) => [p, i]).filter(([p]) => p.ind);
+  box.style.display = indiv && com.length ? '' : 'none';
+  box.innerHTML = com.length ? `<span class="el-rot">Individual próprio de ${com.length === 1 ? '1 policial' : com.length + ' policiais'}</span>` + com.map(([p, i]) => `<div class="el-pessoal">
+      <div class="cab"><b>${esc(postoPM(p.posto) + ' ' + p.nome)}<small>${obsTem(p) ? 'com a sua observação: “' + esc(p.destaque.trim()) + '”' : 'pelo que a ocorrência conta dele'}</small></b>
+        <button type="button" class="bp-btn sm ghost" onclick="usarComum(${i})" title="Este policial volta a usar o texto comum">Usar o comum</button></div>
+      <textarea class="el-area" id="ind-${i}" oninput="POLS[${i}].ind=this.value" aria-label="Individual de ${esc(p.nome)}">${esc(p.ind)}</textarea></div>`).join('') : '';
+}
+function usarComum(i) { const p = POLS[i]; if (!p) return; p.ind = ''; pintarPessoais(); toast('Esse policial volta a usar o individual comum.'); }
 
 /* ============================== 4. IA ============================== */
 async function escreverIA() {
@@ -705,6 +750,12 @@ async function escreverIA() {
   const corpo = MOD === 'm3'
     ? { modo: 'geral', de: $('g-de').value, ate: $('g-ate').value, rotulo: $('g-rot').value, texto: $('g-texto').value }
     : { modo: 'ocorrencia', bos: SEL, texto: $('fato-texto').value };
+  // individual de cada um: a IA recebe posto, nome de guerra, função e a observação (para saber quem fez o quê)
+  const indiv = MOD === 'm2' || (MOD === 'm1' && $('c-indiv').checked);
+  if (MOD !== 'm3' && indiv && POLS.length) {
+    corpo.individuais = true;
+    corpo.policiais = POLS.map((p) => ({ posto: p.posto, guerra: p.guerra || String(p.nome || '').split(/\s+/)[0], funcao: p.funcao || '', obs: (p.destaque || '').trim() }));
+  }
   if (MOD !== 'm3' && !SEL.length && $('fato-texto').value.trim().length < 40) { msg.className = 'bp-msg err'; msg.textContent = 'Escolha a ocorrência (passo 2) ou importe/cole o texto dela.'; return; }
   const antes = bt.innerHTML; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>A IA está escrevendo…';
   msg.className = 'bp-msg'; msg.textContent = 'Leva uns 10 segundos.'; $('ia-avisos').innerHTML = '';
@@ -713,7 +764,14 @@ async function escreverIA() {
     if (MOD === 'm3') $('t-col').value = r.geral || '';
     else { $('t-col').value = r.coletivo || ''; $('t-ind').value = r.individual || ''; }
     $('t-mot').value = r.motivo || ''; $('t-res').value = r.resultado || '';
-    msg.className = 'bp-msg ok'; msg.textContent = 'Pronto. Leia e corrija o que precisar antes de gerar.';
+    let proprios = 0;
+    if (corpo.individuais) {
+      POLS.forEach((p) => { p.ind = ''; });
+      (r.individuais || []).forEach((x) => { const p = POLS[x.n - 1]; if (p && x.texto) { p.ind = x.texto; proprios++; } });
+      pintarPessoais();
+    }
+    msg.className = 'bp-msg ok';
+    msg.textContent = 'Pronto. ' + (proprios ? `${proprios} policia${proprios > 1 ? 'is ganharam' : 'l ganhou'} individual próprio (embaixo); os outros usam o comum. ` : '') + 'Leia e corrija o que precisar antes de gerar.';
     $('ia-avisos').innerHTML = (r.avisos || []).map((a) => `<div class="bp-aviso pend" style="margin-top:10px"><i data-ic="alerta"></i><div>${esc(a)}</div></div>`).join('');
     $('ia-fatos').style.display = r.fatos ? '' : 'none'; $('ia-fatos-tx').textContent = r.fatos || '';
     icones($('ia-avisos'));
@@ -816,8 +874,10 @@ function gerar() {
   const destaque = (p) => p.destaque && p.destaque.trim() ? ' Destacou-se, ainda, ' + p.destaque.trim().replace(/^destacou-se,?\s*(ainda,?)?\s*/i, '').replace(/\.*$/, '') + '.' : '';
   const individual = (p) => {
     const f = !!p.fem;
-    const corpo = paragrafos(tInd).map((t, i) => (i === 0 && f ? t.replace(/^O policial militar elogiado/, 'A policial militar elogiada') : t));
-    if (corpo.length) corpo[corpo.length - 1] += destaque(p);
+    // individual próprio (IA, com a observação já contada) ou o comum + "Destacou-se, ainda, …"
+    const proprio = p.ind && p.ind.trim();
+    const corpo = paragrafos(proprio || tInd).map((t, i) => (i === 0 && f ? t.replace(/^O policial militar elogiado/, 'A policial militar elogiada') : t));
+    if (corpo.length && !proprio) corpo[corpo.length - 1] += destaque(p);
     return { tipo: 'individual', re: p.re, titulo: 'Individual — ' + postoPM(p.posto) + ' ' + p.nome, nota: nota(), assunto: 'ELOGIO INDIVIDUAL', abertura: ABRE,
       dever: `${DEVER} ${f ? 'a' : 'o'} ${esc(nomeLinha(p))}.`, lista: [],
       itens: [{ titulo: '1. DO ATO MERITÓRIO', ps: corpo }, { titulo: '2. DA QUALIFICAÇÃO DA CONDUTA', ps: [ITEM2_IND(f)] }, { titulo: '3. DA ATIVIDADE DE POLÍCIA DE FRONTEIRA', ps: item3({ pl: false, f }) }],
