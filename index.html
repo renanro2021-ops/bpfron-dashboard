@@ -2502,11 +2502,8 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
       <pre id="diag-pre"></pre>
       <div class="diag-fix">
         <strong style="color:var(--yellow)">Como corrigir:</strong><br>
-        1. No Google Sheets → <strong>Arquivo → Publicar na web</strong><br>
-        2. 1º dropdown: selecione a aba <strong>"📋 BASE DE DADOS"</strong> (não "Documento inteiro")<br>
-        3. 2º dropdown: selecione <strong>"Valores separados por vírgula (.csv)"</strong><br>
-        4. Clique em <strong>Publicar</strong> e copie o novo link gerado<br>
-        5. Substitua o valor de <code style="background:#1e293b;padding:1px 5px;border-radius:3px">CSV_URL</code> no HTML
+        Os dados vêm do servidor do batalhão (Worker) e, se ele não responder, do <code style="background:#1e293b;padding:1px 5px;border-radius:3px">data.csv</code> do site.
+        Clique em <strong>Tentar novamente</strong>; se continuar, avise a P3.
       </div>
     </div>
   </div>
@@ -2680,13 +2677,9 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 <footer>BPFRON/RO &nbsp;·&nbsp; Batalhão de Polícia de Fronteira e Divisas &nbsp;·&nbsp; Rondônia &nbsp;·&nbsp; Painel Analítico v4.0 &nbsp;·&nbsp; Uso Restrito — Informação Operacional</footer>
 
 <script>
-/* ============================================================
-   ★ EDITE AQUI O LINK DO CSV ★
-   Arquivo → Publicar na web → aba "BASE DE DADOS" → CSV → copiar link
-============================================================ */
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=992567398&single=true&output=csv";
-// URL da aba PAINEL — usada apenas para buscar o Prejuízo Total Estimado
-const PAINEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSobDewRfvbW7dhFHuejtoOyRBg3ByH_-YwvBXAE3oy_JVRDLX-CF7AwVSZkMsKE9JFBkP22U5aAnMy/pub?gid=1543001629&single=true&output=csv";
+/* Fontes de dados (12/11/2026): Worker → data.csv do site → EMBEDDED_CSV.
+   O CSV publicado da planilha antiga (BPFRON_BD_IA) saiu daqui: ele expunha o
+   texto livre dos BOs sem filtro e a planilha foi apagada pelo usuário. */
 // Worker público (mesma origem CORS liberada p/ github.io + localhost:8000/5500).
 // É a fonte de dados preferida: sempre no ar, dados VIVOS, sem depender de proxy CORS
 // nem de data.csv (que só existe no deploy do GitHub Pages). Evita cair no EMBEDDED_CSV local.
@@ -3854,12 +3847,6 @@ function renderComparativo() {
 }
 
 /* ── Busca Prejuízo Total do PAINEL ── */
-/* ── Busca Prejuízo Total do PAINEL ── */
-
-/* ── Busca Prejuízo Total do PAINEL ── */
-/* ── Busca Prejuízo Total do PAINEL ── */
-// URL de export DIRETO da aba PAINEL (gid 1543001629) — chave viva (a antiga PAINEL_URL morreu).
-const PAINEL_EXPORT_URL = "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=1543001629";
 
 /* Extrai o PREJUÍZO TOTAL ESTIMADO da aba PAINEL.
    Procura o rótulo ("PREJUÍZO TOTAL ESTIMADO") e pega o primeiro valor em R$
@@ -3904,13 +3891,7 @@ async function fetchPrejuizoTotal() {
   if (!isLocal) sources.push(WORKER_API + '/api/painel?_nc=' + Date.now());
   // 1) painel.csv do mesmo domínio (gerado pelo Actions, sem CORS) — preferido
   if (!isLocal) sources.push('painel.csv?_nc=' + Date.now());
-  // 2) proxies CORS sobre o export VIVO da aba PAINEL
-  if (!isLocal) {
-    const u = PAINEL_EXPORT_URL + '&_nc=' + Date.now();
-    sources.push('https://corsproxy.io/?' + encodeURIComponent(u));
-    sources.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(u));
-    sources.push('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u));
-  }
+  // (sem proxy sobre a planilha antiga: ela foi apagada em 12/11/2026)
   for (const src of sources) {
     try {
       const res = await fetch(src);
@@ -3931,19 +3912,14 @@ async function fetchPrejuizoTotal() {
   console.warn('[BPFRON] Prejuizo total nao obtido — usando cálculo local de fallback.');
 }
 
-/* ── Equipe policial por ocorrência (aba 👮 POLICIAIS, gid 894084456) ── */
-const POL_EXPORT_URL = "https://docs.google.com/spreadsheets/d/1qOuy4T6w5jNB4fqunE2w7Zk8kP_M5Fv6sQsztOpfDTs/export?format=csv&gid=894084456";
-
+/* ── Equipe policial por ocorrência (aba 👮 POLICIAIS) ──
+   Vinha do export da planilha antiga (BPFRON_BD_IA), apagada em 12/11/2026.
+   Hoje só lê policiais.csv do próprio site, se um dia existir; sem ele o
+   popup do mapa simplesmente não mostra o bloco "Equipe". */
 async function loadPoliciais() {
   const isLocal = window.location.protocol === 'file:';
   const sources = [];
   if (!isLocal) sources.push('policiais.csv?_nc=' + Date.now());   // futuro: gerado pelo Actions
-  if (!isLocal) {
-    const u = POL_EXPORT_URL + '&_nc=' + Date.now();
-    sources.push('https://corsproxy.io/?' + encodeURIComponent(u));
-    sources.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(u));
-    sources.push('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u));
-  }
   let txt = '';
   for (const src of sources) {
     try {
@@ -4047,31 +4023,8 @@ async function loadData() {
       console.warn('[BPFRON] data.csv não disponível:', e.message);
     }
 
-    // 2. Fallback: tenta proxies CORS
-    if (!txt) {
-      const csvUrl = CSV_URL + '&_nc=' + Date.now();
-      const proxies = [
-        'https://corsproxy.io/?' + encodeURIComponent(csvUrl),
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl),
-        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(csvUrl),
-      ];
-      for (const proxyUrl of proxies) {
-        try {
-          const res = await fetch(proxyUrl);
-          if (res.ok) {
-            const fetched = await res.text();
-            if (fetched && fetched.trim().length > 100 && !fetched.includes('<html') && !fetched.includes('error')) {
-              txt = fetched;
-              fonte = 'online';
-              console.log('[BPFRON] Dados carregados via proxy:', proxyUrl.split('/')[2]);
-              break;
-            }
-          }
-        } catch(e) {
-          console.warn('[BPFRON] Proxy falhou:', proxyUrl.split('/')[2], e.message);
-        }
-      }
-    }
+    // (o fallback por proxy CORS sobre o CSV publicado da planilha antiga saiu
+    //  em 12/11/2026: ela expunha o texto livre dos BOs e foi apagada)
   } else {
     console.log('[BPFRON] Arquivo local — usando dados embutidos');
   }
