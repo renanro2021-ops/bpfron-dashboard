@@ -46,7 +46,8 @@ try { if (matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fi
 <div id="center" class="hidden"></div>
 <div id="toast"></div>
 <div id="shutterFlash"></div>
-<div id="loading" class="hidden"><div class="spin"></div><span>Carregando mapa…</span></div>
+<!-- tela de carregamento: aparece ao abrir a página e ao entrar num voo; só some com os gráficos prontos (main.js, objeto LD) -->
+<div id="loading"><div class="ld-box"><div class="ld-logo">Simulador <b>DJI</b></div><div class="ld-bar"><i></i></div><span id="ldTxt">Carregando o simulador…</span><small id="ldDica">Na primeira vez demora um pouco mais: o navegador baixa e prepara os gráficos.</small></div></div>
 
 <!-- controles na tela do DJI Fly (drones de câmera) -->
 <div id="flyui" class="hidden">
@@ -142,10 +143,9 @@ try { if (matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fi
     <header class="subbar"><button class="back" data-go="main"><svg><use href="#i-arrow"/></svg></button><h2>Escolha o tipo de voo</h2></header>
     <div class="cards">
       <button class="card" data-mode="freestyle"><div class="img" data-thumb="canyon"></div><div class="cap"><b>Voo livre</b><small>Explore o mapa, tire fotos e grave vídeos</small></div></button>
-      <button class="card" data-mode="race"><div class="img" data-thumb="stadium"></div><div class="cap"><b>Corrida</b><small>Passe pelos portões no menor tempo</small></div></button>
-      <button class="card" data-mode="challenge"><div class="img" data-thumb="factory"></div><div class="cap"><b>Missões</b><small>Passe pelos portões ou siga outro drone</small></div></button>
+      <button class="card" data-mode="race"><div class="img" data-thumb="stadium"></div><div class="cap"><b>Corrida</b><small>Pista fixa: portões em ordem, 3 voltas, contra o seu recorde</small></div></button>
+      <button class="card" data-mode="challenge"><div class="img" data-thumb="factory"></div><div class="cap"><b>Missões</b><small>Portões em qualquer ordem contra o relógio, ou seguir outro drone</small></div></button>
       <button class="card" data-mode="school"><div class="img" data-thumb="promo"></div><div class="cap"><b>Academia de voo</b><small>Aprenda passo a passo, do zero ao modo M</small></div></button>
-      <button class="card" data-mode="builder"><div class="img" data-thumb="factory2"></div><div class="cap"><b>Criar pista</b><small>Monte e salve seus próprios percursos</small></div></button>
     </div>
   </section>
 

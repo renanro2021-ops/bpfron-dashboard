@@ -21,6 +21,31 @@ const DEFAULTS = {
   profile: 'kb', throttleMode: 'spring', thrSens: 4, rotSens: 4, mouseSens: 5, stickMode: 2, padThrottle: 'auto', padDeadzone: 12,
 };
 const SETTINGS_KEY = 'djisim.settings.v1';
+// ---------- tela de carregamento (12/11/2026: o jogo "travava" sem aviso ao abrir e ao entrar no voo) ----------
+const LD_DICAS = [
+  'No controle: X decola e pousa, B freia e Y troca o modo de voo.',
+  'No teclado: Espaço liga os motores, W/S sobem e descem, as setas movem o drone.',
+  'Nos menus, o direcional ou o stick anda entre os botões: A escolhe, B volta.',
+  'H traz o drone de volta para casa sozinho (RTH).',
+  'F tira foto e V grava vídeo; tudo fica no Álbum.',
+  'R reinicia o voo e ESC pausa.',
+  'Na Corrida os portões vão em ordem; nas Missões, em qualquer ordem.',
+  'Qualidade gráfica Automática: começa no máximo e baixa sozinha se o computador não aguentar.',
+];
+const LD = {
+  el: () => document.getElementById('loading'),
+  set(txt, pct) {
+    const t = document.getElementById('ldTxt'); if (t && txt) t.textContent = txt;
+    const b = document.querySelector('#loading .ld-bar i'); if (b && pct != null) b.style.width = Math.max(4, Math.min(100, pct)) + '%';
+  },
+  dica() { const d = document.getElementById('ldDica'); if (d) d.textContent = '💡 ' + LD_DICAS[Math.floor(Math.random() * LD_DICAS.length)]; },
+  show(txt, pct) { this.set(txt, pct); this.el()?.classList.remove('hidden'); },
+  hide() { this.el()?.classList.add('hidden'); },
+};
+// espera a tela ser pintada (sem isso o texto novo só aparece depois do trabalho pesado)
+const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+const THUMB_KEY = 'djisim.thumbs', THUMB_VER = '2026-11-12a'; // trocar a versão quando mudar mapa ou drone
+
 const AUTO_GFX_KEY = 'djisim.autogfx';
 const GFX_ORDER = ['ultra', 'high', 'medium', 'low'];
 const GFX_NAMES = { ultra: 'Ultra', high: 'Alta', medium: 'Média', low: 'Baixa' };
@@ -165,7 +190,33 @@ class Game {
     this.resize();
     addEventListener('resize', () => this.resize());
     requestAnimationFrame((t) => this.frame(t));
-    setTimeout(() => this.makeThumbs(), 400);
+  }
+
+  // abertura da página: o loop já desenha o menu por baixo da tela de carregamento; ela só sai com tudo pronto
+  async boot() {
+    LD.set('Preparando os gráficos…', 45);
+    await this.warmFrames((f) => LD.set(null, 45 + f * 15));
+    // trava de segurança: se as fotos dos mapas falharem no meio, o menu abre assim mesmo (só fica sem as fotos)
+    const limite = new Promise((r) => setTimeout(r, 40000));
+    await Promise.race([this.makeThumbs((i, n) => LD.set('Preparando as fotos dos mapas…', 60 + (38 * i) / n)).catch(() => {}), limite]);
+    LD.set('Pronto!', 100);
+    await nextPaint();
+    LD.hide();
+  }
+
+  // espera os primeiros quadros (a placa de vídeo monta os shaders neles e o jogo engasga) até o ritmo firmar
+  warmFrames(onProg, max = 9000) {
+    return new Promise((res) => {
+      const t0 = performance.now(); let last = t0, bons = 0, n = 0;
+      const tick = (t) => {
+        const d = t - last; last = t; n++;
+        bons = d < 120 ? bons + 1 : 0;
+        if (onProg) onProg(Math.min(1, n / 10));
+        if ((bons >= 4 && n >= 5) || t - t0 > max) return res();
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
   }
 
   get quad() { return QUADS[this.settings.quad]; }
@@ -277,42 +328,57 @@ class Game {
   autoArmNow() { if (!this.sim.armed && !this.sim.crashed && !this.sim.batteryDead) this.startMotors(true); }
   get assistedMode() { return this.sim.settings.flightMode !== 'M'; }
 
-  startGame() {
+  async startGame() {
+    if (this.loadingGame) return;
+    this.loadingGame = true;
     const p = this.pending;
     this.audio.init();
-    $('#loading').classList.remove('hidden');
+    LD.dica();
+    LD.show('Montando o mapa…', 10);
     this.show(null);
-    setTimeout(() => {
+    await nextPaint();
+    try {
       if (this.mode) this.mode.dispose();
       this.mode = null;
+      this.warming = true; // até os gráficos firmarem: sem física, sem relógio da missão e sem botões
       this.sim.setQuad(this.settings.quad);
       this.applySettings();
       this.state = 'playing';
       this.camMode = 'fpv';
       this.zoomIdx = 0;
       this.loadMap(p.map || 'factory');
+      LD.set('Posicionando o drone…', 40);
       const key = p.mode === 'challenge' ? p.type : p.mode;
       const M = { freestyle: FreestyleMode, race: RaceMode, collect: CollectMode, chase: ChaseMode, school: TrainingMode, builder: BuilderMode }[key];
       this.mode = new M(this, p);
       this.mode.start();
-      this.perf.wait = 3; this.perf.t = 0; this.perf.n = 0; // o mapa recém-carregado ainda compila sombras e texturas
       this.updateFov();
       this.buildZoomChips();
-      this.last = performance.now(); this.acc = 0;
-      $('#loading').classList.add('hidden');
-      this.updateFlyUI();
-    }, 40);
+      LD.set('Preparando os gráficos…', 55);
+      await this.warmFrames((f) => LD.set(null, 55 + f * 43));
+    } finally {
+      this.warming = false;
+      this.loadingGame = false;
+    }
+    this.perf.wait = 3; this.perf.t = 0; this.perf.n = 0; // o mapa recém-carregado ainda compila sombras e texturas
+    this.last = performance.now(); this.acc = 0;
+    LD.set('Pronto!', 100);
+    LD.hide();
+    this.updateFlyUI();
   }
-  quitToMenu() {
+  async quitToMenu() {
     if (this.rec) this.rec.mr.stop();
     if (this.mode) { this.mode.dispose(); this.mode = null; }
     if (document.pointerLockElement) document.exitPointerLock();
     this.state = 'menu';
     this.sim.disarm(); this.sim.frozen = false;
-    if (this.mapId !== 'factory') this.loadMap('factory');
+    // o menu fica na Fábrica: vindo de outro mapa, remontar também engasga, então mostra o carregamento
+    const troca = this.mapId !== 'factory';
+    if (troca) { LD.dica(); LD.show('Voltando ao menu…', 20); this.show(null); await nextPaint(); this.loadMap('factory'); }
     this.applySettings();
     this.updateFov();
     this.refreshMain();
+    if (troca) { await this.warmFrames((f) => LD.set(null, 30 + f * 68)); LD.hide(); }
     this.show('main');
     this.updateFlyUI();
   }
@@ -321,7 +387,7 @@ class Game {
   // qualidade automática: mede o voo em janelas de 4 s; abaixo de ~42 quadros/s desce um nível e guarda
   autoQuality(raw) {
     const P = this.perf;
-    if (this.settings.gfx !== 'auto' || this.state !== 'playing' || document.hidden || raw > 0.5) { P.t = 0; P.n = 0; return; }
+    if (this.settings.gfx !== 'auto' || this.state !== 'playing' || this.warming || document.hidden || raw > 0.5) { P.t = 0; P.n = 0; return; }
     if (P.wait > 0) { P.wait -= raw; return; }
     P.t += raw; P.n++;
     if (P.t < 4) return;
@@ -341,9 +407,9 @@ class Game {
     this.autoQuality((t - this.last) / 1000);
     const dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
     const inp = this.input.update(dt);
-    for (const ev of this.input.takeEvents()) this.onEvent(ev);
+    for (const ev of this.input.takeEvents()) if (!this.warming) this.onEvent(ev);
 
-    if (this.state === 'playing') {
+    if (this.state === 'playing' && !this.warming) {
       const s = this.sim, q = s.q;
       // gimbal: Q/E, rodinha, gatilhos ou o controle por movimento
       const gmin = q.camera.tiltMin, gmax = q.camera.tiltMax;
@@ -1465,7 +1531,11 @@ class Game {
   }
 
   // Miniaturas dos mapas e drones, renderizadas num contexto separado.
-  async makeThumbs() {
+  async makeThumbs(prog) {
+    const cache = Store.get(THUMB_KEY, null);
+    if (cache && cache.v === THUMB_VER && cache.t && Object.keys(cache.t).length) {
+      Object.assign(this.thumbs, cache.t); this.applyThumbs(); this.refreshMain(); return; // 2ª visita em diante: nada de montar os mapas de novo
+    }
     const jobs = [
       ['factory', 480, 300, MAPS.factory.thumbCam],
       ['factory2', 480, 300, { pos: [10, 3, 18], look: [-6, 12, -110] }],
@@ -1473,13 +1543,16 @@ class Game {
       ['promo', 480, 300, { pos: [0, 2.2, 26], look: [0, 9, -40] }, true],
       ['canyon', 480, 300, MAPS.canyon.thumbCam],
     ];
+    const total = jobs.length + 1;
     let r;
     try { r = new THREE.WebGPURenderer({ antialias: true }); await r.init(); } catch (e) { return; }
     r.toneMapping = THREE.ACESFilmicToneMapping; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
     const scene = new THREE.Scene();
     const w = new World(scene, r);
-    let built = null;
+    let built = null, fim;
+    const pronto = new Promise((r2) => (fim = r2));
     const step = () => {
+      if (prog) prog(total - jobs.length - 1, total);
       const job = jobs.shift();
       if (!job) {
         for (const k of Object.keys(QUADS)) {
@@ -1494,7 +1567,9 @@ class Game {
         }
         w.clear(); r.dispose();
         this.applyThumbs(); this.refreshMain();
-        return;
+        try { Store.set(THUMB_KEY, { v: THUMB_VER, t: this.thumbs }); } catch (e) { /* navegador sem espaço: só refaz na próxima */ }
+        if (prog) prog(total, total);
+        return fim();
       }
       const [id, W, H, cam, drone] = job;
       const mapId = id === 'promo' ? 'stadium' : id.replace(/\d+$/, '');
@@ -1519,6 +1594,7 @@ class Game {
       setTimeout(step, 30);
     };
     step();
+    return pronto;
   }
 }
 
@@ -1529,8 +1605,13 @@ try {
   const ad = navigator.gpu && (await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }));
   if (ad) requiredLimits.maxColorAttachmentBytesPerSample = Math.min(64, ad.limits.maxColorAttachmentBytesPerSample);
 } catch (e) { /* sem WebGPU: o Three.js usa WebGL 2 */ }
+LD.dica();
+LD.set('Ligando a placa de vídeo…', 12);
 const renderer = new THREE.WebGPURenderer({ canvas: document.querySelector('#view'), antialias: false, powerPreference: 'high-performance', requiredLimits });
 await renderer.init();
+LD.set('Montando o mapa…', 28);
+await nextPaint();
 window.game = new Game(renderer);
 window.game.padMenu = new PadMenu(window.game);
+await window.game.boot();
 if (!renderer.backend.isWebGPUBackend) window.game.toast('WebGPU indisponível neste navegador: usando WebGL 2 (mais lento).');
