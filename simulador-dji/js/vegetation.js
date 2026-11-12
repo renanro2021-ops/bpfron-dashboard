@@ -171,6 +171,8 @@ function buildVariant(spec) {
   const key = spec.p + '|' + spec.seed;
   if (VARIANTS.has(key)) return VARIANTS.get(key);
   const o = presetOptions(spec.p, spec.seed);
+  // 12/11/2026: o álamo vinha com folha de outono (amarela) e virava manchas na mata; usa a folha verde do freixo
+  if (spec.p.startsWith('Aspen')) { o.leaves.type = 'ash'; o.leaves.tint = 0xffffff; }
   // galhos finos com menos gomos (quase não muda o desenho, alivia a placa de vídeo)
   for (let l = 1; l <= 3; l++) {
     o.branch.sections[l] = Math.max(3, Math.round(o.branch.sections[l] * 0.7));

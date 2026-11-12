@@ -43,10 +43,11 @@ Perfis em Configurações › Controle: teclado, teclado + mouse, mouse + teclad
 DJI Motion Controller: aponte e segure o botão esquerdo para acelerar, botão direito freia).
 
 Controle de videogame (Mode 2): X liga/decola, Y modo, B freio, RB foto, L3 vídeo, Select RTH, LB câmera,
-gatilhos inclinam o gimbal. Rádios em modo joystick USB podem ser calibrados em Configurações › Controle.
+gatilhos inclinam o gimbal. Nos menus o controle também navega: direcional ou stick esquerdo andam, A escolhe, B volta,
+LB/RB trocam o drone (início) e a aba (configurações). Rádios em modo joystick USB podem ser calibrados em Configurações › Controle.
 
 ## Modos de jogo
-Voo livre, Corrida (com fantasma da melhor volta), Missões (coletar pontos e seguir outro drone),
+Voo livre, Corrida (com fantasma da melhor volta), Missões (passar pelos portões e seguir outro drone),
 Academia de voo (15 lições: 4 exercícios de stick com o drone parado e 11 de voo, da decolagem ao flip no modo M) e Criar pista.
 O Estádio tem um campo de futebol oficial (105 × 68 m) com gols e rede.
 

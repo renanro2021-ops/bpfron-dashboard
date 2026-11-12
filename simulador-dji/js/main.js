@@ -8,6 +8,7 @@ import { World, MAPS } from './world.js';
 import { makeDroneModel, animateProps, PostFX, Showcase, setFpvView, fitModel } from './visuals.js';
 import { Audio } from './audio.js';
 import { Album } from './album.js';
+import { PadMenu } from './padmenu.js';
 import { FreestyleMode, RaceMode, CollectMode, ChaseMode, TrainingMode, BuilderMode, Store, fmtTime, customTracks, DIFFICULTIES, LESSON_LIST } from './modes.js';
 
 const DEFAULTS = {
@@ -16,10 +17,13 @@ const DEFAULTS = {
   obstacle: true, fpvBrake: true, maxAlt: 120, rthAlt: 30, batteryDrain: true, lowBatLand: true, damage: false, wind: 0,
   gimbalMode: 'auto', fovAdj: 0, distortion: true, mTilt: 30, grid: 'off', gimbalSpeed: 5, signalFx: true,
   cinematic: false, stickHud: true, lineAssist: true, ghost: true,
-  volume: 70, quality: 'high', gfx: 'high', upscale: 'off', aa: 'taa', shadows: true, bloom: true, grass: true,
+  volume: 70, quality: 'high', gfx: 'auto', upscale: 'off', aa: 'taa', shadows: true, bloom: true, grass: true,
   profile: 'kb', throttleMode: 'spring', thrSens: 4, rotSens: 4, mouseSens: 5, stickMode: 2, padThrottle: 'auto', padDeadzone: 12,
 };
 const SETTINGS_KEY = 'djisim.settings.v1';
+const AUTO_GFX_KEY = 'djisim.autogfx';
+const GFX_ORDER = ['ultra', 'high', 'medium', 'low'];
+const GFX_NAMES = { ultra: 'Ultra', high: 'Alta', medium: 'Média', low: 'Baixa' };
 const PHYS_HZ = 500;
 const RATE_PRESETS = { low: [0.8, 0.5, 0.2], medium: [1.0, 0.7, 0.0], high: [1.2, 0.76, 0.0] };
 export const MODE_NAMES = { C: 'Cine', N: 'Normal', S: 'Esporte', M: 'Manual' };
@@ -68,7 +72,7 @@ const SET = {
   ],
   display: [
     { k: 'quality', label: 'Resolução', opts: [['high', 'Alta'], ['medium', 'Média'], ['low', 'Baixa']], help: 'Resolução da imagem. Use Média ou Baixa se estiver lento.' },
-    { k: 'gfx', label: 'Qualidade gráfica', opts: [['ultra', 'Ultra'], ['high', 'Alta'], ['medium', 'Média'], ['low', 'Baixa']], help: 'Ultra: luz rebatida entre as superfícies (iluminação global) e reflexos. Alta: sombras de contato nos cantos e reflexos. Média: só sombras de contato. Baixa: sem efeitos extras, a mais leve.' },
+    { k: 'gfx', label: 'Qualidade gráfica', opts: [['auto', 'Automática'], ['ultra', 'Ultra'], ['high', 'Alta'], ['medium', 'Média'], ['low', 'Baixa']], help: 'Automática: começa no Ultra e, se o voo ficar travando, desce sozinha até ficar liso (a escolha fica guardada neste computador). Ultra: luz rebatida entre as superfícies (iluminação global) e reflexos. Alta: sombras de contato nos cantos e reflexos. Média: só sombras de contato. Baixa: sem efeitos extras, a mais leve.' },
     { k: 'upscale', label: 'Aumento de resolução (TAAU)', opts: [['off', 'Desligado'], ['quality', 'Qualidade'], ['balanced', 'Equilibrado'], ['performance', 'Desempenho']], help: 'Funciona como o DLSS: desenha a imagem menor e reconstrói os detalhes usando os quadros anteriores. Ganha bastante FPS perdendo pouca nitidez. Qualidade = 77% da resolução, Equilibrado = 67%, Desempenho = 50%.' },
     { k: 'aa', label: 'Anti-aliasing', opts: [['taa', 'Temporal (TAA)'], ['smaa', 'SMAA'], ['off', 'Desligado']], help: 'Suaviza os serrilhados. Nas qualidades Ultra, Alta e Média o TAA fica sempre ligado, porque ele também limpa o ruído dos efeitos.' },
     { k: 'shadows', label: 'Sombras', opts: ON, help: 'Sombras do sol e dos refletores.' },
@@ -119,6 +123,10 @@ class Game {
     // 26/10/2026: o upscale (TAAU) deixava a imagem serrilhada em movimento; com as árvores novas o Ultra roda
     // sem ele, então volta para "Desligado" uma vez (o usuário pode religar nas configurações)
     if (!this.settings.mig261026) { this.settings.upscale = 'off'; this.settings.mig261026 = true; Store.set(SETTINGS_KEY, this.settings); }
+    // 12/11/2026: no site a qualidade nascia em "Alta"; agora o padrão é "Automática" (Ultra que desce sozinha se travar)
+    if (!this.settings.mig121126) { if (this.settings.gfx === 'high') this.settings.gfx = 'auto'; this.settings.mig121126 = true; Store.set(SETTINGS_KEY, this.settings); }
+    this.autoGfx = Store.get(AUTO_GFX_KEY, null) || (renderer.backend.isWebGPUBackend ? 'ultra' : 'medium');
+    this.perf = { t: 0, n: 0, wait: 3 };
     this.canvas = $('#view');
     this.renderer = renderer;
     this.renderer.shadowMap.enabled = true;
@@ -175,7 +183,7 @@ class Game {
     this.input.setStickMode(s.stickMode);
     this.audio.setVolume(s.volume / 100);
     this.renderer.setPixelRatio(s.quality === 'high' ? Math.min(devicePixelRatio, 2) : s.quality === 'medium' ? 1 : 0.7);
-    this.post.configure({ preset: s.gfx, aa: s.aa, upscale: s.upscale });
+    this.post.configure({ preset: s.gfx === 'auto' ? this.autoGfx : s.gfx, aa: s.aa, upscale: s.upscale });
     if (this.world.sun) this.world.sun.castShadow = s.shadows;
     this.resize();
   }
@@ -287,6 +295,7 @@ class Game {
       const M = { freestyle: FreestyleMode, race: RaceMode, collect: CollectMode, chase: ChaseMode, school: TrainingMode, builder: BuilderMode }[key];
       this.mode = new M(this, p);
       this.mode.start();
+      this.perf.wait = 3; this.perf.t = 0; this.perf.n = 0; // o mapa recém-carregado ainda compila sombras e texturas
       this.updateFov();
       this.buildZoomChips();
       this.last = performance.now(); this.acc = 0;
@@ -309,8 +318,27 @@ class Game {
   }
 
   // ---------- loop ----------
+  // qualidade automática: mede o voo em janelas de 4 s; abaixo de ~42 quadros/s desce um nível e guarda
+  autoQuality(raw) {
+    const P = this.perf;
+    if (this.settings.gfx !== 'auto' || this.state !== 'playing' || document.hidden || raw > 0.5) { P.t = 0; P.n = 0; return; }
+    if (P.wait > 0) { P.wait -= raw; return; }
+    P.t += raw; P.n++;
+    if (P.t < 4) return;
+    const fps = P.n / P.t; P.t = 0; P.n = 0;
+    const i = GFX_ORDER.indexOf(this.autoGfx);
+    if (fps < 42 && i < GFX_ORDER.length - 1) {
+      this.autoGfx = GFX_ORDER[i + 1];
+      Store.set(AUTO_GFX_KEY, this.autoGfx);
+      this.applySettings();
+      P.wait = 2;
+      this.toast(`Qualidade automática: ${GFX_NAMES[this.autoGfx]} (${Math.round(fps)} quadros/s). Dá para escolher outra em Configurações › Transmissão.`);
+    }
+  }
+
   frame(t) {
     requestAnimationFrame((tt) => this.frame(tt));
+    this.autoQuality((t - this.last) / 1000);
     const dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
     const inp = this.input.update(dt);
     for (const ev of this.input.takeEvents()) this.onEvent(ev);
@@ -1389,7 +1417,7 @@ class Game {
     for (const type of ['collect', 'chase']) for (const d of Object.keys(DIFFICULTIES)) items.push({ type, d });
     el.innerHTML = items.map((it, i) => {
       const lb = Store.get(`djisim.lb.${it.type}.${this.pending.map}.${it.d}`, []);
-      return `<button class="mcard" data-i="${i}"><div class="img" style="${this.thumbStyle(this.pending.map)}"></div><span class="tag">${DIFFICULTIES[it.d].label}</span><div class="cap">${it.type === 'collect' ? 'Coletar pontos' : 'Seguir o drone'}<small>${it.type === 'collect' ? `Pegue todos em ${DIFFICULTIES[it.d].time} s` : `Alvo a ${DIFFICULTIES[it.d].chase} m/s por 60 s`} · melhor: ${lb[0] ? lb[0].score + ' pts' : '—'}</small></div></button>`;
+      return `<button class="mcard" data-i="${i}"><div class="img" style="${this.thumbStyle(this.pending.map)}"></div><span class="tag">${DIFFICULTIES[it.d].label}</span><div class="cap">${it.type === 'collect' ? 'Passar pelos portões' : 'Seguir o drone'}<small>${it.type === 'collect' ? `Passe por todos em ${DIFFICULTIES[it.d].time} s` : `Alvo a ${DIFFICULTIES[it.d].chase} m/s por 60 s`} · melhor: ${lb[0] ? lb[0].score + ' pts' : '—'}</small></div></button>`;
     }).join('');
     el.querySelectorAll('[data-i]').forEach((b) => (b.onclick = () => { const it = items[+b.dataset.i]; this.pending.type = it.type; this.pending.difficulty = it.d; this.startGame(); }));
     this.show('challenge');
@@ -1504,4 +1532,5 @@ try {
 const renderer = new THREE.WebGPURenderer({ canvas: document.querySelector('#view'), antialias: false, powerPreference: 'high-performance', requiredLimits });
 await renderer.init();
 window.game = new Game(renderer);
+window.game.padMenu = new PadMenu(window.game);
 if (!renderer.backend.isWebGPUBackend) window.game.toast('WebGPU indisponível neste navegador: usando WebGL 2 (mais lento).');

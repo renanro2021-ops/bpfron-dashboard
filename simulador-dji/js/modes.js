@@ -210,51 +210,70 @@ function challengePoints(map) {
   return pts;
 }
 
+// Missão COLETAR: cada ponto é um portão (trave) — 12/11/2026, antes eram bolinhas amarelas.
+// Vale passar por dentro em qualquer sentido e em qualquer ordem; o mais perto ainda não passado fica verde.
+const GATE_H = 2.4, GATE_W = 3.2;
 export class CollectMode extends BaseMode {
   start() {
+    const pts = challengePoints(this.game.mapDef);
+    this.items = pts.map((p, i) => {
+      const q = pts[(i + 1) % pts.length], o = pts[(i - 1 + pts.length) % pts.length];
+      // de frente para o caminho: do ponto anterior para o próximo
+      const dx = q[0] - o[0], dz = q[2] - o[2];
+      const yaw = Math.atan2(-dx, -dz);
+      const gate = this.world.addGate({ x: p[0], z: p[2], y: Math.max(0, p[1] - GATE_H / 2), yaw, w: GATE_W, h: GATE_H });
+      this.world.setGateNumber(gate, i + 1);
+      return { gate, taken: false };
+    });
+    this.total = this.items.length;
+    this.restart();
+  }
+  restart() {
     const d = DIFF[this.opts.difficulty];
     this.limit = d.time; this.left = d.time;
     this.collected = 0; this.finished = false;
-    const pts = challengePoints(this.game.mapDef);
-    const geo = new THREE.OctahedronGeometry(0.7, 0);
-    this.items = pts.map((p, i) => {
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffd23f, emissive: 0xffa400, emissiveIntensity: 1.2, metalness: 0.3, roughness: 0.3 });
-      const m = this.add(new THREE.Mesh(geo, mat));
-      const gy = this.world.groundHeight(p[0], p[2]);
-      m.position.set(p[0], gy + p[1], p[2]);
-      const halo = new THREE.Mesh(new THREE.SphereGeometry(1.3, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.12, depthWrite: false }));
-      m.add(halo);
-      return { m, mat, taken: false, phase: i * 0.7 };
-    });
-    this.total = this.items.length;
+    for (const it of this.items) it.taken = false;
+    this.refresh();
     this.game.spawnAtStart();
-    this.game.toast(`Missão COLETAR: pegue os ${this.total} pontos antes do tempo acabar! T decola.`);
+    this.game.toast(`Missão COLETAR: passe pelos ${this.total} portões, em qualquer ordem, antes do tempo acabar! T decola.`);
   }
-  onReset() { this.dispose(); this.start(); }
+  // reiniciar não recria os portões (só zera quem já foi passado)
+  onReset() { this.restart(); }
+  refresh() {
+    const alvo = this.nearestItem();
+    for (const it of this.items) {
+      if (it.taken) styleGate(it.gate, 'passed');
+      else if (it === alvo) styleGate(it.gate, 'next');
+      else { styleGate(it.gate, 'after'); it.gate.glowMat.color.setHex(0xffd23f); it.gate.glowMat.opacity = 0.75; }
+    }
+  }
+  take(it) {
+    it.taken = true; this.collected++; this.game.audio.collect();
+    this.refresh();
+  }
+  segment(p0, p1) {
+    if (this.finished) return;
+    for (const it of this.items) if (!it.taken && World.crossGate(it.gate, p0, p1) !== 0) this.take(it);
+  }
   update(dt) {
     if (this.finished) return;
     if (this.sim.armed || this.left < this.limit) this.left -= dt;
-    for (const it of this.items) {
-      if (it.taken) continue;
-      it.phase += dt;
-      it.m.rotation.y += dt * 1.75; // RotationSpeed = 100°/s
-      it.mat.emissiveIntensity = 0.4 + 0.9 * (0.5 + 0.5 * Math.sin(it.phase * Math.PI / 0.65));
-      const p = it.m.position, s = this.sim.pos;
-      if ((p.x - s[0]) ** 2 + (p.y - s[1]) ** 2 + (p.z - s[2]) ** 2 < 1.7 * 1.7) {
-        it.taken = true; it.m.visible = false; this.collected++; this.game.audio.collect();
-      }
-    }
+    // atualiza o verde para o portão mais perto (a cada ~0,25 s)
+    this.refT = (this.refT || 0) - dt;
+    if (this.refT <= 0) { this.refT = 0.25; this.refresh(); }
     if (this.collected === this.total) this.finish(true);
     else if (this.left <= 0) this.finish(false);
   }
-  nearest() {
+  nearestItem() {
     let best = null, bd = 1e9;
+    const s = this.sim.pos;
     for (const it of this.items) if (!it.taken) {
-      const p = it.m.position, s = this.sim.pos, d = (p.x - s[0]) ** 2 + (p.y - s[1]) ** 2 + (p.z - s[2]) ** 2;
-      if (d < bd) { bd = d; best = [p.x, p.y, p.z]; }
+      const c = it.gate.center, d = (c[0] - s[0]) ** 2 + (c[1] - s[1]) ** 2 + (c[2] - s[2]) ** 2;
+      if (d < bd) { bd = d; best = it; }
     }
     return best;
   }
+  nearest() { const it = this.nearestItem(); return it ? it.gate.center : null; }
   finish(win) {
     this.finished = true;
     const timeUsed = this.limit - Math.max(0, this.left);
@@ -264,12 +283,12 @@ export class CollectMode extends BaseMode {
     const stars = win ? (this.left > this.limit * 0.4 ? 3 : this.left > this.limit * 0.15 ? 2 : 1) : 0;
     this.game.showResults({
       title: win ? 'Missão concluída! ' + '★'.repeat(stars) + '☆'.repeat(3 - stars) : 'Tempo esgotado!',
-      lines: [['Pontos coletados', `${this.collected}/${this.total}`], ['Tempo usado', fmtTime(timeUsed * 1000)], ['Pontuação', score], ['Dificuldade', DIFF[this.opts.difficulty].label]],
+      lines: [['Portões', `${this.collected}/${this.total}`], ['Tempo usado', fmtTime(timeUsed * 1000)], ['Pontuação', score], ['Dificuldade', DIFF[this.opts.difficulty].label]],
       board: lb.slice(0, 5).map((e, i) => `${i + 1}. ${e.score} pts`),
     });
   }
   hud() {
-    return { title: 'MISSÃO · COLETAR', rows: [['Pontos', `${this.collected}/${this.total}`], ['Tempo restante', fmtTime(Math.max(0, this.left) * 1000)]], target: this.nearest(), center: !this.sim.armed && this.left === this.limit ? 'Decole para começar (T)' : '' };
+    return { title: 'MISSÃO · COLETAR', rows: [['Portões', `${this.collected}/${this.total}`], ['Tempo restante', fmtTime(Math.max(0, this.left) * 1000)]], target: this.nearest(), center: !this.sim.armed && this.left === this.limit ? 'Decole para começar (T)' : '' };
   }
 }
 
