@@ -221,6 +221,11 @@
     "A página ganhou o visual do site, com tema claro e escuro.",
     "O valor de cada pedido mostra os itens, o frete e o total a pagar."
   ] },
+  { "data": "2026-11-16", "titulo": "Relatório para o grupo", "quem": "gestor", "itens": [
+    "Na Área do gestor: \"Relatório para o grupo (PDF)\" e \"Copiar texto para o WhatsApp\".",
+    "Cada policial acha o próprio nome (ordem alfabética) e confere itens, valor com frete e se o pagamento chegou.",
+    "Sai sem telefone e sem RE, porque vai para um grupo aberto."
+  ] },
   { "data": "2026-11-16", "titulo": "Frete na Área do gestor", "quem": "gestor", "itens": [
     "Quadro \"Frete do lote\": mostra a cota de cada pedido e deixa refazer o rateio (outro valor ou outros pedidos).",
     "Pedido cancelado depois do rateio: a cota dele aparece como \"sem dono\" para você decidir se refaz.",
@@ -1019,6 +1024,12 @@ function embRenderGestao(d){
       <span style="flex:1"></span>
       <button class="bp-btn sm" type="button" onclick="embImprimirFabricante()"><i data-ic="arquivo"></i>Relatório p/ o fabricante (com fotos)</button>
       <button class="bp-btn sm sec" type="button" onclick="embImprimirPedidos()"><i data-ic="arquivo"></i>Relatório dos pedidos</button>
+    </div>
+    <div class="emb-barra" style="margin-top:8px">
+      <span class="bp-tile sm ok"><i data-ic="usuarios"></i></span>
+      <span style="flex:1;min-width:200px;font-size:13px;color:var(--t3);line-height:1.5"><b style="color:var(--t1)">Para o grupo do WhatsApp:</b> cada policial confere o próprio pedido, o valor com frete e se o pagamento já chegou. Sai sem telefone e sem RE.</span>
+      <button class="bp-btn sm" type="button" id="emb-grupo-pdf" onclick="embImprimirGrupo()"><i data-ic="arquivo"></i>Relatório para o grupo (PDF)</button>
+      <button class="bp-btn sm sec" type="button" id="emb-grupo-txt" onclick="embCopiar(embTextoGrupo(), this)">Copiar texto para o WhatsApp</button>
     </div>`;
 
   html += '<div class="emb-faixa-ttl">Total por modelo e cor <span class="cnt">o que precisa ser encomendado</span></div>';
@@ -1351,6 +1362,87 @@ function embImprimirPedidos(){
         </tbody></table>
       </div>`; }).join('')}`;
   embJanelaRelatorio('Pedidos de emborrachados', corpo);
+}
+
+/* ── Relatório para o GRUPO do WhatsApp ──
+   Vai para um grupo aberto: cada um acha o próprio nome e confere itens, valor
+   com frete e se o pagamento chegou. NUNCA leva telefone nem RE (o RE + 4
+   dígitos do telefone é a chave para mexer no pedido). Ordem alfabética. */
+function embGrupoPedidos(){
+  return embGestFiltrados().slice().sort((a, b) =>
+    String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR') || (parseInt(a.pedido,10)||0) - (parseInt(b.pedido,10)||0));
+}
+function embGrupoSituacao(p){
+  if (/^conferido$/i.test(String(p.pagamento||'').trim())) return { tx: 'Pago (conferido)', ic: '✅' };
+  if (p.tem_comprovante) return { tx: 'Comprovante enviado, aguardando conferência', ic: '🔎' };
+  return { tx: 'Aguardando pagamento', ic: '⏳' };
+}
+function embGrupoLink(){
+  return /^https?:/.test(location.protocol) ? location.origin + location.pathname : 'https://renanro2021-ops.github.io/bpfron-dashboard/emborrachados.html';
+}
+function embGrupoFreteTx(){
+  const fr = EMB_GEST_DATA && EMB_GEST_DATA.frete;
+  if (!fr || !(fr.total > 0) || !(fr.rateio||[]).length) return '';
+  const vs = fr.rateio.map(x => x.valor);
+  const mn = Math.min(...vs), mx = Math.max(...vs);
+  return `Frete de ${embMoeda(fr.total)} dividido entre ${fr.rateio.length} pedido(s): ${mn === mx ? embMoeda(mn) : embMoeda(mn) + ' a ' + embMoeda(mx)} cada, já somado no valor a pagar.`;
+}
+
+function embImprimirGrupo(){
+  const pedidos = embGrupoPedidos();
+  if (!pedidos.length){ alert('Nenhum pedido no filtro escolhido.'); return; }
+  const pix = EMB_PIX && EMB_PIX.configurado ? EMB_PIX : null;
+  const pagos = pedidos.filter(p => /^conferido$/i.test(String(p.pagamento||'').trim())).length;
+  const freteTx = embGrupoFreteTx();
+  const corpo = `
+    <div style="border:1.5px solid #c9a030;border-radius:8px;padding:10px 12px;margin-bottom:12px;background:#fffbea;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      <b>Confira o seu pedido abaixo (ordem alfabética).</b>
+      ${pix ? `<br>PIX para pagamento (${embEsc(EMB_TIPO_NOME[pix.tipo] || pix.tipo)}): <b style="font-size:14px">${embEsc(embChaveBonita(pix.tipo, pix.chave))}</b>${pix.titular ? ' · ' + embEsc(pix.titular) : ''}` : ''}
+      ${freteTx ? `<br>${embEsc(freteTx)}` : ''}
+      <br>Para pagar e mandar o comprovante: <b>${embEsc(embGrupoLink())}</b> → <b>Meu pedido · pagar</b> (RE + 4 últimos dígitos do telefone do pedido).
+      <br>Algo errado no seu pedido? Corrija pela página enquanto não pagou, ou procure o P4.
+    </div>
+    <div class="meta"><span>Pedidos: <b>${pedidos.length}</b></span><span>Pagos (conferidos): <b>${pagos}</b></span><span>Faltam: <b>${pedidos.length - pagos}</b></span></div>
+    <table><thead><tr><th>Nº</th><th>Nome</th><th>Itens</th><th>Itens R$</th><th>Frete</th><th>A pagar</th><th>Situação</th></tr></thead><tbody>
+      ${pedidos.map(p => { const s = embGrupoSituacao(p); const fr = Number(p.frete)||0; return `<tr>
+        <td class="n">${embEsc(p.pedido)}</td>
+        <td><b>${embEsc(p.nome)}</b></td>
+        <td>${(p.itens||[]).map(i => `${i.qtd}× ${embEsc(i.item)} · ${embCorTagImpressa(i.cor)}`).join('<br>')}</td>
+        <td style="white-space:nowrap">${embMoeda(p.valor_total)}</td>
+        <td style="white-space:nowrap">${fr > 0 ? embMoeda(fr) : '—'}</td>
+        <td style="white-space:nowrap"><b>${embMoeda(embAPagar(p))}</b></td>
+        <td>${s.tx}</td></tr>`; }).join('')}
+    </tbody></table>`;
+  embJanelaRelatorio('Pedidos de emborrachados · conferência do grupo', corpo);
+}
+
+// Mesmo conteúdo do PDF, em texto com a formatação do WhatsApp (*negrito*).
+function embTextoGrupo(){
+  const pedidos = embGrupoPedidos();
+  const pix = EMB_PIX && EMB_PIX.configurado ? EMB_PIX : null;
+  const hoje = new Date().toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  const freteTx = embGrupoFreteTx();
+  const pagos = pedidos.filter(p => /^conferido$/i.test(String(p.pagamento||'').trim())).length;
+  const l = [];
+  l.push('*PEDIDO DE EMBORRACHADOS · BPFRON*');
+  l.push(`Situação em ${hoje} · ${pedidos.length} pedido(s), ${pagos} pago(s)`);
+  l.push('');
+  if (pix) l.push(`*PIX (${EMB_TIPO_NOME[pix.tipo] || pix.tipo}):* ${embChaveBonita(pix.tipo, pix.chave)}${pix.titular ? ' · ' + pix.titular : ''}`);
+  if (freteTx) l.push(freteTx);
+  l.push('Confira o seu pedido abaixo (ordem alfabética).');
+  pedidos.forEach(p => {
+    const s = embGrupoSituacao(p); const fr = Number(p.frete)||0;
+    l.push('');
+    l.push(`*Nº ${p.pedido} · ${p.nome}*`);
+    (p.itens||[]).forEach(i => l.push(`• ${i.qtd}× ${i.item} (${embCorNorm(i.cor) || 'cor não informada'})`));
+    l.push(fr > 0 ? `Itens ${embMoeda(p.valor_total)} + frete ${embMoeda(fr)} = *${embMoeda(embAPagar(p))}*` : `Total: *${embMoeda(embAPagar(p))}*`);
+    l.push(`${s.ic} ${s.tx}`);
+  });
+  l.push('');
+  l.push('Para pagar e mandar o comprovante:');
+  l.push(embGrupoLink());
+  l.push('→ *Meu pedido · pagar* (RE + 4 últimos dígitos do telefone do pedido)');
+  return l.join('\n');
 }
 
 /* ── Editar / cancelar o próprio pedido ──
