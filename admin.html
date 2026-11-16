@@ -138,6 +138,12 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
 .adm-linha .bp-in{flex:1;min-width:200px}
 .so-cel{display:none}
 
+/* efetivo do BPFRON */
+.ef-acoes{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ef-res{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.ef-res .adm-u{grid-template-columns:1fr auto}
+.ef-motivo{display:grid;grid-template-columns:1fr;gap:8px}
+
 @media (max-width:820px){ .adm-u{grid-template-columns:1fr;gap:10px} .adm-u .adm-ed{width:100%} }
 @media (max-width:760px){
   .adm-nums{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -156,6 +162,12 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-16", "titulo": "Nova aba: Efetivo do BPFRON", "quem": "todos", "itens": [
+    "Lista de quem conta como efetivo do batalhão no site (pesquisas exclusivas, P1, escalas).",
+    "Editar corrige posto, nome, OPM e telefone do policial.",
+    "Saiu do BPFRON: diga para onde ele foi (transferência, reserva…) e ele sai das listas na hora. Nada é apagado.",
+    "Incluir policial: procure pelo RE ou nome no cadastro do estado e traga para o BPFRON, ou cadastre quem ainda não existe."
+  ] },
   { "data": "2026-10-29", "titulo": "Painel de Controle de cara nova", "quem": "todos", "itens": [
     "Visual novo, igual ao Portal da Gestão, com os 4 temas do site.",
     "Os números do topo filtram a lista: clique em Ativos, Administradores, Desativados ou Senha provisória.",
@@ -241,6 +253,7 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
       <button type="button" class="adm-aba on" data-tab="usuarios"><i data-ic="usuarios"></i>Usuários</button>
       <button type="button" class="adm-aba" data-tab="matriz"><i data-ic="grade"></i>Matriz de acesso</button>
       <button type="button" class="adm-aba" data-tab="log"><i data-ic="relogio"></i>Histórico</button>
+      <button type="button" class="adm-aba" data-tab="efetivo"><i data-ic="escudo"></i>Efetivo do BPFRON</button>
     </div>
 
     <div id="t-usuarios">
@@ -274,8 +287,37 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
     <div id="t-log" class="bp-esconde">
       <div class="bp-card"><div class="adm-log" id="log"></div></div>
     </div>
+
+    <div id="t-efetivo" class="bp-esconde">
+      <div class="bp-aviso"><i data-ic="info"></i><div>Esta é a lista que o site usa como <b>efetivo do BPFRON</b>: pesquisas exclusivas (quem ainda não respondeu), P1, escalas e outros. Ela vem do cadastro de policiais da planilha da Diária, e entra quem tem <b>BPFRON</b> na OPM.
+        Quem saiu do batalhão: clique em <b>Saiu do BPFRON</b> e diga para onde foi. Ele some das listas, mas <b>nada é apagado</b>: diárias, respostas e históricos antigos continuam como estavam.</div></div>
+      <div class="adm-barra" style="margin-top:12px">
+        <div class="bp-in"><i data-ic="buscar"></i><input id="ef-busca" type="search" placeholder="Buscar por nome, RE, posto ou OPM…" autocomplete="off"></div>
+        <button type="button" class="bp-btn" id="ef-novo"><i data-ic="mais"></i>Incluir policial</button>
+        <button type="button" class="bp-btn ic sec" id="ef-recarregar" title="Recarregar" aria-label="Recarregar"><i data-ic="atualizar"></i></button>
+      </div>
+      <div class="adm-leg" id="ef-resumo"></div>
+      <div class="adm-lista" id="ef-lista"><div class="bp-vazio">Abra esta aba para carregar o efetivo.</div></div>
+    </div>
   </div>
 </main>
+
+<!-- editor do efetivo (cadastro POLICIAIS) -->
+<div class="adm-ovl" id="ovl-pol">
+  <div class="adm-gav" role="dialog" aria-modal="true" aria-labelledby="pe-titulo">
+    <div class="adm-gav-cab">
+      <span class="adm-av" id="pe-av">+</span>
+      <div><h2 id="pe-titulo">Policial</h2><small id="pe-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" id="pe-fechar" aria-label="Fechar"><i data-ic="x"></i></button>
+    </div>
+    <div class="adm-gav-corpo" id="pe-corpo"></div>
+    <div class="adm-gav-pe">
+      <span class="resumo" id="pe-resumo"></span>
+      <button type="button" class="bp-btn ghost" id="pe-cancelar">Cancelar</button>
+      <button type="button" class="bp-btn" id="pe-salvar"><i data-ic="check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
 
 <!-- editor de usuário -->
 <div class="adm-ovl" id="ovl">
@@ -585,7 +627,8 @@ document.querySelectorAll('.adm-aba').forEach(t => t.addEventListener('click', (
   if (TAB === 'matriz' && t.dataset.tab !== 'matriz' && Object.keys(PEND).length && !confirmaSaida()) return;
   TAB = t.dataset.tab;
   document.querySelectorAll('.adm-aba').forEach(x => x.classList.toggle('on', x === t));
-  ['usuarios','matriz','log'].forEach(k => $('t-' + k).classList.toggle('bp-esconde', k !== TAB));
+  ['usuarios','matriz','log','efetivo'].forEach(k => $('t-' + k).classList.toggle('bp-esconde', k !== TAB));
+  if (TAB === 'efetivo' && !EF) carregarEfetivo();
 }));
 function confirmaSaida(){ toast('Salve ou descarte as alterações da matriz antes de sair dela.', true); return false; }
 
@@ -797,6 +840,206 @@ $('ed-excluir').onclick = async () => {
   if (!$('ed-exsenha').value) return edMsg('Digite a sua senha para confirmar a exclusão.');
   const quem = ED.login;
   if (await edExec($('ed-excluir'), { op:'excluir', login: quem, senha: $('ed-exsenha').value })){ fecharEditor(); toast('Usuário ' + quem + ' excluído.'); }
+};
+
+/* ---------------------------- efetivo do BPFRON (16/11/2026) ----------------------------
+   Cadastro POLICIAIS da planilha da Diária, pelo /api/admin/efetivo. Saída do batalhão =
+   troca a OPM (a linha nunca é apagada). Ver handleAdminEfetivo no worker.js. */
+let EF = null;          // { efetivo, opms, total_cadastro, tem_contato, tem_nome }
+let PE = null;          // { modo: 'editar'|'saida'|'incluir', p }
+
+async function carregarEfetivo(){
+  $('ef-lista').innerHTML = '<div class="bp-vazio"><span class="bp-gira" style="vertical-align:-3px;margin-right:8px"></span>Lendo o cadastro de policiais…</div>';
+  try { EF = await api('/api/admin/efetivo'); renderEfetivo(); }
+  catch(e){ EF = null; $('ef-lista').innerHTML = '<div class="bp-vazio">Não consegui ler o cadastro: ' + esc(e.message) + '</div>'; }
+}
+const opmPadrao = () => (EF && EF.opms && EF.opms[0]) ? EF.opms[0].opm : 'BPFRON';
+const nomePol = (p) => [p.posto_grad, p.guerra || p.nome].filter(Boolean).join(' ') || ('RE ' + p.re);
+
+function renderEfetivo(){
+  if (!EF) return;
+  const q = norm($('ef-busca').value.trim());
+  const lista = EF.efetivo.slice().sort((a, b) => (a.guerra || a.nome).localeCompare(b.guerra || b.nome, 'pt-BR'))
+    .filter(p => !q || norm([p.re, p.nome, p.guerra, p.posto_grad, p.opm, p.contato].join(' ')).includes(q));
+  $('ef-resumo').innerHTML = `<span><b>${EF.efetivo.length}</b> policiais contam como BPFRON</span>`
+    + (EF.opms.length > 1 ? EF.opms.map(o => `<span>${esc(o.opm)}: <b>${o.n}</b></span>`).join('') : '')
+    + (q ? `<span>Mostrando <b>${lista.length}</b></span>` : '');
+  if (!lista.length){ $('ef-lista').innerHTML = '<div class="bp-vazio">' + (q ? 'Ninguém encontrado com essa busca.' : 'Nenhum policial com BPFRON na OPM.') + '</div>'; return; }
+  $('ef-lista').innerHTML = lista.map((p, i) => `<div class="adm-u" style="--i:${Math.min(i, 30)}">
+      <div class="adm-quem"><span class="adm-av">${esc(iniciais(p.guerra || p.nome))}</span><div><b>${esc(nomePol(p))}</b><code>RE ${esc(p.re)}</code>
+        <small>${esc(p.nome || '')}</small></div></div>
+      <div class="adm-chips"><span class="adm-ch" style="--c:var(--info)">${esc(p.opm)}</span>${p.contato ? `<span class="adm-ch neu">${esc(p.contato)}</span>` : ''}</div>
+      <div class="ef-acoes"><button type="button" class="bp-btn sm sec" data-ef-ed="${esc(p.re)}">${IC('editar')}Editar</button>
+        <button type="button" class="bp-btn sm perigo-l" data-ef-sai="${esc(p.re)}">${IC('sair')}Saiu do BPFRON</button></div>
+    </div>`).join('');
+}
+$('ef-busca').addEventListener('input', renderEfetivo);
+$('ef-recarregar').onclick = carregarEfetivo;
+$('ef-lista').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-ef-ed],[data-ef-sai]'); if (!b || !EF) return;
+  const re = b.dataset.efEd || b.dataset.efSai;
+  const p = EF.efetivo.find(x => x.re === re); if (!p) return;
+  abrirPol(b.dataset.efEd ? 'editar' : 'saida', p);
+});
+$('ef-novo').onclick = () => abrirPol('incluir', null);
+
+function campo(id, rot, val, extra){
+  return `<div class="bp-campo${extra && extra.inteira ? ' inteira' : ''}"><label for="${id}">${rot}</label><div class="bp-in"><input id="${id}" value="${esc(val || '')}"${extra && extra.ro ? ' readonly' : ''}${extra && extra.lista ? ' list="pe-opms"' : ''} autocomplete="off" spellcheck="false"${extra && extra.ph ? ` placeholder="${esc(extra.ph)}"` : ''}></div></div>`;
+}
+const listaOpms = () => `<datalist id="pe-opms">${(EF ? EF.opms : []).map(o => `<option value="${esc(o.opm)}">`).join('')}</datalist>`;
+function formPol(p, roRE){
+  return `<div class="adm-g2">
+      ${campo('pe-re', 'RE', p.re, { ro: roRE, ph: 'ex.: 100012345' })}
+      ${campo('pe-posto', 'Posto / graduação', p.posto_grad, { ph: 'ex.: CB QPPM' })}
+      ${campo('pe-guerra', 'Nome de guerra', p.guerra)}
+      ${campo('pe-opm', 'OPM', p.opm, { lista: true })}
+      ${campo('pe-nome', 'Nome completo', p.nome, { inteira: true })}
+      ${EF && EF.tem_contato ? campo('pe-contato', 'Telefone', p.contato, { inteira: true }) : ''}
+    </div>${listaOpms()}
+    <p style="margin:10px 2px 0;color:var(--muted);font-size:12.5px">CPF e dados bancários não aparecem aqui e não são alterados.</p>`;
+}
+const lerForm = () => {
+  const v = (id) => ($(id) ? $(id).value.trim() : undefined);
+  return { posto_grad: v('pe-posto'), guerra: v('pe-guerra'), nome: v('pe-nome'), opm: v('pe-opm'), contato: v('pe-contato') };
+};
+
+const MOTIVOS = [
+  { id: 'transf',   rot: 'Transferido para outra OPM', dica: 'Escreva a nova OPM (ex.: 2º BPM, CPE, BPTRAN).', txt: true },
+  { id: 'reserva',  rot: 'Foi para a reserva',          destino: 'RESERVA REMUNERADA' },
+  { id: 'excluido', rot: 'Licenciado / excluído da PM', destino: 'EXCLUÍDO DA CORPORAÇÃO' },
+  { id: 'falecido', rot: 'Falecido',                   destino: 'FALECIDO' },
+  { id: 'outro',    rot: 'Outro motivo',               dica: 'Escreva a situação que vai ficar no lugar da OPM.', txt: true },
+];
+
+function abrirPol(modo, p){
+  PE = { modo, p };
+  $('pe-av').textContent = p ? iniciais(p.guerra || p.nome) : '+';
+  $('pe-resumo').textContent = '';
+  const sv = $('pe-salvar'); sv.classList.remove('bp-esconde'); sv.disabled = false;
+  if (modo === 'editar'){
+    $('pe-titulo').textContent = nomePol(p);
+    $('pe-sub').textContent = 'Corrigir o cadastro · RE ' + p.re;
+    $('pe-corpo').innerHTML = `<div class="adm-tit">Cadastro</div>${formPol(p, true)}<div class="bp-msg" id="pe-msg" style="margin-top:14px"></div>`;
+    sv.innerHTML = IC('check') + 'Salvar';
+  } else if (modo === 'saida'){
+    $('pe-titulo').textContent = nomePol(p);
+    $('pe-sub').textContent = 'Saída do batalhão · RE ' + p.re + ' · hoje em ' + p.opm;
+    $('pe-corpo').innerHTML = `<div class="adm-tit">Para onde ele foi?</div>
+      <div class="ef-motivo">${MOTIVOS.map((m, i) => `<label class="adm-opt" data-m="${m.id}"><input type="radio" name="pe-mot" value="${m.id}"${i ? '' : ' checked'}><span><b>${esc(m.rot)}</b><small>${esc(m.dica || ('A OPM passa a ser "' + m.destino + '".'))}</small></span></label>`).join('')}</div>
+      <div class="bp-campo" id="pe-dest-wrap" style="margin-top:12px"><label for="pe-dest">Nova OPM / situação</label><div class="bp-in"><input id="pe-dest" autocomplete="off" spellcheck="false" placeholder="ex.: 2º BPM"></div></div>
+      <div class="bp-aviso" style="margin-top:14px">${IC('info')}<div>Ele sai da lista do efetivo na hora (pesquisas, P1, escalas). Diárias, respostas e históricos antigos não mudam. Se foi engano, use <b>Incluir policial</b> e traga ele de volta pelo RE.</div></div>
+      <div class="bp-msg" id="pe-msg" style="margin-top:14px"></div>`;
+    sv.innerHTML = IC('sair') + 'Registrar saída';
+    pintarMotivo();
+  } else {
+    $('pe-titulo').textContent = 'Incluir policial no efetivo';
+    $('pe-sub').textContent = 'Procure pelo RE ou nome no cadastro geral do estado';
+    $('pe-corpo').innerHTML = `<div class="adm-tit">Procurar no cadastro</div>
+      <div class="adm-linha" style="margin-top:0"><div class="bp-in">${IC('buscar')}<input id="pe-busca" autocomplete="off" spellcheck="false" placeholder="RE (ex.: 100012345) ou nome"></div>
+        <button type="button" class="bp-btn sec" id="pe-buscar">${IC('buscar')}Procurar</button></div>
+      <div class="ef-res" id="pe-res"></div>
+      <div id="pe-novo"></div>
+      <div class="bp-msg" id="pe-msg" style="margin-top:14px"></div>`;
+    sv.classList.add('bp-esconde');
+    $('pe-buscar').onclick = buscarCadastro;
+    $('pe-busca').addEventListener('keydown', (ev) => { if (ev.key === 'Enter'){ ev.preventDefault(); buscarCadastro(); } });
+  }
+  $('ovl-pol').classList.add('on');
+  $('ovl-pol').querySelector('.adm-gav').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const f = $(modo === 'editar' ? 'pe-posto' : modo === 'saida' ? 'pe-dest' : 'pe-busca'); if (f) f.focus(); }, 60);
+}
+function fecharPol(){ $('ovl-pol').classList.remove('on'); document.body.style.overflow = ''; PE = null; }
+$('pe-fechar').onclick = $('pe-cancelar').onclick = fecharPol;
+$('ovl-pol').addEventListener('click', (ev) => { if (ev.target === $('ovl-pol')) fecharPol(); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && $('ovl-pol').classList.contains('on')) fecharPol(); });
+const peMsg = (t, ok) => { const m = $('pe-msg'); if (m){ m.textContent = t; m.className = 'bp-msg ' + (ok ? 'ok' : 'err'); } };
+
+function motivoAtual(){ const r = document.querySelector('input[name="pe-mot"]:checked'); return MOTIVOS.find(m => m.id === (r && r.value)) || MOTIVOS[0]; }
+function pintarMotivo(){
+  const m = motivoAtual();
+  document.querySelectorAll('#pe-corpo .adm-opt[data-m]').forEach(o => o.classList.toggle('sel', o.dataset.m === m.id));
+  $('pe-dest-wrap').classList.toggle('bp-esconde', !m.txt);
+  $('pe-resumo').innerHTML = m.txt ? '' : 'OPM nova: <b>' + esc(m.destino) + '</b>';
+}
+$('pe-corpo').addEventListener('change', (ev) => { if (ev.target.name === 'pe-mot') pintarMotivo(); });
+
+async function buscarCadastro(){
+  const q = $('pe-busca').value.trim();
+  if (q.length < 3){ peMsg('Digite o RE ou pelo menos 3 letras do nome.'); return; }
+  peMsg(''); $('pe-novo').innerHTML = '';
+  $('pe-res').innerHTML = '<div class="bp-vazio"><span class="bp-gira" style="vertical-align:-3px;margin-right:8px"></span>Procurando…</div>';
+  try {
+    const d = await api('/api/admin/efetivo?busca=' + encodeURIComponent(q));
+    const achou = d.encontrados || [];
+    $('pe-res').innerHTML = achou.length ? achou.map(p => {
+      const ja = /BPFRON/i.test(p.opm);
+      return `<div class="adm-u"><div class="adm-quem"><span class="adm-av">${esc(iniciais(p.guerra || p.nome))}</span><div><b>${esc(nomePol(p))}</b><code>RE ${esc(p.re)} · ${esc(p.opm || 'sem OPM')}</code><small>${esc(p.nome || '')}</small></div></div>
+        <div>${ja ? '<span class="adm-ch" style="--c:var(--good)">Já é do BPFRON</span>' : `<button type="button" class="bp-btn sm" data-trazer="${esc(p.re)}">${IC('mais')}Trazer para o BPFRON</button>`}</div></div>`;
+    }).join('') + (d.mais ? '<div class="adm-leg">Há mais resultados: refine a busca.</div>' : '')
+      : '<div class="bp-vazio">Não está no cadastro.</div>';
+    $('pe-res').querySelectorAll('[data-trazer]').forEach(b => b.onclick = () => trazer(achou.find(x => x.re === b.dataset.trazer), b));
+    if (!achou.length || /^[\d.\-\s]+$/.test(q)){
+      const reNovo = /^[\d.\-\s]+$/.test(q) ? q.replace(/\D/g, '') : '';
+      $('pe-novo').innerHTML = `<div class="adm-zona"><h4>${achou.length ? 'É outra pessoa?' : 'Cadastrar policial novo'}</h4>
+        <p>${achou.length ? 'Se nenhum dos encontrados é quem você procura, cadastre aqui.' : 'Ele não está no cadastro de policiais. Preencha para incluir no efetivo.'}</p>
+        <div style="margin-top:10px">${formPol({ re: reNovo, opm: opmPadrao() }, false)}</div>
+        <div class="adm-linha"><button type="button" class="bp-btn" id="pe-criar">${IC('check')}Cadastrar no efetivo</button></div></div>`;
+      $('pe-criar').onclick = criarPol;
+    }
+  } catch(e){ $('pe-res').innerHTML = ''; peMsg(e.message); }
+}
+
+async function trazer(p, btn){
+  if (!p) return;
+  btn.disabled = true;
+  try {
+    await api('/api/admin/efetivo', { op: 'editar', re: p.re, dados: { opm: opmPadrao() } });
+    fecharPol(); toast(nomePol(p) + ' voltou para o efetivo do BPFRON (' + opmPadrao() + ').');
+    carregarEfetivo();
+  } catch(e){ peMsg(e.message); btn.disabled = false; }
+}
+async function criarPol(){
+  const re = ($('pe-re').value || '').replace(/\D/g, '');
+  const dados = lerForm();
+  if (re.length < 5) return peMsg('Informe o RE completo.');
+  if (!dados.guerra && !dados.nome) return peMsg('Informe o nome de guerra ou o nome completo.');
+  if (!dados.opm) return peMsg('Informe a OPM.');
+  if (!/BPFRON/i.test(dados.opm)) return peMsg('Para contar como efetivo, a OPM precisa ter "BPFRON" (ex.: ' + opmPadrao() + ').');
+  const btn = $('pe-criar'); btn.disabled = true;
+  try {
+    await api('/api/admin/efetivo', { op: 'criar', re, dados });
+    fecharPol(); toast('Policial cadastrado no efetivo.');
+    carregarEfetivo();
+  } catch(e){ peMsg(e.message); btn.disabled = false; }
+}
+
+$('pe-salvar').onclick = async () => {
+  if (!PE) return;
+  const btn = $('pe-salvar'), p = PE.p;
+  let body, okMsg;
+  if (PE.modo === 'editar'){
+    const f = lerForm(), dados = {};
+    Object.keys(f).forEach(k => { if (f[k] !== undefined && f[k] !== (p[k] || '')) dados[k] = f[k]; });
+    if (!Object.keys(dados).length){ fecharPol(); return; }
+    if (dados.opm !== undefined && !dados.opm) return peMsg('A OPM não pode ficar vazia.');
+    body = { op: 'editar', re: p.re, dados };
+    okMsg = dados.opm !== undefined && !/BPFRON/i.test(dados.opm) ? nomePol(p) + ' saiu da lista do efetivo (OPM ' + dados.opm.toUpperCase() + ').' : 'Cadastro atualizado.';
+  } else if (PE.modo === 'saida'){
+    const m = motivoAtual();
+    const destino = (m.txt ? $('pe-dest').value : m.destino).trim().toUpperCase();
+    if (destino.length < 2) return peMsg(m.id === 'transf' ? 'Escreva a nova OPM.' : 'Escreva a situação.');
+    if (/BPFRON/i.test(destino)) return peMsg('O destino não pode ter "BPFRON", senão ele continua contando como do batalhão.');
+    body = { op: 'saida', re: p.re, destino };
+    okMsg = nomePol(p) + ' saiu do efetivo (agora: ' + destino + ').';
+  } else return;
+  btn.disabled = true;
+  try {
+    await api('/api/admin/efetivo', body);
+    fecharPol(); toast(okMsg);
+    carregarEfetivo();
+  } catch(e){ peMsg(e.message); }
+  finally { btn.disabled = false; }
 };
 
 window.addEventListener('beforeunload', (ev) => { if (Object.keys(PEND).length){ ev.preventDefault(); ev.returnValue = ''; } });
