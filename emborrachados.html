@@ -1,345 +1,370 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bp-claro>
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
 <title>Pedido de Emborrachados · BPFRON/RO</title>
 <script src="conta.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:       #060912;
-  --bg2:      #0b0f1a;
-  --yellow:   #F5C518;
-  --gold:     #c9a030;
-  --text:     #dde3f0;
-  --muted:    #94a3b8;
-  --border:   rgba(245,197,24,0.10);
-  --card:     rgba(12,17,30,0.85);
-  --red:      #ef4444;
-  --redsoft:  rgba(239,68,68,.12);
-  --green:    #34d399;
-}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  font-size:15.5px;
-  line-height:1.5;
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,.12) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(245,197,24,.03) 0%, transparent 40%);
-  background-attachment:fixed;
-}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg2)}
-::-webkit-scrollbar-thumb{background:#1e2535;border-radius:4px}
+/* =====================================================================
+   Pedido de Emborrachados — visual no padrão bp-ui.css (16/11/2026).
+   Só o que é DESTA página, com prefixo emb-. Cores sempre pelas
+   variáveis do bp-ui (--acc, --card, --t1…) para os 4 temas.
+   ===================================================================== */
+.emb-sec-acoes{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 
-.hdr{background:linear-gradient(100deg,#05070d 0%,#0b0f1a 55%,#0d1220 100%);border-bottom:3px solid rgba(245,197,24,.55);position:sticky;top:0;z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.8);backdrop-filter:blur(20px)}
-.hdr-inner{max-width:1080px;margin:0 auto;padding:clamp(10px,2vw,16px) clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.hdr-logo{height:46px;width:auto;object-fit:contain;flex-shrink:0;mix-blend-mode:screen;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
-.hdr-brand-text{display:flex;flex-direction:column;gap:2px}
-.hdr-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,2.4vw,21px);font-weight:700;color:#fff;letter-spacing:.2px}
-.hdr-title em{font-style:normal;color:var(--yellow);font-weight:800}
-.hdr-sub{font-size:12px;font-weight:500;color:var(--muted)}
-.hdr-back{font-size:13px;color:var(--muted);text-decoration:none}
-.hdr-back:hover{color:var(--yellow)}
-.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-#userchip{font-size:13.5px;color:var(--yellow);font-weight:600}
+/* Quadro público do pagamento (chave PIX + frete) */
+.emb-pix{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;margin-top:16px}
+.emb-pix h3{margin:0;font-family:'Rajdhani',sans-serif;font-size:22px;color:var(--t1);line-height:1.15}
+.emb-pix p{margin:6px 0 0;color:var(--t3);font-size:14px;line-height:1.6}
+.emb-pix p b{color:var(--t1)}
+.emb-pix-linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.emb-pix-ch{display:inline-flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:14px;border:1.5px dashed var(--acc-line);background:var(--surf2)}
+.emb-pix-ch code{font-family:ui-monospace,Consolas,monospace;font-size:17px;font-weight:700;color:var(--t1);letter-spacing:.3px}
+.emb-frete{margin-top:12px;display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:14px;background:var(--info-soft);border:1px solid var(--info-line);color:var(--t3);font-size:13.5px;line-height:1.55}
+.emb-frete .bp-i{color:var(--info);width:19px;height:19px;margin-top:1px}
+.emb-frete b{color:var(--t1)}
 
-.wrap{max-width:920px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,4vw,24px) 70px}
-.btn-sair{background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.35);color:#cbd5e1;border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
-.btn-sair:hover{background:rgba(148,163,184,.22)}
-
-/* ---------- Pedido de Emborrachados ---------- */
-.emb-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;margin-bottom:12px}
-.emb-hint{font-size:12.5px;color:var(--muted,#94a3b8);max-width:640px;line-height:1.5}
-.emb-btn{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.42);color:var(--yellow,#F5C518);border-radius:9px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
-.emb-btn:hover{background:rgba(245,197,24,.24)}
-.emb-btn.ghost{background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.35);color:#cbd5e1}
-.emb-btn.ghost:hover{background:rgba(148,163,184,.2)}
-
-.emb-faixa-ttl{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--yellow,#F5C518);letter-spacing:.5px}
-.emb-faixa-ttl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(245,197,24,.35),transparent)}
-.emb-faixa-ttl .cnt{font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;color:var(--muted,#94a3b8);letter-spacing:0}
-
-.emb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.emb-card{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
-.emb-card:hover{border-color:rgba(245,197,24,.45);transform:translateY(-2px)}
-.emb-card.has{border-color:var(--yellow,#F5C518);box-shadow:0 0 0 1px rgba(245,197,24,.3)}
-.emb-thumb{position:relative;aspect-ratio:1/1;background:#0b1220 center/contain no-repeat;display:flex;align-items:center;justify-content:center}
-.emb-thumb img{width:100%;height:100%;object-fit:contain;padding:10px}
-.emb-badge{position:absolute;top:8px;right:8px;background:rgba(11,18,32,.88);border:1px solid rgba(245,197,24,.5);color:var(--yellow,#F5C518);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.3px}
-.emb-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;flex:1}
-.emb-nome{font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.35;flex:1}
-.emb-step{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(148,163,184,.08);border:1px solid var(--border,#334155);border-radius:9px;padding:4px}
-.emb-step button{width:30px;height:28px;border-radius:7px;border:none;background:rgba(245,197,24,.16);color:var(--yellow,#F5C518);font-size:16px;font-weight:800;cursor:pointer;line-height:1}
-.emb-step button:hover{background:rgba(245,197,24,.3)}
+/* Catálogo */
+.emb-faixa-ttl{display:flex;align-items:center;gap:10px;margin:24px 0 12px;font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:var(--acc);letter-spacing:.4px}
+.emb-faixa-ttl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--acc-line),transparent)}
+.emb-faixa-ttl .cnt{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0}
+.emb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px}
+.emb-card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .25s,transform .25s var(--ease),box-shadow .25s}
+.emb-card:hover{border-color:var(--acc-line);transform:translateY(-3px);box-shadow:var(--sh2)}
+.emb-card.has{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-line),var(--sh2)}
+.emb-thumb{position:relative;aspect-ratio:1/1;background:radial-gradient(circle at 50% 42%,var(--surf2),var(--surf));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}
+.emb-thumb img{width:100%;height:100%;object-fit:contain;padding:12px}
+.emb-badge{position:absolute;top:10px;right:10px;background:var(--surf);border:1px solid var(--acc-line);color:var(--acc);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;letter-spacing:.2px}
+.emb-body{padding:12px;display:flex;flex-direction:column;gap:10px;flex:1}
+.emb-nome{font-size:14px;font-weight:700;color:var(--t1);line-height:1.35;flex:1}
+.emb-step{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surf2);border:1px solid var(--line2);border-radius:12px;padding:4px}
+.emb-step button{width:38px;height:34px;border-radius:9px;border:0;background:var(--acc-soft);color:var(--acc);font-size:19px;font-weight:800;cursor:pointer;line-height:1}
+.emb-step button:hover{background:color-mix(in srgb,var(--acc) 26%,transparent)}
 .emb-step button:disabled{opacity:.3;cursor:not-allowed}
-.emb-step .q{flex:1;text-align:center;font-size:14px;font-weight:800;color:#e2e8f0}
+.emb-step .q{flex:1;text-align:center;font-size:15px;font-weight:800;color:var(--t1)}
 
-/* Carrinho / formulário */
-/* Fundo OPACO de propósito: --card é rgba(...,0.85) e, como o carrinho
-   flutua por cima do catálogo, os cards apareciam através dele. */
-.emb-cart{position:sticky;bottom:0;z-index:30;margin-top:20px;background:#0c111e;border:1px solid rgba(245,197,24,.4);border-radius:14px;box-shadow:0 -8px 28px rgba(0,0,0,.6);overflow:hidden}
-.emb-cart-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 16px;background:#161c2b;border-bottom:1px solid rgba(245,197,24,.2)}
-.emb-cart-ttl{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow,#F5C518);letter-spacing:.5px}
-.emb-cart-tot{margin-left:auto;font-size:15px;font-weight:800;color:#6ee7b7}
-.emb-cart-body{padding:14px 16px}
-.emb-lista{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
-.emb-chip{display:inline-flex;align-items:center;gap:7px;background:rgba(148,163,184,.1);border:1px solid var(--border,#334155);border-radius:999px;padding:4px 6px 4px 11px;font-size:11.5px;color:#cbd5e1}
-.emb-chip b{color:#e2e8f0}
-.emb-chip button{border:none;background:rgba(248,113,113,.16);color:#fca5a5;border-radius:50%;width:19px;height:19px;font-size:12px;line-height:1;cursor:pointer}
-.emb-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end}
-.emb-fg{display:flex;flex-direction:column;gap:4px}
-.emb-fg label{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#94a3b8)}
-.emb-fg input{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 11px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:13px;outline:none}
-.emb-fg input:focus{border-color:rgba(245,197,24,.6)}
-.emb-fg small{font-size:10.5px;color:#6ee7b7;min-height:13px}
-.emb-send{background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:10px;padding:11px 20px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;letter-spacing:.3px}
-.emb-send:disabled{opacity:.45;cursor:not-allowed}
-.emb-msg{margin-top:10px;font-size:12.5px;min-height:16px}
-.emb-msg.err{color:#fca5a5}
-.emb-msg.ok{color:#6ee7b7}
-
-.emb-ok{text-align:center;padding:44px 20px;background:var(--card,#111c2e);border:1px solid rgba(16,185,129,.4);border-radius:14px}
-.emb-ok .num{font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:800;color:#6ee7b7;line-height:1}
-.emb-state{text-align:center;padding:50px 20px;color:var(--muted,#94a3b8);font-size:13.5px}
-
-/* Gestão dos pedidos (só logado) */
-/* Buscar / editar o próprio pedido */
-.emb-busca-box{background:var(--card,#111c2e);border:1px solid rgba(96,165,250,.4);border-radius:14px;padding:15px 17px;margin-bottom:16px;animation:vgIn .18s ease-out}
-.emb-busca-ttl{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#93c5fd;letter-spacing:.5px;margin-bottom:4px}
-.emb-busca-hint{font-size:12.5px;color:var(--muted,#94a3b8);margin-bottom:12px}
-.emb-busca-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end;max-width:620px}
-.emb-ped{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(148,163,184,.07);border:1px solid var(--border,#334155);border-radius:11px;padding:11px 13px;margin-top:10px}
-.emb-ped b{color:#e2e8f0}
-.emb-ped .det{flex:1;min-width:200px;font-size:12.5px;color:#cbd5e1;line-height:1.55}
-.emb-ped .st{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:999px}
-.emb-ped .st.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
-.emb-ped .st.lock{background:rgba(148,163,184,.16);color:#cbd5e1}
-#emb-edit-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.45);border-radius:11px;padding:10px 15px;margin-bottom:14px;font-size:13px;color:#bfdbfe}
-#emb-edit-bar b{color:#fff}
-#emb-aviso{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:11px;padding:11px 14px;margin-bottom:12px;font-size:13px;color:#fcd34d;line-height:1.5}
-#emb-aviso b{color:#fff}
-
-.emb-gest{margin-top:18px}
-.emb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
-.emb-kpi{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:12px;padding:12px 14px}
-.emb-kpi .v{font-family:'Rajdhani',sans-serif;font-size:25px;font-weight:800;color:var(--yellow,#F5C518);line-height:1.1}
-.emb-kpi .l{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#94a3b8);margin-top:3px}
-.emb-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
-.emb-tbl th{text-align:left;padding:9px 10px;background:rgba(148,163,184,.08);color:var(--muted,#94a3b8);font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border,#334155);white-space:nowrap}
-.emb-tbl td{padding:9px 10px;border-bottom:1px solid rgba(51,65,85,.5);color:#cbd5e1;vertical-align:top}
-.emb-tbl tr:hover td{background:rgba(245,197,24,.04)}
-.emb-wrap{background:var(--card,#111c2e);border:1px solid var(--border,#334155);border-radius:14px;overflow:auto;max-height:60vh}
-/* No desktop o carrinho fica sempre aberto; o botão de expandir não existe. */
-.emb-cart-abrir{display:none}
-
-/* Cor do emborrachado (05/10/2026): 3 bolinhas no card, a escolhida manda no +/− */
+/* Cor do emborrachado: 3 bolinhas no card, a escolhida manda no +/− */
 .sw{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.35);vertical-align:-1px;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .sw-verde{background:linear-gradient(135deg,#3f4a1f,#6b7a3a 55%,#4d5a2a)}
 .sw-preto{background:linear-gradient(135deg,#0d0d0d 50%,#8a8f98 50%)}
 .sw-colorido{background:conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7,#ef4444)}
 .sw-nada{background:repeating-linear-gradient(45deg,#475569 0 3px,#1e293b 3px 6px)}
 .emb-cores{display:flex;align-items:center;gap:7px}
-.emb-cor{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.emb-cor .sw{width:20px;height:20px}
-.emb-cor.on{border-color:var(--yellow)}
+.emb-cor{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,transform .2s}
+.emb-cor:hover{transform:scale(1.08)}
+.emb-cor .sw{width:21px;height:21px}
+.emb-cor.on{border-color:var(--acc)}
 .emb-cores.pisca .emb-cor{animation:embPisca .5s ease 2}
 @keyframes embPisca{50%{transform:scale(1.25)}}
-.emb-cor-lbl{font-size:11px;color:var(--muted);line-height:1.3;min-height:14px}
-.emb-cor-lbl.on{color:#e2e8f0;font-weight:600}
-.emb-cor-lbl.err{color:#fca5a5;font-weight:700}
-.emb-cor-res{font-size:10.5px;color:#6ee7b7;line-height:1.35;min-height:13px}
+.emb-cor-lbl{font-size:12px;color:var(--muted);line-height:1.3;min-height:15px;margin-top:3px}
+.emb-cor-lbl.on{color:var(--t1);font-weight:600}
+.emb-cor-lbl.err{color:var(--crit);font-weight:700}
+.emb-cor-res{font-size:11.5px;color:var(--good);line-height:1.35;min-height:13px}
 .emb-tag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.emb-chip select{background:#0b1220;border:1px solid #f87171;color:#fca5a5;border-radius:7px;font-size:11px;padding:2px 4px}
 
-/* Pagamento (PIX + comprovante) */
-.emb-modal{position:fixed;inset:0;z-index:200;background:rgba(2,6,15,.78);display:flex;align-items:flex-start;justify-content:center;padding:clamp(10px,4vh,40px) 12px;overflow-y:auto}
-.emb-modal-box{position:relative;width:100%;max-width:520px;background:#0c111e;border:1px solid rgba(245,197,24,.45);border-radius:16px;padding:20px 18px 18px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
-.emb-modal-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(148,163,184,.12);color:#e2e8f0;font-size:15px;cursor:pointer}
-.emb-pag-ttl{font-family:'Rajdhani',sans-serif;font-size:21px;font-weight:700;color:var(--yellow);margin-bottom:2px;padding-right:36px}
-.emb-pag-valor{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:800;color:#6ee7b7;line-height:1.1;margin:6px 0 12px}
-.emb-passo{border-top:1px solid rgba(148,163,184,.18);padding-top:12px;margin-top:12px}
-.emb-passo h4{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#93c5fd;margin-bottom:8px}
-.emb-chave{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#111827;border:1px dashed rgba(245,197,24,.5);border-radius:11px;padding:10px 12px}
-.emb-chave code{flex:1;min-width:180px;font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#fff;word-break:break-all}
-.emb-pix-info{font-size:12.5px;color:#cbd5e1;margin-top:8px;line-height:1.55}
-.emb-pix-cc{width:100%;min-height:62px;background:#0b1220;border:1px solid var(--border);border-radius:9px;color:#cbd5e1;font-family:ui-monospace,Consolas,monospace;font-size:11px;padding:8px;resize:none;margin-bottom:8px}
-.emb-qr{display:flex;justify-content:center;padding:12px;background:#fff;border-radius:10px;margin-top:8px;width:fit-content;margin-left:auto;margin-right:auto}
-.emb-file{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.emb-file label{display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.45);color:#bfdbfe;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}
-.emb-file input{display:none}
-.emb-file .nome{font-size:12px;color:#cbd5e1;word-break:break-all;flex:1;min-width:120px}
-.emb-pagst{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.emb-pagst.nao{background:rgba(251,191,36,.14);color:#fcd34d}
-.emb-pagst.env{background:rgba(96,165,250,.16);color:#93c5fd}
-.emb-pagst.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
+/* Carrinho: fundo OPACO de propósito (flutua por cima do catálogo) */
+.emb-cart{position:sticky;bottom:12px;z-index:25;margin-top:22px;background:var(--surf);border:1px solid var(--acc-line);border-radius:20px;box-shadow:var(--sh);overflow:hidden}
+.emb-cart-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--surf2);border-bottom:1px solid var(--line)}
+.emb-cart-ttl{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--t1);letter-spacing:.3px}
+#emb-cart-qtd{font-size:12.5px;color:var(--muted)}
+.emb-cart-tot{margin-left:auto;font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--good)}
+.emb-cart-body{padding:14px 16px 16px}
+.emb-cart-abrir{display:none}
+.emb-lista{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.emb-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:5px 6px 5px 12px;font-size:12.5px;color:var(--t3)}
+.emb-chip b{color:var(--t1)}
+.emb-chip button{border:0;background:var(--crit-soft);color:var(--crit);border-radius:50%;width:21px;height:21px;font-size:12px;line-height:1;cursor:pointer}
+.emb-chip select{background:var(--surf);border:1px solid var(--crit-line);color:var(--crit);border-radius:8px;font-size:12px;padding:2px 4px}
+
+/* Campos (formulário do pedido, busca, login, gestor) */
+.emb-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
+.emb-fg{display:flex;flex-direction:column;gap:6px;min-width:0}
+.emb-fg label{font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+.emb-fg input,.emb-fg select,.emb-fg textarea{width:100%;background:var(--surf2);border:1px solid var(--line2);border-radius:13px;padding:12px 13px;min-height:48px;color:var(--t1);font:inherit;font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s}
+.emb-fg textarea{min-height:0;resize:vertical}
+.emb-fg select option{background:var(--surf);color:var(--t1)}
+.emb-fg input:focus,.emb-fg select:focus,.emb-fg textarea:focus{border-color:var(--acc-line);box-shadow:0 0 0 4px var(--acc-soft)}
+.emb-fg small{font-size:12px;color:var(--good);min-height:14px}
+.emb-msg{margin-top:10px;font-size:14px;line-height:1.5;color:var(--muted)}
+.emb-msg:empty{display:none}
+.emb-msg.err{color:var(--crit)}
+.emb-msg.ok{color:var(--good)}
+
+/* Telas de resultado e "carregando" */
+.emb-ok{text-align:center;padding:40px 20px;background:var(--card);border:1px solid var(--good-line);border-radius:22px;animation:bp-sobe .5s var(--ease) both}
+.emb-ok .ic{width:64px;height:64px;margin:0 auto 10px;border-radius:20px;display:grid;place-items:center;background:var(--good-soft);border:1px solid var(--good-line);color:var(--good)}
+.emb-ok .ic .bp-i{width:32px;height:32px}
+.emb-ok .rot{font-size:12.5px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;font-weight:800}
+.emb-ok .num{font-family:'Rajdhani',sans-serif;font-size:48px;font-weight:700;color:var(--good);line-height:1.05}
+.emb-ok p{color:var(--t3);font-size:14.5px;margin:12px auto 0;max-width:470px;line-height:1.55}
+.emb-ok .val{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:var(--t1);margin-top:6px}
+.emb-ok .bts{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:18px}
+.emb-ok.crit{border-color:var(--crit-line)}.emb-ok.crit .ic{background:var(--crit-soft);border-color:var(--crit-line);color:var(--crit)}.emb-ok.crit .num{color:var(--crit)}
+.emb-state{padding:34px 20px;border-radius:18px;border:1px dashed var(--line2);color:var(--muted);text-align:center;font-size:14px;line-height:1.6;background:var(--card)}
+
+/* Caixas que abrem no topo (login do gestor, meu pedido) */
+.emb-busca-box{margin-top:16px;animation:bp-sobe .35s var(--ease) both}
+.emb-busca-cab{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.emb-busca-ttl{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.15}
+.emb-busca-hint{font-size:13.5px;color:var(--muted);line-height:1.55}
+.emb-busca-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;max-width:640px;margin-top:12px}
+.emb-ped{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;background:var(--surf2);border:1px solid var(--line2);border-radius:16px;padding:14px;margin-top:12px}
+.emb-ped .det{flex:1;min-width:210px;font-size:13.5px;color:var(--t3);line-height:1.6}
+.emb-ped .det b{color:var(--t1)}
+.emb-ped .acoes{display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:200px}
+.emb-ped .st{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line2)}
+.emb-ped .st.ok{background:var(--good-soft);color:var(--good);border-color:var(--good-line)}
+.emb-ped .st.lock{background:var(--surf);color:var(--muted)}
+.emb-conta{display:inline-grid;grid-template-columns:auto auto;gap:2px 14px;margin-top:6px;padding:8px 12px;border-radius:12px;background:var(--surf);border:1px solid var(--line);font-size:13px}
+.emb-conta span{color:var(--muted)}
+.emb-conta b{text-align:right}
+.emb-conta .tot{color:var(--t1);font-weight:800}
+.emb-conta b.tot{color:var(--good)}
+#emb-edit-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+#emb-aviso{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:15px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;color:var(--t3);line-height:1.5}
+#emb-aviso b{color:var(--t1)}
+
+/* Gestão */
+.emb-kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.emb-kpis .bp-num .v{font-size:27px}
+.emb-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.emb-tbl th{position:sticky;top:0;z-index:1;text-align:left;padding:10px 11px;background:var(--surf2);color:var(--muted);font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-bottom:1px solid var(--line2);white-space:nowrap}
+.emb-tbl td{padding:10px 11px;border-bottom:1px solid var(--line);color:var(--t3);vertical-align:top}
+.emb-tbl td b{color:var(--t1)}
+.emb-tbl tr:hover td{background:var(--acc-soft)}
+.emb-wrap{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:auto;max-height:62vh}
+.emb-foto{width:56px;height:56px;object-fit:contain;background:var(--surf2);border-radius:10px;border:1px solid var(--line)}
+.emb-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:16px 0 0}
+.emb-barra select{background:var(--surf2);border:1px solid var(--line2);color:var(--t1);border-radius:11px;padding:9px 10px;font:inherit;font-size:13.5px}
+.emb-barra .lbl{font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.emb-barra .cnt{font-size:13px;color:var(--muted)}
+.emb-mini{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--line2);color:var(--t2);border-radius:9px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;margin:4px 4px 0 0;white-space:nowrap}
+.emb-mini:hover{border-color:var(--acc-line);color:var(--t1)}
+.emb-mini.ok{background:var(--good-soft);border-color:var(--good-line);color:var(--good)}
+.emb-mini .bp-i{width:13px;height:13px}
+.emb-cfg{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.emb-cfg[open]{border-color:var(--acc-line)}
+.emb-cfg summary{cursor:pointer;display:flex;align-items:center;gap:10px;list-style:none;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--t1)}
+.emb-cfg summary::-webkit-details-marker{display:none}
+.emb-cfg summary .st{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500;color:var(--muted)}
+.emb-cfg-corpo{margin-top:12px}
+.emb-fr-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin:12px 0;max-height:300px;overflow:auto;padding:2px}
+.emb-fr-it{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:var(--surf2);border:1px solid var(--line2);font-size:13px;color:var(--t3);cursor:pointer}
+.emb-fr-it input{width:18px;height:18px;accent-color:var(--acc);flex:none}
+.emb-fr-it b{color:var(--t1)}
+.emb-fr-it small{display:block;color:var(--muted);font-size:11.5px}
+.emb-fr-it .vl{margin-left:auto;font-weight:800;color:var(--acc);white-space:nowrap}
+.emb-linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* Pagamento (PIX + comprovante) — janela própria */
+.emb-modal{position:fixed;inset:0;z-index:200;background:rgba(2,6,23,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:clamp(10px,4vh,40px) 12px;overflow-y:auto}
+.emb-modal-box{position:relative;width:100%;max-width:540px;background:var(--surf);border:1px solid var(--line2);border-radius:22px;padding:22px 20px 20px;box-shadow:var(--sh);animation:bp-sobe .35s var(--ease) both}
+.emb-modal-box::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:22px 22px 0 0;background:linear-gradient(90deg,transparent,var(--acc),transparent)}
+.emb-modal-x{position:absolute;top:12px;right:12px}
+.emb-pag-ttl{font-family:'Rajdhani',sans-serif;font-size:23px;font-weight:700;color:var(--t1);margin-bottom:2px;padding-right:44px;line-height:1.15}
+.emb-pag-rot{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-top:8px}
+.emb-pag-valor{font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;color:var(--good);line-height:1.05;margin:2px 0 6px}
+.emb-passo{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.emb-passo h4{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--info);margin:0 0 9px}
+.emb-passo h4 i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--info-soft);border:1px solid var(--info-line);font-style:normal;font-size:12px}
+.emb-chave{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surf2);border:1.5px dashed var(--acc-line);border-radius:14px;padding:10px 12px}
+.emb-chave code{flex:1;min-width:170px;font-family:ui-monospace,Consolas,monospace;font-size:17px;font-weight:700;color:var(--t1);word-break:break-all}
+.emb-pix-info{font-size:13px;color:var(--t3);margin-top:9px;line-height:1.6}
+.emb-pix-info b{color:var(--t1)}
+.emb-pix-cc{width:100%;min-height:66px;background:var(--surf2);border:1px solid var(--line2);border-radius:12px;color:var(--t3);font-family:ui-monospace,Consolas,monospace;font-size:11px;padding:9px;resize:none;margin-bottom:8px}
+.emb-qr{display:flex;justify-content:center;padding:12px;background:#fff;border-radius:12px;margin:10px auto 0;width:fit-content}
+.emb-pag-txt{font-size:13.5px;color:var(--t3);line-height:1.6}
+.emb-pag-txt b{color:var(--t1)}
+.emb-pagst{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.emb-pagst.nao{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.emb-pagst.env{background:var(--info-soft);color:var(--info);border-color:var(--info-line)}
+.emb-pagst.ok{background:var(--good-soft);color:var(--good);border-color:var(--good-line)}
 .emb-tbl .emb-pagst{white-space:normal;line-height:1.3}
 
-/* Gestão: foto na tabela, filtro dos relatórios, PIX */
-.emb-foto{width:54px;height:54px;object-fit:contain;background:#0b1220;border-radius:8px;border:1px solid var(--border)}
-.emb-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:14px}
-.emb-barra select{background:#0b1220;border:1px solid var(--border);color:#e2e8f0;border-radius:8px;padding:7px 9px;font-family:'Inter',sans-serif;font-size:12.5px}
-.emb-barra .lbl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-.emb-mini{background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.35);color:#e2e8f0;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;margin:2px 2px 0 0;white-space:nowrap}
-.emb-mini.ok{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.45);color:#6ee7b7}
-.emb-pixcfg{background:var(--card);border:1px solid rgba(245,197,24,.35);border-radius:12px;padding:12px 14px;margin-bottom:14px}
-.emb-pixcfg summary{cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--yellow)}
-.emb-fg select,.emb-fg textarea{background:var(--bg,#0b1220);border:1px solid var(--border,#334155);border-radius:9px;padding:9px 11px;color:#e2e8f0;font-family:'Inter',sans-serif;font-size:13px;outline:none}
-
 @media(max-width:760px){
-  .emb-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+  .emb-pix{grid-template-columns:1fr}
+  .emb-pix>.bp-tile{display:none}
+  .emb-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .emb-thumb img{padding:8px}
+  .emb-body{padding:10px}
   /* No celular o carrinho vira uma BARRA compacta: se abrisse inteiro
-     (chips + 4 campos empilhados) tomaria a tela toda e cobriria os
-     cards, e tocar no "+" de um card escondido fazia a página pular
-     pro rodapé. Só expande quando o policial toca em "Finalizar". */
+     tomaria a tela toda e cobriria os cards (tocar no "+" de um card
+     escondido fazia a página pular pro rodapé). Só expande em "Finalizar". */
+  .emb-cart{bottom:8px;border-radius:18px}
   .emb-cart-head{cursor:pointer;padding:10px 13px}
-  .emb-cart-ttl{font-size:15px}
-  .emb-cart-abrir{display:inline-flex;align-items:center;background:linear-gradient(135deg,#F5C518,#e0a800);border:none;border-radius:8px;padding:7px 13px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap}
-  .emb-cart-body{display:none;max-height:65vh;overflow-y:auto}
-  .emb-cart.aberto .emb-cart-body{display:block}
-  .emb-cart.aberto .emb-cart-abrir{background:rgba(148,163,184,.2);color:#e2e8f0}
-  /* 2 linhas: "🛒 Seu pedido · N unidades" / "R$ X,XX      [Finalizar]".
-     O ::after é só a quebra de linha do flex. */
-  .emb-cart-ttl{order:1}
+  .emb-cart-ttl{font-size:16px;order:1}
   #emb-cart-qtd{order:2}
   .emb-cart-head::after{content:"";order:5;flex-basis:100%;height:0}
-  .emb-cart-tot{order:8;flex:1;margin-left:0;font-size:18px}
-  .emb-cart-abrir{order:9}
+  .emb-cart-tot{order:8;flex:1;margin-left:0;font-size:22px}
+  .emb-cart-abrir{display:inline-flex;order:9}
+  .emb-cart-body{display:none;max-height:65vh;overflow-y:auto}
+  .emb-cart.aberto .emb-cart-body{display:block}
+  .emb-ped .acoes{min-width:0;width:100%}
+  .emb-modal{align-items:flex-end;padding:0}
+  .emb-modal-box{border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:94vh;overflow-y:auto}
 }
 </style>
+<!-- Novidades desta página (bp-casca.js → NOVIDADES): cada atualização visível ganha uma entrada. -->
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-16", "titulo": "Pagamento liberado e frete", "quem": "todos", "itens": [
+    "A chave PIX para pagar os emborrachados já está na página (CPF 023.483.201-00). Copie, pague e envie o comprovante por aqui mesmo.",
+    "O frete de R$ 46,75 foi dividido entre os pedidos que já estavam feitos. A sua parte já aparece somada no valor a pagar.",
+    "Para pagar: toque em \"Meu pedido · pagar\", informe o RE e os 4 últimos dígitos do telefone do pedido."
+  ] },
+  { "data": "2026-11-16", "titulo": "Visual novo", "quem": "todos", "itens": [
+    "A página ganhou o visual do site, com tema claro e escuro.",
+    "O valor de cada pedido mostra os itens, o frete e o total a pagar."
+  ] },
+  { "data": "2026-11-16", "titulo": "Frete na Área do gestor", "quem": "gestor", "itens": [
+    "Quadro \"Frete do lote\": mostra a cota de cada pedido e deixa refazer o rateio (outro valor ou outros pedidos).",
+    "Pedido cancelado depois do rateio: a cota dele aparece como \"sem dono\" para você decidir se refaz.",
+    "A tabela e o relatório dos pedidos mostram o frete e o total a pagar de cada um."
+  ] }
+]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-brand">
-      <img class="hdr-logo" src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
-      <div class="hdr-brand-text">
-        <div class="hdr-title">Pedido de <em>Emborrachados</em></div>
-        <div class="hdr-sub">Batalhão de Polícia de Fronteira e Divisas · RO</div>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <a class="hdr-back" href="index.html">⬅ Dashboard</a>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · P4</small><b>Pedido de Emborrachados</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
       <span id="userchip"></span>
-      <button class="btn-sair" id="btn-sair" style="display:none" onclick="apiLogout()" title="Encerrar sessão">⎋ Sair</button>
+      <button type="button" class="bp-btn ic sec" id="btn-sair" style="display:none" onclick="apiLogout()" title="Sair" aria-label="Sair"><i data-ic="sair"></i></button>
     </div>
   </div>
-</div>
+</header>
 
-<div class="wrap">
-<div class="emb-top">
-  <div class="emb-hint">
-    Escolha os emborrachados, a <b>cor</b> e a quantidade, preencha seu <b>RE</b>, <b>nome</b> e <b>contato</b> e envie.
-    Depois é só copiar a chave PIX, pagar e mandar o comprovante por aqui mesmo. Não precisa de senha.
-  </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="emb-btn ghost" id="emb-edit-btn" onclick="embToggleBusca()">✏️ Meu pedido · pagar</button>
-    <button class="emb-btn ghost" onclick="embRecarregar()">↻ Atualizar catálogo</button>
-    <button class="emb-btn" id="emb-gest-btn" onclick="embToggleGestao()">🔐 Área do gestor</button>
-  </div>
-</div>
+<main class="bp-wrap">
 
-<!-- Login do gestor, dentro da própria página -->
-<div id="emb-login" style="display:none">
-  <div class="emb-busca-box" style="border-color:rgba(245,197,24,.45);max-width:420px">
-    <div class="emb-busca-ttl" style="color:var(--yellow,#F5C518)">🔐 Área do gestor</div>
-    <div class="emb-busca-hint">Acesso restrito. Entre para ver todos os pedidos do batalhão.</div>
-    <form onsubmit="return embDoLogin(event)">
-      <div class="emb-fg" style="margin-bottom:10px">
-        <label>Usuário</label>
-        <input id="emb-l-user" type="text" autocomplete="username" required>
-      </div>
-      <div class="emb-fg" style="margin-bottom:10px">
-        <label>Senha</label>
-        <input id="emb-l-pass" type="password" autocomplete="current-password" required>
-      </div>
-      <div id="emb-l-erro" class="emb-msg err" style="margin:0 0 10px"></div>
-      <button class="emb-send" id="emb-l-btn" type="submit" style="width:100%">Entrar</button>
-    </form>
-  </div>
-</div>
-
-<!-- Buscar o próprio pedido: RE + 4 últimos dígitos do telefone -->
-<div id="emb-busca" style="display:none">
-  <div class="emb-busca-box">
-    <div class="emb-busca-ttl">✏️ Meu pedido: pagar, editar ou cancelar</div>
-    <div class="emb-busca-hint">Informe o <b>RE</b> e os <b>4 últimos dígitos do telefone</b> que você usou ao fazer o pedido.</div>
-    <div class="emb-busca-form">
-      <div class="emb-fg"><label>RE</label><input id="emb-b-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 95326"></div>
-      <div class="emb-fg"><label>4 últimos do telefone</label><input id="emb-b-tel" inputmode="numeric" maxlength="4" placeholder="Ex.: 7766"></div>
-      <div class="emb-fg"><label>&nbsp;</label><button class="emb-send" onclick="embBuscarPedido()">🔎 Buscar</button></div>
-    </div>
-    <div class="emb-msg" id="emb-b-msg"></div>
-    <div id="emb-b-lista"></div>
-  </div>
-</div>
-
-<!-- Faixa de aviso quando está editando um pedido existente -->
-<div id="emb-edit-bar" style="display:none">
-  <span>✏️ Você está editando o <b id="emb-edit-num"></b>. Ajuste as quantidades abaixo e confirme.</span>
-  <button class="emb-btn ghost" onclick="embSairEdicao()">✕ Sair da edição</button>
-</div>
-
-<div id="emb-catalogo"><div class="emb-state">Carregando catálogo…</div></div>
-
-<div class="emb-cart" id="emb-cart" style="display:none">
-  <div class="emb-cart-head" onclick="embCartToggle(event)">
-    <span class="emb-cart-ttl">🛒 Seu pedido</span>
-    <span id="emb-cart-qtd" style="font-size:12px;color:var(--muted,#94a3b8)"></span>
-    <span class="emb-cart-tot" id="emb-cart-tot">R$ 0,00</span>
-    <button class="emb-cart-abrir" id="emb-cart-abrir" type="button">Finalizar ▲</button>
-  </div>
-  <div class="emb-cart-body">
-    <div class="emb-lista" id="emb-lista"></div>
-    <div id="emb-aviso" style="display:none"></div>
-    <div class="emb-form">
-      <div class="emb-fg emb-so-novo">
-        <label>RE *</label>
-        <input id="emb-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 100123456" oninput="embOnRE()">
-        <small id="emb-re-info"></small>
-      </div>
-      <div class="emb-fg emb-so-novo">
-        <label>Nome completo *</label>
-        <input id="emb-nome" placeholder="Seu nome completo">
-        <small></small>
-      </div>
-      <div class="emb-fg emb-so-novo">
-        <label>Contato (WhatsApp) *</label>
-        <input id="emb-contato" inputmode="tel" maxlength="15" placeholder="(69) 99999-9999" oninput="embMaskTel(this)">
-        <small></small>
-      </div>
-      <div class="emb-fg">
-        <label>&nbsp;</label>
-        <button class="emb-send" id="emb-send" onclick="embEnviar()">✅ Enviar pedido</button>
-        <small></small>
-      </div>
-      <div class="emb-fg emb-so-edicao" style="display:none">
-        <label>&nbsp;</label>
-        <button class="emb-btn" style="background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.45);color:#fca5a5;padding:11px 18px" onclick="embCancelarPedido()">🗑️ Cancelar pedido</button>
-        <small></small>
+  <section class="bp-heroi">
+    <div>
+      <span class="bp-selo-tx"><b></b>P4 · Loja interna do efetivo</span>
+      <h1>Pedido de <em>Emborrachados</em></h1>
+      <p>Escolha os emborrachados, a <b>cor</b> e a quantidade, informe <b>RE</b>, <b>nome</b> e <b>WhatsApp</b> e envie. Depois é só pagar no PIX e mandar o comprovante por aqui mesmo. Não precisa de senha.</p>
+      <div class="bp-bts">
+        <button type="button" class="bp-btn" onclick="embIrCatalogo()"><i data-ic="etiqueta"></i>Fazer pedido</button>
+        <button type="button" class="bp-btn sec" id="emb-edit-btn" onclick="embToggleBusca()"><i data-ic="editar"></i><span>Meu pedido · pagar</span></button>
+        <button type="button" class="bp-btn ghost" id="emb-gest-btn" onclick="embToggleGestao()"><i data-ic="cadeado"></i><span>Área do gestor</span></button>
       </div>
     </div>
-    <div class="emb-msg" id="emb-msg"></div>
-  </div>
-</div>
+    <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+  </section>
 
-<div class="emb-gest" id="emb-gestao" style="display:none"></div>
-</div>
+  <div class="bp-passos" style="margin-top:14px">
+    <div class="bp-passo" style="--i:0"><span class="bp-tile sm"><i data-ic="etiqueta"></i></span><div><span class="n">PASSO 1</span><b>Escolha modelo e cor</b><small>Toque na cor e no "+" de cada emborrachado.</small></div></div>
+    <div class="bp-passo" style="--i:1"><span class="bp-tile sm info"><i data-ic="enviar"></i></span><div><span class="n">PASSO 2</span><b>Envie o pedido</b><small>RE, nome completo e WhatsApp. Anote o nº do pedido.</small></div></div>
+    <div class="bp-passo" style="--i:2"><span class="bp-tile sm ok"><i data-ic="check"></i></span><div><span class="n">PASSO 3</span><b>Pague e mande o comprovante</b><small>PIX com o valor do pedido + frete, e o comprovante aqui.</small></div></div>
+  </div>
+
+  <!-- Pagamento: chave PIX + frete (lido do /api/emborrachados/pix) -->
+  <div id="emb-pixbox"></div>
+
+  <!-- Login do gestor, dentro da própria página -->
+  <div id="emb-login" style="display:none">
+    <div class="bp-card topo-acc emb-busca-box" style="max-width:440px">
+      <div class="emb-busca-cab"><span class="bp-tile"><i data-ic="cadeado"></i></span>
+        <div><div class="emb-busca-ttl">Área do gestor</div><div class="emb-busca-hint">Acesso restrito. Entre para ver todos os pedidos do batalhão.</div></div></div>
+      <form onsubmit="return embDoLogin(event)">
+        <div class="emb-fg" style="margin-bottom:12px">
+          <label for="emb-l-user">Usuário</label>
+          <input id="emb-l-user" type="text" autocomplete="username" required>
+        </div>
+        <div class="emb-fg" style="margin-bottom:12px">
+          <label for="emb-l-pass">Senha</label>
+          <input id="emb-l-pass" type="password" autocomplete="current-password" required>
+        </div>
+        <div id="emb-l-erro" class="emb-msg err" style="margin:0 0 10px"></div>
+        <button class="bp-btn w emb-send" id="emb-l-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Buscar o próprio pedido: RE + 4 últimos dígitos do telefone -->
+  <div id="emb-busca" style="display:none">
+    <div class="bp-card emb-busca-box" style="border-color:var(--info-line)">
+      <div class="emb-busca-cab"><span class="bp-tile info"><i data-ic="editar"></i></span>
+        <div><div class="emb-busca-ttl">Meu pedido: pagar, editar ou cancelar</div>
+        <div class="emb-busca-hint">Informe o <b>RE</b> e os <b>4 últimos dígitos do telefone</b> que você usou ao fazer o pedido.</div></div></div>
+      <div class="emb-busca-form">
+        <div class="emb-fg"><label for="emb-b-re">RE</label><input id="emb-b-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 95326" onkeydown="if(event.key==='Enter')embBuscarPedido()"></div>
+        <div class="emb-fg"><label for="emb-b-tel">4 últimos do telefone</label><input id="emb-b-tel" inputmode="numeric" maxlength="4" placeholder="Ex.: 7766" onkeydown="if(event.key==='Enter')embBuscarPedido()"></div>
+        <div class="emb-fg"><button class="bp-btn emb-send" type="button" onclick="embBuscarPedido()"><i data-ic="buscar"></i>Buscar</button></div>
+      </div>
+      <div class="emb-msg" id="emb-b-msg"></div>
+      <div id="emb-b-lista"></div>
+    </div>
+  </div>
+
+  <!-- Faixa de aviso quando está editando um pedido existente -->
+  <div id="emb-edit-bar" class="bp-aviso" style="display:none;border-color:var(--info-line);background:var(--info-soft)">
+    <i data-ic="editar"></i>
+    <div style="flex:1;min-width:200px">Você está editando o <b id="emb-edit-num"></b>. Ajuste as quantidades abaixo e confirme.</div>
+    <button type="button" class="bp-btn sm ghost" onclick="embSairEdicao()"><i data-ic="x"></i>Sair da edição</button>
+  </div>
+
+  <div class="bp-sec" id="emb-cat-sec"><span class="bp-tile"><i data-ic="etiqueta"></i></span>
+    <div><h2>Catálogo</h2><small>Preço por unidade · escolha a cor antes do "+"</small></div>
+    <div class="emb-sec-acoes"><button type="button" class="bp-btn sm ghost" onclick="embRecarregar()" title="Atualizar catálogo"><i data-ic="atualizar"></i>Atualizar</button></div>
+  </div>
+  <div id="emb-catalogo"><div class="emb-state"><span class="bp-gira"></span> Carregando catálogo…</div></div>
+
+  <div class="emb-cart" id="emb-cart" style="display:none">
+    <div class="emb-cart-head" onclick="embCartToggle(event)">
+      <span class="emb-cart-ttl">Seu pedido</span>
+      <span id="emb-cart-qtd"></span>
+      <span class="emb-cart-tot" id="emb-cart-tot">R$ 0,00</span>
+      <button class="bp-btn sm emb-cart-abrir" id="emb-cart-abrir" type="button">Finalizar ▲</button>
+    </div>
+    <div class="emb-cart-body">
+      <div class="emb-lista" id="emb-lista"></div>
+      <div id="emb-aviso" style="display:none"></div>
+      <div class="emb-form">
+        <div class="emb-fg emb-so-novo">
+          <label for="emb-re">RE *</label>
+          <input id="emb-re" inputmode="numeric" maxlength="8" placeholder="Ex.: 100123456" oninput="embOnRE()">
+          <small id="emb-re-info"></small>
+        </div>
+        <div class="emb-fg emb-so-novo">
+          <label for="emb-nome">Nome completo *</label>
+          <input id="emb-nome" placeholder="Seu nome completo">
+          <small></small>
+        </div>
+        <div class="emb-fg emb-so-novo">
+          <label for="emb-contato">Contato (WhatsApp) *</label>
+          <input id="emb-contato" inputmode="tel" maxlength="15" placeholder="(69) 99999-9999" oninput="embMaskTel(this)">
+          <small></small>
+        </div>
+        <div class="emb-fg">
+          <button class="bp-btn emb-send" id="emb-send" type="button" onclick="embEnviar()">Enviar pedido</button>
+          <small></small>
+        </div>
+        <div class="emb-fg emb-so-edicao" style="display:none">
+          <button class="bp-btn perigo-l" type="button" onclick="embCancelarPedido()"><i data-ic="lixeira"></i>Cancelar pedido</button>
+          <small></small>
+        </div>
+      </div>
+      <div class="emb-msg" id="emb-msg"></div>
+    </div>
+  </div>
+
+  <div id="emb-gestao" style="display:none"></div>
+</main>
 
 <!-- Pagamento: chave PIX + envio do comprovante -->
 <div class="emb-modal" id="emb-pag" style="display:none" onclick="if(event.target===this)embFecharPag()">
-  <div class="emb-modal-box">
-    <button class="emb-modal-x" type="button" onclick="embFecharPag()" title="Fechar">✕</button>
+  <div class="emb-modal-box" role="dialog" aria-modal="true">
+    <button class="bp-btn ic sm ghost emb-modal-x" type="button" onclick="embFecharPag()" title="Fechar" aria-label="Fechar"><i data-ic="x"></i></button>
     <div id="emb-pag-corpo"></div>
   </div>
 </div>
@@ -360,15 +385,28 @@ const AUTH = {
   get logged(){ return !!this.token; }
 };
 
+// Ícone SVG do bp-casca (texto) e redesenho dos <i data-ic> de HTML montado depois.
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+function embIcones(el){ try { if (el && window.BPCasca && BPCasca.icones) BPCasca.icones(el); } catch {} }
+function toast(msg, tipo){ if (window.BPCasca && BPCasca.toast) BPCasca.toast(msg, tipo); }
+// Troca o texto de um botão sem perder o ícone dele.
+function embRotulo(id, txt){
+  const b = document.getElementById(id); if (!b) return;
+  const s = b.querySelector('span'); if (s) s.textContent = txt; else b.textContent = txt;
+}
+
 function renderUserChip(){
   const chip = document.getElementById('userchip');
   const sair = document.getElementById('btn-sair');
-  if (chip) chip.textContent = AUTH.logged ? ('👤 ' + AUTH.user) : '';
+  if (chip){
+    const u = AUTH.user;
+    chip.innerHTML = AUTH.logged
+      ? `<span class="bp-eu" title="${embEsc(u)}"><b>${embEsc((u||'?').slice(0,2).toUpperCase())}</b><span>${embEsc(u)}</span></span>` : '';
+  }
   if (sair) sair.style.display = AUTH.logged ? '' : 'none';
 }
 
-// Núcleo do login — mesma assinatura do submitLogin do dashboard, para o
-// embDoLogin abaixo continuar idêntico ao que roda no index.html.
+// Núcleo do login — mesma assinatura do submitLogin do dashboard.
 async function submitLogin(user, pass, btn, erro){
   erro.textContent = ''; btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'Entrando...';
   try {
@@ -394,7 +432,7 @@ function apiLogout(){
   // O catálogo é público (fica); só a lista de pedidos some.
   EMB_GEST_ON = false;
   const g = document.getElementById('emb-gestao'); if (g){ g.style.display = 'none'; g.innerHTML = ''; }
-  const b = document.getElementById('emb-gest-btn'); if (b){ b.style.display = ''; b.textContent = '🔐 Área do gestor'; }
+  const b = document.getElementById('emb-gest-btn'); if (b){ b.style.display = ''; embRotulo('emb-gest-btn', 'Área do gestor'); }
   const l = document.getElementById('emb-login'); if (l) l.style.display = 'none';
   renderUserChip();
 }
@@ -431,7 +469,7 @@ function embCorNorm(s){
 function embCorTag(cor){
   const c = embCorNorm(cor);
   return c ? `<span class="emb-tag"><i class="sw ${EMB_COR_SW[c]}"></i>${embEsc(c)}</span>`
-           : `<span class="emb-tag" style="color:#fca5a5"><i class="sw sw-nada"></i>cor não informada</span>`;
+           : `<span class="emb-tag" style="color:var(--crit)"><i class="sw sw-nada"></i>cor não informada</span>`;
 }
 
 function embEsc(s){
@@ -439,6 +477,14 @@ function embEsc(s){
 }
 function embMoeda(v){
   return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+// Quanto pagar: itens + cota do frete (o Worker manda valor_pagar; página velha em cache não).
+function embAPagar(p){ return Number(p && p.valor_pagar != null ? p.valor_pagar : (p && p.valor_total)) || 0; }
+/* "Itens R$ X / Frete R$ Y / Total R$ Z" — só quando o pedido tem frete. */
+function embConta(itens, frete, cls){
+  if (!(Number(frete) > 0)) return '';
+  return `<div class="emb-conta ${cls||''}"><span>Itens</span><b>${embMoeda(itens)}</b><span>Frete (rateio)</span><b>${embMoeda(frete)}</b>` +
+         `<span class="tot">A pagar</span><b class="tot">${embMoeda(Number(itens) + Number(frete))}</b></div>`;
 }
 
 // Traduz os códigos de erro do Worker pra algo que o policial entenda.
@@ -455,17 +501,61 @@ function embErro(d, status){
 
 async function initEmborrachados(){
   // O botão do gestor fica sempre visível; sem login ele abre a caixa de senha.
-  const gb = document.getElementById('emb-gest-btn');
-  if (gb) gb.textContent = AUTH.logged
-    ? (EMB_GEST_ON ? '✕ Fechar pedidos' : '📊 Pedidos recebidos')
-    : '🔐 Área do gestor';
+  embRotulo('emb-gest-btn', AUTH.logged
+    ? (EMB_GEST_ON ? 'Fechar pedidos' : 'Pedidos recebidos')
+    : 'Área do gestor');
+  embPixBox();
   if (EMB_LOADED){ embRender(); return; }
   await embCarregarCatalogo();
 }
 
+function embIrCatalogo(){
+  const s = document.getElementById('emb-cat-sec');
+  if (s) s.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* Quadro público "como pagar": chave PIX com botão de copiar e o frete do lote. */
+async function embPixBox(){
+  const box = document.getElementById('emb-pixbox');
+  if (!box) return;
+  let pix;
+  try { pix = await embCarregarPix(); } catch { box.innerHTML = ''; return; }
+  if (!pix.configurado){ box.innerHTML = ''; return; }
+  const fr = pix.frete;
+  const cota = fr ? (fr.cota_min === fr.cota_max ? embMoeda(fr.cota_min) : `${embMoeda(fr.cota_min)} a ${embMoeda(fr.cota_max)}`) : '';
+  box.innerHTML = `
+    <div class="bp-card topo-acc emb-pix">
+      <span class="bp-tile ok"><i data-ic="ok"></i></span>
+      <div>
+        <h3>Pagamento por PIX liberado</h3>
+        <p>Quem já fez o pedido pode pagar agora. Use a chave abaixo (${embEsc(EMB_TIPO_NOME[pix.tipo] || pix.tipo)})
+          e depois mande o comprovante em <b>Meu pedido · pagar</b>.</p>
+        <div class="emb-pix-linha">
+          <span class="emb-pix-ch"><code>${embEsc(embChaveBonita(pix.tipo, pix.chave))}</code>
+            <button type="button" class="bp-btn sm" onclick="embCopiar(EMB_PIX.chave, this)">Copiar chave</button></span>
+          <button type="button" class="bp-btn sm sec" onclick="embIrPagar()"><i data-ic="enviar"></i>Pagar meu pedido</button>
+        </div>
+        ${fr ? `<div class="emb-frete"><i data-ic="info"></i><div>Frete de <b>${embMoeda(fr.total)}</b> dividido entre os
+          <b>${fr.pedidos}</b> pedido(s) já feitos: <b>${cota}</b> por pedido, já somado no valor a pagar de cada um.
+          Pedidos feitos depois do rateio não entram nesse frete.</div></div>` : ''}
+        ${pix.aviso ? `<div class="emb-frete" style="background:var(--warn-soft);border-color:var(--warn-line)"><i data-ic="alerta"></i><div>${embEsc(pix.aviso)}</div></div>` : ''}
+      </div>
+    </div>`;
+  embIcones(box);
+}
+
+// Abre a busca do próprio pedido (é por lá que se paga).
+function embIrPagar(){
+  const busca = document.getElementById('emb-busca');
+  if (busca.style.display === 'none') embToggleBusca();
+  busca.scrollIntoView({ behavior:'smooth', block:'center' });
+  const re = document.getElementById('emb-b-re');
+  (re.value ? document.getElementById('emb-b-tel') : re).focus();
+}
+
 async function embCarregarCatalogo(){
   const box = document.getElementById('emb-catalogo');
-  if (box) box.innerHTML = '<div class="emb-state">Carregando catálogo…</div>';
+  if (box) box.innerHTML = '<div class="emb-state"><span class="bp-gira"></span> Carregando catálogo…</div>';
   try{
     const r = await fetch(API_BASE + '/api/emborrachados/catalogo');
     const d = await r.json().catch(()=>({}));
@@ -474,8 +564,8 @@ async function embCarregarCatalogo(){
     EMB_LOADED = true;
     embRender();
   }catch(e){
-    if (box) box.innerHTML = '<div class="emb-state">❌ ' + embEsc((e&&e.message)||'Erro ao carregar o catálogo.') +
-      '<br><br><button class="emb-btn" onclick="embRecarregar()">↻ Tentar novamente</button></div>';
+    if (box) box.innerHTML = '<div class="emb-state" style="color:var(--crit)">' + embEsc((e&&e.message)||'Erro ao carregar o catálogo.') +
+      '<br><br><button class="bp-btn sm sec" type="button" onclick="embRecarregar()">Tentar novamente</button></div>';
   }
 }
 
@@ -518,15 +608,15 @@ function embRender(){
             <div>
               <div class="emb-cores" id="embk-${id}">
                 ${EMB_CORES.map((c, n) =>
-                  `<button type="button" class="emb-cor" data-cor="${n}" title="${c}" onclick="embEscolheCor('${id}',${n})"><i class="sw ${EMB_COR_SW[c]}"></i></button>`
+                  `<button type="button" class="emb-cor" data-cor="${n}" title="${c}" aria-label="${c}" onclick="embEscolheCor('${id}',${n})"><i class="sw ${EMB_COR_SW[c]}"></i></button>`
                 ).join('')}
               </div>
               <div class="emb-cor-lbl" id="embl-${id}">Escolha a cor</div>
             </div>
             <div class="emb-step">
-              <button onclick="embAdd('${id}',-1)">−</button>
+              <button type="button" aria-label="Menos" onclick="embAdd('${id}',-1)">−</button>
               <span class="q" id="embq-${id}">0</span>
-              <button onclick="embAdd('${id}',1)">+</button>
+              <button type="button" aria-label="Mais" onclick="embAdd('${id}',1)">+</button>
             </div>
             <div class="emb-cor-res" id="embr-${id}"></div>
           </div>
@@ -628,7 +718,7 @@ function embRenderCart(){
   cart.style.display = (itens.length || EMB_EDIT) ? '' : 'none';
   embModoCarrinho();
   if (!itens.length){
-    lista.innerHTML = '<span style="font-size:12.5px;color:#fca5a5">Nenhum item — adicione algo ou cancele o pedido.</span>';
+    lista.innerHTML = '<span style="font-size:13px;color:var(--crit)">Nenhum item — adicione algo ou cancele o pedido.</span>';
     document.getElementById('emb-cart-qtd').textContent = '';
     document.getElementById('emb-cart-tot').textContent = embMoeda(0);
     return;
@@ -642,7 +732,7 @@ function embRenderCart(){
       : `<select onchange="embTrocaCorChip('${embEsc(i.key)}', this.value)"><option value="">⚠ escolha a cor</option>` +
         EMB_CORES.map(c => `<option>${c}</option>`).join('') + '</select>';
     return `<span class="emb-chip"><b>${i.qtd}×</b> ${embEsc(i.nome)} · ${cor} · ${embMoeda(i.qtd * i.preco)}
-       <button onclick="embRemover('${embEsc(i.key)}')" title="Remover">✕</button></span>`;
+       <button type="button" onclick="embRemover('${embEsc(i.key)}')" title="Remover" aria-label="Remover">✕</button></span>`;
   }).join('');
   document.getElementById('emb-cart-qtd').textContent = `${itens.length} modelo(s) · ${unid} unidade(s)`;
   document.getElementById('emb-cart-tot').textContent = embMoeda(total);
@@ -666,19 +756,19 @@ function embOnRE(){
   const info = document.getElementById('emb-re-info');
   clearTimeout(EMB_RE_TIMER);
   if (el.value.length < 4){ info.textContent = ''; info.style.color = ''; return; }
-  info.textContent = 'conferindo…'; info.style.color = '#94a3b8';
+  info.textContent = 'conferindo…'; info.style.color = 'var(--muted)';
   EMB_RE_TIMER = setTimeout(async () => {
     try{
       const r = await fetch(API_BASE + '/api/emborrachados/policial?re=' + encodeURIComponent(el.value));
       const d = await r.json();
       if (d && d.encontrado){
         info.textContent = '✔ ' + [d.posto_grad, d.guerra].filter(Boolean).join(' ');
-        info.style.color = '#6ee7b7';
+        info.style.color = 'var(--good)';
         const nome = document.getElementById('emb-nome');
         if (nome && !nome.value.trim()) nome.value = d.nome || '';
       } else {
         info.textContent = 'RE não encontrado no cadastro — pode preencher o nome à mão.';
-        info.style.color = '#fbbf24';
+        info.style.color = 'var(--warn)';
       }
       embAvisoPedidoAberto(d && d.pedido_aberto, el.value);
     }catch{ info.textContent = ''; }
@@ -698,10 +788,10 @@ function embAvisoPedidoAberto(aberto, re){
     return;
   }
   box.style.display = '';
-  box.innerHTML = `<span style="flex:1;min-width:220px">⚠️ Você já tem o <b>pedido nº ${embEsc(aberto.pedido)}</b>
-      (${embEsc(aberto.data)}) aguardando. Cada policial pode ter um pedido por vez —
+  box.innerHTML = `<span style="flex:1;min-width:220px">Você já tem o <b>pedido nº ${embEsc(aberto.pedido)}</b>
+      ${aberto.data ? '(' + embEsc(aberto.data) + ')' : ''} aguardando. Cada policial pode ter um pedido por vez —
       edite aquele para acrescentar ou trocar itens.</span>
-    <button class="emb-btn" onclick="embIrEditar('${embEsc(re)}')">✏️ Editar o pedido nº ${embEsc(aberto.pedido)}</button>`;
+    <button type="button" class="bp-btn sm" onclick="embIrEditar('${embEsc(re)}')">Editar o pedido nº ${embEsc(aberto.pedido)}</button>`;
   if (btn) btn.disabled = true;
 }
 
@@ -709,7 +799,7 @@ function embAvisoPedidoAberto(aberto, re){
 function embIrEditar(re){
   const busca = document.getElementById('emb-busca');
   busca.style.display = '';
-  document.getElementById('emb-edit-btn').textContent = '✕ Fechar';
+  embRotulo('emb-edit-btn', 'Fechar');
   document.getElementById('emb-b-re').value = re || '';
   document.getElementById('emb-b-tel').value = '';
   busca.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -733,8 +823,8 @@ async function embEnviar(){
   const semCor = itens.filter(i => !i.cor);
   if (semCor.length)          { msg.textContent = 'Escolha a cor de: ' + semCor.map(i => i.nome).join(', ') + '.'; return; }
 
-  const old = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Enviando…';
+  const old = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Enviando…';
   msg.className = 'emb-msg'; msg.textContent = '';
   try{
     const r = await fetch(API_BASE + '/api/emborrachados/pedido', {
@@ -756,7 +846,7 @@ async function embEnviar(){
     msg.className = 'emb-msg err';
     msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao enviar o pedido.');
   }finally{
-    btn.disabled = false; btn.textContent = old;
+    btn.disabled = false; btn.innerHTML = old;
   }
 }
 
@@ -764,25 +854,25 @@ function embSucesso(d, nome, ident){
   EMB_CART = {}; EMB_COR_SEL = {};
   document.getElementById('emb-cart').style.display = 'none';
   // Guardado pro botão de pagar desta tela (o policial ainda não saiu da página).
-  EMB_ULTIMO = { pedido: String(d.pedido), valor: d.valor_total, re: ident.re, tel4: ident.tel4 };
+  EMB_ULTIMO = { pedido: String(d.pedido), valor: embAPagar(d), itens: d.valor_total, frete: d.frete || 0, re: ident.re, tel4: ident.tel4 };
   const box = document.getElementById('emb-catalogo');
   box.innerHTML = `
     <div class="emb-ok">
-      <div style="font-size:46px;margin-bottom:6px">✅</div>
-      <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido registrado</div>
+      <div class="ic">${IC('check')}</div>
+      <div class="rot">Pedido registrado</div>
       <div class="num">Nº ${embEsc(d.pedido)}</div>
-      <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">
-        Obrigado, <b>${embEsc(nome.split(' ')[0])}</b>! Foram registradas
-        <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).
-      </p>
-      <p style="color:#6ee7b7;font-size:19px;font-weight:800;margin-bottom:6px">${embMoeda(d.valor_total)}</p>
-      <p style="color:#94a3b8;font-size:12px">${embEsc(d.data)} · anote o número do pedido.</p>
-      <button class="emb-send" style="margin-top:18px" onclick="embAbrirPagamento(EMB_ULTIMO)">💳 Pagar com PIX e enviar o comprovante</button>
-      <p style="color:#94a3b8;font-size:12px;margin-top:10px;max-width:460px;margin-left:auto;margin-right:auto">
-        Se preferir pagar depois, entre em <b>✏️ Meu pedido · pagar</b> com o seu RE e os 4 últimos dígitos do telefone.
-      </p>
-      <button class="emb-btn ghost" style="margin-top:14px" onclick="embNovoPedido()">➕ Fazer outro pedido</button>
+      <p>Obrigado, <b>${embEsc(nome.split(' ')[0])}</b>! Foram registradas
+        <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).</p>
+      <div class="val">${embMoeda(embAPagar(d))}</div>
+      ${embConta(d.valor_total, d.frete)}
+      <p style="font-size:12.5px;color:var(--muted);margin-top:6px">${embEsc(d.data)} · anote o número do pedido.</p>
+      <div class="bts">
+        <button class="bp-btn" type="button" onclick="embAbrirPagamento(EMB_ULTIMO)">${IC('enviar')}Pagar com PIX e enviar o comprovante</button>
+        <p style="font-size:12.5px;color:var(--muted);margin:0">Se preferir pagar depois, entre em <b>Meu pedido · pagar</b> com o seu RE e os 4 últimos dígitos do telefone.</p>
+        <button class="bp-btn ghost sm" type="button" onclick="embNovoPedido()">${IC('mais')}Fazer outro pedido</button>
+      </div>
     </div>`;
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 let EMB_ULTIMO = null;
 
@@ -804,21 +894,22 @@ async function embToggleGestao(){
     const lg = document.getElementById('emb-login');
     const abrir = lg.style.display === 'none';
     lg.style.display = abrir ? '' : 'none';
-    document.getElementById('emb-gest-btn').textContent = abrir ? '✕ Fechar' : '🔐 Área do gestor';
+    embRotulo('emb-gest-btn', abrir ? 'Fechar' : 'Área do gestor');
     if (abrir) document.getElementById('emb-l-user').focus();
     return;
   }
   const box = document.getElementById('emb-gestao');
   EMB_GEST_ON = !EMB_GEST_ON;
   box.style.display = EMB_GEST_ON ? '' : 'none';
-  document.getElementById('emb-gest-btn').textContent = EMB_GEST_ON ? '✕ Fechar pedidos' : '📊 Pedidos recebidos';
+  embRotulo('emb-gest-btn', EMB_GEST_ON ? 'Fechar pedidos' : 'Pedidos recebidos');
   if (!EMB_GEST_ON) return;
-  box.innerHTML = '<div class="emb-state">Carregando pedidos…</div>';
+  box.innerHTML = '<div class="emb-state" style="margin-top:20px"><span class="bp-gira"></span> Carregando pedidos…</div>';
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
   try{
     const d = await apiFetchJSON('/api/emborrachados/pedidos');
     embRenderGestao(d);
   }catch(e){
-    box.innerHTML = '<div class="emb-state">❌ ' + embEsc((e&&e.message)||'Erro ao carregar os pedidos.') + '</div>';
+    box.innerHTML = '<div class="emb-state" style="color:var(--crit)">' + embEsc((e&&e.message)||'Erro ao carregar os pedidos.') + '</div>';
   }
 }
 
@@ -834,7 +925,7 @@ async function embDoLogin(ev){
   document.getElementById('emb-l-pass').value = '';
   if (ok){
     document.getElementById('emb-login').style.display = 'none';
-    document.getElementById('emb-gest-btn').textContent = '📊 Pedidos recebidos';
+    embRotulo('emb-gest-btn', 'Pedidos recebidos');
     EMB_GEST_ON = false;
     embToggleGestao();   // já abre a lista
   }
@@ -881,35 +972,41 @@ function embRenderGestao(d){
   const resumo = embGestResumo(pedidos);
   const k = d.kpis || {};
   const kpis = [
-    ['📋', k.total_pedidos,   'Pedidos'],
-    ['👮', k.total_policiais, 'Policiais'],
-    ['🎽', k.total_unidades,  'Unidades'],
-    ['💰', embMoeda(k.valor_total), 'Valor total'],
-    ['⏳', k.pendentes,       'Pendentes'],
-    ['📎', k.com_comprovante, 'Com comprovante'],
-    ['✅', k.conferidos,      'Pag. conferido'],
+    ['pasta',    'var(--info)', k.total_pedidos,   'Pedidos'],
+    ['usuarios', 'var(--info)', k.total_policiais, 'Policiais'],
+    ['etiqueta', 'var(--acc)',  k.total_unidades,  'Unidades'],
+    ['grade',    'var(--acc)',  embMoeda(k.valor_total), 'Valor dos itens'],
+    ['carro',    'var(--info)', embMoeda(k.frete), 'Frete rateado'],
+    ['relogio',  'var(--warn)', k.pendentes,       'Pendentes'],
+    ['arquivo',  'var(--info)', k.com_comprovante, 'Com comprovante'],
+    ['ok',       'var(--good)', k.conferidos,      'Pag. conferido'],
   ];
-  let html = '<div class="emb-kpis">' + kpis.map(([ic,v,l]) =>
-    `<div class="emb-kpi"><div class="v">${ic} ${v==null?'—':(typeof v==='number'? v.toLocaleString('pt-BR') : v)}</div><div class="l">${l}</div></div>`
+  let html = '<div class="bp-sec"><span class="bp-tile"><i data-ic="grade"></i></span><div><h2>Pedidos recebidos</h2><small>Visão do P4 · ' +
+             embEsc(AUTH.user) + '</small></div><div class="emb-sec-acoes"><button type="button" class="bp-btn sm ghost" onclick="embRecarregarGestao().catch(e=>toast(e.message,\'err\'))"><i data-ic="atualizar"></i>Atualizar</button></div></div>';
+  html += '<div class="bp-nums emb-kpis">' + kpis.map(([ic, c, v, l], n) =>
+    `<div class="bp-num" style="--i:${n};--c:${c}"><i data-ic="${ic}"></i><div class="r">${l}</div><div class="v">${v==null?'—':(typeof v==='number'? v.toLocaleString('pt-BR') : v)}</div></div>`
   ).join('') + '</div>';
 
   if (d.gestor){
-    html += `<details class="emb-pixcfg" id="emb-pixcfg" ontoggle="if(this.open)embPixCfgCarregar()">
-      <summary>💳 Chave PIX para pagamento <span style="font-family:Inter;font-size:12px;color:#94a3b8;font-weight:500" id="emb-pixcfg-st"></span></summary>
-      <div class="emb-busca-hint" style="margin:10px 0">É a chave que aparece pro policial copiar ao pagar. O "copia e cola" com o valor do pedido é gerado a partir dela.</div>
-      <div class="emb-form" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-        <div class="emb-fg"><label>Tipo da chave *</label>
-          <select id="emb-cfg-tipo"><option value="">— escolha —</option>
-            ${Object.entries(EMB_TIPO_NOME).map(([v,n]) => `<option value="${v}">${n}</option>`).join('')}</select></div>
-        <div class="emb-fg"><label>Chave *</label><input id="emb-cfg-chave" placeholder="CPF, celular, e-mail…"></div>
-        <div class="emb-fg"><label>Titular da conta *</label><input id="emb-cfg-titular" maxlength="60" placeholder="Nome que aparece no banco"></div>
-        <div class="emb-fg"><label>Cidade do titular</label><input id="emb-cfg-cidade" maxlength="40" placeholder="Ex.: Porto Velho"></div>
-        <div class="emb-fg"><label>Banco</label><input id="emb-cfg-banco" maxlength="40" placeholder="Ex.: Nubank"></div>
+    html += embFreteCfgHTML(d);
+    html += `<details class="emb-cfg" id="emb-pixcfg" ontoggle="if(this.open)embPixCfgCarregar()">
+      <summary><span class="bp-tile sm"><i data-ic="chave"></i></span>Chave PIX para pagamento <span class="st" id="emb-pixcfg-st"></span></summary>
+      <div class="emb-cfg-corpo">
+        <div class="emb-busca-hint" style="margin-bottom:12px">É a chave que aparece pro policial copiar ao pagar. O "copia e cola" com o valor do pedido é gerado a partir dela.</div>
+        <div class="emb-form" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+          <div class="emb-fg"><label>Tipo da chave *</label>
+            <select id="emb-cfg-tipo"><option value="">— escolha —</option>
+              ${Object.entries(EMB_TIPO_NOME).map(([v,n]) => `<option value="${v}">${n}</option>`).join('')}</select></div>
+          <div class="emb-fg"><label>Chave *</label><input id="emb-cfg-chave" placeholder="CPF, celular, e-mail…"></div>
+          <div class="emb-fg"><label>Titular da conta *</label><input id="emb-cfg-titular" maxlength="60" placeholder="Nome que aparece no banco"></div>
+          <div class="emb-fg"><label>Cidade do titular</label><input id="emb-cfg-cidade" maxlength="40" placeholder="Ex.: Porto Velho"></div>
+          <div class="emb-fg"><label>Banco</label><input id="emb-cfg-banco" maxlength="40" placeholder="Ex.: Nubank"></div>
+        </div>
+        <div class="emb-fg" style="margin-top:12px"><label>Aviso para quem vai pagar (opcional)</label>
+          <textarea id="emb-cfg-aviso" rows="2" maxlength="300" placeholder="Ex.: pagamento até dia 20 para entrar no lote."></textarea></div>
+        <button class="bp-btn emb-send" type="button" style="margin-top:12px" onclick="embPixCfgSalvar(this)"><i data-ic="check"></i>Salvar chave PIX</button>
+        <div class="emb-msg" id="emb-cfg-msg"></div>
       </div>
-      <div class="emb-fg" style="margin-top:10px"><label>Aviso para quem vai pagar (opcional)</label>
-        <textarea id="emb-cfg-aviso" rows="2" maxlength="300" placeholder="Ex.: pagamento até dia 20 para entrar no lote de outubro."></textarea></div>
-      <button class="emb-send" type="button" style="margin-top:10px" onclick="embPixCfgSalvar(this)">💾 Salvar chave PIX</button>
-      <div class="emb-msg" id="emb-cfg-msg"></div>
     </details>`;
   }
 
@@ -918,35 +1015,36 @@ function embRenderGestao(d){
       <select onchange="EMB_GEST_FILTRO=this.value;embRenderGestao()">
         ${Object.entries(EMB_FILTROS).map(([v,[n]]) => `<option value="${v}" ${v===EMB_GEST_FILTRO?'selected':''}>${n}</option>`).join('')}
       </select>
-      <span style="font-size:12px;color:#94a3b8">${pedidos.length} pedido(s) · ${resumo.reduce((a,i)=>a+i.qtd,0)} unidade(s)</span>
+      <span class="cnt">${pedidos.length} pedido(s) · ${resumo.reduce((a,i)=>a+i.qtd,0)} unidade(s)</span>
       <span style="flex:1"></span>
-      <button class="emb-btn" type="button" onclick="embImprimirFabricante()">🏭 Relatório p/ o fabricante (com fotos)</button>
-      <button class="emb-btn ghost" type="button" onclick="embImprimirPedidos()">🧾 Relatório dos pedidos</button>
+      <button class="bp-btn sm" type="button" onclick="embImprimirFabricante()"><i data-ic="arquivo"></i>Relatório p/ o fabricante (com fotos)</button>
+      <button class="bp-btn sm sec" type="button" onclick="embImprimirPedidos()"><i data-ic="arquivo"></i>Relatório dos pedidos</button>
     </div>`;
 
-  html += '<div class="emb-faixa-ttl">📦 Total por modelo e cor <span class="cnt">o que precisa ser encomendado</span></div>';
+  html += '<div class="emb-faixa-ttl">Total por modelo e cor <span class="cnt">o que precisa ser encomendado</span></div>';
   html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
           '<th>Foto</th><th>Modelo</th><th>Cor</th><th>Preço</th><th>Qtd</th><th>Pedidos</th><th>Valor</th></tr></thead><tbody>' +
           (resumo.length ? resumo.map(i =>
-            `<tr><td>${i.id ? `<img class="emb-foto" loading="lazy" src="${embImg(i.id)}" alt="">` : '<span style="font-size:11px;color:#94a3b8">sem foto<br>(saiu do catálogo)</span>'}</td>` +
+            `<tr><td>${i.id ? `<img class="emb-foto" loading="lazy" src="${embImg(i.id)}" alt="">` : '<span style="font-size:11px;color:var(--muted)">sem foto<br>(saiu do catálogo)</span>'}</td>` +
             `<td><b>${embEsc(i.item)}</b></td><td>${embCorTag(i.cor)}</td><td>${embMoeda(i.preco)}</td>` +
-            `<td><b style="color:#F5C518;font-size:15px">${i.qtd}</b></td><td>${i.pedidos}</td><td>${embMoeda(i.valor)}</td></tr>`
-          ).join('') : '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">Nenhum pedido neste filtro.</td></tr>') +
+            `<td><b style="color:var(--acc);font-size:16px">${i.qtd}</b></td><td>${i.pedidos}</td><td>${embMoeda(i.valor)}</td></tr>`
+          ).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Nenhum pedido neste filtro.</td></tr>') +
           '</tbody></table></div>';
 
-  html += '<div class="emb-faixa-ttl">🧾 Pedidos <span class="cnt">mais recentes primeiro</span></div>';
+  html += '<div class="emb-faixa-ttl">Pedidos <span class="cnt">mais recentes primeiro</span></div>';
   html += '<div class="emb-wrap"><table class="emb-tbl"><thead><tr>' +
-          '<th>Nº</th><th>Data</th><th>RE</th><th>Nome</th><th>Contato</th><th>Itens</th><th>Un.</th><th>Valor</th><th>Status</th><th>Pagamento</th>' +
+          '<th>Nº</th><th>Data</th><th>RE</th><th>Nome</th><th>Contato</th><th>Itens</th><th>Un.</th><th>A pagar</th><th>Status</th><th>Pagamento</th>' +
           '</tr></thead><tbody>' +
           pedidos.map(p => {
             const conferido = /^conferido$/i.test(String(p.pagamento||'').trim());
             const acoes = d.gestor && p.tem_comprovante
               ? '<br>' + (p.comprovantes||[]).map((c, n) =>
-                  `<button class="emb-mini" type="button" onclick="embVerComprovante('${embEsc(c)}', this)">📎 Ver${p.comprovantes.length>1?' '+(n+1):''}</button>`).join('') +
+                  `<button class="emb-mini" type="button" onclick="embVerComprovante('${embEsc(c)}', this)">${IC('olho')}Ver${p.comprovantes.length>1?' '+(n+1):''}</button>`).join('') +
                 (conferido
-                  ? `<button class="emb-mini" type="button" onclick="embConferir('${embEsc(p.pedido)}', false, this)">↩ Desfazer</button>`
-                  : `<button class="emb-mini ok" type="button" onclick="embConferir('${embEsc(p.pedido)}', true, this)">✔ Conferir</button>`)
+                  ? `<button class="emb-mini" type="button" onclick="embConferir('${embEsc(p.pedido)}', false, this)">${IC('voltar')}Desfazer</button>`
+                  : `<button class="emb-mini ok" type="button" onclick="embConferir('${embEsc(p.pedido)}', true, this)">${IC('check')}Conferir</button>`)
               : '';
+            const fr = Number(p.frete) || 0;
             return `<tr>
                <td><b>${embEsc(p.pedido)}</b></td>
                <td style="white-space:nowrap">${embEsc(p.data)}</td>
@@ -955,20 +1053,112 @@ function embRenderGestao(d){
                <td style="white-space:nowrap">${embEsc(p.contato)}</td>
                <td>${(p.itens||[]).map(i => `${i.qtd}× ${embEsc(i.item)} · ${embCorTag(i.cor)}`).join('<br>')}</td>
                <td>${p.unidades}</td>
-               <td style="white-space:nowrap">${embMoeda(p.valor_total)}</td>
+               <td style="white-space:nowrap"><b>${embMoeda(embAPagar(p))}</b>${fr > 0
+                 ? `<div style="font-size:11px;color:var(--muted)">itens ${embMoeda(p.valor_total)}<br>+ frete ${embMoeda(fr)}</div>` : ''}</td>
                <td>${embEsc(p.status)}</td>
-               <td style="min-width:120px">${embPagStatus(p)}${p.pago_em ? `<div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${embEsc(p.pago_em)}</div>` : ''}${acoes}</td>
+               <td style="min-width:130px">${embPagStatus(p)}${p.pago_em ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">${embEsc(p.pago_em)}</div>` : ''}${acoes}</td>
              </tr>`;
           }).join('') + '</tbody></table></div>';
   if (!d.gestor){
-    html += '<div class="emb-busca-hint" style="margin-top:10px">Para abrir os comprovantes, conferir pagamentos e cadastrar a chave PIX, o login precisa da permissão <b>"Pedido de Emborrachados"</b> no Painel de Controle.</div>';
+    html += '<div class="bp-aviso" style="margin-top:12px"><i data-ic="info"></i><div>Para abrir os comprovantes, conferir pagamentos, mexer no frete e cadastrar a chave PIX, o login precisa da permissão <b>"Pedido de Emborrachados"</b> no Painel de Controle.</div></div>';
   }
 
   const box = document.getElementById('emb-gestao');
   const pixAberto = !!(document.getElementById('emb-pixcfg') || {}).open;
+  const frAberto = !!(document.getElementById('emb-fretecfg') || {}).open;
   box.innerHTML = html;
   if (pixAberto){ const det = document.getElementById('emb-pixcfg'); if (det) det.open = true; }
+  if (frAberto){ const det = document.getElementById('emb-fretecfg'); if (det) det.open = true; }
+  embIcones(box);
   embPixCfgStatus();
+}
+
+/* ── Frete do lote (só gestor) ──
+   O Worker guarda o rateio CONGELADO (cota por pedido). Aqui o gestor vê a
+   cota de cada um e pode refazer: outro valor, ou marcar outros pedidos. */
+function embFreteCfgHTML(d){
+  const fr = d.frete || { total: 0, rateio: [], orfaos: [] };
+  const noRateio = new Set((fr.rateio || []).map(x => String(x.pedido)));
+  const peds = (d.pedidos || []).slice().sort((a, b) => (parseInt(a.pedido,10)||0) - (parseInt(b.pedido,10)||0));
+  const marcado = p => noRateio.size ? (Number(p.frete) > 0) : true;
+  const st = fr.total > 0
+    ? `· ${embMoeda(fr.total)} entre ${(fr.rateio||[]).length} pedido(s)${fr.valor_orfao > 0 ? ` · <span style="color:var(--warn)">${embMoeda(fr.valor_orfao)} sem dono</span>` : ''}`
+    : '· sem frete';
+  return `<details class="emb-cfg" id="emb-fretecfg">
+    <summary><span class="bp-tile sm info"><i data-ic="carro"></i></span>Frete do lote <span class="st">${st}</span></summary>
+    <div class="emb-cfg-corpo">
+      <div class="emb-busca-hint">A cota de cada pedido fica <b>congelada</b>: pedido cancelado não muda a cota dos outros e pedido novo não entra.
+        Para mudar, ajuste o valor e os pedidos marcados e clique em <b>Refazer rateio</b>. ${fr.em ? 'Último rateio: ' + embEsc(fr.em) + '.' : ''}</div>
+      ${fr.valor_orfao > 0 ? `<div class="bp-aviso pend" style="margin-top:10px"><i data-ic="alerta"></i><div>${(fr.orfaos||[]).length} pedido(s) do rateio
+        foram cancelados (${(fr.orfaos||[]).map(x => 'nº ' + embEsc(x.pedido)).join(', ')}): <b>${embMoeda(fr.valor_orfao)}</b> do frete ficou sem dono.
+        Refaça o rateio se quiser dividir de novo entre quem ficou.</div></div>` : ''}
+      <div class="emb-linha" style="margin-top:12px">
+        <div class="emb-fg" style="max-width:200px"><label for="emb-fr-total">Valor total do frete</label>
+          <input id="emb-fr-total" inputmode="decimal" value="${fr.total > 0 ? String(fr.total.toFixed(2)).replace('.', ',') : ''}" placeholder="Ex.: 46,75" oninput="embFretePrevia()"></div>
+        <button type="button" class="bp-btn sm ghost" style="align-self:flex-end" onclick="embFreteMarcar(true)">Marcar todos</button>
+        <button type="button" class="bp-btn sm ghost" style="align-self:flex-end" onclick="embFreteMarcar(false)">Desmarcar</button>
+      </div>
+      <div class="emb-fr-lista" id="emb-fr-lista">
+        ${peds.map(p => `<label class="emb-fr-it"><input type="checkbox" value="${embEsc(p.pedido)}" ${marcado(p) ? 'checked' : ''} onchange="embFretePrevia()">
+          <span><b>Nº ${embEsc(p.pedido)}</b> · ${embEsc(String(p.nome||'').split(' ')[0])}<small>${embEsc(String(p.data||'').slice(0,10))} · itens ${embMoeda(p.valor_total)}</small></span>
+          <span class="vl" data-ped="${embEsc(p.pedido)}">${Number(p.frete) > 0 ? embMoeda(p.frete) : '—'}</span></label>`).join('') || '<div class="emb-busca-hint">Nenhum pedido ainda.</div>'}
+      </div>
+      <div class="emb-linha">
+        <button type="button" class="bp-btn emb-send" onclick="embFreteSalvar(this)"><i data-ic="check"></i>Refazer rateio</button>
+        <span class="emb-busca-hint" id="emb-fr-previa"></span>
+      </div>
+      <div class="emb-msg" id="emb-fr-msg"></div>
+    </div>
+  </details>`;
+}
+function embFreteMarcados(){
+  return [...document.querySelectorAll('#emb-fr-lista input[type=checkbox]:checked')].map(i => i.value);
+}
+function embFreteMarcar(sim){
+  document.querySelectorAll('#emb-fr-lista input[type=checkbox]').forEach(i => { i.checked = sim; });
+  embFretePrevia();
+}
+// Mesma conta do Worker (centavos; o que sobra vai para os primeiros pedidos).
+function embFreteRatear(total, nums){
+  const cent = Math.round((Number(total) || 0) * 100);
+  const l = [...nums].sort((a, b) => (parseInt(a,10)||0) - (parseInt(b,10)||0));
+  if (!l.length || !(cent > 0)) return {};
+  const base = Math.floor(cent / l.length), resto = cent - base * l.length, out = {};
+  l.forEach((n, i) => { out[n] = (base + (i < resto ? 1 : 0)) / 100; });
+  return out;
+}
+function embFretePrevia(){
+  const total = Number(String((document.getElementById('emb-fr-total')||{}).value || '').replace(/\./g,'').replace(',', '.')) || 0;
+  const marc = embFreteMarcados();
+  const cotas = embFreteRatear(total, marc);
+  document.querySelectorAll('#emb-fr-lista .vl').forEach(s => { const v = cotas[s.dataset.ped]; s.textContent = v ? embMoeda(v) : '—'; });
+  const pv = document.getElementById('emb-fr-previa');
+  const vs = Object.values(cotas);
+  if (pv) pv.textContent = vs.length ? `Prévia: ${embMoeda(total)} ÷ ${vs.length} pedido(s) = ${embMoeda(Math.min(...vs))}${Math.max(...vs) !== Math.min(...vs) ? ' a ' + embMoeda(Math.max(...vs)) : ''} cada` : (total > 0 ? 'Marque os pedidos que dividem o frete.' : 'Valor 0 tira o frete de todos.');
+}
+async function embFreteSalvar(btn){
+  const msg = document.getElementById('emb-fr-msg');
+  const total = Number(String(document.getElementById('emb-fr-total').value || '').replace(/\./g,'').replace(',', '.')) || 0;
+  const pedidos = embFreteMarcados();
+  if (total > 0 && !pedidos.length){ msg.className = 'emb-msg err'; msg.textContent = 'Marque pelo menos um pedido.'; return; }
+  const txt = total > 0 ? `Dividir ${embMoeda(total)} entre ${pedidos.length} pedido(s)? A cota de cada um muda na hora para quem ainda não pagou.`
+                        : 'Tirar o frete de todos os pedidos?';
+  if (!window.confirm(txt)) return;
+  const old = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Salvando…';
+  msg.className = 'emb-msg'; msg.textContent = '';
+  try{
+    await apiPostJSON('/api/emborrachados/gestao', { op:'frete', total, pedidos });
+    EMB_PIX = null;
+    await embRecarregarGestao();
+    embPixBox();
+    const m = document.getElementById('emb-fr-msg');
+    if (m){ m.className = 'emb-msg ok'; m.textContent = '✔ Rateio salvo.'; }
+    toast('Frete atualizado.');
+  }catch(e){
+    msg.className = 'emb-msg err'; msg.textContent = '❌ ' + e.message;
+    btn.disabled = false; btn.innerHTML = old;
+  }
 }
 
 async function embRecarregarGestao(){
@@ -988,12 +1178,12 @@ async function apiPostJSON(path, body){
 }
 
 async function embConferir(pedido, conferir, btn){
-  btn.disabled = true; const old = btn.textContent; btn.textContent = '…';
+  btn.disabled = true; const old = btn.innerHTML; btn.textContent = '…';
   try{
     await apiPostJSON('/api/emborrachados/gestao', { op:'pagamento', pedido, pagamento: conferir ? 'Conferido' : 'Comprovante enviado' });
     await embRecarregarGestao();
   }catch(e){
-    btn.disabled = false; btn.textContent = old;
+    btn.disabled = false; btn.innerHTML = old;
     alert('❌ ' + e.message);
   }
 }
@@ -1004,7 +1194,7 @@ async function embConferir(pedido, conferir, btn){
 async function embVerComprovante(id, btn){
   const w = window.open('', '_blank');
   if (w) w.document.write('<p style="font-family:sans-serif;padding:20px">Abrindo o comprovante…</p>');
-  const old = btn.textContent; btn.textContent = '…';
+  const old = btn.innerHTML; btn.textContent = '…';
   try{
     const r = await fetch(API_BASE + '/api/emborrachados/comprovante-arquivo?id=' + encodeURIComponent(id),
       { headers:{ 'Authorization':'Bearer ' + AUTH.token } });
@@ -1015,7 +1205,7 @@ async function embVerComprovante(id, btn){
   }catch(e){
     if (w) w.close();
     alert('❌ ' + e.message);
-  }finally{ btn.textContent = old; }
+  }finally{ btn.innerHTML = old; }
 }
 
 function embPixCfgStatus(){
@@ -1023,7 +1213,7 @@ function embPixCfgStatus(){
   if (!st) return;
   embCarregarPix().then(p => {
     st.textContent = p.configurado ? `· ${EMB_TIPO_NOME[p.tipo]||p.tipo}: ${embChaveBonita(p.tipo, p.chave)}` : '· ⚠️ ainda não cadastrada — ninguém consegue pagar';
-    st.style.color = p.configurado ? '#94a3b8' : '#fcd34d';
+    st.style.color = p.configurado ? 'var(--muted)' : 'var(--warn)';
   }).catch(() => {});
 }
 async function embPixCfgCarregar(){
@@ -1047,6 +1237,7 @@ async function embPixCfgSalvar(btn){
     EMB_PIX = null;
     msg.className = 'emb-msg ok'; msg.textContent = '✔ Chave PIX salva. Já aparece pra quem for pagar.';
     embPixCfgStatus();
+    embPixBox();
   }catch(e){
     msg.className = 'emb-msg err'; msg.textContent = '❌ ' + e.message;
   }finally{ btn.disabled = false; }
@@ -1134,17 +1325,19 @@ function embImprimirFabricante(){
   embJanelaRelatorio('Encomenda de emborrachados', corpo);
 }
 
-// Por policial: pra separar e entregar, com a foto de cada item.
+// Por policial: pra separar e entregar, com a foto de cada item (e o frete de cada um).
 function embImprimirPedidos(){
   const pedidos = embGestFiltrados();
   if (!pedidos.length){ alert('Nenhum pedido no filtro escolhido.'); return; }
   const tot = pedidos.reduce((a,p) => a + (Number(p.valor_total)||0), 0);
+  const frt = pedidos.reduce((a,p) => a + (Number(p.frete)||0), 0);
   const un = pedidos.reduce((a,p) => a + (Number(p.unidades)||0), 0);
   const pagTxt = p => /^conferido$/i.test(String(p.pagamento||'').trim()) ? 'Pagamento conferido'
                     : (p.tem_comprovante ? 'Comprovante enviado' : 'Aguardando pagamento');
   const corpo = `
-    <div class="meta"><span>Pedidos: <b>${pedidos.length}</b></span><span>Unidades: <b>${un}</b></span><span>Valor: <b>${embMoeda(tot)}</b></span></div>
-    ${pedidos.map(p => `
+    <div class="meta"><span>Pedidos: <b>${pedidos.length}</b></span><span>Unidades: <b>${un}</b></span><span>Itens: <b>${embMoeda(tot)}</b></span>
+      ${frt > 0 ? `<span>Frete: <b>${embMoeda(frt)}</b></span><span>A pagar: <b>${embMoeda(tot + frt)}</b></span>` : ''}</div>
+    ${pedidos.map(p => { const fr = Number(p.frete)||0; return `
       <div class="ped">
         <h3>Pedido nº ${embEsc(p.pedido)} · ${embEsc(p.nome)}</h3>
         <div style="font-size:11.5px;color:#333">RE ${embEsc(p.re)} · ${embEsc(p.contato)} · ${embEsc(p.data)} · Status: <b>${embEsc(p.status)}</b> · <b>${pagTxt(p)}</b></div>
@@ -1153,9 +1346,10 @@ function embImprimirPedidos(){
             <td>${i.id ? `<img class="mini" src="${embImg(i.id)}" alt="">` : ''}</td>
             <td>${embEsc(i.item)}</td><td>${embCorTagImpressa(i.cor)}</td>
             <td class="n">${i.qtd}</td><td>${embMoeda(i.valor)}</td></tr>`).join('')}
-          <tr><td colspan="3" style="text-align:right"><b>Total do pedido</b></td><td class="n">${p.unidades}</td><td><b>${embMoeda(p.valor_total)}</b></td></tr>
+          ${fr > 0 ? `<tr><td colspan="4" style="text-align:right">Frete (rateio)</td><td>${embMoeda(fr)}</td></tr>` : ''}
+          <tr><td colspan="3" style="text-align:right"><b>Total do pedido</b></td><td class="n">${p.unidades}</td><td><b>${embMoeda(embAPagar(p))}</b></td></tr>
         </tbody></table>
-      </div>`).join('')}`;
+      </div>`; }).join('')}`;
   embJanelaRelatorio('Pedidos de emborrachados', corpo);
 }
 
@@ -1169,7 +1363,7 @@ function embToggleBusca(){
   const box = document.getElementById('emb-busca');
   const abrir = box.style.display === 'none';
   box.style.display = abrir ? '' : 'none';
-  document.getElementById('emb-edit-btn').textContent = abrir ? '✕ Fechar' : '✏️ Meu pedido · pagar';
+  embRotulo('emb-edit-btn', abrir ? 'Fechar' : 'Meu pedido · pagar');
   if (abrir) document.getElementById('emb-b-re').focus();
 }
 
@@ -1200,26 +1394,27 @@ async function embBuscarPedido(){
     lista.innerHTML = d.pedidos.map(p => {
       const itens = p.itens.map(i => `${i.qtd}× ${embEsc(i.item)} (${embCorTag(i.cor)})`).join('<br>');
       const podeEditar = p.editavel && p.itens.every(i => i.id);
-      const pag = { pedido: String(p.pedido), valor: p.valor_total, re, tel4 };
+      const pag = { pedido: String(p.pedido), valor: embAPagar(p), itens: p.valor_total, frete: p.frete || 0, re, tel4 };
       const motivo = p.tem_comprovante
         ? 'Já pago: para acrescentar itens, faça um pedido novo. Para cancelar, procure o P4.'
         : (p.editavel ? 'Um item deste pedido saiu do catálogo — procure o P4.'
                       : 'Já processado pela gestão. Procure o P4 para alterar.');
       return `<div class="emb-ped">
           <div class="det">
-            <b>Pedido nº ${embEsc(p.pedido)}</b> — ${embEsc(p.data)}<br>
+            <b>Pedido nº ${embEsc(p.pedido)}</b> — ${embEsc(p.data)}
+            <span class="st ${podeEditar?'ok':'lock'}" style="margin-left:6px">${embEsc(podeEditar ? p.status : (p.editavel ? 'item fora do catálogo' : p.status))}</span><br>
             ${itens}<br>
-            <b>${embMoeda(p.valor_total)}</b> · ${p.unidades} unidade(s)<br>
-            <span style="display:inline-block;margin-top:5px">${embPagStatus(p)}</span>
+            <b>${embMoeda(embAPagar(p))}</b> a pagar · ${p.unidades} unidade(s)<br>
+            ${embConta(p.valor_total, p.frete)}
+            <div style="margin-top:8px">${embPagStatus(p)}</div>
           </div>
-          <span class="st ${podeEditar?'ok':'lock'}">${podeEditar ? p.status : (p.editavel ? 'item fora do catálogo' : p.status)}</span>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+          <div class="acoes">
             ${p.pode_pagar
-              ? `<button class="emb-btn" onclick='embAbrirPagamento(${JSON.stringify(pag).replace(/'/g,"&#39;")})'>${p.tem_comprovante ? '📎 Enviar outro comprovante' : '💳 Pagar / enviar comprovante'}</button>`
+              ? `<button class="bp-btn sm" type="button" onclick='embAbrirPagamento(${JSON.stringify(pag).replace(/'/g,"&#39;")})'>${IC('enviar')}${p.tem_comprovante ? 'Enviar outro comprovante' : 'Pagar / enviar comprovante'}</button>`
               : ''}
             ${podeEditar
-              ? `<button class="emb-btn ghost" onclick="embEditarPedido('${embEsc(p.pedido)}','${re}','${tel4}')">✏️ Editar este</button>`
-              : `<span style="font-size:11.5px;color:#94a3b8;max-width:220px">${motivo}</span>`}
+              ? `<button class="bp-btn sm ghost" type="button" onclick="embEditarPedido('${embEsc(p.pedido)}','${re}','${tel4}')">${IC('editar')}Editar este</button>`
+              : `<span style="font-size:12px;color:var(--muted);max-width:240px">${motivo}</span>`}
           </div>
         </div>`;
     }).join('');
@@ -1249,7 +1444,7 @@ async function embEditarPedido(pedido, re, tel4){
   EMB_EDIT = { pedido: String(p.pedido), re, tel4 };
 
   document.getElementById('emb-busca').style.display = 'none';
-  document.getElementById('emb-edit-btn').textContent = '✏️ Meu pedido · pagar';
+  embRotulo('emb-edit-btn', 'Meu pedido · pagar');
   document.getElementById('emb-edit-num').textContent = 'pedido nº ' + p.pedido;
   document.getElementById('emb-edit-bar').style.display = '';
   embRender();
@@ -1271,7 +1466,7 @@ function embModoCarrinho(){
   document.querySelectorAll('.emb-so-novo').forEach(el => el.style.display = editando ? 'none' : '');
   document.querySelectorAll('.emb-so-edicao').forEach(el => el.style.display = editando ? '' : 'none');
   const b = document.getElementById('emb-send');
-  if (b){ b.textContent = editando ? '💾 Salvar alterações' : '✅ Enviar pedido'; if (editando) b.disabled = false; }
+  if (b){ b.textContent = editando ? 'Salvar alterações' : 'Enviar pedido'; if (editando) b.disabled = false; }
   if (editando){
     const av = document.getElementById('emb-aviso'); if (av){ av.style.display = 'none'; av.innerHTML = ''; }
     // Editando, o carrinho já abre expandido (é o que ele veio ver).
@@ -1279,7 +1474,7 @@ function embModoCarrinho(){
     if (c && !c.classList.contains('aberto')) embCartToggle();
   }
   const t = document.querySelector('.emb-cart-ttl');
-  if (t) t.textContent = editando ? ('✏️ Editando o pedido nº ' + EMB_EDIT.pedido) : '🛒 Seu pedido';
+  if (t) t.textContent = editando ? ('Editando o pedido nº ' + EMB_EDIT.pedido) : 'Seu pedido';
 }
 
 async function embSalvarEdicao(){
@@ -1288,7 +1483,7 @@ async function embSalvarEdicao(){
   const itens = embCartItens();
   msg.className = 'emb-msg err';
   if (!itens.length){
-    msg.textContent = 'O pedido ficou vazio. Use "🗑️ Cancelar pedido" se quiser desistir dele.';
+    msg.textContent = 'O pedido ficou vazio. Use "Cancelar pedido" se quiser desistir dele.';
     return;
   }
   const semCor = itens.filter(i => !i.cor);
@@ -1307,19 +1502,22 @@ async function embSalvarEdicao(){
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
     const num = EMB_EDIT.pedido;
-    EMB_ULTIMO = { pedido: String(num), valor: d.valor_total, re: EMB_EDIT.re, tel4: EMB_EDIT.tel4 };
+    EMB_ULTIMO = { pedido: String(num), valor: embAPagar(d), itens: d.valor_total, frete: d.frete || 0, re: EMB_EDIT.re, tel4: EMB_EDIT.tel4 };
     EMB_EDIT = null; EMB_CART = {};
     document.getElementById('emb-edit-bar').style.display = 'none';
     document.getElementById('emb-cart').style.display = 'none';
     document.getElementById('emb-catalogo').innerHTML = `
       <div class="emb-ok">
-        <div style="font-size:46px;margin-bottom:6px">💾</div>
-        <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido atualizado</div>
+        <div class="ic">${IC('check')}</div>
+        <div class="rot">Pedido atualizado</div>
         <div class="num">Nº ${embEsc(num)}</div>
-        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">Agora são <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).</p>
-        <p style="color:#6ee7b7;font-size:19px;font-weight:800">${embMoeda(d.valor_total)}</p>
-        <button class="emb-send" style="margin-top:18px" onclick="embAbrirPagamento(EMB_ULTIMO)">💳 Pagar com PIX e enviar o comprovante</button><br>
-        <button class="emb-btn ghost" style="margin-top:14px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
+        <p>Agora são <b>${d.unidades}</b> unidade(s) em <b>${d.itens}</b> item(ns).</p>
+        <div class="val">${embMoeda(embAPagar(d))}</div>
+        ${embConta(d.valor_total, d.frete)}
+        <div class="bts">
+          <button class="bp-btn" type="button" onclick="embAbrirPagamento(EMB_ULTIMO)">${IC('enviar')}Pagar com PIX e enviar o comprovante</button>
+          <button class="bp-btn ghost sm" type="button" onclick="embNovoPedido()">${IC('voltar')}Voltar ao catálogo</button>
+        </div>
       </div>`;
   }catch(e){
     msg.className = 'emb-msg err';
@@ -1346,12 +1544,12 @@ async function embCancelarPedido(){
     document.getElementById('emb-edit-bar').style.display = 'none';
     document.getElementById('emb-cart').style.display = 'none';
     document.getElementById('emb-catalogo').innerHTML = `
-      <div class="emb-ok" style="border-color:rgba(248,113,113,.4)">
-        <div style="font-size:46px;margin-bottom:6px">🗑️</div>
-        <div style="font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-weight:700">Pedido cancelado</div>
-        <div class="num" style="color:#fca5a5">Nº ${embEsc(num)}</div>
-        <p style="margin:14px 0 4px;color:#cbd5e1;font-size:14px">O pedido foi removido da lista do batalhão.</p>
-        <button class="emb-btn" style="margin-top:18px" onclick="embNovoPedido()">← Voltar ao catálogo</button>
+      <div class="emb-ok crit">
+        <div class="ic">${IC('lixeira')}</div>
+        <div class="rot">Pedido cancelado</div>
+        <div class="num">Nº ${embEsc(num)}</div>
+        <p>O pedido foi removido da lista do batalhão.</p>
+        <div class="bts"><button class="bp-btn sm sec" type="button" onclick="embNovoPedido()">${IC('voltar')}Voltar ao catálogo</button></div>
       </div>`;
   }catch(e){
     msg.className = 'emb-msg err';
@@ -1360,19 +1558,19 @@ async function embCancelarPedido(){
 }
 
 /* ── Pagamento: copiar a chave PIX, pagar e mandar o comprovante ──
-   A chave vem da aba CONFIG_PIX (o gestor cadastra na Área do gestor).
-   O "copia e cola" é gerado aqui, no padrão do Banco Central (BR Code
-   estático), já com o VALOR do pedido e o nº do pedido como identificador —
-   o policial não digita valor nenhum. O comprovante vai pelo mesmo RE + 4
-   dígitos do telefone da edição; quem confere é o gestor. */
+   A chave vem do Worker (padrão no código ou a aba CONFIG_PIX que o gestor
+   salva). O "copia e cola" é gerado aqui, no padrão do Banco Central (BR Code
+   estático), já com o VALOR A PAGAR (itens + frete) e o nº do pedido como
+   identificador — o policial não digita valor nenhum. O comprovante vai pelo
+   mesmo RE + 4 dígitos do telefone da edição; quem confere é o gestor. */
 let EMB_PIX = null;     // cache da configuração (por carregamento da página)
-let EMB_PAG = null;     // { pedido, valor, re, tel4 } do pagamento aberto
+let EMB_PAG = null;     // { pedido, valor, itens, frete, re, tel4 } do pagamento aberto
 
 function embPagStatus(p){
   const k = String(p.pagamento||'').toLowerCase();
-  if (k === 'conferido') return '<span class="emb-pagst ok">✅ Pagamento conferido</span>';
-  if (p.tem_comprovante || k) return '<span class="emb-pagst env">📎 Comprovante enviado</span>';
-  return '<span class="emb-pagst nao">💳 Aguardando pagamento</span>';
+  if (k === 'conferido') return '<span class="emb-pagst ok">Pagamento conferido</span>';
+  if (p.tem_comprovante || k) return '<span class="emb-pagst env">Comprovante enviado</span>';
+  return '<span class="emb-pagst nao">Aguardando pagamento</span>';
 }
 
 function embCrc16(s){
@@ -1441,59 +1639,66 @@ async function embAbrirPagamento(ctx){
   const corpo = document.getElementById('emb-pag-corpo');
   modal.style.display = '';
   document.body.style.overflow = 'hidden';
-  corpo.innerHTML = '<div class="emb-state" style="padding:30px 0">Carregando os dados do PIX…</div>';
+  corpo.innerHTML = '<div class="emb-state" style="padding:30px 0;border:0;background:none"><span class="bp-gira"></span> Carregando os dados do PIX…</div>';
   let pix;
   try { pix = await embCarregarPix(true); }
-  catch(e){ corpo.innerHTML = '<div class="emb-state">❌ ' + embEsc(e.message) + '</div>'; return; }
+  catch(e){ corpo.innerHTML = '<div class="emb-state" style="color:var(--crit)">' + embEsc(e.message) + '</div>'; return; }
 
-  const topo = `<div class="emb-pag-ttl">💳 Pagamento do pedido nº ${embEsc(ctx.pedido)}</div>
-    <div style="font-size:12px;color:#94a3b8">Valor a pagar</div>
-    <div class="emb-pag-valor">${embMoeda(ctx.valor)}</div>`;
+  const frete = Number(ctx.frete) || 0;
+  const topo = `<div class="emb-pag-ttl">Pagamento do pedido nº ${embEsc(ctx.pedido)}</div>
+    <div class="emb-pag-rot">Valor a pagar</div>
+    <div class="emb-pag-valor">${embMoeda(ctx.valor)}</div>
+    ${frete > 0 ? embConta(ctx.itens != null ? ctx.itens : (ctx.valor - frete), frete) : ''}`;
   if (!pix.configurado){
-    corpo.innerHTML = topo + `<div class="emb-passo" style="color:#fcd34d;font-size:13.5px;line-height:1.55">
-      ⚠️ A chave PIX ainda não foi cadastrada pelo P4. Seu pedido está registrado — volte aqui mais tarde
-      em <b>✏️ Meu pedido · pagar</b> para pagar e mandar o comprovante.</div>`;
+    corpo.innerHTML = topo + `<div class="emb-passo"><div class="bp-aviso pend"><i data-ic="relogio"></i><div>
+      A chave PIX ainda não foi cadastrada pelo P4. Seu pedido está registrado — volte aqui mais tarde
+      em <b>Meu pedido · pagar</b> para pagar e mandar o comprovante.</div></div></div>`;
+    embIcones(corpo);
     return;
   }
   const cc = embPixPayload({ chave: pix.chave, nome: pix.titular, cidade: pix.cidade, valor: ctx.valor, txid: 'EMBPED' + ctx.pedido });
   EMB_PAG.cc = cc;
   corpo.innerHTML = topo + `
-    ${pix.aviso ? `<div style="font-size:12.5px;color:#fcd34d;margin-bottom:6px;line-height:1.5">ℹ️ ${embEsc(pix.aviso)}</div>` : ''}
+    ${pix.aviso ? `<div class="bp-aviso pend" style="margin-top:10px"><i data-ic="info"></i><div>${embEsc(pix.aviso)}</div></div>` : ''}
     <div class="emb-passo">
-      <h4>1 · Copie a chave PIX</h4>
+      <h4><i>1</i>Copie a chave PIX</h4>
       <div class="emb-chave">
         <code>${embEsc(embChaveBonita(pix.tipo, pix.chave))}</code>
-        <button class="emb-btn" type="button" onclick="embCopiar(EMB_PIX.chave, this)">📋 Copiar chave</button>
+        <button class="bp-btn sm" type="button" onclick="embCopiar(EMB_PIX.chave, this)">Copiar chave</button>
       </div>
       <div class="emb-pix-info">
-        Tipo: <b>${embEsc(EMB_TIPO_NOME[pix.tipo] || pix.tipo)}</b><br>
-        Titular: <b>${embEsc(pix.titular)}</b>${pix.banco ? ` · ${embEsc(pix.banco)}` : ''}<br>
-        <span style="color:#94a3b8">Antes de confirmar no banco, confira se aparece esse nome.</span>
+        Tipo: <b>${embEsc(EMB_TIPO_NOME[pix.tipo] || pix.tipo)}</b>${pix.titular ? `<br>Titular: <b>${embEsc(pix.titular)}</b>` : ''}${pix.banco ? ` · ${embEsc(pix.banco)}` : ''}<br>
+        <span style="color:var(--muted)">${pix.titular ? 'Antes de confirmar no banco, confira se aparece esse nome.' : 'Antes de confirmar no banco, confira o nome do recebedor que o app mostra.'}</span>
       </div>
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-size:12.5px;color:#93c5fd;font-weight:700">Prefere o PIX copia e cola (já vem com o valor)?</summary>
+        <summary style="cursor:pointer;font-size:13px;color:var(--info);font-weight:700">Prefere o PIX copia e cola (já vem com o valor)?</summary>
         <div style="margin-top:8px">
           <textarea class="emb-pix-cc" readonly onclick="this.select()">${embEsc(cc)}</textarea>
-          <button class="emb-btn" type="button" onclick="embCopiar(EMB_PAG.cc, this)">📋 Copiar código</button>
-          <button class="emb-btn ghost" type="button" onclick="embMostrarQR()">🔳 Mostrar QR Code</button>
+          <div class="emb-linha">
+            <button class="bp-btn sm" type="button" onclick="embCopiar(EMB_PAG.cc, this)">Copiar código</button>
+            <button class="bp-btn sm ghost" type="button" onclick="embMostrarQR()">Mostrar QR Code</button>
+          </div>
           <div id="emb-qr"></div>
         </div>
       </details>
     </div>
     <div class="emb-passo">
-      <h4>2 · Pague no app do seu banco</h4>
-      <div style="font-size:13px;color:#cbd5e1;line-height:1.55">Pix → <b>Pagar com chave</b> (ou <b>Pix copia e cola</b>), valor de <b>${embMoeda(ctx.valor)}</b>.
+      <h4><i>2</i>Pague no app do seu banco</h4>
+      <div class="emb-pag-txt">Pix → <b>Pagar com chave</b> (ou <b>Pix copia e cola</b>), valor de <b>${embMoeda(ctx.valor)}</b>${frete > 0 ? ' (itens + frete)' : ''}.
         Depois salve o comprovante (print da tela ou PDF).</div>
     </div>
     <div class="emb-passo">
-      <h4>3 · Envie o comprovante</h4>
-      <div class="emb-file">
-        <label>📎 Escolher arquivo<input type="file" id="emb-pag-arq" accept="image/*,application/pdf" onchange="embPagArquivo(this)"></label>
-        <span class="nome" id="emb-pag-nome">nenhum arquivo escolhido</span>
-      </div>
-      <button class="emb-send" id="emb-pag-env" type="button" style="width:100%;margin-top:12px" onclick="embEnviarComprovante()" disabled>📤 Enviar comprovante</button>
+      <h4><i>3</i>Envie o comprovante</h4>
+      <label class="bp-arquivo" id="emb-pag-box">
+        <span class="bp-tile sm"><i data-ic="arquivo"></i></span>
+        <span class="tx"><b id="emb-pag-nome">Toque para escolher o comprovante</b><small>print da tela (JPG/PNG) ou PDF do banco · até 8 MB</small></span>
+        <span class="bp-trocar" id="emb-pag-trocar"></span>
+        <input type="file" id="emb-pag-arq" accept="image/*,application/pdf" onchange="embPagArquivo(this)">
+      </label>
+      <button class="bp-btn w" id="emb-pag-env" type="button" style="margin-top:12px" onclick="embEnviarComprovante()" disabled>Enviar comprovante</button>
       <div class="emb-msg" id="emb-pag-msg"></div>
     </div>`;
+  embIcones(corpo);
 }
 
 function embFecharPag(){
@@ -1504,7 +1709,9 @@ function embFecharPag(){
 
 function embPagArquivo(inp){
   const f = inp.files && inp.files[0];
-  document.getElementById('emb-pag-nome').textContent = f ? f.name + ' · ' + (f.size < 1048576 ? Math.max(1, Math.round(f.size/1024)) + ' KB' : (f.size/1048576).toFixed(1) + ' MB') : 'nenhum arquivo escolhido';
+  document.getElementById('emb-pag-nome').textContent = f ? f.name + ' · ' + (f.size < 1048576 ? Math.max(1, Math.round(f.size/1024)) + ' KB' : (f.size/1048576).toFixed(1) + ' MB') : 'Toque para escolher o comprovante';
+  const box = document.getElementById('emb-pag-box'); if (box) box.classList.toggle('tem', !!f);
+  const tr = document.getElementById('emb-pag-trocar'); if (tr) tr.textContent = f ? 'Trocar' : '';
   document.getElementById('emb-pag-env').disabled = !f;
   const msg = document.getElementById('emb-pag-msg');
   msg.className = 'emb-msg'; msg.textContent = '';
@@ -1523,7 +1730,7 @@ function embMostrarQR(){
     new QRCode(box.firstChild, { text: EMB_PAG.cc, width: 210, height: 210, correctLevel: QRCode.CorrectLevel.M });
   };
   if (window.QRCode) return desenha();
-  box.innerHTML = '<div style="font-size:12px;color:#94a3b8;margin-top:6px">Gerando QR Code…</div>';
+  box.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-top:6px">Gerando QR Code…</div>';
   EMB_QR_LIB = EMB_QR_LIB || new Promise((ok, erro) => {
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
@@ -1532,7 +1739,7 @@ function embMostrarQR(){
   });
   EMB_QR_LIB.then(desenha).catch(() => {
     EMB_QR_LIB = null;
-    box.innerHTML = '<div style="font-size:12px;color:#fca5a5;margin-top:6px">Não deu pra gerar o QR Code agora — use o código acima.</div>';
+    box.innerHTML = '<div style="font-size:12px;color:var(--crit);margin-top:6px">Não deu pra gerar o QR Code agora — use o código acima.</div>';
   });
 }
 
@@ -1547,7 +1754,7 @@ async function embEnviarComprovante(){
   fd.append('tel4', EMB_PAG.tel4);
   fd.append('pedido', EMB_PAG.pedido);
   fd.append('file', f, f.name);
-  btn.disabled = true; btn.textContent = 'Enviando…';
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Enviando…';
   msg.className = 'emb-msg'; msg.textContent = '';
   try{
     const r = await fetch(API_BASE + '/api/emborrachados/comprovante', { method:'POST', body: fd });
@@ -1555,22 +1762,27 @@ async function embEnviarComprovante(){
     if (!r.ok || !d.ok) throw new Error(embErro(d, r.status));
     document.getElementById('emb-pag-corpo').innerHTML = `
       <div style="text-align:center;padding:16px 4px">
-        <div style="font-size:48px">✅</div>
+        <div class="emb-ok" style="border:0;background:none;padding:0;animation:none"><div class="ic">${IC('check')}</div></div>
         <div class="emb-pag-ttl" style="padding:0">Comprovante enviado!</div>
-        <p style="color:#cbd5e1;font-size:14px;margin:10px 0 4px">Pedido nº <b>${embEsc(EMB_PAG.pedido)}</b> · ${embMoeda(EMB_PAG.valor)}</p>
-        <p style="color:#94a3b8;font-size:12.5px;line-height:1.5">O P4 confere o pagamento e encaminha o pedido ao fabricante.
-          Se mandou o arquivo errado, abra <b>✏️ Meu pedido · pagar</b> e envie outro.</p>
-        <button class="emb-send" type="button" style="margin-top:14px" onclick="embFecharPag()">Fechar</button>
+        <p class="emb-pag-txt" style="margin:10px 0 4px">Pedido nº <b>${embEsc(EMB_PAG.pedido)}</b> · ${embMoeda(EMB_PAG.valor)}</p>
+        <p style="color:var(--muted);font-size:13px;line-height:1.55;margin:0">O P4 confere o pagamento e encaminha o pedido ao fabricante.
+          Se mandou o arquivo errado, abra <b>Meu pedido · pagar</b> e envie outro.</p>
+        <button class="bp-btn" type="button" style="margin-top:16px" onclick="embFecharPag()">Fechar</button>
       </div>`;
+    toast('Comprovante enviado.');
     // Se o pagamento veio da lista do "Meu pedido", atualiza o status lá.
     const busca = document.getElementById('emb-busca');
     if (busca && busca.style.display !== 'none' && document.getElementById('emb-b-lista').innerHTML) embBuscarPedido();
   }catch(e){
     msg.className = 'emb-msg err';
     msg.textContent = '❌ ' + ((e && e.message) || 'Erro ao enviar o comprovante.');
-    btn.disabled = false; btn.textContent = '📤 Enviar comprovante';
+    btn.disabled = false; btn.textContent = 'Enviar comprovante';
   }
 }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('emb-pag').style.display !== 'none') embFecharPag();
+});
 
 /* ── Arranque da página ── */
 renderUserChip();
