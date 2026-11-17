@@ -1223,7 +1223,7 @@ function cvOnline(){
   $('cv-on').innerHTML = l.length ? 'Também com a reserva aberta: ' + l.map(u => `<span class="p" title="${u.papel === 'chefia' ? 'administrador' : 'armeiro'}">${esc(u.nome)}</span>`).join('') : '';
 }
 function vivoMsg(m){
-  if (m.t === 'hist'){ VIVO_EU = m.voce || ''; VIVO_EV = Array.isArray(m.eventos) ? m.eventos : []; VIVO_ASS = Array.isArray(m.assinando) ? m.assinando : []; cvLista(); cvFaltam(); cvOnline(); return; }
+  if (m.t === 'hist'){ const z = (R && R.zerado_em) || 0; VIVO_EU = m.voce || ''; VIVO_EV = (Array.isArray(m.eventos) ? m.eventos : []).filter(e => (e.em || 0) > z); VIVO_ASS = (Array.isArray(m.assinando) ? m.assinando : []).filter(e => (e.em || 0) > z); cvLista(); cvFaltam(); cvOnline(); return; }
   if (m.t === 'online'){ VIVO_ON = Array.isArray(m.lista) ? m.lista : []; cvOnline(); return; }
   if (m.t === 'assinando'){
     const antes = new Set(VIVO_ASS.map(a => a.cautela));
