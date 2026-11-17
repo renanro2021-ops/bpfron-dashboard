@@ -1140,6 +1140,7 @@ $('btn-comecar-zero').onclick = async () => {
   $('zero-msg').className = 'msg'; $('zero-msg').textContent = 'Apagando… (pode levar alguns segundos)';
   try {
     const d = await apiPost('/api/cautela/zerar', { confirma: 'ZERAR', senha: m.senha });
+    CONTAGEM = {};   // a Conferir também recomeça vazia
     $('zero-msg').className = 'msg ok';
     $('zero-msg').innerHTML = `<i data-ic="ok"></i>Pronto: ${d.eventos} registro(s) de teste e ${d.partes} Parte(s) apagados, ${d.missoes} missão(ões) antigas tiradas e ${d.linhas} linhas da Parte zeradas. Cópia nas abas: ${esc(d.backup.join(', '))}. Agora designe o armeiro de serviço e lance as quantidades.`;
     await carregar();
