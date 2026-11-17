@@ -178,6 +178,11 @@ details summary{color:var(--muted)}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-17", "titulo": "Mais rápido, ao vivo e C/A automático", "quem": "todos", "itens": [
+    "Procurar o policial para entregar ficou instantâneo: a lista aparece enquanto você digita.",
+    "Assinou no celular? A reserva atualiza sozinha na hora — não precisa mais apertar F5.",
+    "Parte Diária: se você recebeu material de volta no seu serviço, ela já sai com C/A ( X ) e lista em Alterações o que voltou e de quem; sem nada recebido, sai S/A ( X )."
+  ]},
   { "data": "2026-11-08", "titulo": "Editar a cautela antes da assinatura", "quem": "todos", "itens": [
     "Em “Receber de volta”, a cautela que ainda espera a assinatura do policial ganhou o botão ✏️ Editar.",
     "Dá para trocar o material, as quantidades, a missão, as datas, a observação e até o policial que vai receber.",
@@ -419,6 +424,12 @@ details summary{color:var(--muted)}
         <button class="btn sec" id="btn-integ" type="button"><i data-ic="escudo"></i>Verificar se alguém mexeu na planilha</button>
         <div class="msg" id="cat-msg"></div>
       </div>
+      <div class="card hidden" id="card-zerar" style="border-color:var(--crit)">
+        <h3>Começar do zero (apagar os testes)</h3>
+        <p class="muted">Apaga cautelas, assinaturas, passagens, Partes geradas, o armeiro designado e as missões antigas da Parte, e <b>zera as quantidades</b> de todas as linhas da Parte. A lista de peças com nº de série, os lotes de munição e a Carga pessoal <b>ficam</b>. Antes de apagar, o sistema copia as abas para abas <b>BKP_…</b> na própria planilha.</p>
+        <button class="btn" id="btn-comecar-zero" type="button" style="background:var(--crit)"><i data-ic="alerta"></i>Começar do zero</button>
+        <div class="msg" id="zero-msg"></div>
+      </div>
     </section>
   </div>
 </main>
@@ -503,7 +514,9 @@ const linha = (id) => R.linhas.find(l => l.id === id);
 
 async function carregar(quieto){
   let novo;
-  try { novo = await api('/api/cautela/reserva'); }
+  // sempre a planilha de agora (?fresco=1): a cópia guardada no servidor podia ser de antes da
+  // assinatura feita no celular do policial, e a tela ficava parada até o F5 (17/11/2026)
+  try { novo = await api('/api/cautela/reserva?fresco=1'); }
   catch(e){
     if (quieto) return;   // atualização automática: tenta de novo no próximo aviso
     if (e.status === 401){ CA.esquecer(); R = null; boot(); return; }
@@ -528,6 +541,7 @@ async function carregar(quieto){
   if (R.contagem) for (const [id, x] of Object.entries(R.contagem.linhas || {})) CONTAGEM[id] = { contado: x.contado === null || x.contado === undefined ? '' : String(x.contado), obs: x.obs || '' };
   if (digitado) Object.assign(CONTAGEM, digitado);
   $('ac-admin').classList.toggle('hidden', !R.papel.chefia);
+  show('card-zerar', !!R.papel.dev);
   // só o armeiro de serviço mexe no material; o administrador acompanha (29/10/2026)
   // no celular o armeiro só acompanha e confere; entregar, receber e passar o serviço são no computador
   PODE = !!R.papel.armeiro && !MOBILE;
@@ -607,17 +621,51 @@ let POL = null, CARRO = [], TIPO = 'missao';
 let EDIT = null;
 const livre = (p) => p.disponivel || !!(EDIT && p.em_cautela === EDIT.cautela_id);
 const naReserva = (l) => l.reserva + (EDIT ? EDIT.itens.filter(i => i.item_id === l.id).reduce((n, i) => n + i.qtd, 0) : 0);
+/* Busca de policial (17/11/2026 — estava lenta: cada letra ia ao servidor, que relia a
+   reserva e a Central inteiras). Agora a lista do efetivo vem UMA vez e a busca é aqui mesmo,
+   na hora; o "pode assinar" chega logo depois, só de quem aparece na lista. */
+const LISTA_POL = {}, CONTAS = {};
+function listaPoliciais(todos){
+  const k = todos ? 'todos' : 'bpfron';
+  if (!LISTA_POL[k]) LISTA_POL[k] = api('/api/cautela/policiais?lista=1' + (todos ? '&todos=1' : ''))
+    .then(d => d.policiais.map(p => Object.assign(p, { _h: norm(`${p.re} ${p.nome} ${p.guerra} ${p.posto}`), _g: norm(p.guerra || '') })))
+    .catch(e => { delete LISTA_POL[k]; throw e; });
+  return LISTA_POL[k];
+}
+function procurarPol(lista, q){
+  const n = norm(q), dig = q.replace(/\D/g, '');
+  const ps = n.split(/\s+/).filter(Boolean);
+  const nota = (p) => (dig.length >= 4 && p.re === dig.slice(-5) ? 0 : p._g === n ? 1 : p._g.startsWith(n) ? 2 : /BPFRON/i.test(p.opm) ? 3 : 4);
+  return lista.filter(p => ps.every(x => p._h.includes(x))).sort((a, b) => nota(a) - nota(b) || a._h.localeCompare(b._h)).slice(0, 25);
+}
+async function contasDe(res){
+  const faltam = res.filter(re => !(re in CONTAS));
+  if (faltam.length){
+    try { const d = await api('/api/cautela/policiais?contas=' + faltam.join(',')); Object.assign(CONTAS, d.contas || {}); } catch(e){ /* só o aviso */ }
+  }
+  return res.map(re => CONTAS[re]);
+}
+const chipConta = (v) => v === undefined ? '<span class="chip neu">conferindo…</span>' : `<span class="chip ${v ? 'ok' : 'wait'}">${v ? 'pode assinar' : 'sem senha ainda'}</span>`;
 function picker({ campo, res, onPick, todos }){
-  let t;
+  let t, vez = 0;
+  $(campo).addEventListener('focus', () => { listaPoliciais(todos).catch(() => {}); });   // já vai baixando
   $(campo).oninput = () => { clearTimeout(t); t = setTimeout(async () => {
     const q = $(campo).value.trim(); if (q.length < 2){ show(res, false); return; }
+    const minha = ++vez;
     try {
-      const d = await api('/api/cautela/policiais?q=' + encodeURIComponent(q) + (todos ? '&todos=1' : ''));
-      $(res).innerHTML = d.policiais.map((p, i) => `<button data-i="${i}" type="button"><span><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> <span class="muted">· RE ${esc(p.re)} · ${esc(p.opm)}</span></span><span class="chip ${p.tem_conta ? 'ok' : 'wait'}">${p.tem_conta ? 'pode assinar' : 'sem senha ainda'}</span></button>`).join('') || '<div class="muted" style="padding:10px">Ninguém encontrado.</div>';
+      if (!LISTA_POL[todos ? 'todos' : 'bpfron']){ $(res).innerHTML = '<div class="muted" style="padding:10px">Carregando o efetivo…</div>'; show(res, true); }
+      const achados = procurarPol(await listaPoliciais(todos), q);
+      if (minha !== vez) return;
+      achados.forEach(p => { p.tem_conta = CONTAS[p.re]; });
+      $(res).innerHTML = achados.map((p, i) => `<button data-i="${i}" type="button"><span><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> <span class="muted">· RE ${esc(p.re)} · ${esc(p.opm)}</span></span><span data-conta="${esc(p.re)}">${chipConta(p.tem_conta)}</span></button>`).join('') || '<div class="muted" style="padding:10px">Ninguém encontrado.</div>';
       show(res, true);
-      $(res).querySelectorAll('button').forEach(b => b.onclick = () => { const p = d.policiais[b.dataset.i]; show(res, false); $(campo).value = ''; onPick(p); });
+      $(res).querySelectorAll('button').forEach(b => b.onclick = () => { const p = achados[b.dataset.i]; show(res, false); $(campo).value = ''; p.tem_conta = CONTAS[p.re]; onPick(p); });
+      const vs = await contasDe(achados.map(p => p.re));
+      if (minha !== vez) return;
+      achados.forEach((p, i) => { p.tem_conta = vs[i]; const el = $(res).querySelector(`[data-conta="${CSS.escape(p.re)}"]`); if (el) el.innerHTML = chipConta(vs[i]); });
+      if (typeof POL !== 'undefined' && POL && POL.tem_conta === undefined && CONTAS[POL.re] !== undefined){ POL.tem_conta = CONTAS[POL.re]; renderPol(); }
     } catch(e){ falha(e); }
-  }, 250); };
+  }, 120); };
 }
 picker({ campo: 'c-q', res: 'c-res', onPick: (p) => { POL = p; renderPol(); $('c-missao').focus(); }, todos: true });
 function renderPol(){
@@ -745,9 +793,8 @@ async function editarCautela(id){
   $('c-edit').scrollIntoView({ block: 'start', behavior: 'smooth' });
   // descobre se o policial já tem a senha do Portal (só para o aviso do passo 1)
   try {
-    const d = await api('/api/cautela/policiais?todos=1&q=' + encodeURIComponent(c.policial.re));
-    const p = d.policiais.find(x => x.re === c.policial.re);
-    if (p && POL && POL.re === p.re){ POL.tem_conta = p.tem_conta; renderPol(); }
+    const [tem] = await contasDe([c.policial.re]);
+    if (tem !== undefined && POL && POL.re === c.policial.re){ POL.tem_conta = tem; renderPol(); }
   } catch { /* só o aviso */ }
 }
 async function salvarEdicao(m){
@@ -1083,6 +1130,20 @@ $('btn-zerar').onclick = async () => {
     if (d.codigo) await modal({ titulo: 'Senha provisória', senha: false, ok: 'Fechar', corpo: `<p class="muted">Entregue ao <b>${esc(d.nome)}</b> (RE ${esc(d.re)}). Vale uma vez e não fica guardada.</p><div style="font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;letter-spacing:6px;color:var(--acc);text-align:center;margin:14px 0" id="z-codigo">${esc(d.codigo)}</div>` });
     else toast(`Senha de ${d.nome} zerada: ele cria outra no 1º acesso.`);
   } catch(e){ falha(e); }
+};
+/* Começar do zero (17/11/2026): só o desenvolvedor (desousa), com senha e a palavra ZERAR. */
+$('btn-comecar-zero').onclick = async () => {
+  const m = await modal({ titulo: 'Começar do zero', ok: 'Apagar os testes',
+    corpo: `<p class="muted">Isto apaga <b>todo o movimento</b> da reserva (cautelas, assinaturas, passagens, Partes, armeiro designado, missões antigas) e <b>zera as quantidades</b> da Parte. Fica uma cópia nas abas BKP_… da planilha.</p><label>Digite ZERAR para confirmar</label><input id="z-conf" autocomplete="off">` });
+  if (!m) return;
+  if (val(m, 'z-conf').trim().toUpperCase() !== 'ZERAR'){ toast('Nada foi apagado: digite ZERAR para confirmar.'); return; }
+  $('zero-msg').className = 'msg'; $('zero-msg').textContent = 'Apagando… (pode levar alguns segundos)';
+  try {
+    const d = await apiPost('/api/cautela/zerar', { confirma: 'ZERAR', senha: m.senha });
+    $('zero-msg').className = 'msg ok';
+    $('zero-msg').innerHTML = `<i data-ic="ok"></i>Pronto: ${d.eventos} registro(s) de teste e ${d.partes} Parte(s) apagados, ${d.missoes} missão(ões) antigas tiradas e ${d.linhas} linhas da Parte zeradas. Cópia nas abas: ${esc(d.backup.join(', '))}. Agora designe o armeiro de serviço e lance as quantidades.`;
+    await carregar();
+  } catch(e){ $('zero-msg').className = 'msg err'; $('zero-msg').textContent = e.message; falha(e); }
 };
 
 /* ===== botões de ação ===== */

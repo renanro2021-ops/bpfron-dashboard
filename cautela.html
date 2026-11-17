@@ -96,6 +96,10 @@ html.portal .bp-wrap{padding-top:14px}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-17", "titulo": "Sua cautela aparece na hora", "quem": "todos", "itens": [
+    "Quando o armeiro entrega ou recebe material seu, a tela atualiza sozinha e avisa — não precisa mais atualizar a página.",
+    "Depois que você assina, a assinatura já aparece na mesma hora."
+  ]},
   { "data": "2026-11-08", "titulo": "Cautela corrigida antes de você assinar", "quem": "todos", "itens": [
     "O armeiro pode corrigir a cautela (material, quantidade, missão, datas) enquanto você ainda não assinou o recebimento.",
     "Se ele mudar algo com a sua tela aberta, o sistema avisa e mostra a cautela de novo para você conferir antes de assinar.",
@@ -226,7 +230,7 @@ function telaEntrada(){
     aoEntrar: () => { OUTRO = ''; boot(); },
   });
 }
-function sair(){ CA.sair(); D = null; boot(); }
+function sair(){ CA.sair(); D = null; try { if (MV_WS) MV_WS.close(); } catch(e){} boot(); }
 $('btn-sair').onclick = sair;
 $('btn-use-re').onclick = sair;
 $('btn-senha').onclick = () => CA.trocarSenha();
@@ -243,10 +247,12 @@ function boot(){
   if (AUTH.logged) carregar(); else telaEntrada();
 }
 
-async function carregar(){
+async function carregar(fresco){
   try {
-    const eu = await api('/api/cautela/eu');
-    const mi = await api('/api/cautela/minhas');
+    // fresco: relê a planilha (não a cópia guardada no servidor) — depois de assinar e a cada aviso ao vivo
+    const fq = fresco ? '?fresco=1' : '';
+    const eu = await api('/api/cautela/eu' + fq);
+    const mi = await api('/api/cautela/minhas' + fq);
     // Carga pessoal (bens permanentes entregues pela P4, 31/10/2026): se falhar, a cautela segue normal
     let cg = null; try { cg = await api('/api/carga/minhas'); } catch(e){ cg = null; }
     D = { eu: eu.eu, papel: eu.papel, plantao: eu.plantao, aviso: eu.aviso, cautelas: mi.cautelas || [], sem_vinculo: !!mi.sem_vinculo, configurado: eu.configurado,
@@ -263,6 +269,7 @@ async function carregar(){
   }
   { const nome = D.eu.guerra ? `${D.eu.posto} ${D.eu.guerra}` : D.eu.nome;
     $('userchip').innerHTML = `<span class="bp-eu" title="${esc(nome)}"><b>${esc(iniciais(D.eu.guerra || D.eu.nome))}</b><span>${esc(nome)}</span></span>`; }
+  meuVivo();
   if (!D.eu.vinculado && PORTAL_RE && !$('v-re').value) $('v-re').value = PORTAL_RE;
   show('estado', !D.configurado);
   if (!D.configurado) $('estado').innerHTML = IC('alerta') + ' A planilha da Cautela ainda não foi configurada no servidor. Avise a P4.';
@@ -457,13 +464,13 @@ async function acao(b){
   try {
     const d = await apiPost('/api/cautela/assinar', { cautela_id: id, acao: a, ref: b.dataset.ref || undefined, versao: receber ? (c.versao || 1) : undefined, senha });
     toast('Assinado — código ' + d.assinatura);
-    await carregar();
+    await carregar(true);
   } catch(e){
     b.disabled = false;
     avisarAssinando(id, a, false);
     if (e.status === 401){ CA.esquecer(); D = null; boot(); return; }
     // o armeiro corrigiu a cautela enquanto a tela estava aberta: mostra a versão nova (08/11/2026)
-    if (e.code === 'cautela_editada'){ toast('O armeiro corrigiu esta cautela. Confira os itens de novo e assine.'); await carregar(); return; }
+    if (e.code === 'cautela_editada'){ toast('O armeiro corrigiu esta cautela. Confira os itens de novo e assine.'); await carregar(true); return; }
     toast(e.code === 'senha_incorreta' ? 'Senha incorreta — nada foi assinado.' : e.message);
   }
 }
@@ -516,6 +523,53 @@ $('btn-assumir').onclick = async () => {
   try { await apiPost('/api/cautela/assumir', { senha }); toast('Você é o armeiro de serviço.'); await carregar(); }
   catch(e){ toast(e.code === 'senha_incorreta' ? 'Senha incorreta.' : e.message); }
 };
+
+/* ---------------- ao vivo (17/11/2026) ----------------
+   Pedido do usuário: o policial também só via depois do F5 que o armeiro entregou ou recebeu
+   o material. WebSocket /api/cautela/meu-vivo (mesmo objeto da reserva): chega um "mudou" das
+   cautelas DESTE policial e a tela relê sozinha. Sem conexão, relê a cada 20 s com a tela aberta. */
+let MV_WS = null, MV_RELIGA = null, MV_TENT = 0, MV_RELER = null;
+const MV_TXT = {
+  entregou: 'O armeiro registrou material para você. Confira e assine o recebimento.',
+  editou: 'O armeiro corrigiu a sua cautela. Confira os itens de novo.',
+  recebeu: 'O armeiro recebeu material seu de volta. Assine a devolução.',
+  cancelou: 'O armeiro cancelou uma cautela sua.',
+  prorrogou: 'O prazo de uma cautela sua foi prorrogado.',
+  assinou: 'Assinatura do recebimento registrada.',
+  assinou_dev: 'Assinatura da devolução registrada.',
+};
+function mvReler(){ clearTimeout(MV_RELER); MV_RELER = setTimeout(() => { if (D) carregar(true); }, 600); }
+function meuVivo(){
+  if (!AUTH.logged || !AUTH.token || !D || !D.eu || !D.eu.re) return;
+  if (MV_WS && (MV_WS.readyState === 0 || MV_WS.readyState === 1)) return;
+  let ws;
+  try { ws = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/cautela/meu-vivo?t=' + encodeURIComponent(AUTH.token)); } catch(e){ return; }
+  MV_WS = ws;
+  let ping = null;
+  ws.onopen = () => {
+    if (MV_TENT) mvReler();   // o que mudou enquanto estava sem conexão
+    MV_TENT = 0;
+    ping = setInterval(() => { try { ws.send('{"t":"ping"}'); } catch(e){} }, 25000);
+  };
+  ws.onmessage = (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+    if (m.t !== 'mudou') return;
+    if (MV_TXT[m.tipo]) toast(MV_TXT[m.tipo]);
+    if (m.tipo === 'entregou' || m.tipo === 'recebeu' || m.tipo === 'editou') { try { navigator.vibrate && navigator.vibrate(200); } catch(e){} }
+    mvReler();
+  };
+  ws.onclose = () => {
+    clearInterval(ping);
+    if (MV_WS === ws) MV_WS = null;
+    if (!AUTH.logged) return;
+    clearTimeout(MV_RELIGA);
+    MV_RELIGA = setTimeout(meuVivo, Math.min(30000, 2000 * Math.pow(2, MV_TENT++)));
+  };
+  ws.onerror = () => { try { ws.close(); } catch(e){} };
+}
+setInterval(() => { if (D && AUTH.logged && !document.hidden && !(MV_WS && MV_WS.readyState === 1)) carregar(); }, 20000);
+// voltou para a tela (celular desbloqueado, troca de aba): confere na hora
+document.addEventListener('visibilitychange', () => { if (!document.hidden && D && AUTH.logged){ mvReler(); meuVivo(); } });
 
 boot();
 </script>
