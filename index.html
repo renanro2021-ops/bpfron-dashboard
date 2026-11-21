@@ -5,6 +5,17 @@
 <script src="bp-casca.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BPFRON/RO · Painel Analítico de Operações Policiais</title>
+<script>
+  // Vinheta de abertura (21/11/2026, no estilo da vinheta da DB Cursos): 1 vez por sessão do navegador.
+  // Não toca dentro de iframe, com ?vinheta=0 (testes) nem para quem pede menos movimento no sistema.
+  (function () {
+    var ja = false, dentro = false;
+    try { ja = sessionStorage.getItem('bp_vinheta') === '1'; } catch (e) {}
+    try { dentro = window.self !== window.top; } catch (e) { dentro = true; }
+    var calma = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!ja && !dentro && !calma && !/[?&]vinheta=0/.test(location.search)) document.documentElement.classList.add('sp-vinheta');
+  })();
+</script>
 <script src="conta.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -918,6 +929,60 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 .sp-loader .car{fill:none;stroke:var(--uib-color);stroke-dasharray:15,85;stroke-dashoffset:0;stroke-linecap:round;
   animation:sp-travel var(--uib-speed) linear infinite;will-change:stroke-dasharray,stroke-dashoffset}
 @keyframes sp-travel{0%{stroke-dashoffset:0}100%{stroke-dashoffset:100}}
+#splash .sp-palco{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px}
+#splash .sp-chev,#splash .sp-brasao-v,#splash .sp-linha,#splash .sp-frase,#splash .sp-pula{display:none}
+
+/* ── Vinheta de abertura (21/11/2026), no estilo da vinheta da DB Cursos ──
+   faixas varrem a tela → o palco abre do centro → as metades do brasão entram dos lados e se
+   encaixam → BPFRON letra por letra → linha → frase. O estado FINAL é o estilo base e cada animação
+   parte do "from" (fill both): o Pular só tira as animações e tudo fica pronto na hora. */
+html.sp-vinheta #splash{background:#03060c;overflow:hidden}
+html.sp-vinheta #splash .sp-chev{display:block;position:absolute;top:50%;left:0;height:190vmax;width:34vmin;background:#F5C518;
+  transform:translate(140vmax,-50%) skewX(-24deg);animation:sp-chev 1.15s cubic-bezier(.6,0,.3,1) both}
+html.sp-vinheta #splash .sp-chev.c2{background:#13213d;animation-delay:.12s}
+html.sp-vinheta #splash .sp-chev.c3{background:#A9822B;animation-delay:.24s}
+html.sp-vinheta #splash .sp-palco{gap:2vmin;background:radial-gradient(ellipse 80% 60% at 50% 38%,rgba(29,78,216,.2) 0%,transparent 62%),radial-gradient(500px 300px at 50% 40%,rgba(245,197,24,.08),transparent 70%),var(--bg);
+  clip-path:polygon(-30% -10%,130% -10%,130% 110%,-30% 110%);animation:sp-abre .75s .7s cubic-bezier(.7,0,.2,1) both}
+html.sp-vinheta #splash .sp-palco::before,html.sp-vinheta #splash .sp-palco::after{content:"";position:absolute;left:0;right:0;height:1.6vmin;min-height:7px;
+  background:repeating-linear-gradient(-45deg,#D4AF37 0 14px,#0b1424 14px 28px)}
+html.sp-vinheta #splash .sp-palco::before{top:0}
+html.sp-vinheta #splash .sp-palco::after{bottom:0}
+html.sp-vinheta #splash .sp-brasao,html.sp-vinheta #splash .sp-sub{display:none}
+html.sp-vinheta #splash .sp-brasao-v{display:block;order:1;position:relative;height:min(30vmin,190px);aspect-ratio:1032/1200;
+  filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(245,197,24,.25));
+  animation:sp-tranco .4s 2s ease-out,spBrasao 2.6s 2.6s ease-in-out infinite}
+html.sp-vinheta #splash .sp-brasao-v img{position:absolute;inset:0;width:100%;height:100%}
+html.sp-vinheta #splash .sp-brasao-v .e{clip-path:inset(0 50% 0 0);animation:sp-entra-e .75s 1.2s cubic-bezier(.2,.9,.2,1.15) both}
+html.sp-vinheta #splash .sp-brasao-v .d{clip-path:inset(0 0 0 50%);animation:sp-entra-d .75s 1.32s cubic-bezier(.2,.9,.2,1.15) both}
+html.sp-vinheta #splash .sp-brasao-v::after{content:"";position:absolute;inset:-12%;border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(255,226,125,.55),rgba(245,197,24,.15) 40%,transparent 68%);animation:sp-brilho .9s 1.95s ease-out both}
+html.sp-vinheta #splash .sp-brand{order:2;display:flex;font-size:clamp(38px,10vmin,84px);line-height:1;letter-spacing:.16em;padding-left:.16em;margin-top:1vmin;
+  text-shadow:0 2px 0 #7a5a12,0 0 26px rgba(245,197,24,.35)}
+html.sp-vinheta #splash .sp-brand span{display:inline-block;animation:sp-letra .42s calc(2.05s + var(--i) * 70ms) cubic-bezier(.2,.9,.3,1.3) both}
+html.sp-vinheta #splash .sp-linha{display:block;order:3;height:4px;width:min(46vmin,340px);border-radius:3px;
+  background:linear-gradient(90deg,transparent,#D4AF37 18%,#F3D77A 50%,#D4AF37 82%,transparent);animation:sp-linha .6s 2.6s ease-out both}
+html.sp-vinheta #splash .sp-frase{display:block;order:4;font-weight:700;font-size:clamp(11px,2vmin,15px);letter-spacing:.22em;text-transform:uppercase;
+  color:#cbd5e1;text-align:center;max-width:36em;text-wrap:balance;animation:sp-aparece .6s 2.85s ease-out both}
+html.sp-vinheta #splash .sp-top{order:5;font-size:clamp(14px,2.4vmin,19px);margin:0;animation:sp-aparece .6s 3.1s ease-out both}
+html.sp-vinheta #splash .sp-loader{order:6;height:40px;width:40px;margin-top:1.4vmin;animation:sp-aparece .5s 3.5s ease-out both}
+html.sp-vinheta #splash .sp-msg{order:7;animation:sp-aparece .5s 3.5s ease-out both}
+html.sp-vinheta #splash .sp-pula{display:block;position:absolute;right:18px;bottom:calc(18px + 1.6vmin);z-index:2;font:700 13px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.8px;
+  color:#e2e8f0;background:rgba(6,10,20,.82);border:1.5px solid rgba(245,197,24,.35);border-radius:99px;padding:11px 17px;cursor:pointer}
+html.sp-vinheta #splash .sp-pula:hover,html.sp-vinheta #splash .sp-pula:focus-visible{border-color:#F5C518;color:#F5C518;outline:none}
+html.sp-vinheta #splash.sp-pronta .sp-pula{display:none}
+html.sp-vinheta #splash.sp-pulou *:not(.car),html.sp-vinheta #splash.sp-pulou *::before,html.sp-vinheta #splash.sp-pulou *::after{animation:none!important}
+html.sp-vinheta #splash.sp-pulou .sp-chev{display:none}
+html.sp-vinheta #splash.sp-sai{animation:sp-sai .7s cubic-bezier(.7,0,.3,1) forwards}
+@keyframes sp-chev{from{transform:translate(-60vmax,-50%) skewX(-24deg)}}
+@keyframes sp-abre{from{clip-path:polygon(50% 50%,50% 50%,50% 50%,50% 50%)}}
+@keyframes sp-entra-e{from{transform:translateX(-70vw) skewX(18deg);opacity:0}}
+@keyframes sp-entra-d{from{transform:translateX(70vw) skewX(-18deg);opacity:0}}
+@keyframes sp-tranco{30%{transform:scale(1.06) rotate(-1.5deg)}100%{transform:none}}
+@keyframes sp-brilho{0%{opacity:0;transform:scale(.6)}35%{opacity:1}100%{opacity:0;transform:scale(1.25)}}
+@keyframes sp-letra{from{opacity:0;transform:translateY(.9em) rotate(8deg)}}
+@keyframes sp-linha{from{width:0}}
+@keyframes sp-aparece{from{opacity:0;transform:translateY(8px)}}
+@keyframes sp-sai{to{transform:translateY(-100%)}}
 
 /* ══════════ TOPBAR MOBILE (☰) ══════════ */
 #mobile-topbar{display:none}
@@ -958,6 +1023,11 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-21", "titulo": "Vinheta de abertura do painel", "quem": "todos", "itens": [
+    "Na primeira vez que você abre o painel no dia, entra uma vinheta com o brasão do BPFRON enquanto os dados carregam.",
+    "Ela aparece uma vez por sessão do navegador; nas outras aberturas fica só a tela de carregamento rápida.",
+    "Para pular, toque em Pular (canto de baixo) ou aperte Esc."
+  ] },
   { "data": "2026-11-02", "titulo": "Material Bélico: estado de conservação", "quem": "gestor", "itens": [
     "O estado de conservação agora é uma escala só, igual à do Patrimônio: Excelente, Bom, Regular ou Péssimo.",
     "Ao editar um item você escolhe numa lista (não precisa mais digitar).",
@@ -993,15 +1063,22 @@ footer{text-align:center;padding:18px;font-size:10.5px;color:var(--muted);border
 
 <!-- TELA DE CARREGAMENTO -->
 <div id="splash">
+  <i class="sp-chev c1"></i><i class="sp-chev c2"></i><i class="sp-chev c3"></i>
+  <div class="sp-palco">
   <img class="sp-brasao" src="LOGOS/bpfron_transp.avif" alt="Brasão do BPFRON">
+  <div class="sp-brasao-v" role="img" aria-label="Brasão do BPFRON"><img class="e" src="LOGOS/bpfron_transp.avif" alt=""><img class="d" src="LOGOS/bpfron_transp.avif" alt=""></div>
   <div class="sp-top">P3 - Divisão Operacional</div>
   <svg class="sp-loader" viewBox="0 0 37 37" height="56" width="56" preserveAspectRatio="xMidYMid meet">
     <path class="track" fill="none" stroke-width="5" pathLength="100" d="M36.63 31.746 c0 -13.394 -7.3260000000000005 -25.16 -18.13 -31.375999999999998 C7.696 6.66 0.37 18.352 0.37 31.746 c5.328 3.108 11.544 4.8839999999999995 18.13 4.8839999999999995 S31.301999999999996 34.854 36.63 31.746z"></path>
     <path class="car" fill="none" stroke-width="5" pathLength="100" d="M36.63 31.746 c0 -13.394 -7.3260000000000005 -25.16 -18.13 -31.375999999999998 C7.696 6.66 0.37 18.352 0.37 31.746 c5.328 3.108 11.544 4.8839999999999995 18.13 4.8839999999999995 S31.301999999999996 34.854 36.63 31.746z"></path>
   </svg>
-  <div class="sp-brand">BPFRON</div>
+  <div class="sp-brand" aria-label="BPFRON">BPFRON</div>
+  <div class="sp-linha"></div>
+  <div class="sp-frase">Batalhão de Polícia de Fronteira e Divisas</div>
   <div class="sp-sub">Inteligência Operacional</div>
   <div class="sp-msg">Carregando dados…</div>
+  </div>
+  <button class="sp-pula" type="button" id="sp-pula">Pular ›</button>
 </div>
 
 <div class="classif-banner">⚠ USO RESTRITO — INFORMAÇÃO OPERACIONAL — POLÍCIA MILITAR DO ESTADO DE RONDÔNIA ⚠</div>
@@ -4820,11 +4897,50 @@ function renderPage(){
 /* ── Esconde a tela de carregamento quando os dados chegarem ── */
 const SPLASH_START = Date.now();
 const SPLASH_MIN_MS = 700; // tempo mínimo visível (pra não "piscar" no desktop)
+// Vinheta de abertura (21/11/2026): a tela só sai quando os dados chegaram E a vinheta terminou
+// (ou a pessoa clicou em Pular / apertou Esc). Sem vinheta, é a tela de carregamento de sempre.
+const SP_VINHETA = document.documentElement.classList.contains('sp-vinheta');
+const SP_VINHETA_MS = 4300;
+let spDados = false, spVinhetaFim = !SP_VINHETA, spFechada = false, spTimer = 0;
+function spFechar(){
+  const s = document.getElementById('splash');
+  if (!s || spFechada) return;
+  spFechada = true;
+  document.removeEventListener('keydown', spEsc);
+  if (!SP_VINHETA) { s.classList.add('hide'); return; }
+  s.classList.add('sp-sai');
+  setTimeout(() => s.classList.add('hide'), 700);
+}
+function spTalvezFechar(){ if (spDados && spVinhetaFim) spFechar(); }
+// No celular a página às vezes fica mais larga que a tela (layout com 445 px num aparelho de 390):
+// o splash usa a largura VISÍVEL para o brasão e o texto ficarem no meio de verdade.
+(function spLargura(){
+  const s = document.getElementById('splash'), vv = window.visualViewport;
+  if (!s || !vv) return;
+  const ajusta = () => { if (s.classList.contains('hide')) return; s.style.right = 'auto'; s.style.bottom = 'auto'; s.style.width = Math.min(vv.width, innerWidth) + 'px'; s.style.height = Math.min(vv.height, innerHeight) + 'px'; };
+  ajusta(); vv.addEventListener('resize', ajusta); addEventListener('load', ajusta);
+})();
+function spFimVinheta(pulou){
+  const s = document.getElementById('splash');
+  clearTimeout(spTimer);
+  spVinhetaFim = true;
+  if (s) { s.classList.add('sp-pronta'); if (pulou) s.classList.add('sp-pulou'); }
+  spTalvezFechar();
+}
+function spEsc(ev){ if (ev.key === 'Escape') spFimVinheta(true); }
+if (SP_VINHETA) {
+  try { sessionStorage.setItem('bp_vinheta', '1'); } catch (e) {}
+  const b = document.querySelector('#splash .sp-brand');
+  if (b) b.innerHTML = [...b.textContent.trim()].map((ch, i) => `<span style="--i:${i}" aria-hidden="true">${ch}</span>`).join('');
+  document.getElementById('sp-pula').addEventListener('click', () => spFimVinheta(true));
+  document.addEventListener('keydown', spEsc);
+  spTimer = setTimeout(() => spFimVinheta(false), SP_VINHETA_MS);
+}
 function hideSplash(){
   const s = document.getElementById('splash');
   if (!s) return;
   const espera = Math.max(0, SPLASH_MIN_MS - (Date.now() - SPLASH_START));
-  setTimeout(() => s.classList.add('hide'), espera);
+  setTimeout(() => { spDados = true; spTalvezFechar(); }, espera);
 }
 loadData().finally(hideSplash);
 // Teto de segurança: nunca deixa a splash travada mais de 12s

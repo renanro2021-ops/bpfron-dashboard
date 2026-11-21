@@ -1032,12 +1032,12 @@
     if (!document.getElementById('bp-novidades')) return;
     try { if (window.self !== window.top) return; } catch (e) { return; }
     // espera a tela de carregamento e o /api/me (o "gestor" depende do login)
-    setTimeout(function () {
-      var vai = function () { if (!document.getElementById('bpc-carga')) novidades(); else setTimeout(vai, 600); };
-      vai();
-    }, 1400);
+    // 21/11/2026: espera também o splash/vinheta do dashboard (#splash do index.html) sair da tela
+    var naTela = function () { var s = document.getElementById('splash'); return !!document.getElementById('bpc-carga') || (!!s && !s.classList.contains('hide')); };
+    var quandoLivre = function () { if (naTela()) setTimeout(quandoLivre, 600); else if (!document.getElementById('bpc-novid')) novidades(); };
+    setTimeout(quandoLivre, 1400);
     // entrou/saiu do login depois: pode ter novidade só da gestão
-    ouvintes.push(function () { setTimeout(function () { if (!document.getElementById('bpc-novid')) novidades(); }, 700); });
+    ouvintes.push(function () { setTimeout(quandoLivre, 700); });
   }
 
   /* ================================================================
