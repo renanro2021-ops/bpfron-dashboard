@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="bp-casca.js"></script>
+<link rel="stylesheet" href="bp-ui.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Inteligência — BPFRON</title>
 <script src="conta.js"></script>
@@ -12,69 +13,220 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="bp-rodovias.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060912; --bg2:#0b0f1a; --bg3:#101524; --yellow:#F5C518; --gold:#c9a030;
-  --blue2:#3b82f6; --green2:#22c55e; --red:#dc2626;
-  --text:#dde3f0; --muted:#8b97a8; --border:rgba(245,197,24,0.16);
-  --card:#0f172a;
-}
-html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
-body{padding:0 0 40px}
-a{color:var(--yellow)}
+/* ── 22/11/2026 (fase 1): página no padrão bp-ui.css (tokens dos 4 temas).
+   Os nomes antigos (--yellow/--text/--border/--muted) ficam como apelidos
+   porque o JS e a Rota do Córtex ainda usam. ── */
+:root{ --yellow:var(--acc); --gold:#c9a030; --text:var(--t2); --border:var(--line2); --red:#dc2626;
+  --nv-alta:#22c55e; --nv-media:#eab308; --nv-baixa:#f97316; --nv-nd:#94a3b8; --nv-venc:#ef4444; }
+body.bp-pg{padding:0 0 30px}
+a{color:var(--acc)}
+.bp-topo-in{max-width:none}
+.in-wrap{position:relative;z-index:1;max-width:1880px;margin:0 auto;padding:14px clamp(10px,1.6vw,22px) 0}
+.in-restrito{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--crit-line);background:var(--crit-soft);color:var(--crit);font:800 10.5px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase;white-space:nowrap}
+.in-topo-btn{position:relative}
+.in-topo-btn em{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--crit);color:#fff;font:800 10.5px/18px Inter,sans-serif;font-style:normal;text-align:center}
 
-.intel-hdr{display:flex;align-items:center;gap:14px;padding:14px 22px;background:linear-gradient(180deg,#0c1120,#080b14);
-  border-bottom:3px solid var(--yellow);position:sticky;top:0;z-index:50}
-.intel-hdr img{width:40px;height:40px;object-fit:contain;mix-blend-mode:screen}
-.intel-hdr .ht{font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;letter-spacing:.5px;line-height:1}
-.intel-hdr .hs{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
-.intel-hdr .spacer{flex:1}
-.intel-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;background:var(--card);border:1px solid var(--border);
-  border-radius:999px;color:var(--text);font-weight:600;font-size:13px}
-.intel-sair{padding:8px 16px;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.4);border-radius:8px;
-  color:#f87171;cursor:pointer;font-size:13px;font-weight:600}
-.intel-back{padding:8px 14px;background:rgba(245,197,24,.1);border:1px solid var(--border);border-radius:8px;
-  color:var(--yellow);cursor:pointer;font-size:13px;font-weight:600;text-decoration:none}
+/* ── faixa de números (cada um filtra o mapa e a lista) ── */
+.in-nums{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.in-num{--c:var(--acc);position:relative;text-align:left;cursor:pointer;border-radius:16px;padding:10px 14px 10px 16px;background:var(--card);border:1px solid var(--line);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--t2);overflow:hidden;transition:border-color .2s,transform .2s var(--ease),background .2s}
+.in-num::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--c)}
+.in-num:hover{border-color:var(--line2);transform:translateY(-1px)}
+.in-num.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--card))}
+.in-num span{display:block;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.in-num b{display:block;font:700 27px/1.1 Rajdhani,sans-serif;color:var(--t1);margin-top:2px}
 
-.wrap{max-width:1280px;margin:0 auto;padding:22px}
-.wrap.wide{max-width:1640px}
-.sec{font-family:Rajdhani,sans-serif;font-weight:700;font-size:22px;color:var(--yellow);letter-spacing:.5px;margin-bottom:4px}
-
-/* ── pesquisa (esquerda, fixa) + mapa (direita) ── */
-.intel-top{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start;margin-top:10px}
-.intel-search{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 92px);overflow-y:auto;
-  background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 15px}
-.intel-search .is-ttl{font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;color:var(--yellow);margin-bottom:2px}
-.intel-search .is-hint{font-size:11.5px;color:var(--muted);margin-bottom:10px;line-height:1.5}
-.intel-search .is-group{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--yellow);font-weight:700;
-  border-bottom:1px solid var(--border,#334155);padding-bottom:3px;margin:13px 0 8px}
-.intel-search .is-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.intel-search .mi-fg{margin-bottom:8px}
-.is-actions{display:flex;gap:8px;margin-top:12px}
+/* ── área de trabalho: painel à esquerda + mapa ── */
+.in-work{display:grid;grid-template-columns:370px minmax(0,1fr);gap:12px;height:calc(100vh - 66px - 92px - 22px);min-height:600px}
+.in-rail{display:flex;flex-direction:column;min-height:0;border-radius:18px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden}
+.in-tabs{display:flex;gap:5px;padding:7px;border-bottom:1px solid var(--line);flex:none}
+.in-tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:11px;border:1px solid transparent;background:transparent;color:var(--muted);
+  font:800 12.5px Inter,sans-serif;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.in-tab:hover{color:var(--t1)}
+.in-tab.on{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.in-tab small{min-width:20px;padding:1px 6px;border-radius:9px;background:var(--surf2);color:var(--t3);font-size:11px;letter-spacing:0}
+.in-pane{flex:1;min-height:0;overflow-y:auto;padding:14px 15px 16px}
+.in-pane[hidden]{display:none}
+.in-hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.in-hint b{color:var(--t3)}
+.intel-search .is-group{display:flex;align-items:center;gap:8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--acc);font-weight:800;margin:14px 0 8px}
+.intel-search .is-group::after{content:'';flex:1;height:1px;background:var(--line)}
+.intel-search .is-group:first-of-type{margin-top:2px}
+.is-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.is-actions{display:flex;gap:8px;margin-top:14px;position:sticky;bottom:-16px;padding:10px 0 12px;background:linear-gradient(transparent,var(--surf) 40%)}
 .is-actions .mi-save{flex:1}
-.is-status{font-size:11.5px;color:var(--muted);margin-top:9px;min-height:15px}
-.intel-mapcol{min-width:0}
+.is-status{font-size:12px;color:var(--muted);margin-top:4px;min-height:16px}
 
-.intel-results{margin-top:20px;display:flex;flex-direction:column;gap:16px}
-.res-block{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 16px}
-.res-block h3{font-family:Rajdhani,sans-serif;font-size:16px;color:var(--yellow);margin-bottom:10px;font-weight:700}
-.res-pessoa,.res-veiculo{border:1px solid var(--border,#334155);border-left:4px solid #38bdf8;border-radius:10px;
-  padding:10px 12px;margin-bottom:10px;background:#0b1220}
-.res-veiculo{border-left-color:#f59e0b}
-.rp-nome{font-weight:700;font-size:14px;color:#e2e8f0}
-.res-kv{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--muted);margin:5px 0}
-.res-kv b{color:#cbd5e1;font-weight:600}
-.res-bo-chip{display:inline-block;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.4);color:#93c5fd;
-  border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer}
-.res-bo-chip:hover{background:rgba(96,165,250,.28)}
-.res-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;display:block;overflow-x:auto}
-.res-tbl th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border,#334155);
-  padding:4px 6px;font-size:10px;text-transform:uppercase;white-space:nowrap}
-.res-tbl td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.04);color:#cbd5e1;white-space:nowrap}
-.res-sub{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--yellow);margin:11px 0 3px;font-weight:700}
-.res-dossie{border:1px solid var(--border,#334155);border-radius:10px;margin-bottom:12px;overflow:hidden}
-.res-dossie-hd{background:#0b1220;padding:9px 12px;font-weight:700;color:#e2e8f0;font-size:13px;border-bottom:1px solid var(--border,#334155)}
-.res-dossie-bd{padding:10px 12px}
+/* filtros da lista de marcações */
+.mi-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.mi-chip{--c:var(--acc);display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--surf2);color:var(--t3);font:700 12px Inter,sans-serif;cursor:pointer}
+.mi-chip i.p{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.mi-chip.on{border-color:var(--c);color:var(--t1);background:color-mix(in srgb,var(--c) 16%,var(--surf2))}
+.mi-filtro-ativo{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:7px 10px;border-radius:11px;background:var(--acc-soft);border:1px solid var(--acc-line);color:var(--acc);font-size:12.5px;font-weight:700}
+.mi-filtro-ativo button{margin-left:auto;background:none;border:0;color:inherit;cursor:pointer;font:800 12px Inter,sans-serif;text-decoration:underline}
+
+/* ── mapa ── */
+.in-stage{position:relative;min-width:0;min-height:0;display:flex}
+.mi-map-wrap{position:relative;flex:1;min-height:0;border:1px solid var(--line2);border-radius:18px;overflow:hidden;box-shadow:var(--sh2)}
+#mi-map{position:absolute;inset:0;background:#0b1220}
+.in-mapbar{position:absolute;z-index:900;top:10px;left:56px;right:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;pointer-events:none;transition:right .3s var(--ease)}
+.in-mapbar>*{pointer-events:auto}
+.mi-map-wrap.form-on .in-mapbar{right:404px}
+.mi-map-wrap.form-on .in-ferr .tx{display:none}
+.mi-map-wrap.form-on .mi-geobar{flex-basis:300px}
+.mi-map-wrap.rc-on .in-mapbar{right:372px}
+.in-vidro{background:rgba(6,10,20,.78);border:1px solid rgba(148,163,184,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:13px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+:root[data-tema="claro"] .in-vidro{background:rgba(255,255,255,.88)}
+.mi-geobar{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;flex:1 1 360px;min-width:260px;max-width:620px}
+.mi-geobar>.bp-i{color:var(--dim)}
+.mi-geobar input{background:transparent;border:0;outline:none;color:var(--t1);font:14px Inter,sans-serif;padding:7px 4px;min-width:0}
+.mi-geobar #mi-geo-q{flex:1}
+.mi-geobar #mi-geo-lat,.mi-geobar #mi-geo-lng{width:92px;border-left:1px solid var(--line2);padding-left:9px}
+.mi-geobar .mi-geo-sep{display:none}
+.in-ferr{display:flex;gap:6px;padding:5px;flex-wrap:wrap}
+.mi-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid transparent;color:var(--t2);border-radius:10px;padding:7px 11px;font:700 13px Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s,color .2s}
+.mi-btn:hover{background:var(--acc-soft);color:var(--acc)}
+.mi-btn.active,.mi-btn.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.mi-btn:disabled{opacity:.4;cursor:not-allowed;background:transparent;color:var(--t2)}
+.mi-btn.prim{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+select.mi-btn{background:var(--surf2);border-color:var(--line2);color:var(--t1);padding:8px 10px}
+select.mi-btn option{background:var(--surf);color:var(--t1)}
+.mi-btn.rc-btn{background:linear-gradient(180deg,rgba(34,211,238,.18),rgba(34,211,238,.06));border-color:rgba(34,211,238,.6);color:#7ff0ff;box-shadow:0 0 12px rgba(34,211,238,.18)}
+.mi-btn.rc-btn:hover{background:rgba(34,211,238,.24)}
+.in-geo-status{flex-basis:100%;display:flex;justify-content:flex-start}
+.in-geo-status .mi-status:empty{display:none}
+.in-geo-status .mi-status{padding:5px 11px;border-radius:9px;font-size:12px}
+.mi-status{font-size:12px;color:var(--t3)}
+.in-rodape{position:absolute;z-index:900;left:10px;bottom:22px;padding:6px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3);max-width:calc(100% - 20px)}
+.in-rodape i.p{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+.mi-map-wrap.rc-on .in-rodape{display:none}
+
+/* quadro de camadas */
+.in-cam{position:absolute;z-index:1160;top:62px;right:10px;width:min(330px,calc(100% - 20px));padding:14px;display:none;max-height:calc(100% - 74px);overflow-y:auto}
+.in-cam.on{display:block}
+.mi-map-wrap.rc-on .in-cam{right:372px}
+.in-cam h4{margin:0 0 8px;font:800 10.5px Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--acc)}
+.in-cam h4:not(:first-child){margin-top:14px}
+.in-cam .mi-btn{width:100%;justify-content:flex-start;border-color:var(--line2);margin-bottom:6px;background:var(--surf2)}
+.in-cam .mi-btn.active{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc)}
+.in-cam select.mi-btn{width:100%}
+.mi-wb-ctrl{display:flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line2);border-radius:10px;padding:5px 8px;margin-bottom:6px}
+.mi-wb-ctrl #mi-wb-slider{flex:1;min-width:0;accent-color:var(--acc);cursor:pointer}
+.mi-wb-ctrl #mi-wb-label{font-size:12px;font-weight:700;color:var(--acc);min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.mi-wb-step{background:transparent;border:0;color:var(--acc);font-size:16px;line-height:1;cursor:pointer;padding:0 3px}
+.mi-wb-step:hover{color:var(--t1)}
+.in-cam .in-leg{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}
+
+/* gaveta de edição (desliza sobre o mapa) */
+.in-drawer{position:absolute;z-index:1150;top:10px;right:10px;bottom:10px;width:384px;display:flex;flex-direction:column;border-radius:16px;
+  background:var(--surf);border:1px solid var(--line2);box-shadow:var(--sh);transform:translateX(calc(100% + 24px));transition:transform .35s var(--ease);overflow:hidden}
+.in-drawer.on{transform:none}
+.in-drawer-cab{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line);flex:none}
+.in-drawer-cab h3{margin:0;font:700 19px/1.1 Rajdhani,sans-serif;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.in-drawer-corpo{flex:1;min-height:0;overflow-y:auto;padding:14px 16px 4px}
+
+/* ── campos e botões (o formulário é montado pelo JS com estas classes) ── */
+.mi-fg{margin-bottom:11px}
+.mi-fg label{display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:5px}
+.mi-fg input,.mi-fg select,.mi-fg textarea{width:100%;background:var(--surf2);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;color:var(--t1);font:14px Inter,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.mi-fg input:focus,.mi-fg select:focus,.mi-fg textarea:focus{border-color:var(--acc-line);box-shadow:0 0 0 3px var(--acc-soft)}
+.mi-fg select option{background:var(--surf);color:var(--t1)}
+.mi-fg input[type=color]{height:42px;padding:3px;cursor:pointer}
+.mi-fg textarea{min-height:76px;resize:vertical}
+.mi-form-actions{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;margin:6px -16px 0;padding:12px 16px 14px;background:var(--surf);border-top:1px solid var(--line);z-index:2}
+.mi-save,.mi-del,.mi-cancel{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;padding:10px 16px;font:800 13.5px Inter,sans-serif;cursor:pointer;min-height:42px;transition:filter .2s,background .2s,border-color .2s}
+.mi-save{background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;color:var(--acc-ink)}
+.mi-save:hover{filter:brightness(1.06)}
+.mi-save:disabled{opacity:.55;cursor:not-allowed}
+.mi-del{background:var(--crit-soft);border:1px solid var(--crit-line);color:var(--crit)}
+.mi-cancel{background:var(--surf2);border:1px solid var(--line2);color:var(--t2)}
+.mi-cancel:hover{border-color:var(--acc-line);color:var(--t1)}
+.mi-hint-draw{color:var(--muted);font-size:13px;line-height:1.65;padding:6px 2px}
+.mi-hint-draw b{color:var(--t2)}
+.mi-sec{display:flex;align-items:center;gap:8px;margin:16px 0 9px;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--acc)}
+.mi-sec::after{content:'';flex:1;height:1px;background:var(--line)}
+.mi-sec button{background:none;border:1px solid var(--acc-line);color:var(--acc);border-radius:50%;width:20px;height:20px;font:800 11px/1 Inter,sans-serif;cursor:pointer;padding:0;order:2}
+.mi-meta{color:var(--muted);font-size:11.5px;line-height:1.5;margin:4px 0 2px}
+
+/* lista de marcações */
+.mi-list{display:flex;flex-direction:column;gap:7px}
+.mi-row{--c:var(--acc);position:relative;background:var(--surf2);border:1px solid var(--line);border-radius:12px;padding:9px 11px 9px 14px;cursor:pointer;font-size:13.5px;color:var(--t2);transition:border-color .2s,background .2s}
+.mi-row::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--c)}
+.mi-row:hover{border-color:var(--acc-line)}
+.mi-row.sel{border-color:var(--acc);background:var(--acc-soft)}
+.mi-row.venc{opacity:.62}
+.mi-row .tt{display:flex;align-items:center;gap:7px}
+.mi-row .tt b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t1)}
+.mi-row .meta{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mi-empty{color:var(--muted);text-align:center;padding:22px 10px;font-size:13px;border:1px dashed var(--line2);border-radius:12px}
+.mi-fotos{display:flex;flex-wrap:wrap;gap:8px}
+.mi-foto{position:relative;width:78px;height:78px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--surf2)}
+.mi-foto img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block}
+.mi-foto.carregando,.mi-foto.erro{display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);text-align:center;padding:4px}
+.mi-foto-x{position:absolute;top:3px;right:3px;width:19px;height:19px;border:0;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0}
+.mi-foto-badge{font-size:11px;color:#e879f9;font-weight:700;white-space:nowrap}
+
+/* selo de avaliação (A1–F6) */
+.av-selo{--c:var(--nv-nd);display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:20px;padding:0 6px;border-radius:6px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);
+  background:color-mix(in srgb,var(--c) 18%,transparent);color:color-mix(in srgb,var(--c) 80%,var(--t1));font:800 11.5px/1 'Share Tech Mono',monospace;letter-spacing:.5px;flex:none;white-space:nowrap}
+.av-selo.alta{--c:var(--nv-alta)} .av-selo.media{--c:var(--nv-media)} .av-selo.baixa{--c:var(--nv-baixa)} .av-selo.nd,.av-selo.sem{--c:var(--nv-nd)}
+.av-selo.venc{--c:var(--nv-venc)}
+.av-sem{opacity:.7;font-family:Inter,sans-serif;font-weight:700;font-size:10.5px}
+.av-grade{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.av-res{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;border:1px solid var(--line2);background:var(--surf2);margin-bottom:11px;font-size:12.5px;color:var(--t3);line-height:1.35}
+.av-res .av-selo{height:26px;min-width:38px;font-size:14px}
+.av-prazos{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.av-prazos button{background:var(--surf2);border:1px solid var(--line2);color:var(--t3);border-radius:8px;padding:4px 9px;font:700 11.5px Inter,sans-serif;cursor:pointer}
+.av-prazos button:hover{border-color:var(--acc-line);color:var(--acc)}
+.av-tab{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 14px}
+.av-tab th{text-align:left;font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);padding:5px 8px;border-bottom:1px solid var(--line2)}
+.av-tab td{padding:7px 8px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top}
+.av-tab td:first-child{font:800 15px 'Share Tech Mono',monospace;color:var(--acc);width:42px}
+.av-tab td small{display:block;color:var(--muted);font-size:12px}
+
+/* pino "retrato" do suspeito */
+.mi-mug .mug{width:44px;height:44px;border-radius:50%;border:3px solid #e879f9;background:#1a1030 center/cover no-repeat;
+  box-shadow:0 3px 10px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative}
+.mi-mug .mug::after{content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#e879f9}
+.mi-pin .av-dot,.mi-mug .av-dot{position:absolute;right:-7px;top:-7px;font:800 9.5px/1 'Share Tech Mono',monospace;padding:2px 3px;border-radius:4px;background:#0b1220;border:1px solid currentColor}
+.mi-pin>div{position:relative}
+/* linha de veículo no formulário */
+.susp-veic{display:grid;grid-template-columns:78px 1fr 64px 22px;gap:5px;margin-bottom:5px;align-items:center}
+.susp-veic input{background:var(--surf2);border:1px solid var(--line2);border-radius:8px;color:var(--t1);font-size:12px;padding:7px;font-family:inherit;min-width:0}
+/* popup do suspeito */
+.susp-popup .leaflet-popup-content{margin:11px 13px;font-size:12.5px}
+.susp-pop .sp-nome{font-weight:700;font-size:14px;color:#f0e6ff;display:flex;align-items:center;gap:6px}
+.susp-pop .sp-vulgo{color:#e879f9;font-size:12px;margin-bottom:5px}
+.susp-pop .sp-kv{display:flex;flex-direction:column;gap:2px;color:#cbd5e1}
+.susp-pop .sp-kv b{color:#94a3b8;font-weight:600}
+.susp-pop .sp-veics{margin-top:6px;color:#fcd34d;font-size:12px}
+.susp-pop .sp-obs{margin-top:6px;color:#cbd5e1;font-style:italic;white-space:pre-wrap}
+.susp-pop .susp-pop-fotos{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.susp-pop .susp-pop-fotos img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid #334155}
+.susp-pop .sp-acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.susp-pop .sp-acts button{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:#F5C518;border-radius:7px;padding:5px 9px;font-size:11.5px;cursor:pointer}
+
+/* ── resultado da pesquisa (abaixo da área de trabalho) ── */
+.intel-results{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.intel-results:empty{display:none}
+.res-block{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.res-block h3{display:flex;align-items:center;gap:8px;font:700 19px Rajdhani,sans-serif;color:var(--t1);margin:0 0 12px}
+.res-block h3::before{content:'';width:4px;height:18px;border-radius:3px;background:var(--acc)}
+.res-pessoa,.res-veiculo{position:relative;border:1px solid var(--line);border-radius:13px;padding:11px 13px 11px 16px;margin-bottom:10px;background:var(--surf2)}
+.res-pessoa::before,.res-veiculo::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:#38bdf8}
+.res-veiculo::before{background:#f59e0b}
+.rp-nome{font-weight:700;font-size:14.5px;color:var(--t1)}
+.res-kv{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted);margin:5px 0}
+.res-kv b{color:var(--t3);font-weight:600}
+.res-bo-chip{display:inline-block;background:var(--info-soft);border:1px solid var(--info-line);color:var(--info);border-radius:7px;padding:2px 8px;font-size:11.5px;font-weight:700;cursor:pointer}
+.res-bo-chip:hover{background:color-mix(in srgb,var(--info) 24%,transparent)}
+.res-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;display:block;overflow-x:auto}
+.res-tbl th{text-align:left;color:var(--muted);font-weight:800;border-bottom:1px solid var(--line2);padding:5px 7px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap}
+.res-tbl td{padding:6px 7px;border-bottom:1px solid var(--line);color:var(--t3);white-space:nowrap}
+.res-sub{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);margin:12px 0 3px;font-weight:800}
+.res-dossie{border:1px solid var(--line);border-radius:13px;margin-bottom:12px;overflow:hidden;transition:outline-color .3s}
+.res-dossie-hd{background:var(--surf2);padding:10px 13px;font-weight:700;color:var(--t1);font-size:13.5px;border-bottom:1px solid var(--line)}
+.res-dossie-bd{padding:10px 13px}
 .res-empty{color:var(--muted);text-align:center;padding:24px;font-size:13px}
 .leaflet-div-icon.srch-pin{background:none;border:none}
 .srch-pin .pin{width:30px;height:30px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);
@@ -83,21 +235,37 @@ a{color:var(--yellow)}
 .srch-pin .pin b{transform:rotate(-45deg);color:#fff;font-size:14px;font-weight:800;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 @keyframes srchPulse{0%,100%{box-shadow:0 0 0 3px rgba(255,106,0,.35),0 3px 10px rgba(0,0,0,.6)}50%{box-shadow:0 0 0 9px rgba(255,106,0,0),0 3px 10px rgba(0,0,0,.6)}}
 .srch-pin .pin{animation:srchPulse 1.8s ease-out infinite}
-@media(max-width:1000px){
-  .intel-top{grid-template-columns:1fr}
-  .intel-search{position:static;max-height:none}
-}
+
+/* janelas (Lixeira, Registro de acessos, tabela A1–F6, conflito) */
+.in-modal .bp-modal-cx{width:min(760px,100%)}
+.in-modal.estreita .bp-modal-cx{width:min(520px,100%)}
+.in-lin{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surf2);margin-bottom:7px}
+.in-lin .tx{flex:1;min-width:0}
+.in-lin .tx b{display:block;color:var(--t1);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.in-lin .tx small{display:block;color:var(--muted);font-size:12px}
+.lg-filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.lg-filtros input,.lg-filtros select{background:var(--surf2);border:1px solid var(--line2);border-radius:10px;padding:8px 11px;color:var(--t1);font:13.5px Inter,sans-serif;outline:none}
+.lg-filtros input{flex:1;min-width:180px}
+.lg-tab{width:100%;border-collapse:collapse;font-size:12.5px}
+.lg-tab th{text-align:left;font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--surf)}
+.lg-tab td{padding:7px 8px;border-bottom:1px solid var(--line);color:var(--t3);vertical-align:top}
+.lg-tab td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
+.lg-acao{display:inline-block;padding:2px 8px;border-radius:7px;font-size:11px;font-weight:800;background:var(--surf2);border:1px solid var(--line2);white-space:nowrap}
+.lg-acao.excluiu,.lg-acao.excluiu_foto{color:var(--crit);border-color:var(--crit-line)}
+.lg-acao.criou,.lg-acao.recuperou{color:var(--good);border-color:var(--good-line)}
+.lg-acao.pesquisou,.lg-acao.cortex{color:var(--info);border-color:var(--info-line)}
+.lg-rol{max-height:56vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
 
 /* ── login ── */
-#intel-login{max-width:400px;margin:70px auto;background:var(--card);border:1px solid #1e293b;border-radius:16px;
-  padding:34px 30px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-#intel-login .ic{text-align:center;font-size:46px;line-height:1}
-#intel-login h2{text-align:center;font-size:19px;color:#e2e8f0;margin:8px 0 4px}
-#intel-login p{text-align:center;font-size:12.5px;color:#94a3b8;margin-bottom:22px}
-#intel-login label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
-#intel-login input{width:100%;padding:11px 13px;margin-bottom:14px;background:#0b1220;border:1px solid #334155;border-radius:9px;color:#e2e8f0;font-size:14px}
-#intel-login button{width:100%;padding:12px;background:var(--yellow);border:0;border-radius:9px;color:#0a0f1a;font-weight:700;font-size:15px;cursor:pointer}
-#intel-erro{color:#f87171;font-size:13px;min-height:18px;margin-bottom:6px}
+#intel-login{position:relative;z-index:1;max-width:420px;margin:8vh auto 40px;padding:32px 30px;border-radius:22px;background:var(--card);border:1px solid var(--line2);box-shadow:var(--sh);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#intel-login .ic{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 10px;border-radius:18px;background:var(--crit-soft);border:1px solid var(--crit-line);font-size:32px}
+#intel-login h2{text-align:center;font:700 24px Rajdhani,sans-serif;color:var(--t1);margin:0 0 4px}
+#intel-login p{text-align:center;font-size:13px;color:var(--muted);margin:0 0 22px}
+#intel-login label{display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:5px}
+#intel-login input{width:100%;padding:12px 13px;margin-bottom:14px;background:var(--surf2);border:1px solid var(--line2);border-radius:12px;color:var(--t1);font-size:15px;outline:none}
+#intel-login input:focus{border-color:var(--acc-line);box-shadow:0 0 0 3px var(--acc-soft)}
+#intel-login button{width:100%;padding:13px;background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;border-radius:12px;color:var(--acc-ink);font-weight:800;font-size:15px;cursor:pointer}
+#intel-erro{color:var(--crit);font-size:13px;min-height:18px;margin-bottom:6px}
 
 .leaflet-tooltip.mun-tip{background:rgba(10,12,16,.9);color:#fde68a;border:1px solid rgba(245,197,24,.45);border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 .leaflet-tooltip.mun-tip::before{border:none;display:none}
@@ -105,90 +273,48 @@ a{color:var(--yellow)}
 .leaflet-tooltip.road-tip::before{border:none;display:none}
 .leaflet-tooltip.road-tip.br{color:#ffb27a}
 .leaflet-tooltip.road-tip.ro{color:#8ee7fb}
-.leaflet-container{background:#0b1220 !important}
+.leaflet-container{background:#0b1220 !important;font-family:Inter,sans-serif}
 .leaflet-popup-content-wrapper{background:#13161e !important;color:#e2e8f0}
+.leaflet-tooltip.mi-tip{background:rgba(6,10,20,.92);color:#e2e8f0;border:1px solid rgba(148,163,184,.3);border-radius:8px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.leaflet-tooltip.mi-tip::before{display:none}
+.mi-tip-l{display:flex;align-items:center;gap:7px}
 
-/* ── page loader ── */
-#intel-loader{position:fixed;inset:0;background:rgba(6,9,18,.82);display:none;align-items:center;justify-content:center;z-index:200;
-  font-family:Rajdhani,sans-serif;font-size:18px;color:var(--yellow);letter-spacing:.5px}
+/* ── carregando ── */
+#intel-loader{position:fixed;inset:0;background:rgba(6,9,18,.72);display:none;align-items:center;justify-content:center;gap:12px;z-index:2147460000;
+  font:700 18px Rajdhani,sans-serif;color:var(--acc);letter-spacing:.5px;backdrop-filter:blur(4px)}
+#intel-loader::before{content:'';width:22px;height:22px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:bp-gira .7s linear infinite}
 
-/* ── estilos do mapa (extraídos de #page-mapa-intel do index.html) ── */
-      .mi-sub{font-size:12.5px;color:var(--muted);margin:-4px 2px 14px}
-      .mi-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
-      .mi-geobar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;padding:9px 11px;
-        background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:12px}
-      .mi-geobar input{background:#0b1220;border:1px solid var(--border,#334155);border-radius:8px;padding:8px 11px;
-        color:#e2e8f0;font-size:13px;font-family:inherit}
-      .mi-geobar #mi-geo-q{flex:1;min-width:200px}
-      .mi-geobar #mi-geo-lat,.mi-geobar #mi-geo-lng{width:104px}
-      .mi-geobar .mi-geo-sep{width:1px;align-self:stretch;background:var(--border,#334155)}
-      .mi-geobar .mi-status{margin-left:0}
-      .mi-btn{background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.4);color:#F5C518;border-radius:9px;padding:8px 14px;font-size:13px;cursor:pointer}
-      .mi-btn:hover{background:rgba(245,197,24,.2)}
-      .mi-btn.active{background:#F5C518;color:#0a0f1a;font-weight:700;border-color:#F5C518}
-      select.mi-btn{background:#161b28;color:#F5C518}
-      select.mi-btn option{background:#161b28;color:#e2e8f0}
-      .mi-wb-ctrl{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);border-radius:9px;padding:4px 8px}
-      .mi-wb-ctrl #mi-wb-slider{width:170px;accent-color:#F5C518;cursor:pointer}
-      .mi-wb-ctrl #mi-wb-label{font-size:12px;font-weight:700;color:#F5C518;min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
-      .mi-wb-step{background:transparent;border:0;color:#F5C518;font-size:16px;line-height:1;cursor:pointer;padding:0 3px}
-      .mi-wb-step:hover{color:#fff}
-      .mi-btn:disabled{opacity:.4;cursor:not-allowed}
-      .mi-bar .mi-sep{width:1px;align-self:stretch;background:var(--border,#334155);margin:0 2px}
-      .mi-status{font-size:12px;color:var(--muted);margin-left:auto}
-      .mi-map-wrap{position:relative;height:62vh;min-height:420px;border:1px solid var(--border,#334155);border-radius:14px;overflow:hidden}
-      #mi-map{position:absolute;inset:0;background:#0b1220}
-      .mi-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:16px}
-      .mi-card{background:var(--card,#0f172a);border:1px solid var(--border,#334155);border-radius:14px;padding:14px 16px}
-      .mi-card-ttl{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:10px}
-      .mi-list{display:flex;flex-direction:column;gap:7px;max-height:430px;overflow-y:auto}
-      .mi-row{background:#0b1220;border:1px solid var(--border,#334155);border-left-width:4px;border-radius:10px;padding:9px 12px;cursor:pointer;font-size:13.5px}
-      .mi-row:hover{border-color:rgba(245,197,24,.5)}
-      .mi-row .meta{color:var(--muted);font-size:11.5px}
-      .mi-empty{color:var(--muted);text-align:center;padding:20px;font-size:13px}
-      .mi-fg{margin-bottom:10px}
-      .mi-fg label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px}
-      .mi-fg input,.mi-fg select,.mi-fg textarea{width:100%;background:#0b1220;border:1px solid var(--border,#334155);border-radius:9px;padding:9px 12px;color:#e2e8f0;font-size:13.5px;font-family:inherit}
-      .mi-fg input[type=color]{height:40px;padding:3px}
-      .mi-fg textarea{min-height:70px;resize:vertical}
-      .mi-form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-      .mi-save{background:#F5C518;border:0;color:#0a0f1a;font-weight:700;border-radius:9px;padding:9px 16px;font-size:13px;cursor:pointer}
-      .mi-del{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.45);color:#fca5a5;border-radius:9px;padding:9px 16px;font-size:13px;cursor:pointer}
-      .mi-cancel{background:transparent;border:1px solid var(--border,#334155);color:#cbd5e1;border-radius:9px;padding:9px 16px;font-size:13px;cursor:pointer}
-      .mi-hint-draw{color:var(--muted);font-size:12.5px;line-height:1.6;padding:10px 4px}
-      .mi-fotos{display:flex;flex-wrap:wrap;gap:8px}
-      .mi-foto{position:relative;width:78px;height:78px;border-radius:8px;overflow:hidden;border:1px solid var(--border,#334155);background:#0b1220}
-      .mi-foto img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block}
-      .mi-foto.carregando,.mi-foto.erro{display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);text-align:center;padding:4px}
-      .mi-foto-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:0;border-radius:50%;background:rgba(220,38,38,.85);color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0}
-      .mi-foto-badge{font-size:11px;color:#e879f9;font-weight:700}
-      /* pino "retrato" do suspeito */
-      .mi-mug .mug{width:44px;height:44px;border-radius:50%;border:3px solid #e879f9;background:#1a1030 center/cover no-repeat;
-        box-shadow:0 3px 10px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative}
-      .mi-mug .mug::after{content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);
-        border:7px solid transparent;border-top-color:#e879f9}
-      /* linha de veículo no formulário */
-      .susp-veic{display:grid;grid-template-columns:78px 1fr 64px 22px;gap:5px;margin-bottom:5px;align-items:center}
-      .susp-veic input{background:#0b1220;border:1px solid var(--border,#334155);border-radius:7px;color:#e2e8f0;font-size:12px;padding:6px 7px;font-family:inherit;min-width:0}
-      /* popup do suspeito */
-      .susp-popup .leaflet-popup-content{margin:11px 13px;font-size:12.5px}
-      .susp-pop .sp-nome{font-weight:700;font-size:14px;color:#f0e6ff}
-      .susp-pop .sp-vulgo{color:#e879f9;font-size:12px;margin-bottom:5px}
-      .susp-pop .sp-kv{display:flex;flex-direction:column;gap:2px;color:#cbd5e1}
-      .susp-pop .sp-kv b{color:#94a3b8;font-weight:600}
-      .susp-pop .sp-veics{margin-top:6px;color:#fcd34d;font-size:12px}
-      .susp-pop .sp-obs{margin-top:6px;color:#cbd5e1;font-style:italic;white-space:pre-wrap}
-      .susp-pop .susp-pop-fotos{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-      .susp-pop .susp-pop-fotos img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border,#334155)}
-      .susp-pop .sp-acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
-      .susp-pop .sp-acts button{background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.4);color:#F5C518;border-radius:7px;padding:5px 9px;font-size:11.5px;cursor:pointer}
-      @media(max-width:1000px){.mi-grid{grid-template-columns:1fr}}
+@media(max-width:1280px){ .in-nums{grid-template-columns:repeat(4,minmax(0,1fr))} .in-work{height:calc(100vh - 66px - 160px - 22px)} }
+@media(max-width:980px){
+  .in-nums{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .in-work{grid-template-columns:1fr;height:auto}
+  .in-stage{order:-1;height:72vh;min-height:460px}
+  .in-rail{max-height:none}
+  .in-pane{max-height:none;overflow:visible}
+  .is-actions{position:static;background:none}
+  .in-drawer{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:78%;transform:translateY(calc(100% + 24px))}
+  .mi-map-wrap.form-on .in-mapbar{right:10px}
+  .in-mapbar{left:52px;right:8px}
+  .mi-geobar{flex-basis:100%;max-width:none}
+  .mi-geobar #mi-geo-lat,.mi-geobar #mi-geo-lng{width:70px}
+}
+@media(max-width:560px){
+  .in-nums{display:flex;overflow-x:auto;gap:8px;margin:0 -10px 10px;padding:0 10px 4px;scrollbar-width:none}
+  .in-nums::-webkit-scrollbar{display:none}
+  .in-num{flex:0 0 auto;min-width:112px;padding:8px 12px 8px 14px;border-radius:13px}
+  .in-num b{font-size:22px}
+  .mi-geobar #mi-geo-lat,.mi-geobar #mi-geo-lng{width:58px;font-size:13px}
+  .mi-geobar #mi-geo-q{min-width:90px}
+  .in-restrito{display:none}
+  .in-ferr .mi-btn span.tx{display:none}
+}
+/* o mapa já ocupa a altura toda: a Rota do Córtex não precisa mais esticar a caixa */
+.in-stage .mi-map-wrap.rc-on{height:auto;min-height:0}
+.in-stage .mi-map-wrap:fullscreen{height:100vh}
 
 /* Rodovias BR/RO: estilos vêm do bp-rodovias.js */
 
 /* ── Rota do Córtex (31/10/2026) ── */
-.mi-btn.rc-btn{background:linear-gradient(180deg,rgba(34,211,238,.18),rgba(34,211,238,.06));border-color:rgba(34,211,238,.6);color:#7ff0ff;box-shadow:0 0 12px rgba(34,211,238,.18)}
-.mi-btn.rc-btn:hover{background:rgba(34,211,238,.24)}
 .mi-map-wrap{transition:height .3s ease}
 .mi-map-wrap.rc-on{height:80vh;min-height:560px;border-color:rgba(34,211,238,.45);box-shadow:0 0 0 1px rgba(34,211,238,.12),0 0 40px rgba(34,211,238,.08)}
 .mi-map-wrap:fullscreen{height:100vh;border-radius:0}
@@ -343,10 +469,84 @@ a{color:var(--yellow)}
 @media (prefers-reduced-motion:reduce){
   .rc-anel,.rc-fluxo,.rc-mira,.rc-cometa::before,.rc-hdr-t::before{animation:none!important}
 }
+
+/* ===== fase 2 (22/11/2026): vínculos, BOs ligados, rede, mancha, cruzamento, relatório ===== */
+.vc-lin{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-left:3px solid var(--c,var(--acc));border-radius:10px;background:var(--surf2);margin-bottom:6px}
+.vc-lin .tx{flex:1;min-width:0}
+.vc-lin .tx b{display:block;color:var(--t1);font-size:13px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-lin .tx b:hover{color:var(--acc)}
+.vc-lin .tx small{display:block;color:var(--muted);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-rel{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--c,var(--acc));border:1px solid currentColor;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.vc-x{flex:none;border:1px solid var(--line2);background:transparent;color:var(--muted);border-radius:8px;min-width:28px;height:28px;cursor:pointer;font:800 12px Inter,sans-serif;padding:0 7px}
+.vc-x:hover{color:var(--crit);border-color:var(--crit-line)}
+.vc-x.conf{color:#fff;background:var(--crit);border-color:var(--crit)}
+.vc-acts{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+.vc-acts .mi-cancel{min-height:36px;padding:7px 12px;font-size:12.5px}
+.vc-vazio{color:var(--muted);font-size:12px;margin:0 0 8px}
+.bo-chip{flex:none;font:800 12px Inter,sans-serif;color:var(--acc-ink,#111);background:var(--acc);border:0;border-radius:7px;padding:4px 8px;cursor:pointer;white-space:nowrap}
+.bo-add{display:flex;gap:6px;margin:2px 0 6px}
+.bo-add input{flex:1;min-width:0}
+.bo-add .mi-cancel{min-height:38px;padding:7px 12px;font-size:12.5px}
+.bo-sug{margin-top:8px}
+.bo-sug .vc-lin{border-left-color:var(--info,#38bdf8)}
+.bo-sug-t{font-size:11.5px;font-weight:800;color:var(--info,#38bdf8);margin:8px 0 6px}
+.vc-pick-l{max-height:46vh;overflow:auto;margin-top:8px}
+.vc-pick-l .in-lin{cursor:pointer}
+.vc-pick-l .in-lin:hover{border-color:var(--acc-line)}
+.vc-pick-f{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){ .vc-pick-f{grid-template-columns:1fr} }
+.res-alvo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 4px;padding:8px 10px;border:1px solid rgba(232,121,249,.45);background:rgba(232,121,249,.1);border-radius:10px;font-size:13px;color:var(--t1)}
+.res-alvo button,.res-ligar{background:var(--surf);border:1px solid var(--line2);color:var(--t1);border-radius:8px;padding:4px 10px;font:700 12px Inter,sans-serif;cursor:pointer}
+.res-ligar{float:right;margin:-3px 0 -3px 8px}
+.res-alvo button:hover,.res-ligar:hover{border-color:var(--acc-line);color:var(--acc)}
+/* rede (janela) */
+.rd-svg{width:100%;height:auto;display:block;background:radial-gradient(circle at 50% 50%,rgba(148,163,184,.08),transparent 70%);border:1px solid var(--line);border-radius:14px}
+.rd-svg .no{cursor:pointer}
+.rd-svg .no:hover circle,.rd-svg .no:hover rect{stroke-width:3.5}
+.rd-svg text{font-family:Inter,sans-serif;fill:var(--t1)}
+.rd-svg .lb{paint-order:stroke;stroke:var(--surf);stroke-width:4px;stroke-linejoin:round}
+.rd-leg{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.rd-leg span{font-size:11px;font-weight:700;border:1px solid var(--c);color:var(--c);border-radius:999px;padding:2px 8px}
+.rd-res{font-size:12.5px;color:var(--t2);margin:8px 0 0}
+/* mancha criminal (quadro Camadas) */
+.mc-box{display:none;margin:6px 0 2px;gap:6px;flex-direction:column}
+.mc-box.on{display:flex}
+.mc-box select{width:100%}
+.mc-info{font-size:11.5px;color:var(--muted)}
+.mc-grad{height:8px;border-radius:4px;background:linear-gradient(90deg,#2563eb,#22d3ee,#a3e635,#facc15,#ef4444)}
+.mc-grad-l{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.mc-pt{background:#ef4444;border:1.5px solid #fff;border-radius:50%}
+/* cruzamento de placas no painel do Córtex */
+.rc-cruz{margin:8px 0 4px;font:12.5px 'Share Tech Mono',monospace}
+.rc-cruz-t{color:#fbbf24;letter-spacing:1px;margin-bottom:4px}
+.rc-cruz-l{display:flex;align-items:center;gap:8px;padding:6px 8px;margin-bottom:5px;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.09);border-radius:4px;color:#fde68a}
+.rc-cruz-l.bo{border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08);color:#a5f3fc}
+.rc-cruz-l span{flex:1;min-width:0}
+.rc-cruz-l button{flex:none;background:transparent;border:1px solid currentColor;color:inherit;border-radius:4px;padding:2px 8px;cursor:pointer;font:12px 'Share Tech Mono',monospace}
+.rc-cruz-n{color:#7fa9b8}
 </style>
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-22", "titulo": "Ligar uma coisa à outra: vínculos, BOs no alvo, mancha criminal e relatório", "quem": "todos", "itens": [
+    "Vínculos: na ficha de qualquer marcação, “Ligar a outra marcação” liga um alvo a comparsas, familiares, pistas, rotas ou locais (comparsa, familiar, é chefe de, frequenta, mora, usa, abastece). “Ver rede” mostra o desenho da rede até 2 passos, com os BOs em comum.",
+    "Camadas → 🕸️ Rede de vínculos: linhas tracejadas no mapa entre o que está ligado. Com uma ficha aberta, os vínculos dela aparecem sempre.",
+    "BOs ligados: guarde na ficha os BOs do alvo (pelo número, ou pelo botão “📎 Ligar a um alvo” em cada BO da pesquisa). Cada BO mostra data, município e natureza.",
+    "“Procurar na base” na ficha do alvo acha sozinho os BOs dele pelo CPF, nome e placas, e avisa quem estava junto nesses BOs e também é alvo no mapa (para ligar como comparsa).",
+    "Na pesquisa, quando a pessoa encontrada já é alvo no mapa, aparece o aviso com o botão para abrir a ficha e ligar os BOs dela.",
+    "Camadas → 🌡️ Mancha criminal: mapa de calor das ocorrências do batalhão, com período e natureza. Aproxime para ver cada BO.",
+    "Rota do Córtex: o painel cruza a placa com os alvos do mapa (veículo do alvo) e com os BOs da base. “Salvar no mapa” guarda também os pontos de atenção e liga a rota ao alvo dono da placa.",
+    "📄 Relatório: na barra do mapa (o que está na tela, respeitando o filtro) e na ficha de cada marcação. Sai em folha A4 com brasão, avaliação A1–F6, mapa de satélite numerado, vínculos e BOs, pronto para imprimir ou salvar em PDF. A geração fica registrada."
+  ] },
+  { "data": "2026-11-22", "titulo": "Central de Inteligência de cara nova, mais segura e com avaliação A1–F6", "quem": "todos", "itens": [
+    "Tela reorganizada: o mapa ocupa a tela toda; à esquerda ficam as abas Pesquisa e Marcações; a busca de endereço e as ferramentas flutuam em cima do mapa; imagem de satélite, focos de calor, municípios e rodovias estão no botão Camadas.",
+    "Números no topo (Alvos, Pistas, Rotas, Confiáveis, A confirmar, Validade vencida): toque num deles e o mapa e a lista mostram só aquilo. Toque de novo para ver tudo.",
+    "Avaliação da informação no padrão A1–F6: a letra diz quanto a FONTE é confiável e o número diz quanto o CONTEÚDO é verdadeiro, com a data da informação e até quando ela vale. No mapa, a confirmada aparece forte, a fraca apagada e tracejada, e a vencida bem apagada com ⌛. O botão “?” no formulário explica a tabela.",
+    "Editar abre uma gaveta do lado do mapa, sem precisar rolar a página.",
+    "Lixeira (ícone no topo): excluir não apaga mais de vez. A marcação vai para a lixeira com quem excluiu e quando, e “Recuperar” traz de volta com fotos, ficha e avaliação.",
+    "Duas pessoas editando a mesma marcação: se outra pessoa salvou antes, o sistema avisa e não grava por cima. Você vê a versão nova e refaz a sua alteração.",
+    "Tudo o que é feito aqui fica registrado: quem abriu, o que pesquisou, que relatório do Córtex leu e quem criou, editou ou excluiu cada marcação. Só o chefe da P2 vê esse registro (ícone do olho no topo)."
+  ] },
   { "data": "2026-10-31", "titulo": "Rota do Córtex e rodovias novas", "quem": "todos", "itens": [
     "Botão “🛰️ Rota do Córtex”: escolha (ou arraste para o mapa) o relatório CSV de passagens do Córtex e o mapa mostra o caminho do veículo de radar em radar, pelas ruas, com a hora de cada passagem.",
     "Painel da rota com a placa, as viagens, a distância e a linha do tempo; avisa quando o veículo fez retorno no mesmo radar, ficou muito tempo sem registro (parada provável) ou andou rápido demais.",
@@ -358,19 +558,25 @@ a{color:var(--yellow)}
   ] }
 ]</script>
 </head>
-<body>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="intel-hdr">
-  <img src="LOGOS/bpfron_transp.avif" alt="BPFRON" onerror="this.style.display='none'">
-  <div>
-    <div class="ht">Central de Inteligência</div>
-    <div class="hs">BPFRON · Seção P2 · Uso Restrito</div>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="index.html" title="Voltar ao dashboard">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON" onerror="this.style.display='none'">
+      <span><small>BPFRON · Seção P2</small><b>Central de Inteligência</b></span>
+    </a>
+    <span class="in-restrito" title="Conteúdo sigiloso: tudo o que é feito aqui fica registrado"><i data-ic="cadeado"></i> Uso restrito</span>
+    <div class="bp-topo-acoes">
+      <button type="button" class="bp-btn ic sec in-topo-btn" id="in-btn-log" style="display:none" title="Registro de acessos (chefe da P2)" aria-label="Registro de acessos" onclick="inAbrirRegistro()"><i data-ic="olho"></i></button>
+      <button type="button" class="bp-btn ic sec in-topo-btn" id="in-btn-lixeira" style="display:none" title="Lixeira: marcações excluídas" aria-label="Lixeira" onclick="inAbrirLixeira()"><i data-ic="lixeira"></i><em id="in-lixeira-n" style="display:none"></em></button>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <span class="bp-eu" id="intel-chip" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec" id="intel-sair" style="display:none" title="Sair" aria-label="Sair" onclick="intelLogout()"><i data-ic="sair"></i></button>
+    </div>
   </div>
-  <div class="spacer"></div>
-  <a class="intel-back" href="index.html">← Painel</a>
-  <span class="intel-chip" id="intel-chip" style="display:none"></span>
-  <button class="intel-sair" id="intel-sair" style="display:none" onclick="intelLogout()">⎋ Sair</button>
-</div>
+</header>
 
 <div id="intel-loader">Abrindo…</div>
 
@@ -390,111 +596,157 @@ a{color:var(--yellow)}
 </div>
 
 <!-- APP -->
-<div class="wrap wide" id="intel-app" style="display:none">
-  <div class="sec">🕵️ Central de Inteligência</div>
+<div class="in-wrap" id="intel-app" style="display:none">
 
-  <div class="intel-top">
-    <!-- ESQUERDA: ferramenta de pesquisa (fixa no scroll) -->
-    <aside class="intel-search" id="intel-search">
-      <div class="is-ttl">🔎 Pesquisa &amp; cruzamento</div>
-      <div class="is-hint">Cruza <b>Envolvidos × Veículos × Ocorrências</b> pelo nº do BO. Achou a pessoa → mostra <b>todos os BOs no nome dela</b>, quem estava junto e os veículos.</div>
+  <!-- números: cada um filtra o mapa e a lista -->
+  <div class="in-nums" id="in-nums"></div>
 
-      <div class="is-group">Pessoa</div>
-      <div class="mi-fg"><label>Nome</label><input id="q-nome" type="text" placeholder="nome completo ou parte"></div>
-      <div class="is-row2">
-        <div class="mi-fg"><label>CPF</label><input id="q-cpf" type="text" placeholder="000.000.000-00"></div>
-        <div class="mi-fg"><label>RG</label><input id="q-rg" type="text"></div>
-      </div>
-      <div class="mi-fg"><label>Data de nascimento</label><input id="q-nasc" type="text" placeholder="dd/mm/aaaa"></div>
-
-      <div class="is-group">Veículo</div>
-      <div class="is-row2">
-        <div class="mi-fg"><label>Placa</label><input id="q-placa" type="text" style="text-transform:uppercase"></div>
-        <div class="mi-fg"><label>Chassi</label><input id="q-chassi" type="text"></div>
-      </div>
-      <div class="is-row2">
-        <div class="mi-fg"><label>Renavam</label><input id="q-renavam" type="text"></div>
-        <div class="mi-fg"><label>Marca / Modelo</label><input id="q-modelo" type="text"></div>
+  <div class="in-work">
+    <!-- ESQUERDA: pesquisa e marcações -->
+    <aside class="in-rail">
+      <div class="in-tabs" role="tablist">
+        <button type="button" class="in-tab on" id="in-tab-busca" onclick="inAba('busca')"><i data-ic="buscar"></i> Pesquisa</button>
+        <button type="button" class="in-tab" id="in-tab-marc" onclick="inAba('marc')"><i data-ic="local"></i> Marcações <small id="mi-count">0</small></button>
       </div>
 
-      <div class="is-group">Ocorrência</div>
-      <div class="mi-fg"><label>Nº do BO</label><input id="q-bo" type="text" placeholder="puxa o boletim inteiro"></div>
-      <div class="mi-fg"><label>Município</label><input id="q-mun" type="text"></div>
-      <div class="is-row2">
-        <div class="mi-fg"><label>De</label><input id="q-di" type="date"></div>
-        <div class="mi-fg"><label>Até</label><input id="q-df" type="date"></div>
+      <div class="in-pane intel-search" id="intel-search">
+        <div class="in-hint">Cruza <b>Envolvidos × Veículos × Ocorrências</b> pelo nº do BO. Achou a pessoa → mostra <b>todos os BOs no nome dela</b>, quem estava junto e os veículos.</div>
+
+        <div class="is-group">Pessoa</div>
+        <div class="mi-fg"><label>Nome</label><input id="q-nome" type="text" placeholder="nome completo ou parte"></div>
+        <div class="is-row2">
+          <div class="mi-fg"><label>CPF</label><input id="q-cpf" type="text" placeholder="000.000.000-00"></div>
+          <div class="mi-fg"><label>RG</label><input id="q-rg" type="text"></div>
+        </div>
+        <div class="mi-fg"><label>Data de nascimento</label><input id="q-nasc" type="text" placeholder="dd/mm/aaaa"></div>
+
+        <div class="is-group">Veículo</div>
+        <div class="is-row2">
+          <div class="mi-fg"><label>Placa</label><input id="q-placa" type="text" style="text-transform:uppercase"></div>
+          <div class="mi-fg"><label>Chassi</label><input id="q-chassi" type="text"></div>
+        </div>
+        <div class="is-row2">
+          <div class="mi-fg"><label>Renavam</label><input id="q-renavam" type="text"></div>
+          <div class="mi-fg"><label>Marca / Modelo</label><input id="q-modelo" type="text"></div>
+        </div>
+
+        <div class="is-group">Ocorrência</div>
+        <div class="mi-fg"><label>Nº do BO</label><input id="q-bo" type="text" placeholder="puxa o boletim inteiro"></div>
+        <div class="mi-fg"><label>Município</label><input id="q-mun" type="text"></div>
+        <div class="is-row2">
+          <div class="mi-fg"><label>De</label><input id="q-di" type="date"></div>
+          <div class="mi-fg"><label>Até</label><input id="q-df" type="date"></div>
+        </div>
+        <div class="is-status" id="q-status"></div>
+
+        <div class="is-actions">
+          <button class="mi-save" onclick="intelBuscar()"><i data-ic="buscar"></i> Buscar</button>
+          <button class="mi-cancel" onclick="intelLimparBusca()">Limpar</button>
+        </div>
       </div>
 
-      <div class="is-actions">
-        <button class="mi-save" onclick="intelBuscar()">🔎 Buscar</button>
-        <button class="mi-cancel" onclick="intelLimparBusca()">Limpar</button>
+      <div class="in-pane" id="in-pane-marc" hidden>
+        <div class="mi-fg"><input type="text" id="mi-busca" placeholder="Filtrar por título, tipo, descrição…" oninput="miRenderList()"></div>
+        <div class="mi-chips" id="mi-chips"></div>
+        <div id="mi-filtro-ativo"></div>
+        <div id="mi-list" class="mi-list"></div>
       </div>
-      <div class="is-status" id="q-status"></div>
     </aside>
 
     <!-- DIREITA: mapa -->
-    <div class="intel-mapcol">
-      <div class="mi-geobar">
-        <input id="mi-geo-q" type="text" placeholder="🔎 Endereço ou local — ex.: Av. Brasil, Guajará-Mirim" onkeydown="if(event.key==='Enter')miGeoBuscar()">
-        <button class="mi-btn" onclick="miGeoBuscar()">Ir</button>
-        <span class="mi-geo-sep"></span>
-        <input id="mi-geo-lat" type="text" placeholder="latitude" onkeydown="if(event.key==='Enter')miGeoCoord()">
-        <input id="mi-geo-lng" type="text" placeholder="longitude" onkeydown="if(event.key==='Enter')miGeoCoord()">
-        <button class="mi-btn" onclick="miGeoCoord()">📍 Ir</button>
-        <button class="mi-btn" id="mi-geo-marcar" style="display:none" onclick="miGeoMarcarAqui()">➕ Marcar aqui</button>
-        <span class="mi-status" id="mi-geo-status"></span>
-      </div>
-      <div class="mi-bar">
-        <button class="mi-btn" onclick="document.getElementById('mi-file').click()" title="Importar traçado de GPS: GPX, KML ou GeoJSON">📥 Importar arquivo</button>
-        <input type="file" id="mi-file" accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/vnd.google-earth.kml+xml,application/geo+json" style="display:none" onchange="miImportFile(this)">
-        <button class="mi-btn rc-btn" onclick="document.getElementById('rc-file').click()" title="Relatório de passagens do Córtex (CSV): mostra o caminho do veículo pelos radares. Também dá para arrastar o arquivo para cima do mapa.">🛰️ Rota do Córtex</button>
-        <input type="file" id="rc-file" accept=".csv,.txt,text/csv" style="display:none" onchange="rcAbrirArquivo(this)">
-        <button class="mi-btn" id="mi-undo-btn" onclick="miUndo()" title="Desfazer última alteração (Ctrl+Z)" disabled>↩️ Desfazer</button>
-        <select class="mi-btn" id="mi-base-sel" onchange="miSetBase(this.value)" title="Camada de imagem">
-          <option value="esri">🛰️ Satélite (Esri, atual)</option>
-          <option value="wayback">🕐 Satélite histórico (por data)</option>
-          <option value="viirs">📡 VIIRS (imagem de ontem, baixa res.)</option>
-          <option value="dark">🌙 Mapa escuro</option>
-        </select>
-        <select class="mi-btn" id="mi-wb-date" style="display:none" title="Data da captura"></select>
-        <span class="mi-wb-ctrl" id="mi-wb-ctrl" style="display:none">
-          <button class="mi-wb-step" onclick="miWbStep(-1)" title="captura anterior">‹</button>
-          <input type="range" id="mi-wb-slider" min="0" max="0" value="0" step="1" oninput="miWbSlide(this.value)" title="Linha do tempo — arraste">
-          <button class="mi-wb-step" onclick="miWbStep(1)" title="captura seguinte">›</button>
-          <span id="mi-wb-label">—</span>
-        </span>
-        <button class="mi-btn" id="mi-wb-scan" onclick="miWaybackScan()" style="display:none" title="Filtra a linha do tempo só pras capturas de satélite realmente diferentes NESTE ponto do mapa">📸 só capturas diferentes</button>
-        <button class="mi-btn" id="mi-fire-btn" onclick="miToggleFire()" title="Focos de calor VIIRS (~24 h) — NASA FIRMS">🔥 Focos de calor</button>
-        <button class="mi-btn" id="mi-roads-btn" onclick="miToggleRoads()" title="Ruas da cidade e estradas no estilo da Esri (desenho da própria Esri, em laranja-claro). As rodovias oficiais BR/RO são os botões ao lado.">🛣️ Ruas e nomes</button>
-        <button class="mi-btn" onclick="miFitAll()">🎯 Enquadrar tudo</button>
-        <span class="mi-sep"></span>
-        <button class="mi-btn" id="mi-geo-mun" onclick="toggleGeoLayer(MI_MAP,'mun',this,'🗺️ Municípios')">🗺️ Municípios</button>
-        <button class="mi-btn" id="mi-geo-br" onclick="toggleGeoLayer(MI_MAP,'br',this,'🟠 Rodovias BR')" title="Rodovias federais (DNIT/SNV). Linha cheia = asfalto; tracejada = terra.">🟠 Rodovias BR</button>
-        <button class="mi-btn" id="mi-geo-ro" onclick="toggleGeoLayer(MI_MAP,'ro',this,'🔵 Rodovias RO')" title="Rodovias estaduais (IBGE 2025). Linha cheia = asfalto; tracejada = terra.">🔵 Rodovias RO</button>
-        <span class="mi-status" id="mi-status">Carregando…</span>
-      </div>
+    <div class="in-stage intel-mapcol">
       <div class="mi-map-wrap"><div id="mi-map"></div>
+
+        <div class="in-mapbar">
+          <div class="mi-geobar in-vidro">
+            <i data-ic="buscar"></i>
+            <input id="mi-geo-q" type="text" placeholder="Endereço ou local — ex.: Av. Brasil, Guajará-Mirim" onkeydown="if(event.key==='Enter')miGeoBuscar()">
+            <button class="mi-btn prim" onclick="miGeoBuscar()">Ir</button>
+            <span class="mi-geo-sep"></span>
+            <input id="mi-geo-lat" type="text" placeholder="latitude" onkeydown="if(event.key==='Enter')miGeoCoord()">
+            <input id="mi-geo-lng" type="text" placeholder="longitude" onkeydown="if(event.key==='Enter')miGeoCoord()">
+            <button class="mi-btn prim" onclick="miGeoCoord()" title="Ir para a coordenada"><i data-ic="local"></i></button>
+            <button class="mi-btn prim" id="mi-geo-marcar" style="display:none" onclick="miGeoMarcarAqui()"><i data-ic="mais"></i> Marcar aqui</button>
+          </div>
+          <div class="in-ferr in-vidro">
+            <button class="mi-btn rc-btn" onclick="document.getElementById('rc-file').click()" title="Relatório de passagens do Córtex (CSV): mostra o caminho do veículo pelos radares. Também dá para arrastar o arquivo para cima do mapa.">🛰️ <span class="tx">Rota do Córtex</span></button>
+            <input type="file" id="rc-file" accept=".csv,.txt,text/csv" style="display:none" onchange="rcAbrirArquivo(this)">
+            <button class="mi-btn" onclick="document.getElementById('mi-file').click()" title="Importar traçado de GPS: GPX, KML ou GeoJSON"><i data-ic="enviar"></i> <span class="tx">Importar</span></button>
+            <input type="file" id="mi-file" accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/vnd.google-earth.kml+xml,application/geo+json" style="display:none" onchange="miImportFile(this)">
+            <button class="mi-btn" id="mi-undo-btn" onclick="miUndo()" title="Desfazer última alteração (Ctrl+Z)" disabled><i data-ic="voltar"></i> <span class="tx">Desfazer</span></button>
+            <button class="mi-btn" onclick="miFitAll()" title="Enquadrar todas as marcações"><i data-ic="grade"></i> <span class="tx">Enquadrar</span></button>
+            <button class="mi-btn" id="in-rel-btn" onclick="inRelatorioMapa()" title="Relatório de inteligência das marcações que estão na tela (respeita o filtro dos números) — para imprimir ou salvar em PDF"><i data-ic="arquivo"></i> <span class="tx">Relatório</span></button>
+            <button class="mi-btn" id="in-cam-btn" onclick="inCamadas()" title="Imagem de satélite, focos de calor, municípios e rodovias"><i data-ic="pasta"></i> <span class="tx">Camadas</span></button>
+          </div>
+          <div class="in-geo-status"><span class="mi-status in-vidro" id="mi-geo-status"></span></div>
+        </div>
+
+        <!-- quadro de camadas -->
+        <div class="in-cam in-vidro" id="in-cam">
+          <h4>Imagem de fundo</h4>
+          <select class="mi-btn" id="mi-base-sel" onchange="miSetBase(this.value)" title="Camada de imagem">
+            <option value="esri">🛰️ Satélite (Esri, atual)</option>
+            <option value="wayback">🕐 Satélite histórico (por data)</option>
+            <option value="viirs">📡 VIIRS (imagem de ontem, baixa res.)</option>
+            <option value="dark">🌙 Mapa escuro</option>
+          </select>
+          <select class="mi-btn" id="mi-wb-date" style="display:none" title="Data da captura"></select>
+          <span class="mi-wb-ctrl" id="mi-wb-ctrl" style="display:none">
+            <button class="mi-wb-step" onclick="miWbStep(-1)" title="captura anterior">‹</button>
+            <input type="range" id="mi-wb-slider" min="0" max="0" value="0" step="1" oninput="miWbSlide(this.value)" title="Linha do tempo — arraste">
+            <button class="mi-wb-step" onclick="miWbStep(1)" title="captura seguinte">›</button>
+            <span id="mi-wb-label">—</span>
+          </span>
+          <button class="mi-btn" id="mi-wb-scan" onclick="miWaybackScan()" style="display:none" title="Filtra a linha do tempo só pras capturas de satélite realmente diferentes NESTE ponto do mapa">📸 só capturas diferentes</button>
+          <h4>Sobre o mapa</h4>
+          <button class="mi-btn" id="mi-fire-btn" onclick="miToggleFire()" title="Focos de calor VIIRS (~24 h) — NASA FIRMS">🔥 Focos de calor</button>
+          <button class="mi-btn" id="mi-roads-btn" onclick="miToggleRoads()" title="Ruas da cidade e estradas no estilo da Esri (desenho da própria Esri, em laranja-claro). As rodovias oficiais BR/RO são os botões abaixo.">🛣️ Ruas e nomes</button>
+          <button class="mi-btn" id="mi-geo-mun" onclick="toggleGeoLayer(MI_MAP,'mun',this,'🗺️ Municípios')">🗺️ Municípios</button>
+          <button class="mi-btn" id="mi-geo-br" onclick="toggleGeoLayer(MI_MAP,'br',this,'🟠 Rodovias BR')" title="Rodovias federais (DNIT/SNV). Linha cheia = asfalto; tracejada = terra.">🟠 Rodovias BR</button>
+          <button class="mi-btn" id="mi-geo-ro" onclick="toggleGeoLayer(MI_MAP,'ro',this,'🔵 Rodovias RO')" title="Rodovias estaduais (IBGE 2025). Linha cheia = asfalto; tracejada = terra.">🔵 Rodovias RO</button>
+          <div class="in-leg">Rodovias: linha cheia = asfalto, tracejada = terra.</div>
+          <h4>Análise</h4>
+          <button class="mi-btn" id="mi-rede-btn" onclick="miToggleRede()" title="Liga no mapa, com linhas, as marcações que têm vínculo entre si (alvo × alvo, alvo × pista, rota…)">🕸️ Rede de vínculos</button>
+          <button class="mi-btn" id="mi-mancha-btn" onclick="miToggleMancha()" title="Mapa de calor das ocorrências do batalhão (BASE DE DADOS): onde mais acontece">🌡️ Mancha criminal</button>
+          <div class="mc-box" id="mc-box">
+            <select class="mi-btn" id="mc-per" onchange="miManchaDesenhar(true)" title="Período">
+              <option value="0">Todo o período</option><option value="365" selected>Últimos 12 meses</option><option value="180">Últimos 6 meses</option><option value="90">Últimos 90 dias</option><option value="30">Últimos 30 dias</option>
+            </select>
+            <select class="mi-btn" id="mc-nat" onchange="miManchaDesenhar(true)" title="Natureza"><option value="">Todas as naturezas</option></select>
+            <div class="mc-grad"></div><div class="mc-grad-l"><span>pouco</span><span>muito</span></div>
+            <div class="mc-info" id="mc-info"></div>
+          </div>
+          <h4>Marcações por avaliação</h4>
+          <div class="in-leg">Forte = informação confirmada (A1–B2). Mais apagada = a confirmar. Tracejada e bem apagada = validade vencida.</div>
+        </div>
+
+        <!-- gaveta de edição -->
+        <aside class="in-drawer" id="in-drawer">
+          <div class="in-drawer-cab"><h3 id="in-drawer-tt">Marcação</h3>
+            <button type="button" class="bp-btn ic sm sec" title="Fechar" aria-label="Fechar" onclick="miCancelForm()"><i data-ic="x"></i></button></div>
+          <div class="in-drawer-corpo"><div id="mi-form-box"></div></div>
+        </aside>
+
+        <div class="in-rodape in-vidro"><i class="p"></i><span class="mi-status" id="mi-status">Carregando…</span></div>
+
         <div class="rc-vinheta"></div>
         <div id="rc-hud" class="rc-hud" style="display:none"><div id="rc-hud-topo"></div><div id="rc-hud-corpo" class="rc-hud-corpo"></div></div>
         <div id="rc-play" class="rc-play" style="display:none"></div>
         <div class="rc-solta-aviso">🛰️ Solte aqui o relatório do Córtex (.csv)</div>
       </div>
-
-      <!-- RESULTADO DA PESQUISA (abaixo do mapa; a coluna da esquerda fica fixa) -->
-      <div id="intel-results" class="intel-results"></div>
-
-      <div class="mi-grid">
-        <div class="mi-card">
-          <div class="mi-card-ttl">📍 Marcações <small id="mi-count"></small></div>
-          <div class="mi-fg"><input type="text" id="mi-busca" placeholder="🔎 Filtrar por título ou tipo…" oninput="miRenderList()"></div>
-          <div id="mi-list" class="mi-list"></div>
-        </div>
-        <div class="mi-card">
-          <div class="mi-card-ttl">✏️ Editar marcação</div>
-          <div id="mi-form-box"><div class="mi-hint-draw">Use as ferramentas no canto superior esquerdo do mapa para desenhar:<br>• <b>marcador</b> → ponto (pista, ponto de apoio)<br>• <b>linha</b> → rota (traçado livre, não segue estrada)<br>• <b>polígono</b> → área<br><br>Ou clique numa marcação existente para editar.</div></div>
-        </div>
-      </div>
     </div>
+  </div>
+
+  <!-- RESULTADO DA PESQUISA -->
+  <div id="intel-results" class="intel-results"></div>
+</div>
+
+<!-- janela comum (Lixeira, Registro, tabela A1–F6, conflito) -->
+<div class="bp-modal in-modal" id="in-modal" onclick="if(event.target===this)inFecharModal()">
+  <div class="bp-modal-cx">
+    <div class="bp-modal-cab"><div><h3 id="in-modal-tt"></h3><small id="in-modal-sub"></small></div>
+      <button type="button" class="bp-btn ic sm sec" aria-label="Fechar" onclick="inFecharModal()"><i data-ic="x"></i></button></div>
+    <div id="in-modal-corpo"></div>
   </div>
 </div>
 
@@ -546,8 +798,12 @@ async function apiPostJSON(path, body){
   });
   if (r.status === 401){ intelLogout(); throw new Error('Sessão expirada. Faça login novamente.'); }
   const d = await r.json().catch(()=>({}));
-  if (!r.ok) throw new Error(d.detail || d.error || ('Erro ' + r.status));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.data = d; throw e; }
   return d;
+}
+// Registro de acessos (aba LOG, só o chefe da P2 lê). Nunca trava a tela.
+function inLog(acao, detalhe){
+  try { apiPostJSON('/api/mapa-intel/log', { acao, detalhe: String(detalhe || '').slice(0, 400) }).catch(() => {}); } catch(e){}
 }
 
 function showPageLoader(msg){ const l = document.getElementById('intel-loader'); if (l){ l.textContent = msg || 'Carregando…'; l.style.display = 'flex'; } }
@@ -556,12 +812,20 @@ function hidePageLoader(){ const l = document.getElementById('intel-loader'); if
 function intelRenderChip(){
   const chip = document.getElementById('intel-chip');
   const sair = document.getElementById('intel-sair');
-  if (AUTH.logged && miPodeGerir()){
-    chip.textContent = '👤 ' + AUTH.user;
+  const dentro = AUTH.logged && miPodeGerir();
+  if (dentro){
+    const p = permsSessao();
+    const nome = (p && p.nome) || AUTH.user;
+    const ini = nome.replace(/\b(CB|SD|SGT|TEN|CAP|MAJ|CEL|QPPM|QOPM|1º|2º|3º)\b/gi, '').trim().split(/\s+/).filter(Boolean);
+    chip.querySelector('b').textContent = ((ini[0] || AUTH.user)[0] + ((ini[1] || '')[0] || '')).toUpperCase();
+    chip.querySelector('span').textContent = nome;
+    chip.title = AUTH.user;
     chip.style.display = ''; sair.style.display = '';
   } else {
     chip.style.display = 'none'; sair.style.display = 'none';
   }
+  document.getElementById('in-btn-lixeira').style.display = dentro ? '' : 'none';
+  document.getElementById('in-btn-log').style.display = dentro && MI_CHEFE ? '' : 'none';
 }
 
 function intelShow(){
@@ -609,6 +873,8 @@ async function intelDoLogin(ev){
 function intelLogout(){
   AUTH.token = ''; AUTH.user = '';
   MI_LOADED = false; MI_FEATURES = []; MI_SEL = null; MI_UNDO = []; MI_IMPORT_ITEMS = [];
+  MI_CHEFE = false; MI_N_EXCL = 0; MI_FILTRO = { k:'', v:'' }; MI_ABRIU_LOG = false;
+  inFecharModal(); inDrawer(false);
   if (MI_DRAFT && MI_MAP){ try { MI_MAP.removeLayer(MI_DRAFT); } catch(e){} }
   MI_DRAFT = null; MI_FORM_GEOM = null;
   IDX_ENV = IDX_VEI = IDX_BASE = null; IDX_LOADING = null;
@@ -618,6 +884,8 @@ function intelLogout(){
   if (typeof rcFechar === 'function') rcFechar();
   if (SRCH_LAYER && MI_MAP){ try { MI_MAP.removeLayer(SRCH_LAYER); } catch(e){} }
   SRCH_LAYER = null;
+  if (typeof miManchaDesligar === 'function') miManchaDesligar();
+  if (typeof MI_REDE_LAYER !== 'undefined' && MI_REDE_LAYER) MI_REDE_LAYER.clearLayers();
   const rb = document.getElementById('intel-results'); if (rb) rb.innerHTML = '';
   intelShow();
 }
@@ -681,9 +949,64 @@ let _fotoURLs = {};   // cache fileId -> blob URL (revogado no logout)
 let MI_BASE_SAT = null, MI_BASE_LBL = null, MI_BASE_DARK = null, MI_BASE_ROADS = null, MI_ROADS_ON = false;   // 31/10/2026: começa desligada (as linhas laranja-claro dela confundiam com as BR)
 let MI_BASE_VIIRS = null, MI_WAYBACK = null, MI_FIRE = null, MI_BASE_CUR = 'esri', MI_WB_RELEASES = [];
 let MI_WB_VIEW = [], MI_WB_SLIDE_T = null;   // MI_WB_VIEW = lista atual da barra, ordenada ANTIGO→NOVO
+// fase 1 (22/11/2026): chefe da P2 vê o registro; nº na lixeira; filtro dos números/chips
+var MI_CHEFE = false, MI_N_EXCL = 0, MI_FILTRO = { k:'', v:'' }, MI_ABRIU_LOG = false, MI_FORM_VERSAO = null;
 
 function miEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function miTipo(t){ return MI_TIPOS[t] || MI_TIPOS.outro; }
+
+/* ── Avaliação da informação (padrão A1–F6 da doutrina de inteligência) ──
+   Letra = a FONTE (quem passou); número = o CONTEÚDO (o que foi dito).
+   Nível: alta (A/B com 1/2), média, baixa, nd (F ou 6 = não dá para avaliar), sem (não avaliada).
+   Validade vencida = a informação pode estar velha: aparece apagada e tracejada. */
+const AV_FONTES = {
+  A:['Totalmente confiável','Fonte de confiança comprovada (ex.: o próprio policial viu, documento oficial).'],
+  B:['Geralmente confiável','Já passou informação que se confirmou quase sempre.'],
+  C:['Razoavelmente confiável','Já acertou algumas vezes.'],
+  D:['Geralmente não confiável','Errou mais do que acertou.'],
+  E:['Não confiável','Histórico de informação falsa.'],
+  F:['Não dá para avaliar','Fonte nova ou desconhecida, denúncia anônima.'],
+};
+const AV_CREDS = {
+  1:['Confirmada','Outra fonte independente confirmou.'],
+  2:['Provavelmente verdadeira','Faz sentido e bate com o que já se sabe.'],
+  3:['Possivelmente verdadeira','Faz sentido, mas nada confirma ainda.'],
+  4:['Duvidosa','Pode ser, mas não bate bem com o que se sabe.'],
+  5:['Improvável','Contradiz o que já se sabe.'],
+  6:['Não dá para avaliar','Não há como saber se é verdade.'],
+};
+const AV_NIVEIS = { alta:'Confiável', media:'Média', baixa:'Fraca', nd:'Não avaliável', sem:'Sem avaliação' };
+function avHoje(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function avCodigo(a){ a = a || {}; return (a.fonte || '') + (a.cred || ''); }
+function avVencida(a){ return !!(a && a.validade && a.validade < avHoje()); }
+function avNivel(a){
+  a = a || {};
+  if (!a.fonte && !a.cred) return 'sem';
+  if (a.fonte === 'F' || a.cred === '6') return 'nd';
+  const s = (a.fonte ? 'ABCDE'.indexOf(a.fonte) + 1 : 3) + (a.cred ? Number(a.cred) : 3);
+  return s <= 4 ? 'alta' : s <= 6 ? 'media' : 'baixa';
+}
+function avDataBR(iso){ return iso ? iso.split('-').reverse().join('/') : ''; }
+function avTexto(a){
+  a = a || {};
+  const p = [];
+  if (a.fonte) p.push('Fonte ' + a.fonte + ' — ' + AV_FONTES[a.fonte][0].toLowerCase());
+  if (a.cred) p.push('conteúdo ' + a.cred + ' — ' + AV_CREDS[a.cred][0].toLowerCase());
+  return p.join(' · ') || 'Informação ainda não avaliada';
+}
+function avSelo(a, opts){
+  a = a || {};
+  const venc = avVencida(a), nv = avNivel(a), cod = avCodigo(a);
+  const tit = avTexto(a) + (a.data ? ' · obtida em ' + avDataBR(a.data) : '') + (a.validade ? (venc ? ' · VENCIDA em ' : ' · vale até ') + avDataBR(a.validade) : '');
+  if (!cod && !(opts && opts.semTambem)) return venc ? `<span class="av-selo venc" title="${miEsc(tit)}">vencida</span>` : '';
+  return `<span class="av-selo ${venc ? 'venc' : nv}${cod ? '' : ' av-sem'}" title="${miEsc(tit)}">${cod ? miEsc(cod) : 's/ aval.'}${venc && cod ? ' ⌛' : ''}</span>`;
+}
+// estilo da marcação no mapa conforme a avaliação
+function avEstilo(f){
+  const a = f.aval || {}, nv = avNivel(a);
+  if (avVencida(a)) return { op:.42, dash:'6 8' };
+  return { op: nv === 'alta' ? 1 : nv === 'media' ? .9 : nv === 'sem' ? .85 : .62, dash: nv === 'baixa' || nv === 'nd' ? '10 6' : null };
+}
 
 // Carrega o Leaflet-Geoman sob demanda (CSS + JS via unpkg). Resolve na 1ª vez e
 // vira no-op depois. Se a CDN falhar, o mapa ainda abre — só sem a barra de desenho.
@@ -805,11 +1128,15 @@ async function miLoad(){
   try {
     const d = await apiFetchJSON('/api/mapa-intel');
     MI_FEATURES = d.features || [];
+    MI_CHEFE = !!d.chefe;
+    MI_N_EXCL = Number(d.excluidas) || 0;
     MI_LOADED = true;
     miRenderLayers();
     miRenderList();
-    if (st) st.textContent = MI_FEATURES.length + ' marcação(ões) · salvo automaticamente';
+    intelRenderChip(); inSyncLixeira();
+    if (st) st.textContent = miStatusPadrao();
     miFitAll();
+    if (!MI_ABRIU_LOG){ MI_ABRIU_LOG = true; inLog('abriu', MI_FEATURES.length + ' marcações no mapa'); }
   } catch(e){
     if (st) st.textContent = '❌ ' + (e.message || 'Erro ao carregar.');
   } finally {
@@ -821,23 +1148,73 @@ function miMakeLayer(f){
   const cor = f.cor || miTipo(f.tipo).cor;
   const g = f.geometry;
   if (!g) return null;
-  if (g.type === 'Point')      return L.marker([g.coordinates[1], g.coordinates[0]], { icon: miIcon(f) });
-  if (g.type === 'LineString') return L.polyline(g.coordinates.map(c => [c[1], c[0]]), { color:cor, weight:4, opacity:.9 });
-  if (g.type === 'Polygon')    return L.polygon(g.coordinates.map(r => r.map(c => [c[1], c[0]])), { color:cor, weight:3, opacity:.9, fillColor:cor, fillOpacity:.18 });
+  const es = avEstilo(f);
+  if (g.type === 'Point')      return L.marker([g.coordinates[1], g.coordinates[0]], { icon: miIcon(f), opacity: es.op });
+  if (g.type === 'LineString') return L.polyline(g.coordinates.map(c => [c[1], c[0]]), { color:cor, weight:4, opacity:.9 * es.op, dashArray: es.dash });
+  if (g.type === 'Polygon')    return L.polygon(g.coordinates.map(r => r.map(c => [c[1], c[0]])), { color:cor, weight:3, opacity:.9 * es.op, fillColor:cor, fillOpacity:.18 * es.op, dashArray: es.dash });
   return null;
 }
 
+// selinho A1–F6 no canto do pino (cor do nível)
+function miAvDot(f){
+  const a = f.aval || {}, cod = avCodigo(a);
+  if (!cod) return '';
+  const nv = avVencida(a) ? 'venc' : avNivel(a);
+  const cor = { alta:'#22c55e', media:'#eab308', baixa:'#f97316', nd:'#94a3b8', venc:'#ef4444' }[nv] || '#94a3b8';
+  return `<span class="av-dot" style="color:${cor}">${miEsc(cod)}</span>`;
+}
 function miIcon(f){
   const t = miTipo(f.tipo);
   const emoji = t.lbl.split(' ')[0];
   if (f.tipo === 'suspeito'){
     // pino de suspeito — vira "retrato" quando a foto carregar (miRenderLayers)
-    return L.divIcon({ className:'mi-mug', html:`<div class="mug"><span>${emoji}</span></div>`, iconSize:[46,54], iconAnchor:[23,52], popupAnchor:[0,-48] });
+    return L.divIcon({ className:'mi-mug', html:`<div class="mug"><span>${emoji}</span>${miAvDot(f)}</div>`, iconSize:[46,54], iconAnchor:[23,52], popupAnchor:[0,-48] });
   }
-  return L.divIcon({ className:'mi-pin', html:`<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.75))">${emoji}</div>`, iconSize:[26,26], iconAnchor:[13,23], popupAnchor:[0,-20] });
+  return L.divIcon({ className:'mi-pin', html:`<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.75))">${emoji}${miAvDot(f)}</div>`, iconSize:[26,26], iconAnchor:[13,23], popupAnchor:[0,-20] });
 }
-function miMugIcon(url){
-  return L.divIcon({ className:'mi-mug', html:`<div class="mug" style="background-image:url('${url}')"></div>`, iconSize:[46,54], iconAnchor:[23,52], popupAnchor:[0,-48] });
+function miMugIcon(url, f){
+  return L.divIcon({ className:'mi-mug', html:`<div class="mug" style="background-image:url('${url}')">${f ? miAvDot(f) : ''}</div>`, iconSize:[46,54], iconAnchor:[23,52], popupAnchor:[0,-48] });
+}
+
+/* ── Filtros (números do topo e chips da lista) ── */
+const MI_GRUPOS_NUM = [
+  { k:'',      v:'',       lbl:'Marcações',        c:'var(--acc)',   n: f => true },
+  { k:'tipo',  v:'suspeito', lbl:'Alvos',          c:'#e879f9',      n: f => f.tipo === 'suspeito' },
+  { k:'tipo',  v:'pista',  lbl:'Pistas',           c:'#ef4444',      n: f => f.tipo === 'pista' },
+  { k:'tipo',  v:'rota',   lbl:'Rotas',            c:'#f59e0b',      n: f => f.tipo === 'rota_terrestre' || f.tipo === 'rota_fluvial' },
+  { k:'nivel', v:'alta',   lbl:'Confiáveis (A1–B2)', c:'#22c55e',    n: f => !avVencida(f.aval) && avNivel(f.aval) === 'alta' },
+  { k:'nivel', v:'conf',   lbl:'A confirmar',      c:'#f97316',      n: f => !avVencida(f.aval) && avNivel(f.aval) !== 'alta' },
+  { k:'nivel', v:'venc',   lbl:'Validade vencida', c:'#ef4444',      n: f => avVencida(f.aval) },
+];
+function miPassaFiltro(f){
+  const F = MI_FILTRO;
+  if (!F.k) return true;
+  const g = MI_GRUPOS_NUM.find(x => x.k === F.k && x.v === F.v);
+  if (g) return g.n(f);
+  if (F.k === 'tipo') return f.tipo === F.v;
+  return true;
+}
+function miFiltrar(k, v){
+  MI_FILTRO = (MI_FILTRO.k === k && MI_FILTRO.v === v) ? { k:'', v:'' } : { k, v };
+  miRenderLayers(); miRenderList();
+  if (MI_FILTRO.k) inAba('marc');
+}
+function miFiltroNome(){
+  const F = MI_FILTRO; if (!F.k) return '';
+  const g = MI_GRUPOS_NUM.find(x => x.k === F.k && x.v === F.v);
+  return g ? g.lbl : (F.k === 'tipo' ? miTipo(F.v).lbl : '');
+}
+function miRenderNums(){
+  const el = document.getElementById('in-nums'); if (!el) return;
+  el.innerHTML = MI_GRUPOS_NUM.map(g => {
+    const n = MI_FEATURES.filter(g.n).length;
+    const on = g.k ? (MI_FILTRO.k === g.k && MI_FILTRO.v === g.v) : !MI_FILTRO.k;
+    return `<button type="button" class="in-num${on ? ' on' : ''}" style="--c:${g.c}" onclick="miFiltrar('${g.k}','${g.v}')" title="${g.k ? 'Mostrar só: ' + miEsc(g.lbl) : 'Mostrar todas'}"><span>${miEsc(g.lbl)}</span><b>${n}</b></button>`;
+  }).join('');
+}
+function miStatusPadrao(){
+  const vis = MI_FEATURES.filter(miPassaFiltro).length;
+  return (MI_FILTRO.k ? vis + ' de ' : '') + MI_FEATURES.length + ' marcação(ões) · salvo automaticamente';
 }
 
 function miLayerGeometry(layer){
@@ -849,17 +1226,19 @@ function miRenderLayers(){
   if (!MI_LAYER_GROUP) return;
   MI_LAYER_GROUP.clearLayers();
   MI_LAYERS = {};
-  MI_FEATURES.forEach(f => {
+  miRenderNums();
+  MI_FEATURES.filter(miPassaFiltro).forEach(f => {
     const layer = miMakeLayer(f);
     if (!layer) return;
     layer._miId = f.id;
-    layer.bindTooltip(`<b>${miEsc(f.titulo || miTipo(f.tipo).lbl)}</b>`, { sticky:true });
+    const selo = avSelo(f.aval);
+    layer.bindTooltip(`<div class="mi-tip-l">${selo}<b>${miEsc(f.titulo || miTipo(f.tipo).lbl)}</b></div><small style="color:#94a3b8">${miEsc(miTipo(f.tipo).lbl)}${f.aval && f.aval.data ? ' · info de ' + avDataBR(f.aval.data) : ''}</small>`, { sticky:true, className:'mi-tip' });
     if (f.tipo === 'suspeito'){
       layer.bindPopup(() => miSuspPopupHtml(f), { minWidth:230, maxWidth:300, className:'susp-popup' });
       layer.on('popupopen', () => miSuspPopupFotos(f));
       // troca o pino pela foto do suspeito quando ela carregar
       if ((f.fotos || []).length && layer.setIcon){
-        miFotoURL(f.fotos[0].id).then(url => { if (MI_LAYERS[f.id] === layer) layer.setIcon(miMugIcon(url)); }).catch(() => {});
+        miFotoURL(f.fotos[0].id).then(url => { if (MI_LAYERS[f.id] === layer) layer.setIcon(miMugIcon(url, f)); }).catch(() => {});
       }
     } else {
       layer.on('click', () => miOpenForm(f, null));
@@ -868,31 +1247,47 @@ function miRenderLayers(){
       const geom = miLayerGeometry(layer);
       const atual = MI_FEATURES.find(x => x.id === f.id) || f;
       if (!MI_UNDO_BUSY) miPushUndo({ tipo:'restore', feature: miClone(atual) }); // estado ANTES do arrasto
-      miPersist({ id:atual.id, tipo:atual.tipo, titulo:atual.titulo, descricao:atual.descricao, cor:atual.cor, geometry:geom }, true);
+      // manda a versão: se outra pessoa mexeu nesta marcação no meio, o Worker recusa (nada sobrescreve)
+      miPersist({ id:atual.id, versao:atual.versao, tipo:atual.tipo, titulo:atual.titulo, descricao:atual.descricao, cor:atual.cor, geometry:geom }, true);
       miToast('Traçado alterado · Ctrl+Z desfaz');
     });
     layer.addTo(MI_LAYER_GROUP);
     MI_LAYERS[f.id] = layer;
   });
+  miRenderRede();
 }
 
 function miRenderList(){
   const q = (document.getElementById('mi-busca').value || '').toLowerCase();
   const el = document.getElementById('mi-list');
   const cnt = document.getElementById('mi-count');
-  const list = MI_FEATURES.filter(f => {
+  // chips por tipo (só os tipos que existem no mapa)
+  const chips = document.getElementById('mi-chips');
+  if (chips){
+    const tipos = Object.keys(MI_TIPOS).filter(k => MI_FEATURES.some(f => f.tipo === k));
+    chips.innerHTML = tipos.map(k => {
+      const t = MI_TIPOS[k], n = MI_FEATURES.filter(f => f.tipo === k).length;
+      const on = MI_FILTRO.k === 'tipo' && MI_FILTRO.v === k;
+      return `<button type="button" class="mi-chip${on ? ' on' : ''}" style="--c:${t.cor}" onclick="miFiltrar('tipo','${k}')"><i class="p"></i>${miEsc(t.lbl)} <small>${n}</small></button>`;
+    }).join('');
+  }
+  const fa = document.getElementById('mi-filtro-ativo');
+  if (fa) fa.innerHTML = MI_FILTRO.k ? `<div class="mi-filtro-ativo">Mostrando só: ${miEsc(miFiltroNome())} (mapa e lista)<button type="button" onclick="miFiltrar('','')">mostrar todas</button></div>` : '';
+  const list = MI_FEATURES.filter(miPassaFiltro).filter(f => {
     const tl = miTipo(f.tipo).lbl;
-    return !q || (f.titulo + ' ' + tl + ' ' + f.descricao).toLowerCase().includes(q);
+    const d = f.dados || {};
+    return !q || [f.titulo, tl, f.descricao, d.nome, d.vulgo, d.cpf, avCodigo(f.aval)].join(' ').toLowerCase().includes(q);
   });
-  if (cnt) cnt.textContent = '(' + list.length + ')';
-  if (!list.length){ el.innerHTML = '<div class="mi-empty">Nenhuma marcação' + (q ? ' com esse filtro' : ' ainda') + '.</div>'; return; }
+  if (cnt) cnt.textContent = String(MI_FEATURES.length);
+  if (!list.length){ el.innerHTML = '<div class="mi-empty">Nenhuma marcação' + (q || MI_FILTRO.k ? ' com esse filtro' : ' ainda. Desenhe no mapa com as ferramentas do canto esquerdo.') + '</div>'; return; }
   el.innerHTML = list.map(f => {
     const t = miTipo(f.tipo);
     const cor = f.cor || t.cor;
     const nf = (f.fotos || []).length;
-    return `<div class="mi-row" style="border-left-color:${cor}" onclick="miFocus('${miEsc(f.id)}')">
-      <b>${miEsc(f.titulo || t.lbl)}</b>${nf ? ` <span class="mi-foto-badge">📷 ${nf}</span>` : ''}<br>
-      <span class="meta">${t.lbl}${f.criado_por ? ' · ' + miEsc(f.criado_por) : ''}${f.descricao ? ' · ' + miEsc(f.descricao.slice(0, 70)) : ''}</span>
+    const quem = f.atualizado_por || f.criado_por;
+    return `<div class="mi-row${MI_SEL === f.id ? ' sel' : ''}${avVencida(f.aval) ? ' venc' : ''}" style="--c:${cor}" onclick="miFocus('${miEsc(f.id)}')">
+      <div class="tt">${avSelo(f.aval, { semTambem:true })}<b>${miEsc(f.titulo || t.lbl)}</b>${nf ? `<span class="mi-foto-badge">📷 ${nf}</span>` : ''}</div>
+      <span class="meta">${t.lbl}${quem ? ' · ' + miEsc(quem) : ''}${f.descricao ? ' · ' + miEsc(f.descricao.slice(0, 70)) : ''}</span>
     </div>`;
   }).join('');
 }
@@ -905,6 +1300,9 @@ function miFocus(id){
     else if (layer.getLatLng) MI_MAP.setView(layer.getLatLng(), 14);
   }
   miOpenForm(f, null);
+  // veio de lá de baixo (resultado da pesquisa, painel do Córtex): sobe até o mapa, onde a ficha abriu
+  const w = document.querySelector('.mi-map-wrap');
+  if (w){ const r = w.getBoundingClientRect(); if (r.top < -40 || r.top > innerHeight * .5) window.scrollTo({ top: Math.max(0, scrollY + r.top - 76), behavior:'smooth' }); }
 }
 
 function miFitAll(){
@@ -1163,6 +1561,8 @@ function miOpenForm(f, draftGeom){
   const isNew = !f;
   const cur = f || { tipo:'rota_terrestre', titulo:'', descricao:'', cor:'' };
   const d = (f && f.dados) || {};
+  const av = (f && f.aval) || { fonte:'', cred:'', data: isNew ? avHoje() : '', validade:'' };
+  MI_FORM_VERSAO = f ? (f.versao || 0) : null;
   const tipoOpts = Object.entries(MI_TIPOS).map(([k, v]) => `<option value="${k}"${k === cur.tipo ? ' selected' : ''}>${v.lbl}</option>`).join('');
   const susp = cur.tipo === 'suspeito';
   box.innerHTML = `
@@ -1193,22 +1593,82 @@ function miOpenForm(f, draftGeom){
 
     <div class="mi-fg"><label id="mi-desc-lbl">${susp ? 'Anotações (modus operandi, fonte…)' : 'Descrição'}</label><textarea id="mi-f-desc" maxlength="2000">${miEsc(cur.descricao)}</textarea></div>
     <div class="mi-fg"><label>Cor</label><input id="mi-f-cor" type="color" value="${cur.cor || miTipo(cur.tipo).cor}"></div>
+
+    <div class="mi-sec">Avaliação da informação <button type="button" title="O que é A1–F6?" onclick="inAjudaAval()">?</button></div>
+    <div class="av-res" id="av-res"></div>
+    <div class="av-grade">
+      <div class="mi-fg"><label>Fonte (quem passou)</label><select id="av-fonte" onchange="avAtualizar()">
+        <option value="">— não avaliada —</option>${Object.entries(AV_FONTES).map(([k, v]) => `<option value="${k}"${av.fonte === k ? ' selected' : ''}>${k} · ${v[0]}</option>`).join('')}</select></div>
+      <div class="mi-fg"><label>Conteúdo (o que disse)</label><select id="av-cred" onchange="avAtualizar()">
+        <option value="">— não avaliado —</option>${Object.entries(AV_CREDS).map(([k, v]) => `<option value="${k}"${av.cred === k ? ' selected' : ''}>${k} · ${v[0]}</option>`).join('')}</select></div>
+    </div>
+    <div class="av-grade">
+      <div class="mi-fg"><label>Informação de</label><input id="av-data" type="date" value="${miEsc(av.data || '')}" max="${avHoje()}" onchange="avAtualizar()"></div>
+      <div class="mi-fg"><label>Vale até</label><input id="av-val" type="date" value="${miEsc(av.validade || '')}" onchange="avAtualizar()"></div>
+    </div>
+    <div class="av-prazos" style="margin:-4px 0 10px">Validade:
+      <button type="button" onclick="avPrazo(30)">30 dias</button><button type="button" onclick="avPrazo(90)">90 dias</button><button type="button" onclick="avPrazo(180)">6 meses</button><button type="button" onclick="avPrazo(365)">1 ano</button><button type="button" onclick="avPrazo(0)">sem prazo</button>
+    </div>
+
+    ${f ? `<div class="mi-sec">Vínculos</div>
+    <div id="mi-vinc"></div>
+    <div class="vc-acts">
+      <button type="button" class="mi-cancel" onclick="inEscolherVinculo('${miEsc(f.id)}')"><i data-ic="mais"></i> Ligar a outra marcação</button>
+      <button type="button" class="mi-cancel" onclick="inRede('${miEsc(f.id)}')"><i data-ic="usuarios"></i> Ver rede</button>
+    </div>
+    <div class="mi-sec">BOs ligados</div>
+    <div id="mi-bos"></div>
+    <div class="bo-add"><input id="bo-novo" type="text" maxlength="40" placeholder="nº do BO" onkeydown="if(event.key==='Enter'){event.preventDefault();miBoLigar('${miEsc(f.id)}')}">
+      <button type="button" class="mi-cancel" onclick="miBoLigar('${miEsc(f.id)}')"><i data-ic="mais"></i> Ligar</button></div>
+    ${susp ? `<button type="button" class="mi-cancel" style="width:100%;min-height:36px;font-size:12.5px" onclick="miBoSugerir('${miEsc(f.id)}')"><i data-ic="buscar"></i> Procurar na base (CPF, nome e placas)</button>` : ''}
+    <div id="bo-sug" class="bo-sug"></div>` : ''}
+
+    <div class="mi-sec">Fotos${susp ? ' · a 1ª vira o pino' : ''}</div>
     <div class="mi-fg">
-      <label>Fotos${susp ? ' (a 1ª vira o pino no mapa)' : ''}</label>
       ${f ? `<div id="mi-fotos" class="mi-fotos"></div>
         <input type="file" id="mi-foto-input" accept="image/*" style="display:none" onchange="miUploadFoto(this)">
-        <button type="button" class="mi-cancel" style="margin-top:4px" onclick="document.getElementById('mi-foto-input').click()">＋ Adicionar foto</button>`
+        <button type="button" class="mi-cancel" style="margin-top:8px" onclick="document.getElementById('mi-foto-input').click()"><i data-ic="mais"></i> Adicionar foto</button>`
       : `<div style="color:var(--muted);font-size:12px">Salve a marcação primeiro para anexar fotos.</div>`}
     </div>
-    ${f ? `<div class="mi-fg" style="color:var(--muted);font-size:11.5px">Criada por ${miEsc(f.criado_por || '—')} · ${miEsc(f.criado_em || '')}${f.atualizado_em && f.atualizado_em !== f.criado_em ? ' · atualizada ' + miEsc(f.atualizado_em) : ''}</div>` : ''}
+    ${f ? `<div class="mi-meta">Criada por <b>${miEsc(f.criado_por || '—')}</b> · ${miEsc(f.criado_em || '')}${f.atualizado_em && f.atualizado_em !== f.criado_em ? `<br>Última alteração: <b>${miEsc(f.atualizado_por || '—')}</b> · ${miEsc(f.atualizado_em)}` : ''}</div>` : ''}
     <div class="mi-form-actions">
-      <button class="mi-save" id="mi-save-btn" onclick="miSaveForm()">${isNew ? '➕ Adicionar' : '💾 Salvar'}</button>
-      ${f ? '<button class="mi-del" onclick="miDeleteFeature()">🗑️ Excluir</button>' : ''}
+      <button class="mi-save" id="mi-save-btn" onclick="miSaveForm()">${isNew ? '<i data-ic="mais"></i> Adicionar' : '<i data-ic="ok"></i> Salvar'}</button>
+      ${f ? `<button class="mi-cancel" onclick="inRelatorio('${miEsc(f.id)}')" title="Relatório de inteligência desta marcação (ficha, avaliação, vínculos, BOs e mapa) — imprimir ou salvar em PDF"><i data-ic="arquivo"></i> Relatório</button>` : ''}
+      ${f ? '<button class="mi-del" onclick="miDeleteFeature()" title="Vai para a Lixeira — dá para recuperar"><i data-ic="lixeira"></i> Excluir</button>' : ''}
       <button class="mi-cancel" onclick="miCancelForm()">Cancelar</button>
     </div>`;
   // veículos: repopula
   (Array.isArray(d.veiculos) && d.veiculos.length ? d.veiculos : []).forEach(v => miSuspAddVeic(v));
-  if (f) miRenderFotos(f);
+  if (f){ miRenderFotos(f); miRenderVinc(f); miRenderBos(f); }
+  avAtualizar();
+  inDrawer(true, isNew ? 'Nova marcação' : (f.titulo || miTipo(f.tipo).lbl));
+  miRenderList();
+  miRenderRede();
+}
+
+// lê a avaliação do formulário
+function avDoForm(){
+  const v = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  return { fonte: v('av-fonte'), cred: v('av-cred'), data: v('av-data'), validade: v('av-val') };
+}
+function avAtualizar(){
+  const box = document.getElementById('av-res'); if (!box) return;
+  const a = avDoForm();
+  const nv = avVencida(a) ? 'venc' : avNivel(a);
+  const frase = {
+    alta:'Informação confiável — aparece forte no mapa.', media:'Confiança média — confira antes de agir.',
+    baixa:'Informação fraca — precisa de confirmação.', nd:'Não dá para avaliar ainda — trate como indício.',
+    sem:'Sem avaliação — escolha a fonte e o conteúdo.', venc:'Validade vencida — a informação pode estar velha.',
+  }[nv];
+  box.innerHTML = `${avSelo(a, { semTambem:true })}<span>${miEsc(frase)}</span>`;
+}
+function avPrazo(dias){
+  const el = document.getElementById('av-val'); if (!el) return;
+  if (!dias){ el.value = ''; avAtualizar(); return; }
+  const base = (document.getElementById('av-data') || {}).value || avHoje();
+  const d = new Date(base + 'T12:00:00'); d.setDate(d.getDate() + dias);
+  el.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  avAtualizar();
 }
 
 function miFormTipoChange(){
@@ -1290,7 +1750,7 @@ function miSuspPopupHtml(f){
     `<div class="sp-veic">🚗 ${miEsc([v.placa, v.modelo, v.cor].filter(Boolean).join(' · ') || '—')}</div>`).join('');
   const nf = (f.fotos || []).length;
   return `<div class="susp-pop">
-    <div class="sp-nome">👤 ${miEsc(d.nome || f.titulo || 'Suspeito')}</div>
+    <div class="sp-nome">👤 ${miEsc(d.nome || f.titulo || 'Suspeito')} ${avSelo(f.aval)}</div>
     ${d.vulgo ? `<div class="sp-vulgo">"${miEsc(d.vulgo)}"</div>` : ''}
     <div class="sp-kv">
       ${linha('CPF', d.cpf)}
@@ -1326,9 +1786,8 @@ function miSuspBuscarBOs(id){
   if (qc) qc.value = d.cpf || '';
   if (qn) qn.value = d.cpf ? '' : (d.nome || '');
   if (MI_MAP) MI_MAP.closePopup();
+  inAba('busca');
   if (typeof intelBuscar === 'function') intelBuscar();
-  const aside = document.getElementById('intel-search');
-  if (aside) aside.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 async function miUploadFoto(input){
@@ -1422,9 +1881,35 @@ async function miDeleteFoto(fileId){
 
 function miCancelForm(){
   if (MI_DRAFT && MI_MAP){ try { MI_MAP.removeLayer(MI_DRAFT); } catch(e){} }
-  MI_DRAFT = null; MI_SEL = null; MI_FORM_GEOM = null;
+  MI_DRAFT = null; MI_SEL = null; MI_FORM_GEOM = null; MI_FORM_VERSAO = null;
   const box = document.getElementById('mi-form-box');
-  if (box) box.innerHTML = '<div class="mi-hint-draw">Use as ferramentas no canto superior esquerdo do mapa para desenhar, clique numa marcação existente para editar, ou use <b>📥 Importar arquivo</b> pra trazer um traçado de GPS (GPX / KML / GeoJSON).</div>';
+  if (box) box.innerHTML = '';
+  inDrawer(false);
+  if (typeof miRenderList === 'function' && document.getElementById('mi-list')) miRenderList();
+  miRenderRede();
+}
+
+// O Worker recusou porque outra pessoa salvou esta marcação no meio (409 conflito)
+// ou ela foi para a lixeira (409 excluida): atualiza o mapa com a versão de lá.
+function miTratarConflito(e){
+  const d = (e && e.data) || {};
+  if (e && e.status === 409 && d.error === 'conflito' && d.feature){
+    const i = MI_FEATURES.findIndex(x => x.id === d.feature.id);
+    if (i >= 0) MI_FEATURES[i] = d.feature; else MI_FEATURES.push(d.feature);
+    miRenderLayers(); miRenderList();
+    inModal('Outra pessoa alterou esta marcação', 'Nada foi gravado — a sua alteração não apagou a dela',
+      `<div class="bp-aviso" style="margin-bottom:14px">${miEsc(d.detail || '')}</div>
+       <div class="bp-modal-pe"><button class="bp-btn sec" onclick="inFecharModal()">Fechar</button>
+       <button class="bp-btn" onclick="inFecharModal();miOpenFormById('${miEsc(d.feature.id)}')">Abrir a versão atual</button></div>`, true);
+    return true;
+  }
+  if (e && e.status === 409 && d.error === 'excluida'){
+    MI_FEATURES = MI_FEATURES.filter(x => x.id !== MI_SEL);
+    miRenderLayers(); miRenderList(); miCancelForm();
+    alert(d.detail || 'Esta marcação foi para a lixeira.');
+    return true;
+  }
+  return false;
 }
 
 async function miSaveForm(){
@@ -1432,10 +1917,12 @@ async function miSaveForm(){
   const tipo = document.getElementById('mi-f-tipo').value;
   const feature = {
     id: MI_SEL || undefined,
+    versao: MI_SEL ? MI_FORM_VERSAO : undefined,
     tipo,
     descricao: document.getElementById('mi-f-desc').value.trim(),
     cor: document.getElementById('mi-f-cor').value,
     geometry: MI_FORM_GEOM,
+    aval: avDoForm(),
   };
   if (tipo === 'suspeito'){
     feature.dados = miSuspDados();
@@ -1458,8 +1945,8 @@ async function miSaveForm(){
     const st = document.getElementById('mi-status');
     if (st) st.textContent = MI_FEATURES.length + ' marcação(ões) · salvo' + (antes ? '' : ' · anexe fotos abaixo');
   } catch(e){
-    alert('Erro ao salvar: ' + (e.message || e));
-    if (btn){ btn.disabled = false; btn.textContent = MI_SEL ? '💾 Salvar' : '➕ Adicionar'; }
+    if (btn){ btn.disabled = false; btn.innerHTML = MI_SEL ? IC('ok') + ' Salvar' : IC('mais') + ' Adicionar'; }
+    if (!miTratarConflito(e)) alert('Erro ao salvar: ' + (e.message || e));
   }
 }
 
@@ -1468,10 +1955,11 @@ async function miPersist(feature, silent){
     const d = await apiPostJSON('/api/mapa-intel/save', { op:'upsert', feature });
     const idx = MI_FEATURES.findIndex(x => x.id === d.id);
     if (idx >= 0) MI_FEATURES[idx] = d.feature; else MI_FEATURES.push(d.feature);
+    if (MI_SEL === d.id) MI_FORM_VERSAO = d.feature.versao;
     if (!silent) miRenderLayers();
     miRenderList();
   } catch(e){
-    alert('Erro ao salvar alteração: ' + (e.message || e));
+    if (!miTratarConflito(e)) alert('Erro ao salvar alteração: ' + (e.message || e));
     miRenderLayers();
   }
 }
@@ -1481,15 +1969,17 @@ async function miDeleteFeature(){
   const antes = MI_FEATURES.find(x => x.id === MI_SEL);
   try {
     const ok = await confirmarExclusao({
-      titulo: 'Excluir marcação', texto: `${(antes && antes.titulo) || 'Esta marcação'}\n\nDá pra desfazer com Ctrl+Z logo em seguida.`,
+      titulo: 'Excluir marcação', texto: `${(antes && antes.titulo) || 'Esta marcação'}\n\nEla vai para a Lixeira (ícone da lixeira no topo): dá para recuperar quando quiser. Ctrl+Z também desfaz.`,
       acao: ({ senha, motivo }) => apiPostJSON('/api/mapa-intel/save', { op:'delete', id: MI_SEL, senha, motivo }),
     });
     if (!ok) return;
-    MI_FEATURES = MI_FEATURES.filter(x => x.id !== MI_SEL);
-    if (!MI_UNDO_BUSY && antes) miPushUndo({ tipo:'restore', feature: miClone(antes) });
+    const id = MI_SEL;
+    MI_FEATURES = MI_FEATURES.filter(x => x.id !== id);
+    MI_N_EXCL++; inSyncLixeira();
+    if (!MI_UNDO_BUSY && antes) miPushUndo({ tipo:'recuperar', ids:[id] });
     miRenderLayers(); miRenderList(); miCancelForm();
     const st = document.getElementById('mi-status');
-    if (st) st.textContent = MI_FEATURES.length + ' marcação(ões) · Ctrl+Z desfaz';
+    if (st) st.textContent = MI_FEATURES.length + ' marcação(ões) · foi para a Lixeira · Ctrl+Z desfaz';
   } catch(e){
     alert('Erro ao excluir: ' + (e.message || e));
   }
@@ -1515,7 +2005,7 @@ function miToast(msg){
   if (!st) return;
   st.textContent = msg;
   clearTimeout(_miToastT);
-  _miToastT = setTimeout(() => { st.textContent = MI_FEATURES.length + ' marcação(ões) · salvo automaticamente'; }, 4000);
+  _miToastT = setTimeout(() => { st.textContent = miStatusPadrao(); }, 4000);
 }
 
 async function miUndo(){
@@ -1526,32 +2016,37 @@ async function miUndo(){
   try {
     if (entry.tipo === 'restore'){
       const f = entry.feature;
+      const agora = MI_FEATURES.find(x => x.id === f.id);
       const d = await apiPostJSON('/api/mapa-intel/save', { op:'upsert', feature: {
-        id: f.id, tipo: f.tipo, titulo: f.titulo, descricao: f.descricao, cor: f.cor, geometry: f.geometry
+        id: f.id, versao: agora ? agora.versao : undefined, tipo: f.tipo, titulo: f.titulo, descricao: f.descricao, cor: f.cor,
+        geometry: f.geometry, aval: f.aval, dados: f.tipo === 'suspeito' ? f.dados : undefined,
       } });
       const idx = MI_FEATURES.findIndex(x => x.id === d.id);
       if (idx >= 0) MI_FEATURES[idx] = d.feature; else MI_FEATURES.push(d.feature);
+    } else if (entry.tipo === 'recuperar'){
+      // desfazer uma exclusão = tirar da lixeira (não pede senha: não apaga nada)
+      const d = await apiPostJSON('/api/mapa-intel/save', { op:'recuperar', ids: entry.ids });
+      (d.features || []).forEach(f => { if (!MI_FEATURES.some(x => x.id === f.id)) MI_FEATURES.push(f); });
+      MI_N_EXCL = Math.max(0, MI_N_EXCL - (d.features || []).length); inSyncLixeira();
     } else if (entry.tipo === 'delete' || entry.tipo === 'delete_many'){
-      // Desfazer uma criação = EXCLUIR no servidor → também pede a senha (uma vez só pro lote).
+      // Desfazer uma criação = mandar para a lixeira → também pede a senha (uma vez só pro lote).
       const ids = entry.tipo === 'delete' ? [entry.id] : entry.ids;
       const ok = await confirmarExclusao({
         titulo: 'Desfazer = excluir marcação',
-        texto: `Desfazer vai excluir ${ids.length} marcação(ões) criada(s) agora há pouco.`,
-        acao: async ({ senha, motivo }) => {
-          await apiPostJSON('/api/mapa-intel/save', { op:'delete', id: ids[0], senha, motivo }); // a 1ª confere a senha
-          for (const id of ids.slice(1)){
-            try { await apiPostJSON('/api/mapa-intel/save', { op:'delete', id, senha, motivo }); } catch(e){}
-          }
-        },
+        texto: `Desfazer vai mandar para a Lixeira ${ids.length} marcação(ões) criada(s) agora há pouco.`,
+        acao: ({ senha, motivo }) => apiPostJSON('/api/mapa-intel/save', { op:'delete_many', ids, senha, motivo }),
       });
       if (!ok){ MI_UNDO.push(entry); miSyncUndoBtn(); return; }   // cancelou: volta pra pilha (o finally libera)
       MI_FEATURES = MI_FEATURES.filter(x => !ids.includes(x.id));
+      MI_N_EXCL += ids.length; inSyncLixeira();
     }
     miRenderLayers(); miRenderList(); miCancelForm();
     miToast('↩️ Desfeito' + (MI_UNDO.length ? ' · Ctrl+Z de novo pra mais' : ''));
   } catch(e){
-    alert('Não deu pra desfazer: ' + (e.message || e));
-    MI_UNDO.push(entry); miSyncUndoBtn();
+    if (!miTratarConflito(e)) alert('Não deu pra desfazer: ' + (e.message || e));
+    else MI_UNDO = [];   // outra pessoa mexeu: a pilha não vale mais
+    if (!(e && e.status === 409)){ MI_UNDO.push(entry); }
+    miSyncUndoBtn();
   } finally {
     MI_UNDO_BUSY = false;
   }
@@ -1566,6 +2061,828 @@ function miKeydown(e){
     e.preventDefault();
     miUndo();
   }
+}
+
+/* ================================================================= */
+/* ===== TELA (22/11/2026, fase 1): abas, camadas, gaveta, janelas ===== */
+/* ================================================================= */
+function IC(n){ return window.BPCasca && BPCasca.ic ? BPCasca.ic(n) : ''; }
+// ícones do HTML que o JS pinta depois (<i data-ic>) viram SVG sozinhos
+(function(){
+  if (!window.MutationObserver) return;
+  let pend = false;
+  const temIc = n => n.nodeType === 1 && (n.matches('i[data-ic]') || (n.firstElementChild && n.querySelector('i[data-ic]')));
+  new MutationObserver(ms => {
+    if (pend || !ms.some(m => Array.prototype.some.call(m.addedNodes, temIc))) return;
+    pend = true;
+    requestAnimationFrame(() => { pend = false; if (window.BPCasca && BPCasca.icones) BPCasca.icones(document.body); });
+  }).observe(document.body, { childList:true, subtree:true });
+})();
+
+function inAba(qual){
+  const busca = qual === 'busca';
+  document.getElementById('in-tab-busca').classList.toggle('on', busca);
+  document.getElementById('in-tab-marc').classList.toggle('on', !busca);
+  document.getElementById('intel-search').hidden = !busca;
+  document.getElementById('in-pane-marc').hidden = busca;
+}
+function inCamadas(forca){
+  const el = document.getElementById('in-cam'), b = document.getElementById('in-cam-btn');
+  const on = typeof forca === 'boolean' ? forca : !el.classList.contains('on');
+  el.classList.toggle('on', on); if (b) b.classList.toggle('on', on);
+}
+function inDrawer(on, titulo){
+  const dr = document.getElementById('in-drawer'); if (!dr) return;
+  dr.classList.toggle('on', !!on);
+  const w = document.querySelector('.mi-map-wrap'); if (w) w.classList.toggle('form-on', !!on);
+  if (titulo) document.getElementById('in-drawer-tt').textContent = titulo;
+  if (on) inCamadas(false);
+}
+function inModal(titulo, sub, html, estreita){
+  document.getElementById('in-modal-tt').textContent = titulo;
+  document.getElementById('in-modal-sub').textContent = sub || '';
+  document.getElementById('in-modal-corpo').innerHTML = html;
+  const m = document.getElementById('in-modal');
+  m.classList.toggle('estreita', !!estreita);
+  m.classList.add('on');
+}
+function inFecharModal(){ const m = document.getElementById('in-modal'); if (m) m.classList.remove('on'); }
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const m = document.getElementById('in-modal');
+  if (m && m.classList.contains('on')){ inFecharModal(); return; }
+  const c = document.getElementById('in-cam');
+  if (c && c.classList.contains('on')){ inCamadas(false); return; }
+});
+
+function inSyncLixeira(){
+  const n = document.getElementById('in-lixeira-n'); if (!n) return;
+  n.textContent = MI_N_EXCL > 99 ? '99+' : String(MI_N_EXCL);
+  n.style.display = MI_N_EXCL > 0 ? '' : 'none';
+}
+// ── Lixeira: o que foi excluído, por quem e quando; recuperar volta igual ──
+async function inAbrirLixeira(){
+  inModal('Lixeira', 'Marcações excluídas — recuperar volta com tudo (fotos, ficha e avaliação)', '<div class="bp-vazio">Carregando…</div>');
+  try {
+    const d = await apiFetchJSON('/api/mapa-intel/excluidas');
+    const l = d.features || [];
+    MI_N_EXCL = l.length; inSyncLixeira();
+    document.getElementById('in-modal-corpo').innerHTML = l.length ? l.map(f => {
+      const t = miTipo(f.tipo);
+      return `<div class="in-lin" id="lx-${miEsc(f.id)}">${avSelo(f.aval, { semTambem:true })}
+        <div class="tx"><b>${miEsc(f.titulo || t.lbl)}</b><small>${miEsc(t.lbl)} · excluída por ${miEsc(f.excluido_por || '—')} em ${miEsc(f.excluido_em || '—')}</small></div>
+        <button class="bp-btn sm sec" onclick="inRecuperar('${miEsc(f.id)}')"><i data-ic="voltar"></i> Recuperar</button></div>`;
+    }).join('') : '<div class="bp-vazio">A lixeira está vazia.</div>';
+  } catch(e){
+    document.getElementById('in-modal-corpo').innerHTML = `<div class="bp-vazio err">${miEsc(e.message || e)}</div>`;
+  }
+}
+async function inRecuperar(id){
+  const lin = document.getElementById('lx-' + id);
+  const b = lin && lin.querySelector('button'); if (b){ b.disabled = true; b.textContent = 'Recuperando…'; }
+  try {
+    const d = await apiPostJSON('/api/mapa-intel/save', { op:'recuperar', id });
+    (d.features || []).forEach(f => { if (!MI_FEATURES.some(x => x.id === f.id)) MI_FEATURES.push(f); });
+    MI_N_EXCL = Math.max(0, MI_N_EXCL - 1); inSyncLixeira();
+    miRenderLayers(); miRenderList();
+    if (lin) lin.remove();
+    if (!document.querySelector('#in-modal-corpo .in-lin')) document.getElementById('in-modal-corpo').innerHTML = '<div class="bp-vazio">A lixeira está vazia.</div>';
+    if (window.BPCasca && BPCasca.toast) BPCasca.toast('Marcação recuperada e de volta ao mapa.');
+    if (d.feature) miFocus(d.feature.id);
+  } catch(e){
+    if (b){ b.disabled = false; b.textContent = 'Recuperar'; }
+    alert('Não deu para recuperar: ' + (e.message || e));
+  }
+}
+
+// ── Registro de acessos (só o chefe da P2) ──
+let IN_LOG = [];
+const IN_LOG_ACOES = { abriu:'Abriu a Central', pesquisou:'Pesquisou', cortex:'Leu relatório do Córtex', importou:'Importou arquivo',
+  criou:'Criou marcação', editou:'Editou marcação', excluiu:'Excluiu marcação', recuperou:'Recuperou marcação',
+  anexou_foto:'Anexou foto', excluiu_foto:'Excluiu foto', abriu_bo:'Abriu BO',
+  vinculou:'Criou vínculo', desvinculou:'Tirou vínculo', ligou_bo:'Ligou BO', desligou_bo:'Desligou BO',
+  relatorio:'Gerou relatório', mancha:'Viu a mancha criminal' };
+async function inAbrirRegistro(){
+  inModal('Registro de acessos', 'Quem abriu, o que pesquisou e o que mudou — o mais recente em cima', '<div class="bp-vazio">Carregando…</div>');
+  try {
+    const d = await apiFetchJSON('/api/mapa-intel/log');
+    IN_LOG = d.itens || [];
+    const quem = [...new Set(IN_LOG.map(x => x.quem).filter(Boolean))].sort();
+    const acoes = [...new Set(IN_LOG.map(x => x.acao).filter(Boolean))];
+    document.getElementById('in-modal-corpo').innerHTML = `
+      <div class="lg-filtros">
+        <input id="lg-q" type="text" placeholder="Procurar (nome pesquisado, placa, título…)" oninput="inRenderRegistro()">
+        <select id="lg-quem" onchange="inRenderRegistro()"><option value="">Todos</option>${quem.map(q => `<option>${miEsc(q)}</option>`).join('')}</select>
+        <select id="lg-acao" onchange="inRenderRegistro()"><option value="">Todas as ações</option>${acoes.map(a => `<option value="${miEsc(a)}">${miEsc(IN_LOG_ACOES[a] || a)}</option>`).join('')}</select>
+      </div>
+      <div class="lg-rol" id="lg-rol"></div>
+      <div class="in-leg" style="margin-top:8px;color:var(--muted);font-size:12px">Mostra os últimos 1.000 registros. O registro completo fica na aba LOG da planilha da Inteligência.</div>`;
+    inRenderRegistro();
+  } catch(e){
+    document.getElementById('in-modal-corpo').innerHTML = `<div class="bp-vazio err">${miEsc(e.message || e)}</div>`;
+  }
+}
+function inRenderRegistro(){
+  const rol = document.getElementById('lg-rol'); if (!rol) return;
+  const q = ixNorm((document.getElementById('lg-q') || {}).value || '');
+  const qu = (document.getElementById('lg-quem') || {}).value || '';
+  const ac = (document.getElementById('lg-acao') || {}).value || '';
+  const l = IN_LOG.filter(x => (!qu || x.quem === qu) && (!ac || x.acao === ac) && (!q || ixNorm(x.detalhe + ' ' + x.quem).includes(q)));
+  rol.innerHTML = l.length ? `<table class="lg-tab"><thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th>Detalhe</th></tr></thead><tbody>${
+    l.map(x => `<tr><td>${miEsc(x.quando)}</td><td><b>${miEsc(x.quem)}</b></td><td><span class="lg-acao ${miEsc(x.acao)}">${miEsc(IN_LOG_ACOES[x.acao] || x.acao)}</span></td><td>${miEsc(x.detalhe)}</td></tr>`).join('')
+  }</tbody></table>` : '<div class="bp-vazio" style="border:0">Nenhum registro com esse filtro.</div>';
+}
+
+// ── O que é A1–F6 ──
+function inAjudaAval(){
+  inModal('Avaliação da informação (A1–F6)', 'Padrão da doutrina de inteligência: uma letra para a fonte e um número para o conteúdo', `
+    <div class="av-grade" style="gap:16px">
+      <div><div class="mi-sec" style="margin-top:0">Letra · a fonte (quem passou)</div>
+        <table class="av-tab">${Object.entries(AV_FONTES).map(([k, v]) => `<tr><td>${k}</td><td>${miEsc(v[0])}<small>${miEsc(v[1])}</small></td></tr>`).join('')}</table></div>
+      <div><div class="mi-sec" style="margin-top:0">Número · o conteúdo (o que disse)</div>
+        <table class="av-tab">${Object.entries(AV_CREDS).map(([k, v]) => `<tr><td>${k}</td><td>${miEsc(v[0])}<small>${miEsc(v[1])}</small></td></tr>`).join('')}</table></div>
+    </div>
+    <div class="bp-aviso"><b>Exemplos.</b> A guarnição esteve na pista e fotografou = <span class="av-selo alta">A1</span>.
+      Denúncia anônima que faz sentido, mas ninguém confirmou = <span class="av-selo nd">F3</span>.
+      No mapa, quanto mais confiável, mais forte a marcação; a fraca aparece apagada e tracejada, e a que passou da validade fica bem apagada com ⌛.</div>`);
+}
+
+/* ================================================================= */
+/* ===== FASE 2 (22/11/2026): ligar uma coisa à outra ================ */
+/* Rede de vínculos entre marcações, BOs ligados ao alvo, cruzamento automático
+   (pessoa da pesquisa que já é alvo, quem estava junto no mesmo BO e também é alvo,
+   placa do Córtex que é de um alvo ou está num BO), mancha criminal e relatório
+   de inteligência para imprimir/salvar em PDF. Vínculos e BOs têm op própria no
+   Worker (não mexem na versão do formulário). */
+/* ================================================================= */
+const MI_RELS = {
+  comparsa:  ['Comparsa / mesmo grupo', '#f43f5e'],
+  familiar:  ['Familiar', '#a78bfa'],
+  lider:     ['É chefe de', '#f59e0b'],
+  frequenta: ['Frequenta o local', '#38bdf8'],
+  mora:      ['Mora / tem base aqui', '#22c55e'],
+  usa:       ['Usa (rota, pista, veículo)', '#facc15'],
+  abastece:  ['Abastece / recebe de', '#fb923c'],
+  outro:     ['Outro vínculo', '#94a3b8'],
+};
+function miRel(k){ return MI_RELS[k] || MI_RELS.outro; }
+function boNorm(b){ return String(b == null ? '' : b).trim().replace(/[^\w./-]/g, ''); }
+function miById(id){ return MI_FEATURES.find(x => x.id === id); }
+function miNomeF(f){ return (f && (f.titulo || (f.dados && (f.dados.nome || f.dados.vulgo)))) || miTipo(f && f.tipo).lbl; }
+function miEmoji(f){ return miTipo(f && f.tipo).lbl.split(' ')[0]; }
+function miTipoSem(f){ return miTipo(f && f.tipo).lbl.replace(/^\S+\s/, ''); }
+function miNatCurta(n){ return String(n || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim(); }
+// troca na memória as marcações que o Worker devolveu (vínculo/BO) e redesenha
+function miAtualizarF(feats, semRender){
+  (feats || []).forEach(nf => { if (!nf || !nf.id) return; const i = MI_FEATURES.findIndex(x => x.id === nf.id); if (i >= 0) MI_FEATURES[i] = nf; });
+  if (!semRender){ miRenderLayers(); miRenderList(); }
+  const f = MI_SEL && miById(MI_SEL);
+  if (f){ miRenderVinc(f); miRenderBos(f); }
+}
+// todos os vínculos de uma marcação, dos dois lados (só com marcações ativas)
+function miVincDe(id){
+  const out = [], f = miById(id);
+  ((f && f.vinculos) || []).forEach(v => { const o = miById(v.id); if (o) out.push({ outro:o, rel:v.rel, obs:v.obs, por:v.por, em:v.em }); });
+  MI_FEATURES.forEach(g => {
+    if (g.id === id) return;
+    (g.vinculos || []).forEach(v => { if (v.id === id && !out.some(x => x.outro.id === g.id)) out.push({ outro:g, rel:v.rel, obs:v.obs, por:v.por, em:v.em }); });
+  });
+  return out;
+}
+// ponto central de uma marcação [lat, lng]
+function miCentro(f){
+  const g = f && f.geometry; if (!g || !g.coordinates) return null;
+  if (g.type === 'Point') return [g.coordinates[1], g.coordinates[0]];
+  const cs = g.type === 'LineString' ? g.coordinates : g.type === 'Polygon' ? g.coordinates[0] : null;
+  if (!cs || !cs.length) return null;
+  if (g.type === 'LineString'){ const c = cs[Math.floor(cs.length / 2)]; return [c[1], c[0]]; }
+  let x = 0, y = 0; cs.forEach(c => { x += c[0]; y += c[1]; }); return [y / cs.length, x / cs.length];
+}
+// botão ✕ que pede um 2º toque (evita tirar sem querer, sem janela do navegador)
+function miDoisToques(btn){
+  if (btn.classList.contains('conf')) return true;
+  btn.classList.add('conf'); btn.textContent = 'tirar?';
+  setTimeout(() => { if (btn.isConnected && !btn.disabled){ btn.classList.remove('conf'); btn.textContent = '✕'; } }, 3500);
+  return false;
+}
+// mesma pessoa? CPF quando os dois têm; senão o nome completo igual
+function miPessoaChave(d){ return { cpf: String((d && d.cpf) || '').replace(/\D/g, ''), nome: ixNorm((d && d.nome) || '') }; }
+function miEnvCasa(r, k){
+  const c = gCPF(r);
+  if (k.cpf && c) return c === k.cpf;
+  return !!k.nome && k.nome.length > 5 && ixNorm(gNome(r)) === k.nome;
+}
+// alvos do mapa que batem com uma linha de Envolvidos
+function miAlvosDoEnv(r, excluir){ return MI_FEATURES.filter(f => f.tipo === 'suspeito' && f.id !== excluir && miEnvCasa(r, miPessoaChave(f.dados))); }
+
+/* ── Vínculos (gaveta) ── */
+function miRenderVinc(f){
+  const box = document.getElementById('mi-vinc'); if (!box || !f) return;
+  const l = miVincDe(f.id);
+  box.innerHTML = l.length ? l.map(v => {
+    const r = miRel(v.rel);
+    return `<div class="vc-lin" style="--c:${r[1]}"><span class="vc-rel">${miEsc(r[0])}</span>
+      <div class="tx"><b onclick="miFocus('${miEsc(v.outro.id)}')" title="Abrir">${miEmoji(v.outro)} ${miEsc(miNomeF(v.outro))}</b>
+        <small>${miEsc([miTipoSem(v.outro), v.obs, v.por ? 'por ' + v.por : ''].filter(Boolean).join(' · '))}</small></div>
+      ${avSelo(v.outro.aval)}
+      <button type="button" class="vc-x" title="Tirar o vínculo" onclick="miVincRemover(this,'${miEsc(f.id)}','${miEsc(v.outro.id)}')">✕</button></div>`;
+  }).join('') : '<div class="vc-vazio">Nenhum vínculo ainda. Ligue a comparsas, familiares, pistas, rotas ou locais.</div>';
+}
+async function miVincRemover(btn, a, b){
+  if (!miDoisToques(btn)) return;
+  btn.disabled = true;
+  try { const d = await apiPostJSON('/api/mapa-intel/save', { op:'vinculo', de:a, para:b, remover:true }); miAtualizarF(d.features); miToast('Vínculo tirado'); }
+  catch(e){ btn.disabled = false; alert('Não deu para tirar o vínculo: ' + (e.message || e)); }
+}
+let VC_DE = null;
+function inEscolherVinculo(id){
+  const f = miById(id); if (!f) return;
+  VC_DE = id;
+  const padrao = f.tipo === 'suspeito' ? 'comparsa' : 'usa';
+  const rels = Object.entries(MI_RELS).map(([k, v]) => `<option value="${k}"${k === padrao ? ' selected' : ''}>${miEsc(v[0])}</option>`).join('');
+  inModal('Ligar a outra marcação', miNomeF(f) + ' — escolha a relação e toque na marcação', `
+    <div class="vc-pick-f">
+      <div class="mi-fg"><label>Relação</label><select id="vc-rel">${rels}</select></div>
+      <div class="mi-fg"><label>Observação (opcional)</label><input id="vc-obs" type="text" maxlength="200" placeholder="Ex.: vistos juntos em 10/11"></div>
+    </div>
+    <div class="mi-fg" style="margin:0"><input id="vc-q" type="text" placeholder="Procurar marcação por nome, vulgo, CPF, tipo…" oninput="inPickRender()"></div>
+    <div class="vc-pick-l" id="vc-pick-l"></div>`);
+  inPickRender();
+  setTimeout(() => { const q = document.getElementById('vc-q'); if (q) q.focus(); }, 60);
+}
+function inPickRender(){
+  const box = document.getElementById('vc-pick-l'); if (!box) return;
+  const q = ixNorm((document.getElementById('vc-q') || {}).value || '');
+  const ja = new Set(miVincDe(VC_DE).map(v => v.outro.id));
+  const l = MI_FEATURES.filter(g => g.id !== VC_DE && !ja.has(g.id))
+    .filter(g => { const d = g.dados || {}; return !q || ixNorm([g.titulo, d.nome, d.vulgo, d.cpf, miTipo(g.tipo).lbl, g.descricao].join(' ')).includes(q); })
+    .sort((a, b) => (b.tipo === 'suspeito') - (a.tipo === 'suspeito') || miNomeF(a).localeCompare(miNomeF(b)));
+  box.innerHTML = l.length ? l.slice(0, 80).map(g => `<div class="in-lin" data-id="${miEsc(g.id)}" onclick="inPickEscolher('${miEsc(g.id)}')">${avSelo(g.aval, { semTambem:true })}
+      <div class="tx"><b>${miEmoji(g)} ${miEsc(miNomeF(g))}</b><small>${miEsc(miTipoSem(g))}${g.dados && g.dados.vulgo ? ' · "' + miEsc(g.dados.vulgo) + '"' : ''}</small></div></div>`).join('')
+    : '<div class="bp-vazio">Nenhuma marcação' + (q ? ' com esse nome' : ' para ligar') + '.</div>';
+}
+async function inPickEscolher(para){
+  const de = VC_DE; if (!de) return;
+  const rel = (document.getElementById('vc-rel') || {}).value || 'outro';
+  const obs = ((document.getElementById('vc-obs') || {}).value || '').trim();
+  const box = document.getElementById('vc-pick-l'); if (box) box.style.opacity = '.5';
+  try {
+    const d = await apiPostJSON('/api/mapa-intel/save', { op:'vinculo', de, para, rel, obs });
+    inFecharModal(); miAtualizarF(d.features);
+    miToast(`🕸️ Vínculo criado: ${miNomeF(miById(de))} ⟷ ${miNomeF(miById(para))}`);
+  } catch(e){ if (box) box.style.opacity = ''; alert('Não deu para ligar: ' + (e.message || e)); }
+}
+
+/* ── BOs ligados (gaveta) ── */
+function miBoInfo(bo){
+  const n = boNorm(bo);
+  const oc = IDX_BASE && IDX_BASE.find(r => boNorm(gBO(r)) === n);
+  return oc ? { oc, data:bData(oc), mun:bMun(oc), nat:bCrime(oc) } : null;
+}
+let _miBosTentou = false;
+function miRenderBos(f){
+  const box = document.getElementById('mi-bos'); if (!box || !f) return;
+  const l = f.bos || [];
+  // a ficha mostra data/município/natureza de cada BO: carrega a base uma vez, sem travar
+  if (l.length && !IDX_BASE && !_miBosTentou){
+    _miBosTentou = true;
+    ensureIndices().then(() => { const g = MI_SEL && miById(MI_SEL); if (g) miRenderBos(g); }).catch(() => {});
+  }
+  box.innerHTML = l.length ? l.map(b => {
+    const i = miBoInfo(b.bo);
+    return `<div class="vc-lin"><button type="button" class="bo-chip" title="Ver o BO na pesquisa" onclick="inVerBO('${miEsc(b.bo)}')">BO ${miEsc(b.bo)}</button>
+      <div class="tx"><b onclick="inVerBO('${miEsc(b.bo)}')">${i ? miEsc([i.data, i.mun].filter(Boolean).join(' · ') || '—') : 'BO ' + miEsc(b.bo)}</b>
+        <small>${miEsc([i ? miNatCurta(i.nat) : (IDX_BASE ? 'não está na BASE DE DADOS' : ''), b.obs, b.por ? 'ligado por ' + b.por : ''].filter(Boolean).join(' · '))}</small></div>
+      <button type="button" class="vc-x" title="Desligar o BO" onclick="miBoRemover(this,'${miEsc(f.id)}','${miEsc(b.bo)}')">✕</button></div>`;
+  }).join('') : '<div class="vc-vazio">Nenhum BO ligado. Digite o número abaixo' + (f.tipo === 'suspeito' ? ' ou procure na base pelo CPF, nome e placas.' : '.') + '</div>';
+}
+async function miBoLigar(id, bo, obs){
+  const inp = document.getElementById('bo-novo');
+  const n = boNorm(bo != null ? bo : (inp && inp.value));
+  if (!n){ if (inp) inp.focus(); return null; }
+  try {
+    const d = await apiPostJSON('/api/mapa-intel/save', { op:'bo', id, bo:n, obs: obs || '' });
+    if (inp && bo == null) inp.value = '';
+    miAtualizarF([d.feature], true);
+    miToast(`📎 BO ${n} ligado a ${miNomeF(d.feature)}`);
+    return d.feature;
+  } catch(e){ alert('Não deu para ligar o BO: ' + (e.message || e)); return null; }
+}
+async function miBoRemover(btn, id, bo){
+  if (!miDoisToques(btn)) return;
+  btn.disabled = true;
+  try { const d = await apiPostJSON('/api/mapa-intel/save', { op:'bo', id, bo, remover:true }); miAtualizarF([d.feature], true); miToast('BO ' + bo + ' desligado'); }
+  catch(e){ btn.disabled = false; alert('Não deu para desligar: ' + (e.message || e)); }
+}
+function inVerBO(bo){
+  inFecharModal();
+  intelLimparBusca();
+  const q = document.getElementById('q-bo'); if (q) q.value = bo;
+  inAba('busca'); intelBuscar();
+}
+// procura na base os BOs do alvo (CPF, nome e placas) e quem estava junto que também é alvo
+let SUG_BOS = [];
+async function miBoSugerir(id, semLog){
+  const f = miById(id); if (!f) return;
+  const box = document.getElementById('bo-sug'); if (!box) return;
+  const d = f.dados || {}, k = miPessoaChave(d);
+  const placas = (d.veiculos || []).map(v => String(v.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '')).filter(p => p.length >= 5);
+  if (!k.cpf && !k.nome && !placas.length){ box.innerHTML = '<div class="vc-vazio">Preencha o CPF, o nome ou uma placa na ficha (e salve) para procurar.</div>'; return; }
+  box.innerHTML = '<div class="vc-vazio">Procurando na base…</div>';
+  try { await ensureIndices(); } catch(e){ box.innerHTML = `<div class="vc-vazio">❌ ${miEsc(e.message || e)}</div>`; return; }
+  if (!(IDX_ENV || []).length && !(IDX_VEI || []).length){ box.innerHTML = '<div class="vc-vazio">❌ A base de Envolvidos/Veículos não carregou.</div>'; return; }
+  const ja = new Set((f.bos || []).map(b => boNorm(b.bo)));
+  const achou = new Map();   // bo → motivo
+  IDX_ENV.forEach(r => { if (miEnvCasa(r, k)){ const b = boNorm(gBO(r)); if (b && !achou.has(b)) achou.set(b, (gPapel(r) || 'envolvido') + (gCPF(r) && k.cpf ? ' · pelo CPF' : ' · pelo nome')); } });
+  IDX_VEI.forEach(r => { const p = gPlaca(r); if (p && placas.includes(p)){ const b = boNorm(gBO(r)); if (b && !achou.has(b)) achou.set(b, 'veículo ' + p); } });
+  // comparsas: quem estava nesses BOs e também é alvo no mapa (ainda sem vínculo)
+  const todosBos = new Set([...achou.keys(), ...ja]);
+  const vinc = new Set(miVincDe(id).map(v => v.outro.id));
+  const comp = new Map();   // alvoId → Set(bos)
+  IDX_ENV.forEach(r => {
+    const b = boNorm(gBO(r)); if (!b || !todosBos.has(b) || miEnvCasa(r, k)) return;
+    miAlvosDoEnv(r, id).forEach(a => { if (vinc.has(a.id)) return; if (!comp.has(a.id)) comp.set(a.id, new Set()); comp.get(a.id).add(b); });
+  });
+  const novos = [...achou].filter(([b]) => !ja.has(b));
+  SUG_BOS = novos.map(([b]) => b);
+  if (!semLog) inLog('pesquisou', `Sugestões para o alvo ${miNomeF(f)} → ${achou.size} BO(s) na base, ${comp.size} comparsa(s) no mapa`);
+  let h = '';
+  if (novos.length){
+    h += `<div class="bo-sug-t">${novos.length} BO(s) na base que ainda não estão na ficha${novos.length > 1 ? ` <button type="button" class="vc-x" style="float:right;height:24px" onclick="miBoLigarTodos(this,'${miEsc(id)}')">ligar todos</button>` : ''}</div>`;
+    h += novos.map(([b, mot]) => { const i = miBoInfo(b);
+      return `<div class="vc-lin"><button type="button" class="bo-chip" onclick="inVerBO('${miEsc(b)}')">BO ${miEsc(b)}</button>
+        <div class="tx"><b>${miEsc(i ? [i.data, i.mun].filter(Boolean).join(' · ') || '—' : '—')}</b><small>${miEsc([mot, i ? miNatCurta(i.nat) : ''].filter(Boolean).join(' · '))}</small></div>
+        <button type="button" class="vc-x" onclick="miBoSugLigar(this,'${miEsc(id)}','${miEsc(b)}')">ligar</button></div>`; }).join('');
+  }
+  if (comp.size){
+    h += '<div class="bo-sug-t">Estavam junto nesses BOs e também são alvos no mapa</div>';
+    h += [...comp].map(([aid, bs]) => { const a = miById(aid), lb = [...bs].join(', ');
+      return `<div class="vc-lin" style="--c:${miRel('comparsa')[1]}"><div class="tx"><b onclick="miFocus('${miEsc(aid)}')">${miEmoji(a)} ${miEsc(miNomeF(a))}</b><small>junto no(s) BO(s) ${miEsc(lb)}</small></div>
+        <button type="button" class="vc-x" onclick="miSugComparsa(this,'${miEsc(id)}','${miEsc(aid)}','${miEsc(lb)}')">ligar como comparsa</button></div>`; }).join('');
+  }
+  box.innerHTML = h || `<div class="vc-vazio">Nada novo na base${achou.size ? ' (os BOs encontrados já estão na ficha)' : ''}.</div>`;
+}
+async function miBoSugLigar(btn, id, bo){
+  btn.disabled = true; btn.textContent = '…';
+  const g = await miBoLigar(id, bo);
+  if (g){ const lin = btn.closest('.vc-lin'); if (lin) lin.remove(); SUG_BOS = SUG_BOS.filter(x => x !== bo); }
+  else { btn.disabled = false; btn.textContent = 'ligar'; }
+}
+async function miBoLigarTodos(btn, id){
+  btn.disabled = true; btn.textContent = 'ligando…';
+  for (const b of SUG_BOS.slice()) await miBoLigar(id, b);
+  miBoSugerir(id, true);
+}
+async function miSugComparsa(btn, id, aid, bos){
+  btn.disabled = true;
+  try {
+    const d = await apiPostJSON('/api/mapa-intel/save', { op:'vinculo', de:id, para:aid, rel:'comparsa', obs:'junto no(s) BO(s) ' + bos });
+    miAtualizarF(d.features); const lin = btn.closest('.vc-lin'); if (lin) lin.remove(); miToast('🕸️ Comparsa ligado');
+  } catch(e){ btn.disabled = false; alert('Não deu para ligar: ' + (e.message || e)); }
+}
+
+/* ── Pesquisa: a pessoa encontrada já é alvo? / ligar o BO a um alvo ── */
+function miAlvoNaPesquisa(r, rows){
+  if (!MI_LOADED) return '';
+  const alvos = miAlvosDoEnv(r, null);
+  return alvos.map(a => {
+    const ja = new Set((a.bos || []).map(b => boNorm(b.bo)));
+    const faltam = [...new Set((rows || []).map(x => boNorm(gBO(x))).filter(b => b && !ja.has(b)))];
+    return `<div class="res-alvo">👤 Já é alvo no mapa: <b>${miEsc(miNomeF(a))}</b> ${avSelo(a.aval)}
+      <button type="button" onclick="miFocus('${miEsc(a.id)}')">abrir ficha</button>
+      ${faltam.length && miPodeGerir() ? `<button type="button" onclick="inLigarBoVarios(this,'${miEsc(a.id)}','${miEsc(faltam.join(','))}')">📎 ligar ${faltam.length === 1 ? 'o BO' : 'os ' + faltam.length + ' BOs'} à ficha</button>`
+        : '<small style="color:var(--muted)">todos os BOs já estão na ficha</small>'}</div>`;
+  }).join('');
+}
+async function inLigarBoVarios(btn, id, lista){
+  btn.disabled = true; btn.textContent = 'ligando…';
+  let n = 0; for (const b of lista.split(',').filter(Boolean)){ if (await miBoLigar(id, b)) n++; }
+  btn.textContent = `✔ ${n} BO(s) na ficha`;
+}
+function inLigarBoAlvo(bo){
+  const n = boNorm(bo);
+  inModal('Ligar o BO ' + n, 'Escolha o alvo (ou outra marcação) que recebe este BO na ficha', `
+    <div class="mi-fg"><input id="lb-obs" type="text" maxlength="200" placeholder="Observação (opcional) — ex.: preso em flagrante, era o motorista"></div>
+    <div class="mi-fg" style="margin:0"><input id="lb-q" type="text" placeholder="Procurar por nome, vulgo, CPF…" oninput="inLigarBoRender('${miEsc(n)}')"></div>
+    <div class="vc-pick-l" id="lb-l"></div>`);
+  inLigarBoRender(n);
+}
+function inLigarBoRender(bo){
+  const box = document.getElementById('lb-l'); if (!box) return;
+  const q = ixNorm((document.getElementById('lb-q') || {}).value || '');
+  const noBo = new Set();   // quem estava no BO e já é alvo aparece primeiro
+  (IDX_ENV || []).forEach(r => { if (boNorm(gBO(r)) === bo) miAlvosDoEnv(r, null).forEach(a => noBo.add(a.id)); });
+  const l = MI_FEATURES.filter(g => { const d = g.dados || {}; return !q || ixNorm([g.titulo, d.nome, d.vulgo, d.cpf, miTipo(g.tipo).lbl].join(' ')).includes(q); })
+    .sort((a, b) => noBo.has(b.id) - noBo.has(a.id) || (b.tipo === 'suspeito') - (a.tipo === 'suspeito') || miNomeF(a).localeCompare(miNomeF(b)));
+  box.innerHTML = l.length ? l.slice(0, 80).map(g => {
+    const ja = (g.bos || []).some(b => boNorm(b.bo) === bo);
+    return `<div class="in-lin" data-id="${miEsc(g.id)}"${ja ? ' style="opacity:.55;cursor:default"' : ` onclick="inLigarBoEscolher('${miEsc(g.id)}','${miEsc(bo)}')"`}>${avSelo(g.aval, { semTambem:true })}
+      <div class="tx"><b>${miEmoji(g)} ${miEsc(miNomeF(g))}</b><small>${miEsc(miTipoSem(g))}${noBo.has(g.id) ? ' · está neste BO' : ''}${ja ? ' · já ligado' : ''}</small></div></div>`;
+  }).join('') : '<div class="bp-vazio">Nenhuma marcação' + (q ? ' com esse nome' : ' no mapa') + '.</div>';
+}
+async function inLigarBoEscolher(id, bo){
+  const obs = ((document.getElementById('lb-obs') || {}).value || '').trim();
+  const g = await miBoLigar(id, bo, obs);
+  if (g){ inFecharModal(); if (window.BPCasca && BPCasca.toast) BPCasca.toast(`BO ${bo} ligado a ${miNomeF(g)}.`); }
+}
+
+/* ── Rede de vínculos no mapa (linhas tracejadas entre as marcações) ── */
+let MI_REDE_ON = false, MI_REDE_LAYER = null;
+function miToggleRede(){
+  MI_REDE_ON = !MI_REDE_ON;
+  const b = document.getElementById('mi-rede-btn');
+  if (b){ b.classList.toggle('active', MI_REDE_ON); b.innerHTML = '🕸️ Rede de vínculos' + (MI_REDE_ON ? ' ✓' : ''); }
+  miRenderRede();
+  if (MI_REDE_ON){
+    const n = MI_FEATURES.reduce((s, f) => s + (f.vinculos || []).filter(v => miById(v.id)).length, 0);
+    miToast(n ? `🕸️ ${n} vínculo(s) no mapa` : 'Nenhum vínculo ainda — abra uma marcação e use “Ligar a outra marcação”');
+  }
+}
+function miRenderRede(){
+  if (!MI_MAP || !window.L) return;
+  if (!MI_REDE_LAYER){
+    if (!MI_MAP.getPane('miRede')) MI_MAP.createPane('miRede').style.zIndex = 420;
+    MI_REDE_LAYER = L.layerGroup().addTo(MI_MAP);
+  }
+  MI_REDE_LAYER.clearLayers();
+  MI_FEATURES.forEach(f => (f.vinculos || []).forEach(v => {
+    if (!MI_LAYERS[f.id] || !MI_LAYERS[v.id]) return;           // só o que está visível (filtro)
+    const destaque = !!MI_SEL && (MI_SEL === f.id || MI_SEL === v.id);
+    if (!MI_REDE_ON && !destaque) return;                        // desligada: só os da marcação aberta
+    const o = miById(v.id), a = miCentro(f), b = miCentro(o); if (!a || !b) return;
+    const r = miRel(v.rel);
+    const ln = L.polyline([a, b], { pane:'miRede', color:r[1], weight: destaque ? 3.5 : 2.2, opacity: destaque ? .95 : .75, dashArray:'6 6', pmIgnore:true });
+    ln._miRede = [f.id, v.id];
+    ln.bindTooltip(`<b>${miEsc(r[0])}</b><br>${miEsc(miNomeF(f))} ⟷ ${miEsc(miNomeF(o))}${v.obs ? '<br><small>' + miEsc(v.obs) + '</small>' : ''}`, { sticky:true, className:'mi-tip' });
+    ln.addTo(MI_REDE_LAYER);
+  }));
+}
+
+/* ── Rede do alvo (janela): até 2 passos + BOs em comum ── */
+function inRede(id){
+  const c = miById(id); if (!c) return;
+  const nos = new Map([[id, { f:c, d:0, pai:null }]]), arestas = [], fila = [id];
+  while (fila.length){
+    const x = fila.shift(), dx = nos.get(x).d;
+    if (dx >= 2) continue;
+    miVincDe(x).forEach(v => {
+      if (!nos.has(v.outro.id)){ if (nos.size >= 40) return; nos.set(v.outro.id, { f:v.outro, d:dx + 1, pai:x }); fila.push(v.outro.id); }
+      const k = [x, v.outro.id].sort().join('|');
+      if (!arestas.some(a => a.k === k)) arestas.push({ k, a:x, b:v.outro.id, rel:v.rel });
+    });
+  }
+  // BOs: os do centro e os que aparecem em 2+ marcações da rede (ligação escondida)
+  const donosBo = new Map();
+  nos.forEach((n, k) => (n.f.bos || []).forEach(b => { const bb = boNorm(b.bo); if (!donosBo.has(bb)) donosBo.set(bb, new Set()); donosBo.get(bb).add(k); }));
+  const multi = [...donosBo].filter(([, s]) => s.size > 1).slice(0, 16);
+  const doCentro = [...donosBo].filter(([, s]) => s.size === 1 && s.has(id));
+  const centroVer = doCentro.slice(0, doCentro.length > 8 ? 7 : 8), centroResto = doCentro.length - centroVer.length;
+  // posições
+  const P = new Map([[id, [0, 0]]]), R1 = 170, R2 = 268;
+  const a1 = [...nos].filter(([, n]) => n.d === 1).map(([k]) => k);
+  a1.forEach((k, i) => { const t = -Math.PI / 2 + i * 2 * Math.PI / Math.max(1, a1.length); P.set(k, [R1 * Math.cos(t), R1 * Math.sin(t)]); nos.get(k).t = t; });
+  const porPai = new Map();
+  [...nos].filter(([, n]) => n.d === 2).forEach(([k, n]) => { if (!porPai.has(n.pai)) porPai.set(n.pai, []); porPai.get(n.pai).push(k); });
+  porPai.forEach((ks, pai) => {
+    const t0 = nos.get(pai).t || 0, abre = Math.min(1.2, 2 * Math.PI / Math.max(1, a1.length) * .85);
+    ks.forEach((k, i) => { const t = t0 + (ks.length === 1 ? 0 : (i / (ks.length - 1) - .5) * abre); P.set(k, [R2 * Math.cos(t), R2 * Math.sin(t)]); });
+  });
+  const boP = new Map();
+  // BOs do centro: cada um vai para o ângulo mais longe das linhas dos vínculos e dos outros BOs
+  const usados = a1.map(k => nos.get(k).t), angDist = (a, b) => Math.abs(((a - b + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+  const livre = () => { let melhor = Math.PI / 2, md = -1;
+    for (let g = 0; g < 36; g++){ const t = -Math.PI / 2 + g * Math.PI / 18; const dd = usados.length ? Math.min(...usados.map(u => angDist(t, u))) : 9; if (dd > md + 1e-9){ md = dd; melhor = t; } }
+    usados.push(melhor); return melhor; };
+  centroVer.forEach(([b]) => { const t = livre(); boP.set(b, [96 * Math.cos(t), 96 * Math.sin(t)]); });
+  const tResto = centroResto ? livre() : 0;
+  multi.forEach(([b, s], i) => {
+    let x = 0, y = 0; s.forEach(k => { const p = P.get(k); x += p[0]; y += p[1]; }); x /= s.size; y /= s.size;
+    if (Math.hypot(x, y) < 60){ const t = .6 + i * 2.1; x = 120 * Math.cos(t); y = 120 * Math.sin(t); }
+    boP.set(b, [x, y + (i % 2 ? 16 : -16)]);
+  });
+  const corte = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  const W = 780, H = 640;
+  let svg = `<svg class="rd-svg" viewBox="${-W / 2} ${-H / 2} ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rede de vínculos de ${miEsc(miNomeF(c))}">`;
+  // linhas BO ↔ donos
+  [...centroVer, ...multi].forEach(([b, s]) => { const q = boP.get(b); s.forEach(k => { const p = P.get(k); if (p && q) svg += `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#94a3b8" stroke-width="1.2" opacity=".55"/>`; }); });
+  // vínculos
+  arestas.forEach(e => {
+    const p = P.get(e.a), q = P.get(e.b); if (!p || !q) return;
+    const r = miRel(e.rel);
+    svg += `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${r[1]}" stroke-width="2.6" stroke-dasharray="8 5"/>`;
+    svg += `<text class="lb" x="${(p[0] + q[0]) / 2}" y="${(p[1] + q[1]) / 2 - 5}" font-size="10.5" font-weight="700" text-anchor="middle" style="fill:${r[1]}">${miEsc(r[0].split(' /')[0].split(' (')[0])}</text>`;
+  });
+  // BOs
+  [...centroVer, ...multi].forEach(([b, s]) => {
+    const q = boP.get(b), comum = s.size > 1, w = Math.max(64, 10 + b.length * 6.4);
+    svg += `<g class="no" onclick="inVerBO('${miEsc(b)}')"><title>BO ${miEsc(b)}${comum ? ' — em comum entre ' + s.size + ' marcações' : ''}</title>
+      <rect x="${q[0] - w / 2}" y="${q[1] - 11}" width="${w}" height="22" rx="6" fill="${comum ? '#facc15' : 'rgba(148,163,184,.25)'}" stroke="${comum ? '#a16207' : '#94a3b8'}" stroke-width="1.5"/>
+      <text x="${q[0]}" y="${q[1] + 4}" font-size="10.5" font-weight="800" text-anchor="middle" style="${comum ? 'fill:#111' : ''}">BO ${miEsc(corte(b, 14))}</text></g>`;
+  });
+  if (centroResto) svg += `<text class="lb" x="${96 * Math.cos(tResto)}" y="${96 * Math.sin(tResto) + 4}" font-size="11" font-weight="800" text-anchor="middle">+${centroResto} BOs</text>`;
+  // marcações
+  [...nos].forEach(([k, n]) => {
+    const p = P.get(k); if (!p) return;
+    const t = miTipo(n.f.tipo), cor = n.f.cor || t.cor, rr = n.d === 0 ? 32 : n.d === 1 ? 24 : 19;
+    const cod = avCodigo(n.f.aval), nb = (n.f.bos || []).length;
+    svg += `<g class="no" onclick="inFecharModal();miFocus('${miEsc(k)}')"><title>${miEsc(miNomeF(n.f))} — ${miEsc(miTipoSem(n.f))}${nb ? ' · ' + nb + ' BO(s)' : ''}</title>
+      <circle cx="${p[0]}" cy="${p[1]}" r="${rr}" fill="${cor}" fill-opacity=".22" stroke="${cor}" stroke-width="${n.d === 0 ? 3 : 2}"/>
+      <text x="${p[0]}" y="${p[1] + rr * .32}" font-size="${rr * .95}" text-anchor="middle">${t.lbl.split(' ')[0]}</text>
+      <text class="lb" x="${p[0]}" y="${p[1] + rr + 14}" font-size="${n.d === 0 ? 13 : 11.5}" font-weight="${n.d === 0 ? 800 : 700}" text-anchor="middle">${miEsc(corte(miNomeF(n.f), 24))}</text>
+      ${cod || nb ? `<text class="lb" x="${p[0]}" y="${p[1] + rr + 27}" font-size="10" text-anchor="middle" style="fill:var(--muted)">${miEsc([cod, nb ? nb + ' BO' + (nb > 1 ? 's' : '') : ''].filter(Boolean).join(' · '))}</text>` : ''}</g>`;
+  });
+  svg += '</svg>';
+  const relsUsadas = [...new Set(arestas.map(e => e.rel))];
+  const ligados = nos.size - 1;
+  inModal('Rede de ' + miNomeF(c), 'Vínculos até 2 passos e BOs em comum — toque num item para abrir', `
+    ${ligados || doCentro.length ? svg : '<div class="bp-vazio">Esta marcação ainda não tem vínculos nem BOs ligados. Use “Ligar a outra marcação” e “BOs ligados” na ficha.</div>'}
+    ${relsUsadas.length || multi.length ? `<div class="rd-leg">${relsUsadas.map(k => `<span style="--c:${miRel(k)[1]}">${miEsc(miRel(k)[0])}</span>`).join('')}${multi.length ? '<span style="--c:#a16207;background:#facc15;color:#111">BO em comum</span>' : ''}</div>` : ''}
+    <div class="rd-res">${ligados} marcação(ões) ligada(s) · ${doCentro.length + multi.filter(([, s]) => s.has(id)).length} BO(s) na ficha · <b>${multi.length}</b> BO(s) em comum entre marcações da rede</div>
+    <div class="bp-modal-pe"><button class="bp-btn sec" onclick="inFecharModal()">Fechar</button>
+      <button class="bp-btn" onclick="inRelatorio('${miEsc(id)}')"><i data-ic="arquivo"></i> Relatório</button></div>`);
+}
+
+/* ── Mancha criminal: mapa de calor das ocorrências da BASE DE DADOS ── */
+let MI_MANCHA = null, MI_MANCHA_PTS = null, MI_MANCHA_ON = false, MI_MANCHA_SEM_HEAT = false, _miHeatP = null, MC_ORDEM = null;
+function miCarregarHeat(){
+  if (window.L && L.heatLayer) return Promise.resolve(true);
+  if (_miHeatP) return _miHeatP;
+  _miHeatP = new Promise(ok => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js';   // a mesma do painel (index.html)
+    s.onload = () => ok(true); s.onerror = () => { _miHeatP = null; ok(false); };
+    document.head.appendChild(s);
+  });
+  return _miHeatP;
+}
+// a BASE vem dd/mm/aaaa hoje, mas já veio mm/dd: descobre a ordem pelo lote inteiro
+function mcOrdem(){
+  if (MC_ORDEM) return MC_ORDEM;
+  let dmy = 0, mdy = 0;
+  (IDX_BASE || []).forEach(r => { const m = String(bData(r)).match(/^(\d{1,2})\/(\d{1,2})\/\d{4}/); if (!m) return; if (+m[1] > 12) dmy++; else if (+m[2] > 12) mdy++; });
+  MC_ORDEM = mdy > dmy ? 'mdy' : 'dmy';
+  return MC_ORDEM;
+}
+function mcISO(raw){
+  const s = String(raw || '').trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0];
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (!m) return '';
+  const [d, mo] = mcOrdem() === 'dmy' ? [m[1], m[2]] : [m[2], m[1]];
+  return `${m[3]}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+function mcNaturezas(r){ return miNatCurta(bCrime(r)).split(/\s+\/\s+/).map(x => x.trim()).filter(Boolean); }
+function miManchaDesligar(){
+  MI_MANCHA_ON = false;
+  if (MI_MAP) [MI_MANCHA, MI_MANCHA_PTS].forEach(l => { if (l && MI_MAP.hasLayer(l)) MI_MAP.removeLayer(l); });
+  MI_MANCHA = MI_MANCHA_PTS = null; MC_ORDEM = null;
+  const b = document.getElementById('mi-mancha-btn'); if (b){ b.classList.remove('active'); b.innerHTML = '🌡️ Mancha criminal'; }
+  const bx = document.getElementById('mc-box'); if (bx) bx.classList.remove('on');
+}
+async function miToggleMancha(){
+  if (MI_MANCHA_ON){ miManchaDesligar(); return; }
+  const b = document.getElementById('mi-mancha-btn'); if (b) b.innerHTML = '🌡️ Carregando…';
+  const [okHeat] = await Promise.all([miCarregarHeat(), ensureIndices().catch(() => {})]);
+  if (!(IDX_BASE || []).length){
+    if (b) b.innerHTML = '🌡️ Mancha criminal';
+    alert('A BASE DE DADOS das ocorrências não carregou agora. Tente de novo em instantes.');
+    return;
+  }
+  MI_MANCHA_ON = true; MI_MANCHA_SEM_HEAT = !okHeat;
+  if (b){ b.classList.add('active'); b.innerHTML = '🌡️ Mancha criminal ✓'; }
+  document.getElementById('mc-box').classList.add('on');
+  const cont = new Map(); IDX_BASE.forEach(r => mcNaturezas(r).forEach(n => cont.set(n, (cont.get(n) || 0) + 1)));
+  const sel = document.getElementById('mc-nat'), atual = sel.value;
+  sel.innerHTML = '<option value="">Todas as naturezas</option>' + [...cont].sort((a, b) => b[1] - a[1]).slice(0, 15)
+    .map(([n, c]) => `<option value="${miEsc(n)}"${n === atual ? ' selected' : ''}>${miEsc(n.length > 46 ? n.slice(0, 44) + '…' : n)} (${c})</option>`).join('');
+  miManchaDesenhar(true);
+}
+function miManchaDesenhar(logar){
+  if (!MI_MANCHA_ON || !MI_MAP || !IDX_BASE) return;
+  [MI_MANCHA, MI_MANCHA_PTS].forEach(l => { if (l && MI_MAP.hasLayer(l)) MI_MAP.removeLayer(l); });
+  const selP = document.getElementById('mc-per'), dias = +selP.value || 0, nat = document.getElementById('mc-nat').value;
+  const corte = dias ? new Date(Date.now() - dias * 864e5).toISOString().slice(0, 10) : '';
+  let semCoord = 0; const pts = [], lista = [];
+  IDX_BASE.forEach(r => {
+    if (nat && !mcNaturezas(r).includes(nat)) return;
+    if (corte){ const iso = mcISO(bData(r)); if (!iso || iso < corte) return; }
+    const lat = bLat(r), lng = bLng(r);
+    if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) < 1 || Math.abs(lng) < 1){ semCoord++; return; }
+    pts.push([lat, lng, 1]); lista.push(r);
+  });
+  MI_MANCHA = null;
+  if (!MI_MANCHA_SEM_HEAT && L.heatLayer){
+    MI_MANCHA = L.heatLayer(pts, { radius:24, blur:20, maxZoom:11, minOpacity:.35, gradient:{ .2:'#2563eb', .4:'#22d3ee', .6:'#a3e635', .8:'#facc15', 1:'#ef4444' } }).addTo(MI_MAP);
+  }
+  MI_MANCHA_PTS = L.layerGroup(lista.map(r => L.circleMarker([bLat(r), bLng(r)], { radius:5, color:'#fff', weight:1.2, fillColor:'#ef4444', fillOpacity:.85, pmIgnore:true })
+    .bindPopup(`<b>BO ${intelEsc(gBO(r))}</b><br>${intelEsc(bMun(r) || '')} · ${intelEsc(bData(r) || '')}<br><small>${intelEsc(miNatCurta(bCrime(r)))}</small><br>
+      <button type="button" class="mi-btn" style="margin-top:6px" onclick="inVerBO('${intelEsc(gBO(r))}')">Ver o BO</button>`)));
+  MI_MANCHA_PTS._mcN = lista.length;
+  miManchaPtsZoom();
+  if (!MI_MAP._mcZoom){ MI_MAP._mcZoom = true; MI_MAP.on('zoomend', miManchaPtsZoom); }
+  const info = document.getElementById('mc-info');
+  if (info) info.innerHTML = `<b>${pts.length}</b> ocorrência(s) no mapa${semCoord ? ` · ${semCoord} sem coordenada` : ''}${MI_MANCHA_SEM_HEAT ? ' · calor indisponível agora: mostrando os pontos' : ' · aproxime para ver cada BO'}`;
+  if (logar) inLog('mancha', `Mancha criminal: ${selP.selectedOptions[0].text}${nat ? ' · ' + nat : ''} → ${pts.length} ocorrência(s)`);
+}
+function miManchaPtsZoom(){
+  if (!MI_MANCHA_PTS || !MI_MAP) return;
+  const ver = MI_MANCHA_SEM_HEAT || MI_MAP.getZoom() >= 11;
+  if (ver && !MI_MAP.hasLayer(MI_MANCHA_PTS)) MI_MANCHA_PTS.addTo(MI_MAP);
+  if (!ver && MI_MAP.hasLayer(MI_MANCHA_PTS)) MI_MAP.removeLayer(MI_MANCHA_PTS);
+}
+
+/* ── Córtex: a placa é de um alvo? aparece em BO? ── */
+function rcPlacaNorm(p){ return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function rcAlvosDaPlaca(placa){
+  const p = rcPlacaNorm(placa);
+  return p ? MI_FEATURES.filter(f => f.tipo === 'suspeito' && ((f.dados && f.dados.veiculos) || []).some(v => rcPlacaNorm(v.placa) === p)) : [];
+}
+function rcBosDaPlaca(placa){ const p = rcPlacaNorm(placa); return [...new Set((IDX_VEI || []).filter(r => gPlaca(r) === p).map(r => boNorm(gBO(r))).filter(Boolean))]; }
+let RC_CRUZ_CARREGANDO = false;
+function rcCruzar(){
+  const box = document.getElementById('rc-cruz'); if (!box || !RC.placa) return;
+  const p = RC.placa, alvos = rcAlvosDaPlaca(p), baseOk = !!IDX_VEI;
+  if (!baseOk && !RC_CRUZ_CARREGANDO){
+    RC_CRUZ_CARREGANDO = true;
+    ensureIndices().catch(() => {}).finally(() => { RC_CRUZ_CARREGANDO = false; if (!IDX_VEI) IDX_VEI = []; if (RC.placa) rcCruzar(); });
+  }
+  const bos = baseOk ? rcBosDaPlaca(p) : [];
+  const outras = RC.placas.filter(x => x !== p && (rcAlvosDaPlaca(x).length || (baseOk && rcBosDaPlaca(x).length)));
+  let h = '';
+  alvos.forEach(a => { h += `<div class="rc-cruz-l"><span>👤 Veículo do alvo <b>${rcEsc(miNomeF(a))}</b>${avCodigo(a.aval) ? ' · ' + rcEsc(avCodigo(a.aval)) : ''}</span><button onclick="miFocus('${rcEsc(a.id)}')">ficha</button></div>`; });
+  if (bos.length) h += `<div class="rc-cruz-l bo"><span>📋 Aparece em ${bos.length} BO(s): ${rcEsc(bos.slice(0, 4).join(', '))}${bos.length > 4 ? '…' : ''}</span><button onclick="rcPesquisarPlaca('${rcEsc(p)}')">pesquisar</button></div>`;
+  if (outras.length) h += `<div class="rc-cruz-n">Outras placas do arquivo com alvo ou BO: ${outras.map(x => `<a href="#" onclick="rcSelecionarPlaca('${rcEsc(x)}');return false" style="color:#fbbf24">${rcEsc(x)}</a>`).join(', ')}</div>`;
+  box.innerHTML = h ? '<div class="rc-cruz-t">⚠ CRUZAMENTO</div>' + h
+    : `<div class="rc-cruz-n">${baseOk ? 'Cruzamento: placa sem alvo no mapa e sem BO na base.' : 'Cruzando a placa com os alvos e a base…'}</div>`;
+}
+function rcPesquisarPlaca(p){
+  intelLimparBusca();
+  const q = document.getElementById('q-placa'); if (q) q.value = p;
+  inAba('busca'); intelBuscar();
+}
+
+/* ── Relatório de inteligência (A4: imprimir ou salvar em PDF) ── */
+// mapa estático: mosaico de satélite da Esri + marcações numeradas desenhadas por cima
+function inMapaEstatico(itens, W, H, ligacoes){
+  const pts = [];
+  itens.forEach(it => { const g = it.f.geometry; if (!g || !g.coordinates) return;
+    (g.type === 'Point' ? [g.coordinates] : g.type === 'LineString' ? g.coordinates : g.type === 'Polygon' ? g.coordinates[0] : []).forEach(c => pts.push(c)); });
+  if (!pts.length) return '';
+  const X = (lng, z) => (lng + 180) / 360 * 256 * Math.pow(2, z);
+  const Y = (lat, z) => { const s = Math.sin(lat * Math.PI / 180); return (.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * 256 * Math.pow(2, z); };
+  const lngs = pts.map(p => p[0]), lats = pts.map(p => p[1]);
+  const mn = [Math.min(...lngs), Math.min(...lats)], mx = [Math.max(...lngs), Math.max(...lats)];
+  let z = 16;
+  for (; z > 3; z--) if (X(mx[0], z) - X(mn[0], z) <= W - 90 && Y(mn[1], z) - Y(mx[1], z) <= H - 90) break;
+  const cx = (X(mn[0], z) + X(mx[0], z)) / 2, cy = (Y(mn[1], z) + Y(mx[1], z)) / 2;
+  const x0 = cx - W / 2, y0 = cy - H / 2, nT = Math.pow(2, z);
+  let tiles = '';
+  for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W) / 256); tx++) for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H) / 256); ty++){
+    if (ty < 0 || ty >= nT) continue;
+    tiles += `<img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${((tx % nT) + nT) % nT}" style="position:absolute;left:${Math.round(tx * 256 - x0)}px;top:${Math.round(ty * 256 - y0)}px;width:256px;height:256px" alt="">`;
+  }
+  const px = c => [(X(c[0], z) - x0).toFixed(1), (Y(c[1], z) - y0).toFixed(1)];
+  let svg = '';
+  itens.forEach(it => { const g = it.f.geometry, cor = it.f.cor || miTipo(it.f.tipo).cor; if (!g || !g.coordinates) return;
+    if (g.type === 'LineString') svg += `<polyline points="${g.coordinates.map(c => px(c).join(',')).join(' ')}" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="6" stroke-linejoin="round"/><polyline points="${g.coordinates.map(c => px(c).join(',')).join(' ')}" fill="none" stroke="${cor}" stroke-width="3.5" stroke-linejoin="round"/>`;
+    if (g.type === 'Polygon') svg += `<polygon points="${g.coordinates[0].map(c => px(c).join(',')).join(' ')}" fill="${cor}" fill-opacity=".28" stroke="${cor}" stroke-width="2.5"/>`;
+  });
+  (ligacoes || []).forEach(([fa, fb, cor]) => { const a = miCentro(fa), b = miCentro(fb); if (!a || !b) return;
+    const p = px([a[1], a[0]]), q = px([b[1], b[0]]);
+    svg += `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${cor}" stroke-width="2.5" stroke-dasharray="7 5"/>`; });
+  itens.forEach(it => { const c = miCentro(it.f); if (!c) return; const [x, y] = px([c[1], c[0]]), cor = it.f.cor || miTipo(it.f.tipo).cor;
+    svg += `<circle cx="${x}" cy="${y}" r="11" fill="${cor}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${+y + 4}" text-anchor="middle" font-family="Arial" font-size="11" font-weight="800" fill="#111">${it.n}</text>`; });
+  return `<div class="mapa" style="width:${W}px;height:${H}px">${tiles}<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0">${svg}</svg><div class="mapa-cr">Imagem de satélite: Esri World Imagery</div></div>`;
+}
+function inRelNumero(){ const d = new Date(), p = n => String(n).padStart(2, '0'); return `RI-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+function inRelQuem(){ const p = permsSessao(); return (p && p.nome) || AUTH.user || '—'; }
+function inAvalHtml(a){
+  a = a || {}; const nv = avVencida(a) ? 'venc' : avNivel(a), cod = avCodigo(a);
+  return `<span class="aval ${nv}">${cod ? miEsc(cod) : 's/ aval.'}</span>${avVencida(a) ? ' <b style="color:#b91c1c">VENCIDA</b>' : ''}`;
+}
+function inRelDoc(titulo, sub, meta, corpo){
+  const abs = u => new URL(u, location.href).href;
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${miEsc(titulo)}</title><style>
+  @page{size:A4;margin:13mm 12mm 15mm}
+  *{box-sizing:border-box} body{margin:0;font:12.5px/1.45 Arial,Helvetica,sans-serif;color:#111;background:#d1d5db;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .barra{position:sticky;top:0;z-index:5;background:#0f172a;color:#fff;padding:10px 14px;display:flex;gap:12px;align-items:center;justify-content:center;font:700 13px Arial;flex-wrap:wrap}
+  .barra button{background:#facc15;color:#111;border:0;border-radius:8px;padding:9px 16px;font:800 13px Arial;cursor:pointer}
+  .folha{width:210mm;max-width:100%;min-height:297mm;margin:12px auto;background:#fff;padding:13mm 12mm 16mm;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+  .cab{display:flex;align-items:center;gap:14px;border-bottom:2.5px solid #111;padding-bottom:10px}
+  .cab img{width:62px;height:62px;object-fit:contain}
+  .cab .org{flex:1;text-transform:uppercase;font-size:11px;line-height:1.4}
+  .cab .org b{font-size:12.5px}
+  .selo{border:2.5px solid #b91c1c;color:#b91c1c;font:900 12px/1.2 Arial;letter-spacing:1px;padding:6px 10px;text-align:center;transform:rotate(-3deg)}
+  h1{font-size:17px;text-align:center;margin:14px 0 2px;letter-spacing:.5px;text-transform:uppercase}
+  .sub{text-align:center;color:#444;margin-bottom:12px}
+  .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 14px;border:1px solid #bbb;padding:8px 10px;margin-bottom:6px;font-size:11.5px}
+  h2{font-size:12.5px;text-transform:uppercase;background:#111;color:#fff;padding:5px 9px;margin:16px 0 8px;letter-spacing:.5px;break-after:avoid}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th,td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}
+  th{background:#e5e7eb} tr{break-inside:avoid}
+  .ficha{display:flex;gap:14px;align-items:flex-start} .ficha img{width:118px;height:148px;object-fit:cover;border:1px solid #999}
+  .kv{flex:1;display:grid;grid-template-columns:140px 1fr;gap:3px 10px} .kv b{color:#333}
+  .mapa{position:relative;overflow:hidden;border:1px solid #999;margin:4px auto 0;max-width:100%;background:#334155;break-inside:avoid}
+  .mapa-cr{position:absolute;right:4px;bottom:3px;background:rgba(255,255,255,.85);font-size:9px;padding:1px 5px}
+  .aval{display:inline-block;font-weight:900;border-radius:5px;padding:1px 7px;color:#fff;font-size:11px}
+  .aval.alta{background:#15803d}.aval.media{background:#a16207}.aval.baixa{background:#c2410c}.aval.nd{background:#64748b}.aval.sem{background:#94a3b8}.aval.venc{background:#b91c1c}
+  .obs{white-space:pre-wrap;border:1px solid #bbb;padding:8px 10px;font-size:11.5px}
+  .fotos{display:flex;gap:8px;flex-wrap:wrap} .fotos img{width:160px;height:120px;object-fit:cover;border:1px solid #999}
+  .vazio{color:#555;font-style:italic}
+  .assin{margin:34px auto 0;width:300px;border-top:1px solid #111;text-align:center;padding-top:4px;font-size:11.5px}
+  .rod{margin-top:22px;border-top:1px solid #999;padding-top:8px;font-size:10px;color:#333}
+  @media print{ body{background:#fff} .barra{display:none} .folha{margin:0;box-shadow:none;width:auto;min-height:0;padding:0} }
+  @media (max-width:800px){ .folha{padding:14px} .meta{grid-template-columns:1fr 1fr} .ficha{flex-direction:column} .kv{grid-template-columns:110px 1fr} }
+  </style></head><body>
+  <div class="barra">${miEsc(titulo)} <button onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button></div>
+  <div class="folha">
+    <div class="cab"><img src="${abs('LOGOS/bpfron_transp.png')}" alt="Brasão BPFRON"><div class="org">Estado de Rondônia · Polícia Militar<br><b>Batalhão de Polícia de Fronteira e Divisas — BPFRON</b><br>Seção de Inteligência — P2</div><div class="selo">ACESSO<br>RESTRITO</div></div>
+    <h1>${miEsc(titulo)}</h1><div class="sub">${miEsc(sub)}</div>
+    <div class="meta">${meta.map(([k, v]) => `<div><b>${miEsc(k)}:</b> ${v}</div>`).join('')}</div>
+    ${corpo}
+    <div class="assin">${miEsc(inRelQuem())}<br><small>Elaborado pela Central de Inteligência</small></div>
+    <div class="rod">Documento gerado em ${miEsc(new Date().toLocaleString('pt-BR'))} por ${miEsc(AUTH.user)} na Central de Inteligência do BPFRON. Contém informação de inteligência: difusão somente a quem tem necessidade de conhecer; não reproduzir nem encaminhar sem autorização do chefe da P2. A geração deste relatório fica registrada.<br>
+    Avaliação A1–F6: a letra é a fonte (A = totalmente confiável … E = não confiável; F = não dá para avaliar) e o número é o conteúdo (1 = confirmada … 5 = improvável; 6 = não dá para avaliar). Entre radares do Córtex o trajeto é provável; só as passagens são confirmadas.</div>
+  </div></body></html>`;
+}
+// abre a janela já no clique (o navegador não bloqueia) e escreve depois
+function inRelJanela(){
+  const w = window.open('', '_blank');
+  if (!w){ alert('O navegador bloqueou a janela do relatório. Libere as janelas (pop-ups) para este site e tente de novo.'); return null; }
+  try { w.document.write('<p style="font:15px Arial;padding:24px">Montando o relatório…</p>'); } catch(e){}
+  return w;
+}
+function inRelEscrever(w, html){ try { w.document.open(); w.document.write(html); w.document.close(); w.focus(); } catch(e){} }
+function inRelPapel(f, bo){
+  const k = miPessoaChave(f.dados); if (!k.cpf && !k.nome) return '';
+  const r = (IDX_ENV || []).find(x => boNorm(gBO(x)) === bo && miEnvCasa(x, k));
+  return r ? [gPapel(r), gStatus(r)].filter(Boolean).join(' · ') : '';
+}
+async function inRelatorio(id){
+  const f = miById(id); if (!f) return;
+  const w = inRelJanela(); if (!w) return;
+  try { await ensureIndices(); } catch(e){}
+  const fotos = [];
+  for (const ft of (f.fotos || []).slice(0, 5)){ try { fotos.push(await miFotoURL(ft.id)); } catch(e){} }
+  const susp = f.tipo === 'suspeito', d = f.dados || {}, a = f.aval || {};
+  const vincs = miVincDe(id), bos = f.bos || [];
+  const itens = [{ f, n:1 }, ...vincs.map((v, i) => ({ f:v.outro, n:i + 2 }))];
+  const mapa = inMapaEstatico(itens, 680, vincs.length ? 400 : 330, vincs.map(v => [f, v.outro, miRel(v.rel)[1]]));
+  const c = miCentro(f);
+  const lin = (k, v) => v ? `<b>${miEsc(k)}</b><span>${miEsc(v)}</span>` : '';
+  let corpo = '';
+  corpo += `<h2>1. ${susp ? 'Identificação do alvo' : 'Identificação'}</h2>`;
+  corpo += susp ? `<div class="ficha">${fotos[0] ? `<img src="${fotos[0]}" alt="foto">` : ''}<div class="kv">
+      ${lin('Nome', d.nome || f.titulo)}${lin('Vulgo / alcunha', d.vulgo)}${lin('CPF', d.cpf)}${lin('RG', d.rg)}${lin('Nascimento', d.nascimento)}${lin('Filiação (mãe)', d.mae)}${lin('Endereço / referência', d.endereco)}</div></div>`
+    : `<div class="kv">${lin('Título', f.titulo || miTipoSem(f))}${lin('Tipo', miTipoSem(f))}</div>`;
+  corpo += `<h2>2. Avaliação da informação</h2><div>${inAvalHtml(a)} &nbsp;${miEsc(avTexto(a))}${a.data ? ' · informação de ' + miEsc(avDataBR(a.data)) : ''}${a.validade ? ' · ' + (avVencida(a) ? 'venceu em ' : 'vale até ') + miEsc(avDataBR(a.validade)) : ' · sem prazo de validade'}</div>`;
+  corpo += `<h2>3. Localização${vincs.length ? ' e vínculos no mapa' : ''}</h2>${mapa}<div style="font-size:11px;margin-top:4px">1 = ${miEsc(miNomeF(f))}${c ? ` · ${c[0].toFixed(5)}, ${c[1].toFixed(5)}` : ''}${vincs.length ? ' · 2 em diante = marcações ligadas (tabela abaixo)' : ''}</div>`;
+  corpo += `<h2>4. Vínculos (${vincs.length})</h2>` + (vincs.length ? `<table><thead><tr><th>Nº</th><th>Marcação</th><th>Tipo</th><th>Relação</th><th>Avaliação</th><th>Observação</th></tr></thead><tbody>${
+    vincs.map((v, i) => `<tr><td>${i + 2}</td><td>${miEsc(miNomeF(v.outro))}</td><td>${miEsc(miTipoSem(v.outro))}</td><td>${miEsc(miRel(v.rel)[0])}</td><td>${inAvalHtml(v.outro.aval)}</td><td>${miEsc(v.obs || '')}</td></tr>`).join('')}</tbody></table>` : '<div class="vazio">Nenhum vínculo registrado.</div>');
+  corpo += `<h2>5. Ocorrências ligadas (${bos.length})</h2>` + (bos.length ? `<table><thead><tr><th>BO</th><th>Data</th><th>Município</th><th>Natureza</th>${susp ? '<th>Papel do alvo</th>' : ''}<th>Observação</th></tr></thead><tbody>${
+    bos.map(b => { const i = miBoInfo(b.bo); return `<tr><td><b>${miEsc(b.bo)}</b></td><td>${miEsc(i ? i.data : '')}</td><td>${miEsc(i ? i.mun : '')}</td><td>${miEsc(i ? miNatCurta(i.nat) : (IDX_BASE ? 'não está na BASE DE DADOS' : ''))}</td>${susp ? `<td>${miEsc(inRelPapel(f, b.bo))}</td>` : ''}<td>${miEsc(b.obs || '')}</td></tr>`; }).join('')}</tbody></table>` : '<div class="vazio">Nenhum BO ligado.</div>');
+  let n = 6;
+  if (susp && (d.veiculos || []).length) corpo += `<h2>${n++}. Veículos</h2><table><thead><tr><th>Placa</th><th>Marca / modelo</th><th>Cor</th></tr></thead><tbody>${d.veiculos.map(v => `<tr><td><b>${miEsc(v.placa || '')}</b></td><td>${miEsc(v.modelo || '')}</td><td>${miEsc(v.cor || '')}</td></tr>`).join('')}</tbody></table>`;
+  corpo += `<h2>${n++}. ${susp ? 'Anotações (modus operandi, fonte…)' : 'Descrição'}</h2>` + (f.descricao ? `<div class="obs">${miEsc(f.descricao)}</div>` : '<div class="vazio">Sem anotações.</div>');
+  if (fotos.length > (susp ? 1 : 0)) corpo += `<h2>${n++}. Fotos</h2><div class="fotos">${fotos.slice(susp ? 1 : 0).map(u => `<img src="${u}" alt="foto">`).join('')}</div>`;
+  const num = inRelNumero();
+  const meta = [['Nº', miEsc(num)], ['Data', miEsc(new Date().toLocaleDateString('pt-BR'))], ['Elaborado por', miEsc(inRelQuem())],
+    ['Tipo', miEsc(miTipoSem(f))], ['Avaliação', inAvalHtml(a)], ['Última alteração', miEsc((f.atualizado_por || f.criado_por || '—') + ' · ' + (f.atualizado_em || f.criado_em || ''))]];
+  inRelEscrever(w, inRelDoc('Relatório de Inteligência', miNomeF(f), meta, corpo));
+  inLog('relatorio', `Relatório ${num} de ${miNomeF(f)} (${f.id}) · ${vincs.length} vínculo(s), ${bos.length} BO(s)`);
+}
+async function inRelatorioMapa(){
+  const ordemTipo = Object.keys(MI_TIPOS);
+  const lista = MI_FEATURES.filter(miPassaFiltro).slice()
+    .sort((a, b) => ordemTipo.indexOf(a.tipo === 'suspeito' ? '' : a.tipo) - ordemTipo.indexOf(b.tipo === 'suspeito' ? '' : b.tipo) || miNomeF(a).localeCompare(miNomeF(b)));
+  if (!lista.length){ alert('Não há marcações na tela para o relatório.'); return; }
+  const w = inRelJanela(); if (!w) return;
+  try { await ensureIndices(); } catch(e){}
+  const itens = lista.map((f, i) => ({ f, n:i + 1 }));
+  const ids = new Set(lista.map(f => f.id)), lig = [];
+  lista.forEach(f => (f.vinculos || []).forEach(v => { const o = miById(v.id); if (o && ids.has(o.id)) lig.push([f, o, miRel(v.rel)[1]]); }));
+  const mapa = inMapaEstatico(itens, 680, 440, lig);
+  const porTipo = {}; lista.forEach(f => { const t = miTipoSem(f); porTipo[t] = (porTipo[t] || 0) + 1; });
+  const conf = lista.filter(f => !avVencida(f.aval) && avNivel(f.aval) === 'alta').length, venc = lista.filter(f => avVencida(f.aval)).length;
+  const nBos = lista.reduce((s, f) => s + (f.bos || []).length, 0);
+  let corpo = `<h2>1. Resumo</h2><table><tbody>
+    <tr><th style="width:42%">Marcações neste relatório</th><td><b>${lista.length}</b>${MI_FILTRO.k ? ' (filtro: ' + miEsc(miFiltroNome()) + ')' : ''}</td></tr>
+    <tr><th>Por tipo</th><td>${Object.entries(porTipo).map(([t, q]) => miEsc(t) + ': ' + q).join(' · ')}</td></tr>
+    <tr><th>Avaliação</th><td>${conf} confiável(is) (A1–B2) · ${lista.length - conf - venc} a confirmar · ${venc} com validade vencida</td></tr>
+    <tr><th>Rede</th><td>${lig.length} vínculo(s) entre as marcações · ${nBos} BO(s) ligado(s)</td></tr></tbody></table>`;
+  corpo += `<h2>2. Mapa</h2>${mapa}<div style="font-size:11px;margin-top:4px">Os números do mapa são os da tabela abaixo. Linhas tracejadas = vínculos.</div>`;
+  corpo += `<h2>3. Marcações</h2><table><thead><tr><th>Nº</th><th>Tipo</th><th>Marcação</th><th>Avaliação</th><th>Informação de</th><th>Vale até</th><th>Vínculos</th><th>BOs</th></tr></thead><tbody>${
+    itens.map(({ f, n }) => `<tr><td>${n}</td><td>${miEsc(miTipoSem(f))}</td><td><b>${miEsc(miNomeF(f))}</b>${f.descricao ? `<br><small>${miEsc(f.descricao.slice(0, 140))}${f.descricao.length > 140 ? '…' : ''}</small>` : ''}</td>
+      <td>${inAvalHtml(f.aval)}</td><td>${miEsc(avDataBR((f.aval || {}).data))}</td><td>${miEsc(avDataBR((f.aval || {}).validade))}</td><td>${miVincDe(f.id).length}</td><td>${(f.bos || []).length}</td></tr>`).join('')}</tbody></table>`;
+  const alvos = lista.filter(f => f.tipo === 'suspeito');
+  if (alvos.length) corpo += `<h2>4. Alvos</h2><table><thead><tr><th>Nº</th><th>Nome / vulgo</th><th>CPF</th><th>Veículos</th><th>Vínculos</th><th>BOs ligados</th></tr></thead><tbody>${
+    alvos.map(f => { const d = f.dados || {}, n = itens.find(x => x.f === f).n;
+      return `<tr><td>${n}</td><td><b>${miEsc(d.nome || f.titulo || '')}</b>${d.vulgo ? ` "${miEsc(d.vulgo)}"` : ''}</td><td>${miEsc(d.cpf || '')}</td><td>${miEsc((d.veiculos || []).map(v => v.placa || v.modelo).filter(Boolean).join(', '))}</td>
+        <td>${miEsc(miVincDe(f.id).map(v => miNomeF(v.outro) + ' (' + miRel(v.rel)[0].split(' /')[0] + ')').join('; '))}</td><td>${miEsc((f.bos || []).map(b => b.bo).join(', '))}</td></tr>`; }).join('')}</tbody></table>`;
+  const num = inRelNumero();
+  const meta = [['Nº', miEsc(num)], ['Data', miEsc(new Date().toLocaleDateString('pt-BR'))], ['Elaborado por', miEsc(inRelQuem())],
+    ['Marcações', String(lista.length)], ['Filtro', miEsc(MI_FILTRO.k ? miFiltroNome() : 'todas')], ['Base', 'Mapa de Inteligência']];
+  inRelEscrever(w, inRelDoc('Relatório de Inteligência', 'Situação do mapa' + (MI_FILTRO.k ? ' — ' + miFiltroNome() : ''), meta, corpo));
+  inLog('relatorio', `Relatório ${num} do mapa (${MI_FILTRO.k ? miFiltroNome() : 'todas'}) · ${lista.length} marcação(ões)`);
 }
 
 /* ── Importar traçado de GPS: GPX / KML / GeoJSON ────────────────────── */
@@ -1723,6 +3040,7 @@ async function miImportConfirm(){
     } catch(e){ erros++; }
   }
   if (ids.length && !MI_UNDO_BUSY) miPushUndo({ tipo:'delete_many', ids });
+  if (ids.length) inLog('importou', `${ids.length} traçado(s) como "${miTipo(tipo).lbl}"${prefixo ? ' · ' + prefixo : ''}`);
   miRenderLayers(); miRenderList(); miImportCancel(); miFitAll();
   miToast(`📥 ${ids.length} importada(s)${erros ? ` · ${erros} falhou` : ''} · Ctrl+Z desfaz`);
 }
@@ -1853,10 +3171,14 @@ async function intelBuscar(){
   const algoPessoa  = nome || cpf || rg || nasc;
   const algoVeiculo = placa || chassi || renavam || modelo;
   if (!algoPessoa && !algoVeiculo && !boq && !mun && !di && !df){ st.textContent = 'Preencha ao menos um campo.'; return; }
+  // registro de acessos: monta o resumo do que foi digitado (registra mesmo se a base não carregar)
+  const crit = [['Nome','q-nome'],['CPF','q-cpf'],['RG','q-rg'],['Nasc.','q-nasc'],['Placa','q-placa'],['Chassi','q-chassi'],['Renavam','q-renavam'],
+    ['Modelo','q-modelo'],['BO','q-bo'],['Município','q-mun'],['De','q-di'],['Até','q-df']]
+    .map(([r, id]) => { const v = val(id); return v ? r + ': ' + v : ''; }).filter(Boolean).join(' · ');
 
   st.textContent = 'Carregando base de dados…';
-  try { await ensureIndices(); } catch(e){ st.textContent = '❌ ' + (e.message || e); return; }
-  if (!IDX_ENV.length && !IDX_VEI.length){ st.textContent = '❌ Não foi possível ler Envolvidos/Veículos (sem acesso?).'; return; }
+  try { await ensureIndices(); } catch(e){ st.textContent = '❌ ' + (e.message || e); inLog('pesquisou', crit + ' → base não carregou'); return; }
+  if (!IDX_ENV.length && !IDX_VEI.length){ st.textContent = '❌ Não foi possível ler Envolvidos/Veículos (sem acesso?).'; inLog('pesquisou', crit + ' → base não carregou'); return; }
 
   const nascISO = ixDataISO(nasc);
   const inRange = raw => {
@@ -1918,6 +3240,8 @@ async function intelBuscar(){
 
   const nV = new Set(mVei.map(gPlaca).filter(Boolean)).size;
   st.textContent = `${pessoas.size} pessoa(s) · ${nV} veículo(s) · ${bos.size} BO(s)`;
+  // registro de acessos: o que foi pesquisado (texto como a pessoa digitou) e quanto achou
+  inLog('pesquisou', crit + ` → ${pessoas.size} pessoa(s), ${nV} veículo(s), ${bos.size} BO(s)`);
 }
 
 function intelRenderResultados(pessoas, mVei, bos){
@@ -1929,6 +3253,7 @@ function intelRenderResultados(pessoas, mVei, bos){
       const r = p.ref;
       return `<div class="res-pessoa">
         <div class="rp-nome">👤 ${intelEsc(gNome(r) || '—')}</div>
+        ${miAlvoNaPesquisa(r, p.rows)}
         <div class="res-kv">
           <span><b>CPF:</b> ${intelEsc(r.cpf || '—')}</span>
           <span><b>RG:</b> ${intelEsc(gRG(r) || '—')}</span>
@@ -1979,7 +3304,7 @@ function intelRenderResultados(pessoas, mVei, bos){
       const veis = IDX_VEI.filter(r => gBO(r) === bo);
       const oc   = IDX_BASE.find(r => gBO(r) === bo);
       return `<div class="res-dossie" id="${boId(bo)}">
-        <div class="res-dossie-hd">📋 BO ${intelEsc(bo)}${oc ? ` — ${intelEsc(bMun(oc) || '')} · ${intelEsc(bData(oc) || '')}` : ''}</div>
+        <div class="res-dossie-hd">${miPodeGerir() ? `<button type="button" class="res-ligar" onclick="inLigarBoAlvo('${intelEsc(bo)}')" title="Guarda este BO na ficha de um alvo (ou de outra marcação) do mapa">📎 Ligar a um alvo</button>` : ''}📋 BO ${intelEsc(bo)}${oc ? ` — ${intelEsc(bMun(oc) || '')} · ${intelEsc(bData(oc) || '')}` : ''}</div>
         <div class="res-dossie-bd">
           ${oc ? `<div class="res-kv">
             <span><b>Crime:</b> ${intelEsc(bCrime(oc) || '—')}</span>
@@ -2140,6 +3465,8 @@ async function rcCarregarArquivo(f){
   RC.arquivo = f.name; RC.ignoradas = r.ignoradas;
   RC.regs = r.regs.sort((a, b) => a.ts - b.ts);
   RC.placas = [...new Set(RC.regs.map(x => x.placa))];
+  inLog('cortex', `${RC.placas.slice(0, 10).join(', ')}${RC.placas.length > 10 ? '…' : ''} · ${RC.regs.length} passagem(ns) · arquivo ${f.name}`);
+  inCamadas(false);
   await rcSelecionarPlaca(RC.placas[0]);
 }
 
@@ -2415,6 +3742,7 @@ function rcRenderHud(){
       <div><b data-n="${RC.viagens.length}">0</b><span>${RC.viagens.length === 1 ? 'viagem' : 'viagens'}</span></div>
       <div><b data-n="${Math.round(distTot / 1000)}" data-suf=" km">0</b><span>percorridos</span></div>
     </div>
+    <div class="rc-cruz" id="rc-cruz"></div>
     ${RC.viagens.length > 1 ? `<div class="rc-vs"><button class="${RC.vSel < 0 ? 'on' : ''}" onclick="rcViagem(-1)">Todas</button>${RC.viagens.map(v =>
       `<button class="${RC.vSel === v.i ? 'on' : ''}" style="--c:${v.cor}" onclick="rcViagem(${v.i})"><i></i>${rcDiaCurto(v.ini)}${rcDiaCurto(v.fim) !== rcDiaCurto(v.ini) ? '–' + rcDiaCurto(v.fim) : ''} · ${v.regs.length}</button>`).join('')}</div>` : ''}
     <div class="rc-ferr">
@@ -2427,6 +3755,7 @@ function rcRenderHud(){
     ${nAlert ? `<div class="rc-resumo-al">⚠ ${nAlert} ${nAlert === 1 ? 'ponto de atenção' : 'pontos de atenção'} na linha do tempo</div>` : ''}
     <div class="rc-aviso">${RC.rotaRuas ? 'Entre um radar e outro: <b>trajeto provável</b> (menor caminho pelas vias). Os radares são os únicos pontos confirmados.' : '⚠ A rota pelas vias não respondeu agora — mostrando <b>ligação direta</b> entre os radares.'}${RC.ignoradas ? ` · ${RC.ignoradas} linha(s) sem coordenada ignorada(s)` : ''}</div>`;
   rcContar();
+  rcCruzar();
   const corpo = document.getElementById('rc-hud-corpo');
   corpo.innerHTML = rcViagensVisiveis().map(v => `
     <div class="rc-vg" style="--c:${v.cor}">
@@ -2591,12 +3920,19 @@ async function rcCopiar(){
 }
 async function rcSalvar(){
   const vs = rcViagensVisiveis(); if (!vs.length) return;
-  if (!confirm(`Gravar ${vs.length === 1 ? 'a viagem' : 'as ' + vs.length + ' viagens'} de ${RC.placa} como marcação "Rota terrestre" no Mapa de Inteligência? (fica visível para os outros gestores)`)) return;
+  const donos = rcAlvosDaPlaca(RC.placa);
+  if (!confirm(`Gravar ${vs.length === 1 ? 'a viagem' : 'as ' + vs.length + ' viagens'} de ${RC.placa} como marcação "Rota terrestre" no Mapa de Inteligência? (fica visível para os outros gestores)`
+    + (donos.length ? `\n\nA rota também fica ligada ${donos.length === 1 ? 'ao alvo' : 'aos alvos'} ${donos.map(miNomeF).join(', ')} (dono da placa).` : ''))) return;
   const ids = [];
   for (const v of vs){
     const geo = rcGeoViagem(v).map(p => [Math.round(p[1] * 1e5) / 1e5, Math.round(p[0] * 1e5) / 1e5]);
     if (geo.length < 2) continue;
-    const desc = v.regs.map((r, k) => `${k + 1}. ${rcDia(r.t)} ${rcHora(r.t)} — ${[r.via, r.ref, r.sentido ? 'sent. ' + r.sentido : ''].filter(Boolean).join(' — ')}`).join('\n');
+    // a análise vai junto: cada passagem e, antes dela, os pontos de atenção do trecho
+    const desc = v.regs.map((r, k) => {
+      const l = k ? v.legs[k - 1] : null;
+      const al = l ? l.alertas.map(a => '   ⚠ ' + a.txt).join('\n') : '';
+      return (al ? al + '\n' : '') + `${k + 1}. ${rcDia(r.t)} ${rcHora(r.t)} — ${[r.via, r.ref, r.sentido ? 'sent. ' + r.sentido : ''].filter(Boolean).join(' — ')}`;
+    }).join('\n');
     try {
       const d = await apiPostJSON('/api/mapa-intel/save', { op:'upsert', feature:{ tipo:'rota_terrestre',
         titulo:`Córtex · ${RC.placa} · ${rcDia(v.ini)}${rcDia(v.fim) !== rcDia(v.ini) ? ' a ' + rcDia(v.fim) : ''}`.slice(0, 200),
@@ -2604,7 +3940,12 @@ async function rcSalvar(){
       ids.push(d.id); MI_FEATURES.push(d.feature);
     } catch(e){ alert('Erro ao salvar: ' + (e.message || e)); break; }
   }
-  if (ids.length){ if (!MI_UNDO_BUSY) miPushUndo({ tipo:'delete_many', ids }); miRenderLayers(); miRenderList(); miToast(`💾 ${ids.length} rota(s) gravada(s) · Ctrl+Z desfaz`); }
+  let ligadas = 0;
+  for (const id of ids) for (const a of donos){
+    try { const d = await apiPostJSON('/api/mapa-intel/save', { op:'vinculo', de:a.id, para:id, rel:'usa', obs:'Córtex: placa ' + RC.placa }); miAtualizarF(d.features, true); ligadas++; } catch(e){}
+  }
+  if (ids.length){ if (!MI_UNDO_BUSY) miPushUndo({ tipo:'delete_many', ids }); miRenderLayers(); miRenderList();
+    miToast(`💾 ${ids.length} rota(s) gravada(s)${ligadas ? ' e ligada(s) ao alvo' : ''} · Ctrl+Z desfaz`); }
 }
 function rcFechar(silencioso){
   rcParar();

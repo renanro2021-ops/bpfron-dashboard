@@ -120,7 +120,7 @@
     // ---- P2 · Inteligência
     { id: 'consultas', href: 'index.html?pg=consultas', ic: '🔎', nome: 'Consultas (Envolvidos e Veículos)', grupo: 'p2', acesso: { pagina: 'consultas' },
       desc: 'Qualificação de envolvidos e veículos das ocorrências.' },
-    { id: 'intel', href: 'intel.html', ic: '🕵️', nome: 'Central de Inteligência', grupo: 'p2', acesso: { perm: ['intel'] },
+    { id: 'intel', href: 'intel.html', ic: '🕵️', nome: 'Central de Inteligência', grupo: 'p2', acesso: { perm: ['intel'] }, gestor: 'intelchefe',
       desc: 'Mapa de Inteligência (P2) com marcações, fotos e pesquisa cruzada.' },
     { id: 'busca', href: 'ocorrencias.html', ic: '🧾', nome: 'Busca de Ocorrências', grupo: 'p2', acesso: { perm: ['busca'] },
       desc: 'Pesquisa livre no texto de todas as ocorrências, com relatório.' },
