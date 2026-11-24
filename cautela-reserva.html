@@ -76,6 +76,7 @@ input[type=checkbox]{width:auto;accent-color:var(--acc)}
 table.t1{width:100%;border-collapse:collapse;color:var(--t2)}
 .t1 th{position:sticky;top:66px;background:var(--surf);color:var(--acc);font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:10px 8px;border-bottom:1px solid var(--acc-line);z-index:5}
 .t1 td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.rolar .t1 th{top:0}/* dentro de .rolar o top:66px cobria a 1ª linha (24/11/2026) */
 .t1 tr.grupo td{background:var(--acc-soft);color:var(--acc);font-weight:700;font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:1px}
 .t1 tr.l{transition:background .15s}
 .t1 tr.l:hover{background:color-mix(in srgb,var(--acc) 6%,transparent);cursor:pointer}
@@ -178,6 +179,11 @@ details summary{color:var(--muted)}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-24", "titulo": "Ordem nova das tabelas", "quem": "todos", "itens": [
+    "Na 1ª tabela: fuzil primeiro, depois pistola, as outras armas, carregador e munição.",
+    "Na 2ª tabela: tudo que é eletrônico ficou no final.",
+    "Administração ganhou “Atualizar a Parte inteira”: todos os números numa tela só, botão para zerar as observações e uma senha só no fim."
+  ]},
   { "data": "2026-11-17", "titulo": "Mais rápido, ao vivo e C/A automático", "quem": "todos", "itens": [
     "Procurar o policial para entregar ficou instantâneo: a lista aparece enquanto você digita.",
     "Assinou no celular? A reserva atualiza sozinha na hora — não precisa mais apertar F5.",
@@ -267,7 +273,7 @@ details summary{color:var(--muted)}
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="f-grupos"></div>
         <p class="muted" style="margin-top:8px">Clique numa linha para ver cada peça, com o código e com quem está.</p>
       </div>
-      <div class="card" style="padding:0;overflow:hidden"><table class="t1 tres"><thead><tr>
+      <div class="card" style="padding:0;overflow:clip"><table class="t1 tres"><thead><tr>
         <th>Descrição</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva</th><th class="n">Missões</th><th>Obs</th>
       </tr></thead><tbody id="tb-res"></tbody></table></div>
     </section>
@@ -405,8 +411,24 @@ details summary{color:var(--muted)}
           <div style="flex:none"><button class="btn sec" id="btn-nova-mun" type="button"><i data-ic="mais"></i>Lote de munição</button></div>
           <div style="flex:none"><button class="btn sec" id="btn-corrigir" type="button"><i data-ic="editar"></i>Corrigir os números de uma linha</button></div>
           <div style="flex:none"><button class="btn sec" id="btn-nova-linha" type="button"><i data-ic="mais"></i>Linha nova na Parte</button></div>
+          <div style="flex:none"><button class="btn sec" id="btn-lote" type="button"><i data-ic="grade"></i>Atualizar a Parte inteira</button></div>
         </div>
         <div class="msg" id="adm-msg"></div>
+      </div>
+      <!-- Atualizar a Parte inteira (24/11/2026): só as linhas que já existem; nada é criado -->
+      <div class="card hidden" id="card-lote">
+        <h3>Atualizar a Parte inteira</h3>
+        <p class="muted">Mude os números que precisar e clique em <b>Salvar tudo</b> no fim: a senha é pedida uma vez só. Nenhuma linha é criada nem apagada, e antes de gravar o sistema guarda uma cópia nas abas <b>BKP_…</b> da planilha. O que mudou fica marcado em amarelo.</p>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:none"><button class="btn sec" id="lt-obs0" type="button"><i data-ic="x"></i>Zerar todas as observações</button></div>
+          <div style="flex:none"><label class="btn sec" for="lt-arq" style="display:inline-flex;cursor:pointer;margin:0"><i data-ic="baixar"></i>Carregar de arquivo (.json)</label><input id="lt-arq" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0"></div>
+          <div style="flex:none"><button class="btn sec" id="lt-fechar" type="button">Fechar sem salvar</button></div>
+        </div>
+        <div class="msg" id="lt-msg"></div>
+        <div class="rolar" style="margin-top:10px"><table class="t1" id="lt-tab"><thead><tr><th>Ordem</th><th>Item</th><th class="n">Total</th><th class="n">Cautela/P4</th><th class="n">Na reserva</th><th class="n">Missões</th><th>OBS</th></tr></thead><tbody id="lt-tb"></tbody></table></div>
+        <div id="lt-mis" style="margin-top:12px"></div>
+        <label>Motivo (fica no histórico)</label><input id="lt-mot" maxlength="200" placeholder="ex.: Parte Diária 683/2026">
+        <div style="margin-top:12px"><button class="btn" id="lt-salvar" type="button"><i data-ic="ok"></i>Salvar tudo</button></div>
       </div>
       <div class="card">
         <h3>Armeiro de serviço</h3>
@@ -1100,6 +1122,73 @@ async function editarLinha(id){
   try { await apiPost('/api/cautela/linha', { id: id || undefined, campos, motivo: id ? val(m, 'e-mot') : 'linha nova', senha: m.senha }); admMsg('<i data-ic="ok"></i>Salvo.', true); await carregar(); } catch(e){ admMsg(esc(e.message)); falha(e); }
 }
 $('btn-nova-linha').onclick = () => editarLinha('');
+/* ===== Atualizar a Parte inteira (24/11/2026) =====
+   Grade com as linhas que já existem; POST /api/cautela/atualizar-parte com uma senha só.
+   A grade só é montada ao abrir: a atualização automática da página não apaga o que foi digitado. */
+let LT_MIS = [];
+const LT_NUM = ['ordem', 'total', 'p4', 'reserva', 'legado'];
+function ltAbrir(){
+  LT_MIS = [];
+  const n = (l, c, w) => `<input type="number" min="0" data-c="${c}" data-de="${esc(l[c])}" value="${esc(l[c])}" style="width:${w}px">`;
+  $('lt-tb').innerHTML = R.linhas.map(l => `<tr class="l" data-id="${esc(l.id)}"><td>${n(l, 'ordem', 64)}</td><td><b>${esc(l.descricao)}</b><br><span class="muted">${l.tabela}ª tabela · ${esc(l.grupo)}</span></td><td class="n">${n(l, 'total', 86)}</td><td class="n">${n(l, 'p4', 78)}</td><td class="n">${n(l, 'reserva', 86)}<br><input data-c="nota_reserva" data-de="${esc(l.nota_reserva)}" value="${esc(l.nota_reserva)}" placeholder="nota" style="width:110px;margin-top:4px"${l.nota_reserva ? '' : ' hidden'}></td><td class="n">${n(l, 'legado', 86)}</td><td><textarea data-c="obs" rows="1" style="min-width:200px;min-height:44px">${esc(l.obs)}</textarea></td></tr>`).join('');
+  $('lt-tb').querySelectorAll('textarea').forEach(t => { t.dataset.de = t.value; });
+  $('lt-mis').innerHTML = ''; $('lt-mot').value = ''; $('lt-msg').textContent = ''; $('lt-arq').value = '';
+  show('card-lote', true); ltMarcar();
+  $('card-lote').scrollIntoView({ block: 'start' });
+}
+function ltMarcar(){
+  let q = 0;
+  $('lt-tb').querySelectorAll('[data-c]').forEach(i => { const m = i.value !== i.dataset.de; if (m) q++; i.style.background = m ? 'rgba(255,193,7,.22)' : ''; });
+  return q;
+}
+$('lt-tb').addEventListener('input', ltMarcar);
+$('btn-lote').onclick = ltAbrir;
+$('lt-fechar').onclick = () => show('card-lote', false);
+$('lt-obs0').onclick = () => { $('lt-tb').querySelectorAll('textarea[data-c="obs"]').forEach(t => { t.value = ''; }); ltMarcar(); };
+function ltAplicar(d){
+  const fora = [];
+  for (const [id, x] of Object.entries(d.linhas || {})){
+    const tr = [...$('lt-tb').querySelectorAll('tr')].find(t => t.dataset.id === id);
+    if (!tr){ fora.push(x.descricao || id); continue; }
+    tr.querySelectorAll('[data-c]').forEach(i => { if (x[i.dataset.c] !== undefined) i.value = String(x[i.dataset.c]); if (i.dataset.c === 'nota_reserva' && i.value) i.hidden = false; });
+  }
+  // mostra já na ordem nova
+  const ord = (t) => Number(t.querySelector('[data-c="ordem"]').value) || 0;
+  [...$('lt-tb').querySelectorAll('tr')].sort((a, b) => ord(a) - ord(b)).forEach(t => $('lt-tb').appendChild(t));
+  LT_MIS = Array.isArray(d.missoes) ? d.missoes : [];
+  if (d.motivo) $('lt-mot').value = d.motivo;
+  $('lt-mis').innerHTML = LT_MIS.length ? `<h3>Missões que já estão na rua (${LT_MIS.length})</h3><p class="muted">Entram como missões lançadas no papel: saem na Parte e o armeiro dá baixa em “Receber de volta”.</p><div class="rolar"><table class="t1"><thead><tr><th>Missão</th><th>Policial</th><th>Início</th><th>Material</th></tr></thead><tbody>${LT_MIS.map(m => `<tr><td>${esc(m.titulo)}</td><td><b>${esc(m.posto + ' ' + m.nome)}</b><br><span class="muted">${esc(m.matricula)}</span></td><td>${esc(m.inicio)}</td><td>${esc([m.armamento, m.municao, m.acessorios, m.alteracoes].filter(Boolean).join(' · ').replace(/\n/g, ' '))}</td></tr>`).join('')}</tbody></table></div>` : '';
+  const q = ltMarcar();
+  $('lt-msg').className = 'msg ' + (fora.length ? 'err' : 'ok');
+  $('lt-msg').textContent = `${d.titulo || 'Arquivo'}: ${q} campo(s) mudam e ${LT_MIS.length} missão(ões).` + (fora.length ? ` Não existem na Parte e ficaram de fora: ${fora.join(', ')}.` : ' Confira e clique em Salvar tudo, no fim da tabela.');
+}
+$('lt-arq').onchange = async (e) => {
+  const a = e.target.files[0]; if (!a) return;
+  try { ltAplicar(JSON.parse(await a.text())); } catch(x){ $('lt-msg').className = 'msg err'; $('lt-msg').textContent = 'Não consegui ler este arquivo.'; }
+};
+$('lt-salvar').onclick = async () => {
+  const linhas = {}; let ruim = '';
+  $('lt-tb').querySelectorAll('tr').forEach(tr => tr.querySelectorAll('[data-c]').forEach(i => {
+    if (i.value === i.dataset.de) return;
+    if (LT_NUM.includes(i.dataset.c) && !/^\d+$/.test(i.value.trim())){ ruim = ruim || tr.querySelector('b').textContent; return; }
+    (linhas[tr.dataset.id] ||= {})[i.dataset.c] = LT_NUM.includes(i.dataset.c) ? Number(i.value) : i.value;
+  }));
+  const erroLt = (t) => { $('lt-msg').className = 'msg err'; $('lt-msg').textContent = t; toast(t); };
+  if (ruim) return erroLt('Número vazio ou inválido em: ' + ruim);
+  const nl = Object.keys(linhas).length;
+  if (!nl && !LT_MIS.length) return erroLt('Nada mudou.');
+  if ($('lt-mot').value.trim().length < 3) return erroLt('Escreva o motivo (fica no histórico).');
+  const m = await modal({ titulo: 'Atualizar a Parte inteira', ok: '<i data-ic="ok"></i>Gravar', corpo: `<p class="muted">Vai mudar <b>${nl}</b> linha(s)${LT_MIS.length ? ` e lançar <b>${LT_MIS.length}</b> missão(ões) que já estão na rua` : ''}. Antes de gravar, o sistema guarda uma cópia.</p>` });
+  if (!m) return;
+  $('lt-salvar').disabled = true; $('lt-msg').className = 'msg'; $('lt-msg').textContent = 'Gravando… (alguns segundos)';
+  try {
+    const d = await apiPost('/api/cautela/atualizar-parte', { linhas, missoes: LT_MIS, motivo: $('lt-mot').value.trim(), senha: m.senha });
+    show('card-lote', false);
+    admMsg(`<i data-ic="ok"></i>Parte atualizada: ${d.linhas} linha(s) e ${d.missoes} missão(ões)${d.missoes_repetidas ? ` (${d.missoes_repetidas} já estavam lançadas)` : ''}. Cópia nas abas: ${esc(d.backup.join(', '))}.`, true);
+    await carregar();
+  } catch(e){ $('lt-msg').className = 'msg err'; $('lt-msg').textContent = e.code === 'senha_incorreta' ? 'Senha incorreta: nada foi gravado.' : e.message; falha(e); }
+  $('lt-salvar').disabled = false;
+};
 $('btn-corrigir').onclick = async () => {
   const m = await modal({ titulo: 'Qual linha?', corpo: `<select id="q-linha">${opcoesLinhas('')}</select>`, senha: false, ok: 'Abrir' });
   if (m) editarLinha(val(m, 'q-linha'));
