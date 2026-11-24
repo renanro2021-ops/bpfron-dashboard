@@ -182,7 +182,7 @@ details summary{color:var(--muted)}
   { "data": "2026-11-24", "titulo": "Ordem nova das tabelas", "quem": "todos", "itens": [
     "Na 1ª tabela: fuzil primeiro, depois pistola, as outras armas, carregador e munição.",
     "Na 2ª tabela: tudo que é eletrônico ficou no final.",
-    "Administração ganhou “Atualizar a Parte inteira”: todos os números numa tela só, botão para zerar as observações e uma senha só no fim."
+    "Administração ganhou “Atualizar a Parte inteira”: todos os números numa tela só, observação em preto ou vermelho e uma senha só no fim."
   ]},
   { "data": "2026-11-17", "titulo": "Mais rápido, ao vivo e C/A automático", "quem": "todos", "itens": [
     "Procurar o policial para entregar ficou instantâneo: a lista aparece enquanto você digita.",
@@ -1130,7 +1130,7 @@ const LT_NUM = ['ordem', 'total', 'p4', 'reserva', 'legado'];
 function ltAbrir(){
   LT_MIS = [];
   const n = (l, c, w) => `<input type="number" min="0" data-c="${c}" data-de="${esc(l[c])}" value="${esc(l[c])}" style="width:${w}px">`;
-  $('lt-tb').innerHTML = R.linhas.map(l => `<tr class="l" data-id="${esc(l.id)}"><td>${n(l, 'ordem', 64)}</td><td><b>${esc(l.descricao)}</b><br><span class="muted">${l.tabela}ª tabela · ${esc(l.grupo)}</span></td><td class="n">${n(l, 'total', 86)}</td><td class="n">${n(l, 'p4', 78)}</td><td class="n">${n(l, 'reserva', 86)}<br><input data-c="nota_reserva" data-de="${esc(l.nota_reserva)}" value="${esc(l.nota_reserva)}" placeholder="nota" style="width:110px;margin-top:4px"${l.nota_reserva ? '' : ' hidden'}></td><td class="n">${n(l, 'legado', 86)}</td><td><textarea data-c="obs" rows="1" style="min-width:200px;min-height:44px">${esc(l.obs)}</textarea></td></tr>`).join('');
+  $('lt-tb').innerHTML = R.linhas.map(l => `<tr class="l" data-id="${esc(l.id)}"><td>${n(l, 'ordem', 64)}</td><td><b>${esc(l.descricao)}</b><br><span class="muted">${l.tabela}ª tabela · ${esc(l.grupo)}</span></td><td class="n">${n(l, 'total', 86)}</td><td class="n">${n(l, 'p4', 78)}</td><td class="n">${n(l, 'reserva', 86)}<br><input data-c="nota_reserva" data-de="${esc(l.nota_reserva)}" value="${esc(l.nota_reserva)}" placeholder="nota" style="width:110px;margin-top:4px"${l.nota_reserva ? '' : ' hidden'}></td><td class="n">${n(l, 'legado', 86)}</td><td><textarea data-c="obs" rows="1" style="min-width:200px;min-height:44px">${esc(l.obs)}</textarea><select data-c="obs_vermelha" data-de="${l.obs_vermelha ? 1 : 0}" style="margin-top:4px;width:auto;font-size:12px"><option value="0">letra preta</option><option value="1" ${l.obs_vermelha ? 'selected' : ''}>letra vermelha</option></select></td></tr>`).join('');
   $('lt-tb').querySelectorAll('textarea').forEach(t => { t.dataset.de = t.value; });
   $('lt-mis').innerHTML = ''; $('lt-mot').value = ''; $('lt-msg').textContent = ''; $('lt-arq').value = '';
   show('card-lote', true); ltMarcar();
@@ -1144,13 +1144,13 @@ function ltMarcar(){
 $('lt-tb').addEventListener('input', ltMarcar);
 $('btn-lote').onclick = ltAbrir;
 $('lt-fechar').onclick = () => show('card-lote', false);
-$('lt-obs0').onclick = () => { $('lt-tb').querySelectorAll('textarea[data-c="obs"]').forEach(t => { t.value = ''; }); ltMarcar(); };
+$('lt-obs0').onclick = () => { $('lt-tb').querySelectorAll('textarea[data-c="obs"]').forEach(t => { t.value = ''; }); $('lt-tb').querySelectorAll('select[data-c="obs_vermelha"]').forEach(t => { t.value = '0'; }); ltMarcar(); };
 function ltAplicar(d){
   const fora = [];
   for (const [id, x] of Object.entries(d.linhas || {})){
     const tr = [...$('lt-tb').querySelectorAll('tr')].find(t => t.dataset.id === id);
     if (!tr){ fora.push(x.descricao || id); continue; }
-    tr.querySelectorAll('[data-c]').forEach(i => { if (x[i.dataset.c] !== undefined) i.value = String(x[i.dataset.c]); if (i.dataset.c === 'nota_reserva' && i.value) i.hidden = false; });
+    tr.querySelectorAll('[data-c]').forEach(i => { if (x[i.dataset.c] !== undefined) i.value = i.dataset.c === 'obs_vermelha' ? (x.obs_vermelha ? '1' : '0') : String(x[i.dataset.c]); if (i.dataset.c === 'nota_reserva' && i.value) i.hidden = false; });
   }
   // mostra já na ordem nova
   const ord = (t) => Number(t.querySelector('[data-c="ordem"]').value) || 0;
@@ -1171,7 +1171,7 @@ $('lt-salvar').onclick = async () => {
   $('lt-tb').querySelectorAll('tr').forEach(tr => tr.querySelectorAll('[data-c]').forEach(i => {
     if (i.value === i.dataset.de) return;
     if (LT_NUM.includes(i.dataset.c) && !/^\d+$/.test(i.value.trim())){ ruim = ruim || tr.querySelector('b').textContent; return; }
-    (linhas[tr.dataset.id] ||= {})[i.dataset.c] = LT_NUM.includes(i.dataset.c) ? Number(i.value) : i.value;
+    (linhas[tr.dataset.id] ||= {})[i.dataset.c] = LT_NUM.includes(i.dataset.c) ? Number(i.value) : i.dataset.c === 'obs_vermelha' ? i.value === '1' : i.value;
   }));
   const erroLt = (t) => { $('lt-msg').className = 'msg err'; $('lt-msg').textContent = t; toast(t); };
   if (ruim) return erroLt('Número vazio ou inválido em: ' + ruim);
