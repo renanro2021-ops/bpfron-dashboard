@@ -96,6 +96,10 @@ html.portal .bp-wrap{padding-top:14px}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-24", "titulo": "Cautela permanente", "quem": "todos", "itens": [
+    "O armeiro ou a P4 pode registrar o material que fica com você de vez, inclusive por quantidade (carregador, munição).",
+    "Confira em “Para assinar”: aceite com a sua senha ou diga o que está errado."
+  ]},
   { "data": "2026-11-17", "titulo": "Sua cautela aparece na hora", "quem": "todos", "itens": [
     "Quando o armeiro entrega ou recebe material seu, a tela atualiza sozinha e avisa — não precisa mais atualizar a página.",
     "Depois que você assina, a assinatura já aparece na mesma hora."
@@ -323,7 +327,7 @@ function cartao(c, completo){
 
 /* ---------------- carga pessoal (bens permanentes da P4, 31/10/2026) ---------------- */
 const FIM_CG = { DEVOLVIDA: 'Devolvido à P4', TRANSFERIDA: 'Transferido', RECUSADA: 'Você recusou', CANCELADA: 'Entrega cancelada pela P4' };
-const cgLinha = (c, extra) => `<div><span>${esc(c.descricao)}<small>${esc(c.bem)}${c.serie ? ' · Nº de série ' + esc(c.serie) : ''}${c.tombamento ? ' · Tomb. ' + esc(c.tombamento) : ''}</small>${extra || ''}</span><b>${c.qtd}×</b></div>`;
+const cgLinha = (c, extra) => `<div><span>${esc(c.descricao)}<small>${c.origem === 'PARTE' ? 'por quantidade' : esc(c.bem)}${c.serie ? ' · Nº de série ' + esc(c.serie) : ''}${c.tombamento ? ' · Tomb. ' + esc(c.tombamento) : ''}</small>${extra || ''}</span><b>${c.qtd}×</b></div>`;
 function cargaLotes(){
   const m = new Map();
   (D.carga || []).filter(c => c.status === 'AGUARDANDO').forEach(c => { if (!m.has(c.lote)) m.set(c.lote, []); m.get(c.lote).push(c); });
@@ -350,7 +354,7 @@ function renderCarga(){
   h += `<div class="card"><div class="cau-top"><div><div class="cau-id">Bens com você</div><div class="muted">Carga pessoal entregue pela P4 e aceita por você</div></div>
     <div style="text-align:right"><span class="chip ${ativas.length ? 'ok' : 'neu'}">${ativas.length} ${ativas.length === 1 ? 'bem' : 'bens'}</span></div></div>
     ${ativas.length ? `<div class="itens">${ativas.map(c => cgLinha(c, `<small>aceito em ${fQuando(c.aceite_em)} · assinatura ${esc(c.assinatura)}</small>`)).join('')}</div>` : '<p class="muted" style="margin-top:8px">Nenhum bem em carga pessoal com você.</p>'}</div>`;
-  if (D.cargaFim.length) h += `<div class="card"><div class="cau-id">Já saíram da sua carga</div><div class="itens">${D.cargaFim.map(c => `<div><span>${esc(c.descricao)}<small>${esc(c.bem)} · ${esc(FIM_CG[c.fim_tipo] || c.fim_tipo)} em ${fDia(c.fim_em)}${c.fim_estado && c.fim_estado !== 'bom' ? ' · ' + esc(c.fim_estado) : ''}${c.fim_obs ? ' · ' + esc(c.fim_obs) : ''}</small></span><b>${c.qtd}×</b></div>`).join('')}</div></div>`;
+  if (D.cargaFim.length) h += `<div class="card"><div class="cau-id">Já saíram da sua carga</div><div class="itens">${D.cargaFim.map(c => `<div><span>${esc(c.descricao)}<small>${c.origem === 'PARTE' ? 'por quantidade' : esc(c.bem)} · ${esc(FIM_CG[c.fim_tipo] || c.fim_tipo)} em ${fDia(c.fim_em)}${c.fim_estado && c.fim_estado !== 'bom' ? ' · ' + esc(c.fim_estado) : ''}${c.fim_obs ? ' · ' + esc(c.fim_obs) : ''}</small></span><b>${c.qtd}×</b></div>`).join('')}</div></div>`;
   return h;
 }
 function pedirMotivo(itens){

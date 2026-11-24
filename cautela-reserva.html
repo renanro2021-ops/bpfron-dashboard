@@ -184,6 +184,12 @@ details summary{color:var(--muted)}
     "Na 2ª tabela: tudo que é eletrônico ficou no final.",
     "Administração ganhou “Atualizar a Parte inteira”: todos os números numa tela só, observação em preto ou vermelho e uma senha só no fim."
   ]},
+  { "data": "2026-11-24", "titulo": "Cautela permanente", "quem": "todos", "itens": [
+    "Botão novo “Cautela permanente”: registra o material que fica de vez com o policial, com peça ou só pela quantidade (carregador, munição).",
+    "Serve para o armeiro de serviço e para o administrador. Transferir de um policial para outro é só com o administrador.",
+    "Se o material já está com o policial, escolha “Já está com o policial”: registra o nome sem mexer nos números da Parte.",
+    "O policial confirma com a senha dele, no celular. Não tem prazo e não entra nas missões."
+  ]},
   { "data": "2026-11-17", "titulo": "Mais rápido, ao vivo e C/A automático", "quem": "todos", "itens": [
     "Procurar o policial para entregar ficou instantâneo: a lista aparece enquanto você digita.",
     "Assinou no celular? A reserva atualiza sozinha na hora — não precisa mais apertar F5.",
@@ -257,6 +263,7 @@ details summary{color:var(--muted)}
       <button class="ac on" data-p="reserva"><span class="ico bp-tile sm"><i data-ic="arquivar"></i></span><b>Reserva</b><span>o que tem e onde está</span></button>
       <button class="ac" data-p="entregar" id="ac-entregar"><span class="ico bp-tile sm info"><i data-ic="enviar"></i></span><b>Entregar</b><span>material para um policial</span></button>
       <button class="ac" data-p="receber" id="ac-receber"><span class="ico bp-tile sm ok"><i data-ic="baixar"></i></span><b id="ac-receber-t">Receber de volta</b><span id="ac-receber-s">o que está com policiais</span><span class="n zero" id="n-receber">0</span></button>
+      <button class="ac hidden" data-p="permanente" id="ac-perm"><span class="ico bp-tile sm info"><i data-ic="cadeado"></i></span><b>Cautela permanente</b><span>o que fica de vez com o policial</span></button>
       <button class="ac" data-p="conferir" id="ac-conferir"><span class="ico bp-tile sm ok"><i data-ic="check"></i></span><b>Conferir</b><span>contar a reserva</span></button>
       <button class="ac" data-p="ver"><span class="ico bp-tile sm info"><i data-ic="olho"></i></span><b>Ver Parte Diária</b><span>como ela está agora</span></button>
       <button class="ac" data-p="passar" id="ac-passar"><span class="ico bp-tile sm"><i data-ic="arquivo"></i></span><b>Passar o serviço</b><span>Parte Diária pronta pro SEI</span></button>
@@ -325,6 +332,44 @@ details summary{color:var(--muted)}
       </div>
       <div class="card"><h2>Cautelas no sistema</h2><p class="muted">Quem vence primeiro aparece em cima. Clique em <b>Receber</b> quando o material voltar.</p><div id="lista-cautelas" style="margin-top:10px"></div></div>
       <div class="card"><h2>Missões que já estavam na Parte</h2><p class="muted">Material que saiu antes do sistema começar (veio da última Parte Diária). Quando voltar, clique em <b>Voltou</b>: o sistema já sugere o que entra de volta na reserva — é só conferir.</p><div id="lista-anteriores" style="margin-top:10px"></div></div>
+    </section>
+
+    <!-- ===== CAUTELA PERMANENTE (24/11/2026) — grava na Carga Pessoal (carga.js) ===== -->
+    <section class="pane" id="p-permanente">
+      <div id="pm-form">
+      <div class="card">
+        <h2><span class="passo">1</span>Com quem fica o material?</h2>
+        <div class="res-busca"><i data-ic="buscar"></i><input id="pm-q" placeholder="Digite o RE ou o nome do policial" autocomplete="off"></div>
+        <div class="res hidden" id="pm-res"></div>
+        <div id="pm-pol"></div>
+      </div>
+      <div class="card">
+        <h2><span class="passo">2</span>O material sai agora ou já está com ele?</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="pm-modo">
+          <button class="pill on" data-modo="sai" type="button"><i data-ic="enviar"></i>Sai da reserva agora</button>
+          <button class="pill" data-modo="ja" type="button"><i data-ic="ok"></i>Já está com o policial</button>
+        </div>
+        <p class="muted" id="pm-modo-tx" style="margin-top:8px"></p>
+      </div>
+      <div class="card">
+        <h2><span class="passo">3</span>Qual material?</h2>
+        <div class="res-busca"><i data-ic="buscar"></i><input id="pm-qi" placeholder="Nome do material, código (ARM-0012) ou nº de série" autocomplete="off"></div>
+        <div class="res hidden" id="pm-resi"></div>
+        <table class="t1" style="margin-top:10px"><thead><tr><th>Material</th><th>Qual peça / quantos</th><th class="n" id="pm-col">Na reserva</th><th></th></tr></thead><tbody id="pm-carrinho"></tbody></table>
+        <div class="muted" id="pm-vazio" style="margin-top:6px">Nada ainda. Procure acima e clique para incluir.</div>
+        <label>Observação (opcional)</label><input id="pm-obs" maxlength="300">
+        <div class="msg" id="pm-msg"></div>
+        <button class="btn big" id="pm-salvar" type="button" style="margin-top:6px"><i data-ic="assinar"></i>Fazer a cautela permanente</button>
+      </div>
+      <div id="pm-ok"></div>
+      </div>
+      <div class="card">
+        <h2>Material permanente com policiais</h2>
+        <p class="muted">Não tem prazo e não entra nas missões da Parte: conta na coluna CAUTELA/P4.</p>
+        <div class="res-busca" style="margin-top:8px"><i data-ic="buscar"></i><input id="pm-f" placeholder="Procurar: policial, RE, material, código ou nº de série" autocomplete="off"></div>
+        <div class="muted" id="pm-info" style="margin-top:6px"></div>
+        <div id="pm-lista" style="margin-top:10px"></div>
+      </div>
     </section>
 
     <!-- ===== CONFERIR ===== -->
@@ -568,6 +613,7 @@ async function carregar(quieto){
   // no celular o armeiro só acompanha e confere; entregar, receber e passar o serviço são no computador
   PODE = !!R.papel.armeiro && !MOBILE;
   ['ac-entregar', 'ac-passar'].forEach(id => $(id).classList.toggle('hidden', !PODE));
+  $('ac-perm').classList.toggle('hidden', !(R.papel.chefia || R.papel.armeiro));
   $('ac-conferir').classList.toggle('hidden', !R.papel.armeiro);
   $('ac-receber-t').textContent = PODE ? 'Receber de volta' : 'Com policiais';
   $('ac-receber-s').textContent = PODE ? 'o que está com policiais' : 'quem está com material (só ver)';
@@ -583,6 +629,7 @@ async function carregar(quieto){
   if (!(quieto && $('tb-cnt').contains(document.activeElement))) renderConferir();
   if (!(quieto && $('p-passar').classList.contains('on'))) renderPassarInfo();
   if ($('p-ver').classList.contains('on')) verParte();
+  if ($('p-permanente').classList.contains('on')) pmCarregar();
   cvFaltam();
   vivoLigar();
 }
@@ -591,7 +638,7 @@ function renderFaixa(){
   const a = R.plantao.armeiro, p = R.plantao.pendente;
   $('faixa').innerHTML = `<span><i data-ic="escudo"></i>Armeiro de serviço: <b>${a ? esc(`${a.posto || ''} ${a.guerra || a.nome || ''}`.trim()) : '— ninguém designado —'}</b>${R.plantao.desde ? ` <span class="muted">desde ${fQ(R.plantao.desde)}</span>` : ''}</span>`
     + (p ? `<span class="chip wait">Serviço passado — falta RE ${esc(p.re)} aceitar</span>` : '')
-    + (R.papel.chefia ? '<span class="chip neu">Você: administrador (só acompanha)</span>' : '')
+    + (R.papel.chefia ? '<span class="chip neu">Você: administrador (acompanha e faz cautela permanente)</span>' : '')
     + (MOBILE && R.papel.armeiro ? '<span class="chip neu"><i data-ic="info"></i>Celular: acompanhar e conferir</span>' : '')
     + (!a && R.papel.chefia ? '<span class="muted">Designe o armeiro em <i data-ic="grade"></i>Administração.</span>' : '');
   const av = [];
@@ -1236,12 +1283,143 @@ $('btn-comecar-zero').onclick = async () => {
   } catch(e){ $('zero-msg').className = 'msg err'; $('zero-msg').textContent = e.message; falha(e); }
 };
 
+/* ===== cautela permanente (24/11/2026) =====
+   Pedido do usuário: material que fica de vez com o policial, feito pelo administrador OU pelo armeiro.
+   Grava na Carga Pessoal (/api/carga): um registro só de quem tem o quê. Transferir: só o administrador. */
+let PM = { pol: null, modo: 'sai', itens: [], cargas: [], pode: { entregar: false, transferir: false } };
+const PM_MODO = {
+  sai: 'O material sai de <b>NA RESERVA</b> e passa para <b>CAUTELA/P4</b> na Parte.',
+  ja: 'Só registra o nome: <b>os números da Parte não mudam</b>, porque ela já conta esse material em CAUTELA/P4.',
+};
+const pmTem = (cod) => PM.cargas.some(c => c.bem === cod);
+const pmFora = (s) => !/^(|reserva.*|disponivel|cautel.*|p4)$/.test(norm(s).trim()) && !norm(s).includes('carga pessoal');
+const pmServe = (p) => !p.em_cautela && !pmTem(p.codigo) && (PM.modo === 'ja' ? !pmFora(p.situacao) : p.disponivel);
+async function pmCarregar(){
+  try {
+    const d = await api('/api/carga/reserva?fresco=1'); PM.cargas = d.cargas; PM.pode = d.pode;
+    show('pm-form', PM.pode.entregar); pmLista();
+  } catch(e){ falha(e); }
+}
+function pmRender(){
+  document.querySelectorAll('#pm-modo .pill').forEach(b => b.classList.toggle('on', b.dataset.modo === PM.modo));
+  $('pm-modo-tx').innerHTML = PM_MODO[PM.modo];
+  $('pm-col').textContent = PM.modo === 'ja' ? 'Cautela/P4' : 'Na reserva';
+  const p = PM.pol;
+  $('pm-pol').innerHTML = p ? `<div class="sel-box"><div><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> · RE ${esc(p.re)} · ${esc(p.opm)}</div><button class="btn sm sec" id="pm-troca" type="button">Trocar</button></div>` : '';
+  if (p) $('pm-troca').onclick = () => { PM.pol = null; pmRender(); };
+  show('pm-vazio', !PM.itens.length);
+  $('pm-carrinho').innerHTML = PM.itens.map((x, i) => {
+    const l = linha(x.item_id), usados = PM.itens.filter((y, j) => j !== i).map(y => y.codigo);
+    const livres = l.pecas.filter(q => pmServe(q) && !usados.includes(q.codigo));
+    const campo = livres.length || x.codigo ? `<select data-i="${i}" data-k="codigo"><option value="">sem código (só a quantidade)</option>${livres.map(q => `<option value="${esc(q.codigo)}" ${x.codigo === q.codigo ? 'selected' : ''}>${esc(q.codigo)}${q.serie ? ' · Nº ' + esc(q.serie) : ''}${q.responsavel ? ' · ' + esc(q.responsavel) : ''}</option>`).join('')}</select>` : '';
+    return `<tr><td><b>${esc(l.descricao)}</b></td><td>${campo}${x.codigo ? '' : `<input type="number" min="1" value="${x.qtd}" data-i="${i}" data-k="qtd" style="width:120px;margin-top:${campo ? 6 : 0}px"> <span class="muted">unidade(s)</span>`}</td>
+      <td class="n">${PM.modo === 'ja' ? l.p4 : l.reserva}</td><td><button class="btn sm red" data-rm="${i}" type="button"><i data-ic="x"></i></button></td></tr>`;
+  }).join('');
+  $('pm-carrinho').querySelectorAll('[data-k]').forEach(el => el.onchange = () => {
+    const x = PM.itens[el.dataset.i];
+    if (el.dataset.k === 'codigo'){ x.codigo = el.value; x.qtd = 1; pmRender(); } else x.qtd = Math.max(1, Math.trunc(Number(el.value)) || 1);
+  });
+  $('pm-carrinho').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { PM.itens.splice(b.dataset.rm, 1); pmRender(); });
+}
+document.querySelectorAll('#pm-modo .pill').forEach(b => b.onclick = () => {
+  PM.modo = b.dataset.modo;
+  PM.itens = PM.itens.filter(x => !x.codigo || pmServe(linha(x.item_id).pecas.find(p => p.codigo === x.codigo)));
+  pmRender();
+});
+picker({ campo: 'pm-q', res: 'pm-res', onPick: (p) => { PM.pol = p; pmRender(); $('pm-qi').focus(); }, todos: true });
+$('pm-qi').oninput = () => {
+  const bruto = $('pm-qi').value.trim(), q = norm(bruto), qc = compacto(bruto);
+  if (q.length < 2){ show('pm-resi', false); return; }
+  const pecas = [];
+  if (qc.length >= 3) for (const l of R.linhas) for (const p of l.pecas) if (compacto(p.codigo).includes(qc) || compacto(p.serie).includes(qc) || compacto(p.patrimonio).includes(qc)) pecas.push({ l, p });
+  const linhas = R.linhas.filter(l => norm(l.descricao).includes(q)).slice(0, 14);
+  $('pm-resi').innerHTML = pecas.slice(0, 14).map((x, i) => `<button data-p="${i}" type="button"><span><span class="cod">${esc(x.p.codigo)}</span> · ${esc(x.l.descricao)}${x.p.serie ? ' · Nº <b>' + esc(x.p.serie) + '</b>' : ''}</span><span class="chip ${pmServe(x.p) ? 'ok' : 'bad'}">${esc(pmTem(x.p.codigo) ? 'já em cautela permanente' : x.p.em_cautela ? 'com ' + x.p.com : x.p.situacao)}</span></button>`).join('')
+    + linhas.map(l => `<button data-id="${esc(l.id)}" type="button"><span>${esc(l.descricao)}</span><span class="chip ${(PM.modo === 'ja' ? l.p4 : l.reserva) > 0 ? 'ok' : 'wait'}">${PM.modo === 'ja' ? l.p4 + ' em cautela/P4' : l.reserva + ' na reserva'}</span></button>`).join('')
+    || `<div class="muted" style="padding:10px">Nada com "${esc(bruto)}".</div>`;
+  show('pm-resi', true);
+  const fechar = () => { show('pm-resi', false); $('pm-qi').value = ''; pmRender(); $('pm-qi').focus(); };
+  $('pm-resi').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+    const l = linha(b.dataset.id), solta = l.pecas.find(p => pmServe(p) && !PM.itens.some(x => x.codigo === p.codigo));
+    PM.itens.push({ item_id: l.id, qtd: 1, codigo: solta ? solta.codigo : '' }); fechar();
+  });
+  $('pm-resi').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    const { l, p } = pecas[b.dataset.p];
+    if (!pmServe(p)){ toast(pmTem(p.codigo) ? `${p.codigo} já está em cautela permanente.` : p.em_cautela ? `${p.codigo} está com ${p.com}.` : `${p.codigo}: ${p.situacao}.${PM.modo === 'sai' ? ' Se já está com o policial, escolha essa opção no passo 2.' : ''}`); return; }
+    if (PM.itens.some(x => x.codigo === p.codigo)){ toast(`${p.codigo} já está na lista.`); return; }
+    PM.itens.push({ item_id: l.id, qtd: 1, codigo: p.codigo }); fechar();
+  });
+};
+$('pm-salvar').onclick = async () => {
+  const m = $('pm-msg'); m.className = 'msg err'; m.textContent = '';
+  if (!PM.pol){ m.textContent = 'Passo 1: escolha o policial.'; return; }
+  if (!PM.itens.length){ m.textContent = 'Passo 3: inclua pelo menos um material.'; return; }
+  const p = PM.pol;
+  const mm = await modal({ titulo: 'Cautela permanente', ok: '<i data-ic="assinar"></i>Assinar', corpo: `<div class="muted"><b>${esc(p.posto)} ${esc(p.guerra || p.nome)}</b> fica de forma permanente com:</div><div style="margin-top:6px;line-height:1.7">${PM.itens.map(x => `• ${x.qtd}× ${esc(linha(x.item_id).descricao)}${x.codigo ? ` <span class="cod">${esc(x.codigo)}</span>` : ''}`).join('<br>')}</div><p class="muted" style="margin-top:8px">${PM_MODO[PM.modo]}</p>` });
+  if (!mm) return;
+  const corpo = { op: 'entregar', reserva: true, re: p.re, modo: PM.modo, obs: $('pm-obs').value, senha: mm.senha, itens: PM.itens.map(x => x.codigo ? { codigo: x.codigo } : { codigo: x.item_id, qtd: x.qtd }) };
+  try {
+    let d;
+    try { d = await apiPost('/api/carga/salvar', corpo); }
+    catch(e){
+      if (e.code === 'sem_saldo' && confirm(e.message + '\n\nGravar assim mesmo?')) d = await apiPost('/api/carga/salvar', Object.assign(corpo, { confirmar_sem_saldo: true }));
+      else throw e;
+    }
+    $('pm-ok').innerHTML = `<div class="card" style="border-color:var(--good)"><h2><i data-ic="ok"></i>Cautela permanente feita</h2><p class="muted">Falta ${esc(p.posto)} ${esc(p.guerra || p.nome)} confirmar com a senha: no celular, Portal do Policial → Cautela → <b>Para assinar</b>.</p>${pmAvisos(d)}</div>`;
+    PM.pol = null; PM.itens = []; PM.modo = 'sai'; $('pm-obs').value = ''; pmRender();
+    toast('Cautela permanente feita.'); await carregar();
+  } catch(e){ falha(e); }
+};
+const pmAvisos = (d) => (d.avisos || []).length ? `<p style="color:var(--warn)"><i data-ic="alerta"></i>${d.avisos.map(esc).join('<br>')}</p>` : '';
+const pmItem = (c) => `${c.qtd}× ${esc(c.descricao)}${c.origem === 'PARTE' ? '' : ` <span class="cod">${esc(c.bem)}</span>`}${c.serie ? ' Nº ' + esc(c.serie) : ''}`;
+function pmLista(){
+  const bruto = $('pm-f').value.trim(), q = norm(bruto), qc = compacto(bruto), por = new Map();
+  for (const c of PM.cargas){ if (!por.has(c.re)) por.set(c.re, []); por.get(c.re).push(c); }
+  const todos = [...por.values()].sort((a, b) => norm(a[0].guerra || a[0].nome).localeCompare(norm(b[0].guerra || b[0].nome)));
+  const lista = todos.filter(l => achou(l.map(c => [c.posto, c.nome, c.guerra, c.re, c.descricao, c.bem, c.serie].join(' ')).join(' '), q, qc));
+  $('pm-info').textContent = q ? `${lista.length} policial(is) com "${bruto}".` : `${todos.length} policial(is), ${PM.cargas.length} registro(s).`;
+  $('pm-lista').innerHTML = lista.map(l => `<div class="lista-item"><div class="txt"><b>${esc(l[0].posto)} ${esc(l[0].guerra || l[0].nome)}</b> <span class="muted">· RE ${esc(l[0].re)}</span><br>
+    <div style="line-height:1.8">${l.map(c => `${pmItem(c)} ${c.status === 'AGUARDANDO' ? '<span class="chip wait">falta confirmar</span>' : ''}${c.ja_estava ? ' <span class="chip neu">já estava com ele</span>' : ''} <span class="muted">desde ${fQ(c.entregue_em).slice(0, 10)}</span>`).join('<br>')}</div></div>
+    ${PM.pode.entregar ? `<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" data-a="devolver" data-re="${esc(l[0].re)}" type="button"><i data-ic="baixar"></i>Receber</button>${PM.pode.transferir ? `<button class="btn sm sec" data-a="transferir" data-re="${esc(l[0].re)}" type="button">Transferir</button>` : ''}${l.some(c => c.status === 'AGUARDANDO') ? `<button class="btn sm red" data-a="cancelar" data-re="${esc(l[0].re)}" type="button">Cancelar</button>` : ''}</div>` : ''}</div>`).join('')
+    || `<div class="muted">${q ? 'Nada encontrado.' : 'Nenhuma cautela permanente registrada ainda.'}</div>`;
+  $('pm-lista').querySelectorAll('[data-a]').forEach(b => b.onclick = () => pmAcao(b.dataset.a, b.dataset.re));
+}
+$('pm-f').oninput = pmLista;
+async function pmAcao(op, re){
+  const l = PM.cargas.filter(c => c.re === re && (op !== 'cancelar' || c.status === 'AGUARDANDO'));
+  const nome = l[0].guerra || l[0].nome;
+  const T = { devolver: 'Receber de volta · ' + nome, transferir: 'Transferir · ' + nome, cancelar: 'Cancelar · ' + nome }[op];
+  const dica = { devolver: 'Marque o que está voltando para a reserva.', transferir: 'Marque o que vai para outro policial. Ele confirma com a senha dele.', cancelar: 'Só dá para cancelar o que o policial ainda não confirmou. O que saiu da reserva volta para ela; o que "já estava com ele" não muda os números.' }[op];
+  const corpo = `<div class="muted">${dica}</div>
+    ${op === 'transferir' ? '<label>RE de quem vai ficar com o material</label><input id="pm-re" inputmode="numeric" placeholder="ex.: 94186">' : ''}
+    <table class="t1" style="margin-top:8px"><tr><th></th><th>Material</th>${op === 'devolver' ? '<th>Voltou</th><th>Como</th>' : ''}</tr>${l.map(c => `<tr><td><input type="checkbox" data-c="${esc(c.id)}" ${l.length === 1 ? 'checked' : ''} style="width:auto"></td><td>${pmItem(c)}${c.status === 'AGUARDANDO' ? ' <span class="chip wait">falta confirmar</span>' : ''}</td>
+      ${op === 'devolver' ? `<td>${c.origem === 'PARTE' ? `<input type="number" min="1" max="${c.qtd}" value="${c.qtd}" data-q="${esc(c.id)}" style="width:90px">` : '1'}</td><td><select data-e="${esc(c.id)}"><option value="bom">OK</option><option value="danificado">Estragado</option><option value="extraviado">Perdido</option></select></td>` : ''}</tr>`).join('')}</table>
+    <label>${op === 'devolver' ? 'Observação (obrigatória se estragou ou se perdeu)' : op === 'cancelar' ? 'Por quê?' : 'Observação (opcional)'}</label><input id="pm-o" maxlength="300">`;
+  const m = await modal({ titulo: T, corpo, ok: '<i data-ic="assinar"></i>Assinar', largura: 720 });
+  if (!m) return;
+  const ids = [...m.el.querySelectorAll('[data-c]')].filter(x => x.checked).map(x => x.dataset.c);
+  if (!ids.length){ toast('Marque pelo menos um material.'); return; }
+  const c = { op, reserva: true, ids, obs: val(m, 'pm-o'), senha: m.senha };
+  if (op === 'transferir') c.re = val(m, 'pm-re');
+  if (op === 'devolver'){
+    c.qtds = {}; c.estados = {};
+    ids.forEach(id => { const q = m.el.querySelector(`[data-q="${id}"]`); if (q) c.qtds[id] = Number(q.value); c.estados[id] = m.el.querySelector(`[data-e="${id}"]`).value; });
+    if (Object.values(c.estados).some(e => e !== 'bom') && c.obs.trim().length < 3){ toast('Escreva o que houve com o material estragado ou perdido.'); return; }
+  }
+  try {
+    const d = await apiPost('/api/carga/salvar', c);
+    $('pm-ok').innerHTML = (d.avisos || []).length ? `<div class="card" style="border-color:var(--warn)">${pmAvisos(d)}</div>` : '';
+    toast({ devolver: (d.restos || []).length ? 'Recebido em parte. O policial confirma o que ficou.' : 'Recebido de volta.', transferir: 'Transferido. Falta o novo responsável confirmar.', cancelar: 'Cancelada.' }[op]);
+    await carregar();
+  } catch(e){ falha(e); }
+}
+
 /* ===== botões de ação ===== */
 function abrirPane(p){
   document.querySelectorAll('#acoes .ac').forEach(x => x.classList.toggle('on', x.dataset.p === p));
   document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'p-' + p));
   if (p === 'entregar' && !$('c-ini').value) resetEntregar();
   if (p === 'historico') buscarHistorico();
+  if (p === 'permanente'){ pmRender(); pmCarregar(); }
   if (p === 'ver') verParte();
 }
 document.querySelectorAll('#acoes .ac').forEach(t => t.onclick = () => abrirPane(t.dataset.p));

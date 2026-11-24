@@ -127,6 +127,10 @@
 <!-- Novidades desta página (bp-casca.js → 7. NOVIDADES): cada atualização
      visível ganha uma entrada; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-24", "titulo": "Cautela permanente feita na Reserva", "quem": "gestor", "itens": [
+    "A Reserva de Armamento ganhou o botão “Cautela permanente”: o que for feito lá aparece aqui, inclusive material só por quantidade (carregador, munição).",
+    "O armeiro de serviço também entrega e recebe. Transferir continua só com o gestor."
+  ]},
   { "data": "2026-11-01", "titulo": "Carga antiga agrupada por policial", "quem": "gestor", "itens": [
     "As peças que já estavam lançadas como “Cautelado” na planilha agora aparecem juntas, por policial (não mais uma linha por equipamento com o nome repetido).",
     "O sistema procura o policial no cadastro pelo nome ou RE escrito na planilha. Um botão regulariza todos os bens dele de uma vez.",
@@ -218,7 +222,7 @@
           <div class="bp-in"><i data-ic="buscar"></i><input id="cg-q" placeholder="Nome, RE, código, nº de série, tombamento…" autocomplete="off" oninput="pintar()"></div></div>
         <div class="bp-campo"><label for="cg-forig">Origem</label>
           <div class="bp-in"><i data-ic="pasta"></i><select id="cg-forig" onchange="pintar()">
-            <option value="">Material Bélico e Patrimônio</option><option value="MATERIAL">Só Material Bélico</option><option value="PATRIMONIO">Só Patrimônio</option></select></div></div>
+            <option value="">Todas as origens</option><option value="MATERIAL">Só Material Bélico</option><option value="PATRIMONIO">Só Patrimônio</option><option value="PARTE">Só por quantidade (Reserva)</option></select></div></div>
         <button type="button" class="bp-btn ghost" onclick="$('cg-q').value='';$('cg-forig').value='';pintar()"><i data-ic="x"></i>Limpar</button>
       </div>
       <div class="cg-seg cg-abas" id="cg-abas">
@@ -354,7 +358,8 @@ const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k)
 const cmp = (a, b) => String(a == null ? '' : a).localeCompare(String(b == null ? '' : b), 'pt-BR', { numeric: true, sensitivity: 'base' });
 const nomePol = (p) => [p.posto, p.guerra || p.nome].filter(Boolean).join(' ') || ('RE ' + p.re);
 const iniciais = (p) => String(p.guerra || p.nome || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
-const ORIGEM = { MATERIAL: 'Material Bélico', PATRIMONIO: 'Patrimônio' };
+const ORIGEM = { MATERIAL: 'Material Bélico', PATRIMONIO: 'Patrimônio', PARTE: 'Reserva (por quantidade)' };
+const codDe = (c) => c.origem === 'PARTE' ? 'por quantidade' : c.bem;   // linha da Parte: não tem código de peça (24/11/2026)
 const FIM = { DEVOLVIDA: 'Devolvida', TRANSFERIDA: 'Transferida', RECUSADA: 'Recusada pelo policial', CANCELADA: 'Entrega cancelada' };
 const MODAIS = ['m-trf', 'm-dev', 'm-ent', 'm-pol'];
 
@@ -568,7 +573,7 @@ function pintar() {
       .filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra)).sort((a, b) => cmp(a.bem, b.bem));
     n = l.length;
     html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th class="n">Qtd.</th><th>Com quem</th><th>Situação</th><th>Desde</th></tr></thead><tbody>${l.map((c) => `
-      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(c.bem)}</td>
+      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(codDe(c))}</td>
       <td class="desc" data-r="Bem">${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></td>
       <td class="n" data-r="Qtd.">${c.qtd}</td><td data-r="Com quem">${esc(nomePol(c))}<br><small class="vz">RE ${esc(c.re)}</small></td>
       <td data-r="Situação">${selStatus(c)}</td><td data-r="Desde">${esc(fData(c.aceite_em || c.entregue_em))}</td></tr>`).join('')}</tbody></table></div>`
@@ -592,7 +597,7 @@ function pintar() {
     const l = (D.encerradas || []).filter((c) => origemOk(c.origem)).filter((c) => casaBusca(q, c.bem, c.descricao, c.serie, c.tombamento, c.re, c.nome, c.guerra, c.fim_obs));
     n = l.length;
     html = l.length ? `<div class="cg-tabwrap"><table class="cg-tab"><thead><tr><th>Código</th><th>Bem</th><th>Estava com</th><th>Como saiu</th><th>Quando</th></tr></thead><tbody>${l.map((c) => `
-      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(c.bem)}</td>
+      <tr class="clica" onclick="abrirPol('${esc(c.re)}')"><td class="cod" data-r="Código">${esc(codDe(c))}</td>
       <td class="desc" data-r="Bem">${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}</small></td>
       <td data-r="Estava com">${esc(nomePol(c))}</td>
       <td data-r="Como saiu">${esc(FIM[c.fim_tipo] || c.fim_tipo)}${c.fim_estado && c.fim_estado !== 'bom' ? ` <span class="bp-sl crit">${esc(c.fim_estado)}</span>` : ''}${c.fim_obs ? `<br><small class="vz">${esc(c.fim_obs)}</small>` : ''}</td>
@@ -621,7 +626,7 @@ function abrirPol(re, manter) {
   $('pol-itens').innerHTML = itens.length ? itens.map((c) => `<label class="cg-item ${SEL.has(c.id) ? 'sel' : ''}">
       ${D.gestor ? `<input type="checkbox" data-id="${esc(c.id)}" ${SEL.has(c.id) ? 'checked' : ''} onchange="marcar(this)">` : ''}
       <span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b>
-        <small>${esc(c.bem)} · ${esc(ORIGEM[c.origem])}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small>
+        <small>${esc(codDe(c))} · ${esc(ORIGEM[c.origem])}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small>
         <small>Entregue em ${esc(fQuando(c.entregue_em))} por ${esc(c.entregue_por)}${c.aceite_em ? ` · aceito em ${esc(fQuando(c.aceite_em))} (assinatura ${esc(c.assinatura)})` : ''}</small>
         ${c.obs ? `<small>${esc(c.obs)}</small>` : ''}</span>
       ${selStatus(c)}</label>`).join('') : '<div class="bp-vazio">Nada em carga com este policial agora.</div>';
@@ -746,7 +751,7 @@ function selecionados() { return D.cargas.filter((c) => SEL.has(c.id)); }
 function abrirDevolver() {
   const l = selecionados(); if (!l.length) return;
   $('dev-obs').value = ''; $('dev-msg').textContent = '';
-  $('dev-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(c.bem)}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span>
+  $('dev-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(codDe(c))}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span>
     <select class="cg-est" data-id="${esc(c.id)}" aria-label="Estado"><option value="bom">Em bom estado</option><option value="danificado">Danificado</option><option value="extraviado">Extraviado</option></select></div>`).join('');
   abrir('m-dev');
 }
@@ -768,7 +773,7 @@ function abrirTransferir() {
   const l = selecionados(); if (!l.length) return;
   TRF = { pol: null }; $('trf-obs').value = ''; $('trf-msg').textContent = '';
   $('m-trf-sub').textContent = 'Hoje com ' + nomePol(POL);
-  $('trf-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(c.bem)}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span></div>`).join('');
+  $('trf-itens').innerHTML = l.map((c) => `<div class="cg-item"><span class="tx"><b>${c.qtd > 1 ? c.qtd + '× ' : ''}${esc(c.descricao)}</b><small>${esc(codDe(c))}${ondeBem(c) ? ' · ' + esc(ondeBem(c)) : ''}</small></span></div>`).join('');
   trocarPol('trf');
   abrir('m-trf');
 }
@@ -811,7 +816,7 @@ function imprimirTermo(re) {
   const agoraTx = new Date().toLocaleString('pt-BR', { timeZone: 'America/Porto_Velho' });
   const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho', day: 'numeric', month: 'long', year: 'numeric' });
   const quem = (D.eu && D.eu.nome) || ls('bp_user');
-  const linhas = itens.map((c, i) => `<tr><td class="n">${i + 1}</td><td>${esc(c.bem)}</td><td>${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}</small></td>
+  const linhas = itens.map((c, i) => `<tr><td class="n">${i + 1}</td><td>${esc(codDe(c))}</td><td>${esc(c.descricao)}<small>${esc(ORIGEM[c.origem])}</small></td>
     <td>${esc(c.serie || '—')}</td><td>${esc(c.tombamento || '—')}</td><td class="n">${c.qtd}</td>
     <td>${esc(fData(c.entregue_em))}</td><td>${c.aceite_em ? esc(fQuando(c.aceite_em)) + `<small>${esc(c.assinatura)}</small>` : '<b>aguardando aceite</b>'}</td></tr>`).join('');
   const qtd = itens.reduce((n, c) => n + c.qtd, 0);
