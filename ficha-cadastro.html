@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- =====================================================================
+     ficha-cadastro.html — Cadastro para missão (25/11/2026), no lugar do Forms.
+     Policial de outra unidade, SEM login: digita o CPF. Sem cadastro, responde
+     as mesmas perguntas do Forms. Com cadastro, informa nascimento e RE,
+     confere, corrige e clica em Feito. Depois baixa a ficha e devolve assinada.
+     Worker: /api/fichas/pub/* (as perguntas vêm de backend/fichas-campos.js).
+     ===================================================================== -->
+<script src="bp-casca.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<meta name="robots" content="noindex">
+<title>Cadastro para Missão · BPFRON</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.fc .bp-wrap{max-width:760px}
+.fc-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fc-form .inteira{grid-column:1/-1}
+.fc-campo.mal .bp-in{border-color:var(--crit)}
+.fc-campo small.er{color:var(--crit);font-size:12.5px}
+.fc-campo small.di{color:var(--muted);font-size:12.5px}
+.fc-campo label em{color:var(--crit);font-style:normal}
+.fc-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.fc-res div small{display:block;color:var(--muted);font-size:11.5px;font-weight:700}
+.fc-res div b{color:var(--t1);font-size:14.5px;overflow-wrap:anywhere}
+.fc-bl{margin-bottom:14px}
+.fc-bl .cab{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.fc-bl .cab h2{margin:0;font:700 20px 'Rajdhani',sans-serif;color:var(--t1);flex:1}
+.fc-etapas{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:var(--muted);font-size:13.5px;font-weight:700}
+.fc-etapas .bp-prog{flex:1}
+.fc-feito{position:sticky;bottom:0;padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg,#060912) 30%);z-index:5}
+.fc-mis{margin-top:12px}
+.fc-mis h3{margin:0;font:700 19px 'Rajdhani',sans-serif;color:var(--t1)}
+@media (max-width:620px){.fc-form{grid-template-columns:1fr}}
+</style>
+<script type="application/json" id="bp-novidades">[]</script>
+</head>
+<body class="bp-pg fc">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <span class="bp-marca"><img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON"><span><small>BPFRON · P3</small><b>Cadastro para missão</b></span></span>
+    <div class="bp-topo-acoes"><button type="button" class="bp-btn ic sec" id="bt-sair" style="display:none" title="Sair" aria-label="Sair" onclick="recomecar()"><i data-ic="sair"></i></button></div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+  <!-- 1. CPF -->
+  <section id="t-cpf">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="usuario"></i></span><div><h2>Digite o seu CPF</h2><small>Se você já tem cadastro, é só conferir e clicar em Feito</small></div></div>
+      <form onsubmit="event.preventDefault();consultar()">
+        <div class="bp-campo"><label for="cpf">CPF</label><div class="bp-in"><i data-ic="usuario"></i><input id="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" oninput="this.value=mCpf(this.value)"></div></div>
+        <div class="bp-msg err" id="cpf-erro" style="margin-top:10px"></div>
+        <button class="bp-btn w" id="cpf-bt" style="margin-top:14px">Continuar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 2. QUEM É -->
+  <section id="t-quem" style="display:none">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile ok"><i data-ic="ok"></i></span><div><h2>Você já tem cadastro</h2><small>Confirme que é você</small></div></div>
+      <form onsubmit="event.preventDefault();entrar()" class="fc-form">
+        <div class="bp-campo"><label for="nasc">Data de nascimento</label><div class="bp-in"><i data-ic="calendario"></i><input id="nasc" type="date"></div></div>
+        <div class="bp-campo"><label for="re">RE / matrícula</label><div class="bp-in"><i data-ic="escudo"></i><input id="re" inputmode="numeric" autocomplete="off" placeholder="100099847" maxlength="12"></div></div>
+        <div class="bp-msg err inteira" id="quem-erro"></div>
+        <button class="bp-btn w inteira" id="quem-bt">Ver meus dados</button>
+        <button type="button" class="bp-btn ghost w inteira" onclick="recomecar()">Usar outro CPF</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 3. CADASTRO -->
+  <section id="t-form" style="display:none">
+    <div id="form-topo"></div>
+    <div id="form-corpo"></div>
+  </section>
+
+  <!-- 4. FEITO -->
+  <section id="t-feito" style="display:none">
+    <div class="bp-card ok" style="text-align:center">
+      <span class="bp-tile ok" style="margin:0 auto 10px"><i data-ic="ok"></i></span>
+      <h2 style="margin:0;font:700 26px Rajdhani,sans-serif;color:var(--t1)" id="feito-tit">Feito!</h2>
+      <p style="color:var(--t3);margin:8px 0 0" id="feito-tx"></p>
+    </div>
+    <div id="feito-mis"></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="bp-btn sec" onclick="voltarDados()"><i data-ic="editar"></i>Ver ou corrigir meus dados</button><button type="button" class="bp-btn ghost" onclick="recomecar()"><i data-ic="sair"></i>Sair</button></div>
+  </section>
+</main>
+<input type="file" id="arq" accept="application/pdf,.pdf" style="display:none" onchange="mandar(this.files[0]);this.value=''">
+<datalist id="dl-cidades"></datalist>
+
+<script>
+'use strict';
+const API_BASE = (function () {
+  try { const q = new URLSearchParams(location.search).get('api'); if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, ''); } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t, ms) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t, ms); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dig = (s) => String(s || '').replace(/\D/g, '');
+const mCpf = (v) => dig(v).slice(0, 11).replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d{1,2})$/, '.$1-$2');
+const mFone = (v) => { let d = dig(v); if (d.length > 11 && d.startsWith('55')) d = d.slice(2); d = d.slice(0, 11); return d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}` : d; };
+const mCep = (v) => { const d = dig(v).slice(0, 8); return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; };
+const fDia = (v) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : v || ''; };
+const fmt = (c, v) => (c.tipo === 'cpf' ? mCpf(v) : c.tipo === 'fone' ? mFone(v) : c.tipo === 'cep' ? mCep(v) : v || '');
+
+let S = null;   // { token, cpf, novo, blocos, dados, missoes }
+let PASSO = 0, ABERTOS = new Set(), ERROS = {}, MUDOU = false;
+const SS = { get: (k) => { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { return null; } }, set: (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+async function api(path, body) {
+  let r;
+  try { r = await fetch(API_BASE + '/api/fichas/pub/' + path, { method: body ? 'POST' : 'GET', headers: Object.assign({}, body ? { 'Content-Type': 'application/json' } : {}, S && S.token ? { Authorization: 'Bearer ' + S.token } : {}), body: body ? JSON.stringify(body) : undefined }); }
+  catch (e) { throw new Error('Sem conexão. Confira a internet e tente de novo.'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.detail || 'Não deu certo agora. Tente de novo.'); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+function tela(t) { for (const x of ['cpf', 'quem', 'form', 'feito']) $('t-' + x).style.display = x === t ? '' : 'none'; $('bt-sair').style.display = t === 'cpf' ? 'none' : ''; window.scrollTo(0, 0); }
+function recomecar() { if (S && MUDOU && !window.confirm('Sair sem salvar o que você preencheu?')) return; if (S) SS.set('fc_' + S.cpf, null); fecharVivo(); S = null; MUDOU = false; $('cpf').value = ''; $('nasc').value = ''; $('re').value = ''; $('cpf-erro').textContent = ''; tela('cpf'); }
+async function ocupado(bt, txt, fn, erro) {
+  const b = $(bt), a = b.innerHTML; b.disabled = true; b.innerHTML = '<span class="bp-gira"></span>' + txt; $(erro).textContent = '';
+  try { await fn(); } catch (e) { $(erro).textContent = e.message; } finally { b.disabled = false; b.innerHTML = a; }
+}
+const consultar = () => ocupado('cpf-bt', 'Procurando…', async () => {
+  const cpf = dig($('cpf').value);
+  const r = await api('consultar', { cpf });
+  if (r.tem) { $('quem-erro').textContent = ''; tela('quem'); setTimeout(() => $('nasc').focus(), 100); return; }
+  abrirCom(await api('entrar', { cpf }));
+}, 'cpf-erro');
+const entrar = () => ocupado('quem-bt', 'Abrindo…', async () => {
+  if (!$('nasc').value || dig($('re').value).length < 5) throw new Error('Informe a data de nascimento e o RE.');
+  abrirCom(await api('entrar', { cpf: dig($('cpf').value), nascimento: $('nasc').value, re: $('re').value }));
+}, 'quem-erro');
+
+function abrirCom(r) {
+  S = { token: r.token, cpf: r.cpf, novo: r.novo, blocos: r.blocos, missoes: r.missoes, dados: Object.assign({}, r.cadastro || {}) };
+  S.dados.cpf = r.cpf;
+  if (S.novo) { const g = SS.get('fc_' + S.cpf); if (g) S.dados = Object.assign(g, { cpf: r.cpf }); }
+  const cid = S.blocos.flatMap((b) => b.campos).find((c) => c.tipo === 'sugestao'); $('dl-cidades').innerHTML = (cid ? cid.op : []).map((o) => `<option value="${esc(o)}">`).join('');
+  PASSO = 0; ERROS = {}; ABERTOS = new Set(); MUDOU = false;
+  // quem já tem cadastro: só abre para digitar o bloco em que falta alguma coisa
+  if (!S.novo) for (const b of S.blocos) if (b.campos.some((c) => c.obrig && !S.dados[c.id])) ABERTOS.add(b.id);
+  ligarVivo(); pintarForm(); tela('form');
+}
+function campoHtml(c) {
+  const v = S.dados[c.id] || '', er = ERROS[c.id], id = 'c-' + c.id;
+  let inp;
+  if (c.tipo === 'lista') inp = `<select id="${id}" onchange="muda('${c.id}',this.value)"><option value="">Escolha…</option>${[...c.op, ...(v && !c.op.includes(v) ? [v] : [])].map((o) => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  else inp = `<input id="${id}" value="${esc(fmt(c, v))}" ${c.trava ? 'readonly' : ''} ${c.tipo === 'data' ? 'type="date"' : c.tipo === 'email' ? 'type="email" autocapitalize="none"' : ''} ${c.num || ['fone', 'cep', 'cpf'].includes(c.tipo) ? 'inputmode="numeric"' : ''} ${c.tipo === 'sugestao' ? 'list="dl-cidades"' : ''} autocomplete="off" maxlength="${c.max || 120}" ${c.dica ? `placeholder="${esc(c.dica)}"` : ''} oninput="${c.tipo === 'fone' ? 'this.value=mFone(this.value);' : c.tipo === 'cep' ? 'this.value=mCep(this.value);' : ''}muda('${c.id}',this.value)">`;
+  return `<div class="bp-campo fc-campo ${er ? 'mal' : ''} ${['nome', 'mae', 'pai', 'conjuge', 'rua', 'lot_rua', 'form_inst'].includes(c.id) ? 'inteira' : ''}"><label for="${id}">${esc(c.nome)}${c.obrig ? ' <em>*</em>' : ''}</label><div class="bp-in">${inp}</div>${er ? `<small class="er">${esc(er)}</small>` : c.dica && c.tipo !== 'lista' ? `<small class="di">${esc(c.dica)}</small>` : ''}</div>`;
+}
+function muda(id, v) {
+  S.dados[id] = v; MUDOU = true;
+  if (ERROS[id]) { delete ERROS[id]; const e = $('c-' + id).closest('.fc-campo'); e.classList.remove('mal'); const s = e.querySelector('.er'); if (s) s.remove(); }
+  if (S.novo) SS.set('fc_' + S.cpf, S.dados);
+  avisarVivo();
+}
+const preenchidos = () => { const o = S.blocos.flatMap((b) => b.campos).filter((c) => c.obrig); return Math.round(100 * o.filter((c) => S.dados[c.id]).length / o.length); };
+function errosLocais(cs) {
+  const e = {};
+  for (const c of cs) {
+    const v = String(S.dados[c.id] || '').trim();
+    if (!v) { if (c.obrig) e[c.id] = 'Preencha este campo'; continue; }
+    if (c.tipo === 'fone' && !/^\d{2}9\d{8}$/.test(dig(v))) e[c.id] = 'Celular com DDD (69 99999-9999)';
+    if (c.tipo === 'cep' && dig(v).length !== 8) e[c.id] = 'CEP com 8 números';
+    if (c.tipo === 'email' && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v)) e[c.id] = 'E-mail inválido';
+    if (c.id === 'nome' && !/\S+\s+\S+/.test(v)) e[c.id] = 'Escreva o nome completo';
+    if (c.id === 're' && dig(v).length < 5) e[c.id] = 'RE incompleto';
+    if (c.tipo === 'lista' && !c.op.includes(v)) e[c.id] = 'Escolha uma das opções';
+  }
+  return e;
+}
+const misTxt = () => (S.missoes.length ? `<div class="bp-aviso" style="margin-bottom:14px"><i data-ic="info"></i><div>${S.missoes.map((m) => `Você está indicado para a <b>${esc(m.operacao)}</b>, período de <b>${esc(m.periodos.join(' e '))}</b>.`).join('<br>')}</div></div>` : '');
+function pintarForm() {
+  if (S.novo) {
+    const b = S.blocos[PASSO], n = S.blocos.length, ult = PASSO === n - 1;
+    $('form-topo').innerHTML = (PASSO === 0 ? misTxt() : '') + `<div class="fc-etapas">${PASSO + 1} de ${n}<div class="bp-prog"><i style="--p:${Math.round(100 * (PASSO + 1) / n)}%"></i></div></div>`;
+    $('form-corpo').innerHTML = `<div class="bp-card topo-acc fc-bl"><div class="cab"><span class="bp-tile sm"><i data-ic="${esc(b.ic)}"></i></span><h2>${esc(b.nome)}</h2></div><div class="fc-form">${b.campos.map(campoHtml).join('')}</div><div class="bp-msg err" id="form-erro" style="margin-top:12px"></div>
+      <div class="bp-modal-pe">${PASSO ? '<button type="button" class="bp-btn ghost" onclick="passo(-1)"><i data-ic="voltar"></i>Voltar</button>' : ''}<button type="button" class="bp-btn" id="form-bt" onclick="${ult ? 'feito()' : 'passo(1)'}">${ult ? IC('check') + 'Feito' : 'Próximo' + IC('seta')}</button></div></div>`;
+  } else {
+    const falta = ABERTOS.size && S.blocos.some((b) => b.campos.some((c) => c.obrig && !S.dados[c.id]));
+    const pronta = S.missoes.some((m) => m.tem_ficha && m.assinada !== 'OK' && m.ficha !== 'SIM');
+    $('form-topo').innerHTML = (pronta ? '<div class="bp-card topo-acc" style="margin-bottom:14px"><p style="margin:0 0 12px;color:var(--t1);font-weight:700">Sua ficha está pronta para assinar.</p><button type="button" class="bp-btn" onclick="verFicha()"><i data-ic="assinar"></i>Ver e assinar a ficha</button></div>' : '') + misTxt() + `<div class="bp-sec" style="margin-top:0"><span class="bp-tile ok"><i data-ic="usuario"></i></span><div><h2>Confira os seus dados</h2><small>${falta ? 'Falta preencher alguma coisa. ' : ''}Está tudo certo? Clique em Feito no fim da página.</small></div></div>`;
+    $('form-corpo').innerHTML = S.blocos.map((b) => `<div class="bp-card fc-bl" id="bl-${b.id}"><div class="cab"><span class="bp-tile sm"><i data-ic="${esc(b.ic)}"></i></span><h2>${esc(b.nome)}</h2>${ABERTOS.has(b.id) ? '' : `<button type="button" class="bp-btn sm ghost" onclick="abrirBloco('${b.id}')"><i data-ic="editar"></i>Corrigir</button>`}</div>` +
+      (ABERTOS.has(b.id) ? `<div class="fc-form">${b.campos.map(campoHtml).join('')}</div>` : `<div class="fc-res">${b.campos.map((c) => `<div><small>${esc(c.nome)}</small><b>${esc(c.tipo === 'data' ? fDia(S.dados[c.id]) : fmt(c, S.dados[c.id])) || '—'}</b></div>`).join('')}</div>`) + '</div>').join('') +
+      `<div class="fc-feito"><div class="bp-msg err" id="form-erro" style="margin-bottom:8px"></div><button type="button" class="bp-btn w" id="form-bt" onclick="feito()">${IC('check')}Feito, está tudo certo</button></div>`;
+  }
+  avisarVivo();
+}
+function abrirBloco(id) { ABERTOS.add(id); pintarForm(); $('bl-' + id).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function passo(n) {
+  if (n > 0) { ERROS = errosLocais(S.blocos[PASSO].campos); if (Object.keys(ERROS).length) { pintarForm(); primeiroErro(); return; } }
+  ERROS = {}; PASSO = Math.max(0, Math.min(S.blocos.length - 1, PASSO + n)); pintarForm(); window.scrollTo(0, 0);
+}
+function primeiroErro() { const e = document.querySelector('.fc-campo.mal input,.fc-campo.mal select'); if (e) { e.scrollIntoView({ behavior: 'smooth', block: 'center' }); e.focus({ preventScroll: true }); } const m = $('form-erro'); if (m) m.textContent = 'Confira os campos marcados em vermelho.'; }
+function mostrarErros() {
+  if (S.novo) PASSO = Math.max(0, S.blocos.findIndex((b) => b.campos.some((c) => ERROS[c.id])));
+  else for (const b of S.blocos) if (b.campos.some((c) => ERROS[c.id])) ABERTOS.add(b.id);
+  pintarForm(); primeiroErro();
+}
+async function feito() {
+  ERROS = errosLocais(S.blocos.flatMap((b) => b.campos));
+  if (Object.keys(ERROS).length) return mostrarErros();
+  const bt = $('form-bt'), a = bt.innerHTML; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Enviando…';
+  try {
+    const era = S.novo, r = await api('salvar', { dados: S.dados });
+    SS.set('fc_' + S.cpf, null); MUDOU = false;
+    S.token = r.token; S.novo = false; S.missoes = r.missoes;
+    fecharVivo(); pintarFeito(era ? 'Cadastro enviado!' : 'Feito!'); tela('feito');
+  } catch (e) {
+    if (e.d && e.d.erros) { ERROS = {}; for (const x of e.d.erros) ERROS[x.id] = x.erro; return mostrarErros(); }
+    if (e.status === 401) { toast(e.message, 'err', 6000); const g = S.novo; MUDOU = false; if (!g) SS.set('fc_' + S.cpf, null); fecharVivo(); S = null; tela('cpf'); return; }
+    bt.disabled = false; bt.innerHTML = a; $('form-erro').textContent = e.message;
+  }
+}
+function voltarDados() { ABERTOS = new Set(); ERROS = {}; ligarVivo(); pintarForm(); tela('form'); }
+
+/* ---------- ficha e assinada ---------- */
+function pintarFeito(tit) {
+  if (tit) $('feito-tit').textContent = tit;
+  const ms = S.missoes.filter((m) => m.id);
+  $('feito-tx').textContent = ms.some((m) => m.tem_ficha && m.assinada !== 'OK') ? 'Sua ficha está pronta para assinar: veja abaixo.' : 'A P3 do BPFRON já recebeu. Ela vai fazer a sua ficha e mandar pelo WhatsApp para você assinar no Gov.br.';
+  $('feito-mis').innerHTML = ms.map((m) => {
+    const ok = m.assinada === 'OK' || m.ficha === 'SIM', st = ok ? ['ok', 'Ficha OK'] : m.assinada === 'CONFERIR' ? ['info', 'Assinada enviada, a P3 vai conferir'] : m.assinada === 'RECUSADA' ? ['crit', 'Precisa assinar de novo'] : m.tem_ficha ? ['pend', 'Falta assinar'] : ['', 'A P3 vai fazer a ficha'];
+    return `<div class="bp-card fc-mis"><h3>${esc(m.operacao)}</h3><p style="color:var(--t3);margin:4px 0 10px">${esc(m.periodos.join(' e '))}</p><span class="bp-sl ${st[0]}">${st[1]}</span>` +
+      (m.motivo ? `<div class="bp-aviso crit" style="margin-top:10px"><i data-ic="alerta"></i><div>${esc(m.motivo)}</div></div>` : '') +
+      (m.tem_ficha && !ok ? `<div class="bp-aviso" style="margin-top:10px"><i data-ic="info"></i><div><b>1.</b> Baixe a ficha e confira nome, CPF, RG, unidade, e-mail, telefone e conta. Se algo estiver errado, avise a P3 <b>antes</b> de assinar.<br><b>2.</b> Assine pelo Gov.br.<br><b>3.</b> Devolva o PDF assinado aqui ou pelo WhatsApp da P3.</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button type="button" class="bp-btn sec" onclick="baixar('${esc(m.id)}')"><i data-ic="baixar"></i>Baixar a ficha</button><a class="bp-btn sec" href="https://assinador.iti.br/" target="_blank" rel="noopener"><i data-ic="assinar"></i>Assinar no Gov.br</a><button type="button" class="bp-btn" onclick="ESC='${esc(m.id)}';$('arq').click()"><i data-ic="enviar"></i>Enviar a ficha assinada</button></div>` : '') + '</div>';
+  }).join('');
+}
+function verFicha() { fecharVivo(); pintarFeito('Sua ficha'); tela('feito'); }
+let ESC = null;
+async function baixar(id) {
+  try {
+    const r = await fetch(API_BASE + '/api/fichas/pub/ficha?id=' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + S.token } });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || 'Não consegui baixar agora.');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = 'minha-ficha.pdf'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  } catch (e) { toast(e.message, 'err'); }
+}
+async function mandar(f) {
+  if (!f) return;
+  if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { toast('Mande o PDF assinado (não foto).', 'err', 6000); return; }
+  if (f.size > 10 * 1024 * 1024) { toast('PDF grande demais (máximo 10 MB).', 'err'); return; }
+  const carga = window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Enviando a ficha') : null;
+  try {
+    const pdf = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+    const r = await api('assinada', { id: ESC, pdf }); S.missoes = r.missoes; pintarFeito('Ficha enviada!'); window.scrollTo(0, 0); toast('A P3 recebeu a sua ficha assinada.');
+  } catch (e) { toast(e.message, 'err', 6000); } finally { if (carga) carga.fechar(); }
+}
+
+/* ---------- ao vivo (a P3 vê em que parte você está) ---------- */
+let WSV = null, PING = null, AV = null;
+function ligarVivo() {
+  fecharVivo(); if (!('WebSocket' in window) || !S) return;
+  const w = WSV = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/fichas/pub/ao-vivo?t=' + encodeURIComponent(S.token));
+  w.onopen = () => { avisarVivo(); PING = setInterval(() => { try { w.send('{"t":"ping"}'); } catch (e) {} }, 25000); };
+  w.onclose = () => { if (WSV === w) { WSV = null; clearInterval(PING); if (S && $('t-form').style.display !== 'none') setTimeout(() => { if (S && !WSV && $('t-form').style.display !== 'none') ligarVivo(); }, 5000); } };
+}
+function fecharVivo() { clearInterval(PING); clearTimeout(AV); if (WSV) { const w = WSV; WSV = null; try { w.close(); } catch (e) {} } }
+function avisarVivo() {
+  clearTimeout(AV);
+  AV = setTimeout(() => {
+    if (!WSV || WSV.readyState !== 1 || !S) return;
+    const b = S.novo ? PASSO : Math.max(0, S.blocos.findIndex((x) => ABERTOS.has(x.id)));
+    try { WSV.send(JSON.stringify({ t: 'faz', bloco: b + 1, total: S.blocos.length, etapa: S.blocos[b].nome, pct: preenchidos(), nome: S.novo ? String(S.dados.nome || '').toUpperCase() : undefined })); } catch (e) {}
+  }, 350);
+}
+window.addEventListener('beforeunload', (e) => { if (S && MUDOU && !S.novo) { e.preventDefault(); e.returnValue = ''; } });
+if (window.BPCasca && BPCasca.icones) new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); }).observe(document.body, { childList: true, subtree: true });
+</script>
+</body>
+</html>

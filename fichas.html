@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- =====================================================================
+     fichas.html — P3 · Fichas de Missão (25/11/2026)
+     Policial de outra unidade indicado por ofício: a P3 arrasta o PDF do SEI,
+     confere e lança; manda o link do cadastro pelo WhatsApp; vê ao vivo quem
+     preenche; copia os dados para o Córtex; anexa a ficha; manda assinar; e
+     confere a assinada. Substitui a CGFROM_Controle_Fichas + Forms + script.
+     Leitor do PDF: fichas-oficio.js. Worker: /api/fichas* (backend/fichas.js).
+     ===================================================================== -->
+<script src="bp-casca.js"></script>
+<script src="conta.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<title>Fichas de Missão · P3 · BPFRON</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<script src="fichas-oficio.js"></script>
+<style>
+.fic .bp-wrap,.fic .bp-topo-in{max-width:1240px}
+.fic-linha{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fic-pills{display:flex;gap:6px;flex-wrap:wrap}
+.fic-pills button{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:8px 14px;color:var(--t2);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.fic-pills button b{color:var(--t1)}
+.fic-pills button.on{border-color:var(--acc-line);color:var(--acc);background:var(--acc-soft)}
+.fic-pills button.on b{color:var(--acc)}
+.fic-busca{flex:1;min-width:220px}
+.fic-grupo{margin:22px 0 8px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fic-grupo h3{margin:0;font:700 20px 'Rajdhani',sans-serif;color:var(--t1)}
+.fic-grupo small{color:var(--muted);font-weight:600}
+.fic-p{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px 16px;align-items:center;padding:13px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;border-left:4px solid var(--c,var(--line2))}
+.fic-p.s-NAO{--c:var(--crit)}.fic-p.s-FORMS{--c:var(--info)}.fic-p.s-PENDENTE{--c:var(--warn)}.fic-p.s-SIM{--c:var(--good)}
+.fic-p.aovivo{box-shadow:0 0 0 2px var(--good-line)}
+.fic-p .nm{font-weight:700;color:var(--t1);font-size:15px;overflow-wrap:anywhere}
+.fic-p small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;overflow-wrap:anywhere}
+.fic-p .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.fic-p .bts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:430px}
+.fic-sel{border:1px solid var(--line2);background:var(--surf2);color:var(--t1);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;font-weight:700;max-width:100%}
+.fic-sel option{background:var(--surf);color:var(--t1)}
+.fic .bp-modal-cx.larga{width:min(1180px,100%)}
+.fic .bp-modal-cx.media{width:min(760px,100%)}
+.fic-vivo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.fic-vivo h3{margin:0 0 10px;font:700 18px 'Rajdhani',sans-serif;color:var(--t1);display:flex;align-items:center;gap:8px}
+.fic-vivo .q{display:flex;flex-direction:column;gap:5px;padding:9px 0;border-top:1px solid var(--line)}
+.fic-vivo .q:first-of-type{border-top:0}
+.fic-vivo .q b{color:var(--t1);font-size:14px}
+.fic-vivo .q small{color:var(--muted);font-size:12.5px}
+.fic-vivo .rola{max-height:230px;overflow:auto}
+.fic-ev{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--t2)}
+.fic-ev:first-child{border-top:0}
+.fic-ev.novo b{color:var(--acc)}
+.fic-ev small{color:var(--muted);white-space:nowrap;margin-left:auto}
+.fic-tab{width:100%;border-collapse:collapse;font-size:13px}
+.fic-tab th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);padding:6px;white-space:nowrap}
+.fic-tab td{padding:5px 4px;border-top:1px solid var(--line);vertical-align:top}
+.fic-tab input:not([type=checkbox]),.fic-tab select{width:100%;min-width:70px;background:var(--surf2);border:1px solid var(--line2);border-radius:8px;padding:7px 8px;color:var(--t1);font:inherit;font-size:13px}
+.fic-tab input.mal{border-color:var(--crit)}
+.fic-tab tr.fora{opacity:.45}
+.fic-tab .obs td{border-top:0;padding-top:0}
+.fic-rola{overflow:auto;max-height:56vh;border:1px solid var(--line);border-radius:14px;padding:4px 8px}
+.fic-av{display:inline-flex;gap:6px;align-items:center;margin:0 10px 6px 0;font-size:12.5px;color:var(--warn)}
+.fic-av.crit{color:var(--crit)}.fic-av.ok{color:var(--good)}.fic-av.info{color:var(--info)}
+.fic-av button{border:1px solid var(--line2);background:var(--surf2);color:var(--t1);border-radius:8px;padding:3px 8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.fic-dados{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.fic-d{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surf2);min-width:0}
+.fic-d .tx{flex:1;min-width:0}
+.fic-d small{display:block;color:var(--muted);font-size:11px;font-weight:700}
+.fic-d b{display:block;color:var(--t1);font-size:14px;overflow-wrap:anywhere}
+.fic-d.copiado{border-color:var(--good-line);background:var(--good-soft)}
+.fic-d input,.fic-d select{width:100%;background:var(--surf);border:1px solid var(--line2);border-radius:8px;padding:7px;color:var(--t1);font:inherit;font-size:14px}
+.fic-bl{margin:16px 0 8px;font:700 17px 'Rajdhani',sans-serif;color:var(--acc)}
+.fic-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fic-form .inteira{grid-column:1/-1}
+.fic-ta{width:100%;min-height:150px;background:var(--surf2);border:1px solid var(--line2);border-radius:12px;padding:12px;color:var(--t1);font:13.5px/1.5 inherit;resize:vertical}
+.fic-fila{white-space:pre-wrap;font-size:13.5px;color:var(--t2);background:var(--surf2);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:30vh;overflow:auto}
+.fic .fic-sino{position:relative;overflow:visible}
+.fic-sino i.n{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--crit);color:#fff;font:800 11px/18px Inter,sans-serif;text-align:center;padding:0 4px}
+.fic-marca{display:flex;flex-direction:column;gap:9px}
+@media (max-width:900px){.fic-p{grid-template-columns:1fr}.fic-p .bts{justify-content:flex-start;max-width:none}.fic-vivo{grid-template-columns:1fr}}
+@media (max-width:640px){.fic-form{grid-template-columns:1fr}.fic .bp-sec{flex-wrap:wrap}.fic .bp-sec>.fic-linha{margin-left:0!important;width:100%}}
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-25", "titulo": "Fichas de Missão", "quem": "todos", "itens": [
+    "Arraste o PDF do ofício: o sistema lê os policiais, confere CPF e telefone e mostra quem já tem cadastro.",
+    "Botões do WhatsApp para fazer e para assinar a ficha, com fila em lote.",
+    "Quadro ao vivo: veja quem está preenchendo e receba o aviso quando terminar.",
+    "Copiar para o Córtex: cada dado do cadastro com um botão de copiar."
+  ] }
+]</script>
+</head>
+<body class="bp-pg fic">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in" data-bp-menu>
+    <a class="bp-marca" href="fichas.html" title="Fichas de Missão">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · P3</small><b>Fichas de Missão</b></span>
+    </a>
+    <div class="bp-topo-acoes">
+      <span class="bp-eu" id="fi-eu" style="display:none"><b></b><span></span></span>
+      <button type="button" class="bp-btn ic sec fic-sino" id="fi-sino" style="display:none" title="Avisos" aria-label="Avisos" onclick="verAvisos()"><i data-ic="alerta"></i><i class="n" id="fi-sino-n" style="display:none"></i></button>
+      <button type="button" class="bp-btn ic sec" title="Novidades desta página" aria-label="Novidades desta página" onclick="if(window.BPCasca&&BPCasca.novidades)BPCasca.novidades.abrir()"><i data-ic="novidade"></i></button>
+      <button type="button" class="bp-btn ic sec" id="fi-sair" title="Sair" aria-label="Sair" style="display:none" onclick="sair()"><i data-ic="sair"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="bp-wrap">
+  <div id="fi-login" style="display:none;max-width:440px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile"><i data-ic="cadeado"></i></span><div><h2>Fichas de Missão</h2><small>Entre com o mesmo login do dashboard</small></div></div>
+      <form onsubmit="event.preventDefault(); entrar()" style="display:flex;flex-direction:column;gap:14px">
+        <div class="bp-campo"><label for="f-user">Usuário</label><div class="bp-in"><i data-ic="usuario"></i><input id="f-user" autocomplete="username" required></div></div>
+        <div class="bp-campo"><label for="f-pass">Senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="f-pass" type="password" autocomplete="current-password" required></div></div>
+        <div class="bp-msg err" id="f-erro"></div>
+        <button class="bp-btn w" id="f-btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="fi-negado" style="display:none;max-width:560px;margin:24px auto 0">
+    <div class="bp-card topo-acc">
+      <div class="bp-sec" style="margin-top:0"><span class="bp-tile crit"><i data-ic="cadeado"></i></span><div><h2>Acesso restrito</h2><small>Só a P3</small></div></div>
+      <p style="color:var(--t3);margin:0">Peça ao administrador para marcar <b>“P3 · Fichas de Missão”</b> no Painel de Controle.</p>
+      <p style="color:var(--t3);margin:12px 0 0">Você é policial indicado para missão? Use o <a href="ficha-cadastro.html" style="color:var(--acc)">cadastro para missão</a>.</p>
+      <div style="margin-top:14px"><button type="button" class="bp-btn sec" onclick="sair()"><i data-ic="sair"></i>Entrar com outro login</button></div>
+    </div>
+  </div>
+
+  <div id="fi-estado" class="bp-vazio" style="display:none;margin-top:24px"></div>
+
+  <div id="fi-app" style="display:none">
+    <section class="bp-heroi">
+      <div>
+        <span class="bp-selo-tx"><b></b>P3 · Operações</span>
+        <h1>Fichas de <em>Missão</em></h1>
+        <p>Policiais de outras unidades: do ofício à ficha assinada.</p>
+        <div class="bp-bts">
+          <button type="button" class="bp-btn" id="bt-lancar" onclick="abrirLancar()"><i data-ic="enviar"></i>Lançar ofício</button>
+          <button type="button" class="bp-btn sec" onclick="abrirFila()"><i data-ic="celular"></i>Quem está sem ficha</button>
+          <button type="button" class="bp-btn sec" onclick="copiarTexto(LINK(),'Link do cadastro copiado.')"><i data-ic="etiqueta"></i>Copiar link do cadastro</button>
+        </div>
+      </div>
+      <div class="bp-selo" aria-hidden="true"><i></i><i></i><i></i><img src="LOGOS/bpfron_transp.avif" alt=""></div>
+    </section>
+
+    <div class="fic-vivo">
+      <div class="bp-card"><h3><span class="bp-vivo" id="vivo-luz"></span>Preenchendo agora <span class="bp-sl" id="vivo-n">0</span></h3><div class="rola" id="vivo-lista"></div></div>
+      <div class="bp-card"><h3><i data-ic="relogio"></i>Últimas atividades
+        <button type="button" class="bp-btn sm ghost" id="bt-som" style="margin-left:auto" onclick="ligarSom()"></button></h3><div class="rola" id="vivo-ev"></div></div>
+    </div>
+
+    <div class="bp-sec"><span class="bp-tile"><i data-ic="pasta"></i></span><div><h2>Missão</h2><small id="mis-sub"></small></div>
+      <div class="fic-linha" style="margin-left:auto">
+        <button type="button" class="bp-btn sm sec" onclick="abrirMissao()"><i data-ic="mais"></i>Nova</button>
+        <button type="button" class="bp-btn sm ghost" id="bt-mis-ed" onclick="abrirMissao(true)"><i data-ic="editar"></i>Editar</button>
+        <button type="button" class="bp-btn sm ghost" onclick="abrir('m-func')"><i data-ic="painel"></i>Funções</button>
+      </div></div>
+    <div class="fic-pills" id="mis-pills"></div>
+
+    <div id="mis-corpo">
+      <div class="bp-nums" style="margin-top:16px">
+        <button type="button" class="bp-num clica" style="--i:0;--c:var(--crit)" onclick="setFiltro('cad')"><i data-ic="usuario"></i><div class="r">Falta cadastro</div><div class="v" id="n-cad">0</div><small class="bp-ver">ver<i data-ic="seta"></i></small></button>
+        <button type="button" class="bp-num clica" style="--i:1;--c:var(--info)" onclick="setFiltro('FORMS')"><i data-ic="arquivo"></i><div class="r">Fazer no Córtex</div><div class="v" id="n-forms">0</div><small class="bp-ver">ver<i data-ic="seta"></i></small></button>
+        <button type="button" class="bp-num clica" style="--i:2;--c:var(--warn)" onclick="setFiltro('PENDENTE')"><i data-ic="assinar"></i><div class="r">Falta assinar</div><div class="v" id="n-pend">0</div><small class="bp-ver" id="n-conf">ver<i data-ic="seta"></i></small></button>
+        <button type="button" class="bp-num clica" style="--i:3;--c:var(--good)" onclick="setFiltro('SIM')"><i data-ic="ok"></i><div class="r">Ficha OK</div><div class="v" id="n-ok">0</div><small class="bp-ver">ver<i data-ic="seta"></i></small></button>
+      </div>
+      <div class="fic-linha" style="margin:16px 0 4px">
+        <div class="fic-pills" id="filtros"></div>
+        <div class="bp-in fic-busca"><i data-ic="buscar"></i><input id="q" placeholder="Nome, RE, CPF, telefone, unidade…" oninput="pintarLista()"></div>
+        <button type="button" class="bp-btn sm ghost" onclick="csv()"><i data-ic="baixar"></i>CSV</button>
+      </div>
+      <div id="lista"></div>
+      <div id="oficios"></div>
+    </div>
+  </div>
+</main>
+
+<!-- LANÇAR OFÍCIO -->
+<div class="bp-modal" id="m-lancar">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="lan-tit">
+    <div class="bp-modal-cab"><span class="bp-tile"><i data-ic="enviar"></i></span><div><h3 id="lan-tit">Lançar ofício</h3><small id="lan-sub">O PDF é lido aqui no seu computador</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-lancar')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div id="lan-1">
+      <label class="bp-arquivo grande" id="lan-arq" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');lerArquivo(event.dataTransfer.files[0])">
+        <span class="bp-tile"><i data-ic="arquivo"></i></span><span class="tx"><b>Arraste o PDF do ofício para cá</b><small>ou clique para escolher (o PDF baixado do SEI)</small></span>
+        <input type="file" id="lan-file" accept="application/pdf,.pdf" onchange="lerArquivo(this.files[0]);this.value=''"></label>
+      <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--t2);font-weight:700">Não tem PDF? Cole a relação</summary>
+        <p style="color:var(--muted);font-size:13px">Cole do Excel, e-mail ou WhatsApp: uma pessoa por linha, com nome e CPF (ou matrícula). Uma linha com o período em cima (13/12 a 22/12/2026) vale para quem vem embaixo.</p>
+        <textarea class="fic-ta" id="lan-cola"></textarea>
+        <div class="fic-linha" style="margin-top:8px"><button type="button" class="bp-btn sm" onclick="lerCola()"><i data-ic="check"></i>Ler a relação</button></div></details>
+      <div class="bp-msg err" id="lan-erro" style="margin-top:12px"></div>
+    </div>
+    <div id="lan-2" style="display:none">
+      <div class="fic-form" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+        <div class="bp-campo"><label for="lan-mis">Missão</label><div class="bp-in"><select id="lan-mis" onchange="lanMis()"></select></div></div>
+        <div class="bp-campo" id="lan-mis-cx"><label for="lan-mis-nome">Nome da missão nova</label><div class="bp-in"><input id="lan-mis-nome" placeholder="DEZEMBRO 2026"></div></div>
+        <div class="bp-campo"><label for="lan-num">Nº do ofício</label><div class="bp-in"><input id="lan-num"></div></div>
+        <div class="bp-campo"><label for="lan-proc">Processo SEI</label><div class="bp-in"><input id="lan-proc"></div></div>
+        <div class="bp-campo"><label for="lan-sec">De onde veio</label><div class="bp-in"><input id="lan-sec" placeholder="CRP III"></div></div>
+      </div>
+      <div class="bp-msg" id="lan-resumo" style="margin:12px 0"></div>
+      <div class="fic-rola"><table class="fic-tab"><thead><tr><th></th><th>Período</th><th>Grad.</th><th>Nome</th><th>RE</th><th>CPF</th><th>Telefone</th><th>Unidade</th><th>OPM</th></tr></thead><tbody id="lan-tab"></tbody></table></div>
+      <div class="bp-msg err" id="lan-erro2" style="margin-top:10px"></div>
+      <div class="bp-modal-pe">
+        <button type="button" class="bp-btn ghost" onclick="lanVoltar()"><i data-ic="voltar"></i>Outro arquivo</button>
+        <button type="button" class="bp-btn ghost" onclick="lanMais()"><i data-ic="mais"></i>Linha</button>
+        <button type="button" class="bp-btn" id="lan-ok" onclick="lancar()"><i data-ic="check"></i>Lançar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CADASTRO / COPIAR PARA O CÓRTEX -->
+<div class="bp-modal" id="m-cad" onclick="if(event.target===this)fechar('m-cad')">
+  <div class="bp-modal-cx larga" role="dialog" aria-modal="true" aria-labelledby="cad-tit">
+    <div class="bp-modal-cab"><span class="bp-tile info"><i data-ic="usuario"></i></span><div><h3 id="cad-tit">Cadastro</h3><small id="cad-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-cad')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div id="cad-aviso"></div>
+    <div id="cad-corpo"></div>
+    <div class="bp-msg err" id="cad-erro" style="margin-top:10px"></div>
+    <div class="bp-modal-pe" id="cad-pe"></div>
+  </div>
+</div>
+
+<!-- EDITAR INDICADO -->
+<div class="bp-modal" id="m-ind" onclick="if(event.target===this)fechar('m-ind')">
+  <div class="bp-modal-cx media" role="dialog" aria-modal="true" aria-labelledby="ind-tit">
+    <div class="bp-modal-cab"><span class="bp-tile"><i data-ic="editar"></i></span><div><h3 id="ind-tit">Corrigir indicado</h3><small id="ind-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ind')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div class="fic-form" id="ind-form"></div>
+    <details style="margin-top:14px" ontoggle="if(this.open)verHist()"><summary style="cursor:pointer;color:var(--t2);font-weight:700">Histórico</summary><div id="ind-hist" style="margin-top:8px"></div></details>
+    <div class="bp-msg err" id="ind-erro" style="margin-top:10px"></div>
+    <div class="bp-modal-pe">
+      <button type="button" class="bp-btn perigo-l" onclick="pedirSenha('excluir_indicado')"><i data-ic="lixeira"></i>Excluir</button>
+      <button type="button" class="bp-btn ghost" onclick="fechar('m-ind')">Cancelar</button>
+      <button type="button" class="bp-btn" id="ind-ok" onclick="salvarInd()"><i data-ic="check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFERIR ASSINADA -->
+<div class="bp-modal" id="m-ass" onclick="if(event.target===this)fechar('m-ass')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="ass-tit">
+    <div class="bp-modal-cab"><span class="bp-tile ok"><i data-ic="assinar"></i></span><div><h3 id="ass-tit">Ficha assinada</h3><small id="ass-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-ass')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <button type="button" class="bp-btn sec w" onclick="abrirPdf(IND.id,'assinada')"><i data-ic="olho"></i>Abrir a ficha assinada</button>
+    <div class="bp-campo" style="margin-top:14px"><label for="ass-mot">Se estiver errada, diga o motivo (o policial vê)</label><div class="bp-in"><input id="ass-mot" maxlength="300" placeholder="Ex.: falta a assinatura do Gov.br"></div></div>
+    <div class="bp-msg err" id="ass-erro"></div>
+    <div class="bp-modal-pe"><button type="button" class="bp-btn perigo-l" onclick="decidir('recusar')"><i data-ic="voltar"></i>Devolver</button><button type="button" class="bp-btn" onclick="decidir('ok')"><i data-ic="ok"></i>Está certa: ficha OK</button></div>
+  </div>
+</div>
+
+<!-- FILA -->
+<div class="bp-modal" id="m-fila" onclick="if(event.target===this)fechar('m-fila')">
+  <div class="bp-modal-cx media" role="dialog" aria-modal="true" aria-labelledby="fila-tit">
+    <div class="bp-modal-cab"><span class="bp-tile pend"><i data-ic="celular"></i></span><div><h3 id="fila-tit">Quem está sem ficha</h3><small id="fila-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-fila')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div id="fila-corpo"></div>
+  </div>
+</div>
+
+<!-- MISSÃO -->
+<div class="bp-modal" id="m-mis" onclick="if(event.target===this)fechar('m-mis')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="mis-tit">
+    <div class="bp-modal-cab"><span class="bp-tile"><i data-ic="pasta"></i></span><div><h3 id="mis-tit">Nova missão</h3><small>O nome é só para organizar (ex.: DEZEMBRO 2026)</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-mis')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div class="fic-form">
+      <div class="bp-campo inteira"><label for="mis-nome">Nome</label><div class="bp-in"><input id="mis-nome" maxlength="80"></div></div>
+      <div class="bp-campo inteira"><label for="mis-op">Operação (sai na mensagem do WhatsApp)</label><div class="bp-in"><input id="mis-op" maxlength="200"></div></div>
+    </div>
+    <div class="bp-msg err" id="mis-erro" style="margin-top:10px"></div>
+    <div class="bp-modal-pe"><button type="button" class="bp-btn perigo-l" id="mis-exc" onclick="pedirSenha('excluir_missao')"><i data-ic="lixeira"></i>Excluir</button><button type="button" class="bp-btn" onclick="salvarMissao()"><i data-ic="check"></i>Salvar</button></div>
+  </div>
+</div>
+
+<!-- FUNÇÕES (menu da planilha antiga) -->
+<div class="bp-modal" id="m-func" onclick="if(event.target===this)fechar('m-func')">
+  <div class="bp-modal-cx media" role="dialog" aria-modal="true" aria-labelledby="func-tit">
+    <div class="bp-modal-cab"><span class="bp-tile info"><i data-ic="painel"></i></span><div><h3 id="func-tit">Funções</h3><small>As mesmas do menu “P3 - BPFRON” da planilha</small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-func')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div class="fic-bl" style="margin-top:0">Arrumar esta missão</div>
+    <div class="fic-marca" id="func-arrumar">
+      <label class="bp-check"><input type="checkbox" value="zeros" checked> Corrigir zeros do CPF</label>
+      <label class="bp-check"><input type="checkbox" value="cpf" checked> Buscar CPF que falta, pelo nome</label>
+      <label class="bp-check"><input type="checkbox" value="cadastro" checked> Verificar cadastro (quem já tem passa para “Cadastro feito”)</label>
+      <label class="bp-check"><input type="checkbox" value="sincronizar" checked> Sincronizar Ficha OK entre os períodos</label>
+    </div>
+    <div class="fic-linha" style="margin-top:10px"><button type="button" class="bp-btn sm" onclick="arrumar()"><i data-ic="check"></i>Arrumar</button></div>
+    <div class="fic-bl">Trazer Ficha OK de missões anteriores</div>
+    <div class="fic-marca" id="func-de"></div>
+    <div class="fic-linha" style="margin-top:10px"><button type="button" class="bp-btn sm" onclick="trazerOk()"><i data-ic="check"></i>Trazer Ficha OK</button></div>
+    <div class="fic-bl">Trazer o histórico antigo (uma vez só)</div>
+    <div class="fic-linha"><button type="button" class="bp-btn sm sec" onclick="importar('forms',this)"><i data-ic="baixar"></i>Cadastros do Forms</button><button type="button" class="bp-btn sm sec" onclick="importar('cgfrom',this)"><i data-ic="baixar"></i>Planilha CGFROM</button></div>
+    <p style="color:var(--muted);font-size:13px;margin:8px 0 0">As planilhas antigas só são lidas. Clicar de novo não duplica.</p>
+    <div class="bp-msg" id="func-msg" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- SENHA -->
+<div class="bp-modal" id="m-senha" onclick="if(event.target===this)fechar('m-senha')">
+  <div class="bp-modal-cx" role="dialog" aria-modal="true" aria-labelledby="sx-tit">
+    <div class="bp-modal-cab"><span class="bp-tile crit"><i data-ic="lixeira"></i></span><div><h3 id="sx-tit">Excluir</h3><small id="sx-sub"></small></div>
+      <button type="button" class="bp-btn ic sm ghost" onclick="fechar('m-senha')" aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <form onsubmit="event.preventDefault();excluir()" class="fic-form">
+      <div class="bp-campo inteira"><label for="sx-pass">Sua senha</label><div class="bp-in"><i data-ic="cadeado"></i><input id="sx-pass" type="password" autocomplete="current-password" required></div></div>
+      <div class="bp-campo inteira"><label for="sx-mot">Motivo</label><div class="bp-in"><input id="sx-mot" maxlength="200"></div></div>
+      <div class="bp-msg err inteira" id="sx-erro"></div>
+      <div class="bp-modal-pe inteira"><button type="button" class="bp-btn ghost" onclick="fechar('m-senha')">Cancelar</button><button type="submit" class="bp-btn perigo"><i data-ic="lixeira"></i>Excluir</button></div>
+    </form>
+  </div>
+</div>
+
+<input type="file" id="arq-pdf" accept="application/pdf,.pdf" style="display:none" onchange="anexarArq(this.files[0]);this.value=''">
+
+<script>
+'use strict';
+/* ?api= só para os testes locais, e só localhost (a página manda o token). */
+const API_BASE = (function () {
+  try { const q = new URLSearchParams(location.search).get('api'); if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, ''); } catch (e) {}
+  return 'https://bpfron-api.bpfron.workers.dev';
+})();
+const $ = (id) => document.getElementById(id);
+const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
+const toast = (m, t, ms) => { if (window.BPCasca && BPCasca.toast) BPCasca.toast(m, t, ms); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const dig = (s) => String(s || '').replace(/\D/g, '');
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return ''; } };
+const FO = window.FichasOficio;
+const fCpf = (c) => FO.fmtCpf(c);
+const fFone = (t) => { const d = dig(t); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : t; };
+const p2 = (n) => String(n).padStart(2, '0');
+const fQuando = (iso) => { const t = typeof iso === 'number' ? iso : Date.parse(iso); if (!t) return ''; const d = new Date(t - 4 * 3600e3); return `${p2(d.getUTCDate())}/${p2(d.getUTCMonth() + 1)}/${String(d.getUTCFullYear()).slice(2)} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
+const fHora = (t) => { const d = new Date(t - 4 * 3600e3); return p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()); };
+const fDia = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : iso || ''; };
+const LINK = () => new URL('ficha-cadastro.html', location.href.split('?')[0]).href;
+const copiarTexto = (t, m) => (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => m && toast(m), () => window.prompt('Copie:', t));
+const abrir = (id) => $(id).classList.add('on');
+const fechar = (id) => $(id).classList.remove('on');
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const m = [...document.querySelectorAll('.bp-modal.on')].pop(); if (m && m.id !== 'm-lancar') m.classList.remove('on'); } });
+
+const SIT = {
+  '': { nome: 'Sem contato', cl: '' }, NAO: { nome: 'Cadastro pedido', cl: 'crit' }, FORMS: { nome: 'Cadastro feito', cl: 'info' },
+  PENDENTE: { nome: 'Falta assinar', cl: 'pend' }, SIM: { nome: 'Ficha OK', cl: 'ok' },
+};
+
+/* ============================== API / login ============================== */
+async function api(path, opt) {
+  const h = Object.assign({}, (opt && opt.headers) || {});
+  const tk = ls('bp_token'); if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, Object.assign({}, opt || {}, { headers: h }));
+  if (r.status === 401) { ls('bp_token', ''); boot(); const e = new Error('Sessão expirada. Entre de novo.'); e.status = 401; throw e; }
+  return r;
+}
+async function apiJson(path, body) {
+  let r;
+  try { r = await api(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined); }
+  catch (e) { if (e.status) throw e; throw new Error('Sem conexão com o servidor. Confira a internet.'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.d = d; throw e; }
+  return d;
+}
+const salvar = (corpo) => apiJson('/api/fichas/salvar', corpo);
+async function entrar() {
+  const bt = $('f-btn'), er = $('f-erro');
+  er.textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('f-user').value.trim(), pass: $('f-pass').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.token) { er.textContent = r.status === 401 ? 'Usuário ou senha incorretos.' : 'Não consegui entrar agora. Tente de novo.'; return; }
+    ls('bp_token', d.token); ls('bp_user', d.user);
+    if (window.BPCasca && BPCasca.guardarDoWorker) BPCasca.guardarDoWorker(d, d.token);
+    $('f-pass').value = '';
+    if (d.trocarSenha) return; // o conta.js abre a troca obrigatória
+    boot();
+  } catch (e) { er.textContent = 'Sem conexão com o servidor. Confira a internet.'; }
+  finally { bt.disabled = false; bt.textContent = 'Entrar'; }
+}
+function sair() { ls('bp_token', ''); ls('bp_user', ''); D = null; fecharVivo(); boot(); }
+function mostrar(q) { ['fi-login', 'fi-negado', 'fi-estado', 'fi-app'].forEach((id) => { $(id).style.display = id === q ? '' : 'none'; }); }
+function boot() {
+  const logado = !!ls('bp_token');
+  mostrar(logado ? '' : 'fi-login');
+  for (const id of ['fi-sair', 'fi-eu', 'fi-sino']) $(id).style.display = logado ? '' : 'none';
+  if (logado) carregar();
+}
+
+/* ============================== dados ============================== */
+let D = null, MIS = null, FILTRO = 'todos', IND = null, CADS = null;
+async function carregar(manual) {
+  const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo as fichas') : null;
+  try { D = await apiJson('/api/fichas'); }
+  catch (e) {
+    if (e.status === 401) return;
+    if (e.status === 403) { mostrar('fi-negado'); return; }
+    if (D) { toast(e.message, 'err'); return; }
+    mostrar('fi-estado'); $('fi-estado').innerHTML = esc(e.message) + '<br><br><button class="bp-btn sm sec" onclick="boot()">Tentar de novo</button>'; return;
+  } finally { if (carga) setTimeout(() => carga.fechar(), 200); }
+  indexar();
+  mostrar('fi-app');
+  $('fi-eu').querySelector('b').textContent = String(D.nome).split(/\s+/).filter((x) => /[A-Za-zÀ-ú]/.test(x)).slice(-2).map((x) => x[0]).join('').toUpperCase() || 'P3';
+  $('fi-eu').querySelector('span').textContent = D.nome;
+  if (!MIS || !D.missoes.some((m) => m.id === MIS)) { const g = ls('fic_missao'); MIS = D.missoes.some((m) => m.id === g) ? g : (ordemMis()[0] || {}).id || null; }
+  pintar();
+  ligarVivo();
+}
+function indexar() {
+  CADS = { cpf: new Map(), re: new Map(), nome: new Map() };
+  for (const c of D.cadastros) { if (c.cpf) CADS.cpf.set(c.cpf, c); if (dig(c.re).length >= 5) CADS.re.set(dig(c.re).slice(-5), c); CADS.nome.set(sem(c.nome), c); }
+}
+// CPF manda; sem CPF igual, o RE só vale com o primeiro nome igual (RE digitado errado existe); depois o nome inteiro
+function achaCad(x) {
+  const c = x.cpf && FO.cpfValido(x.cpf) && CADS.cpf.get(x.cpf); if (c) return c;
+  const r = dig(x.re).length >= 5 && CADS.re.get(dig(x.re).slice(-5)); if (r && sem(r.nome).split(' ')[0] === sem(x.nome).split(' ')[0]) return r;
+  return CADS.nome.get(sem(x.nome)) || null;
+}
+const cadDe = (i) => (FO.cpfValido(i.cpf) ? CADS.cpf.get(i.cpf) : CADS.nome.get(sem(i.nome))) || null;
+const daMis = () => D.indicados.filter((i) => i.missao_id === MIS);
+const missao = () => D.missoes.find((m) => m.id === MIS);
+const chaveP = (i) => i.cpf || sem(i.nome);
+const ultimoFim = (m) => D.indicados.reduce((x, i) => (i.missao_id === m.id && i.fim > x ? i.fim : x), '');
+function ordemMis() { return D.missoes.slice().sort((a, b) => { const x = ultimoFim(a) || '9', y = ultimoFim(b) || '9'; return x < y ? 1 : x > y ? -1 : (a.criado_em < b.criado_em ? 1 : -1); }); }
+// cadastro em dia = confirmado depois de ser lançado na missão
+const emDia = (i, c) => !!(c && c.confirmado_em && c.confirmado_em >= i.criado_em);
+const pessoas = (l) => { const m = new Map(); for (const i of l) if (!m.has(chaveP(i))) m.set(chaveP(i), i); return [...m.values()]; };
+const FILTROS = {
+  todos: ['Todos', () => true], cad: ['Falta cadastro', (i) => i.ficha === '' || i.ficha === 'NAO'], FORMS: ['Fazer no Córtex', (i) => i.ficha === 'FORMS'],
+  PENDENTE: ['Falta assinar', (i) => i.ficha === 'PENDENTE'], conf: ['Conferir assinada', (i) => i.assinada_sit === 'CONFERIR'], SIM: ['Ficha OK', (i) => i.ficha === 'SIM'], cortex: ['Sem escala no Córtex', (i) => i.cortex !== 'SIM'],
+};
+function setFiltro(f) { FILTRO = f; pintarLista(); $('lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function escolherMis(id) { MIS = id; ls('fic_missao', id); FILTRO = 'todos'; pintar(); }
+
+function pintar() {
+  if (!D) return;
+  const ms = ordemMis();
+  $('mis-pills').innerHTML = ms.map((m) => `<button type="button" class="${m.id === MIS ? 'on' : ''}" onclick="escolherMis('${esc(m.id)}')">${esc(m.nome)} <b>${pessoas(D.indicados.filter((i) => i.missao_id === m.id)).length}</b></button>`).join('')
+    || '<div class="bp-vazio" style="width:100%">Nenhuma missão ainda. Clique em <b>Lançar ofício</b>, ou traga o histórico antigo em <b>Funções</b>.</div>';
+  $('mis-corpo').style.display = MIS ? '' : 'none'; $('bt-mis-ed').style.display = MIS ? '' : 'none';
+  $('mis-sub').textContent = MIS ? missao().operacao : '';
+  $('func-de').innerHTML = ms.filter((m) => m.id !== MIS).map((m) => { const n = pessoas(D.indicados.filter((i) => i.missao_id === m.id && i.ficha === 'SIM')).length; return `<label class="bp-check"><input type="checkbox" value="${esc(m.id)}"> ${esc(m.nome)} <span style="color:var(--muted)">(${n} com ficha OK)</span></label>`; }).join('') || '<small style="color:var(--muted)">Não há outra missão.</small>';
+  if (MIS) pintarLista();
+  pintarVivo();
+}
+function pintarLista() {
+  if (!D || !MIS) return;
+  const L = daMis(), P = pessoas(L), n = (f) => P.filter(FILTROS[f][1]).length;
+  $('n-cad').textContent = n('cad'); $('n-forms').textContent = n('FORMS'); $('n-pend').textContent = n('PENDENTE'); $('n-ok').textContent = n('SIM');
+  $('n-conf').innerHTML = n('conf') ? `${n('conf')} para conferir${IC('seta')}` : 'ver' + IC('seta');
+  $('filtros').innerHTML = Object.entries(FILTROS).map(([k, [nome]]) => `<button type="button" data-f="${k}" class="${k === FILTRO ? 'on' : ''}" onclick="FILTRO='${k}';pintarLista()">${nome} <b>${n(k)}</b></button>`).join('');
+  const q = sem($('q').value), qd = dig(q);
+  const V = L.filter(FILTROS[FILTRO][1]).filter((i) => !q || sem([i.nome, i.grad, i.opm, i.unidade, i.secao, i.oficio, i.obs].join(' ')).includes(q) || (qd.length >= 3 && [i.re, i.cpf, i.telefone].some((x) => dig(x).includes(qd))));
+  const grupos = new Map();
+  for (const i of V) { const k = (i.ini || '9') + '|' + i.periodo; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(i); }
+  $('lista').innerHTML = [...grupos.keys()].sort().map((k) => {
+    const g = grupos.get(k), uns = [];
+    for (const i of g) { const u = [i.secao, i.unidade].filter(Boolean).join(' · '); let x = uns.find((y) => y.u === u); if (!x) uns.push(x = { u, l: [] }); x.l.push(i); }
+    return `<div class="fic-grupo"><h3>${esc(g[0].periodo || 'Sem período')}</h3><small>${g.length} ${g.length === 1 ? 'policial' : 'policiais'}</small></div>` +
+      uns.map((x) => (x.u ? `<small style="display:block;color:var(--acc);font-weight:800;margin:10px 0 6px">${esc(x.u)}</small>` : '') + x.l.map(cartao).join('')).join('');
+  }).join('') || `<div class="bp-vazio" style="margin-top:14px">${L.length ? 'Ninguém com esse filtro.' : 'Nenhum policial nesta missão ainda.'}</div>`;
+  const os = D.oficios.filter((o) => o.missao_id === MIS);
+  $('oficios').innerHTML = os.length ? `<div class="bp-sec"><span class="bp-tile sm"><i data-ic="arquivo"></i></span><div><h2>Ofícios</h2></div></div>` + os.map((o) => `<div class="fic-p" style="grid-template-columns:1fr auto"><div><div class="nm">Ofício ${esc(o.numero || 'sem número')}</div><small>${esc([o.remetente, o.processo ? 'SEI ' + o.processo : '', o.periodos, o.qtd + ' lançados por ' + o.criado_por + ' em ' + fQuando(o.criado_em)].filter(Boolean).join(' · '))}</small></div>${o.tem_pdf ? `<button type="button" class="bp-btn sm sec" onclick="abrirPdf('${esc(o.id)}','oficio')"><i data-ic="olho"></i>Abrir PDF</button>` : ''}</div>`).join('') : '';
+  marcarVivos();
+}
+function cartao(i) {
+  const s = SIT[i.ficha] || SIT[''], c = cadDe(i), dia = emDia(i, c), ch = [], id = esc(i.id);
+  ch.push(!c ? '<span class="bp-sl crit">Sem cadastro</span>' : dia ? `<span class="bp-sl ok"><i data-ic="check"></i>Cadastro confirmado ${esc(fQuando(c.confirmado_em).slice(0, 8))}</span>` : '<span class="bp-sl pend">Tem cadastro, falta confirmar</span>');
+  if (i.tem_ficha) ch.push('<span class="bp-sl info">Ficha anexada</span>');
+  if (c && i.tem_ficha && c.atualizado_em > i.ficha_pdf_em) ch.push('<span class="bp-sl crit">Dados mudaram depois da ficha</span>');
+  if (i.assinada_sit === 'CONFERIR') ch.push('<span class="bp-sl pend"><i data-ic="assinar"></i>Assinada: conferir</span>');
+  if (i.assinada_sit === 'RECUSADA' && i.tem_assinada) ch.push('<span class="bp-sl crit">Assinada devolvida</span>');
+  if (i.cpf && !FO.cpfValido(i.cpf)) ch.push('<span class="bp-sl crit">CPF inválido</span>');
+  if (i.ni === 'SIM') ch.push('<span class="bp-sl">NI</span>'); if (i.canil === 'SIM') ch.push('<span class="bp-sl">Canil</span>'); if (i.funcao) ch.push(`<span class="bp-sl">${esc(i.funcao)}</span>`); if (i.fronteira) ch.push(`<span class="bp-sl">${esc(i.fronteira)}</span>`);
+  const b = [];
+  if (i.assinada_sit === 'CONFERIR') b.push(`<button type="button" class="bp-btn sm" onclick="conferir('${id}')"><i data-ic="assinar"></i>Conferir assinada</button>`);
+  if (i.ficha !== 'SIM') b.push(`<button type="button" class="bp-btn sm ${i.ficha === '' || i.ficha === 'NAO' ? '' : 'sec'}" ${i.telefone ? '' : 'disabled title="Sem telefone"'} onclick="whats('${id}','fazer')"><i data-ic="celular"></i>Fazer ficha</button>`,
+    `<button type="button" class="bp-btn sm ${(i.ficha === 'FORMS' && i.tem_ficha) || i.ficha === 'PENDENTE' ? '' : 'sec'}" ${i.telefone ? '' : 'disabled title="Sem telefone"'} onclick="whats('${id}','assinar')"><i data-ic="assinar"></i>Assinar ficha</button>`);
+  if (c) b.push(`<button type="button" class="bp-btn sm ${i.ficha === 'FORMS' && !i.tem_ficha ? '' : 'sec'}" onclick="verCad('${id}')"><i data-ic="arquivo"></i>Copiar para o Córtex</button>`);
+  b.push(`<button type="button" class="bp-btn sm ghost" onclick="anexar('${id}','ficha')"><i data-ic="enviar"></i>${i.tem_ficha ? 'Trocar ficha' : 'Anexar ficha'}</button>`);
+  if (i.tem_ficha) b.push(`<button type="button" class="bp-btn sm ghost" onclick="abrirPdf('${id}','ficha')"><i data-ic="olho"></i>Ficha</button>`);
+  if (i.tem_assinada) b.push(`<button type="button" class="bp-btn sm ghost" onclick="abrirPdf('${id}','assinada')"><i data-ic="olho"></i>Assinada</button>`);
+  else b.push(`<button type="button" class="bp-btn sm ghost" onclick="anexar('${id}','assinada')" title="A ficha assinada que chegou pelo WhatsApp"><i data-ic="enviar"></i>Assinada (WhatsApp)</button>`);
+  b.push(`<button type="button" class="bp-btn ic sm ghost" onclick="editar('${id}')" title="Corrigir" aria-label="Corrigir"><i data-ic="editar"></i></button>`);
+  const env = [i.pedido_em ? 'pedido ' + fQuando(i.pedido_em) : '', i.assinar_em ? 'para assinar ' + fQuando(i.assinar_em) : '', i.ok_em ? 'OK ' + fQuando(i.ok_em) : ''].filter(Boolean).join(' · ');
+  return `<div class="fic-p s-${esc(i.ficha)}" id="p-${id}" data-k="${esc(chaveP(i))}" data-cpf="${esc(i.cpf)}">
+    <div><div class="nm">${esc(i.grad)} ${esc(i.nome)}</div><small>${esc([i.re ? 'RE ' + i.re : '', i.cpf ? 'CPF ' + fCpf(i.cpf) : 'sem CPF', i.telefone ? fFone(i.telefone) : 'sem telefone', i.opm].filter(Boolean).join(' · '))}</small>
+      <div class="chips">${ch.join('')}</div>${i.obs ? `<small style="color:var(--warn)">${esc(i.obs)}</small>` : ''}</div>
+    <div><select class="fic-sel" aria-label="Situação da ficha" onchange="mudarSit('${id}',this.value)">${Object.entries(SIT).map(([k, v]) => `<option value="${k}" ${k === i.ficha ? 'selected' : ''}>${v.nome}</option>`).join('')}</select>
+      <label class="bp-check" style="margin-top:8px;font-size:13px"><input type="checkbox" ${i.cortex === 'SIM' ? 'checked' : ''} onchange="cortex('${id}',this.checked)"> Escala no Córtex</label>${env ? `<small>${esc(env)}</small>` : ''}</div>
+    <div class="bts">${b.join('')}</div></div>`;
+}
+const achaI = (id) => D.indicados.find((i) => i.id === id);
+async function faz(fn, msg) { try { const r = await fn(); if (msg) toast(typeof msg === 'function' ? msg(r) : msg); await carregar(); return r; } catch (e) { if (e.status !== 401) toast(e.message, 'err', 6000); await carregar(); } }
+const mudarSit = (id, ficha) => faz(() => salvar({ op: 'ficha', id, ficha }), 'Situação: ' + SIT[ficha].nome + '.');
+const cortex = (id, valor) => faz(() => salvar({ op: 'cortex', id, valor }));
+
+/* ============================== WhatsApp ============================== */
+function saudacao() { const h = Number(new Intl.DateTimeFormat('pt-BR', { hour: 'numeric', hour12: false, timeZone: 'America/Manaus' }).format(new Date())); return h >= 6 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite'; }
+function assinatura() {
+  const n = String((D && D.nome) || '');
+  return /\b(SD|CB|SGT|ST|SUB|TEN|CAP|MAJ|TC|CEL|TENENTE|CAPIT)/i.test(n) ? `Sou *${n.toUpperCase()}* da Seção Operacional do *BPFRON*.` : 'Sou da Seção Operacional do *BPFRON*.';
+}
+const periodosDe = (i) => [...new Set(D.indicados.filter((x) => x.missao_id === i.missao_id && chaveP(x) === chaveP(i)).sort((a, b) => (a.ini < b.ini ? -1 : 1)).map((x) => x.periodo).filter(Boolean))].join(' e ');
+function mensagem(i, tipo) {
+  const op = (D.missoes.find((m) => m.id === i.missao_id) || {}).operacao || D.operacao_padrao, per = periodosDe(i), nome = i.nome;
+  if (tipo === 'fazer') {
+    const tem = !!cadDe(i);
+    return `${saudacao()}, ${nome}!\n\n${assinatura()} Preciso que ${tem ? 'confira os seus dados no' : 'preencha o'} link que vou enviar para eu confeccionar sua ficha para participar da *${op}* - período de *${per}*.\n\n${LINK()}` +
+      (tem ? '\n\nVocê já tem cadastro: entre com CPF, data de nascimento e RE, confira os dados e clique em *Feito*.' : '');
+  }
+  return `${saudacao()}, ${nome}!\n\n${assinatura()}\n\nSegue em anexo sua ficha para participação na *${op}* - período de *${per}*.\n\nATENÇÃO: Antes de assinar, verifique se os seguintes dados estão corretos na ficha:\n\n- Nome completo\n- CPF\n- RG\n- Unidade atual\n- E-mail\n- Telefone\n- Conta bancária\n\nCaso algum dado esteja incorreto ou desatualizado, nos informe ANTES de assinar.\n\nApós confirmar que está tudo certo, assine digitalmente pelo Gov.br e devolva o documento assinado.` +
+    (i.tem_ficha ? `\n\nSe preferir, baixe a ficha e devolva a assinada por aqui: ${LINK()}` : '') + '\n\n*BPFRON/PMRO*';
+}
+const fone55 = (t) => { const d = dig(t); return d.startsWith('55') && d.length >= 12 ? d : '55' + d; };
+let janelaWa = null;
+function abrirWa(i, tipo, modo) {
+  const q = 'phone=' + fone55(i.telefone) + '&text=' + encodeURIComponent(mensagem(i, tipo));
+  if (modo === 'app') { const a = document.createElement('a'); a.href = 'whatsapp://send?' + q; a.click(); return; }
+  const u = 'https://web.whatsapp.com/send?' + q;
+  if (/Android|iPhone|iPad/i.test(navigator.userAgent)) { window.open('https://wa.me/' + fone55(i.telefone) + '?text=' + encodeURIComponent(mensagem(i, tipo)), '_blank', 'noopener'); return; }
+  if (janelaWa && !janelaWa.closed) { try { janelaWa.location.href = u; janelaWa.focus(); return; } catch (e) { /* abre outra */ } }
+  janelaWa = window.open(u, 'bpfron_wa');
+}
+// fora da fila: abre a fila só com essa pessoa (a mesma janela de enviar e confirmar)
+function whats(id, tipo) { FILA = { l: [{ i: achaI(id), tipo }], n: 0, so: true }; pintarFila(); abrir('m-fila'); }
+
+let FILA = null;
+function abrirFila() {
+  if (!MIS) { toast('Crie ou escolha a missão primeiro.', 'err'); return; }
+  FILA = null;
+  const P = pessoas(daMis()), a = P.filter((i) => i.ficha === '' || i.ficha === 'NAO'), b = P.filter((i) => i.ficha === 'PENDENTE'), semTel = [...a, ...b].filter((i) => !i.telefone);
+  $('fila-tit').textContent = 'Quem está sem ficha'; $('fila-sub').textContent = missao().nome;
+  const bloco = (t, l, tipo, cl) => `<div class="fic-bl">${t} <span class="bp-sl ${cl}">${l.length}</span></div>` +
+    (l.length ? `<div class="fic-marca" style="max-height:26vh;overflow:auto">${l.map((i) => `<label class="bp-check"><input type="checkbox" data-t="${tipo}" value="${esc(i.id)}" ${i.telefone ? 'checked' : 'disabled'}> ${esc(i.grad)} ${esc(i.nome)} <span style="color:var(--muted)">${i.telefone ? fFone(i.telefone) : 'sem telefone'}</span></label>`).join('')}</div><div class="fic-linha" style="margin-top:8px"><button type="button" class="bp-btn sm" onclick="iniciarFila('${tipo}')"><i data-ic="iniciar"></i>Enviar em fila</button></div>` : '<small style="color:var(--muted)">Ninguém.</small>');
+  $('fila-corpo').innerHTML = bloco('Falta fazer ou confirmar o cadastro', a, 'fazer', 'crit') + bloco('Não assinou', b, 'assinar', 'pend') + (semTel.length ? `<div class="bp-aviso pend" style="margin-top:14px"><i data-ic="alerta"></i><div>${semTel.length} sem telefone: corrija no cadastro da missão.</div></div>` : '');
+  abrir('m-fila');
+}
+function iniciarFila(tipo) {
+  const l = [...$('fila-corpo').querySelectorAll(`input[data-t="${tipo}"]:checked`)].map((x) => ({ i: achaI(x.value), tipo })).filter((x) => x.i);
+  if (!l.length) { toast('Marque pelo menos uma pessoa.', 'err'); return; }
+  FILA = { l, n: 0 }; pintarFila();
+}
+function pintarFila() {
+  const f = FILA, x = f.l[f.n];
+  if (!x) { $('fila-tit').textContent = 'Fila concluída'; $('fila-sub').textContent = `${f.env || 0} enviado(s)`; $('fila-corpo').innerHTML = `<div class="bp-aviso ok"><i data-ic="ok"></i><div>Todos os contatos da fila foram feitos.</div></div><div class="bp-modal-pe"><button type="button" class="bp-btn" onclick="fechar('m-fila')">Fechar</button></div>`; return; }
+  $('fila-tit').textContent = x.tipo === 'fazer' ? 'Fazer ficha' : 'Assinar ficha';
+  $('fila-sub').textContent = (f.so ? '' : `${f.n + 1} de ${f.l.length} — `) + `${x.i.grad} ${x.i.nome} · ${fFone(x.i.telefone)}`;
+  const cel = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  $('fila-corpo').innerHTML = (f.so ? '' : `<div class="bp-prog" style="margin-bottom:12px"><i style="--p:${Math.round(100 * f.n / f.l.length)}%"></i></div>`) + `<div class="fic-fila" id="fila-msg">${esc(mensagem(x.i, x.tipo))}</div>` +
+    (x.tipo === 'assinar' ? `<div class="bp-aviso" style="margin-top:12px"><i data-ic="info"></i><div>${x.i.tem_ficha ? 'A ficha está anexada no site: o link para baixar vai na mensagem. Se quiser mandar também o arquivo, anexe no WhatsApp.' : 'Anexe o PDF da ficha no WhatsApp, ou anexe aqui no site antes (botão Anexar ficha).'}</div></div>` : '') +
+    `<div class="fic-linha" style="margin-top:14px"><button type="button" class="bp-btn" onclick="abrirWa(FILA.l[FILA.n].i,FILA.l[FILA.n].tipo,'web')"><i data-ic="celular"></i>${cel ? 'Abrir WhatsApp' : 'WhatsApp Web'}</button>${cel ? '' : `<button type="button" class="bp-btn sec" onclick="abrirWa(FILA.l[FILA.n].i,FILA.l[FILA.n].tipo,'app')"><i data-ic="celular"></i>Aplicativo</button>`}<button type="button" class="bp-btn ghost" onclick="copiarTexto($('fila-msg').textContent,'Mensagem copiada.')"><i data-ic="arquivo"></i>Copiar</button></div>
+    <div class="bp-modal-pe">${f.so ? '' : `<button type="button" class="bp-btn ghost" ${f.n ? '' : 'disabled'} onclick="FILA.n--;pintarFila()"><i data-ic="voltar"></i>Voltar</button><button type="button" class="bp-btn ghost" onclick="FILA.n++;pintarFila()">Pular</button>`}<button type="button" class="bp-btn" id="fila-ja" onclick="jaEnviei()"><i data-ic="check"></i>Já enviei${f.so ? '' : ', próximo'}</button></div>`;
+}
+async function jaEnviei() {
+  const x = FILA.l[FILA.n], bt = $('fila-ja'); bt.disabled = true;
+  try { await salvar({ op: 'contato', id: x.i.id, tipo: x.tipo }); FILA.env = (FILA.env || 0) + 1; FILA.n++; if (FILA.so) fechar('m-fila'); else pintarFila(); toast('Marcado.'); agendar(); }
+  catch (e) { toast(e.message, 'err'); bt.disabled = false; }
+}
+
+/* ============================== lançar ofício ============================== */
+let LAN = null;
+function abrirLancar() { LAN = null; $('lan-erro').textContent = ''; $('lan-cola').value = ''; $('lan-1').style.display = ''; $('lan-2').style.display = 'none'; abrir('m-lancar'); }
+function lanVoltar() { $('lan-1').style.display = ''; $('lan-2').style.display = 'none'; $('lan-erro').textContent = ''; }
+async function lerArquivo(f) {
+  if (!f) return;
+  $('lan-erro').textContent = '';
+  if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { $('lan-erro').textContent = 'Escolha o PDF do ofício.'; return; }
+  if (f.size > 10 * 1024 * 1024) { $('lan-erro').textContent = 'PDF grande demais (máximo 10 MB).'; return; }
+  const carga = window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Lendo o ofício') : null;
+  try {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    const pdf = await b64De(bytes);
+    if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Confira a internet e tente de novo.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const doc = await pdfjsLib.getDocument({ data: bytes }).promise, pgs = [];
+    for (let i = 1; i <= doc.numPages; i++) { const t = await (await doc.getPage(i)).getTextContent(); pgs.push(t.items.map((x) => ({ s: x.str, x: x.transform[4], y: x.transform[5], w: x.width }))); }
+    const r = FO.lerOficio(pgs);
+    if (!r.linhas.length) { $('lan-erro').textContent = r.avisos[0] || 'Não achei policiais neste PDF.'; return; }
+    iniciarLan(r.oficio, r.linhas, pdf);
+  } catch (e) { $('lan-erro').textContent = /password/i.test(e.message || '') ? 'O PDF tem senha.' : (e.message || 'Não consegui ler o PDF.'); }
+  finally { if (carga) carga.fechar(); }
+}
+const b64De = (bytes) => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(new Blob([bytes])); });
+function lerCola() {
+  const l = FO.lerColado($('lan-cola').value);
+  if (!l.length) { $('lan-erro').textContent = 'Não achei nenhuma linha com CPF ou matrícula.'; return; }
+  iniciarLan({ numero: '', processo: '', sei: '', secao: '', periodos: [] }, l, null);
+}
+const MESN = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+function iniciarLan(oficio, linhas, pdf) {
+  LAN = { oficio, pdf, linhas: linhas.map((l) => ({ ...l, usar: true })) };
+  const ini = linhas.map((l) => l.ini).filter(Boolean).sort()[0], nome = ini ? MESN[+ini.slice(5, 7) - 1] + ' ' + ini.slice(0, 4) : '';
+  const ja = D.missoes.find((m) => sem(m.nome) === sem(nome));
+  $('lan-mis').innerHTML = '<option value="">Missão nova…</option>' + ordemMis().map((m) => `<option value="${esc(m.id)}">${esc(m.nome)}</option>`).join('');
+  $('lan-mis').value = ja ? ja.id : ''; $('lan-mis-nome').value = nome; lanMis();
+  $('lan-num').value = oficio.numero || ''; $('lan-proc').value = oficio.processo || ''; $('lan-sec').value = oficio.secao || '';
+  $('lan-erro2').textContent = '';
+  $('lan-1').style.display = 'none'; $('lan-2').style.display = '';
+  pintarLan();
+}
+function lanMis() { $('lan-mis-cx').style.display = $('lan-mis').value ? 'none' : ''; if (LAN) pintarLan(); }
+function lanPeriodos() {
+  const m = new Map();
+  for (const p of [...(LAN.oficio.periodos || []), ...LAN.linhas, ...D.indicados.filter((i) => i.missao_id === $('lan-mis').value)]) if (p.ini && p.fim) m.set(p.ini + '|' + p.fim, FO.txtPeriodo(p));
+  return [...m.entries()].sort();
+}
+// o que o sistema sabe sobre a linha
+function avisosLan(l, n) {
+  const a = [], c = achaCad(l), mal = l.cpf && !FO.cpfValido(l.cpf);
+  const bt = (campo, v, t) => `<button type="button" onclick="lanUsar(${n},'${campo}','${esc(v)}')">${t}</button>`;
+  if (c) a.push(`<span class="fic-av ok">${IC('check')}Já tem cadastro${c.confirmado_em ? ', confirmado em ' + fQuando(c.confirmado_em).slice(0, 8) : c.forms_em ? ', do Forms de ' + fQuando(c.forms_em).slice(0, 8) : ''}</span>`);
+  else a.push(`<span class="fic-av info">${IC('info')}Sem cadastro: vai preencher</span>`);
+  if (c && c.cpf && c.cpf !== l.cpf && FO.cpfValido(c.cpf)) a.push(`<span class="fic-av crit">${IC('alerta')}${mal ? 'CPF do ofício inválido' : l.cpf ? 'CPF diferente do cadastro' : 'Sem CPF no ofício'}. No cadastro: ${fCpf(c.cpf)} ${bt('cpf', c.cpf, 'Usar')}</span>`);
+  else if (mal) a.push(`<span class="fic-av crit">${IC('alerta')}CPF inválido</span>`);
+  else if (!l.cpf) a.push(`<span class="fic-av crit">${IC('alerta')}Sem CPF</span>`);
+  if (c && c.celular && dig(c.celular) !== dig(l.telefone)) a.push(`<span class="fic-av">${IC('celular')}Telefone no cadastro: ${fFone(c.celular)} ${bt('telefone', dig(c.celular), 'Usar')}</span>`);
+  for (const x of l.avisos || []) if (/elefone|período|Repetido/.test(x) && !l['ok_' + (/elefone/.test(x) ? 'telefone' : 'x')]) a.push(`<span class="fic-av">${IC('alerta')}${esc(x)}</span>`);
+  const ok = D.indicados.find((i) => i.ficha === 'SIM' && i.missao_id !== $('lan-mis').value && (l.cpf ? i.cpf === l.cpf : sem(i.nome) === sem(l.nome)));
+  if (ok) a.push(`<span class="fic-av ok">${IC('ok')}Ficha OK em ${esc((D.missoes.find((m) => m.id === ok.missao_id) || {}).nome)}</span>`);
+  const dup = D.indicados.find((i) => i.missao_id === $('lan-mis').value && i.ini === l.ini && i.fim === l.fim && (l.cpf && i.cpf ? i.cpf === l.cpf : sem(i.nome) === sem(l.nome)));
+  if (dup) a.push(`<span class="fic-av">${IC('info')}Já está lançado neste período: não entra de novo</span>`);
+  return a.join('');
+}
+function pintarLan() {
+  const ps = lanPeriodos();
+  $('lan-tab').innerHTML = LAN.linhas.map((l, n) => {
+    const inp = (k, w, cl) => `<input value="${esc(k === 'cpf' ? fCpf(l.cpf) : k === 'telefone' ? fFone(l.telefone) : l[k])}" style="min-width:${w}px" class="${cl || ''}" aria-label="${k}" onchange="lanMuda(${n},'${k}',this.value)">`;
+    const k = l.ini && l.fim ? l.ini + '|' + l.fim : '';
+    return `<tr class="${l.usar ? '' : 'fora'}"><td><input type="checkbox" aria-label="Lançar" ${l.usar ? 'checked' : ''} onchange="LAN.linhas[${n}].usar=this.checked;pintarLan()"></td>
+      <td><select style="min-width:150px" class="${k ? '' : 'mal'}" aria-label="Período" onchange="lanPer(${n},this.value)"><option value="">escolha…</option>${ps.map(([v, t]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${t}</option>`).join('')}<option value="novo">outro…</option></select></td>
+      <td>${inp('grad', 74)}</td><td>${inp('nome', 220, l.nome ? '' : 'mal')}</td><td>${inp('re', 92)}</td><td>${inp('cpf', 122, l.cpf && FO.cpfValido(l.cpf) ? '' : 'mal')}</td><td>${inp('telefone', 122, l.telefone ? '' : 'mal')}</td><td>${inp('unidade', 80)}</td><td>${inp('opm', 130)}</td></tr>
+      <tr class="obs ${l.usar ? '' : 'fora'}"><td></td><td colspan="8">${avisosLan(l, n)}</td></tr>`;
+  }).join('');
+  const us = LAN.linhas.filter((l) => l.usar), pes = new Set(us.map((l) => l.cpf || sem(l.nome))).size;
+  const mal = us.filter((l) => (l.cpf && !FO.cpfValido(l.cpf)) || !l.ini || !l.nome).length, sc = new Set(us.filter((l) => !achaCad(l)).map((l) => l.cpf || sem(l.nome))).size;
+  $('lan-resumo').innerHTML = `<b style="color:var(--t1)">${us.length}</b> ${us.length === 1 ? 'linha' : 'linhas'}, <b style="color:var(--t1)">${pes}</b> ${pes === 1 ? 'policial' : 'policiais'}: ${pes - sc} já têm cadastro e ${sc} não têm.` + (mal ? ` <b style="color:var(--crit)">${mal} para corrigir antes de lançar.</b>` : '');
+  $('lan-ok').disabled = !us.length || !!mal;
+  $('lan-ok').innerHTML = IC('check') + 'Lançar ' + us.length;
+}
+function lanMuda(n, k, v) { const l = LAN.linhas[n]; l[k] = k === 'cpf' ? FO.cpf11(v) : k === 'telefone' ? FO.normFone(v).fone : k === 're' ? dig(v) : /nome|grad/.test(k) ? v.toUpperCase().trim() : v.trim(); if (k === 'telefone') l.ok_telefone = true; pintarLan(); }
+function lanUsar(n, k, v) { const l = LAN.linhas[n]; for (const x of LAN.linhas) if (x === l || (l.re && x.re === l.re) || sem(x.nome) === sem(l.nome)) { x[k] = v; x['ok_' + k] = true; if (k === 'cpf') x.avisos = (x.avisos || []).filter((a) => !/CPF/.test(a)); } pintarLan(); }
+function lanPer(n, v) {
+  const l = LAN.linhas[n];
+  if (v === 'novo') { const t = window.prompt('Período (ex.: 13/12 a 22/12/2026)'); const p = t && FO.lerPeriodos(t)[0]; if (!p) { if (t) toast('Não entendi o período. Use 13/12 a 22/12/2026.', 'err'); pintarLan(); return; } l.ini = p.ini; l.fim = p.fim; }
+  else { [l.ini, l.fim] = v ? v.split('|') : ['', '']; }
+  l.periodo = FO.txtPeriodo(l); if (l.ini) l.avisos = (l.avisos || []).filter((a) => !/período/.test(a));
+  pintarLan();
+}
+function lanMais() { const u = LAN.linhas[LAN.linhas.length - 1] || {}; LAN.linhas.push({ usar: true, grad: '', nome: '', re: '', cpf: '', telefone: '', unidade: u.unidade || '', opm: '', funcao: '', ni: '', ini: u.ini || '', fim: u.fim || '', periodo: u.periodo || '', avisos: [] }); pintarLan(); }
+async function lancar(forcar) {
+  const bt = $('lan-ok'); $('lan-erro2').textContent = ''; bt.disabled = true; bt.innerHTML = '<span class="bp-gira"></span>Lançando…';
+  try {
+    let mid = $('lan-mis').value;
+    if (!mid) { const nome = $('lan-mis-nome').value.trim(); if (!nome) throw new Error('Dê um nome para a missão.'); mid = (await salvar({ op: 'missao', nome })).id; await recarregarSo(); $('lan-mis').innerHTML += `<option value="${esc(mid)}">${esc(nome)}</option>`; $('lan-mis').value = mid; lanMis(); bt.disabled = true; }
+    const of = { ...LAN.oficio, numero: $('lan-num').value.trim(), processo: $('lan-proc').value.trim(), secao: $('lan-sec').value.trim() };
+    const linhas = LAN.linhas.filter((l) => l.usar).map((l) => ({ grad: l.grad, nome: l.nome, re: l.re, cpf: l.cpf, telefone: l.telefone, opm: l.opm, unidade: l.unidade, funcao: l.funcao, ni: l.ni, ini: l.ini, fim: l.fim, secao: of.secao }));
+    const r = await salvar({ op: 'lancar', missao_id: mid, oficio: of, linhas, pdf: LAN.pdf || undefined, forcar: forcar === true });
+    MIS = mid; ls('fic_missao', mid); FILTRO = 'todos';
+    fechar('m-lancar'); await carregar();
+    toast(`${r.lancados} lançados.` + (r.pulados.length ? ` ${r.pulados.length} já estavam.` : ''), '', 5000);
+    if (r.aviso) toast(r.aviso, 'err', 9000);
+  } catch (e) {
+    const er = e.d && e.d.erros ? ' ' + e.d.erros.map((x) => `${x.nome || 'linha ' + x.linha}: ${x.erros.join(', ')}`).join('; ') : '';
+    $('lan-erro2').innerHTML = esc(e.message + er) + (e.d && e.d.error === 'oficio_repetido' ? ' <button type="button" class="bp-btn sm sec" onclick="lancar(true)">Lançar só quem falta</button>' : '');
+  } finally { if (LAN) pintarLan(); }
+}
+async function recarregarSo() { D = await apiJson('/api/fichas'); indexar(); }
+
+/* ============================== cadastro / Córtex ============================== */
+let CAD = null, CADED = false;
+async function verCad(id) {
+  IND = achaI(id); const c = cadDe(IND); if (!c) return;
+  $('cad-tit').textContent = `${IND.grad} ${IND.nome}`; $('cad-sub').textContent = 'Carregando…'; $('cad-corpo').innerHTML = ''; $('cad-pe').innerHTML = ''; $('cad-aviso').innerHTML = ''; $('cad-erro').textContent = '';
+  abrir('m-cad');
+  try { CAD = await apiJson('/api/fichas/cadastro?id=' + encodeURIComponent(c.id)); CADED = false; pintarCad(); }
+  catch (e) { $('cad-sub').textContent = e.message; }
+}
+const valCad = (c, v) => (c.tipo === 'data' ? fDia(v) : c.tipo === 'cpf' ? fCpf(v) : c.tipo === 'fone' ? fFone(v) : c.tipo === 'cep' && v.length === 8 ? v.slice(0, 5) + '-' + v.slice(5) : v);
+function pintarCad() {
+  const k = CAD.cadastro;
+  $('cad-sub').textContent = [k.confirmado_em ? 'Confirmado pelo policial em ' + fQuando(k.confirmado_em) : 'Ainda não confirmado', k.origem === 'FORMS' ? 'veio do Forms de ' + fQuando(k.forms_em).slice(0, 8) : 'feito pelo site', k.atualizado_em ? 'mudou em ' + fQuando(k.atualizado_em) : ''].filter(Boolean).join(' · ');
+  const dif = [];
+  if (IND.telefone && dig(k.celular) !== dig(IND.telefone)) dif.push(`telefone (missão ${fFone(IND.telefone)}, cadastro ${fFone(k.celular)})`);
+  if (sem(k.nome) !== sem(IND.nome)) dif.push(`nome (missão ${IND.nome}, cadastro ${k.nome})`);
+  $('cad-aviso').innerHTML = (!emDia(IND, k) ? '<div class="bp-aviso pend"><i data-ic="alerta"></i><div>O policial <b>ainda não confirmou</b> estes dados para esta missão.</div></div>' : '') + (dif.length ? `<div class="bp-aviso" style="margin-top:8px"><i data-ic="info"></i><div>Diferente da missão: ${esc(dif.join('; '))}.</div></div>` : '');
+  $('cad-corpo').innerHTML = CAD.blocos.map((b) => `<div class="fic-bl">${esc(b.nome)}</div><div class="fic-dados">` + b.campos.map((c) => {
+    const v = k[c.id] || '';
+    if (CADED) return `<div class="fic-d"><div class="tx"><small>${esc(c.nome)}</small>${c.tipo === 'lista' ? `<select data-c="${c.id}"><option></option>${[...new Set([...c.op, v].filter(Boolean))].map((o) => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>` : `<input data-c="${c.id}" ${c.tipo === 'data' ? 'type="date"' : ''} value="${esc(c.tipo === 'data' ? v : valCad(c, v))}">`}</div></div>`;
+    return `<div class="fic-d" data-v="${esc(valCad(c, v))}"><div class="tx"><small>${esc(c.nome)}</small><b>${v ? esc(valCad(c, v)) : '<span style="color:var(--dim)">—</span>'}</b></div>${v ? `<button type="button" class="bp-btn sm sec" onclick="copiarCampo(this)">Copiar</button>` : ''}</div>`;
+  }).join('') + '</div>').join('') + (!CADED && CAD.historico.length ? `<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--t2);font-weight:700">Histórico do cadastro</summary>${histHtml(CAD.historico)}</details>` : '');
+  $('cad-pe').innerHTML = CADED
+    ? `<button type="button" class="bp-btn ghost" onclick="CADED=false;pintarCad()">Cancelar</button><button type="button" class="bp-btn" id="cad-ok" onclick="salvarCad()"><i data-ic="check"></i>Salvar correção</button>`
+    : `<button type="button" class="bp-btn ghost" onclick="CADED=true;pintarCad()"><i data-ic="editar"></i>Corrigir</button><button type="button" class="bp-btn sec" onclick="copiarTudo()"><i data-ic="arquivo"></i>Copiar tudo</button><button type="button" class="bp-btn sec" onclick="anexar(IND.id,'ficha')"><i data-ic="enviar"></i>Anexar a ficha (PDF)</button><button type="button" class="bp-btn" onclick="fechar('m-cad');whats(IND.id,'assinar')"><i data-ic="assinar"></i>Mandar assinar</button>`;
+}
+function copiarCampo(bt) { const x = bt.closest('.fic-d'); copiarTexto(x.dataset.v); document.querySelectorAll('.fic-d.copiado').forEach((e) => e.classList.remove('copiado')); x.classList.add('copiado'); bt.textContent = 'Copiado'; setTimeout(() => { bt.textContent = 'Copiar'; }, 1500); }
+function copiarTudo() { copiarTexto(CAD.blocos.map((b) => b.nome.toUpperCase() + '\n' + b.campos.map((c) => `${c.nome}: ${valCad(c, CAD.cadastro[c.id] || '')}`).join('\n')).join('\n\n'), 'Todos os dados copiados.'); }
+async function salvarCad() {
+  const dados = {}; $('cad-corpo').querySelectorAll('[data-c]').forEach((e) => { dados[e.dataset.c] = e.value; });
+  $('cad-erro').textContent = ''; $('cad-ok').disabled = true;
+  try { await salvar({ op: 'cadastro', id: CAD.cadastro.id, base: CAD.cadastro.atualizado_em, dados }); toast('Cadastro corrigido.'); CAD = await apiJson('/api/fichas/cadastro?id=' + encodeURIComponent(CAD.cadastro.id)); CADED = false; pintarCad(); carregar(); }
+  catch (e) { $('cad-erro').textContent = e.message; $('cad-ok').disabled = false; }
+}
+const histHtml = (l) => l.map((h) => `<div class="fic-ev"><span><b>${esc(h.acao)}</b> por ${esc(h.quem)}${h.resumo ? ': ' + esc(h.resumo) : ''}</span><small>${fQuando(h.quando)}</small></div>`).join('') || '<small style="color:var(--muted)">Sem registros.</small>';
+
+/* ============================== PDFs ============================== */
+async function abrirPdf(id, tipo) {
+  const w = window.open('', '_blank');
+  try { const r = await api('/api/fichas/arquivo?id=' + encodeURIComponent(id) + '&tipo=' + tipo); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || 'Não consegui abrir.'); const u = URL.createObjectURL(await r.blob()); if (w) w.location.href = u; else location.href = u; setTimeout(() => URL.revokeObjectURL(u), 120000); }
+  catch (e) { if (w) w.close(); toast(e.message, 'err'); }
+}
+let ANEXO = null;
+function anexar(id, tipo) { ANEXO = { id, tipo }; $('arq-pdf').click(); }
+async function anexarArq(f) {
+  if (!f || !ANEXO) return;
+  if (f.size > 10 * 1024 * 1024) { toast('PDF grande demais (máximo 10 MB).', 'err'); return; }
+  const carga = window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Guardando o PDF') : null;
+  try { await apiJson('/api/fichas/anexar', { ...ANEXO, pdf: await b64De(new Uint8Array(await f.arrayBuffer())) }); toast(ANEXO.tipo === 'assinada' ? 'Ficha assinada guardada: ficha OK.' : 'Ficha guardada. O policial já pode baixar no site.'); await carregar(); }
+  catch (e) { toast(e.message, 'err', 6000); } finally { if (carga) carga.fechar(); }
+}
+function conferir(id) { IND = achaI(id); $('ass-sub').textContent = `${IND.grad} ${IND.nome} · enviada ${fQuando(IND.assinada_em)}`; $('ass-mot').value = ''; $('ass-erro').textContent = ''; abrir('m-ass'); }
+async function decidir(decisao) { try { await salvar({ op: 'assinada', id: IND.id, decisao, motivo: $('ass-mot').value.trim() }); fechar('m-ass'); toast(decisao === 'ok' ? 'Ficha OK.' : 'Devolvida. O policial vê o motivo no site.'); carregar(); } catch (e) { $('ass-erro').textContent = e.message; } }
+
+/* ============================== editar / excluir ============================== */
+const CAMPOS_IND = [['grad', 'Graduação'], ['nome', 'Nome'], ['re', 'RE'], ['cpf', 'CPF'], ['telefone', 'Telefone'], ['unidade', 'Unidade'], ['opm', 'OPM'], ['secao', 'De onde veio'], ['funcao', 'Função'], ['ini', 'Início', 'date'], ['fim', 'Término', 'date'], ['ni', 'NI'], ['canil', 'Canil'], ['fronteira', 'Fronteira/Divisa'], ['obs', 'Observação']];
+function editar(id) {
+  IND = achaI(id); $('ind-sub').textContent = IND.periodo; $('ind-erro').textContent = ''; $('ind-hist').innerHTML = ''; document.querySelector('#m-ind details').open = false;
+  $('ind-form').innerHTML = CAMPOS_IND.map(([k, n, t]) => `<div class="bp-campo ${k === 'nome' || k === 'obs' ? 'inteira' : ''}"><label for="i-${k}">${n}</label><div class="bp-in">${k === 'ni' || k === 'canil' ? `<select id="i-${k}">${['', 'SIM', 'NÃO'].map((o) => `<option ${o === IND[k] ? 'selected' : ''}>${o}</option>`).join('')}</select>` : `<input id="i-${k}" ${t ? 'type="' + t + '"' : ''} value="${esc(k === 'cpf' ? (IND.cpf ? fCpf(IND.cpf) : '') : k === 'telefone' ? fFone(IND.telefone) : IND[k])}">`}</div></div>`).join('');
+  abrir('m-ind');
+}
+async function verHist() { $('ind-hist').textContent = 'carregando…'; try { $('ind-hist').innerHTML = histHtml((await apiJson('/api/fichas/historico?id=' + encodeURIComponent(IND.id))).historico); } catch (e) { $('ind-hist').textContent = e.message; } }
+async function salvarInd() {
+  const dados = {}; for (const [k] of CAMPOS_IND) dados[k] = $('i-' + k).value;
+  $('ind-erro').textContent = ''; $('ind-ok').disabled = true;
+  try { await salvar({ op: 'indicado', id: IND.id, dados }); fechar('m-ind'); toast('Salvo.'); carregar(); } catch (e) { $('ind-erro').textContent = e.message; } finally { $('ind-ok').disabled = false; }
+}
+let EXC = null;
+function pedirSenha(op) {
+  EXC = { op, id: op === 'excluir_missao' ? MIS : IND.id };
+  $('sx-sub').textContent = op === 'excluir_missao' ? `A missão ${missao().nome} e os indicados dela saem da tela (ficam na planilha).` : `${IND.nome} · ${IND.periodo} sai da missão (fica na planilha).`;
+  $('sx-pass').value = ''; $('sx-mot').value = ''; $('sx-erro').textContent = ''; abrir('m-senha'); setTimeout(() => $('sx-pass').focus(), 80);
+}
+async function excluir() { try { await salvar({ ...EXC, senha: $('sx-pass').value, motivo: $('sx-mot').value }); ['m-senha', 'm-ind', 'm-mis'].forEach(fechar); if (EXC.op === 'excluir_missao') MIS = null; toast('Excluído.'); carregar(); } catch (e) { $('sx-erro').textContent = e.message; } }
+let MISED = null;
+function abrirMissao(ed) { MISED = ed ? missao() : null; $('mis-tit').textContent = ed ? 'Editar missão' : 'Nova missão'; $('mis-nome').value = ed ? MISED.nome : ''; $('mis-op').value = ed ? MISED.operacao : D.operacao_padrao; $('mis-exc').style.display = ed ? '' : 'none'; $('mis-erro').textContent = ''; abrir('m-mis'); }
+async function salvarMissao() { try { const r = await salvar({ op: 'missao', id: MISED ? MISED.id : undefined, nome: $('mis-nome').value, operacao: $('mis-op').value }); MIS = r.id; ls('fic_missao', MIS); fechar('m-mis'); carregar(); } catch (e) { $('mis-erro').textContent = e.message; } }
+
+/* ============================== funções ============================== */
+const fmsg = (t, cl) => { $('func-msg').className = 'bp-msg ' + (cl || ''); $('func-msg').innerHTML = t; };
+async function arrumar() {
+  if (!MIS) return fmsg('Escolha a missão primeiro.', 'err');
+  try { const r = await salvar({ op: 'arrumar', missao_id: MIS, quais: [...document.querySelectorAll('#func-arrumar input:checked')].map((x) => x.value) }); fmsg(`Zeros corrigidos: ${r.zeros}. CPF achados: ${r.cpf}. Com cadastro: ${r.cadastro}. Ficha OK sincronizada: ${r.sincronizou}.`, 'ok'); carregar(); } catch (e) { fmsg(esc(e.message), 'err'); }
+}
+async function trazerOk() {
+  if (!MIS) return fmsg('Escolha a missão primeiro.', 'err');
+  try { const r = await salvar({ op: 'ficha_ok_anteriores', missao_id: MIS, de: [...document.querySelectorAll('#func-de input:checked')].map((x) => x.value) }); fmsg(`${r.total} linhas marcadas Ficha OK: ${r.por_cpf} por CPF e ${r.por_nome} pelo nome.`, 'ok'); carregar(); } catch (e) { fmsg(esc(e.message), 'err'); }
+}
+async function importar(fonte, bt) {
+  bt.disabled = true; fmsg('<span class="bp-gira"></span> Lendo a planilha antiga…');
+  try {
+    const r = await apiJson('/api/fichas/importar', { fonte });
+    fmsg(fonte === 'forms' ? `${r.lidos} respostas lidas: <b>${r.novos}</b> cadastros novos, ${r.ja_tinha} já estavam, ${r.repetidos} respostas repetidas (ficou a mais nova).` + (r.cpf_invalido.length ? `<br>CPF inválido no Forms: ${r.cpf_invalido.map((x) => esc(`${x.nome} (${x.cpf})`)).join('; ')}.` : '') + (r.sem_re.length ? `<br>Sem RE: ${r.sem_re.map(esc).join('; ')}.` : '')
+      : `${r.indicados} indicados trazidos.<br>` + r.abas.map((a) => esc(a.aba) + ': ' + (a.pulou ? 'já estava' : a.qtd + (a.ok ? ` (${a.ok} com ficha OK)` : ''))).join(' · '), 'ok');
+    carregar();
+  } catch (e) { fmsg(esc(e.message) + (e.d && e.d.conta ? `<br>Conta para compartilhar: <b>${esc(e.d.conta)}</b>` : ''), 'err'); } finally { bt.disabled = false; }
+}
+
+/* ============================== ao vivo ============================== */
+let WSV = null, TENTA = 0, EVS = [], PRE = [], PING = null, AG = null;
+function agendar() { clearTimeout(AG); AG = setTimeout(() => { if (D) carregar(); }, 700); }
+function fecharVivo() { clearInterval(PING); if (WSV) { const w = WSV; WSV = null; try { w.close(); } catch (e) {} } $('vivo-luz').classList.remove('on'); }
+function ligarVivo() {
+  if (WSV || !('WebSocket' in window) || !ls('bp_token')) return;
+  const w = WSV = new WebSocket(API_BASE.replace(/^http/, 'ws') + '/api/fichas/ao-vivo?t=' + encodeURIComponent(ls('bp_token')));
+  w.onopen = () => { TENTA = 0; $('vivo-luz').classList.add('on'); clearInterval(PING); PING = setInterval(() => { try { w.send('{"t":"ping"}'); } catch (e) {} }, 25000); };
+  w.onmessage = (m) => {
+    let d; try { d = JSON.parse(m.data); } catch (e) { return; }
+    if (d.t === 'hist') { EVS = d.eventos || []; pintarVivo(); }
+    if (d.t === 'online') { PRE = d.pol || []; pintarVivo(); marcarVivos(); }
+    if (d.t === 'evento') { EVS.unshift(d.e); EVS = EVS.slice(0, 200); if (d.e.avisa) notificar(d.e); pintarVivo(); if (d.e.por !== (D && D.usuario)) agendar(); }
+  };
+  w.onclose = () => { if (WSV !== w) return; WSV = null; $('vivo-luz').classList.remove('on'); PRE = []; pintarVivo(); clearInterval(PING); if (D && ls('bp_token')) setTimeout(ligarVivo, Math.min(30000, 2000 * 2 ** TENTA++)); };
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D) { ligarVivo(); agendar(); } });
+const TXT_EV = {
+  cadastro_novo: (e) => `<b>${esc(e.quem)}</b> fez o cadastro`, cadastro_feito: (e) => `<b>${esc(e.quem)}</b> ${esc(e.detalhe || 'confirmou o cadastro')}`, assinada: (e) => `<b>${esc(e.quem)}</b> mandou a ficha assinada`,
+  lancou: (e) => `${esc(e.nome)} lançou ${esc(e.detalhe)}`, contato: (e) => `${esc(e.nome)} mandou ${esc(e.detalhe)} para ${esc(e.quem)}`, ficha: (e) => `${esc(e.nome)}: ${esc(e.quem || '')} ${esc(e.detalhe)}`, ficha_pdf: (e) => `${esc(e.nome)} anexou a ficha de ${esc(e.quem)}`,
+  assinada_ok: (e) => `${esc(e.nome)} conferiu a ficha de ${esc(e.quem)}`, assinada_recusada: (e) => `${esc(e.nome)} devolveu a ficha de ${esc(e.quem)}`, editou: (e) => `${esc(e.nome)} corrigiu ${esc(e.quem || e.detalhe)}`, excluiu: (e) => `${esc(e.nome)} excluiu ${esc(e.quem || e.detalhe)}`, importou: (e) => `${esc(e.nome)} trouxe ${esc(e.detalhe)}`,
+};
+const vistos = () => Number(ls('fic_visto') || 0);
+function pintarVivo() {
+  $('vivo-n').textContent = PRE.length;
+  $('vivo-lista').innerHTML = PRE.map((p) => `<div class="q"><b>${esc(p.nome || 'Cadastro novo')}</b><small>${esc(p.novo ? 'cadastro novo' : 'conferindo os dados')}${p.total ? ` · bloco ${p.bloco} de ${p.total}${p.etapa ? ' (' + esc(p.etapa) + ')' : ''}` : ''} · desde ${fHora(p.desde)}</small><div class="bp-prog"><i style="--p:${p.pct || 2}%"></i></div></div>`).join('') || '<small style="color:var(--muted)">Ninguém preenchendo agora.</small>';
+  const v = vistos();
+  $('vivo-ev').innerHTML = EVS.slice(0, 40).map((e) => `<div class="fic-ev ${e.avisa && e.em > v ? 'novo' : ''}"><span>${(TXT_EV[e.tipo] || (() => esc(e.tipo)))(e)}</span><small>${fQuando(e.em).slice(0, 5)} ${fHora(e.em)}</small></div>`).join('') || '<small style="color:var(--muted)">Nada ainda.</small>';
+  const n = EVS.filter((e) => e.avisa && e.em > v).length, s = $('fi-sino-n');
+  s.style.display = n ? '' : 'none'; s.textContent = n > 99 ? '99+' : n;
+  document.title = (n ? `(${n}) ` : '') + 'Fichas de Missão · P3 · BPFRON';
+  const on = ls('fic_som') === '1'; $('bt-som').innerHTML = on ? 'Som ligado' : 'Avisar com som'; $('bt-som').classList.toggle('sec', on);
+}
+function verAvisos() { $('vivo-ev').scrollIntoView({ behavior: 'smooth', block: 'center' }); ls('fic_visto', String(Date.now())); setTimeout(pintarVivo, 2500); }
+function marcarVivos() { const s = new Set(PRE.map((p) => p.cpf)); document.querySelectorAll('.fic-p[data-cpf]').forEach((e) => e.classList.toggle('aovivo', !!e.dataset.cpf && s.has(e.dataset.cpf))); }
+function notificar(e) {
+  const t = document.createElement('div'); t.innerHTML = (TXT_EV[e.tipo] || (() => ''))(e); const txt = t.textContent;
+  toast(txt, '', 8000);
+  if (ls('fic_som') === '1') { bip(); try { if ('Notification' in window && Notification.permission === 'granted') new Notification('Fichas de Missão', { body: txt, icon: 'gestao-icon-192.png', tag: 'fic-' + e.id }); } catch (x) {} }
+}
+function bip() {
+  try { const ac = new (window.AudioContext || window.webkitAudioContext)(); [0, 0.22].forEach((t) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ac.destination); g.gain.setValueAtTime(0.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.18); o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.2); }); } catch (e) {}
+}
+async function ligarSom() { if (ls('fic_som') === '1') { ls('fic_som', ''); pintarVivo(); return; } ls('fic_som', '1'); bip(); try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch (e) {} pintarVivo(); toast('Com a página aberta, chega som e aviso quando alguém terminar.'); }
+
+/* ============================== CSV ============================== */
+function csv() {
+  const col = [['periodo', 'Período'], ['grad', 'Grad'], ['nome', 'Nome'], ['re', 'RE'], ['cpf', 'CPF'], ['telefone', 'Telefone'], ['opm', 'OPM'], ['unidade', 'Unidade'], ['oficio', 'Nº Ofício'], ['ni', 'NI'], ['canil', 'Canil'], ['ficha', 'Ficha'], ['cortex', 'Escala Córtex'], ['fronteira', 'Fronteira/Divisa'], ['obs', 'Obs.']];
+  const cel = (i, k) => { let v = k === 'cpf' ? (i.cpf ? fCpf(i.cpf) : '') : k === 'telefone' ? fFone(i.telefone) : k === 'ficha' ? (SIT[i.ficha] || SIT['']).nome : i[k] || ''; v = String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+  const t = '﻿' + [col.map((c) => '"' + c[1] + '"').join(';'), ...daMis().filter(FILTROS[FILTRO][1]).map((i) => col.map(([k]) => cel(i, k)).join(';'))].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/csv;charset=utf-8' })); a.download = 'fichas-' + missao().nome.toLowerCase().replace(/\s+/g, '-') + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+// ícones <i data-ic> que o JS escreve depois do carregamento
+if (window.BPCasca && BPCasca.icones) new MutationObserver(() => { if (document.querySelector('body i[data-ic]')) BPCasca.icones(); }).observe(document.body, { childList: true, subtree: true });
+boot();
+</script>
+</body>
+</html>
