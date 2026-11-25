@@ -142,7 +142,7 @@ const entrar = () => ocupado('quem-bt', 'Abrindo…', async () => {
 }, 'quem-erro');
 
 function abrirCom(r) {
-  S = { token: r.token, cpf: r.cpf, novo: r.novo, blocos: r.blocos, missoes: r.missoes, dados: Object.assign({}, r.cadastro || {}) };
+  S = { token: r.token, cpf: r.cpf, novo: r.novo, blocos: r.blocos, missoes: r.missoes, em_dia: r.em_dia, atualizar: r.atualizar, ficha_ano: r.ficha_ano, dados: Object.assign({}, r.cadastro || {}) };
   S.dados.cpf = r.cpf;
   if (S.novo) { const g = SS.get('fc_' + S.cpf); if (g) S.dados = Object.assign(g, { cpf: r.cpf }); }
   const cid = S.blocos.flatMap((b) => b.campos).find((c) => c.tipo === 'sugestao'); $('dl-cidades').innerHTML = (cid ? cid.op : []).map((o) => `<option value="${esc(o)}">`).join('');
@@ -180,6 +180,9 @@ function errosLocais(cs) {
   return e;
 }
 const misTxt = () => (S.missoes.length ? `<div class="bp-aviso" style="margin-bottom:14px"><i data-ic="info"></i><div>${S.missoes.map((m) => `Você está indicado para a <b>${esc(m.operacao)}</b>, período de <b>${esc(m.periodos.join(' e '))}</b>.`).join('<br>')}</div></div>` : '');
+// ficha do ano em dia, ou virou o ano
+const valTxt = () => (S.em_dia ? '<div class="bp-aviso ok" style="margin-bottom:14px"><i data-ic="ok"></i><div><b>Seu cadastro está em dia.</b> Se algum dado mudou, corrija e clique em Feito.</div></div>'
+  : S.atualizar ? `<div class="bp-aviso pend" style="margin-bottom:14px"><i data-ic="alerta"></i><div><b>Atualizar ficha.</b> A sua última ficha é de ${esc(S.ficha_ano)}. Confira os dados para fazermos a de ${esc(S.atualizar)}.</div></div>` : '');
 function pintarForm() {
   if (S.novo) {
     const b = S.blocos[PASSO], n = S.blocos.length, ult = PASSO === n - 1;
@@ -189,7 +192,7 @@ function pintarForm() {
   } else {
     const falta = ABERTOS.size && S.blocos.some((b) => b.campos.some((c) => c.obrig && !S.dados[c.id]));
     const pronta = S.missoes.some((m) => m.tem_ficha && m.assinada !== 'OK' && m.ficha !== 'SIM');
-    $('form-topo').innerHTML = (pronta ? '<div class="bp-card topo-acc" style="margin-bottom:14px"><p style="margin:0 0 12px;color:var(--t1);font-weight:700">Sua ficha está pronta para assinar.</p><button type="button" class="bp-btn" onclick="verFicha()"><i data-ic="assinar"></i>Ver e assinar a ficha</button></div>' : '') + misTxt() + `<div class="bp-sec" style="margin-top:0"><span class="bp-tile ok"><i data-ic="usuario"></i></span><div><h2>Confira os seus dados</h2><small>${falta ? 'Falta preencher alguma coisa. ' : ''}Está tudo certo? Clique em Feito no fim da página.</small></div></div>`;
+    $('form-topo').innerHTML = (pronta ? '<div class="bp-card topo-acc" style="margin-bottom:14px"><p style="margin:0 0 12px;color:var(--t1);font-weight:700">Sua ficha está pronta para assinar.</p><button type="button" class="bp-btn" onclick="verFicha()"><i data-ic="assinar"></i>Ver e assinar a ficha</button></div>' : '') + misTxt() + valTxt() + `<div class="bp-sec" style="margin-top:0"><span class="bp-tile ok"><i data-ic="usuario"></i></span><div><h2>Confira os seus dados</h2><small>${falta ? 'Falta preencher alguma coisa. ' : ''}Está tudo certo? Clique em Feito no fim da página.</small></div></div>`;
     $('form-corpo').innerHTML = S.blocos.map((b) => `<div class="bp-card fc-bl" id="bl-${b.id}"><div class="cab"><span class="bp-tile sm"><i data-ic="${esc(b.ic)}"></i></span><h2>${esc(b.nome)}</h2>${ABERTOS.has(b.id) ? '' : `<button type="button" class="bp-btn sm ghost" onclick="abrirBloco('${b.id}')"><i data-ic="editar"></i>Corrigir</button>`}</div>` +
       (ABERTOS.has(b.id) ? `<div class="fc-form">${b.campos.map(campoHtml).join('')}</div>` : `<div class="fc-res">${b.campos.map((c) => `<div><small>${esc(c.nome)}</small><b>${esc(c.tipo === 'data' ? fDia(S.dados[c.id]) : fmt(c, S.dados[c.id])) || '—'}</b></div>`).join('')}</div>`) + '</div>').join('') +
       `<div class="fc-feito"><div class="bp-msg err" id="form-erro" style="margin-bottom:8px"></div><button type="button" class="bp-btn w" id="form-bt" onclick="feito()">${IC('check')}Feito, está tudo certo</button></div>`;

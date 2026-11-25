@@ -20,7 +20,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script src="fichas-oficio.js"></script>
 <style>
-.fic .bp-wrap,.fic .bp-topo-in{max-width:1240px}
+.fic .bp-wrap,.fic .bp-topo-in{max-width:1480px}
 .fic-linha{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .fic-pills{display:flex;gap:6px;flex-wrap:wrap}
 .fic-pills button{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:8px 14px;color:var(--t2);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
@@ -28,16 +28,51 @@
 .fic-pills button.on{border-color:var(--acc-line);color:var(--acc);background:var(--acc-soft)}
 .fic-pills button.on b{color:var(--acc)}
 .fic-busca{flex:1;min-width:220px}
-.fic-grupo{margin:22px 0 8px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.fic-grupo h3{margin:0;font:700 20px 'Rajdhani',sans-serif;color:var(--t1)}
-.fic-grupo small{color:var(--muted);font-weight:600}
-.fic-p{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px 16px;align-items:center;padding:13px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;border-left:4px solid var(--c,var(--line2))}
+div.fic-p{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px 16px;align-items:center;padding:13px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;border-left:4px solid var(--c,var(--line2))}
 .fic-p.s-NAO{--c:var(--crit)}.fic-p.s-FORMS{--c:var(--info)}.fic-p.s-PENDENTE{--c:var(--warn)}.fic-p.s-SIM{--c:var(--good)}
-.fic-p.aovivo{box-shadow:0 0 0 2px var(--good-line)}
-.fic-p .nm{font-weight:700;color:var(--t1);font-size:15px;overflow-wrap:anywhere}
-.fic-p small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;overflow-wrap:anywhere}
-.fic-p .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.fic-p .bts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:430px}
+div.fic-p.aovivo{box-shadow:0 0 0 2px var(--good-line)}
+.fic-pl{overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:14px;max-height:72vh;background:var(--card)}
+.fic-pl table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px}
+.fic-pl th{position:sticky;top:0;z-index:2;background:var(--surf);color:var(--t2);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;padding:8px 5px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line2)}
+.fic-pl td{padding:2px 5px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--t2);vertical-align:middle}
+.fic-pl td.nm{color:var(--t1);font-weight:700;white-space:normal;min-width:170px}
+.fic-pl td.c{text-align:center;color:var(--muted)}
+.fic-pl tr.fic-sec td{background:var(--acc-soft);color:var(--acc);font:800 15px 'Rajdhani',sans-serif;letter-spacing:.4px;padding:7px 10px;border-left:4px solid var(--acc)}
+.fic-pl tr.fic-grupo td{background:var(--surf2);color:var(--t1);font-weight:800;padding:6px 10px}
+.fic-pl tr.fic-grupo small{color:var(--muted);font-weight:600;margin-left:8px}
+.fic-pl tr.fic-p td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent)}
+.fic-pl tr.fic-p.s-NAO{--c:var(--crit)}.fic-pl tr.fic-p.s-FORMS{--c:var(--info)}.fic-pl tr.fic-p.s-PENDENTE{--c:var(--warn)}.fic-pl tr.fic-p.s-SIM{--c:var(--good)}
+.fic-pl tr.fic-p:hover td{background:var(--surf2)}
+.fic-pl tr.fic-p.aovivo td{background:var(--good-soft)}
+.fic-pl .mk{display:inline-flex;vertical-align:-2px;margin-left:5px}
+.fic-pl .mk svg{width:14px;height:14px}
+.fic-pl .mk.ok{color:var(--good)}.fic-pl .mk.pend{color:var(--warn)}.fic-pl .mk.crit{color:var(--crit)}
+.fic-c{appearance:none;-webkit-appearance:none;width:100%;min-width:54px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;background:var(--surf2);color:var(--muted);text-align:center}
+.fic-c option{background:var(--surf);color:var(--t1)}
+.fic-c.v-SIM,.fic-c.s-SIM{background:var(--good-soft);color:var(--good);border-color:var(--good-line)}
+.fic-c.v-NÃO,.fic-c.s-NAO{background:var(--crit-soft);color:var(--crit);border-color:var(--crit-line)}
+.fic-c.s-FORMS{background:var(--info-soft);color:var(--info);border-color:var(--info-line)}
+.fic-c.s-PENDENTE{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.fic-c.fic-sit{min-width:112px}
+.fic-obs{width:100%;min-width:150px;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 7px;color:var(--t1);font:inherit;font-size:12.5px}
+.fic-obs:hover{border-color:var(--line2)}.fic-obs:focus{outline:0;border-color:var(--acc-line);background:var(--surf2)}
+.fic-mn{border:1px solid var(--line2);background:var(--surf2);color:var(--t1);border-radius:8px;height:28px;padding:0 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.fic-mn:hover{border-color:var(--acc-line);color:var(--acc)}
+.fic-menu{position:fixed;z-index:60;width:290px;max-width:calc(100vw - 24px);background:var(--surf);border:1px solid var(--line2);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.45);padding:10px;display:none}
+.fic-menu.on{display:block}
+.fic-menu .cab{padding:4px 6px 8px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.fic-menu .cab b{display:block;color:var(--t1);font-size:13.5px}
+.fic-menu .cab .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.fic-menu .cab small{display:block;color:var(--muted);font-size:11.5px;margin-top:6px}
+.fic-menu button{display:flex;width:100%;align-items:center;gap:9px;background:transparent;border:0;border-radius:9px;padding:8px;color:var(--t1);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left}
+.fic-menu button:hover:not(:disabled){background:var(--surf2)}
+.fic-menu button:disabled{opacity:.45;cursor:default}
+.fic-menu button.dest{color:var(--acc)}
+.fic-menu button svg{width:16px;height:16px;flex:none}
+div.fic-p .nm{font-weight:700;color:var(--t1);font-size:15px;overflow-wrap:anywhere}
+div.fic-p small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;overflow-wrap:anywhere}
+div.fic-p .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+div.fic-p .bts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:430px}
 .fic-sel{border:1px solid var(--line2);background:var(--surf2);color:var(--t1);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;font-weight:700;max-width:100%}
 .fic-sel option{background:var(--surf);color:var(--t1)}
 .fic .bp-modal-cx.larga{width:min(1180px,100%)}
@@ -79,10 +114,20 @@
 .fic .fic-sino{position:relative;overflow:visible}
 .fic-sino i.n{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--crit);color:#fff;font:800 11px/18px Inter,sans-serif;text-align:center;padding:0 4px}
 .fic-marca{display:flex;flex-direction:column;gap:9px}
-@media (max-width:900px){.fic-p{grid-template-columns:1fr}.fic-p .bts{justify-content:flex-start;max-width:none}.fic-vivo{grid-template-columns:1fr}}
+@media (max-width:900px){div.fic-p{grid-template-columns:1fr}div.fic-p .bts{justify-content:flex-start;max-width:none}.fic-vivo{grid-template-columns:1fr}}
 @media (max-width:640px){.fic-form{grid-template-columns:1fr}.fic .bp-sec{flex-wrap:wrap}.fic .bp-sec>.fic-linha{margin-left:0!important;width:100%}}
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-25", "titulo": "Lista em tabela, igual à planilha", "quem": "todos", "itens": [
+    "Uma linha por policial, com as colunas da planilha: NI, Canil, Ficha OK?, Escala Córtex, Fronteira/Divisa e Observações.",
+    "Mude direto na linha: escolha SIM ou NÃO e escreva a observação, sem abrir janela.",
+    "WhatsApp, Córtex, anexar e corrigir ficam no botão do fim da linha."
+  ] },
+  { "data": "2026-11-25", "titulo": "Cadastro em dia e Atualizar ficha", "quem": "todos", "itens": [
+    "Quem tem Ficha OK no ano aparece como Cadastro em dia.",
+    "Virou o ano: quem já tem ficha aparece como Atualizar ficha, e a ficha velha não entra na missão nova.",
+    "Ao lançar o ofício, quem está em dia já entra com Ficha OK (dá para desmarcar)."
+  ] },
   { "data": "2026-11-25", "titulo": "Fichas de Missão", "quem": "todos", "itens": [
     "Arraste o PDF do ofício: o sistema lê os policiais, confere CPF e telefone e mostra quem já tem cadastro.",
     "Botões do WhatsApp para fazer e para assinar a ficha, com fila em lote.",
@@ -204,6 +249,7 @@
         <div class="bp-campo"><label for="lan-sec">De onde veio</label><div class="bp-in"><input id="lan-sec" placeholder="CRP III"></div></div>
       </div>
       <div class="bp-msg" id="lan-resumo" style="margin:12px 0"></div>
+      <label class="bp-check" id="lan-dia-cx" style="display:none;margin:0 0 12px"><input type="checkbox" id="lan-dia" checked> <span id="lan-dia-tx"></span></label>
       <div class="fic-rola"><table class="fic-tab"><thead><tr><th></th><th>Período</th><th>Grad.</th><th>Nome</th><th>RE</th><th>CPF</th><th>Telefone</th><th>Unidade</th><th>OPM</th></tr></thead><tbody id="lan-tab"></tbody></table></div>
       <div class="bp-msg err" id="lan-erro2" style="margin-top:10px"></div>
       <div class="bp-modal-pe">
@@ -315,6 +361,7 @@
   </div>
 </div>
 
+<div class="fic-menu" id="menu-ind" role="menu"></div>
 <input type="file" id="arq-pdf" accept="application/pdf,.pdf" style="display:none" onchange="anexarArq(this.files[0]);this.value=''">
 
 <script>
@@ -391,7 +438,7 @@ function boot() {
 }
 
 /* ============================== dados ============================== */
-let D = null, MIS = null, FILTRO = 'todos', IND = null, CADS = null;
+let D = null, MIS = null, FILTRO = 'todos', IND = null, CADS = null, OKS = new Map();
 async function carregar(manual) {
   const carga = !D && window.BPCasca && BPCasca.carregando ? BPCasca.carregando('Abrindo as fichas') : null;
   try { D = await apiJson('/api/fichas'); }
@@ -412,6 +459,8 @@ async function carregar(manual) {
 function indexar() {
   CADS = { cpf: new Map(), re: new Map(), nome: new Map() };
   for (const c of D.cadastros) { if (c.cpf) CADS.cpf.set(c.cpf, c); if (dig(c.re).length >= 5) CADS.re.set(dig(c.re).slice(-5), c); CADS.nome.set(sem(c.nome), c); }
+  OKS = new Map();
+  for (const i of D.indicados) if (i.ficha === 'SIM') { const m = misDe(i), ano = anoDe(i, m); for (const k of [i.cpf && 'c' + i.cpf, 'n' + sem(i.nome)]) if (k && (!OKS.has(k) || OKS.get(k).ano < ano)) OKS.set(k, { ano, missao: m ? m.nome : '', missao_id: i.missao_id }); }
 }
 // CPF manda; sem CPF igual, o RE só vale com o primeiro nome igual (RE digitado errado existe); depois o nome inteiro
 function achaCad(x) {
@@ -425,12 +474,22 @@ const missao = () => D.missoes.find((m) => m.id === MIS);
 const chaveP = (i) => i.cpf || sem(i.nome);
 const ultimoFim = (m) => D.indicados.reduce((x, i) => (i.missao_id === m.id && i.fim > x ? i.fim : x), '');
 function ordemMis() { return D.missoes.slice().sort((a, b) => { const x = ultimoFim(a) || '9', y = ultimoFim(b) || '9'; return x < y ? 1 : x > y ? -1 : (a.criado_em < b.criado_em ? 1 : -1); }); }
-// cadastro em dia = confirmado depois de ser lançado na missão
+/* A ficha vale pelo ANO da missão (mesma regra do Worker): OK em missão de 2026 = cadastro em dia em 2026;
+   virou o ano, atualizar ficha. Missão antiga continua com a situação dela (é o histórico). */
+const anoAtual = () => Number(String(D.hoje).slice(0, 4));
+const misDe = (i) => D.missoes.find((m) => m.id === i.missao_id);
+const anoDe = (i, m = misDe(i)) => Number(String(i.ini || '').slice(0, 4)) || Number((String((m && m.nome) || '').match(/20\d\d/) || [])[0]) || Number(String(i.ok_em || i.criado_em || '').slice(0, 4)) || 0;
+function validade(i) {
+  const f = OKS.get(i.cpf ? 'c' + i.cpf : 'n' + sem(i.nome));   // a ficha OK mais nova da pessoa
+  return f ? { ...f, dia: f.ano >= Math.max(anoDe(i), anoAtual()) } : null;
+}
+const atualizar = (i) => { const v = validade(i); return !!v && !v.dia; };
+// confirmado = o policial clicou em Feito depois de ser lançado na missão
 const emDia = (i, c) => !!(c && c.confirmado_em && c.confirmado_em >= i.criado_em);
 const pessoas = (l) => { const m = new Map(); for (const i of l) if (!m.has(chaveP(i))) m.set(chaveP(i), i); return [...m.values()]; };
 const FILTROS = {
   todos: ['Todos', () => true], cad: ['Falta cadastro', (i) => i.ficha === '' || i.ficha === 'NAO'], FORMS: ['Fazer no Córtex', (i) => i.ficha === 'FORMS'],
-  PENDENTE: ['Falta assinar', (i) => i.ficha === 'PENDENTE'], conf: ['Conferir assinada', (i) => i.assinada_sit === 'CONFERIR'], SIM: ['Ficha OK', (i) => i.ficha === 'SIM'], cortex: ['Sem escala no Córtex', (i) => i.cortex !== 'SIM'],
+  PENDENTE: ['Falta assinar', (i) => i.ficha === 'PENDENTE'], conf: ['Conferir assinada', (i) => i.assinada_sit === 'CONFERIR'], SIM: ['Ficha OK', (i) => i.ficha === 'SIM'], dia: ['Cadastro em dia', (i) => i.ficha === 'SIM' && !atualizar(i)], atu: ['Atualizar ficha', atualizar], cortex: ['Sem escala no Córtex', (i) => i.cortex !== 'SIM'],
 };
 function setFiltro(f) { FILTRO = f; pintarLista(); $('lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 function escolherMis(id) { MIS = id; ls('fic_missao', id); FILTRO = 'todos'; pintar(); }
@@ -454,49 +513,92 @@ function pintarLista() {
   $('filtros').innerHTML = Object.entries(FILTROS).map(([k, [nome]]) => `<button type="button" data-f="${k}" class="${k === FILTRO ? 'on' : ''}" onclick="FILTRO='${k}';pintarLista()">${nome} <b>${n(k)}</b></button>`).join('');
   const q = sem($('q').value), qd = dig(q);
   const V = L.filter(FILTROS[FILTRO][1]).filter((i) => !q || sem([i.nome, i.grad, i.opm, i.unidade, i.secao, i.oficio, i.obs].join(' ')).includes(q) || (qd.length >= 3 && [i.re, i.cpf, i.telefone].some((x) => dig(x).includes(qd))));
-  const grupos = new Map();
-  for (const i of V) { const k = (i.ini || '9') + '|' + i.periodo; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(i); }
-  $('lista').innerHTML = [...grupos.keys()].sort().map((k) => {
-    const g = grupos.get(k), uns = [];
-    for (const i of g) { const u = [i.secao, i.unidade].filter(Boolean).join(' · '); let x = uns.find((y) => y.u === u); if (!x) uns.push(x = { u, l: [] }); x.l.push(i); }
-    return `<div class="fic-grupo"><h3>${esc(g[0].periodo || 'Sem período')}</h3><small>${g.length} ${g.length === 1 ? 'policial' : 'policiais'}</small></div>` +
-      uns.map((x) => (x.u ? `<small style="display:block;color:var(--acc);font-weight:800;margin:10px 0 6px">${esc(x.u)}</small>` : '') + x.l.map(cartao).join('')).join('');
-  }).join('') || `<div class="bp-vazio" style="margin-top:14px">${L.length ? 'Ninguém com esse filtro.' : 'Nenhum policial nesta missão ainda.'}</div>`;
+  // igual à planilha: seção (CRP I…) → período → linhas numeradas
+  const secs = new Map();
+  for (const i of V) { const s = i.secao || ''; if (!secs.has(s)) secs.set(s, new Map()); const g = secs.get(s), k = (i.ini || '9') + '|' + i.periodo; if (!g.has(k)) g.set(k, []); g.get(k).push(i); }
+  const nomeSec = (s) => s || 'Sem seção', ordSec = (a, b) => (!a ? 1 : !b ? -1 : a.localeCompare(b, 'pt-BR', { numeric: true }));
+  const corpo = [...secs.keys()].sort(ordSec).map((s) => {
+    const g = secs.get(s);
+    return (secs.size > 1 || s ? `<tr class="fic-sec"><td colspan="15">${esc(nomeSec(s))}</td></tr>` : '') + [...g.keys()].sort().map((k) => {
+      const l = g.get(k);
+      return `<tr class="fic-grupo"><td colspan="15">${esc(l[0].periodo || 'Sem período')}<small>${l.length} ${l.length === 1 ? 'policial' : 'policiais'}</small></td></tr>` + l.map((i, n) => linha(i, n + 1)).join('');
+    }).join('');
+  }).join('');
+  $('lista').innerHTML = corpo ? `<div class="fic-pl"><table><thead><tr><th>Ord.</th><th>Período</th><th>Grad.</th><th>Nome completo</th><th>CPF</th><th>Telefone</th><th>OPM</th><th>Nº Ofício</th><th>NI</th><th>Canil</th><th>Ficha OK?</th><th>Escala Córtex</th><th>Fronteira/Divisa</th><th>Observações</th><th></th></tr></thead><tbody>${corpo}</tbody></table></div>`
+    : `<div class="bp-vazio" style="margin-top:14px">${L.length ? 'Ninguém com esse filtro.' : 'Nenhum policial nesta missão ainda.'}</div>`;
   const os = D.oficios.filter((o) => o.missao_id === MIS);
   $('oficios').innerHTML = os.length ? `<div class="bp-sec"><span class="bp-tile sm"><i data-ic="arquivo"></i></span><div><h2>Ofícios</h2></div></div>` + os.map((o) => `<div class="fic-p" style="grid-template-columns:1fr auto"><div><div class="nm">Ofício ${esc(o.numero || 'sem número')}</div><small>${esc([o.remetente, o.processo ? 'SEI ' + o.processo : '', o.periodos, o.qtd + ' lançados por ' + o.criado_por + ' em ' + fQuando(o.criado_em)].filter(Boolean).join(' · '))}</small></div>${o.tem_pdf ? `<button type="button" class="bp-btn sm sec" onclick="abrirPdf('${esc(o.id)}','oficio')"><i data-ic="olho"></i>Abrir PDF</button>` : ''}</div>`).join('') : '';
   marcarVivos();
 }
-function cartao(i) {
-  const s = SIT[i.ficha] || SIT[''], c = cadDe(i), dia = emDia(i, c), ch = [], id = esc(i.id);
-  ch.push(!c ? '<span class="bp-sl crit">Sem cadastro</span>' : dia ? `<span class="bp-sl ok"><i data-ic="check"></i>Cadastro confirmado ${esc(fQuando(c.confirmado_em).slice(0, 8))}</span>` : '<span class="bp-sl pend">Tem cadastro, falta confirmar</span>');
-  if (i.tem_ficha) ch.push('<span class="bp-sl info">Ficha anexada</span>');
-  if (c && i.tem_ficha && c.atualizado_em > i.ficha_pdf_em) ch.push('<span class="bp-sl crit">Dados mudaram depois da ficha</span>');
-  if (i.assinada_sit === 'CONFERIR') ch.push('<span class="bp-sl pend"><i data-ic="assinar"></i>Assinada: conferir</span>');
-  if (i.assinada_sit === 'RECUSADA' && i.tem_assinada) ch.push('<span class="bp-sl crit">Assinada devolvida</span>');
-  if (i.cpf && !FO.cpfValido(i.cpf)) ch.push('<span class="bp-sl crit">CPF inválido</span>');
-  if (i.ni === 'SIM') ch.push('<span class="bp-sl">NI</span>'); if (i.canil === 'SIM') ch.push('<span class="bp-sl">Canil</span>'); if (i.funcao) ch.push(`<span class="bp-sl">${esc(i.funcao)}</span>`); if (i.fronteira) ch.push(`<span class="bp-sl">${esc(i.fronteira)}</span>`);
-  const b = [];
-  if (i.assinada_sit === 'CONFERIR') b.push(`<button type="button" class="bp-btn sm" onclick="conferir('${id}')"><i data-ic="assinar"></i>Conferir assinada</button>`);
-  if (i.ficha !== 'SIM') b.push(`<button type="button" class="bp-btn sm ${i.ficha === '' || i.ficha === 'NAO' ? '' : 'sec'}" ${i.telefone ? '' : 'disabled title="Sem telefone"'} onclick="whats('${id}','fazer')"><i data-ic="celular"></i>Fazer ficha</button>`,
-    `<button type="button" class="bp-btn sm ${(i.ficha === 'FORMS' && i.tem_ficha) || i.ficha === 'PENDENTE' ? '' : 'sec'}" ${i.telefone ? '' : 'disabled title="Sem telefone"'} onclick="whats('${id}','assinar')"><i data-ic="assinar"></i>Assinar ficha</button>`);
-  if (c) b.push(`<button type="button" class="bp-btn sm ${i.ficha === 'FORMS' && !i.tem_ficha ? '' : 'sec'}" onclick="verCad('${id}')"><i data-ic="arquivo"></i>Copiar para o Córtex</button>`);
-  b.push(`<button type="button" class="bp-btn sm ghost" onclick="anexar('${id}','ficha')"><i data-ic="enviar"></i>${i.tem_ficha ? 'Trocar ficha' : 'Anexar ficha'}</button>`);
-  if (i.tem_ficha) b.push(`<button type="button" class="bp-btn sm ghost" onclick="abrirPdf('${id}','ficha')"><i data-ic="olho"></i>Ficha</button>`);
-  if (i.tem_assinada) b.push(`<button type="button" class="bp-btn sm ghost" onclick="abrirPdf('${id}','assinada')"><i data-ic="olho"></i>Assinada</button>`);
-  else b.push(`<button type="button" class="bp-btn sm ghost" onclick="anexar('${id}','assinada')" title="A ficha assinada que chegou pelo WhatsApp"><i data-ic="enviar"></i>Assinada (WhatsApp)</button>`);
-  b.push(`<button type="button" class="bp-btn ic sm ghost" onclick="editar('${id}')" title="Corrigir" aria-label="Corrigir"><i data-ic="editar"></i></button>`);
-  const env = [i.pedido_em ? 'pedido ' + fQuando(i.pedido_em) : '', i.assinar_em ? 'para assinar ' + fQuando(i.assinar_em) : '', i.ok_em ? 'OK ' + fQuando(i.ok_em) : ''].filter(Boolean).join(' · ');
-  return `<div class="fic-p s-${esc(i.ficha)}" id="p-${id}" data-k="${esc(chaveP(i))}" data-cpf="${esc(i.cpf)}">
-    <div><div class="nm">${esc(i.grad)} ${esc(i.nome)}</div><small>${esc([i.re ? 'RE ' + i.re : '', i.cpf ? 'CPF ' + fCpf(i.cpf) : 'sem CPF', i.telefone ? fFone(i.telefone) : 'sem telefone', i.opm].filter(Boolean).join(' · '))}</small>
-      <div class="chips">${ch.join('')}</div>${i.obs ? `<small style="color:var(--warn)">${esc(i.obs)}</small>` : ''}</div>
-    <div><select class="fic-sel" aria-label="Situação da ficha" onchange="mudarSit('${id}',this.value)">${Object.entries(SIT).map(([k, v]) => `<option value="${k}" ${k === i.ficha ? 'selected' : ''}>${v.nome}</option>`).join('')}</select>
-      <label class="bp-check" style="margin-top:8px;font-size:13px"><input type="checkbox" ${i.cortex === 'SIM' ? 'checked' : ''} onchange="cortex('${id}',this.checked)"> Escala no Córtex</label>${env ? `<small>${esc(env)}</small>` : ''}</div>
-    <div class="bts">${b.join('')}</div></div>`;
+// uma linha da tabela: os campos ficam à vista; o resto (etiquetas e ações) vai para o menu do fim da linha
+const perCurto = (p) => String(p || '').replace(/\/20\d\d/g, '');
+function linha(i, ord) {
+  const id = esc(i.id), info = infoDe(i), val = validade(i);
+  const sn = (k, v, fn) => { const x = v === 'SIM' ? 'SIM' : v === 'NÃO' || v === 'NAO' ? 'NÃO' : v; return `<select class="fic-c v-${esc(x)}" aria-label="${k}" onchange="${fn}">${(['', 'SIM', 'NÃO'].includes(x) ? ['', 'SIM', 'NÃO'] : ['', 'SIM', 'NÃO', x]).map((o) => `<option value="${esc(o)}" ${o === x ? 'selected' : ''}>${o || '—'}</option>`).join('')}</select>`; };
+  const fr = ['', 'FRONTEIRA', 'DIVISA']; if (i.fronteira && !fr.includes(i.fronteira)) fr.push(i.fronteira);
+  const mk = val && !val.dia ? `<span class="mk pend" title="Atualizar ficha (a última é de ${val.ano})">${IC('alerta')}</span>`
+    : info.alerta ? `<span class="mk crit" title="${esc(info.alerta)}">${IC('alerta')}</span>`
+    : i.ficha === 'SIM' && val ? `<span class="mk ok" title="Cadastro em dia">${IC('ok')}</span>` : '';
+  return `<tr class="fic-p s-${esc(i.ficha)}" id="p-${id}" data-k="${esc(chaveP(i))}" data-cpf="${esc(i.cpf)}" data-info="${esc(info.texto)}">
+    <td class="c">${ord}</td><td>${esc(perCurto(i.periodo))}</td><td>${esc(i.grad)}</td><td class="nm">${esc(i.nome)}${mk}</td>
+    <td>${i.cpf ? esc(i.cpf) : '<span style="color:var(--crit)">sem CPF</span>'}</td><td>${i.telefone ? esc(dig(i.telefone)) : '<span style="color:var(--crit)">sem telefone</span>'}</td>
+    <td>${esc(i.opm || i.unidade)}</td><td>${esc(i.oficio)}</td>
+    <td>${sn('NI', i.ni, `campo('${id}','ni',this.value)`)}</td><td>${sn('Canil', i.canil, `campo('${id}','canil',this.value)`)}</td>
+    <td><select class="fic-c fic-sit s-${esc(i.ficha)}" aria-label="Ficha OK?" onchange="mudarSit('${id}',this.value)">${Object.entries(SIT).map(([k, v]) => `<option value="${k}" ${k === i.ficha ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></td>
+    <td><select class="fic-c v-${i.cortex === 'SIM' ? 'SIM' : 'NÃO'}" aria-label="Escala no Córtex" onchange="cortex('${id}',this.value==='SIM')"><option value="SIM" ${i.cortex === 'SIM' ? 'selected' : ''}>SIM</option><option value="" ${i.cortex === 'SIM' ? '' : 'selected'}>NÃO</option></select></td>
+    <td><select class="fic-c" aria-label="Fronteira/Divisa" onchange="campo('${id}','fronteira',this.value)">${fr.map((o) => `<option value="${esc(o)}" ${o === (i.fronteira || '') ? 'selected' : ''}>${o || '—'}</option>`).join('')}</select></td>
+    <td><input class="fic-obs" value="${esc(i.obs)}" maxlength="400" placeholder="…" aria-label="Observações" onkeydown="if(event.key==='Enter')this.blur()" onchange="campo('${id}','obs',this.value)"></td>
+    <td><button type="button" class="fic-mn" aria-label="Ações de ${esc(i.nome)}" onclick="menuInd('${id}',this)">Ações</button></td></tr>`;
 }
+// as etiquetas que eram do cartão: vão para o menu (e para data-info)
+function infoDe(i) {
+  const c = cadDe(i), dia = emDia(i, c), val = validade(i), ch = [];
+  if (val && !val.dia) ch.push(['pend', 'Atualizar ficha' + (val.ano ? ' (a última é de ' + val.ano + ')' : '')]);
+  else if (val) ch.push(['ok', 'Cadastro em dia' + (i.ficha === 'SIM' ? '' : ' (Ficha OK em ' + val.missao + ')')]);
+  if (!val || (i.ficha !== 'SIM' && c)) ch.push(!c ? ['crit', 'Sem cadastro'] : dia ? ['ok', 'Cadastro confirmado ' + fQuando(c.confirmado_em).slice(0, 8)] : ['pend', 'Tem cadastro, falta confirmar']);
+  if (i.tem_ficha) ch.push(['info', 'Ficha anexada']);
+  const al = [];
+  if (c && i.tem_ficha && c.atualizado_em > i.ficha_pdf_em) al.push('Dados mudaram depois da ficha');
+  if (i.assinada_sit === 'CONFERIR') al.push('Assinada: conferir');
+  if (i.assinada_sit === 'RECUSADA' && i.tem_assinada) al.push('Assinada devolvida');
+  if (i.cpf && !FO.cpfValido(i.cpf)) al.push('CPF inválido');
+  for (const a of al) ch.push([a === 'Assinada: conferir' ? 'pend' : 'crit', a]);
+  if (i.funcao) ch.push(['', i.funcao]);
+  const env = [i.re ? 'RE ' + i.re : '', i.pedido_em ? 'pedido ' + fQuando(i.pedido_em) : '', i.assinar_em ? 'para assinar ' + fQuando(i.assinar_em) : '', i.ok_em ? 'OK ' + fQuando(i.ok_em) : ''].filter(Boolean).join(' · ');
+  return { ch, env, alerta: al.join(' · '), texto: ch.map((x) => x[1]).join(' · ') };
+}
+let MENU = null;
+function menuInd(id, bt) {
+  const m = $('menu-ind');
+  if (MENU === id && m.classList.contains('on')) return fecharMenu();
+  const i = achaI(id); if (!i) return;
+  MENU = id;
+  const info = infoDe(i), atu = atualizar(i), c = cadDe(i), x = esc(id);
+  const it = (ic, t, fn, o = {}) => `<button type="button" role="menuitem" class="${o.dest ? 'dest' : ''}" ${o.off ? 'disabled title="' + esc(o.off) + '"' : ''} onclick="fecharMenu();${fn}">${IC(ic)}${t}</button>`;
+  const b = [];
+  if (i.assinada_sit === 'CONFERIR') b.push(it('assinar', 'Conferir assinada', `conferir('${x}')`, { dest: true }));
+  if (i.ficha !== 'SIM') b.push(it('celular', atu ? 'Atualizar ficha (WhatsApp)' : 'Fazer ficha (WhatsApp)', `whats('${x}','fazer')`, { off: i.telefone ? '' : 'Sem telefone', dest: i.ficha === '' || i.ficha === 'NAO' }),
+    it('assinar', 'Assinar ficha (WhatsApp)', `whats('${x}','assinar')`, { off: i.telefone ? '' : 'Sem telefone', dest: (i.ficha === 'FORMS' && i.tem_ficha) || i.ficha === 'PENDENTE' }));
+  if (c) b.push(it('arquivo', 'Copiar para o Córtex', `verCad('${x}')`, { dest: i.ficha === 'FORMS' && !i.tem_ficha }));
+  b.push(it('enviar', i.tem_ficha ? 'Trocar ficha' : 'Anexar ficha', `anexar('${x}','ficha')`));
+  if (i.tem_ficha) b.push(it('olho', 'Ver a ficha', `abrirPdf('${x}','ficha')`));
+  b.push(i.tem_assinada ? it('olho', 'Ver a assinada', `abrirPdf('${x}','assinada')`) : it('enviar', 'Anexar assinada (WhatsApp)', `anexar('${x}','assinada')`));
+  b.push(it('editar', 'Corrigir', `editar('${x}')`));
+  m.innerHTML = `<div class="cab"><b>${esc(i.grad)} ${esc(i.nome)}</b><div class="chips">${info.ch.map(([cl, t]) => `<span class="bp-sl ${cl}">${esc(t)}</span>`).join('')}</div>${info.env ? `<small>${esc(info.env)}</small>` : ''}</div>${b.join('')}`;
+  m.classList.add('on');
+  const r = bt.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
+  m.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
+  m.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+}
+function fecharMenu() { MENU = null; $('menu-ind').classList.remove('on'); }
+document.addEventListener('click', (e) => { if (MENU && !e.target.closest('#menu-ind,.fic-mn')) fecharMenu(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && MENU) fecharMenu(); });
+window.addEventListener('scroll', () => { if (MENU) fecharMenu(); }, true);
 const achaI = (id) => D.indicados.find((i) => i.id === id);
 async function faz(fn, msg) { try { const r = await fn(); if (msg) toast(typeof msg === 'function' ? msg(r) : msg); await carregar(); return r; } catch (e) { if (e.status !== 401) toast(e.message, 'err', 6000); await carregar(); } }
 const mudarSit = (id, ficha) => faz(() => salvar({ op: 'ficha', id, ficha }), 'Situação: ' + SIT[ficha].nome + '.');
 const cortex = (id, valor) => faz(() => salvar({ op: 'cortex', id, valor }));
+const campo = (id, campo, valor) => faz(() => salvar({ op: 'campo', id, campo, valor }), campo === 'obs' ? 'Observação salva.' : '');
 
 /* ============================== WhatsApp ============================== */
 function saudacao() { const h = Number(new Intl.DateTimeFormat('pt-BR', { hour: 'numeric', hour12: false, timeZone: 'America/Manaus' }).format(new Date())); return h >= 6 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite'; }
@@ -508,8 +610,8 @@ const periodosDe = (i) => [...new Set(D.indicados.filter((x) => x.missao_id === 
 function mensagem(i, tipo) {
   const op = (D.missoes.find((m) => m.id === i.missao_id) || {}).operacao || D.operacao_padrao, per = periodosDe(i), nome = i.nome;
   if (tipo === 'fazer') {
-    const tem = !!cadDe(i);
-    return `${saudacao()}, ${nome}!\n\n${assinatura()} Preciso que ${tem ? 'confira os seus dados no' : 'preencha o'} link que vou enviar para eu confeccionar sua ficha para participar da *${op}* - período de *${per}*.\n\n${LINK()}` +
+    const tem = !!cadDe(i), atu = atualizar(i);
+    return `${saudacao()}, ${nome}!\n\n${assinatura()} Preciso que ${tem ? (atu ? 'atualize' : 'confira') + ' os seus dados no' : 'preencha o'} link que vou enviar para eu ${atu ? 'atualizar' : 'confeccionar'} sua ficha para participar da *${op}* - período de *${per}*.\n\n${LINK()}` +
       (tem ? '\n\nVocê já tem cadastro: entre com CPF, data de nascimento e RE, confira os dados e clique em *Feito*.' : '');
   }
   return `${saudacao()}, ${nome}!\n\n${assinatura()}\n\nSegue em anexo sua ficha para participação na *${op}* - período de *${per}*.\n\nATENÇÃO: Antes de assinar, verifique se os seguintes dados estão corretos na ficha:\n\n- Nome completo\n- CPF\n- RG\n- Unidade atual\n- E-mail\n- Telefone\n- Conta bancária\n\nCaso algum dado esteja incorreto ou desatualizado, nos informe ANTES de assinar.\n\nApós confirmar que está tudo certo, assine digitalmente pelo Gov.br e devolva o documento assinado.` +
@@ -535,7 +637,7 @@ function abrirFila() {
   const P = pessoas(daMis()), a = P.filter((i) => i.ficha === '' || i.ficha === 'NAO'), b = P.filter((i) => i.ficha === 'PENDENTE'), semTel = [...a, ...b].filter((i) => !i.telefone);
   $('fila-tit').textContent = 'Quem está sem ficha'; $('fila-sub').textContent = missao().nome;
   const bloco = (t, l, tipo, cl) => `<div class="fic-bl">${t} <span class="bp-sl ${cl}">${l.length}</span></div>` +
-    (l.length ? `<div class="fic-marca" style="max-height:26vh;overflow:auto">${l.map((i) => `<label class="bp-check"><input type="checkbox" data-t="${tipo}" value="${esc(i.id)}" ${i.telefone ? 'checked' : 'disabled'}> ${esc(i.grad)} ${esc(i.nome)} <span style="color:var(--muted)">${i.telefone ? fFone(i.telefone) : 'sem telefone'}</span></label>`).join('')}</div><div class="fic-linha" style="margin-top:8px"><button type="button" class="bp-btn sm" onclick="iniciarFila('${tipo}')"><i data-ic="iniciar"></i>Enviar em fila</button></div>` : '<small style="color:var(--muted)">Ninguém.</small>');
+    (l.length ? `<div class="fic-marca" style="max-height:26vh;overflow:auto">${l.map((i) => `<label class="bp-check"><input type="checkbox" data-t="${tipo}" value="${esc(i.id)}" ${i.telefone ? 'checked' : 'disabled'}> ${esc(i.grad)} ${esc(i.nome)}${tipo === 'fazer' && atualizar(i) ? ' <span class="bp-sl pend">Atualizar ficha</span>' : ''} <span style="color:var(--muted)">${i.telefone ? fFone(i.telefone) : 'sem telefone'}</span></label>`).join('')}</div><div class="fic-linha" style="margin-top:8px"><button type="button" class="bp-btn sm" onclick="iniciarFila('${tipo}')"><i data-ic="iniciar"></i>Enviar em fila</button></div>` : '<small style="color:var(--muted)">Ninguém.</small>');
   $('fila-corpo').innerHTML = bloco('Falta fazer ou confirmar o cadastro', a, 'fazer', 'crit') + bloco('Não assinou', b, 'assinar', 'pend') + (semTel.length ? `<div class="bp-aviso pend" style="margin-top:14px"><i data-ic="alerta"></i><div>${semTel.length} sem telefone: corrija no cadastro da missão.</div></div>` : '');
   abrir('m-fila');
 }
@@ -547,7 +649,7 @@ function iniciarFila(tipo) {
 function pintarFila() {
   const f = FILA, x = f.l[f.n];
   if (!x) { $('fila-tit').textContent = 'Fila concluída'; $('fila-sub').textContent = `${f.env || 0} enviado(s)`; $('fila-corpo').innerHTML = `<div class="bp-aviso ok"><i data-ic="ok"></i><div>Todos os contatos da fila foram feitos.</div></div><div class="bp-modal-pe"><button type="button" class="bp-btn" onclick="fechar('m-fila')">Fechar</button></div>`; return; }
-  $('fila-tit').textContent = x.tipo === 'fazer' ? 'Fazer ficha' : 'Assinar ficha';
+  $('fila-tit').textContent = x.tipo === 'fazer' ? (atualizar(x.i) ? 'Atualizar ficha' : 'Fazer ficha') : 'Assinar ficha';
   $('fila-sub').textContent = (f.so ? '' : `${f.n + 1} de ${f.l.length} — `) + `${x.i.grad} ${x.i.nome} · ${fFone(x.i.telefone)}`;
   const cel = /Android|iPhone|iPad/i.test(navigator.userAgent);
   $('fila-corpo').innerHTML = (f.so ? '' : `<div class="bp-prog" style="margin-bottom:12px"><i style="--p:${Math.round(100 * f.n / f.l.length)}%"></i></div>`) + `<div class="fic-fila" id="fila-msg">${esc(mensagem(x.i, x.tipo))}</div>` +
@@ -599,7 +701,7 @@ function iniciarLan(oficio, linhas, pdf) {
   $('lan-mis').value = ja ? ja.id : ''; $('lan-mis-nome').value = nome; lanMis();
   $('lan-num').value = oficio.numero || ''; $('lan-proc').value = oficio.processo || ''; $('lan-sec').value = oficio.secao || '';
   $('lan-erro2').textContent = '';
-  $('lan-1').style.display = 'none'; $('lan-2').style.display = '';
+  $('lan-dia').checked = true;   $('lan-1').style.display = 'none'; $('lan-2').style.display = '';
   pintarLan();
 }
 function lanMis() { $('lan-mis-cx').style.display = $('lan-mis').value ? 'none' : ''; if (LAN) pintarLan(); }
@@ -607,6 +709,11 @@ function lanPeriodos() {
   const m = new Map();
   for (const p of [...(LAN.oficio.periodos || []), ...LAN.linhas, ...D.indicados.filter((i) => i.missao_id === $('lan-mis').value)]) if (p.ini && p.fim) m.set(p.ini + '|' + p.fim, FO.txtPeriodo(p));
   return [...m.entries()].sort();
+}
+// ficha OK da pessoa em outra missão; em dia = do ano desta missão (igual ao Worker)
+function okDaLinha(l) {
+  const f = D.indicados.filter((i) => i.ficha === 'SIM' && i.missao_id !== $('lan-mis').value && (l.cpf ? i.cpf === l.cpf : sem(i.nome) === sem(l.nome))).map((i) => ({ ano: anoDe(i), missao: (misDe(i) || {}).nome })).sort((a, b) => b.ano - a.ano)[0];
+  return f && { ...f, dia: f.ano >= Math.max(Number(String(l.ini || '').slice(0, 4)) || 0, anoAtual()) };
 }
 // o que o sistema sabe sobre a linha
 function avisosLan(l, n) {
@@ -619,8 +726,8 @@ function avisosLan(l, n) {
   else if (!l.cpf) a.push(`<span class="fic-av crit">${IC('alerta')}Sem CPF</span>`);
   if (c && c.celular && dig(c.celular) !== dig(l.telefone)) a.push(`<span class="fic-av">${IC('celular')}Telefone no cadastro: ${fFone(c.celular)} ${bt('telefone', dig(c.celular), 'Usar')}</span>`);
   for (const x of l.avisos || []) if (/elefone|período|Repetido/.test(x) && !l['ok_' + (/elefone/.test(x) ? 'telefone' : 'x')]) a.push(`<span class="fic-av">${IC('alerta')}${esc(x)}</span>`);
-  const ok = D.indicados.find((i) => i.ficha === 'SIM' && i.missao_id !== $('lan-mis').value && (l.cpf ? i.cpf === l.cpf : sem(i.nome) === sem(l.nome)));
-  if (ok) a.push(`<span class="fic-av ok">${IC('ok')}Ficha OK em ${esc((D.missoes.find((m) => m.id === ok.missao_id) || {}).nome)}</span>`);
+  const ok = okDaLinha(l);
+  if (ok) a.push(ok.dia ? `<span class="fic-av ok">${IC('ok')}Cadastro em dia: Ficha OK em ${esc(ok.missao)}</span>` : `<span class="fic-av">${IC('alerta')}Atualizar ficha: a última é de ${ok.ano} (${esc(ok.missao)})</span>`);
   const dup = D.indicados.find((i) => i.missao_id === $('lan-mis').value && i.ini === l.ini && i.fim === l.fim && (l.cpf && i.cpf ? i.cpf === l.cpf : sem(i.nome) === sem(l.nome)));
   if (dup) a.push(`<span class="fic-av">${IC('info')}Já está lançado neste período: não entra de novo</span>`);
   return a.join('');
@@ -638,6 +745,9 @@ function pintarLan() {
   const us = LAN.linhas.filter((l) => l.usar), pes = new Set(us.map((l) => l.cpf || sem(l.nome))).size;
   const mal = us.filter((l) => (l.cpf && !FO.cpfValido(l.cpf)) || !l.ini || !l.nome).length, sc = new Set(us.filter((l) => !achaCad(l)).map((l) => l.cpf || sem(l.nome))).size;
   $('lan-resumo').innerHTML = `<b style="color:var(--t1)">${us.length}</b> ${us.length === 1 ? 'linha' : 'linhas'}, <b style="color:var(--t1)">${pes}</b> ${pes === 1 ? 'policial' : 'policiais'}: ${pes - sc} já têm cadastro e ${sc} não têm.` + (mal ? ` <b style="color:var(--crit)">${mal} para corrigir antes de lançar.</b>` : '');
+  const dias = new Set(us.filter((l) => l.cpf && (okDaLinha(l) || {}).dia).map((l) => l.cpf)).size;
+  $('lan-dia-cx').style.display = dias ? '' : 'none';
+  $('lan-dia-tx').textContent = `${dias} com cadastro em dia: ${dias === 1 ? 'já entra' : 'já entram'} com Ficha OK. Desmarque para pedir a ficha de novo.`;
   $('lan-ok').disabled = !us.length || !!mal;
   $('lan-ok').innerHTML = IC('check') + 'Lançar ' + us.length;
 }
@@ -658,10 +768,10 @@ async function lancar(forcar) {
     if (!mid) { const nome = $('lan-mis-nome').value.trim(); if (!nome) throw new Error('Dê um nome para a missão.'); mid = (await salvar({ op: 'missao', nome })).id; await recarregarSo(); $('lan-mis').innerHTML += `<option value="${esc(mid)}">${esc(nome)}</option>`; $('lan-mis').value = mid; lanMis(); bt.disabled = true; }
     const of = { ...LAN.oficio, numero: $('lan-num').value.trim(), processo: $('lan-proc').value.trim(), secao: $('lan-sec').value.trim() };
     const linhas = LAN.linhas.filter((l) => l.usar).map((l) => ({ grad: l.grad, nome: l.nome, re: l.re, cpf: l.cpf, telefone: l.telefone, opm: l.opm, unidade: l.unidade, funcao: l.funcao, ni: l.ni, ini: l.ini, fim: l.fim, secao: of.secao }));
-    const r = await salvar({ op: 'lancar', missao_id: mid, oficio: of, linhas, pdf: LAN.pdf || undefined, forcar: forcar === true });
+    const r = await salvar({ op: 'lancar', missao_id: mid, oficio: of, linhas, pdf: LAN.pdf || undefined, forcar: forcar === true, em_dia: $('lan-dia').checked });
     MIS = mid; ls('fic_missao', mid); FILTRO = 'todos';
     fechar('m-lancar'); await carregar();
-    toast(`${r.lancados} lançados.` + (r.pulados.length ? ` ${r.pulados.length} já estavam.` : ''), '', 5000);
+    toast(`${r.lancados} lançados.` + (r.em_dia ? ` ${r.em_dia} com cadastro em dia.` : '') + (r.pulados.length ? ` ${r.pulados.length} já estavam.` : ''), '', 5000);
     if (r.aviso) toast(r.aviso, 'err', 9000);
   } catch (e) {
     const er = e.d && e.d.erros ? ' ' + e.d.erros.map((x) => `${x.nome || 'linha ' + x.linha}: ${x.erros.join(', ')}`).join('; ') : '';
@@ -756,7 +866,7 @@ async function arrumar() {
 }
 async function trazerOk() {
   if (!MIS) return fmsg('Escolha a missão primeiro.', 'err');
-  try { const r = await salvar({ op: 'ficha_ok_anteriores', missao_id: MIS, de: [...document.querySelectorAll('#func-de input:checked')].map((x) => x.value) }); fmsg(`${r.total} linhas marcadas Ficha OK: ${r.por_cpf} por CPF e ${r.por_nome} pelo nome.`, 'ok'); carregar(); } catch (e) { fmsg(esc(e.message), 'err'); }
+  try { const r = await salvar({ op: 'ficha_ok_anteriores', missao_id: MIS, de: [...document.querySelectorAll('#func-de input:checked')].map((x) => x.value) }); fmsg(`${r.total} linhas marcadas Ficha OK: ${r.por_cpf} por CPF e ${r.por_nome} pelo nome.` + (r.vencidas ? ` ${r.vencidas} com ficha de ano anterior ficaram de fora: precisam atualizar.` : ''), 'ok'); carregar(); } catch (e) { fmsg(esc(e.message), 'err'); }
 }
 async function importar(fonte, bt) {
   bt.disabled = true; fmsg('<span class="bp-gira"></span> Lendo a planilha antiga…');
