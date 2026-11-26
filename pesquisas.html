@@ -5,6 +5,14 @@
 <script src="bp-casca.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pesquisas e Formulários — BPFRON</title>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Quem respondeu cada opção", "quem": "todos", "itens": [
+    "No resultado de pesquisa identificada, cada pergunta mostra quem marcou cada opção (ex.: quem respondeu SIM), com posto, nome e RE.",
+    "O relatório em PDF traz os mesmos nomes embaixo de cada pergunta.",
+    "Botão novo Planilha (Excel): uma linha por policial com todas as respostas dele.",
+    "Pesquisa anônima continua sem nomes."
+  ] }
+]</script>
 <script src="conta.js"></script>
 <!-- pdf.js (UMD) — lê o texto do ofício/documento direto no navegador, para montar
      o prompt da IA. O arquivo NÃO sai da máquina: não sobe pro Worker nem pro Drive. -->
@@ -142,6 +150,13 @@ select option{background:#0a0f1c}
 .freq td.nu b{color:var(--yellow);font-size:14px}
 .bar{height:16px;background:#0a0f1c;border:1px solid rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#d4a017,#f5c518)}
+.quem-op{margin-top:10px;border-top:1px dashed rgba(255,255,255,.1);padding-top:8px;font-size:12.5px}
+.quem-op summary{cursor:pointer;color:var(--yellow);font-weight:600;margin-bottom:6px}
+.quem-op .qo{margin:6px 0 8px}
+.quem-op .qo b{color:#eaf0fa}
+.quem-op ul{margin:3px 0 0;padding-left:18px;color:#c3ccdb;columns:2;column-gap:24px}
+.quem-op li{break-inside:avoid;margin:1px 0}
+@media (max-width:640px){ .quem-op ul{columns:1} }
 .txt-lista{max-height:300px;overflow:auto;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#0a0f1c;padding:6px}
 .txt-lista div{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px;line-height:1.5;white-space:pre-wrap}
 .txt-lista div:last-child{border-bottom:none}
@@ -228,6 +243,8 @@ select option{background:#0a0f1c}
   .pr-bar{height:8pt;border:.5pt solid #666}
   .pr-bar i{display:block;height:100%;background:#666;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
+  .pr-quem{font-size:8pt;margin-top:4pt;border-top:.5pt dashed #bbb;padding-top:3pt}
+  .pr-quem div{margin:1.5pt 0;line-height:1.35}
   .pr-txt{font-size:8.5pt;margin-top:3pt}
   .pr-txt div{border-bottom:.5pt solid #eee;padding:2.5pt 0;white-space:pre-wrap}
   .pr-txt .quem{color:#555;font-size:7.5pt}
@@ -1090,31 +1107,36 @@ async function verRespostas(id){
 
 /* Apura uma pergunta: devolve as linhas da tabela de frequência (ou a lista de
    textos, quando é resposta aberta). É o coração do relatório. */
-function apurar(q, respostas){
+function apurar(q, respostas, ident){
   const brutas = respostas.map((r) => String(r.itens[q.n] ?? '').trim());
   const dadas = brutas.filter((v) => v !== '');
   const base = { n: q.n, texto: q.texto, tipo: q.tipo, respondidas: dadas.length,
                  embranco: respostas.length - dadas.length };
+  /* 26/11/2026: na pesquisa identificada, cada opção guarda QUEM a marcou (ex.: quem tem iPhone) */
+  const quem = {};
+  const anota = (k, r) => { if (!ident) return; (quem[k] = quem[k] || []).push(quemRespondeu(r)); };
+  const comQuem = (linhas) => { if (ident) linhas.forEach((l) => { l.quem = quem[l.chave ?? l.rotulo] || []; }); return linhas; };
 
   if (q.tipo === 'unica' || q.tipo === 'simnao' || q.tipo === 'multipla'){
     const opcoes = q.tipo === 'simnao' ? ['SIM','NÃO'] : (q.opcoes || []).slice();
     const cont = {};
     opcoes.forEach((o) => { cont[o] = 0; });
-    dadas.forEach((v) => {
+    respostas.forEach((r, i) => {
+      const v = brutas[i]; if (!v) return;
       // múltipla escolha grava "A | B" na mesma célula
       (q.tipo === 'multipla' ? v.split('|') : [v]).forEach((parte) => {
         const t = parte.trim();
         if (!t) return;
         if (!(t in cont)) cont[t] = 0;   // opção que saiu do questionário depois
-        cont[t]++;
+        cont[t]++; anota(t, r);
       });
     });
     const totalMarcas = Object.values(cont).reduce((a, b) => a + b, 0);
     // o denominador do % é quem respondeu (na múltipla, cada um pode marcar várias)
     const divisor = q.tipo === 'multipla' ? (dadas.length || 1) : (totalMarcas || 1);
-    base.linhas = Object.keys(cont).map((o) => ({
+    base.linhas = comQuem(Object.keys(cont).map((o) => ({
       rotulo: o, n: cont[o], pct: (cont[o] * 100) / divisor
-    })).sort((a, b) => b.n - a.n);
+    })).sort((a, b) => b.n - a.n));
     base.nota_pct = q.tipo === 'multipla' ? 'sobre quem respondeu (várias marcações por pessoa)' : '';
     return base;
   }
@@ -1124,10 +1146,10 @@ function apurar(q, respostas){
     const cont = {};
     for (let i = 1; i <= max; i++) cont[i] = 0;
     let soma = 0;
-    dadas.forEach((v) => { const n = parseInt(v, 10); if (cont[n] !== undefined){ cont[n]++; soma += n; } });
-    base.linhas = Object.keys(cont).map((k) => ({
-      rotulo: 'Nota ' + k, n: cont[k], pct: (cont[k] * 100) / (dadas.length || 1)
-    }));
+    respostas.forEach((r, i) => { const n = parseInt(brutas[i], 10); if (cont[n] !== undefined){ cont[n]++; soma += n; anota(String(n), r); } });
+    base.linhas = comQuem(Object.keys(cont).map((k) => ({
+      chave: String(k), rotulo: 'Nota ' + k, n: cont[k], pct: (cont[k] * 100) / (dadas.length || 1)
+    })));
     base.media = dadas.length ? soma / dadas.length : 0;
     base.max = max;
     base.rotulos = [q.rotulo_min || '', q.rotulo_max || ''];
@@ -1149,10 +1171,10 @@ function apurar(q, respostas){
   if (q.tipo === 'curta' || q.tipo === 'data'){
     // texto curto e data repetem bastante: vale contar em vez de listar
     const cont = {};
-    dadas.forEach((v) => { const k = q.tipo === 'data' ? dataBR(v) : v; cont[k] = (cont[k] || 0) + 1; });
+    respostas.forEach((r, i) => { const v = brutas[i]; if (!v) return; const k = q.tipo === 'data' ? dataBR(v) : v; cont[k] = (cont[k] || 0) + 1; anota(k, r); });
     const linhas = Object.keys(cont).map((k) => ({ rotulo:k, n:cont[k], pct:(cont[k] * 100) / (dadas.length || 1) }))
       .sort((a, b) => b.n - a.n || a.rotulo.localeCompare(b.rotulo));
-    if (linhas.length <= 25){ base.linhas = linhas; return base; }
+    if (linhas.length <= 25){ base.linhas = comQuem(linhas); return base; }
   }
 
   // parágrafo (e texto curto muito variado): lista as respostas
@@ -1161,18 +1183,25 @@ function apurar(q, respostas){
     .filter((x) => x.txt);
   return base;
 }
+/* "CB QPPM FULANO · RE 12345": o mesmo jeito de escrever o respondente em todo o relatório */
+function quemRespondeu(r){
+  const re = String(r.re || '').replace(/\D/g, '');
+  return [r.posto_grad, r.nome].filter(Boolean).join(' ') + (re ? ' · RE ' + re.slice(-5) : '');
+}
+const identificada = (p) => !p.anonima && (VENDO.respostas || []).some((r) => r.nome || r.re);
 
 function renderRespostas(){
   telas('tela-resp');
   const p = VENDO.pesquisa, R = VENDO.respostas || [];
   const PEND = VENDO.pendentes || [];
   const esperados = VENDO.esperados || 0;
-  const apurado = p.perguntas.map((q) => apurar(q, R));
+  const apurado = p.perguntas.map((q) => apurar(q, R, identificada(p)));
 
   let h = '<div class="card">' +
     '<div class="sec-t">Resultado · ' + esc(p.id) +
       '<span class="dir">' +
         '<button class="btn pq" onclick="imprimir()">🖨️ Relatório (PDF)</button>' +
+        (R.length ? '<button class="btn sec pq" onclick="baixarPlanilha()">📥 Planilha (Excel)</button>' : '') +
         (PEND.length ? '<button class="btn sec pq" onclick="imprimirPendentes()">🖨️ Quem falta</button>' : '') +
         '<button class="btn sec pq" onclick="verRespostas(\'' + p.id + '\')">🔄 Atualizar</button>' +
         '<button class="btn sec pq" onclick="carregarLista()">← Voltar</button>' +
@@ -1285,6 +1314,12 @@ function blocoApuracao(a){
                (a.rotulos && (a.rotulos[0] || a.rotulos[1]) ? ' · ' + esc(a.rotulos[0]) + ' → ' + esc(a.rotulos[1]) : '') + '</div>';
     }
     if (a.nota_pct) corpo += '<div style="margin-top:6px;font-size:11.5px;color:var(--muted)">% ' + a.nota_pct + '</div>';
+    const comNomes = a.linhas.filter((l) => l.quem && l.quem.length);
+    if (comNomes.length){
+      corpo += '<details class="quem-op"' + (a.linhas.length <= 6 ? ' open' : '') + '><summary>👥 Quem respondeu cada opção</summary>' +
+        comNomes.map((l) => '<div class="qo"><b>' + esc(l.rotulo) + ' (' + l.quem.length + ')</b>' +
+          '<ul>' + l.quem.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul></div>').join('') + '</details>';
+    }
   } else if (a.numeros){
     const f = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits:2 });
     corpo = '<div class="kpis" style="margin:0">' +
@@ -1310,7 +1345,7 @@ function blocoApuracao(a){
 function montarRelatorio(){
   if (!VENDO) return;
   const p = VENDO.pesquisa, R = VENDO.respostas || [];
-  const apurado = p.perguntas.map((q) => apurar(q, R));
+  const apurado = p.perguntas.map((q) => apurar(q, R, identificada(p)));
   const agora = new Date().toLocaleString('pt-BR');
   const periodo = R.length
     ? (R[0].data || '').split(' ')[0] + ' a ' + (R[R.length - 1].data || '').split(' ')[0]
@@ -1377,6 +1412,11 @@ function blocoImpresso(a){
                '</b> de ' + a.max + (a.rotulos && (a.rotulos[0] || a.rotulos[1]) ? ' (' + esc(a.rotulos[0]) + ' → ' + esc(a.rotulos[1]) + ')' : '') + '</div>';
     }
     if (a.nota_pct) corpo += '<div style="font-size:7.5pt;color:#555;margin-top:2pt">% ' + a.nota_pct + '</div>';
+    const comNomes = a.linhas.filter((l) => l.quem && l.quem.length);
+    if (comNomes.length){
+      corpo += '<div class="pr-quem">' + comNomes.map((l) => '<div><b>' + esc(l.rotulo) + ' (' + l.quem.length + '):</b> ' +
+        l.quem.map(esc).join('; ') + '.</div>').join('') + '</div>';
+    }
   } else if (a.numeros){
     const f = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits:2 });
     corpo = '<table class="pr-tab"><thead><tr><th>Respostas</th><th>Média</th><th>Menor</th><th>Maior</th><th>Soma</th></tr></thead>' +
@@ -1395,6 +1435,26 @@ function blocoImpresso(a){
 }
 
 function imprimir(){ montarRelatorio(); window.print(); }
+
+/* Planilha com a resposta de cada policial (uma linha por respondente, uma coluna por pergunta).
+   CSV com ; e BOM: abre direto no Excel com acento. Pesquisa anônima sai sem as colunas de quem. */
+function csvRespostas(){
+  if (!VENDO) return '';
+  const p = VENDO.pesquisa, R = VENDO.respostas || [], ident = identificada(p);
+  const cel = (v) => { const t = String(v ?? '').replace(/\r?\n/g, ' ').trim(); return /[;"]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const cab = (ident ? ['Data', 'RE', 'Posto/Grad', 'Nome', 'Unidade'] : ['Data']).concat(p.perguntas.map((q) => q.n + '. ' + q.texto));
+  const linhas = R.map((r) => (ident ? [r.data, String(r.re || '').replace(/\D/g, ''), r.posto_grad, r.nome, r.opm] : [r.data])
+    .concat(p.perguntas.map((q) => q.tipo === 'data' ? dataBR(String(r.itens[q.n] ?? '')) : r.itens[q.n])));
+  return '\uFEFF' + [cab].concat(linhas).map((l) => l.map(cel).join(';')).join('\r\n') + '\r\n';
+}
+function baixarPlanilha(){
+  const b = new Blob([csvRespostas()], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = 'pesquisa-' + (VENDO.pesquisa.id || 'respostas') + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 
 /* Relatório SEPARADO: só a relação de quem ainda não respondeu, para cobrança
    pela cadeia de comando. Não se mistura com o relatório do resultado. */
