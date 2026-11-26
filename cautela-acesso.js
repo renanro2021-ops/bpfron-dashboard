@@ -61,6 +61,7 @@
     estilo();
     var MODO = '';            // '' (normal) | 'primeiro' | 'trocar'
     var PRECISA = 'cpf4';
+    var EMAIL = '';           // e-mail mascarado do cadastro (modo 'email')
     el.innerHTML =
       '<div class="ca-seg"><button type="button" data-m="re" class="on">' + (opt.rotuloRE || (ic('usuario') || '🪪 ') + 'RE e senha') + '</button><button type="button" data-m="dash">' + (opt.rotuloDash || (ic('cadeado') || '🔑 ') + 'Login do dashboard') + '</button></div>' +
       (opt.aviso ? '<div class="ca-pa">' + opt.aviso + '</div>' : '') +
@@ -73,8 +74,10 @@
       '    <label for="ca-nova2">Repita a senha</label><input id="ca-nova2" type="password" autocomplete="new-password"></div>' +
       '  <div class="msg" id="ca-msg"></div>' +
       '  <button class="btn full" id="ca-ok" type="button">Entrar</button>' +
+      '  <button class="btn sec full ca-hide" id="ca-link-env" type="button">Mandar o link de novo</button>' +
       '  <button class="ca-link" id="ca-primeiro" type="button">Primeiro acesso (ainda não tenho senha)</button>' +
-      '  <p class="ca-nota">É a <b>mesma senha do Portal do Policial</b> (Tarefas e ficha). No 1º acesso você cria com o RE e os 4 últimos dígitos do CPF. Esqueceu? Peça à P4 para zerar e faça o 1º acesso de novo.</p>' +
+      '  <button class="ca-link" id="ca-esqueci" type="button">Esqueci a senha</button>' +
+      '  <p class="ca-nota">É a <b>mesma senha do Portal do Policial</b> (Tarefas, ficha e checklist da viatura). O efetivo do BPFRON cria a senha pelo <b>link enviado ao e-mail do cadastro</b>; esqueceu, toque em “Esqueci a senha”. Policial de outra unidade: peça uma senha provisória à P4.</p>' +
       '</form>' +
       '<form data-p="dash" class="ca-hide" onsubmit="return false">' +
       '  <label for="ca-user">Usuário</label><input id="ca-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false">' +
@@ -101,6 +104,16 @@
       MODO = m; PRECISA = precisa || PRECISA;
       var quem = nome ? '<b>' + esc(nome) + '</b>, ' : '';
       vis('ca-pa', !!m);
+      vis('ca-link-env', m === 'email');
+      vis('ca-ok', m !== 'email' && m !== 'sem_email');
+      vis('ca-esqueci', !m);
+      if (m === 'email' || m === 'sem_email') {
+        vis('ca-w-senha', false); vis('ca-w-conf', false); vis('ca-w-nova', false); vis('ca-primeiro', false);
+        $('ca-pa').innerHTML = m === 'email'
+          ? '✉️ ' + quem + 'o seu cadastro de senha é feito pelo <b>link enviado ao seu e-mail' + (EMAIL ? ' (' + esc(EMAIL) + ')' : '') + '</b>. Abra o link, confirme RE e CPF e crie a senha. Não achou? Confira o spam ou mande de novo.'
+          : '📭 ' + quem + 'o seu cadastro no efetivo ainda não tem e-mail. <b>Procure a P1 para incluir o seu e-mail</b> e receber o link da senha.';
+        return;
+      }
       vis('ca-w-senha', m !== 'primeiro');
       vis('ca-w-conf', m === 'primeiro');
       vis('ca-w-nova', !!m);
@@ -150,18 +163,36 @@
           return;
         }
         if (d.primeiro) {
+          if (d.precisa === 'email') { EMAIL = d.email_mascarado || ''; modo('email', '', d.nome); return; }
+          if (d.precisa === 'email_sem_cadastro') { modo('sem_email', '', d.nome); return; }
           if (d.precisa === 'provisoria') { modo(''); throw new Error(d.detail || 'Peça uma senha provisória à P4.'); }
           modo('primeiro', d.precisa, d.nome); setTimeout(function () { $('ca-conf').focus(); }, 50); return;
         }
         if (d.trocar) { modo('trocar', '', d.nome); setTimeout(function () { $('ca-nova').focus(); }, 50); return; }
         if (d.error === 'use_login') { aba('dash'); msg('ca-msg2', d.detail || 'Entre com o seu login do dashboard.'); return; }
-        if (soConsultar && d.error === 'invalid_credentials') throw new Error('Este RE já tem senha. Entre com ela — se esqueceu, peça à P4 para zerar.');
+        if (soConsultar && d.error === 'invalid_credentials') throw new Error('Este RE já tem senha. Entre com ela — se esqueceu, toque em “Esqueci a senha”.');
         throw new Error(d.detail || 'Não foi possível entrar.');
       } catch (e) { msg('ca-msg', e.message || 'Não foi possível conectar ao servidor.'); }
       finally { btn.disabled = false; if (btn.textContent === 'Aguarde…') btn.textContent = txt; }
     }
     $('ca-ok').onclick = function () { entrarRE(false); };
     $('ca-primeiro').onclick = function () { entrarRE(true); };
+    /* Esqueci a senha / Mandar o link de novo: o link vai para o e-mail do cadastro (POST /api/senha/pedir-link) */
+    async function pedirLink(btn) {
+      var re = $('ca-re').value.replace(/D/g, '');
+      if (re.length < 4) { msg('ca-msg', 'Digite o seu RE (5 dígitos).'); $('ca-re').focus(); return; }
+      btn.disabled = true; msg('ca-msg', '');
+      try {
+        var r = await fetch(API + '/api/senha/pedir-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ re: re }) });
+        var d = await r.json().catch(function () { return {}; });
+        if (!r.ok) throw new Error(d.detail || 'Não foi possível pedir o link agora.');
+        msg('ca-msg', d.detail || 'Pronto.', !!d.enviado);
+        if (!d.enviado) $('ca-msg').className = 'msg';
+      } catch (e) { msg('ca-msg', e.message || 'Não foi possível conectar ao servidor.'); }
+      finally { btn.disabled = false; }
+    }
+    $('ca-link-env').onclick = function () { pedirLink($('ca-link-env')); };
+    $('ca-esqueci').onclick = function () { pedirLink($('ca-esqueci')); };
     $('ca-re').addEventListener('keydown', function (e) { if (e.key === 'Enter') (MODO === 'primeiro' ? $('ca-conf') : $('ca-senha')).focus(); });
     ['ca-senha', 'ca-nova2'].forEach(function (i) { $(i).addEventListener('keydown', function (e) { if (e.key === 'Enter') entrarRE(false); }); });
     $('ca-conf').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('ca-nova').focus(); });

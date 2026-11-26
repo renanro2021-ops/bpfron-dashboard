@@ -232,6 +232,11 @@ html.portal #quem-ok a{display:none}
 <!-- Novidades desta página (padrão do site, ver bp-casca.js → 7. NOVIDADES):
      cada atualização ganha uma entrada aqui; quem abre a página vê uma vez. -->
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Senha do Portal no checklist", "quem": "todos", "itens": [
+    "Para o efetivo do BPFRON o checklist pede a senha do Portal do Policial uma vez neste aparelho. Depois o celular lembra (até você tocar em “não sou eu”).",
+    "Ainda não tem senha ou esqueceu? Toque em “receber o link no e-mail”: o link vai para o e-mail do seu cadastro.",
+    "Policial de outra unidade: toque em “Sou de outra OPM” e siga sem senha, como antes."
+  ] },
   { "data": "2026-11-08", "titulo": "Aviso de abastecimento pendente na viatura", "quem": "todos", "itens": [
     "Ao escolher uma viatura que ainda tem pendência de abastecimento em aberto (lançada por qualquer motorista), aparece um aviso amarelo: o cartão dela pode dar o mesmo erro no posto.",
     "Na lista de viaturas, ela ganha a etiqueta “Abastecimento pendente”. O aviso some quando a DAAL resolver."
@@ -310,14 +315,35 @@ html.portal #quem-ok a{display:none}
       </div>
       <div class="hint">Digite o seu RE. Ele fica salvo neste celular para as próximas vezes.</div>
       <div id="re-erro" class="err" style="font-size:13.5px;margin-top:8px"></div>
+      <button type="button" id="btn-outra-opm" class="btn gray" style="width:100%;margin-top:12px" onclick="souOutraOpm()"><i data-ic="etiqueta"></i>Sou de outra OPM</button>
       <div id="quem-ext" class="hidden">
-        <div class="aviso yel"><i data-ic="alerta"></i>O RE <b id="ext-re"></b> não está no cadastro do BPFRON. Se digitou errado, corrija o número acima e confirme de novo. Se você é de <b>outra unidade</b>, identifique-se:</div>
+        <div class="aviso yel" id="ext-msg"><i data-ic="alerta"></i>O RE <b id="ext-re"></b> não está no cadastro do BPFRON. Se digitou errado, corrija o número acima e confirme de novo. Se você é de <b>outra unidade</b>, identifique-se:</div>
         <label class="lb" for="ext-nome">Posto/graduação e nome <span class="req">*</span></label>
         <input id="ext-nome" autocomplete="off" maxlength="120" placeholder="Ex.: 3º SGT PM Fulano">
         <label class="lb" for="ext-uni">Sua unidade <span class="req">*</span></label>
         <input id="ext-uni" autocomplete="off" maxlength="60" placeholder="Ex.: 5º BPM">
         <button class="btn-main" style="margin-top:14px" onclick="confirmarExt()">Continuar</button>
       </div>
+    </div>
+    <!-- efetivo do BPFRON: senha do Portal uma vez neste aparelho (26/11/2026) -->
+    <div id="quem-senha" class="hidden">
+      <div class="eu" style="margin-bottom:10px">
+        <div class="av"><i data-ic="cadeado"></i></div>
+        <div><b id="sn-nome"></b><span class="muted" style="font-size:12.5px">RE <span id="sn-re"></span></span></div>
+        <a href="#" onclick="trocarPolicial();return false">não sou eu</a>
+      </div>
+      <div class="aviso" id="sn-aviso"><i data-ic="cadeado"></i>Policial do BPFRON: entre com a <b>sua senha do Portal do Policial</b>. É só uma vez neste aparelho.</div>
+      <label class="lb" for="sn-senha">Senha do Portal <span class="req">*</span></label>
+      <input id="sn-senha" type="password" autocomplete="current-password" maxlength="60" onkeydown="if(event.key==='Enter')entrarSenha()">
+      <div id="sn-nova-wrap" class="hidden">
+        <label class="lb" for="sn-nova">Senha nova <span class="req">*</span></label>
+        <input id="sn-nova" type="password" autocomplete="new-password" maxlength="60" onkeydown="if(event.key==='Enter')entrarSenha()">
+        <div class="hint">A sua senha é provisória: escolha uma senha nova (pelo menos 6 caracteres).</div>
+      </div>
+      <div id="sn-erro" class="err" style="font-size:13.5px;margin-top:8px"></div>
+      <button class="btn-main" id="btn-senha" style="margin-top:12px" onclick="entrarSenha()">Entrar</button>
+      <button type="button" class="btn gray" style="width:100%;margin-top:8px" id="btn-link" onclick="pedirLink()"><i data-ic="enviar"></i>Esqueci / não tenho senha — receber o link no e-mail</button>
+      <div id="sn-link-msg" class="hint" style="margin-top:8px"></div>
     </div>
     <div id="quem-ok" class="eu hidden">
       <div class="av"><i data-ic="usuario"></i></div>
@@ -519,8 +545,26 @@ const IC = (n) => (window.BPCasca && BPCasca.ic) ? BPCasca.ic(n) : '';
 function show(id, on){ $(id).classList.toggle('hidden', !on); }
 function carregandoOvl(msg){ $('load-msg').textContent = msg || ''; $('load-ovl').style.display = msg ? 'flex' : 'none'; }
 
+/* Sessão da Garagem do efetivo do BPFRON (26/11/2026): RE + senha do Portal uma vez neste
+   aparelho; o Worker devolve um token de 180 dias que só abre as rotas do motorista. No Portal
+   do Policial (?portal=1) vale a sessão do próprio Portal. */
+const LS_GTOK = 'bp_gar_token';
+const NO_PORTAL = (() => { try { return new URLSearchParams(location.search).has('portal'); } catch(e){ return false; } })();
+const re5 = (re) => String(re || '').replace(/\D/g, '').slice(-5);
+function sessaoGar(re){
+  try{
+    const t = JSON.parse(localStorage.getItem(LS_GTOK) || 'null');
+    if (t && t.token && t.re === re5(re) && (!t.exp || t.exp > Date.now())) return t.token;
+  }catch(e){}
+  if (NO_PORTAL){ try{ return localStorage.getItem('tar_token') || localStorage.getItem('bp_token') || ''; }catch(e){} }
+  return '';
+}
+function apagarSessaoGar(){ try{ localStorage.removeItem(LS_GTOK); }catch(e){} }
 async function api(path, body){
-  const r = await fetch(API_BASE + path, body ? { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) } : {});
+  const h = { 'Content-Type':'application/json' };
+  const tk = body && body.re ? sessaoGar(body.re) : '';
+  if (tk) h.Authorization = 'Bearer ' + tk;
+  const r = await fetch(API_BASE + path, body ? { method:'POST', headers: h, body: JSON.stringify(body) } : {});
   const d = await r.json().catch(() => ({}));
   if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; e.data = d; throw e; }
   return d;
@@ -553,6 +597,8 @@ function montar(dados){
   $('termo').textContent = APP.termo;
   if (SEL) SEL = APP.viaturas.find(v => v.prefixo === SEL.prefixo) || null;
   try{ EU = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); }catch(e){ EU = null; }
+  // efetivo do BPFRON sem a sessão neste aparelho (ou ela caiu): pede a senha antes de seguir
+  if (EU && EU.precisa_senha && !sessaoGar(EU.re)){ SENHA_PEND = EU; EU = null; }
   // Portal do Policial: o RE vem do portal; se o salvo aqui for de outra pessoa, identifica de novo
   const reP = (() => { try { const q = new URLSearchParams(location.search); return q.has('portal') ? (q.get('re') || '').replace(/\D/g, '') : ''; } catch(e){ return ''; } })();
   if (reP && (!EU || String(EU.re).replace(/\D/g, '').slice(-5) !== reP.slice(-5))){
@@ -612,7 +658,8 @@ function renderFrotaSit(){
 function mostrarQuem(){
   if (VISTA === 'frota') return renderFrotaSit();
   show('s-quem', true);
-  show('quem-form', !EU); show('quem-ok', !!EU);
+  show('quem-form', !EU && !SENHA_PEND); show('quem-senha', !EU && !!SENHA_PEND); show('quem-ok', !!EU);
+  if (SENHA_PEND){ $('sn-nome').textContent = SENHA_PEND.nome; $('sn-re').textContent = SENHA_PEND.re; }
   if (EU){
     $('eu-nome').textContent = EU.nome; $('eu-re').textContent = EU.re;
     $('eu-uni').innerHTML = IC('etiqueta') + 'Outra unidade' + (EU.unidade ? ' · ' + esc(EU.unidade) : ''); show('eu-uni', !!EU.externo);
@@ -621,8 +668,11 @@ function mostrarQuem(){
   show('s-vtr', !!EU && !travarNaMinha() && !ABV);
   renderMinha();
   carregarAb();
-  if (!EU) setTimeout(() => $('re').focus(), 50);
+  if (!EU) setTimeout(() => (SENHA_PEND ? $('sn-senha') : $('re')).focus(), 50);
 }
+let MODO_OUTRA = false;     // entrou pelo botão "Sou de outra OPM"
+let SENHA_PEND = null;      // policial do BPFRON esperando a senha (uma vez neste aparelho)
+const EXT_MSG = () => $('ext-msg').dataset.orig || ($('ext-msg').dataset.orig = $('ext-msg').innerHTML);
 async function identificar(){
   const re = $('re').value.replace(/\D/g,'');
   $('re-erro').textContent = '';
@@ -630,24 +680,83 @@ async function identificar(){
   $('btn-re').disabled = true; $('btn-re').textContent = '…';
   try{
     const d = await api('/api/garagem/identificar', { re });
+    if (d.precisa_senha){
+      // efetivo do BPFRON: senha do Portal, mesmo se tocou em "Sou de outra OPM"
+      const veioDeOutra = MODO_OUTRA;
+      MODO_OUTRA = false; EXT_PEND = null; show('quem-ext', false);
+      if (sessaoGar(d.re)) return entrarComo(euDe(d));
+      return pedirSenha(euDe(d), veioDeOutra ? 'Este RE é do <b>BPFRON</b>: entre com a sua senha do Portal (uma vez neste aparelho).' : '');
+    }
     if (d.desconhecido){
       // RE fora do cadastro: outra unidade. Pede nome e unidade antes de seguir.
+      const digNome = $('ext-nome').value.trim(), digUni = $('ext-uni').value.trim();
       EXT_PEND = d;
+      $('ext-msg').innerHTML = EXT_MSG();
       $('ext-re').textContent = d.re;
-      $('ext-nome').value = [d.posto, d.nome].filter(Boolean).join(' '); $('ext-uni').value = d.unidade || '';
-      show('quem-ext', true); $('ext-nome').focus();
+      $('ext-nome').value = MODO_OUTRA && digNome ? digNome : [d.posto, d.nome].filter(Boolean).join(' ');
+      $('ext-uni').value = MODO_OUTRA && digUni ? digUni : (d.unidade || '');
+      show('quem-ext', true);
+      if (MODO_OUTRA && $('ext-nome').value.trim().length >= 3 && $('ext-uni').value.trim()) return confirmarExt();
+      $('ext-nome').focus();
       return;
     }
     entrarComo(euDe(d));
   }catch(e){ $('re-erro').textContent = e.message; }
   finally{ $('btn-re').disabled = false; $('btn-re').textContent = 'Confirmar'; }
 }
+/* "Sou de outra OPM": o caminho sem senha (posto/nome, unidade, finalidade e quem autorizou). */
+function souOutraOpm(){
+  MODO_OUTRA = true; EXT_PEND = null;
+  EXT_MSG();
+  $('ext-msg').innerHTML = IC('etiqueta') + 'Policial de <b>outra OPM</b>: digite o seu RE acima e identifique-se. No checklist você informa a finalidade e quem autorizou. <span class="muted">(Efetivo do BPFRON entra com a senha.)</span>';
+  show('quem-ext', true);
+  $('re').focus();
+}
+function pedirSenha(eu, aviso){
+  SENHA_PEND = { ...eu, precisa_senha: true }; EU = null;
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(SENHA_PEND)); }catch(e){}
+  $('sn-senha').value = ''; $('sn-nova').value = ''; show('sn-nova-wrap', false);
+  $('sn-erro').innerHTML = ''; $('sn-link-msg').textContent = '';
+  $('sn-aviso').innerHTML = IC('cadeado') + (aviso || 'Policial do BPFRON: entre com a <b>sua senha do Portal do Policial</b>. É só uma vez neste aparelho.');
+  show('s-form', false);
+  mostrarQuem(); renderViaturas();
+}
+async function entrarSenha(){
+  if (!SENHA_PEND) return;
+  const senha = $('sn-senha').value, nova = $('sn-nova').value;
+  $('sn-erro').innerHTML = '';
+  if (!senha){ $('sn-erro').textContent = 'Digite a sua senha.'; return; }
+  $('btn-senha').disabled = true; $('btn-senha').textContent = 'Entrando…';
+  try{
+    const d = await api('/api/garagem/entrar', { re: SENHA_PEND.re, senha, ...(nova ? { nova } : {}) });
+    if (d.trocar){ show('sn-nova-wrap', true); $('sn-erro').textContent = d.detail || 'Escolha uma senha nova.'; $('sn-nova').focus(); return; }
+    try{ localStorage.setItem(LS_GTOK, JSON.stringify({ re: re5(SENHA_PEND.re), token: d.token, exp: Date.now() + (d.expiresIn || 0) * 1000 })); }catch(e){}
+    const eu = { ...SENHA_PEND }; SENHA_PEND = null;
+    entrarComo(eu);
+  }catch(e){
+    $('sn-erro').innerHTML = esc(e.message) + (e.code === 'sem_senha' ? '<br><span style="font-size:12.5px">Toque em “receber o link no e-mail” logo abaixo.</span>' : '');
+  }finally{ $('btn-senha').disabled = false; $('btn-senha').textContent = 'Entrar'; }
+}
+async function pedirLink(){
+  if (!SENHA_PEND) return;
+  $('btn-link').disabled = true; $('sn-link-msg').textContent = 'Enviando…';
+  try{ const d = await api('/api/senha/pedir-link', { re: SENHA_PEND.re }); $('sn-link-msg').textContent = d.detail || 'Pronto.'; }
+  catch(e){ $('sn-link-msg').textContent = e.message; }
+  finally{ $('btn-link').disabled = false; }
+}
+/* o Worker recusou por falta de senha (ou sessão vencida): volta para a senha sem perder o formulário */
+function sessaoRecusada(e){
+  if (e.code !== 'precisa_senha' && e.code !== 'sessao_vencida') return false;
+  apagarSessaoGar();
+  if (EU) pedirSenha(EU, esc(e.message));
+  return true;
+}
 let EXT_PEND = null;
 function euDe(d){
-  return { re: d.re, nome: [d.posto, d.nome].filter(Boolean).join(' '), externo: !!d.externo, unidade: d.unidade || '', desconhecido: !!d.desconhecido };
+  return { re: d.re, nome: [d.posto, d.nome].filter(Boolean).join(' '), externo: !!d.externo, unidade: d.unidade || '', desconhecido: !!d.desconhecido, precisa_senha: !!d.precisa_senha };
 }
 function entrarComo(eu){
-  EU = eu; EXT_PEND = null; show('quem-ext', false);
+  EU = eu; EXT_PEND = null; MODO_OUTRA = false; SENHA_PEND = null; show('quem-ext', false);
   try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(e){}
   mostrarQuem(); renderViaturas();
   if (SEL) abrirForm(false);
@@ -655,6 +764,7 @@ function entrarComo(eu){
 }
 function confirmarExt(){
   const nome = $('ext-nome').value.trim(), uni = $('ext-uni').value.trim();
+  if (MODO_OUTRA && !EXT_PEND) return identificar();      // "Sou de outra OPM": confere o RE primeiro
   if (!EXT_PEND) return;
   if ($('re').value.replace(/\D/g,'') !== EXT_PEND.re) return identificar();   // corrigiu o RE: confere de novo
   if (nome.length < 3 || !uni){ $('re-erro').textContent = 'Informe seu posto/nome e a sua unidade.'; return; }
@@ -670,6 +780,7 @@ async function reconferirEU(){
   try{
     const d = await api('/api/garagem/identificar', { re: EU.re });
     if (!EU || EU.re !== d.re) return;
+    if (d.precisa_senha && !sessaoGar(d.re)) return pedirSenha(euDe(d));
     if (d.desconhecido) EU = { ...EU, externo: true, desconhecido: true, unidade: EU.unidade || d.unidade || '' };
     else EU = euDe(d);
     try{ localStorage.setItem(LS_KEY, JSON.stringify(EU)); }catch(e){}
@@ -677,7 +788,8 @@ async function reconferirEU(){
   }catch(e){ EU_CONFERIDO = false; }
 }
 function trocarPolicial(){
-  EU = null; try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  EU = null; SENHA_PEND = null; MODO_OUTRA = false; apagarSessaoGar();
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
   AB = null; AB_RE = ''; ABV = null; show('s-abast', false); show('s-abast-ok', false);
   SEL = null; show('s-form', false); $('re').value = ''; EXT_PEND = null; show('quem-ext', false);
   mostrarQuem(); renderViaturas();
@@ -915,7 +1027,8 @@ async function enviarAbast(confirmar){
     window.scrollTo({ top:0, behavior:'smooth' });
     carregarAb(true);
   }catch(e){
-    if (e.code === 'repetida') abErroEnvio('<i data-ic="info"></i>' + esc(e.message) + `<br><button class="btn gray" style="margin-top:8px" onclick="enviarAbast(true)">É outro abastecimento — enviar mesmo assim</button>`);
+    if (sessaoRecusada(e)) { show('s-abast', false); }
+    else if (e.code === 'repetida') abErroEnvio('<i data-ic="info"></i>' + esc(e.message) + `<br><button class="btn gray" style="margin-top:8px" onclick="enviarAbast(true)">É outro abastecimento — enviar mesmo assim</button>`);
     else if (e.code === 'sem_viatura'){ abErroEnvio('<i data-ic="cadeado"></i>' + esc(e.message)); recarregarSilencioso(); }
     else abErroEnvio('<i data-ic="alerta"></i>Não foi enviado: ' + esc(e.message) + '<br><span style="font-size:12.5px">Seus dados continuam na tela — tente de novo.</span>');
   }finally{ $('ab-enviar').disabled = false; carregandoOvl(''); }
@@ -1101,7 +1214,8 @@ async function enviar(){
     const d = await api('/api/garagem/checklist', body);
     mostrarSucesso(body, d);
   }catch(e){
-    if (e.code === 'km_divergente'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('O km diverge do maior já registrado (' + fN(e.data.km_max) + ' km). Confira e confirme.'); }
+    if (sessaoRecusada(e)) { /* volta para a senha; o formulário continua preenchido */ }
+    else if (e.code === 'km_divergente'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('O km diverge do maior já registrado (' + fN(e.data.km_max) + ' km). Confira e confirme.'); }
     else if (e.code === 'km_absurdo'){ SEL.km_atual = e.data.km_max; kmInput(); erroEnvio('<i data-ic="proibido"></i>' + esc(e.message)); }
     else if (e.code === 'externo_dados'){
       // o servidor diz que este RE é de outra unidade (o celular tinha a informação antiga)

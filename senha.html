@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bp-claro>
+<head>
+<meta charset="UTF-8">
+<!-- senha.html (26/11/2026): o policial do BPFRON abre o link que chegou no e-mail do cadastro,
+     confirma RE + CPF e cria (ou redefine) a senha do Portal do Policial — a mesma senha da
+     Cautela, do checklist da viatura, da ficha da P1 e das Tarefas.
+     Worker: GET/POST /api/senha/link e POST /api/senha/pedir-link (backend/senha-email.js). -->
+<script src="bp-casca.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Senha do Portal · BPFRON/RO</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bp-ui.css">
+<style>
+.sn-wrap{max-width:520px;margin:0 auto}
+.sn-form{display:flex;flex-direction:column;gap:14px}
+.sn-ola{font-size:15px;color:var(--t2);margin:0}
+.sn-ola b{color:var(--t1)}
+.sn-email{font-size:13.5px;color:var(--muted);margin:4px 0 0}
+.sn-dica{font-size:12.5px;color:var(--muted);margin:-6px 0 0}
+.sn-carregando{display:flex;align-items:center;gap:10px;color:var(--t3);padding:18px 4px}
+.sn-wrap .bp-heroi h1{font-size:clamp(24px,6vw,34px)}
+</style>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Cadastro da senha pelo e-mail", "quem": "todos", "itens": [
+    "O link que chega no seu e-mail abre esta página: confirme o RE e o CPF e crie a senha do Portal.",
+    "A mesma senha vale para a Cautela, o checklist da viatura, a ficha da P1 e as Tarefas."
+  ] }
+]</script>
+</head>
+<body class="bp-pg">
+<div class="bp-fundo" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bp-topo">
+  <div class="bp-topo-in">
+    <a class="bp-marca" href="policial.html" title="Portal do Policial">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON">
+      <span><small>BPFRON · Rondônia</small><b>Senha do Portal</b></span>
+    </a>
+  </div>
+</header>
+
+<main class="bp-wrap sn-wrap">
+  <section class="bp-heroi">
+    <div>
+      <span class="bp-selo-tx"><b></b>Portal do Policial</span>
+      <h1 id="sn-titulo">Cadastre a sua <em>senha</em></h1>
+      <p>A mesma senha vale para a Cautela, o checklist da viatura, a ficha da P1 e as Tarefas.</p>
+    </div>
+  </section>
+
+  <div class="sn-carregando" id="sn-carregando"><span class="bp-gira"></span>Conferindo o link…</div>
+
+  <!-- link válido -->
+  <div class="bp-card topo-acc bp-esconde" id="sn-form" style="margin-top:14px">
+    <form class="sn-form" onsubmit="event.preventDefault(); criarSenha()">
+      <div>
+        <p class="sn-ola" id="sn-ola"></p>
+        <p class="sn-email" id="sn-email"></p>
+      </div>
+      <div class="bp-campo"><label for="sn-re">Seu RE</label>
+        <div class="bp-in"><i data-ic="usuario"></i><input id="sn-re" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="5 dígitos"></div></div>
+      <div class="bp-campo"><label for="sn-cpf">Seu CPF</label>
+        <div class="bp-in"><i data-ic="escudo"></i><input id="sn-cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00"></div></div>
+      <div class="bp-campo"><label for="sn-nova">Senha nova</label>
+        <div class="bp-in"><i data-ic="cadeado"></i><input id="sn-nova" type="password" autocomplete="new-password" maxlength="72"></div></div>
+      <p class="sn-dica">Pelo menos 6 caracteres. Nada de sequência (123456) ou número repetido.</p>
+      <div class="bp-campo"><label for="sn-nova2">Repita a senha</label>
+        <div class="bp-in"><i data-ic="cadeado"></i><input id="sn-nova2" type="password" autocomplete="new-password" maxlength="72"></div></div>
+      <button type="submit" class="bp-btn w" id="sn-ok"><i data-ic="check"></i>Salvar a senha</button>
+      <div class="bp-msg" id="sn-msg"></div>
+    </form>
+  </div>
+
+  <!-- link usado, vencido ou substituído -->
+  <div class="bp-esconde" id="sn-usado" style="margin-top:14px">
+    <div class="bp-aviso pend"><i data-ic="relogio"></i><div><b>Este link não vale mais.</b> Ele já foi usado, passou de 72 horas ou foi substituído por um link mais novo.</div></div>
+    <div class="bp-card" style="margin-top:12px">
+      <form class="sn-form" onsubmit="event.preventDefault(); pedirLink()">
+        <div class="bp-campo"><label for="sn-re2">Seu RE</label>
+          <div class="bp-in"><i data-ic="usuario"></i><input id="sn-re2" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="5 dígitos"></div></div>
+        <button type="submit" class="bp-btn sec w" id="sn-pedir"><i data-ic="enviar"></i>Mandar um link novo para o meu e-mail</button>
+        <div class="bp-msg" id="sn-pedir-msg"></div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_Q = (function(){
+  try {
+    const q = new URLSearchParams(location.search).get('api');
+    if (q && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(q.replace(/\/+$/, ''))) return q.replace(/\/+$/, '');
+  } catch(e){}
+  return '';
+})();
+const API = API_Q || 'https://bpfron-api.bpfron.workers.dev';
+const $ = (id) => document.getElementById(id);
+const vis = (id, on) => $(id).classList.toggle('bp-esconde', !on);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+const ls = { set(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} } };
+const T = (() => { try { return new URLSearchParams(location.search).get('t') || ''; } catch(e){ return ''; } })();
+let LINK = null;
+
+async function chamar(path, corpo){
+  const r = await fetch(API + path, corpo ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) } : {});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ const e = new Error(d.detail || d.error || ('Erro ' + r.status)); e.status = r.status; e.code = d.error; throw e; }
+  return d;
+}
+function msg(id, tipo, texto){ const m = $(id); m.className = 'bp-msg' + (tipo ? ' ' + tipo : ''); m.textContent = texto; }
+
+/* CPF com máscara 000.000.000-00 enquanto digita */
+$('sn-cpf').addEventListener('input', (e) => {
+  const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+  e.target.value = d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d{1,2})$/, '.$1-$2');
+});
+
+function linkInvalido(){ vis('sn-carregando', false); vis('sn-form', false); vis('sn-usado', true); $('sn-titulo').innerHTML = 'Link <em>sem validade</em>'; }
+
+async function abrir(){
+  if (!T) return linkInvalido();
+  try {
+    LINK = await chamar('/api/senha/link?t=' + encodeURIComponent(T));
+    const quem = [LINK.posto, LINK.guerra].filter(Boolean).join(' ');
+    $('sn-titulo').innerHTML = LINK.tipo === 'troca' ? 'Redefinir a sua <em>senha</em>' : 'Cadastre a sua <em>senha</em>';
+    $('sn-ola').innerHTML = 'Olá, <b>' + esc(quem || 'policial') + '</b>. Confirme os seus dados para ' + (LINK.tipo === 'troca' ? 'trocar' : 'criar') + ' a senha.';
+    $('sn-email').textContent = LINK.email_mascarado ? 'Link enviado para ' + LINK.email_mascarado : '';
+    vis('sn-carregando', false); vis('sn-form', true);
+    setTimeout(() => $('sn-re').focus(), 50);
+  } catch(e){
+    if (e.status === 410 || e.status === 400 || e.status === 404) return linkInvalido();
+    vis('sn-carregando', false);
+    $('sn-carregando').textContent = '';
+    vis('sn-usado', true);
+    msg('sn-pedir-msg', 'err', e.message || 'Não consegui conferir o link agora. Tente de novo em instantes.');
+  }
+}
+
+async function criarSenha(){
+  const re = $('sn-re').value.replace(/\D/g, ''), cpf = $('sn-cpf').value.replace(/\D/g, '');
+  const nova = $('sn-nova').value, nova2 = $('sn-nova2').value;
+  if (re.length < 5) return msg('sn-msg', 'err', 'Digite o seu RE.');
+  if (cpf.length !== 11) return msg('sn-msg', 'err', 'Digite o CPF completo (11 números).');
+  if (nova.length < 6) return msg('sn-msg', 'err', 'A senha precisa de pelo menos 6 caracteres.');
+  if (nova !== nova2) return msg('sn-msg', 'err', 'As duas senhas não são iguais. Digite de novo.');
+  const btn = $('sn-ok'), antes = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Salvando…'; msg('sn-msg', '', '');
+  try {
+    const d = await chamar('/api/senha/link', { t: T, re, cpf, nova });
+    // entra no Portal já logado (igual ao /api/tarefas/entrar)
+    ls.set('tar_token', d.token); ls.set('tar_user', d.user || null);
+    ls.set('bp_portal', JSON.stringify({ re: re.slice(-5), nome: d.nome || '', posto: LINK.posto || '', guerra: LINK.guerra || '' }));
+    ls.set('bp_gar_token', null);
+    msg('sn-msg', 'ok', 'Senha salva. Abrindo o Portal do Policial…');
+    setTimeout(() => { location.href = 'policial.html' + (API_Q ? '?api=' + encodeURIComponent(API_Q) : ''); }, 700);
+  } catch(e){
+    if (e.code === 'link_invalido') return linkInvalido();
+    msg('sn-msg', 'err', e.message);
+    btn.disabled = false; btn.innerHTML = antes;
+  }
+}
+
+async function pedirLink(){
+  const re = $('sn-re2').value.replace(/\D/g, '');
+  if (re.length < 5) return msg('sn-pedir-msg', 'err', 'Digite o seu RE.');
+  const btn = $('sn-pedir'); btn.disabled = true; msg('sn-pedir-msg', '', 'Enviando…');
+  try { const d = await chamar('/api/senha/pedir-link', { re }); msg('sn-pedir-msg', d.enviado ? 'ok' : '', d.detail || 'Pronto.'); }
+  catch(e){ msg('sn-pedir-msg', 'err', e.message); }
+  finally { btn.disabled = false; }
+}
+
+// o token não fica no histórico nem vaza pelo Referer depois de lido
+try { if (T) history.replaceState(null, '', location.pathname + (API_Q ? '?api=' + encodeURIComponent(API_Q) : '')); } catch(e){}
+abrir();
+</script>
+</body>
+</html>

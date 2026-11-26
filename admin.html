@@ -142,12 +142,24 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
 .ef-acoes{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .ef-res{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .ef-res .adm-u{grid-template-columns:1fr auto}
+.sn-nums{grid-template-columns:repeat(6,minmax(0,1fr))}
+.sn-result{display:flex;flex-direction:column;gap:6px;margin-top:12px;border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--card)}
+.sn-result h4{margin:0 0 4px;font-size:14px}
+.sn-result [data-res]{font-size:13px;color:var(--t2);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.sn-result [data-res].err{color:var(--crit)}
+.sn-result [data-res] b{color:inherit}
+.sn-email{font-size:12.5px;color:var(--t3);word-break:break-all}
+.imp-sec{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:10px}
+.imp-sec h4{margin:0 0 6px;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.imp-sec ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--t2);max-height:220px;overflow:auto}
+.imp-sec li{margin:2px 0;word-break:break-word}
 .ef-motivo{display:grid;grid-template-columns:1fr;gap:8px}
 
 @media (max-width:820px){ .adm-u{grid-template-columns:1fr;gap:10px} .adm-u .adm-ed{width:100%} }
 @media (max-width:760px){
   .adm-nums{grid-template-columns:repeat(2,minmax(0,1fr))}
   .adm-nums .bp-num:last-child{grid-column:1/-1}
+  .sn-nums .bp-num:last-child{grid-column:auto}
   .adm-aba{flex:1;justify-content:center;padding:10px 6px;font-size:13px}
   .adm-g2,.adm-opts{grid-template-columns:1fr}
   .adm-log-it{grid-template-columns:1fr;gap:2px}
@@ -162,6 +174,13 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Cadastro da senha do Portal pelo e-mail", "quem": "todos", "itens": [
+    "Aba nova Cadastro de senha: quem está sem e-mail, quem ainda não recebeu o link, quem recebeu, quem deixou vencer e quem já cadastrou. Clique nos números para filtrar.",
+    "Enviar para todos que faltam manda o link de uma vez (pede confirmação e mostra em vermelho quem não recebeu). Reenviar e Link para trocar vão um a um.",
+    "Efetivo do BPFRON: Importar da planilha do efetivo traz os e-mails (e CPF/telefone onde estiver vazio), com prévia antes de gravar.",
+    "Editar ganhou o campo E-mail.",
+    "Enquanto o envio pelo Gmail não estiver autorizado, a aba mostra o aviso com o botão Autorizar o Gmail (entra com a conta do batalhão e aceita no Google)."
+  ] },
   { "data": "2026-11-16", "titulo": "Nova aba: Efetivo do BPFRON", "quem": "todos", "itens": [
     "Lista de quem conta como efetivo do batalhão no site (pesquisas exclusivas, P1, escalas).",
     "Editar corrige posto, nome, OPM e telefone do policial.",
@@ -254,6 +273,7 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
       <button type="button" class="adm-aba" data-tab="matriz"><i data-ic="grade"></i>Matriz de acesso</button>
       <button type="button" class="adm-aba" data-tab="log"><i data-ic="relogio"></i>Histórico</button>
       <button type="button" class="adm-aba" data-tab="efetivo"><i data-ic="escudo"></i>Efetivo do BPFRON</button>
+      <button type="button" class="adm-aba" data-tab="senhas"><i data-ic="cadeado"></i>Cadastro de senha</button>
     </div>
 
     <div id="t-usuarios">
@@ -294,10 +314,33 @@ table.adm-mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:
       <div class="adm-barra" style="margin-top:12px">
         <div class="bp-in"><i data-ic="buscar"></i><input id="ef-busca" type="search" placeholder="Buscar por nome, RE, posto ou OPM…" autocomplete="off"></div>
         <button type="button" class="bp-btn" id="ef-novo"><i data-ic="mais"></i>Incluir policial</button>
+        <button type="button" class="bp-btn sec" id="ef-importar"><i data-ic="baixar"></i>Importar da planilha do efetivo</button>
         <button type="button" class="bp-btn ic sec" id="ef-recarregar" title="Recarregar" aria-label="Recarregar"><i data-ic="atualizar"></i></button>
       </div>
       <div class="adm-leg" id="ef-resumo"></div>
       <div class="adm-lista" id="ef-lista"><div class="bp-vazio">Abra esta aba para carregar o efetivo.</div></div>
+    </div>
+
+    <!-- cadastro da senha do Portal pelo link no e-mail (26/11/2026) -->
+    <div id="t-senhas" class="bp-esconde">
+      <div class="bp-aviso"><i data-ic="info"></i><div>O efetivo do BPFRON cria a senha do Portal (Cautela, checklist da viatura, ficha da P1 e Tarefas) pelo <b>link enviado ao e-mail do cadastro</b>, confirmando RE e CPF. O link vale <b>72 horas</b> e só o último enviado funciona.
+        Quem está <b>sem e-mail</b>: abra a aba <b>Efetivo do BPFRON</b> e use <b>Editar</b> ou <b>Importar da planilha do efetivo</b>.</div></div>
+      <div class="bp-aviso bp-esconde" id="sn-gmail" style="margin-top:10px;border-color:var(--warn)"><i data-ic="alerta"></i><div><b>O envio pelo Gmail ainda não foi autorizado</b> — sem isso nenhum link sai. Clique no botão, entre com a conta do batalhão que vai mandar os e-mails e aceite na tela do Google.
+        <div class="adm-linha" style="margin-top:8px"><button type="button" class="bp-btn" id="sn-gmail-btn"><i data-ic="cadeado"></i>Autorizar o Gmail</button></div></div></div>
+      <div class="bp-nums adm-nums sn-nums" id="sn-nums" style="margin-top:14px"></div>
+      <div class="adm-barra" style="margin-top:12px">
+        <div class="bp-in"><i data-ic="buscar"></i><input id="sn-busca" type="search" placeholder="Buscar por nome, RE ou e-mail…" autocomplete="off"></div>
+        <button type="button" class="bp-btn" id="sn-enviar-todos"><i data-ic="enviar"></i>Enviar para todos que faltam</button>
+        <button type="button" class="bp-btn ic sec" id="sn-recarregar" title="Recarregar" aria-label="Recarregar"><i data-ic="atualizar"></i></button>
+      </div>
+      <div class="adm-zona bp-esconde" id="sn-conf">
+        <h4 id="sn-conf-tit"></h4>
+        <p>Cada um recebe no e-mail do cadastro o link para criar a senha. Quem tinha um link anterior ainda não usado passa a valer só o novo.</p>
+        <div class="adm-linha"><button type="button" class="bp-btn" id="sn-conf-sim"><i data-ic="enviar"></i>Enviar agora</button>
+          <button type="button" class="bp-btn ghost" id="sn-conf-nao">Cancelar</button></div>
+      </div>
+      <div class="sn-result bp-esconde" id="sn-result"></div>
+      <div class="adm-lista" id="sn-lista" style="margin-top:12px"><div class="bp-vazio">Abra esta aba para carregar.</div></div>
     </div>
   </div>
 </main>
@@ -627,8 +670,9 @@ document.querySelectorAll('.adm-aba').forEach(t => t.addEventListener('click', (
   if (TAB === 'matriz' && t.dataset.tab !== 'matriz' && Object.keys(PEND).length && !confirmaSaida()) return;
   TAB = t.dataset.tab;
   document.querySelectorAll('.adm-aba').forEach(x => x.classList.toggle('on', x === t));
-  ['usuarios','matriz','log','efetivo'].forEach(k => $('t-' + k).classList.toggle('bp-esconde', k !== TAB));
+  ['usuarios','matriz','log','efetivo','senhas'].forEach(k => $('t-' + k).classList.toggle('bp-esconde', k !== TAB));
   if (TAB === 'efetivo' && !EF) carregarEfetivo();
+  if (TAB === 'senhas' && !SN) carregarSenhas();
 }));
 function confirmaSaida(){ toast('Salve ou descarte as alterações da matriz antes de sair dela.', true); return false; }
 
@@ -850,6 +894,8 @@ let PE = null;          // { modo: 'editar'|'saida'|'incluir', p }
 
 async function carregarEfetivo(){
   $('ef-lista').innerHTML = '<div class="bp-vazio"><span class="bp-gira" style="vertical-align:-3px;margin-right:8px"></span>Lendo o cadastro de policiais…</div>';
+  // o efetivo mudou (e-mail, saída, inclusão): a aba Cadastro de senha relê
+  if (typeof TAB !== 'undefined' && TAB === 'senhas') carregarSenhas(); else SN = null;
   try { EF = await api('/api/admin/efetivo'); renderEfetivo(); }
   catch(e){ EF = null; $('ef-lista').innerHTML = '<div class="bp-vazio">Não consegui ler o cadastro: ' + esc(e.message) + '</div>'; }
 }
@@ -860,7 +906,7 @@ function renderEfetivo(){
   if (!EF) return;
   const q = norm($('ef-busca').value.trim());
   const lista = EF.efetivo.slice().sort((a, b) => (a.guerra || a.nome).localeCompare(b.guerra || b.nome, 'pt-BR'))
-    .filter(p => !q || norm([p.re, p.nome, p.guerra, p.posto_grad, p.opm, p.contato].join(' ')).includes(q));
+    .filter(p => !q || norm([p.re, p.nome, p.guerra, p.posto_grad, p.opm, p.contato, p.email].join(' ')).includes(q));
   $('ef-resumo').innerHTML = `<span><b>${EF.efetivo.length}</b> policiais contam como BPFRON</span>`
     + (EF.opms.length > 1 ? EF.opms.map(o => `<span>${esc(o.opm)}: <b>${o.n}</b></span>`).join('') : '')
     + (q ? `<span>Mostrando <b>${lista.length}</b></span>` : '');
@@ -868,7 +914,7 @@ function renderEfetivo(){
   $('ef-lista').innerHTML = lista.map((p, i) => `<div class="adm-u" style="--i:${Math.min(i, 30)}">
       <div class="adm-quem"><span class="adm-av">${esc(iniciais(p.guerra || p.nome))}</span><div><b>${esc(nomePol(p))}</b><code>RE ${esc(p.re)}</code>
         <small>${esc(p.nome || '')}</small></div></div>
-      <div class="adm-chips"><span class="adm-ch" style="--c:var(--info)">${esc(p.opm)}</span>${p.contato ? `<span class="adm-ch neu">${esc(p.contato)}</span>` : ''}</div>
+      <div class="adm-chips"><span class="adm-ch" style="--c:var(--info)">${esc(p.opm)}</span>${p.contato ? `<span class="adm-ch neu">${esc(p.contato)}</span>` : ''}${p.email ? `<span class="adm-ch neu">${esc(p.email)}</span>` : '<span class="adm-ch blk">sem e-mail</span>'}</div>
       <div class="ef-acoes"><button type="button" class="bp-btn sm sec" data-ef-ed="${esc(p.re)}">${IC('editar')}Editar</button>
         <button type="button" class="bp-btn sm perigo-l" data-ef-sai="${esc(p.re)}">${IC('sair')}Saiu do BPFRON</button></div>
     </div>`).join('');
@@ -895,12 +941,14 @@ function formPol(p, roRE){
       ${campo('pe-opm', 'OPM', p.opm, { lista: true })}
       ${campo('pe-nome', 'Nome completo', p.nome, { inteira: true })}
       ${EF && EF.tem_contato ? campo('pe-contato', 'Telefone', p.contato, { inteira: true }) : ''}
+      ${campo('pe-email', 'E-mail (recebe o link da senha do Portal)', p.email, { inteira: true, ph: 'ex.: nome@gmail.com' })}
     </div>${listaOpms()}
     <p style="margin:10px 2px 0;color:var(--muted);font-size:12.5px">CPF e dados bancários não aparecem aqui e não são alterados.</p>`;
 }
 const lerForm = () => {
   const v = (id) => ($(id) ? $(id).value.trim() : undefined);
-  return { posto_grad: v('pe-posto'), guerra: v('pe-guerra'), nome: v('pe-nome'), opm: v('pe-opm'), contato: v('pe-contato') };
+  const em = v('pe-email');
+  return { posto_grad: v('pe-posto'), guerra: v('pe-guerra'), nome: v('pe-nome'), opm: v('pe-opm'), contato: v('pe-contato'), email: em === undefined ? undefined : em.toLowerCase() };
 };
 
 const MOTIVOS = [
@@ -1025,6 +1073,15 @@ $('pe-salvar').onclick = async () => {
     if (dados.opm !== undefined && !dados.opm) return peMsg('A OPM não pode ficar vazia.');
     body = { op: 'editar', re: p.re, dados };
     okMsg = dados.opm !== undefined && !/BPFRON/i.test(dados.opm) ? nomePol(p) + ' saiu da lista do efetivo (OPM ' + dados.opm.toUpperCase() + ').' : 'Cadastro atualizado.';
+  } else if (PE.modo === 'importar'){
+    btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Gravando…';
+    try {
+      const d = await api('/api/admin/efetivo/importar', { aplicar: true });
+      fecharPol();
+      toast(d.gravados ? `Planilha importada: ${d.gravados} policial(is) atualizado(s).` : 'Nada para gravar: o cadastro já estava igual à planilha.');
+      EF = null; SN = null; carregarEfetivo();
+    } catch(e){ peMsg(e.message); btn.disabled = false; btn.innerHTML = IC('check') + 'Gravar no cadastro'; }
+    return;
   } else if (PE.modo === 'saida'){
     const m = motivoAtual();
     const destino = (m.txt ? $('pe-dest').value : m.destino).trim().toUpperCase();
@@ -1041,6 +1098,149 @@ $('pe-salvar').onclick = async () => {
   } catch(e){ peMsg(e.message); }
   finally { btn.disabled = false; }
 };
+
+/* ------------------- importar da planilha do efetivo (26/11/2026) -------------------
+   Prévia do /api/admin/efetivo/importar: grava só e-mail (e CPF/telefone onde está vazio).
+   Divergências só aparecem (CPF pelos 4 últimos); residência nunca é lida para cá. */
+const nomeImp = (x) => esc(x.nome || ('RE ' + x.re)) + ' <span style="color:var(--muted)">(RE ' + esc(x.re) + ')</span>';
+function secImp(chave, tit, cor, itens, linha, vazio){
+  return `<div class="imp-sec" data-imp-sec="${chave}" style="border-color:color-mix(in srgb,${cor} 40%,var(--line))">
+    <h4><span class="adm-ch" style="--c:${cor}">${itens.length}</span>${tit} · ${itens.length}</h4>
+    ${itens.length ? '<ul>' + itens.map(linha).join('') + '</ul>' : `<div style="font-size:12.5px;color:var(--muted)">${vazio}</div>`}</div>`;
+}
+async function abrirImportar(){
+  PE = { modo: 'importar' };
+  $('pe-av').textContent = '⇣';
+  $('pe-titulo').textContent = 'Importar da planilha do efetivo';
+  $('pe-sub').textContent = 'Confira antes de gravar no cadastro de policiais';
+  $('pe-resumo').textContent = '';
+  const sv = $('pe-salvar'); sv.classList.add('bp-esconde');
+  $('pe-corpo').innerHTML = '<div class="bp-vazio"><span class="bp-gira" style="vertical-align:-3px;margin-right:8px"></span>Lendo a planilha do efetivo e comparando com o cadastro…</div><div class="bp-msg" id="pe-msg" style="margin-top:14px"></div>';
+  $('ovl-pol').classList.add('on'); $('ovl-pol').querySelector('.adm-gav').scrollTop = 0; document.body.style.overflow = 'hidden';
+  let d;
+  try { d = await api('/api/admin/efetivo/importar', { aplicar: false }); }
+  catch(e){ $('pe-corpo').innerHTML = '<div class="bp-msg err" id="pe-msg">' + esc(e.message) + '</div>'; return; }
+  if (!PE || PE.modo !== 'importar') return;
+  const ROT = { cpf: 'CPF', telefone: 'Telefone', nome: 'Nome' };
+  const MOT = { email_invalido: 'e-mail inválido na planilha', sem_email: 'sem e-mail na planilha' };
+  const nGrava = d.novos_email.length + d.preenche.length;
+  $('pe-corpo').innerHTML = `<div class="bp-aviso">${IC('info')}<div>Grava no cadastro só o <b>e-mail</b> e, onde estiver <b>vazio</b>, o CPF e o telefone. Divergências <b>não</b> são gravadas: corrija pelo <b>Editar</b> se for o caso. Ninguém entra ou sai do efetivo por aqui.</div></div>
+    ${secImp('novos', 'E-mails novos', 'var(--good)', d.novos_email, (x) => `<li>${nomeImp(x)}: <b>${esc(x.email)}</b>${x.antes ? ' <span style="color:var(--muted)">(antes ' + esc(x.antes) + ')</span>' : ''}</li>`, 'Todos os e-mails já estão iguais.')}
+    ${secImp('preenche', 'Preenche campos vazios', 'var(--info)', d.preenche, (x) => `<li>RE ${esc(x.re)}: ${ROT[x.campo] || esc(x.campo)}</li>`, 'Nenhum campo vazio para preencher.')}
+    ${secImp('diverg', 'Divergências (não gravadas)', 'var(--warn)', d.divergencias, (x) => `<li>RE ${esc(x.re)} · ${ROT[x.campo] || esc(x.campo)}: cadastro <b>${esc(x.cadastro)}</b> × planilha <b>${esc(x.planilha)}</b></li>`, 'Nenhuma divergência.')}
+    ${secImp('so_planilha', 'Só na planilha (não estão no efetivo do cadastro)', 'var(--muted)', d.so_planilha, (x) => `<li>${nomeImp(x)}</li>`, 'Ninguém.')}
+    ${secImp('so_cadastro', 'Só no cadastro (não estão na planilha)', 'var(--muted)', d.so_cadastro, (x) => `<li>${nomeImp(x)}</li>`, 'Ninguém.')}
+    ${secImp('problemas', 'Problemas na planilha', 'var(--crit)', d.problemas, (x) => `<li>RE ${esc(x.re)}: ${MOT[x.motivo] || esc(x.motivo)}</li>`, 'Nenhum.')}
+    <div class="bp-msg" id="pe-msg" style="margin-top:14px"></div>`;
+  if (nGrava){ sv.classList.remove('bp-esconde'); sv.disabled = false; sv.innerHTML = IC('check') + 'Gravar no cadastro'; $('pe-resumo').innerHTML = `<b>${nGrava}</b> alteração(ões) para gravar`; }
+  else $('pe-resumo').textContent = 'Nada para gravar.';
+}
+$('ef-importar').onclick = abrirImportar;
+
+/* ------------------- cadastro de senha pelo e-mail (26/11/2026) -------------------
+   GET /api/admin/senhas · POST /api/admin/senhas/enviar { res: "pendentes" | [RE…] } */
+let SN = null, SN_F = '';
+const SIT = {
+  sem_email:      { r: 'Sem e-mail',     c: 'var(--crit)', ic: 'alerta' },
+  nao_enviado:    { r: 'Não enviado',    c: 'var(--muted)', ic: 'relogio' },
+  enviado:        { r: 'Enviado',        c: 'var(--info)', ic: 'enviar' },
+  vencido:        { r: 'Vencido',        c: 'var(--warn)', ic: 'alerta' },
+  cadastrou:      { r: 'Cadastrou',      c: 'var(--good)', ic: 'ok' },
+  ja_tinha_senha: { r: 'Já tinha senha', c: 'var(--acc)', ic: 'cadeado' },
+};
+const ERRO_ENVIO = { sem_email: 'sem e-mail no cadastro', fora_do_efetivo: 'não está no efetivo do BPFRON', gmail_nao_configurado: 'o envio pelo Gmail não foi autorizado', email_invalido: 'e-mail do cadastro inválido' };
+const quandoBR = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+
+async function carregarSenhas(){
+  if (!SN) $('sn-lista').innerHTML = '<div class="bp-vazio"><span class="bp-gira" style="vertical-align:-3px;margin-right:8px"></span>Lendo o efetivo e as senhas…</div>';
+  try { SN = await api('/api/admin/senhas'); renderSenhas(); }
+  catch(e){ SN = null; $('sn-lista').innerHTML = '<div class="bp-vazio">Não consegui ler: ' + esc(e.message) + '</div>'; }
+}
+function renderSenhas(){
+  if (!SN) return;
+  $('sn-gmail').classList.toggle('bp-esconde', SN.gmail !== false);
+  $('sn-nums').innerHTML = Object.entries(SIT).map(([k, s], i) => `<button type="button" class="bp-num clica${SN_F === k ? ' on' : ''}" data-sf="${k}" style="--i:${i};--c:${s.c}">${IC(s.ic)}<div class="r">${s.r}</div><div class="v">${SN.contagem[k] || 0}</div><small class="bp-ver">${SN_F === k ? 'mostrando · limpar' : 'filtrar'}${IC('seta')}</small></button>`).join('');
+  const q = norm($('sn-busca').value.trim());
+  const lista = SN.policiais.filter(p => (!SN_F || p.situacao === SN_F) && (!q || norm([p.re, p.nome, p.guerra, p.posto_grad, p.email].join(' ')).includes(q)));
+  const falta = (SN.contagem.nao_enviado || 0) + (SN.contagem.vencido || 0);
+  $('sn-enviar-todos').disabled = !falta;
+  if (!lista.length){ $('sn-lista').innerHTML = '<div class="bp-vazio">' + (SN_F || q ? 'Ninguém nesse filtro.' : 'Nenhum policial no efetivo.') + '</div>'; return; }
+  $('sn-lista').innerHTML = lista.map((p, i) => {
+    const s = SIT[p.situacao] || SIT.nao_enviado;
+    const quando = p.situacao === 'cadastrou' || p.situacao === 'ja_tinha_senha' ? (p.definida_em ? 'senha em ' + quandoBR(p.definida_em) : '')
+      : p.enviado_em ? 'enviado em ' + quandoBR(p.enviado_em) + (p.situacao === 'enviado' && p.link_valido_ate ? ' · vale até ' + quandoBR(p.link_valido_ate) : '') : '';
+    const acao = p.situacao === 'sem_email' ? `<button type="button" class="bp-btn sm sec" data-sn-email="${esc(p.re)}">${IC('editar')}Pôr e-mail</button>`
+      : `<button type="button" class="bp-btn sm ${p.situacao === 'nao_enviado' ? '' : 'sec'}" data-sn-env="${esc(p.re)}">${IC('enviar')}${p.situacao === 'nao_enviado' ? 'Enviar' : p.situacao === 'cadastrou' || p.situacao === 'ja_tinha_senha' ? 'Link para trocar' : 'Reenviar'}</button>`;
+    return `<div class="adm-u" style="--i:${Math.min(i, 30)}">
+      <div class="adm-quem"><span class="adm-av">${esc(iniciais(p.guerra || p.nome))}</span><div><b>${esc(nomePol(p))}</b><code>RE ${esc(p.re)}</code>
+        <small class="sn-email">${p.email ? esc(p.email) : 'sem e-mail no cadastro'}</small></div></div>
+      <div class="adm-chips"><span class="adm-ch" style="--c:${s.c}">${esc(s.r)}</span>${quando ? `<span class="adm-ch neu">${esc(quando)}</span>` : ''}</div>
+      <div class="ef-acoes">${acao}</div>
+    </div>`;
+  }).join('');
+}
+function mostrarResultado(res){
+  const nome = (re) => { const p = SN && SN.policiais.find(x => x.re === re); return p ? nomePol(p) : 'RE ' + re; };
+  const ok = res.filter(r => r.ok).length;
+  $('sn-result').innerHTML = `<h4>${ok} de ${res.length} enviado(s)</h4>` + res.map(r => r.ok
+    ? `<div data-res="${esc(r.re)}">${IC('ok')}<b>${esc(nome(r.re))}</b> → ${esc(r.email_mascarado || '')}</div>`
+    : `<div data-res="${esc(r.re)}" class="err">${IC('alerta')}<b>${esc(nome(r.re))}</b> não foi: ${esc(ERRO_ENVIO[r.erro] || r.erro || 'falhou')}</div>`).join('');
+  $('sn-result').classList.remove('bp-esconde');
+}
+async function enviarSenhas(res, btn){
+  const antes = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="bp-gira"></span>Enviando…';
+  try {
+    /* 26/11/2026: o Worker manda em lotes (limite de chamadas por pedido) e diz quantos "restantes";
+       a tela repete o pedido, avisando o Worker de quem já foi tentado (pular) para não reenviar falha. */
+    const todos = [];
+    const lotes = Array.isArray(res) ? Array.from({ length: Math.ceil(res.length / 10) }, (_, i) => res.slice(i * 10, i * 10 + 10)) : null;
+    for (let volta = 0; volta < 60; volta++){
+      const corpo = lotes ? { res: lotes[volta] } : { res, pular: todos.map(r => r.re) };
+      if (lotes && !corpo.res) break;
+      const d = await api('/api/admin/senhas/enviar', corpo);
+      todos.push(...(d.resultados || []));
+      btn.innerHTML = '<span class="bp-gira"></span>Enviando… ' + todos.length;
+      if (!lotes && !(d.restantes > 0 && (d.resultados || []).length)) break;
+    }
+    const d = { resultados: todos };
+    mostrarResultado(d.resultados || []);
+    const falhou = (d.resultados || []).filter(r => !r.ok).length;
+    toast(falhou ? falhou + ' envio(s) falharam — veja em vermelho.' : 'Link(s) enviado(s).', !!falhou);
+    await carregarSenhas();
+  } catch(e){ toast(e.message, true); }
+  finally { btn.disabled = false; btn.innerHTML = antes; }
+}
+$('sn-nums').addEventListener('click', (ev) => { const b = ev.target.closest('[data-sf]'); if (!b) return; SN_F = SN_F === b.dataset.sf ? '' : b.dataset.sf; renderSenhas(); });
+$('sn-busca').addEventListener('input', renderSenhas);
+$('sn-recarregar').onclick = carregarSenhas;
+// autorizar o Gmail: o Worker dá o link do Google (a aba abre antes do await para o navegador não bloquear)
+$('sn-gmail-btn').onclick = async () => {
+  const aba = window.open('', '_blank');
+  try {
+    const d = await api('/api/admin/senhas/gmail');
+    if (aba) { aba.opener = null; aba.location.href = d.url; } else location.href = d.url;
+    toast('Aceite na tela do Google e depois clique em Recarregar aqui.');
+  } catch(e){ if (aba) aba.close(); toast(e.message, true); }
+};
+$('sn-enviar-todos').onclick = () => {
+  if (!SN) return;
+  const n = (SN.contagem.nao_enviado || 0) + (SN.contagem.vencido || 0);
+  if (!n) return toast('Ninguém faltando: todos com e-mail já receberam um link válido ou já têm senha.');
+  $('sn-conf-tit').textContent = `Enviar o link para ${n} policial(is) (não enviados e com link vencido)?`;
+  $('sn-conf').classList.remove('bp-esconde');
+};
+$('sn-conf-nao').onclick = () => $('sn-conf').classList.add('bp-esconde');
+$('sn-conf-sim').onclick = async () => { await enviarSenhas('pendentes', $('sn-conf-sim')); $('sn-conf').classList.add('bp-esconde'); };
+$('sn-lista').addEventListener('click', async (ev) => {
+  const e = ev.target.closest('[data-sn-email]');
+  if (e){
+    if (!EF) await carregarEfetivo();
+    const p = EF && EF.efetivo.find(x => x.re === e.dataset.snEmail);
+    if (p){ abrirPol('editar', p); setTimeout(() => $('pe-email') && $('pe-email').focus(), 80); }
+    return;
+  }
+  const b = ev.target.closest('[data-sn-env]'); if (b) enviarSenhas([b.dataset.snEnv], b);
+});
 
 window.addEventListener('beforeunload', (ev) => { if (Object.keys(PEND).length){ ev.preventDefault(); ev.returnValue = ''; } });
 

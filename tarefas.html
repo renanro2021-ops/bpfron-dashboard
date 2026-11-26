@@ -12,6 +12,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tarefas BPFRON">
 <title>Central de Tarefas · BPFRON/RO</title>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Senha do Portal pelo e-mail", "quem": "todos", "itens": [
+    "O efetivo do BPFRON cria a senha do Portal pelo link enviado ao e-mail do cadastro (confirma RE e CPF). Ela vale para a Cautela, as Tarefas, a ficha da P1 e o checklist da viatura.",
+    "Esqueceu a senha? Na tela de entrada, digite o RE e toque em “Esqueci a senha”: o link chega no seu e-mail.",
+    "Sem e-mail no cadastro? Procure a P1 para incluir."
+  ] }
+]</script>
 <link rel="icon" id="favicon" href="LOGOS/bpfron_transp.png">
 <script>/* aberta dentro do Portal do Policial (policial.html) */try{if(new URLSearchParams(location.search).has('portal'))document.documentElement.classList.add('portal')}catch(e){}</script>
 <script>/* tema antes de pintar (sem piscar) — tema comum do site (bp-casca.js), com o antigo da Central de reserva */try{var t=localStorage.getItem('bp_tema')||localStorage.getItem('tar_tema')||'escuro';if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'claro':'escuro';document.documentElement.dataset.tema=t}catch(e){}</script>
@@ -769,7 +776,9 @@ html.portal .hdr .sp{display:block!important}
         <div class="fg" style="margin-top:12px"><label>Repita a senha</label><input class="inp" id="f-nova2" type="password" autocomplete="new-password"></div>
       </div>
       <button type="button" class="btn xl" id="btn-entrar-re" style="width:100%;justify-content:center;margin-top:18px">Entrar</button>
+      <button type="button" class="btn sec hide" id="lg-link-env" style="width:100%;justify-content:center;margin-top:12px">Mandar o link de novo</button>
       <button type="button" class="linkbtn" id="lg-primeiro" style="display:block;margin:12px auto 0">Primeiro acesso? Toque aqui</button>
+      <button type="button" class="linkbtn" id="lg-esqueci" style="display:block;margin:6px auto 0">Esqueci a senha</button>
     </form>
     <form id="lg-dash" class="hide" onsubmit="return false">
       <div class="fg"><label>Usuário</label><input class="inp" id="f-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
@@ -1054,9 +1063,24 @@ function abaLogin(re){
 }
 $('lg-tab-re').onclick = () => abaLogin(true);
 $('lg-tab-dash').onclick = () => abaLogin(false);
-function lgModo(modo, precisa, nome){
+function lgModo(modo, precisa, nome, email){
   LG_MODO = modo; LG_PRECISA = precisa || '';
   vis('lg-pa', !!modo);
+  vis('lg-link-env', modo === 'email');
+  vis('lg-esqueci', !modo);
+  vis('btn-entrar-re', modo !== 'email' && modo !== 'sem_email');
+  if (modo === 'email' || modo === 'sem_email'){
+    // efetivo do BPFRON: a senha é criada pelo link do e-mail (senha.html), não aqui
+    const q = nome ? `<b style="color:var(--t1)">${esc(nome)}</b>, ` : '';
+    $('lg-pa-txt').innerHTML = modo === 'email'
+      ? `✉️ ${q}o seu cadastro de senha é feito pelo <b style="color:var(--t1)">link enviado ao seu e-mail${email ? ' (' + esc(email) + ')' : ''}</b>. Abra o link, confirme RE e CPF e crie a senha. Não achou? Confira o spam ou mande de novo.`
+      : `📭 ${q}o seu cadastro no efetivo ainda não tem e-mail. <b style="color:var(--tx-warn)">Procure a P1 para incluir o seu e-mail</b> e receber o link da senha.`;
+    qsa('#lg-pa .fg').forEach(f => vis(f, false));
+    vis('lg-re-senha-wrap', false); vis('lg-primeiro', false);
+    LG_MODO = ''; LG_EMAIL_MODO = modo;
+    return;
+  }
+  LG_EMAIL_MODO = '';
   vis('lg-re-senha-wrap', modo !== 'primeiro');
   vis('lg-primeiro', !modo);
   vis('lg-pa-conf-wrap', modo === 'primeiro' && precisa !== 'provisoria');
@@ -1107,6 +1131,8 @@ async function entrarRE(soConsultar){
       boasVindas(d.nome || '');
       lgModo(''); boot(); return;
     }
+    if (d.primeiro && d.precisa === 'email'){ lgModo('email', '', d.nome, d.email_mascarado); return; }
+    if (d.primeiro && d.precisa === 'email_sem_cadastro'){ lgModo('sem_email', '', d.nome); return; }
     if (d.primeiro){ lgModo('primeiro', d.precisa, d.nome); if (d.precisa !== 'provisoria') setTimeout(() => $('f-confirma').focus(), 50); return; }
     if (d.trocar){ lgModo('trocar', '', d.nome); setTimeout(() => $('f-nova').focus(), 50); return; }
     if (d.error === 'use_login') abaLogin(false);
@@ -1116,6 +1142,24 @@ async function entrarRE(soConsultar){
 }
 $('btn-entrar-re').addEventListener('click', () => entrarRE(false));
 $('lg-primeiro').addEventListener('click', () => entrarRE(true));
+/* Esqueci a senha / Mandar o link de novo: POST /api/senha/pedir-link (o link vai para o e-mail do cadastro) */
+let LG_EMAIL_MODO = '';
+async function pedirLinkSenha(btn){
+  const m = $('msg-login'), re = $('f-re').value.replace(/D/g, '');
+  m.className = 'msg'; m.textContent = '';
+  if (re.length < 4){ m.className = 'msg err'; m.textContent = 'Digite o seu RE (5 dígitos).'; $('f-re').focus(); return; }
+  btn.disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/api/senha/pedir-link', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ re }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || 'Não foi possível pedir o link agora.');
+    m.className = 'msg' + (d.enviado ? ' ok' : ''); m.textContent = d.detail || 'Pronto.';
+  } catch(e){ m.className = 'msg err'; m.textContent = e.message || 'Não foi possível conectar ao servidor.'; }
+  finally { btn.disabled = false; }
+}
+$('lg-link-env').addEventListener('click', () => pedirLinkSenha($('lg-link-env')));
+$('lg-esqueci').addEventListener('click', () => pedirLinkSenha($('lg-esqueci')));
+$('f-re').addEventListener('input', () => { if (LG_EMAIL_MODO){ LG_EMAIL_MODO = ''; lgModo(''); } });
 $('f-re').addEventListener('keydown', e => { if (e.key === 'Enter') LG_MODO ? $('f-confirma').focus() : $('f-resenha').focus(); });
 ['f-resenha','f-nova2'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') entrarRE(false); }));
 $('f-confirma').addEventListener('keydown', e => { if (e.key === 'Enter') $('f-nova').focus(); });

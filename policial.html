@@ -13,6 +13,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Portal PM">
 <title>Portal do Policial · BPFRON/RO</title>
+<script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Senha do Portal pelo e-mail", "quem": "todos", "itens": [
+    "O efetivo do BPFRON cria a senha do Portal pelo link enviado ao e-mail do cadastro (confirma RE e CPF). Ela vale para a Cautela, as Tarefas, a ficha da P1 e o checklist da viatura.",
+    "Esqueceu a senha? Na tela de entrada, digite o RE e toque em “Esqueci a senha”: o link chega no seu e-mail.",
+    "Sem e-mail no cadastro? Procure a P1 para incluir."
+  ] }
+]</script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* =====================================================================
@@ -237,7 +244,7 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
           <p class="dica">Mesmo usuário e senha do dashboard. Assim as <b>Tarefas</b> já abrem direto, sem outra senha.</p>
         </form>
       </div>
-      <p class="nota">Pelo RE não precisa de senha: ele fica lembrado neste aparelho. Só as <b>Tarefas</b> e a <b>Cautela</b> pedem a senha do Portal — é uma só, criada no 1º acesso com o RE e o CPF.</p>
+      <p class="nota">Pelo RE não precisa de senha: ele fica lembrado neste aparelho. As <b>Tarefas</b>, a <b>Cautela</b> e o <b>checklist da viatura</b> pedem a senha do Portal — é uma só. O efetivo do BPFRON cria a senha pelo <b>link enviado ao e-mail do cadastro</b> (esqueceu? use “Esqueci a senha” na tela de entrada).</p>
       <p class="manual"><a href="manual-portal.html" target="_blank" rel="noopener">📖 Como usar o portal (manual)</a></p>
     </div>
   </section>
@@ -434,7 +441,7 @@ $('bt-trocar').onclick = () => {
   $('md').classList.add('on');
   $('md-nao').onclick = () => $('md').classList.remove('on');
   $('md-sim').onclick = () => {
-    ['tar_token', 'bp_token', 'bp_user', 'bp_perms', 'bp_gar_motorista', LS_EU].forEach(k => ls.set(k, null));
+    ['tar_token', 'bp_token', 'bp_user', 'bp_perms', 'bp_gar_motorista', 'bp_gar_token', LS_EU].forEach(k => ls.set(k, null));
     EU = null; DADOS = {}; FRAMES.forEach(a => { $('v-' + a).querySelector('iframe')?.remove(); });
     $('md').classList.remove('on');
     iniciar();
