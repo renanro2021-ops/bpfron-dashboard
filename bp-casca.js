@@ -100,7 +100,7 @@
 
   var CATALOGO = [
     // ---- Comando
-    { id: 'tarefas', href: 'tarefas.html', ic: '✅', nome: 'Central de Tarefas', grupo: 'cmd', acesso: 'pub', gestor: 'tarefas',
+    { id: 'tarefas', href: 'tarefas.html', ic: '✅', nome: 'Central de Tarefas', grupo: 'cmd', acesso: 'pub', gestor: 'tarefas', emDev: true,
       desc: 'Tarefas com prazo e prioridade, ciência, andamento e atrasadas.' },
     { id: 'sala', href: 'sala.html', ic: '🎥', nome: 'Sala de Reunião', grupo: 'cmd', acesso: 'login', gestor: 'video',
       desc: 'Videoconferência pelo Jitsi, com link de convidado.' },
@@ -190,7 +190,7 @@
       desc: 'Uma resposta do batalhão preenchida por vários setores, ao vivo.' },
 
     // ---- P6 · Procedimentos (ficam dentro da Central de Tarefas)
-    { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub', soAdmin: true,
+    { id: 'procedimentos', href: 'tarefas.html', ic: '⚖️', nome: 'Procedimentos', grupo: 'p6', acesso: 'pub', soAdmin: true, emDev: true,
       desc: 'IPM, sindicância e perícias ficam na Central de Tarefas, só para a P6 e o Comando.' },
     { id: 'elogio', href: 'elogio.html', ic: '🏅', nome: 'P6 · Elogios', grupo: 'p6', acesso: { perm: ['elogio'] }, gestor: 'elogio',
       desc: 'Notas de elogio pelos modelos da P6: a IA escreve o ato meritório e sai o coletivo e o individual de cada policial para o SEI.' },
@@ -425,8 +425,17 @@
     var l = Array.isArray(perm) ? perm : [perm];
     return l.some(function (x) { return P.perms.indexOf(x) >= 0; });
   }
+  /* emDev:true = sistema em desenvolvimento, desligado para todos (26/11/2026: Central de
+     Tarefas). Some do menu, do Portal da Gestão e da lista; só o desenvolvedor continua vendo. */
+  var DEV_LOGINS = ['desousa'];
+  function devLiberado() { return DEV_LOGINS.indexOf(String(ls('bp_user') || '').toLowerCase()) >= 0; }
+  function emDev(id) {
+    for (var i = 0; i < CATALOGO.length; i++) if (CATALOGO[i].id === id) return !!CATALOGO[i].emDev && !devLiberado();
+    return false;
+  }
   function pode(item, P) {
     P = P || PERFIL || perfilVazio();
+    if (item.emDev && !devLiberado()) return false;
     var a = item.acesso;
     if (a === 'pub') return true;
     if (!P.logado) return false;
@@ -1067,7 +1076,7 @@
     atualizarPerfil: atualizarPerfil,
     aoMudarPerfil: function (cb) { ouvintes.push(cb); },
     guardarDoWorker: guardarDoWorker,
-    pode: pode, papel: papel, categoria: categoria, deGestao: deGestao, visiveis: visiveis,
+    pode: pode, emDev: emDev, papel: papel, categoria: categoria, deGestao: deGestao, visiveis: visiveis,
     recentes: recentes, hrefCom: hrefCom, sair: sair, iniciais: iniciais,
     abrirMenu: abrirMenu, fecharMenu: fecharMenu,
     ic: ic, icones: icones, ICONES: ICONES, toast: toast, novidades: novidades,

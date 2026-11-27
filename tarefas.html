@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-title" content="Tarefas BPFRON">
 <title>Central de Tarefas · BPFRON/RO</title>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Central de Tarefas em desenvolvimento", "quem": "todos", "itens": [
+    "A Central de Tarefas foi desligada por enquanto: ainda está em desenvolvimento e volta quando estiver pronta."
+  ] },
   { "data": "2026-11-26", "titulo": "Senha do Portal pelo e-mail", "quem": "todos", "itens": [
     "O efetivo do BPFRON cria a senha do Portal pelo link enviado ao e-mail do cadastro (confirma RE e CPF). Ela vale para a Cautela, as Tarefas, a ficha da P1 e o checklist da viatura.",
     "Esqueceu a senha? Na tela de entrada, digite o RE e toque em “Esqueci a senha”: o link chega no seu e-mail.",
@@ -3329,7 +3332,23 @@ function abrirPeloEndereco(){ const m = location.hash.match(/#t=([A-Z0-9]+)/i); 
 window.portalAbrir = (id) => { if (!D || !AUTH.logged) return false; abrirTarefa(id); return true; };
 window.addEventListener('hashchange', () => { if (D) abrirPeloEndereco(); });
 
-boot();
+/* 26/11/2026: Central de Tarefas DESLIGADA para todos (em desenvolvimento). Só o
+   desenvolvedor (BPCasca.emDev) segue usando. Para religar: tirar emDev do CATALOGO. */
+if (window.BPCasca && BPCasca.emDev && BPCasca.emDev('tarefas')) {
+  document.body.classList.add('tar-desligada');
+  const st = document.createElement('style');
+  st.textContent = 'body.tar-desligada > :not(#tar-off){display:none!important}';
+  document.head.appendChild(st);
+  document.body.insertAdjacentHTML('beforeend', `<div id="tar-off" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;background:var(--bg,#0b1220);color:var(--tx,#e5e7eb)">
+    <div style="max-width:440px;text-align:center">
+      <img src="LOGOS/bpfron_transp.avif" alt="Brasão BPFRON" style="width:96px;height:96px;object-fit:contain">
+      <h1 style="font-size:22px;margin:14px 0 8px">Central de Tarefas em desenvolvimento</h1>
+      <p style="opacity:.8;line-height:1.5;margin:0 0 18px">Este sistema foi desligado por enquanto e volta quando estiver pronto.</p>
+      ${new URLSearchParams(location.search).has('portal') ? '' : '<a href="policial.html" style="display:inline-block;padding:10px 18px;border-radius:10px;background:#3987e5;color:#fff;text-decoration:none;font-weight:600">Ir para o Portal do Policial</a>'}
+    </div></div>`);
+} else {
+  boot();
+}
 </script>
 </body>
 </html>

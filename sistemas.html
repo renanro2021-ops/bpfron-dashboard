@@ -63,6 +63,9 @@
 }
 </style>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Central de Tarefas em desenvolvimento", "quem": "todos", "itens": [
+    "A Central de Tarefas saiu da lista por enquanto: ainda está em desenvolvimento e volta quando estiver pronta."
+  ] },
   { "data": "2026-11-05", "titulo": "Só os seus sistemas, já na entrada", "quem": "todos", "itens": [
     "Quem entra com login já vê só o que o login abre. Para ver a lista inteira, desmarque \"Só os liberados para mim\"."
   ] },
@@ -142,7 +145,8 @@ function render(){
   const so = P.logado && $('sis-so').checked;
   $('sis-so-wrap').classList.toggle('bp-esconde', !P.logado);
 
-  const base = C.CATALOGO.filter(s => s.id !== 'sistemas' && (!so || C.pode(s, P)));
+  // emDev = sistema em desenvolvimento (Central de Tarefas, 26/11/2026): fora da lista inteira
+  const base = C.CATALOGO.filter(s => s.id !== 'sistemas' && !(s.emDev && C.emDev && C.emDev(s.id)) && (!so || C.pode(s, P)));
   const daSec = (g) => base.filter(s => s.grupo === g.id);
 
   // atalhos das seções

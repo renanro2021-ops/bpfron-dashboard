@@ -14,6 +14,10 @@
 <meta name="apple-mobile-web-app-title" content="Portal PM">
 <title>Portal do Policial · BPFRON/RO</title>
 <script type="application/json" id="bp-novidades">[
+  { "data": "2026-11-26", "titulo": "Tarefas fora do Portal por enquanto", "quem": "todos", "itens": [
+    "A aba Tarefas saiu do Portal: a Central de Tarefas ainda está em desenvolvimento e volta quando estiver pronta.",
+    "O checklist da viatura, a Cautela e a ficha da P1 continuam normais, com a mesma senha do Portal."
+  ] },
   { "data": "2026-11-26", "titulo": "Senha do Portal pelo e-mail", "quem": "todos", "itens": [
     "O efetivo do BPFRON cria a senha do Portal pelo link enviado ao e-mail do cadastro (confirma RE e CPF). Ela vale para a Cautela, as Tarefas, a ficha da P1 e o checklist da viatura.",
     "Esqueceu a senha? Na tela de entrada, digite o RE e toque em “Esqueci a senha”: o link chega no seu e-mail.",
@@ -122,7 +126,8 @@ label.lb{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-t
 .ola h1{font-family:'Rajdhani',sans-serif;font-size:26px;color:var(--t1);line-height:1.15}
 .ola p{color:var(--muted);font-size:13px;margin-top:2px;text-transform:capitalize}
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 6px}
-@media (max-width:640px){ .cards{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:640px){ .cards{grid-template-columns:repeat(2,minmax(0,1fr))} .cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))} }
 .cd{position:relative;text-align:left;border:1px solid var(--border);background:var(--card);border-radius:16px;padding:12px;min-height:118px;display:flex;flex-direction:column;gap:4px;overflow:hidden;transition:.15s}
 .cd:hover{border-color:var(--border2);background:var(--card2)}
 .cd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--yellow))}
@@ -450,7 +455,10 @@ $('bt-trocar').onclick = () => {
 $('md').addEventListener('click', (e) => { if (e.target === $('md')) $('md').classList.remove('on'); });
 
 /* ============================== abas ============================== */
-const ABAS = ['inicio', 'tarefas', 'viatura', 'cautela', 'ficha', 'p1'];
+// 26/11/2026: Tarefas em desenvolvimento = aba desligada (só o desenvolvedor vê; ver emDev no bp-casca.js)
+const TAR_OFF = !!(window.BPCasca && BPCasca.emDev && BPCasca.emDev('tarefas'));
+if (TAR_OFF) { const b = document.querySelector('[data-aba="tarefas"]'); if (b) b.remove(); }
+const ABAS = ['inicio', 'tarefas', 'viatura', 'cautela', 'ficha', 'p1'].filter(a => !(TAR_OFF && a === 'tarefas'));
 const FRAMES = ['tarefas', 'viatura', 'cautela', 'ficha', 'p1'];
 let ABA = 'inicio';
 const PAGINA = { tarefas: 'tarefas.html', viatura: 'garagem.html', cautela: 'cautela.html', ficha: 'p1.html', p1: 'pessoal.html' };
@@ -531,6 +539,7 @@ const fDH = (s) => {
 const fN = (n) => Number(n || 0).toLocaleString('pt-BR');
 
 async function carregarTarefas(){
+  if (TAR_OFF) return { estado: 'off' };
   const tk = tokenTar();
   if (!tk) return { estado: 'sem_login' };
   try {
@@ -604,7 +613,7 @@ function renderInicio(){
   $('ola').textContent = `${h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'}, ${nomeCurto(EU)}`;
   $('hoje').textContent = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Porto_Velho', weekday: 'long', day: 'numeric', month: 'long' });
   const sk = '<div class="skel" style="height:118px"></div>';
-  const cT = !T ? sk : T.estado === 'ok'
+  const cT = TAR_OFF ? '' : !T ? sk : T.estado === 'ok'
     ? cartao({ ir:'tarefas', ic:'📋', v:T.abertas.length, l:`tarefa${T.abertas.length === 1 ? '' : 's'} com você`, cor:'#3987e5',
         s: T.atrasadas.length ? `⏰ ${T.atrasadas.length} atrasada${T.atrasadas.length > 1 ? 's' : ''}` : T.novas.length ? `📥 ${T.novas.length} nova${T.novas.length > 1 ? 's' : ''}` : T.pontos && T.pontos.mes ? `🏆 ${T.pontos.mes} pts no mês` : 'tudo em dia',
         sc: T.atrasadas.length ? 'c' : T.novas.length ? 'w' : 'g' })
@@ -627,11 +636,12 @@ function renderInicio(){
       : cartao({ ir:'cautela', ic: C.estado === 'ok' ? '🛡️' : '🔒', v:'Cautela', txt:true, l: C.estado === 'ok' ? 'nada com você' : 'entre com a senha', cor:'#e66767',
           s: C.estado === 'ok' ? 'armamento em dia' : C.estado === 'outro' ? 'entrou outra pessoa' : C.estado === 'sem_re' ? 'ligar o login ao RE' : 'toque para entrar', sc: C.estado === 'ok' ? 'g' : '' });
   $('cards').innerHTML = cT + cV + cC + cP;
+  $('cards').classList.toggle('c3', TAR_OFF);
   qsa('[data-ir]', $('cards')).forEach(b => b.onclick = () => irAba(b.dataset.ir));
 
   // tarefas
   let ht = '';
-  if (T){
+  if (T && !TAR_OFF){
     if (T.estado === 'ok'){
       const l = T.ord.slice(0, 6);
       ht = `<div class="sect">📋 Suas tarefas <small>${T.abertas.length ? 'as que vencem primeiro' : ''}</small><span class="sp"></span><button class="btn sec sm" data-ir2="tarefas">Abrir tudo ›</button></div>
@@ -684,7 +694,7 @@ function renderInicio(){
   qsa('[data-tar]', $('main')).forEach(b => b.onclick = () => irAba('tarefas', { abrir: b.dataset.tar }));
   // marcadores nas abas
   const nT = T && T.estado === 'ok' ? T.novas.length + T.atrasadas.filter(t => !T.novas.includes(t)).length : 0;
-  $('bd-tar').textContent = nT; vis('bd-tar', nT > 0);
+  if ($('bd-tar')) { $('bd-tar').textContent = nT; vis('bd-tar', nT > 0); }
   const emUso = V && V.estado === 'ok' && V.minhas.length;
   $('bd-vtr').textContent = '1'; vis('bd-vtr', !!emUso);
   const nC = C && C.estado === 'ok' ? C.assinar.length + C.vencidas.filter(c => !C.assinar.includes(c)).length : 0;
